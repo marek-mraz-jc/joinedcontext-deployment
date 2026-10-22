@@ -253,3 +253,59 @@ def test_rendered_probe_egress_is_https_and_dns_only(dev):
     assert ports <= {("TCP", 443), ("TCP", 8443), ("UDP", 53), ("TCP", 53)}
     public = next(r for r in policy["spec"]["egress"] if any("ipBlock" in t for t in r["to"]))
     assert "10.0.0.0/8" in public["to"][0]["ipBlock"]["except"]
+
+
+def test_metrics_count_failures_and_latency_per_surface_for_the_slo():
+    # T-5104: the burn-rate rules read these counters, not the newest gauge.
+    clock = FakeClock()
+    get, ws, _ = recorded_internet(broken={"odata"})
+    prober = probe.Prober([TARGET], 30, 900, clock=clock, sleep=clock.sleep, get=get, ws=ws)
+    prober.round(TARGET)
+    prober.round(TARGET)
+    metrics = prober.metrics()
+    assert 'jc_probe_failures_total{target="dev",surface="odata"} 2' in metrics
+    assert 'jc_probe_failures_total{target="dev",surface="ogc"} 0' in metrics
+    # Every recorded answer took 0.2 s: inside the 0.25 bucket, outside 0.1.
+    assert 'jc_probe_request_duration_seconds_bucket{target="dev",surface="ogc",le="0.1"} 0' in metrics
+    assert 'jc_probe_request_duration_seconds_bucket{target="dev",surface="ogc",le="0.25"} 2' in metrics
+    assert 'jc_probe_request_duration_seconds_bucket{target="dev",surface="ogc",le="+Inf"} 2' in metrics
+    assert 'jc_probe_request_duration_seconds_count{target="dev",surface="ogc"} 2' in metrics
+
+
+def test_expiries_keep_the_last_known_value_when_nothing_answers():
+    answers = {"api.example.org": 2_000_000.0, "opendata.example.org": 0.0, "assistant.example.org": None}
+    asked = []
+
+    def domain(name, get):
+        asked.append(name)
+        return 3_000_000.0
+
+    prober = probe.Prober([TARGET], 30, 900, tls=answers.get, domain=domain)
+    prober.expiries(TARGET)
+    metrics = prober.metrics()
+    assert 'jc_probe_tls_cert_expiry_timestamp_seconds{host="api.example.org"} 2000000' in metrics
+    assert 'jc_probe_tls_cert_expiry_timestamp_seconds{host="opendata.example.org"} 0' in metrics
+    assert "assistant.example.org" not in metrics
+    assert asked == ["example.org"]
+    assert 'jc_probe_domain_expiry_timestamp_seconds{domain="example.org"} 3000000' in metrics
+    prober.tls = lambda host: None
+    prober.expiries(TARGET)
+    assert 'jc_probe_tls_cert_expiry_timestamp_seconds{host="api.example.org"} 2000000' in prober.metrics()
+
+
+def test_domain_expiry_reads_the_rdap_expiration_event_from_the_bootstrapped_https_server():
+    calls = []
+
+    def get(url, data=None, headers=None, cap=probe.BODY_CAP):
+        calls.append(url)
+        if url == probe.RDAP_BOOTSTRAP:
+            return 200, JSON, j({"services": [[["org"], ["http://plain.example/"]], [["com", "net"], ["https://rdap.example/com/v1/"]]]}), 0.1
+        return 200, JSON, j({"events": [{"eventAction": "registration", "eventDate": "2020-01-01T00:00:00Z"},
+                                        {"eventAction": "expiration", "eventDate": "2027-03-01T00:00:00Z"}]}), 0.1
+
+    assert probe.domain_not_after("joinedcontext.com", get) == 1803859200.0
+    assert calls[-1] == "https://rdap.example/com/v1/domain/joinedcontext.com"
+    # An http-only RDAP server is never asked; no expiration event is no value.
+    assert probe.domain_not_after("example.org", get) is None
+    assert probe.domain_not_after("joinedcontext.com", lambda *a, **k: (200, JSON, b"{}", 0.1)) is None
+    assert probe.domain_not_after("joinedcontext.com", lambda *a, **k: (0, {}, b"refused", 0.1)) is None

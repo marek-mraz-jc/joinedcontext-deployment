@@ -131,6 +131,137 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'The synthetic probe of {{`{{ $labels.target }}`}} finished no round for three minutes'
+  # T-5104: the objectives of each public surface over 30 days, measured by the synthetic probe
+  # from outside: 99.5 % of probes hold their check, and 95 % answer within 500 ms (p95 < 500 ms).
+  # Multiwindow burn rates (Google SRE workbook ch. 5): 14.4x over 1h and 6x over 6h page, each
+  # confirmed by a short window so the alert resolves minutes after the fault; 1x over 3 days is a ticket.
+  - name: slo-public-surfaces
+    rules:
+      - record: jc:probe_failure:ratio_rate5m
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[5m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[5m]))
+      - record: jc:probe_slow:ratio_rate5m
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[5m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[5m]))
+      - record: jc:probe_failure:ratio_rate30m
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[30m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30m]))
+      - record: jc:probe_slow:ratio_rate30m
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[30m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30m]))
+      - record: jc:probe_failure:ratio_rate1h
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[1h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[1h]))
+      - record: jc:probe_slow:ratio_rate1h
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[1h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[1h]))
+      - record: jc:probe_failure:ratio_rate6h
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[6h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[6h]))
+      - record: jc:probe_slow:ratio_rate6h
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[6h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[6h]))
+      - record: jc:probe_failure:ratio_rate3d
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[3d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[3d]))
+      - record: jc:probe_slow:ratio_rate3d
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[3d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[3d]))
+      - record: jc:probe_failure:ratio_rate30d
+        expr: sum by (target, surface) (rate(jc_probe_failures_total[30d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30d]))
+      - record: jc:probe_slow:ratio_rate30d
+        expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[30d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30d]))
+      - record: jc:probe_availability:ratio30d
+        expr: 1 - jc:probe_failure:ratio_rate30d
+      - record: jc:probe_latency:p95_30d
+        expr: histogram_quantile(0.95, sum by (target, surface, le) (rate(jc_probe_request_duration_seconds_bucket[30d])))
+      - alert: SurfaceAvailabilityBudgetBurnFast
+        expr: |
+          (jc:probe_failure:ratio_rate1h > (14.4 * 0.005) and jc:probe_failure:ratio_rate5m > (14.4 * 0.005))
+          or
+          (jc:probe_failure:ratio_rate6h > (6 * 0.005) and jc:probe_failure:ratio_rate30m > (6 * 0.005))
+        for: 2m
+        labels:
+          severity: critical
+          slo: failure
+        annotations:
+          summary: '{{`{{ $labels.surface }}`}} on {{`{{ $labels.target }}`}} spends its 30-day availability (99.5 %) budget at 6x or more: at this rate it is gone in under five days (GET /results.json on the probe pod names the failing Endpoints)'
+      - alert: SurfaceAvailabilityBudgetBurnSlow
+        expr: jc:probe_failure:ratio_rate3d > 0.005 and jc:probe_failure:ratio_rate6h > 0.005
+        for: 1h
+        labels:
+          severity: warning
+          slo: failure
+        annotations:
+          summary: '{{`{{ $labels.surface }}`}} on {{`{{ $labels.target }}`}} has spent its availability (99.5 %) budget faster than 30 days allow for three days'
+      - alert: SurfaceLatencyBudgetBurnFast
+        expr: |
+          (jc:probe_slow:ratio_rate1h > (14.4 * 0.05) and jc:probe_slow:ratio_rate5m > (14.4 * 0.05))
+          or
+          (jc:probe_slow:ratio_rate6h > (6 * 0.05) and jc:probe_slow:ratio_rate30m > (6 * 0.05))
+        for: 2m
+        labels:
+          severity: critical
+          slo: slow
+        annotations:
+          summary: '{{`{{ $labels.surface }}`}} on {{`{{ $labels.target }}`}} spends its 30-day latency (p95 < 500 ms) budget at 6x or more: at this rate it is gone in under five days (GET /results.json on the probe pod names the failing Endpoints)'
+      - alert: SurfaceLatencyBudgetBurnSlow
+        expr: jc:probe_slow:ratio_rate3d > 0.05 and jc:probe_slow:ratio_rate6h > 0.05
+        for: 1h
+        labels:
+          severity: warning
+          slo: slow
+        annotations:
+          summary: '{{`{{ $labels.surface }}`}} on {{`{{ $labels.target }}`}} has spent its latency (p95 < 500 ms) budget faster than 30 days allow for three days'
+  # T-5104: the outside view of what lapses on a date. cert-manager renews 30 days ahead, so
+  # 14 days left means renewal has failed for two weeks; 0 is a certificate that fails verification.
+  - name: expiry
+    rules:
+      - alert: TLSCertificateExpiresSoon
+        expr: jc_probe_tls_cert_expiry_timestamp_seconds - time() < 14 * 86400
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The certificate {{`{{ $labels.host }}`}} serves expires within 14 days or fails verification: check its cert-manager Certificate and the HTTP-01 challenge'
+      - alert: DomainExpiresSoon
+        expr: jc_probe_domain_expiry_timestamp_seconds - time() < 30 * 86400
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The registration of {{`{{ $labels.domain }}`}} expires within 30 days: renew it at the registrar'
+  {{- end }}
+  # T-5104: node and volume capacity, from node-exporter and the kubelet as the Prometheus
+  # Operator's stack (kube-prometheus-stack) scrapes them; local-path volumes live on the node disk.
+  - name: capacity
+    rules:
+      - alert: NodeDiskAlmostFull
+        expr: 1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"} > 0.85
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{`{{ $labels.mountpoint }}`}} on {{`{{ $labels.instance }}`}} is more than 85 % full: Postgres and local-path volumes stop at 100 %'
+      - alert: VolumeAlmostFull
+        expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Volume {{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}} is more than 85 % full'
+      - alert: NodeMemoryHigh
+        expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes > 0.90
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{`{{ $labels.instance }}`}} has used more than 90 % of its memory for 10 minutes: the next pod to grow gets OOM-killed'
+  {{- if has "postgres" $components }}
+  # T-5104: a nightly backup older than 26 h missed a night. The local pg_dumpall CronJob
+  # (`<cluster>-local-backup`, through kube-state-metrics) and CNPG's own backups where enabled.
+  - name: postgres-backup
+    rules:
+      - alert: PostgresBackupStale
+        expr: |
+          time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~".*-local-backup"}) > 26 * 3600
+          or
+          time() - max by (namespace, cluster) (cnpg_collector_last_available_backup_timestamp > 0) > 26 * 3600
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The newest Postgres backup in {{`{{ $labels.namespace }}`}} is older than 26 hours: check the backup job and its volume'
   {{- end }}
   {{- if has "context-gateway" $components }}
   # T-4873, API/07 §3: the WebSocket limits at work. Each fires on a client held to its share,

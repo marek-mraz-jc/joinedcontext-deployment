@@ -43,6 +43,11 @@ visitors share), one Endpoint per kind (misses a single broken Endpoint for good
   per target, Endpoint and surface; `jc_probe_surface_failing` per target and surface;
   `jc_probe_round_timestamp_seconds` per target. The monitoring component scrapes it and alerts
   `ProbeSurfaceDown` (`jc_probe_up == 0` for 1 minute) and `ProbeStalled`.
+- Since T-5104 also `jc_probe_failures_total` and the histogram `jc_probe_request_duration_seconds`
+  per target and surface (the SLO's events), and, checked once an hour from the same outside view,
+  `jc_probe_tls_cert_expiry_timestamp_seconds` per host (0 when the certificate fails verification)
+  and `jc_probe_domain_expiry_timestamp_seconds` per registered domain (RDAP, its server from
+  IANA's bootstrap list at data.iana.org).
 - `GET :9100/results.json`: the newest result per check with its reason, for the status page
   (T-5102) and the health log (T-5067). A reason is the probe's own sentence, never a response body.
 - `GET :9100/healthz`: 503 when a target finished no round for three minutes (the liveness probe).
@@ -77,6 +82,8 @@ committed file to the same rules.
 ## Security
 
 Anonymous only: no token, no Secret, no `envFrom`. Every URL is built from the https origins in
-`PROBE_TARGETS`, never taken from an answer; redirects are not followed. Egress is 443 to public
-addresses and the ingress controller, and CoreDNS; ingress only from Prometheus and the status page
-on 9100. The status page takes ingress from the edge on 8080 only and dials the probe and CoreDNS.
+`PROBE_TARGETS`, never taken from an answer, except the RDAP server, which the hourly expiry check
+takes from IANA's bootstrap answer (https only, no redirects, body capped); redirects are not followed.
+Egress is 443 to public addresses and the ingress controller, and CoreDNS; ingress only from
+Prometheus and the status page on 9100. The status page takes ingress from the edge on 8080 only and
+dials the probe and CoreDNS.

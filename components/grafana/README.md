@@ -12,7 +12,7 @@ is the worked example and the render this component is tested against.
   configuration and alert rules for an Operator that is already on the cluster; this reads the
   same Prometheus back. `grafana.grafana.prometheusUrl` is that address, and the render is
   refused without it rather than serving a login page in front of panels that all say "No data".
-- **Nothing is authored here.** The datasource and all four dashboards are provisioned from
+- **Nothing is authored here.** The datasource and every dashboard are provisioned from
   files in this repository and marked non-editable, so a dashboard is changed by a merge
   request like everything else (CC-02). One replica and no volume follow from that: what a
   restart loses is what nobody wrote down.
@@ -35,6 +35,7 @@ is the worked example and the render this component is tested against.
 | Context Gateway — traffic | `jc_gateway_requests_total`, `jc_gateway_request_duration_seconds`, `jc_gateway_pdp_decisions_total`, `jc_gateway_broker_request_duration_seconds`, plus `apisix_http_status` for the last two panels | The gateway's own since T-0463. The two only it can answer are the policy verdict and the broker round trip; the edge panels stay because APISIX is the only place that sees a request the gateway never received (T-0464) |
 | Portal — traffic and proposals | `jc_portal_requests_total`, `jc_portal_request_duration_seconds`, `jc_portal_changes_total`, plus `apisix_http_status` | The lane a change was classified into is known only inside the Portal (CC-63) |
 | Context Broker — Antares | `antares_http_requests_total`, `antares_http_request_duration_seconds`, `antares_notifications_*`, `antares_pg_*` | The broker serves these at `/q/metrics` |
+| SLOs — public surfaces | `jc:probe_availability:ratio30d`, `jc:probe_latency:p95_30d`, `jc:probe_failure:ratio_rate*`, `jc:probe_slow:ratio_rate30d`, `jc_probe_*_expiry_timestamp_seconds` | The 30-day objectives per target and surface (T-5104), recorded by the monitoring component from the synthetic probe |
 
 ## Checklist
 
