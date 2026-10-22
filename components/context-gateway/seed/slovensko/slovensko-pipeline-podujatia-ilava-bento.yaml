@@ -47,18 +47,20 @@ pipeline:
         root = if this == null { null } else if this.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.ts_parse("2006-01-02").ts_unix() - 3600 } else { this.ts_unix().catch(null) }
       }
       let now = timestamp_unix()
-      let records = this.map_each(r -> r.merge({
+      # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
+      # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
           r.end.apply("unix") + if r.end.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { 86400 } else { 0 }
         } else { r.start.apply("unix").(s -> if s != null { s + 86400 } else { null }) }
       }))
       # Only upcoming events (owner 2026-10-20): one whose end (plus the store's grace, a day in the national
-      # store) is past is never loaded. A record with no readable start stays, so the model check refuses it
-      # where the run report shows it.
-      let upcoming = $records.filter(r -> r._end == null || r._end + 86400 >= $now)
-      let dated = $upcoming.filter(r -> r._start != null).sort_by(r -> r._start)
-      root = $dated.slice(0, [$dated.length(), 100].min()).concat($upcoming.filter(r -> r._start == null))
+      # store) is past is never loaded. A record with no readable start is refused, never stored without a date
+      # (owner 2026-10-22, T-5215).
+      let dated = $records.filter(r -> r._start != null && r._end + 86400 >= $now).sort_by(r -> r._start)
+      root = $dated.slice(0, [$dated.length(), 100].min())
   - unarchive:
       format: json_array
   - mapping: |
@@ -71,14 +73,14 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = []
+      let venues = [{"match":"obecný úrad ilava","town":"ilava","venue":"Mestský úrad","streetAddress":"Mierové námestie 16/31","addressLocality":"Ilava","lat":48.9995242,"lon":18.2361525}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
       let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
       # An event that names no place, or only the town or its organizer, takes its organizer's own address
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
-      let home = if $place == null && ($venue_key == "" || ["ilava", "obec ilava"].contains($venue_key)) { null } else { null }
+      let home = if $place == null && ($venue_key == "" || ["celá obec", "ilava", "ilava - celá obec", "mesto", "mesto ilava", "mestský úrad", "mestský úrad ilava", "obec", "obec ilava", "obecný úrad", "obecný úrad ilava", "v obci"].contains($venue_key)) { {"match":"obecný úrad ilava","town":"ilava","venue":"Mestský úrad","streetAddress":"Mierové námestie 16/31","addressLocality":"Ilava","lat":48.9995242,"lon":18.2361525} } else { null }
       let known = $place.or($home)
       # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
       # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
@@ -87,10 +89,11 @@ pipeline:
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
       let locality = this.locality.apply("text").or($known.addressLocality.or("Ilava"))
       let town = $known.town.or("ilava")
-      # One event announced by two sources is one entity: the id hashes the name, the start (to the
-      # minute in UTC, or the day) and the town, the dedup key of the Event model (T-4895).
-      let start_key = if this._start == null { null } else if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15:04Z", "UTC") }
-      let key = if $name != null && $start_key != null { "%s|%s|%s".format($name.lowercase(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+      # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
+      # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
+      # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
+      let start_key = if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15Z", "UTC") }
+      let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
       let address = {
         "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
         "postalCode": this.postalCode.apply("text"),

@@ -33,18 +33,45 @@ pipeline:
         # schema.org writes a local time with or without its offset, LSVR with a space for the T: a time without an
         # offset is Bratislava's.
         map at {
-          let s = this.or("").string().trim().re_replace_all("([+-][0-9]{2})([0-9]{2})$", "$1:$2")
+          # EventON writes a one-digit offset hour and no seconds ("2026-11-14T10:00+2:00").
+          let s = this.or("").string().trim().re_replace_all("([+-][0-9]{2})([0-9]{2})$", "$1:$2").re_replace_all("([+-])([0-9]):([0-9]{2})$", "$1#$2:$3").replace_all("#", "0").re_replace_all("(T[0-9]{2}:[0-9]{2})(Z|[+-][0-9]{2}:[0-9]{2})$", "$1:00$2")
           let v = if $s.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:") { $s.slice(0, 10) + "T" + $s.slice(11) } else { $s }
           let local = $v.re_find_object("^(?P<t>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2})(:[0-9]{2})?$").t.or(null)
           root = if $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") || $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?([.][0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$") { $v } else if $local != null { $local + ":00" + ($local + ":00Z").ts_format("-07:00", "Europe/Bratislava") } else { null }
+        }
+        # A Slovak date as a page prints it, "28. augusta 2026" or "28. 8. 2026", as YYYY-MM-DD.
+        map day {
+          let months = {"januára": 1, "január": 1, "februára": 2, "február": 2, "marca": 3, "marec": 3, "apríla": 4, "apríl": 4, "mája": 5, "máj": 5, "júna": 6, "jún": 6, "júla": 7, "júl": 7, "augusta": 8, "august": 8, "septembra": 9, "september": 9, "októbra": 10, "október": 10, "novembra": 11, "november": 11, "decembra": 12, "december": 12}
+          let n = this.re_find_object("(?P<d>[0-9]{1,2})\\.\\s*(?P<m>[0-9]{1,2})\\.\\s*(?P<y>[0-9]{4})").catch({})
+          let w = this.re_find_object("(?P<d>[0-9]{1,2})\\.\\s*(?P<m>\\p{L}+)\\s+(?P<y>[0-9]{4})").catch({})
+          let p = if $n.d.or(null) != null { $n } else { $w }
+          let month = if $n.d.or(null) != null { $n.m.int64() } else { $months.get($w.m.or("").lowercase()).or(null) }
+          root = if $p.d.or(null) == null || $month == null || $month < 1 || $month > 12 { null } else { "%04d-%02d-%02d".format($p.y.int64(), $month, $p.d.int64()) }
+        }
+        # Every HH:MM of a text, the hour in two digits.
+        map clock {
+          root = this.re_find_all("[0-9]{1,2}:[0-9]{2}").map_each(t -> if t.length() == 4 { "0" + t } else { t })
         }
         let blocks = content().string().re_find_all_object("<script[^>]*application/ld\\+json[^>]*>(?P<j>[\\s\\S]*?)</script>").map_each(m -> m.j.parse_json().catch(null)).filter(j -> j != null)
         let nodes = $blocks.map_each(j -> if j.type() == "array" { j } else if j."@graph".or(null) != null { j."@graph" } else { [j] }).flatten()
         let ld = $nodes.filter(n -> n.type() == "object" && n."@type".or("").string().re_match("Event")).index(0).catch(null)
         let loc = $ld.location.or(null).(l -> if l != null && l.type() == "array" { l.index(0).catch(null) } else { l })
         let adr = $loc.address.or(null)
-        let start = $ld.startDate.or(null).apply("at")
-        let end = $ld.endDate.or(null).apply("at")
+        # LSVR Events (TownPress) leaves the JSON-LD dates empty and prints them in its post__info list: one "Dátum"
+        # item and a "Čas" item ("08:00 - 12:00"), or "Začiatok" and "Koniec" items, each a date and maybe a time.
+        let info = content().string().re_find_object("(?P<u><ul class=\"post__info[\\s\\S]*?</ul>)").u.or("")
+        let days = $info.re_find_all_object("post__info-item--date\"[\\s\\S]*?post__info-item-text\">(?P<t>[\\s\\S]*?)</p>").map_each(i -> i.t)
+        let hours = $info.re_find_object("post__info-item--time\"[\\s\\S]*?post__info-item-text\">(?P<t>[\\s\\S]*?)</p>").t.or("").apply("clock")
+        let first = $days.index(0).catch("")
+        let last = $days.index(1).catch(null)
+        let from = $first.apply("day")
+        let from_at = $first.apply("clock").concat($hours).index(0).catch(null)
+        let to = if $last != null { $last.apply("day") } else if $hours.length() > 1 { $from } else { null }
+        let to_at = if $last != null { $last.apply("clock").index(0).catch(null) } else { $hours.index(1).catch(null) }
+        let lsvr_start = if $from == null { null } else if $from_at == null { $from } else { $from + "T" + $from_at }
+        let lsvr_end = if $to == null { null } else if $to_at == null { $to } else { $to + "T" + $to_at }
+        let start = $ld.startDate.or(null).apply("at").or($lsvr_start.apply("at"))
+        let end = $ld.endDate.or(null).apply("at").or($lsvr_end.apply("at"))
         root.start = $start
         # A plugin writes the end equal to the start when the author gave none: that is no end.
         root.end = if $end != $start { $end } else { null }
@@ -66,18 +93,20 @@ pipeline:
         root = if this == null { null } else if this.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.ts_parse("2006-01-02").ts_unix() - 3600 } else { this.ts_unix().catch(null) }
       }
       let now = timestamp_unix()
-      let records = this.map_each(r -> r.merge({
+      # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
+      # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
           r.end.apply("unix") + if r.end.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { 86400 } else { 0 }
         } else { r.start.apply("unix").(s -> if s != null { s + 86400 } else { null }) }
       }))
       # Only upcoming events (owner 2026-10-20): one whose end (plus the store's grace, a day in the national
-      # store) is past is never loaded. A record with no readable start stays, so the model check refuses it
-      # where the run report shows it.
-      let upcoming = $records.filter(r -> r._end == null || r._end + 86400 >= $now)
-      let dated = $upcoming.filter(r -> r._start != null).sort_by(r -> r._start)
-      root = $dated.slice(0, [$dated.length(), 100].min()).concat($upcoming.filter(r -> r._start == null))
+      # store) is past is never loaded. A record with no readable start is refused, never stored without a date
+      # (owner 2026-10-22, T-5215).
+      let dated = $records.filter(r -> r._start != null && r._end + 86400 >= $now).sort_by(r -> r._start)
+      root = $dated.slice(0, [$dated.length(), 100].min())
   - unarchive:
       format: json_array
   - mapping: |
@@ -90,14 +119,14 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = []
+      let venues = [{"match":"obecný úrad spišské hanušovce","town":"spisske-hanusovce","venue":"Obecný úrad Spišké Hanušovce","streetAddress":null,"addressLocality":"Spišské Hanušovce","lat":49.3303426,"lon":20.3433973}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
       let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
       # An event that names no place, or only the town or its organizer, takes its organizer's own address
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
-      let home = if $place == null && ($venue_key == "" || ["obec spišské hanušovce", "spišské hanušovce"].contains($venue_key)) { null } else { null }
+      let home = if $place == null && ($venue_key == "" || ["celá obec", "mesto", "mesto spišské hanušovce", "mestský úrad", "mestský úrad spišské hanušovce", "obec", "obec spišské hanušovce", "obecný úrad", "obecný úrad spišské hanušovce", "spišské hanušovce", "spišské hanušovce - celá obec", "v obci"].contains($venue_key)) { {"match":"obecný úrad spišské hanušovce","town":"spisske-hanusovce","venue":"Obecný úrad Spišké Hanušovce","streetAddress":null,"addressLocality":"Spišské Hanušovce","lat":49.3303426,"lon":20.3433973} } else { null }
       let known = $place.or($home)
       # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
       # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
@@ -106,10 +135,11 @@ pipeline:
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
       let locality = this.locality.apply("text").or($known.addressLocality.or("Spišské Hanušovce"))
       let town = $known.town.or("spisske-hanusovce")
-      # One event announced by two sources is one entity: the id hashes the name, the start (to the
-      # minute in UTC, or the day) and the town, the dedup key of the Event model (T-4895).
-      let start_key = if this._start == null { null } else if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15:04Z", "UTC") }
-      let key = if $name != null && $start_key != null { "%s|%s|%s".format($name.lowercase(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+      # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
+      # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
+      # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
+      let start_key = if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15Z", "UTC") }
+      let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
       let address = {
         "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
         "postalCode": this.postalCode.apply("text"),

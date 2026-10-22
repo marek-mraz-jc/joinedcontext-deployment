@@ -156,6 +156,15 @@ def pipeline(name: str, fixture: str, pages: str | None = None) -> list:
     return run(offline(processors(name), recorded), (FIXTURES / fixture).read_text())
 
 
+def home_point(events_url: str) -> list[float]:
+    """[lon, lat] of the venues.csv row homes.csv names for a source."""
+    events = ROOT / "seeds/bbsk-events"
+    (home,) = [h for h in csv.DictReader((events / "homes.csv").open(encoding="utf-8")) if h["events_url"] == events_url]
+    (row,) = [v for v in csv.DictReader((events / "venues.csv").open(encoding="utf-8"))
+              if (v["town"], v["match"]) == (home["town"], home["match"])]
+    return [float(row["lon"]), float(row["lat"])]
+
+
 def key_values(entity: dict) -> dict:
     """The entity as the model's key-values shape, without the NGSI-LD system members."""
     out = {}
@@ -413,8 +422,9 @@ def test_an_item_off_the_sources_host_is_never_fetched():
     steps = offline(
         processors("lucenec"), json.loads((FIXTURES / "pages/weby.json").read_text())
     )
-    forged = [e for e in run(steps, feed) if e["name"]["value"] == "SILNÉ REČI"]
-    assert forged and "startDate" not in forged[0]
+    # The forged item's page is never read, so it has no date and is refused (T-5215); the others are written.
+    out = run(steps, feed)
+    assert out and all(e["name"]["value"] != "SILNÉ REČI" for e in out)
 
 
 @requires_docker
@@ -478,13 +488,11 @@ def test_an_event_without_name_or_start_is_refused_and_one_without_gps_kept():
         )
     }
     assert VALID.is_valid(key_values(out["4"])) and VALID.is_valid(key_values(out["1"]))
-    for refused in ("2", "3"):
-        assert not VALID.is_valid(key_values(out[refused])), refused
-    assert (
-        "location" not in out["1"]
-        and "name" not in out["2"]
-        and "startDate" not in out["3"]
-    )
+    assert not VALID.is_valid(key_values(out["2"])) and "name" not in out["2"]
+    # A record without a start is never stored without a date (owner 2026-10-22, T-5215); one without GPS that
+    # names no place takes the town office's point (homes.csv).
+    assert "3" not in out
+    assert out["1"]["location"]["value"]["coordinates"] == home_point("https://www.banskabystrica.sk/podujatia/")
 
 
 # --- the national space (T-4898) ----------------------------------------------------------------------------
@@ -593,8 +601,10 @@ def test_lsvr_events_take_their_dates_from_the_pages_json_ld_written_with_a_spac
     assert toast["startDate"]["value"] == "2026-12-31T23:59:00+01:00"
     assert toast["endDate"]["value"] == "2027-01-01T03:00:00+01:00"
     assert toast["id"].startswith("urn:ngsi-ld:Event:slovensko-podujatia:") and toast["scope"] == "/SK/BA/casta"
-    # Častá's venues are not in the table checked by hand: no point, never the village centre (owner 2026-10-20).
-    assert all("location" not in e for e in out.values())
+    # Častá's events name no place of their own, so they take the village office's point (homes.csv, T-5215),
+    # never the village centre (owner 2026-10-20).
+    office = home_point("https://www.casta.sk/")
+    assert all(e["location"]["value"]["coordinates"] == office for e in out.values())
 
 
 @requires_docker
@@ -639,8 +649,8 @@ def test_a_wordpress_list_that_is_no_list_fails_the_run_and_an_empty_one_writes_
 def test_an_item_off_the_sources_host_or_with_dot_segments_is_never_fetched():
     items = [{"id": 1, "link": "https://www.casta.sk@attacker.example/events/x/", "title": {"rendered": "A"}},
              {"id": 2, "link": "https://www.casta.sk/events/../../etc/", "title": {"rendered": "B"}}]
-    out = national("lsvr-rest", "www.casta.sk", json.dumps(items))
-    assert len(out) == 2 and all("startDate" not in e for e in out)
+    # Neither page is read, so neither has a date: both are refused (T-5215).
+    assert national("lsvr-rest", "www.casta.sk", json.dumps(items)) == []
 
 
 @requires_docker
@@ -861,3 +871,82 @@ def test_every_home_names_one_venue_of_a_kept_source_and_no_aggregator():
         assert h["events_url"] in kept, h
         assert generate.organizer(kept[h["events_url"]]) is not None, f"an aggregator has no address of its own: {h}"
         assert generate.home(kept[h["events_url"]])["match"] == h["match"]
+
+
+# --- T-5215: dates from the page, notices out, one entity per event ---------------------------------------------
+
+
+def lsvr_page(info: str, ld_start: str = "") -> str:
+    """An LSVR (TownPress) event page as recorded 2026-10-22 from obecpredajna.sk: empty JSON-LD dates."""
+    return (
+        '<script type="application/ld+json">{"@context":"http://schema.org","@type":"Event","name":"X",'
+        f'"startDate":"{ld_start}","endDate":""}}</script><main>{info}</main>'
+    )
+
+
+MULTIDAY = """<ul class="post__info post__info--multiday"> <li class="post__info-item post__info-item--date">
+<h3 class="post__info-item-title">Začiatok</h3> <p class="post__info-item-text"> 28. augusta 2027 <br>Celodenná udalosť </p> </li>
+<li class="post__info-item post__info-item--date"> <h3 class="post__info-item-title">Koniec</h3>
+<p class="post__info-item-text"> 30. augusta 2027 <br>Celodenná udalosť </p> </li></ul>"""
+SINGLEDAY = """<ul class="post__info post__info--singleday"> <li class="post__info-item post__info-item--date">
+<h3 class="post__info-item-title">Dátum</h3> <p class="post__info-item-text"> 7. 12. 2026 </p> </li>
+<li class="post__info-item post__info-item--time"> <h3 class="post__info-item-title">Čas</h3>
+<p class="post__info-item-text"> 8:00 - 12:30 </p> </li></ul>"""
+
+
+def wp_items(*names: str) -> str:
+    return json.dumps([{"id": i, "link": f"https://www.casta.sk/events/e{i}/", "title": {"rendered": n}}
+                       for i, n in enumerate(names)])
+
+
+@requires_docker
+def test_an_lsvr_page_without_json_ld_dates_gives_the_dates_it_prints():
+    pages = {"/events/e0/": lsvr_page(MULTIDAY), "/events/e1/": lsvr_page(SINGLEDAY),
+             "/events/e2/": lsvr_page("<p>Bez dátumu</p>")}
+    steps = offline(template("lsvr-rest", "www.casta.sk"), pages)
+    out = {e["name"]["value"]: e for e in run(steps, wp_items("Biatlon", "Jarmok", "Nič"), "slovensko-podujatia")}
+    assert out["Biatlon"]["startDate"]["value"] == "2027-08-28" and out["Biatlon"]["endDate"]["value"] == "2027-08-30"
+    assert out["Jarmok"]["startDate"]["value"] == "2026-12-07T08:00:00+01:00"
+    assert out["Jarmok"]["endDate"]["value"] == "2026-12-07T12:30:00+01:00"
+    assert "Nič" not in out, "a page that prints no date is refused, never stored dateless"
+
+
+@requires_docker
+def test_an_eventon_offset_with_a_one_digit_hour_is_read():
+    # Recorded 2026-10-22 from k13.sk (EventON): "2026-11-14T10:00+2:00".
+    page = ('<script type="application/ld+json">{"@context":"http://schema.org","@type":"Event","name":"SteelPark",'
+            '"startDate":"2027-11-14T10:00+2:00","endDate":"2027-11-15T18:00+1:00"}</script>')
+    (e,) = run(offline(template("eventon-rest", "www.casta.sk"), {"/events/e0/": page}), wp_items("SteelPark"),
+               "slovensko-podujatia")
+    assert e["startDate"]["value"] == "2027-11-14T10:00:00+02:00" and e["endDate"]["value"] == "2027-11-15T18:00:00+01:00"
+
+
+@requires_docker
+def test_notices_are_never_loaded_for_any_source_kind():
+    notices = ["Vývoz triedeného zberu plastov", "Odvoz komunálneho odpadu", "Zber papiera", "Papier",
+               "Zasadnutie OZ – 30.09.2026", "Oznámenie o prerušení distribúcie elektriny", "VZN č. 3/2026",
+               "Zámer predaja pozemku", "Komunálne voľby", "Svadba", "Rodinná oslava"]
+    events = ["Mikuláš v obci", "Koncert skupiny FIDEM", "Zberateľská burza"]
+    day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
+    # wp-rest-sc (feed with dates), lsvr-rest (page JSON-LD), lego-html and every other kind share common.yaml.
+    sc = run(offline(processors("banskabystrica"), {}),
+             json.dumps([wp_event(i, day, title=t) for i, t in enumerate(notices + events)]))
+    assert sorted(e["name"]["value"] for e in sc) == sorted(events)
+    page = '<script type="application/ld+json">{"@type":"Event","startDate":"' + day.strftime("%Y-%m-%dT%H:%M:%S+00:00") + '"}</script>'
+    pages = {f"/events/e{i}/": page for i in range(len(notices + events))}
+    lsvr = run(offline(template("lsvr-rest", "www.casta.sk"), pages), wp_items(*notices, *events), "slovensko-podujatia")
+    assert sorted(e["name"]["value"] for e in lsvr) == sorted(events)
+
+
+@requires_docker
+def test_one_event_written_by_two_sources_with_other_punctuation_or_a_minute_apart_is_one_entity():
+    # Recorded 2026-10-22 on dev: banskabystrica.sk and vkmk.sk wrote "Kintsugi – japonské umenie" and
+    # "Kintsugi: japonské umenie", and "Čarovný kľúčik" at 16:35 and 16:36.
+    def one(title: str, at: str) -> str:
+        page = '<script type="application/ld+json">{"@type":"Event","startDate":"' + at + '"}</script>'
+        (e,) = run(offline(template("lsvr-rest", "www.casta.sk"), {"/events/e0/": page}), wp_items(title), "slovensko-podujatia")
+        return e["id"]
+
+    assert one("Kintsugi – japonské umenie", "2027-11-19T16:30:00+01:00") == one("Kintsugi: japonské umenie", "2027-11-19T16:30:00+01:00")
+    assert one("Čarovný kľúčik", "2027-11-18T16:35:00+01:00") == one("Čarovný kľúčik", "2027-11-18T16:36:00+01:00")
+    assert one("Korčuľovanie", "2027-10-29T10:30:00+01:00") != one("Korčuľovanie", "2027-10-29T15:00:00+01:00")
