@@ -17,7 +17,10 @@
 # Plausibility (owner 2026-10-22): the list drops, and counts in the run's log, a location with no
 # name, one marked "(disabled)" and a repeated row. A month is
 # dropped, logged with its reason, when its value is not a number, below 0 or above 50 GWh (or
-# 5 million m3 of water) in a month, its unit is not kWh or m3, or its month is not the one asked.
+# 5 million m3 of water) in a month, its unit is not kWh or m3 (Nuuka writes M3 and m3), or its
+# month is not the one asked. Nuuka stamps a month with the last day it has data for: a month that
+# ends before its last day is incomplete (60 of 1,110 on 2026-10-22) and is dropped, since a
+# partial sum would read as low use.
 # An empty list fails the run, so a broken download never reads as a city without properties.
 
 pipeline:
@@ -70,16 +73,17 @@ pipeline:
                   root = if content().length() > 1048576 { throw("Nuuka answered %v bytes for one month of one location".format(content().length())) } else { this }
             result_map: root.answer = this
         - mapping: |
-            let units = { "kWh": { "code": "KWH", "max": 50000000 }, "M3": { "code": "MTQ", "max": 5000000 } }
+            let units = { "kwh": { "code": "KWH", "max": 50000000 }, "m3": { "code": "MTQ", "max": 5000000 } }
             let names = { "Electricity": { "fi": "sähkö", "en": "electricity" }, "Heat": { "fi": "lämpö", "en": "heat" }, "Water": { "fi": "vesi", "en": "water" } }
             let rows = if this.answer.type() == "array" { this.answer.filter(r -> r.locationName.or("").string().trim() == this.location && r.reportingGroup.or("") == this.group) } else { [] }
             let row = if $rows.length() == 0 { null } else { $rows.index(-1) }
-            let unit = if $row == null { null } else { $units.get($row.unit.or("").string()) }
+            let unit = if $row == null { null } else { $units.get($row.unit.or("").string().lowercase()) }
             let month = if $row == null { "" } else { $row.timestamp.or("").string().slice(0, 10).catch("") }
             meta drop = if $row == null { "" }
               else if $row.value.type() != "number" { "not a number" }
               else if $unit == null { "unit %v is not kWh or m3".format($row.unit.or("none")) }
               else if $row.value < 0 || $row.value > $unit.max { "%v %v is outside 0..%v".format($row.value, $row.unit, $unit.max) }
+              else if $month.slice(0, 7).catch("") == this.to.slice(0, 7) && $month < this.to { "incomplete month: data ends %v".format($month) }
               else if $month != this.to { "the month %v is not the one asked".format($month) }
               else { "" }
             let query = "Record=LocationName&SearchString=%v&ReportingGroup=%v&StartTime=%v&EndTime=%v".format(this.location.escape_url_query(), this.group, this.from, this.to)

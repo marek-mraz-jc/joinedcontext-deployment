@@ -6,11 +6,14 @@ kind: Endpoint
 metadata:
   name: helsinki-service-property-energy
   namespace: helsinki
-  title: { fi: 'Palvelukiinteistöjen energiankulutus — Helsinki', sv: 'Servicefastigheternas energiförbrukning — Helsingfors', en: 'Energy use of service properties — Helsinki' }
+  title:
+    fi: Palvelukiinteistöjen energiankulutus — Helsinki
+    sv: Servicefastigheternas energiförbrukning — Helsingfors
+    en: Energy use of service properties — Helsinki
   description:
     fi: 'Helsingin kaupungin palvelu- ja käyttökiinteistöjen (koulut, päiväkodit, virastot, kauppahallit) kuukausittainen sähkön- ja lämmönkulutus (kWh) ja vedenkulutus (m³) Nuuka-energiahallintapalvelusta. Yksi Smart Data Models KeyPerformanceIndicator kohdetta ja hyödykettä kohden, viimeisin kokonainen kuukausi arvona ja aiemmat kuukaudet historiassa. Kaukojäähdytys ei sisälly. Lähde: Helsingin kaupunki, CC BY 4.0.'
     sv: 'Den månatliga el- och värmeförbrukningen (kWh) och vattenförbrukningen (m³) i Helsingfors stads service- och verksamhetsfastigheter (skolor, daghem, ämbetshus, saluhallar) från energihanteringstjänsten Nuuka. En Smart Data Models KeyPerformanceIndicator per objekt och nyttighet, den senaste hela månaden som värde och tidigare månader i historiken. Fjärrkyla ingår inte. Källa: Helsingfors stad, CC BY 4.0.'
-    en: 'The monthly electricity and heat use (kWh, unitCode KWH) and water use (m³, unitCode MTQ) of the City of Helsinki''s service and utility properties (schools, day care centres, offices, market halls) from its energy management service Nuuka. One Smart Data Models KeyPerformanceIndicator per location and utility, the last complete month as kpiValue and the earlier months in its history. District cooling is left out, and so are locations the source marks disabled. Nuuka publishes no coordinates. Property beyond the model: dimensionKey (the location''s name in Nuuka, its property code where it has one, and the utility). Source: City of Helsinki, CC BY 4.0.'
+    en: "The monthly electricity and heat use (kWh, unitCode KWH) and water use (m³, unitCode MTQ) of the City of Helsinki's service and utility properties (schools, day care centres, offices, market halls) from its energy management service Nuuka. One Smart Data Models KeyPerformanceIndicator per location and utility, the last complete month as kpiValue and the earlier months in its history. District cooling is left out, and so are locations the source marks disabled. Nuuka publishes no coordinates. Property beyond the model: dimensionKey (the location's name in Nuuka, its property code where it has one, and the utility). Source: City of Helsinki, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: vdv6dd5zhwph3ggzjz6xyffu2ikrmvtl
@@ -43,6 +46,8 @@ spec:
     frequency: MONTHLY
     source:
       - url: https://hri.fi/data/fi/dataset/helsingin-kaupungin-palvelukiinteistojen-energiankulutustietoja
-        title: { fi: 'Helsingin kaupungin palvelukiinteistöjen energiankulutustietoja', en: 'Energy consumption data of the City of Helsinki''s service properties' }
-        description: { fi: 'Nuuka Open API', en: 'Nuuka Open API' }
+        title:
+          fi: Helsingin kaupungin palvelukiinteistöjen energiankulutustietoja
+          en: Energy consumption data of the City of Helsinki's service properties
+        description: { fi: Nuuka Open API, en: Nuuka Open API }
     pipelineRef: { kind: Pipeline, name: service-property-energy }

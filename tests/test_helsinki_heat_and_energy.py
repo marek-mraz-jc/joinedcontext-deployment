@@ -101,8 +101,8 @@ def test_each_district_gives_six_indicators_linked_to_its_sub_district(recorded_
     assert uhvi["refArea"] == {"type": "Relationship",
                                "object": "urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:subdistrict-0913301103"}
     assert uhvi["districtCode"]["value"] == "0913301103" and uhvi["divisionLevel"]["value"] == "subDistrict"
-    assert uhvi["kpiValue"]["unitCode"] == "C62" and 0 <= uhvi["kpiValue"]["value"] <= 1
-    assert uhvi["kpiValue"]["observedAt"] == "2021-08-31T00:00:00Z"
+    assert "unitCode" not in uhvi["kpiValue"] and 0 <= uhvi["kpiValue"]["value"] <= 1
+    assert "observedAt" not in uhvi["kpiValue"], "one period: the space records it on change"
     assert uhvi["calculationPeriod"]["value"] == {"from": "2018-06-01", "to": "2021-08-31"}
     assert uhvi["dimensionKey"]["value"] == "district=113006;index=Avg-UHVI"
     # Eira's weighted heat vulnerable population exceeds its residents in the study itself: kept.
@@ -224,6 +224,10 @@ def test_out_of_range_unknown_unit_and_another_month_are_dropped():
     assert edited(value="n/a") == []
     assert edited(unit="MWh") == []
     assert edited(timestamp="2026-08-31T00:00:00") == []
+    # Nuuka stamps a month with its last day of data: one that stops on the 22nd is incomplete.
+    assert edited(timestamp="2026-09-22T00:00:00") == []
+    # Nuuka writes the unit of water as M3 and as m3.
+    assert edited(unit="kwh")[0]["kpiValue"]["unitCode"] == "KWH"
     # An answer for another location (a partial match) is never taken for the one asked.
     assert edited(locationName="1716 Töölön virastotalo B") == []
     assert len(edited(value=0)) == 1
