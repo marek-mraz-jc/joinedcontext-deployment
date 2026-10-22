@@ -1232,13 +1232,15 @@ def jc_entity_type(resource):
 
 def _filtered(resource):
     """Whether the address keeps only this dataset's rows: the harvest's `q=isPartOf==...`, OGC API
-    Features' `isPartOf=...` or OData's `$filter=isPartOf eq ...` (T-4289)."""
+    Features' `isPartOf=...`, OData's `$filter=isPartOf eq ...` (T-4289) or SensorThings'
+    `... Thing/properties/isPartOf eq ...` (T-5205)."""
     split = _split(resource)
     if not split:
         return False
     query = parse_qs(split[0].query)
     return ("isPartOf" in query or any("isPartOf==" in q for q in query.get("q", []))
-            or any(f.startswith("isPartOf eq ") for f in query.get("$filter", [])))
+            or any(f.startswith("isPartOf eq ") or " and Thing/properties/isPartOf eq " in f
+                   for f in query.get("$filter", [])))
 
 
 def jc_what(resource):

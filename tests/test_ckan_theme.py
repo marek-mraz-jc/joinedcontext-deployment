@@ -1641,7 +1641,10 @@ def test_the_slovak_page_carries_no_english_description(theme):
     # OGC API Features and OData keep the dataset's rows in their own syntax (T-4289).
     mine = "https%3A%2F%2Fdata.dev.example%2Fdataset%2Fbb"
     for url in (OD + "odata/v4/StatisticalObservation?%24filter=isPartOf%20eq%20%27" + mine + "%27",
-                OD + "ogc/features/collections/StatisticalObservation/items?isPartOf=" + mine):
+                OD + "ogc/features/collections/StatisticalObservation/items?isPartOf=" + mine,
+                # T-5205: SensorThings names it through the Datastream's Thing, after its type.
+                OD + "sta/v1.1/Datastreams?%24filter=Thing%2Fproperties%2Ftype%20eq%20%27StatisticalObservation"
+                   "%27%20and%20Thing%2Fproperties%2FisPartOf%20eq%20%27" + mine + "%27"):
         assert theme.jc_what(dict(_od(theme, "o"), url=url)).endswith(". Iba záznamy tohto datasetu."), url
     page = (THEME / "templates__package__resource_read.html").read_text()
     # The harvest's description reaches the page only for a resource that is not an Endpoint's.
