@@ -19,7 +19,7 @@
 # - [x] Graceful shutdown
 # - [x] Standard labels
 # - [x] ServiceAccount with least privilege where required
-# - [x] Named ports -> 9090 container mapped to 8080 service
+# - [x] Named ports -> 9090 container mapped to 8080 service, metrics alone on 9464 (T-5095)
 # - [ ] Ingress with TLS -> not applicable, broker is cluster-internal only
 
 fullnameOverride: context-broker
@@ -40,6 +40,13 @@ service:
   port: 8080
   targetPort: 9090
   name: http
+
+# /q/metrics on a listener of its own that serves nothing else (ANTARES_METRICS_PORT below,
+# T-5095): Prometheus is admitted to this port alone, never to the API port 9090.
+metrics:
+  enabled: true
+  port: 9464
+  name: metrics
 
 probes:
   readiness:
@@ -73,6 +80,8 @@ env:
   # The Prometheus recorder and /q/metrics with it: Antares constructs neither by default, so
   # without this the ServiceMonitor of components/monitoring scrapes a 404 (OPS-16).
   ANTARES_TELEMETRY: "1"
+  # The API port answers /q/metrics 404 with this set; the metrics port answers nothing else.
+  ANTARES_METRICS_PORT: "9464"
   ANTARES_STORE: "postgres"
   ANTARES_BUS: "local"
   ANTARES_ALLOW_SHARED_LOCAL: "1"
@@ -141,9 +150,8 @@ env:
   ANTARES_POLICY: "joinedcontext"
   ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
-  # A scraper cannot send the admin secret; the metrics carry no tenant data. Prometheus is not
-  # admitted to the broker yet: its namespace is the operator's, and a rule naming it by pod
-  # label alone would let any pod that labels itself reach the API (T-3771).
+  # A scraper cannot send the admin secret; the metrics carry no tenant data. Only the metrics
+  # port is open to Prometheus (networkpolicies.yaml), and that port serves no API path (T-5095).
   ANTARES_ADMIN_METRICS: "open"
   # Broker-initiated HTTP and MQTT reach no private address but the peers named here (T-3909,
   # Antares T-3908): the broker's own Service, which every federation registration the
@@ -180,8 +188,7 @@ serviceMesh:
 # The broker port answers the gateway and the Portal alone (T-4875). The NetworkPolicy opens the
 # proxy port (4143) to them, but with the mesh on any meshed pod's connection lands on that proxy;
 # this Server makes the proxy refuse every other identity. Probes stay authorized (no HTTPRoute).
-# A Prometheus scrape of /q/metrics is refused with it until the metrics move to their own port;
-# no environment runs a Prometheus and the mesh together today.
+# The Server covers 9090 alone: a Prometheus scrape reaches /q/metrics on 9464 (T-5095).
 # The broker's own identity is admitted too: a federation registration the reconciler writes names
 # the broker's own Service, and a forward carries no subject header (Antares federation::forward).
 meshAuthorization:

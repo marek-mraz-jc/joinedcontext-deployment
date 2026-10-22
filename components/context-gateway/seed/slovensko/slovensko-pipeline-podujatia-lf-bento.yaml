@@ -54,18 +54,20 @@ pipeline:
         root = if this == null { null } else if this.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.ts_parse("2006-01-02").ts_unix() - 3600 } else { this.ts_unix().catch(null) }
       }
       let now = timestamp_unix()
-      let records = this.map_each(r -> r.merge({
+      # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
+      # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
           r.end.apply("unix") + if r.end.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { 86400 } else { 0 }
         } else { r.start.apply("unix").(s -> if s != null { s + 86400 } else { null }) }
       }))
       # Only upcoming events (owner 2026-10-20): one whose end (plus the store's grace, a day in the national
-      # store) is past is never loaded. A record with no readable start stays, so the model check refuses it
-      # where the run report shows it.
-      let upcoming = $records.filter(r -> r._end == null || r._end + 86400 >= $now)
-      let dated = $upcoming.filter(r -> r._start != null).sort_by(r -> r._start)
-      root = $dated.slice(0, [$dated.length(), 100].min()).concat($upcoming.filter(r -> r._start == null))
+      # store) is past is never loaded. A record with no readable start is refused, never stored without a date
+      # (owner 2026-10-22, T-5215).
+      let dated = $records.filter(r -> r._start != null && r._end + 86400 >= $now).sort_by(r -> r._start)
+      root = $dated.slice(0, [$dated.length(), 100].min())
   - unarchive:
       format: json_array
   - mapping: |
@@ -78,7 +80,7 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"match":"sng zvolen","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zvolenský zámok","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"tuzvo","town":"zvolen","venue":"TUZVO","streetAddress":"Študentská 2117/27","addressLocality":"Zvolen","lat":48.5725862,"lon":19.1147562},{"match":"arborétum borová hora","town":"zvolen","venue":"Arborétum Borová hora","streetAddress":null,"addressLocality":"Zvolen","lat":48.5947396,"lon":19.1351858},{"match":"fee","town":"zvolen","venue":"FEE","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fee e214","town":"zvolen","venue":"FEE E214","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fakulta techniky","town":"zvolen","venue":"Fakulta techniky","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5737029,"lon":19.1160245},{"match":"šd ľ. štúra študentská 17 zvolen","town":"zvolen","venue":"ŠD Ľ. Štúra, Študentská 17, Zvolen","streetAddress":"Študentská 1734/17","addressLocality":"Zvolen","lat":48.5738159,"lon":19.120556},{"match":"stará radnica nám. snp 21/31 zvolen - prízemie","town":"zvolen","venue":"Stará radnica, Nám. SNP 21/31, Zvolen - prízemie","streetAddress":"Námestie SNP 21/31","addressLocality":"Zvolen","lat":48.5768616,"lon":19.1251732},{"match":"technická univerzita vo zvolene","town":"zvolen","venue":"Technická univerzita vo Zvolene","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"technická univerzita vo zvolene - vestibul","town":"zvolen","venue":"Technická univerzita vo Zvolene - vestibul","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sldk informačno-vedecké centrum","town":"zvolen","venue":"SLDK, Informačno-vedecké centrum","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sng zvolenský zámok","town":"zvolen","venue":"SNG Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zimný štadión vo zvolen","town":"zvolen","venue":"Zimný štadión Zvolen","streetAddress":"Pod Dráhami 2292/21","addressLocality":"Zvolen","lat":48.5662224,"lon":19.1209496},{"match":"divadlo jozefa gregora tajovského","town":"zvolen","venue":"Divadlo Jozefa Gregora Tajovského","streetAddress":null,"addressLocality":"Zvolen","lat":48.5786614,"lon":19.1270324}]
+      let venues = [{"match":"sng zvolen","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zvolenský zámok","town":"zvolen","venue":"SNG – Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"tuzvo","town":"zvolen","venue":"TUZVO","streetAddress":"Študentská 2117/27","addressLocality":"Zvolen","lat":48.5725862,"lon":19.1147562},{"match":"arborétum borová hora","town":"zvolen","venue":"Arborétum Borová hora","streetAddress":null,"addressLocality":"Zvolen","lat":48.5947396,"lon":19.1351858},{"match":"fee","town":"zvolen","venue":"FEE","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fee e214","town":"zvolen","venue":"FEE E214","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5729663,"lon":19.1165987},{"match":"fakulta techniky","town":"zvolen","venue":"Fakulta techniky","streetAddress":"Študentská","addressLocality":"Zvolen","lat":48.5737029,"lon":19.1160245},{"match":"šd ľ. štúra študentská 17 zvolen","town":"zvolen","venue":"ŠD Ľ. Štúra, Študentská 17, Zvolen","streetAddress":"Študentská 1734/17","addressLocality":"Zvolen","lat":48.5738159,"lon":19.120556},{"match":"stará radnica nám. snp 21/31 zvolen - prízemie","town":"zvolen","venue":"Stará radnica, Nám. SNP 21/31, Zvolen - prízemie","streetAddress":"Námestie SNP 21/31","addressLocality":"Zvolen","lat":48.5768616,"lon":19.1251732},{"match":"technická univerzita vo zvolene","town":"zvolen","venue":"Technická univerzita vo Zvolene","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"technická univerzita vo zvolene - vestibul","town":"zvolen","venue":"Technická univerzita vo Zvolene - vestibul","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sldk informačno-vedecké centrum","town":"zvolen","venue":"SLDK, Informačno-vedecké centrum","streetAddress":"T. G. Masaryka 8026/24","addressLocality":"Zvolen","lat":48.5721115,"lon":19.1179432},{"match":"sng zvolenský zámok","town":"zvolen","venue":"SNG Zvolenský zámok","streetAddress":"Námestie SNP 594/1","addressLocality":"Zvolen","lat":48.5729001,"lon":19.1276837},{"match":"zimný štadión vo zvolen","town":"zvolen","venue":"Zimný štadión Zvolen","streetAddress":"Pod Dráhami 2292/21","addressLocality":"Zvolen","lat":48.5662224,"lon":19.1209496},{"match":"divadlo jozefa gregora tajovského","town":"zvolen","venue":"Divadlo Jozefa Gregora Tajovského","streetAddress":null,"addressLocality":"Zvolen","lat":48.5786614,"lon":19.1270324},{"match":"mestský úrad zvolen","town":"zvolen","venue":"Mestský úrad","streetAddress":null,"addressLocality":"Zvolen","lat":48.5782821,"lon":19.1235398}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
@@ -94,10 +96,11 @@ pipeline:
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
       let locality = this.locality.apply("text").or($known.addressLocality.or("Zvolen"))
       let town = $known.town.or("zvolen")
-      # One event announced by two sources is one entity: the id hashes the name, the start (to the
-      # minute in UTC, or the day) and the town, the dedup key of the Event model (T-4895).
-      let start_key = if this._start == null { null } else if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15:04Z", "UTC") }
-      let key = if $name != null && $start_key != null { "%s|%s|%s".format($name.lowercase(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+      # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
+      # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
+      # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
+      let start_key = if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15Z", "UTC") }
+      let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
       let address = {
         "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
         "postalCode": this.postalCode.apply("text"),

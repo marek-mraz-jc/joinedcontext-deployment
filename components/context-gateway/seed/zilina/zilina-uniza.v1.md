@@ -25,7 +25,8 @@ Specialises `Entity`.
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The work's title, per language, as the repository records it. |
 | `workType` | Property | `string` |  |  | `jc:workType` | What the work is, in the repository's words (Article, Conference paper, Thesis, …). |
 | `yearPublished` | Property | `integer` |  |  | `jc:yearPublished` | The year the work was issued. |
-| `isPartOf` | Property | `string` |  |  | `schema:isPartOf` | The repository collection the work was deposited in, as DREPO names it: a journal issue, a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`). |
+| `isPartOf` | Property | `uri` |  |  | `schema:isPartOf` | The address of the repository collection the work was deposited in (`https://dspace.uniza.sk/handle/hdluniza/556`). |
+| `collectionName` | Property | `string` |  |  | `jc:collectionName` | The repository collection the work was deposited in, as DREPO names it: a journal issue, a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`). |
 | `publisher` | Property | `string` |  |  | `schema:publisher` | Who issued the work, as the repository records it. |
 | `license` | Property | `uri` | yes |  | `schema:license` | The licence the work itself carries (`dc.rights.uri`); only open licences reach the space. |
 | `url` | Property | `uri` |  |  | `schema:url` | The work's persistent handle in the repository. |

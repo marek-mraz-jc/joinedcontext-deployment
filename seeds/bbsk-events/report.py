@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -81,6 +82,11 @@ def summarise(events: list[dict], known: dict[tuple[float, float], str]) -> dict
     return {"sources": per, "total": total, "gps": gps, "share": gps / total if total else 0.0, "unplaced": unplaced}
 
 
+def next_links(headers: list[str]) -> list[str]:
+    """The `rel="next"` targets of Link headers; a target holds commas of its own (attrs=a,b), so no split on them."""
+    return [m.group(1) for h in headers for m in re.finditer(r'<([^>]*)>\s*;\s*rel="next"', h)]
+
+
 def fetch(base: str) -> list[dict]:
     """Every Event of the store, paged by the API's cursor."""
     url = base.rstrip("/") + "/entities?" + urllib.parse.urlencode(
@@ -97,7 +103,7 @@ def fetch(base: str) -> list[dict]:
         if len(body) > MAX_BYTES:
             raise ValueError(f"answer over {MAX_BYTES} bytes")
         out += json.loads(body)
-        nxt = [part.split(">")[0].lstrip(" <") for part in ",".join(link).split(",") if 'rel="next"' in part]
+        nxt = next_links(link)
         if not nxt:
             return out
         url = urllib.parse.urljoin(url, nxt[0])

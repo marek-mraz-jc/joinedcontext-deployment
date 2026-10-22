@@ -92,8 +92,9 @@ broker-{{ $b.name }}:
               app.kubernetes.io/name: prometheus
           namespaceFrom: monitoring.monitoring.prometheusNamespace
       ports:
+        # The metrics port alone: 9090 is the API (T-5095).
         - protocol: TCP
-          port: 9090
+          port: 9464
         {{- if $mesh }}
         - protocol: TCP
           port: 4143

@@ -61,7 +61,8 @@ context-broker:
         - protocol: TCP
           port: 9090
     # The Prometheus that scrapes /q/metrics (components/monitoring), from its own namespace
-    # only (T-3771); no peer is rendered while monitoring.prometheusNamespace is empty.
+    # only (T-3771); no peer is rendered while monitoring.prometheusNamespace is empty. The
+    # metrics port alone: 9090 is the API (T-5095).
     - from:
         - podSelector:
             matchLabels:
@@ -69,7 +70,7 @@ context-broker:
           namespaceFrom: monitoring.monitoring.prometheusNamespace
       ports:
         - protocol: TCP
-          port: 9090
+          port: 9464
 
 postgres-from-context-broker:
   componentNamespace: postgres

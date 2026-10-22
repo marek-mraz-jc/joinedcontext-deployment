@@ -143,5 +143,10 @@ context-broker:
     # Antares dev 27d8e07 (dev-35, trains 0552, 0552-2 and 0730 over 5dea7dd: T-5100 OGC history collections, T-4921
     # WebSocket hub fan-out and notification throttle, T-4920 T-5092 T-5190 tests/docs/CI). No migration, no new
     # runtime key. Rollback: dev-32. Signed by ship.yml on dev at 27d8e07.
-    tag: 'dev-35'
-    digest: 'sha256:0d8d27d9f8303ecd9ba188308f92f54482aa07179e0be626067a6e6f9d0dddd5'
+    # Antares dev 4e68f99 (dev-36, train 0709 over 27d8e07: T-5157 a retention step that fails rests and halves its
+    # batch, slow steps are logged). No migration, no new runtime key. Rollback: dev-35. Signed by ship.yml on dev at 4e68f99.
+    # Antares dev 2acd15b (dev-37, over 4e68f99: T-5136 typed location paths under RLS). Migration 0018 adds two
+    # btree indexes on entities without CONCURRENTLY (591 074 rows, 1.7 GB on dev: seconds of write lock); pooled sessions
+    # set max_parallel_workers_per_gather=0. Rollback: dev-36 (0018 rollback compatible). Signed by ship.yml on dev at 2acd15b.
+    tag: 'dev-37'
+    digest: 'sha256:6783d98c5a5faebc4214176e620cc494183fac5128b8863c3401f8d833c714a8'
