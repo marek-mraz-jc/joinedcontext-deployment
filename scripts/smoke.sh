@@ -397,9 +397,20 @@ if has_route portal-api; then
 		# the capture URL missing from the Portal, or a NetworkPolicy between the two. The viewer
 		# may not test a pipeline (403 is the role, not the wiring), so this runs as the steward.
 		steward_password="${JC_SMOKE_STEWARD_PASSWORD:-$(kubectl get secret keycloak-user-demo-steward -n "$slug" -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null || true)}"
+		# demo.steward holds mfa-required (T-5120): the password grant wants a TOTP code of the
+		# seed beside the password, RFC 6238 HmacSHA256/30 s/6 digits as the realm's OTP policy.
+		steward_totp=""
+		steward_seed="${JC_SMOKE_STEWARD_TOTP:-$(kubectl get secret keycloak-user-demo-steward -n "$slug" -o jsonpath='{.data.totp}' 2>/dev/null | base64 -d 2>/dev/null || true)}"
+		if [ -n "$steward_seed" ]; then
+			steward_totp=$(printf '%s' "$steward_seed" | python3 -c 'import hashlib,hmac,struct,sys,time
+m=hmac.new(sys.stdin.read().encode(),struct.pack(">Q",int(time.time())//30),hashlib.sha256).digest()
+o=m[-1]&15
+print(str((struct.unpack(">I",m[o:o+4])[0]&0x7FFFFFFF)%10**6).zfill(6),end="")')
+		fi
 		steward_token=$(curl -sS --max-time 20 -d grant_type=password \
 			-d "client_id=$client_id" --data-urlencode "client_secret=$client_secret" \
 			-d "username=demo.steward@${org}" --data-urlencode "password=$steward_password" \
+			${steward_totp:+-d "totp=$steward_totp"} \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 		# Organization → People lists the demo people (T-2688, DEMO.md): read on Person is the
