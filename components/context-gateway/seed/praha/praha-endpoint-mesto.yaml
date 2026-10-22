@@ -137,3 +137,8 @@ spec:
         description:
           cs: Stanoviště tříděného odpadu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Sorted-waste collection points from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://api.golemio.cz/v2/vehiclepositions?limit=10000
+        title: { cs: Polohy vozidel PID – API (Golemio), en: PID vehicle positions API (Golemio) }
+        description:
+          cs: Aktuální polohy a zpoždění vozidel PID, Operátor ICT, podle podmínek užití Golemio.
+          en: Current positions and delays of the PID vehicles, Operátor ICT, under Golemio's terms of use.

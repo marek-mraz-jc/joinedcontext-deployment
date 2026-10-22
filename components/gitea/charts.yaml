@@ -36,3 +36,7 @@ gitea:
     chart: charts/sample-apps
   seed-8:
     chart: charts/sample-apps
+  seed-9:
+    chart: charts/sample-apps
+  seed-10:
+    chart: charts/sample-apps
