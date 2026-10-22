@@ -155,5 +155,7 @@ context-broker:
     # HEAD Content-Length, T-5205 STA Thing/properties/type filter, T-5206; same FEATURES ...,ical,feed). Migration 0019
     # drops the unused GIN i_entities_jsonb (no data). No new runtime key. Rollback: dev-39 (0019 rollback compatible).
     # Signed by ship.yml on dev at 5ed44bf (dispatched run 39834395804; the train push started no run).
-    tag: 'dev-42'
-    digest: 'sha256:6c1f9c783e201d1762f430843f73660b9fafaf3f6d4a9e352700b4352e4647b6'
+    # Antares dev f945ccb (dev-43, over 5ed44bf: T-5169 OGC id filters lowered to the id list, T-5333 OData Untyped
+    # Property filterable; same FEATURES). No migration, no new runtime key. Rollback: dev-42. Signed by ship.yml on dev at f945ccb.
+    tag: 'dev-43'
+    digest: 'sha256:8200cbdcf75bfb291f45ef20d00d241a03953db97a8cc3cc28fea20a8f875fcf'
