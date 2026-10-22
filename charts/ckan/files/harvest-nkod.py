@@ -288,6 +288,7 @@ def package(ds, name, licence_id, distributions, tables):
     tags = [{"name": t[:100]} for t in sorted(ds["keywords"]) if re.fullmatch(r"[\w .-]{2,100}", t)]
     extras = {"harvest_source": CONFIG["source"], "source_uri": ds["iri"],
               "publisher_name": CONFIG["publisherName"], "publisher_uri": CONFIG["publisher"],
+              "spatial_uri": CONFIG.get("spatialUri"),
               "issued": ds["issued"], "modified": ds["modified"]}
     return {"name": name, "title": ds["title"], "notes": "\n\n".join(notes),
             "owner_org": CONFIG["organization"], "license_id": licence_id, "tags": tags,

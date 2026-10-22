@@ -163,6 +163,9 @@ def dataset(item, title, source, name=None):
         "modified": iso(item.get("modified")),
         "publisher_name": source["publisherName"],
         "publisher_uri": source["publisherUri"],
+        # The region the publisher serves, as an EU NUTS IRI (T-5123): DCAT's dct:spatial and the
+        # page's schema.org spatialCoverage.
+        "spatial_uri": source.get("spatialUri"),
         "license_url": licence_url,
     }
     name = name or f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}"

@@ -147,10 +147,10 @@ apiToken:
 # Catalogue harvests (T-4151): a CronJob per source that copies one publisher's datasets from
 # the national catalogue (NKOD) into a CKAN organization, corrected, with the API token above.
 # Each source is the configuration `files/harvest-nkod.py` reads; a deployment that lists none
-# renders nothing. A source: `{name, sparql, publisher, publisherName, organization, namePrefix,
+# renders nothing. A source: `{name, sparql, publisher, publisherName, spatialUri, organization, namePrefix,
 # allowedHosts: [], rewriteHosts: {}, skip: {<title>: {state, reason}}, requireColumn: {<title>: <column>}}`.
 # `kind: hub` (T-4152, `files/harvest-hub.py`) reads an ArcGIS Hub instead: `{name, kind, hub,
-# allowedHosts, organization, publisherName, publisherUri, publisherDescription,
+# allowedHosts, organization, publisherName, publisherUri, spatialUri, publisherDescription,
 # skip: {<item id>: <reason>}, titles: {<item id>: <title>}, spelling: {<wrong>: <right>}}`.
 harvest:
   schedule: '23 3 * * *'

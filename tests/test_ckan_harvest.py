@@ -28,6 +28,7 @@ CONFIG = {
     "sparql": "https://data.slovensko.sk/api/sparql",
     "publisher": "https://data.gov.sk/id/legal-subject/00313271",
     "publisherName": "Mesto Banská Bystrica",
+    "spatialUri": "http://data.europa.eu/nuts/code/SK032",
     "organization": "banskabystrica",
     "namePrefix": "bb-",
     "allowedHosts": ["egov.banskabystrica.sk", "dtm-banskabystrica.tmapserver.sk", "www.banskabystrica.sk"],
@@ -286,6 +287,8 @@ def test_a_run_ingests_what_the_files_hold_and_lists_every_skip_with_its_reason(
     assert extras["modified"] == "2023-11-30T08:26:58Z"
     assert extras["publisher_name"] == "Mesto Banská Bystrica"
     assert extras["source_uri"] == "https://data.gov.sk/set/veku"
+    # T-5123: the region, for DCAT's dct:spatial and the page's schema.org spatialCoverage.
+    assert extras["spatial_uri"] == "http://data.europa.eu/nuts/code/SK032"
     # T-4765: the Endpoint under the key jcctl's publisher writes, its trailing slash included.
     assert extras["endpoint"] == "https://api.dev.joinedcontext.com/api/endpoint/ep/"
     # EP-118: the platform's distributions and data model, the DataStore table last; no source link.

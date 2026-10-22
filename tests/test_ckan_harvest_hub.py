@@ -224,6 +224,7 @@ def test_a_dataset_carries_licence_publisher_and_none_of_the_hubs_links(converte
     extras = {e["key"]: e["value"] for e in package["extras"]}
     assert extras["publisher_name"] == "Banskobystrický samosprávny kraj"
     assert extras["publisher_uri"].endswith("/37828100")
+    assert extras["spatial_uri"] == "http://data.europa.eu/nuts/code/SK032"
     assert extras["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
     assert extras["source_id"] == CULTURE and extras["modified"].endswith("Z")
     # EP-118: no Hub CSV, GeoJSON, Esri REST or Shapefile link, only the platform's (T-4324).
