@@ -348,6 +348,7 @@ v1/Secret local/keycloak-user-demo-steward
 v1/Secret local/keycloak-user-demo-viewer
 v1/Secret local/keycloak-user-demo-zilina
 v1/Secret local/portal-cookie-key
+v1/Secret local/postgres-backup-artifact-store
 v1/Service local/apisix-gateway
 v1/Service local/artifact-store
 v1/Service local/cnpg-webhook-service

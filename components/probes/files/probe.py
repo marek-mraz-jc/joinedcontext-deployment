@@ -23,6 +23,12 @@ Once an hour it also reads, from the same outside view, when each host's TLS cer
 registered domain expire (the domain from RDAP, its server from IANA's bootstrap list), for the
 expiry alerts of T-5104.
 
+Every five minutes it also reads, from inside, how old this cluster's newest Postgres backup and
+restore drill are (T-5289), when PROBE_BACKUPS names the cluster: the CNPG Cluster's
+lastSuccessfulBackup, the local dump CronJob's last success, and the drill's result ConfigMap. That
+is the one call with a token: the pod's ServiceAccount, sent only to the in-cluster API server and
+allowed `get` on those three objects and nothing else.
+
     GET /metrics       Prometheus text (jc_probe_*)
     GET /results.json  the newest result per target, Endpoint and surface (T-5102, T-5067)
     GET /healthz       200 while every target finished a round in the last three minutes
@@ -57,6 +63,10 @@ TYPE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,99}$")
 BUCKETS = (0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 EXPIRY_SECONDS = 3600
 RDAP_BOOTSTRAP = "https://data.iana.org/rdap/dns.json"
+BACKUP_SECONDS = 300
+KUBE_API = "https://kubernetes.default.svc"
+KUBE_SA = "/var/run/secrets/kubernetes.io/serviceaccount"
+DRILL_RESULTS = {"passed", "failed", "skipped", "no-backup"}
 # The surface paths of jc-dcat's Representation::Served (platform crates/jc-dcat/src/lib.rs).
 SURFACES = {
     "ngsi-ld/v1/": "ngsi-ld",
@@ -326,6 +336,59 @@ def domain_not_after(domain, get=fetch):
     return None
 
 
+def kube_get(path):
+    """One GET of the in-cluster API server with the pod's own token; the parsed JSON or None."""
+    try:
+        with open(f"{KUBE_SA}/token", encoding="ascii") as f:
+            token = f.read().strip()
+        context = ssl.create_default_context(cafile=f"{KUBE_SA}/ca.crt")
+        request = urllib.request.Request(  # noqa: S310 (a fixed in-cluster https URL)
+            KUBE_API + path, headers={"Authorization": f"Bearer {token}", "Accept": "application/json"})
+        with urllib.request.urlopen(request, timeout=TIMEOUT, context=context) as answer:  # noqa: S310
+            return json.loads(answer.read(BODY_CAP))
+    except (OSError, ValueError):
+        return None
+
+
+def _when(value):
+    """An RFC 3339 instant from the API as a timestamp; None for anything else."""
+    try:
+        return datetime.fromisoformat(str(value)).timestamp() if value else None
+    except ValueError:
+        return None
+
+
+def load_backups(text):
+    """PROBE_BACKUPS: {namespace, cluster, localBackup} or empty for a cluster without Postgres."""
+    if not text:
+        return None
+    cfg = json.loads(text)
+    for key in ("namespace", "cluster"):
+        if not isinstance(cfg.get(key), str) or not NAME.match(cfg[key]):
+            raise ValueError(f"PROBE_BACKUPS {key} must match {NAME.pattern}")
+    return {"namespace": cfg["namespace"], "cluster": cfg["cluster"], "localBackup": cfg.get("localBackup") is True}
+
+
+def backup_state(cfg, get=kube_get):
+    """The newest backup and drill of the cluster, read from the API: {backupAt, drillAt, drillResult}.
+
+    The newest backup is the later of CNPG's last successful base backup and the local dump's last
+    successful run; a value the API does not give stays None, so the page shows it as unknown."""
+    ns, name = cfg["namespace"], cfg["cluster"]
+    cluster = get(f"/apis/postgresql.cnpg.io/v1/namespaces/{ns}/clusters/{name}") or {}
+    found = [_when((cluster.get("status") or {}).get("lastSuccessfulBackup"))]
+    if cfg["localBackup"]:
+        cron = get(f"/apis/batch/v1/namespaces/{ns}/cronjobs/{name}-local-backup") or {}
+        found.append(_when((cron.get("status") or {}).get("lastSuccessfulTime")))
+    drill = (get(f"/api/v1/namespaces/{ns}/configmaps/{name}-dr-drill") or {}).get("data") or {}
+    result = drill.get("result")
+    return {
+        "backupAt": max((t for t in found if t is not None), default=None),
+        "drillAt": _when(drill.get("at")),
+        "drillResult": result if result in DRILL_RESULTS else None,
+    }
+
+
 def load_targets(text):
     """PROBE_TARGETS, validated: a bad entry stops the pod at start instead of probing elsewhere."""
     targets = json.loads(text)
@@ -409,7 +472,7 @@ def plan(budget, kinds, cursors, holders):
 
 class Prober:
     def __init__(self, targets, budget, discovery_seconds, clock=time.time, sleep=time.sleep, get=fetch, ws=websocket,
-                 tls=tls_not_after, domain=domain_not_after):
+                 tls=tls_not_after, domain=domain_not_after, backups=None, kube=kube_get):
         self.targets, self.budget, self.discovery_seconds = targets, budget, discovery_seconds
         self.clock, self.sleep, self.get, self.ws, self.tls, self.domain = clock, sleep, get, ws, tls, domain
         self.lock = threading.Lock()
@@ -421,6 +484,8 @@ class Prober:
         self.listed_at = {}
         self.cursors = {t["name"]: {} for t in targets}
         self.started = clock()
+        self.backups_cfg, self.kube = backups, kube
+        self.backups = None  # backup_state() of this cluster, once read
 
     def record(self, target, endpoint, surface, reason, seconds):
         with self.lock:
@@ -525,6 +590,16 @@ class Prober:
                 print(json.dumps({"target": target["name"], "error": type(err).__name__}), file=sys.stderr, flush=True)
                 self.sleep(10)
 
+    def watch_backups(self):
+        while True:
+            try:
+                state = backup_state(self.backups_cfg, self.kube)
+                with self.lock:
+                    self.backups = state
+            except Exception as err:  # noqa: BLE001 (one bad answer must not stop the probe)
+                print(json.dumps({"backups": "error", "error": type(err).__name__}), file=sys.stderr, flush=True)
+            self.sleep(BACKUP_SECONDS)
+
     def metrics(self):
         def esc(value):
             return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
@@ -534,6 +609,7 @@ class Prober:
             rounds = dict(self.rounds)
             counts = {k: {**v, "buckets": list(v["buckets"])} for k, v in sorted(self.counts.items())}
             expiry = sorted(self.expiry.items())
+            backups = dict(self.backups or {})
         out = [
             "# HELP jc_probe_up 1 when the newest probe of the surface held, 0 when it did not.",
             "# TYPE jc_probe_up gauge",
@@ -574,6 +650,16 @@ class Prober:
         out += ["# HELP jc_probe_domain_expiry_timestamp_seconds When the domain's registration expires (RDAP).",
                 "# TYPE jc_probe_domain_expiry_timestamp_seconds gauge"]
         out += [f'jc_probe_domain_expiry_timestamp_seconds{{domain="{esc(n)}"}} {int(v)}' for (k, n), v in expiry if k == "domain"]
+        if backups.get("backupAt") is not None:
+            out += ["# HELP jc_probe_backup_timestamp_seconds When this cluster's newest Postgres backup finished.",
+                    "# TYPE jc_probe_backup_timestamp_seconds gauge", f"jc_probe_backup_timestamp_seconds {int(backups['backupAt'])}"]
+        if backups.get("drillAt") is not None:
+            out += ["# HELP jc_probe_restore_drill_timestamp_seconds When the newest restore drill finished.",
+                    "# TYPE jc_probe_restore_drill_timestamp_seconds gauge",
+                    f"jc_probe_restore_drill_timestamp_seconds {int(backups['drillAt'])}",
+                    "# HELP jc_probe_restore_drill_passed 1 when the newest restore drill passed.",
+                    "# TYPE jc_probe_restore_drill_passed gauge",
+                    f"jc_probe_restore_drill_passed {1 if backups.get('drillResult') == 'passed' else 0}"]
         return "\n".join(out) + "\n"
 
     def snapshot(self):
@@ -582,6 +668,10 @@ class Prober:
                 {"target": t, "endpoint": e or None, "surface": s, **r}
                 for (t, e, s), r in sorted(self.results.items())
             ]
+
+    def backup_snapshot(self):
+        with self.lock:
+            return None if self.backups is None else dict(self.backups)
 
     def healthy(self):
         with self.lock:
@@ -594,7 +684,8 @@ def serve(prober, port):
             if self.path == "/metrics":
                 body, kind, status = prober.metrics().encode(), "text/plain; version=0.0.4", 200
             elif self.path == "/results.json":
-                body, kind, status = json.dumps({"results": prober.snapshot()}).encode(), "application/json", 200
+                doc = {"results": prober.snapshot(), "backups": prober.backup_snapshot()}
+                body, kind, status = json.dumps(doc).encode(), "application/json", 200
             elif self.path == "/healthz":
                 ok = prober.healthy()
                 body, kind, status = (b"ok" if ok else b"a target missed its round"), "text/plain", 200 if ok else 503
@@ -617,9 +708,12 @@ def main():
     # Under the edge's 300 requests a minute per address with room for the other suites.
     if not 12 <= budget <= 200:
         raise ValueError("PROBE_BUDGET must be 12..200 requests a minute per target")
-    prober = Prober(load_targets(os.environ["PROBE_TARGETS"]), budget, int(os.environ.get("PROBE_DISCOVERY_SECONDS", "900")))
+    prober = Prober(load_targets(os.environ["PROBE_TARGETS"]), budget, int(os.environ.get("PROBE_DISCOVERY_SECONDS", "900")),
+                    backups=load_backups(os.environ.get("PROBE_BACKUPS", "")))
     for target in prober.targets:
         threading.Thread(target=prober.run, args=(target,), daemon=True).start()
+    if prober.backups_cfg:
+        threading.Thread(target=prober.watch_backups, daemon=True).start()
     serve(prober, int(os.environ.get("PROBE_PORT", "9100")))
 
 

@@ -148,8 +148,9 @@ def test_only_the_gateway_the_portal_and_the_bootstrap_reach_the_store(local):
     names = set()
     for peer in allowed:
         labels = peer["podSelector"]["matchLabels"]
-        names.add(labels.get("app.kubernetes.io/name") or labels["app.kubernetes.io/component"])
-    assert names == {"context-gateway-gateway", "portal-portal", "bucket"}
+        names.add(labels.get("app.kubernetes.io/name") or labels.get("app.kubernetes.io/component") or labels["cnpg.io/cluster"])
+    # T-5289: the Postgres instances and the restore drill's copy, for the backup bucket alone.
+    assert names == {"context-gateway-gateway", "portal-portal", "bucket", "postgres-cluster", "postgres-cluster-drill"}
     assert [p["port"] for p in store["spec"]["ingress"][0]["ports"]] == [9000]
     # The store calls nothing but DNS.
     assert all("kube-dns" in str(rule) for rule in store["spec"]["egress"])

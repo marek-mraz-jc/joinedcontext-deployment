@@ -1,13 +1,15 @@
 ---
 {{- $probe := .Values.probes.probe -}}
 {{- $global := .Values.global }}
+{{- $pg := and (has "postgres" .Values.components) .Values.postgres }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`
 # - [x] Health probes -> /healthz (every target finished a round in the last three minutes)
 # - [x] Graceful shutdown
 # - [x] Standard labels
 # - [x] Named ports -> metrics
-# - [x] No token, no Secret: every probe is anonymous (T-5103)
+# - [x] No Secret, and every probe of a public surface is anonymous (T-5103); the pod's token goes
+#       to the API server alone, for `get` on three named Postgres objects (T-5289)
 # - [ ] Ingress with TLS -> not applicable, nothing outside the cluster calls it
 
 fullnameOverride: probe
@@ -36,6 +38,39 @@ env:
   PROBE_PORT: "9100"
   PYTHONDONTWRITEBYTECODE: "1"
   PYTHONUNBUFFERED: "1"
+  {{- if $pg }}
+  PROBE_BACKUPS: {{ dict "namespace" $pg.cluster.namespace "cluster" $pg.cluster.name "localBackup" ($pg.databases.localBackup.enabled | default false) | toJson | quote }}
+  {{- end }}
+
+{{- if $pg }}
+# The newest backup and restore drill of this cluster's Postgres, for the status page (T-5289):
+# `get` on the Cluster, the local dump's CronJob and the drill's result ConfigMap, by name, in the
+# database's namespace. Nothing to list, watch or change.
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+rbac:
+  namespace: {{ $pg.cluster.namespace | quote }}
+  rules:
+    - apiGroups: ["postgresql.cnpg.io"]
+      resources: ["clusters"]
+      resourceNames: [{{ $pg.cluster.name | quote }}]
+      verbs: ["get"]
+    - apiGroups: ["batch"]
+      resources: ["cronjobs"]
+      resourceNames: [{{ printf "%s-local-backup" $pg.cluster.name | quote }}]
+      verbs: ["get"]
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      resourceNames: [{{ printf "%s-dr-drill" $pg.cluster.name | quote }}]
+      verbs: ["get"]
+
+podAnnotations:
+  security.joinedcontext.com/api-access-reason: >-
+    Reads the age of this cluster's newest Postgres backup and restore drill for the status page
+    (T-5289): get on the Cluster, the local-backup CronJob and the dr-drill ConfigMap, by name.
+{{- end }}
 
 configMap:
   enabled: true
