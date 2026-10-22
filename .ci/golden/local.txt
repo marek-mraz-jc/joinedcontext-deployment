@@ -250,12 +250,13 @@ v1/ConfigMap local/gitea-sample-apps-transit-reach
 v1/ConfigMap local/gitea-seed-s1-banskabystrica
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--3
-v1/ConfigMap local/gitea-seed-s1-slovensko--20
+v1/ConfigMap local/gitea-seed-s1-slovensko--19
 v1/ConfigMap local/gitea-seed-s1-slovensko--22
 v1/ConfigMap local/gitea-seed-s10-sharing-other
 v1/ConfigMap local/gitea-seed-s10-slovensko
 v1/ConfigMap local/gitea-seed-s10-slovensko--2
-v1/ConfigMap local/gitea-seed-s10-slovensko--21
+v1/ConfigMap local/gitea-seed-s10-slovensko--20
+v1/ConfigMap local/gitea-seed-s10-slovensko--25
 v1/ConfigMap local/gitea-seed-s10-slovensko--3
 v1/ConfigMap local/gitea-seed-s2-bbsk
 v1/ConfigMap local/gitea-seed-s2-bbsk--2
@@ -277,8 +278,7 @@ v1/ConfigMap local/gitea-seed-s5-slovensko--17
 v1/ConfigMap local/gitea-seed-s5-zilina
 v1/ConfigMap local/gitea-seed-s6-helsinki
 v1/ConfigMap local/gitea-seed-s6-slovensko--18
-v1/ConfigMap local/gitea-seed-s6-slovensko--19
-v1/ConfigMap local/gitea-seed-s6-slovensko--25
+v1/ConfigMap local/gitea-seed-s6-slovensko--21
 v1/ConfigMap local/gitea-seed-s7-helsinki-mobility
 v1/ConfigMap local/gitea-seed-s7-slovensko--4
 v1/ConfigMap local/gitea-seed-s7-slovensko--5
