@@ -242,6 +242,8 @@ env:
   JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
   # The operator's bounds on an Organization's limits (PF-97), from the same ConfigMap.
   JC_PORTAL_ORGANIZATION_BOUNDS_FILE: /etc/jc/branding/organization-bounds.yaml
+  # The price table of Administration → Costs (T-5126), from the same ConfigMap.
+  JC_PORTAL_COST_PRICES_FILE: /etc/jc/branding/cost-prices.yaml
   # The validation checks' last results, one digest per check, which
   # scripts/publish-health.py writes into the ConfigMap jc-validation-results (OPS-53).
   JC_HEALTH_DIR: /etc/jc/health
@@ -526,6 +528,8 @@ configMap:
     # bound changed in the values restarts the Portal through the same checksum.
     organization-bounds.yaml: |
 {{ dig "organizationBounds" dict $thisPortal | toYaml | indent 6 }}
+    cost-prices.yaml: |
+{{ dig "costPrices" dict $thisPortal | toYaml | indent 6 }}
 {{- if and ($branding.logoSvg | default "") ($branding.logo | default "") }}
     {{ $branding.logo }}: |
 {{ $branding.logoSvg | indent 6 }}
