@@ -24,6 +24,7 @@ helsinki-endpoint-all.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki
 helsinki-endpoint-news.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-news.yaml
 helsinki-endpoint-weather.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-weather.yaml
 helsinki-endpoint-alerts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-alerts.yaml
+helsinki-endpoint-feedback.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-feedback.yaml
 helsinki-policy-public-events.yaml: projects/helsinki/spaces/helsinki/policies/public-events.yaml
 helsinki-policy-public-bikes.yaml: projects/helsinki/spaces/helsinki/policies/public-bikes.yaml
 helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-steward.yaml
@@ -36,6 +37,7 @@ helsinki-policy-public-all-history.yaml: projects/helsinki/spaces/helsinki/polic
 helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml
 helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/public-weather.yaml
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
+helsinki-policy-public-feedback.yaml: projects/helsinki/spaces/helsinki/policies/public-feedback.yaml
 helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
 helsinki-policy-pipelines-delete-alerts.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-delete-alerts.yaml
 helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
@@ -188,6 +190,9 @@ helsinki-pipeline-departures-bento.yaml: projects/helsinki/pipelines/hsl-departu
 helsinki-datasource-service-alerts.yaml: projects/helsinki/datasources/hsl-service-alerts.yaml
 helsinki-pipeline-service-alerts.yaml: projects/helsinki/pipelines/hsl-service-alerts/pipeline.yaml
 helsinki-pipeline-service-alerts-bento.yaml: projects/helsinki/pipelines/hsl-service-alerts/bento.yaml
+helsinki-datasource-feedback.yaml: projects/helsinki/datasources/hel-feedback.yaml
+helsinki-pipeline-feedback.yaml: projects/helsinki/pipelines/feedback-requests/pipeline.yaml
+helsinki-pipeline-feedback-bento.yaml: projects/helsinki/pipelines/feedback-requests/bento.yaml
 # Fintraffic LIIPI park and ride (T-3894): the HSL area's sites daily, their free spaces every 5 min.
 helsinki-datasource-liipi-facilities.yaml: projects/helsinki/datasources/liipi-facilities.yaml
 helsinki-datasource-liipi-utilizations.yaml: projects/helsinki/datasources/liipi-utilizations.yaml
