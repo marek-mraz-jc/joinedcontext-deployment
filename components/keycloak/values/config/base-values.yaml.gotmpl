@@ -699,6 +699,11 @@ config:
         {{- range (index ($this.initialUser | default dict) "groups" | default list) }}
         {{- $_ := set $declared . true }}
         {{- end }}
+        {{- /* And each Organization's subtree root, made here by keycloak-config-cli alone and
+               never by hand (ADR-N-058 2.5, T-5242). */}}
+        {{- range ($this.organizations | default list) }}
+        {{- $_ := set $declared . true }}
+        {{- end }}
         {{- range $group, $_ := $declared }}
         - name: {{ $group }}
           path: /{{ $group }}
