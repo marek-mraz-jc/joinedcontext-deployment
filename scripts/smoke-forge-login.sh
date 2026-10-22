@@ -56,6 +56,15 @@ else
 	ok "an anonymous visitor does not read the $cfg_repo repository ($code)"
 fi
 
+# RFC 6238 code of the seed on stdin: HMAC-SHA256 over its UTF-8 bytes, 30 s, 6 digits, as the
+# realm's OTP policy and Keycloak's own check (scripts/keycloak-login-journey.py totp()).
+totp_code() {
+	python3 -c 'import hashlib,hmac,struct,sys,time
+m=hmac.new(sys.stdin.read().encode(),struct.pack(">Q",int(time.time())//30),hashlib.sha256).digest()
+o=m[-1]&15
+print(str((struct.unpack(">I",m[o:o+4])[0]&0x7FFFFFFF)%10**6).zfill(6),end="")'
+}
+
 login() {
 	local user="$1" password jar action page after landed code
 	password=$(kubectl get secret "keycloak-user-${user//./-}" -n "$slug" -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null || true)
@@ -74,6 +83,18 @@ login() {
 
 	landed=$(printf '%s' "$password" | curl -sS -L --max-time 30 -c "$jar" -b "$jar" -o "$after" \
 		-w '%{url_effective}' --data-urlencode "username=$user@$org" --data-urlencode "password@-" "$action" 2>/dev/null)
+	# A holder of `mfa-required` (T-5120) answers Keycloak's TOTP form with the seed beside the password.
+	if grep -q 'id="kc-otp-login-form"' "$after"; then
+		local seed otp_action
+		seed=$(kubectl get secret "keycloak-user-${user//./-}" -n "$slug" -o jsonpath='{.data.totp}' 2>/dev/null | base64 -d 2>/dev/null || true)
+		if [ -z "$seed" ]; then
+			ko "$user: Keycloak asks for a TOTP code and Secret keycloak-user-${user//./-} holds no totp seed"
+			return
+		fi
+		otp_action=$(tr '\n' ' ' < "$after" | sed -n 's/.*id="kc-otp-login-form"[^>]*action="\([^"]*\)".*/\1/p' | sed 's/&amp;/\&/g')
+		landed=$(printf '%s' "$seed" | totp_code | curl -sS -L --max-time 30 -c "$jar" -b "$jar" -o "$after" \
+			-w '%{url_effective}' --data-urlencode "otp@-" "$otp_action" 2>/dev/null)
+	fi
 	case "$landed" in
 		"$base/git/"*) ;;
 		*) ko "$user: the login did not come back to the forge: $(error_of "$after")"; return ;;

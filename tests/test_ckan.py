@@ -186,7 +186,7 @@ def test_the_instance_branding_reaches_both_the_catalogue_and_the_portal(rendere
     assert branding["colours"]["primary"] == "#0000bf"
     # The catalogue's own languages, Slovak first (T-4280); the Portal stays English only, since
     # it ships no Finnish bundle yet (T-0342 follow-up, asserted in test_shared_branding).
-    assert branding["languages"] == {"default": "sk", "offered": ["sk", "en", "cs", "fi"]}
+    assert branding["languages"] == {"default": "sk", "offered": ["sk", "en", "cs", "fi", "hu"]}
     # The logo travels as a file beside the block, never inlined into it.
     assert "logoSvg" not in branding
     assert by_name(docs, "ConfigMap", "ckan-theme")["data"]["logo.svg"].lstrip().startswith("<svg")
@@ -677,4 +677,4 @@ def test_the_catalogue_speaks_slovak_and_offers_the_publishers_languages(rendere
     visitor (photo audit, T-4199). `ckanext-envvars` maps both variables to their options."""
     env = env_of(ckan_container(rendered("dev")))
     assert env.get("CKAN__LOCALE_DEFAULT") == "sk"
-    assert env.get("CKAN__LOCALES_OFFERED", "").split() == ["sk", "en", "cs", "fi"]
+    assert env.get("CKAN__LOCALES_OFFERED", "").split() == ["sk", "en", "cs", "fi", "hu"]

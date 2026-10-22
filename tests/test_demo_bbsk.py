@@ -120,7 +120,7 @@ def test_every_page_says_demo_and_frames_the_demo_assistant(demo):
     assert branding["siteTitle"].startswith("DEMO")
     # "Add to your AI assistant" names the demo assistant's own server, not the platform's hub.
     assert branding["mcpServer"] == "d/bbsk-demo"
-    assert set(branding["languages"]["offered"]) == {"sk", "en"}
+    assert set(branding["languages"]["offered"]) == {"sk", "hu", "en"}
     rendered = yaml.safe_dump(docs)
     domain = HOSTS[env].split(".", 1)[1].removeprefix("apps.")
     assert f"https://assistant.{domain}/d/bbsk-demo/widget" in rendered

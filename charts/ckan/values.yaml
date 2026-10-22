@@ -27,7 +27,7 @@ ckan:
   # `ckan.locale_default` and `ckan.locales_offered` (T-4199); CKAN ships each of these.
   locales:
     default: sk
-    offered: [sk, en, cs, fi]
+    offered: [sk, en, cs, fi, hu]
   # `oidc_pkce` is appended to this list by the template when `sso.enabled` is on, and only
   # then: CKAN exits on a plugin it cannot import, and the extension lives in the image this
   # repository builds, not in the stock one.

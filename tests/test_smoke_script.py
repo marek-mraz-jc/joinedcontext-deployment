@@ -197,8 +197,9 @@ elif args[0] == "exec":
     named = next((a.split("$", 1)[1].strip('" ]') for a in args if "$" in a), "")
     sys.exit(1 if named in spec.get("runnerEnvMissing", []) else 0)
 elif args[0] == "get" and args[1] == "secret" and args[2].startswith("keycloak-user-"):
-    # A demo user's generated password (T-0248); "" = no demo users seeded.
-    secret = spec.get("demoPassword", "Passw0rd-demo")
+    # A demo user's generated password (T-0248); "" = no demo users seeded. The TOTP seed of a
+    # holder of mfa-required (T-5120) is its own key, absent unless the spec names one.
+    secret = spec.get("demoTotp", "") if ".data.totp" in line else spec.get("demoPassword", "Passw0rd-demo")
     if not secret:
         sys.exit(1)
     sys.stdout.write(base64.b64encode(secret.encode()).decode())
@@ -1698,6 +1699,22 @@ def test_no_published_app_skips_the_app_routes(tmp_path):
     spec = dict(HEALTHY, bodies=[["/api/v1/projects/helsinki/apps", '{"items": []}'] if b[0] == "/api/v1/projects/helsinki/apps" else b for b in HEALTHY["bodies"]])
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert "skip  App routes (no App is published in helsinki)" in result.stdout
+
+
+def test_the_steward_grant_answers_totp_from_its_secret(tmp_path):
+    """T-5120: demo.steward holds mfa-required, so Keycloak gives its token only with a TOTP code;
+    the smoke computes one from the seed in Secret keycloak-user-demo-steward and sends it."""
+    bodies = [[["username=demo.steward", "totp="], '{"access_token":"steward.otp.sig"}'],
+              [["/api/v1/organization/people", "Bearer steward.otp.sig"], DEMO_PEOPLE],
+              ["/api/v1/organization/people", '{"items":[]}']]
+    spec = dict(HEALTHY, demoTotp="JourneySeed-0123456789abcdefghij", bodies=bodies + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "ok    People lists the demo people" in result.stdout, result.stdout
+    assert "JourneySeed" not in result.stdout + result.stderr
+    # Without the seed the grant carries no code, Keycloak refuses it, and People goes red.
+    spec = dict(HEALTHY, bodies=bodies + HEALTHY["bodies"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "FAIL  People does not list:" in result.stdout
 
 
 def test_a_demo_person_missing_from_people_fails_the_run(tmp_path):

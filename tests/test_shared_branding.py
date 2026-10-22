@@ -28,7 +28,7 @@ def test_the_catalogue_speaks_slovak_first_and_the_portal_keeps_its_languages(re
     # T-4280: data.dev opens in Slovak; the Portal's English-only choice stays its own.
     docs = rendered("dev")
     catalogue = json.loads(config_map(docs, "ckan-theme")["branding.json"])["languages"]
-    assert catalogue == {"default": "sk", "offered": ["sk", "en", "cs", "fi"]}
+    assert catalogue == {"default": "sk", "offered": ["sk", "en", "cs", "fi", "hu"]}
     portal = yaml.safe_load(config_map(docs, "portal-branding")["branding.yaml"])["languages"]
     assert portal["default"] == "en"
 

@@ -29,3 +29,4 @@ components:
 - {name: assistant, component: assistant, namespace: smartcity, wave: 22}
 - {name: basemap, component: basemap, namespace: smartcity, wave: 23}
 - {name: viz, component: viz, namespace: smartcity, wave: 24}
+- {name: probes, component: probes, namespace: smartcity, wave: 25}

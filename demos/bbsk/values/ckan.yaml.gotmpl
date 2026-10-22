@@ -24,7 +24,7 @@ ckan:
     {{- toYaml $images.catalogue | nindent 4 }}
   locales:
     default: sk
-    offered: [sk, en]
+    offered: [sk, hu, en]
   storage:
     size: 2Gi
   # The demo's About page ("O ukážke", T-4687), CKAN's `ckan.site_about`, which the theme lets win
@@ -137,7 +137,7 @@ branding:
     body: system-ui, sans-serif
   languages:
     default: sk
-    offered: [sk, en]
+    offered: [sk, hu, en]
 
 organizations:
   {{- toYaml (pick $platform.organizations "banskabystrica" "bbsk") | nindent 2 }}

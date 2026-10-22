@@ -121,6 +121,20 @@ def test_demo_user_password_shorter_than_32_is_refused(tmp_path):
     assert "decodes to 8 characters, declared 32" in result.stdout
 
 
+def test_an_approvers_totp_seed_is_declared_and_held_to_32_characters(tmp_path):
+    """T-5120: a demo person holding portal-approver signs in with TOTP, so its Secret carries
+    the seed beside the password, generated as long as every other credential."""
+    keycloak = tmp_path / "components" / "keycloak"
+    keycloak.mkdir(parents=True, exist_ok=True)
+    (keycloak / "demo-users.yaml").write_text(yaml.safe_dump({"demo.steward": {"realmRoles": ["portal-approver"]}}))
+    good = check(secret_manifest("keycloak-user-demo-steward", {"password": "a" * 32, "totp": "b" * 32}),
+                 {"demo": DECLARATION}, tmp_path)
+    assert good.returncode == 0, good.stdout
+    missing = check(secret_manifest("keycloak-user-demo-steward", {"password": "a" * 32}), {"demo": DECLARATION}, tmp_path)
+    assert missing.returncode == 1
+    assert "declared key 'totp' is missing" in missing.stdout
+
+
 def test_demo_user_secret_for_an_unnamed_user_is_refused(tmp_path):
     """A `keycloak-user-*` Secret nobody named in demo-users.yaml is still undeclared."""
     demo_users(tmp_path, "demo.steward")
