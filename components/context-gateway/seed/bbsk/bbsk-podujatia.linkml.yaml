@@ -260,8 +260,9 @@ classes:
   Event:
     class_uri: schema:Event
     description: >-
-      One public event: its name, its start, its place as a GPS point, its organizer and a link are
-      required (owner 2026-10-20, 2026-10-21), the rest is kept where the source gives it.
+      One public event: its name, its start and a link are required (owner 2026-10-22); its place as a
+      GPS point is expected and filled from the source or the venue table, its organizer kept where the
+      source names one, the rest kept where the source gives it.
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
@@ -291,7 +292,6 @@ classes:
         annotations: { summary: true }
       endDate: { rank: 3 }
       location:
-        required: true
         description: >-
           Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8
           to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand;
@@ -305,7 +305,6 @@ classes:
         rank: 7
         annotations: { summary: true }
       organizer:
-        required: true
         rank: 8
         annotations: { summary: true }
       url: { required: true, rank: 9 }

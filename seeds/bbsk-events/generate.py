@@ -56,7 +56,10 @@ STORES = (
         "regions": ("BBSK",),
         "target": TARGET,
         "endpoints": ("bbsk-endpoint-podujatia.yaml",),
-        "cadences": ({"kinds": None, "period": "24h", "every": 24, "window": 180, "lease": None},),
+        # Daily, and the same 52 h lease as the national store's daily sources (T-5081): an event its source
+        # dropped, or whose new record the model now refuses (no GPS, start or organizer), leaves within two
+        # missed runs instead of staying half until its end.
+        "cadences": ({"kinds": None, "period": "24h", "every": 24, "window": 180, "lease": 52 * 3600},),
         "grace": 0,
     },
     {
