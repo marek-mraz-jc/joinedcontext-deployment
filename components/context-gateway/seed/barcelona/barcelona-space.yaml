@@ -30,6 +30,11 @@ spec:
         dateObserved: { record: onChange, heartbeat: P1D }
         location: { record: onChange, heartbeat: P1D }
         name: { record: onChange, heartbeat: P1D }
+        stationCode: { record: onChange, heartbeat: P1D }
+        address: { record: onChange, heartbeat: P1D }
+        areaServed: { record: onChange, heartbeat: P1D }
+        dataProvider: { record: onChange, heartbeat: P1D }
+        source: { record: onChange, heartbeat: P1D }
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:

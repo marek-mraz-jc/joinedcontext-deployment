@@ -12,6 +12,7 @@ prefixes:
   linkml: https://w3id.org/linkml/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
+  jc: https://joinedcontext.com/models/
 default_prefix: sdm
 default_range: string
 imports:
@@ -21,9 +22,9 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The station's name as the city publishes it.
+    description: The name, per language, as the city publishes it (Catalan for the stations).
     annotations:
-      ngsi_ld_kind: Property
+      ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
@@ -69,12 +70,140 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  so2:
+    slot_uri: sdm:so2
+    description: Sulphur dioxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  co:
+    slot_uri: sdm:co
+    description: Carbon monoxide, the hour's mean at the station, in mg/m³ as the city measures it.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: mg/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  'no':
+    slot_uri: sdm:no
+    description: Nitrogen monoxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  nox:
+    slot_uri: sdm:nox
+    description: Nitrogen oxides (NO + NO2 as NO2), the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  blackCarbon:
+    slot_uri: jc:blackCarbon
+    description: >-
+      Black carbon, the hour's mean at the station. A property of this model: the Smart Data Model
+      AirQualityObserved names no black carbon attribute. The city's file gives it in ng/m³ under a
+      µg/m³ label; the pipeline divides by 1000.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations: { ngsi_ld_kind: Property }
+  stationCode:
+    slot_uri: jc:stationCode
+    description: >-
+      The station's code in the Catalan air-quality network (XVPCA, the city's codi_eoi), such as
+      `8019043`.
+    pattern: ^80190[0-9]{2}$
+    examples:
+      - value: '8019043'
+    annotations: { ngsi_ld_kind: Property }
+  address:
+    slot_uri: schema:address
+    description: >-
+      Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).
+    range: PostalAddress
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The square, park or street corner of the station.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The municipality.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  district:
+    slot_uri: sdm:district
+    description: The city district (districte) the station is in.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: The neighbourhood (barri) the station is in, as the city names it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: >-
+      Who publishes the data the entity was read from, with the credit its licence asks for.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The open-data file the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
 
 classes:
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: >-
+      The value of `address`: a postal address, never an entity of its own (Smart Data Models'
+      common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots: [streetAddress, addressLocality, district, addressCountry]
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
     description: One air-quality station of Barcelona and its hourly means.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
-    slots: [name, dateObserved, pm10, pm25, no2, o3]
+    slots:
+      - name
+      - dateObserved
+      - pm10
+      - pm25
+      - no2
+      - o3
+      - so2
+      - co
+      - 'no'
+      - nox
+      - blackCarbon
+      - stationCode
+      - address
+      - areaServed
+      - dataProvider
+      - source

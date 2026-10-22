@@ -16,5 +16,11 @@ its retention and `in-area` rows to the space. The datasets publish to the CKAN 
 `barcelona`, titled "Ajuntament de Barcelona": jcctl opens it with the first Endpoint that
 publishes. Which Open Data BCN dataset goes where, and why, is the ranked matrix of T-5261.
 
+Batch 2 (T-5263) adds the pipeline `air-quality`: Open Data BCN's hourly file
+Qualitat_Aire_Detall.csv, twice an hour, one `AirQualityObserved` per station of the city's network
+with the newest valid hour of each pollutant, published as the CKAN dataset of the Endpoint
+`air-quality`. Black carbon arrives in ng/m³ under a µg/m³ label and is divided by 1000; the
+mapping's header lists what it drops and why.
+
 Regenerate the model's artifacts after editing its LinkML as `../zilina/README.md` shows, with
 `m=barcelona`.

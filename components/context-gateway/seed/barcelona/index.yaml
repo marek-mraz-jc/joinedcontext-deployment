@@ -20,3 +20,9 @@ barcelona.v1.md: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.md
 barcelona-endpoint.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona.yaml
 barcelona-policy-pipelines-write.yaml: projects/barcelona/spaces/barcelona/policies/pipelines-write.yaml
 barcelona-policy-public-read.yaml: projects/barcelona/spaces/barcelona/policies/public-read.yaml
+# Batch 2, environment (T-5263): the hourly air quality of the city's stations.
+barcelona-datasource-air-quality.yaml: projects/barcelona/datasources/bcn-air-quality.yaml
+barcelona-pipeline-air-quality.yaml: projects/barcelona/pipelines/air-quality/pipeline.yaml
+barcelona-pipeline-air-quality-bento.yaml: projects/barcelona/pipelines/air-quality/bento.yaml
+barcelona-endpoint-air-quality.yaml: projects/barcelona/spaces/barcelona/endpoints/air-quality.yaml
+barcelona-policy-public-air-quality.yaml: projects/barcelona/spaces/barcelona/policies/public-air-quality.yaml
