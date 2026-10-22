@@ -193,6 +193,20 @@ def home(row: dict) -> dict | None:
     return None
 
 
+#: How a municipality's calendar names the municipality or its office instead of a place (T-5215, dev 2026-10-22:
+#: "Obec" 28 events of Oravská Polhora, "Celá obec" Ďurčiná, "Obecný úrad").
+MUNICIPAL_SELF = ("obec", "mesto", "celá obec", "obecný úrad", "mestský úrad", "obecný úrad {town}",
+                  "mestský úrad {town}", "mesto {town}", "obec {town}", "v obci", "{town} - celá obec")
+
+
+def self_names(row: dict) -> set[str]:
+    """The place texts that name the town or the source's own body rather than a place of their own."""
+    named = {key(row["town"]), *([key(organizer(row)["name"])] if organizer(row) else [])}
+    if row["org_type"] in ("town", "municipality", "village"):
+        named |= {key(t.format(town=row["town"])) for t in MUNICIPAL_SELF}
+    return named
+
+
 def key(text: str) -> str:
     """A place text's match key, as pipelines/common.yaml computes it."""
     text = re.sub(r"\([^)]*\)", " ", text.lower())
@@ -216,9 +230,7 @@ def processors(row: dict, store: dict) -> list:
         "__TOWN_SLUG__": json.dumps(row["town_slug"]),
         "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
         # A place text that is only the town's or the organizer's own name names no place of its own.
-        "__SELF__": json.dumps(
-            sorted({key(row["town"]), *([key(organizer(row)["name"])] if organizer(row) else [])}), ensure_ascii=False
-        ),
+        "__SELF__": json.dumps(sorted(self_names(row)), ensure_ascii=False),
         "__SCOPE__": json.dumps("/SK/" + row["scope"]),
         "__REGION__": json.dumps(row["region_name"], ensure_ascii=False),
         "__SOURCE__": json.dumps(row["events_url"], ensure_ascii=False),

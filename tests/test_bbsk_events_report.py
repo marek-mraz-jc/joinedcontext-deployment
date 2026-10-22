@@ -55,3 +55,13 @@ def test_only_an_https_store_is_read():
         assert "https" in str(e)
     else:
         raise AssertionError("an http store was read")
+
+
+def test_the_next_page_link_keeps_the_commas_of_its_target():
+    # Recorded 2026-10-22 from the dev Endpoint: the old split on "," cut the target at attrs=source, and 404ed.
+    headers = [
+        '<https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.9.jsonld>; rel="http://www.w3.org/ns/json-ld#context"',
+        '</api/endpoint/x/ngsi-ld/v1/entities?attrs=source,location,venue&limit=100&cursor=ab.cd>; rel="next";type="application/json"',
+    ]
+    assert report.next_links(headers) == ["/api/endpoint/x/ngsi-ld/v1/entities?attrs=source,location,venue&limit=100&cursor=ab.cd"]
+    assert report.next_links([headers[0]]) == []

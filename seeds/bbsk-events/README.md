@@ -270,3 +270,43 @@ image posters (filakovo.sk, jelsava.sk, revuca.sk), not a list; stredoslovenskem
 have no `podujatie` post type, and horehronskemuzeum.sk writes the date only in the post's prose or poster.
 Five municipal waste collection calendars (vhkalinka.eu and four outside the region) listed pickups as events:
 they are `skip` now.
+
+## Dates, notices, duplicates and office points (T-5215)
+
+Measured on dev on 2026-10-22 through the national Endpoint (`report.py`, every Event, keyValues): 1,680 events from 175
+sources, 200 with GPS (12 %), 711 without a start (42 %). What changed:
+
+- **Dates.** A record without a readable start is refused, never stored without a date (owner 2026-10-22); the model
+  check alone had let 711 through. EventON writes its offset with a one-digit hour and no seconds
+  (`2026-11-14T10:00+2:00`): `jsonld-pages` now reads it (194 of 197 EventON events had no start). LSVR Events
+  (TownPress theme) leaves its JSON-LD dates empty and prints them in the page's `post__info` list ("Dátum" and
+  "Čas", or "Začiatok" and "Koniec", as `28. augusta 2026` or `7. 12. 2026`): `jsonld-pages` reads that list when the
+  JSON-LD has no start (451 of 492 LSVR events had none). Visit Bratislava's pages carry no Event JSON-LD at all; its
+  events stay refused until a template reads its HTML.
+- **Notices.** `common.yaml` refuses a record whose name is a notice, for every source kind: waste collection
+  (vývoz, odvoz, zvoz, zber of papier, plasty, sklo, odpad ...), a council session (zasadnutie, zastupiteľstvo),
+  VZN, zámer, oznámenie, elections and referenda, power cuts (prerušenie dodávky/distribúcie, odstávka), "Nová webová
+  stránka", and a hall's private booking (Svadba, Rodinná oslava, Kar). Decided (worker-t5215, owner may override):
+  council sessions and hall bookings count as notices, because the analyst's audit of 2026-10-22 counted them so
+  and a booked wedding is no public event; options: keep council sessions as public meetings.
+- **Duplicates.** The id hashes the name in lower case with only its letters and digits, the start to the hour in UTC
+  (or the day), and the town: "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" at 16:30, and "Čarovný
+  kľúčik" at 16:35 and 16:36, are one entity each. Two sessions of one name on one day at different hours stay two.
+  Every id changes once with this key: the old entities leave by their lease (8 h for the 3-hourly feeds, 52 h for
+  the daily calendars and the region store).
+- **Office points.** `offices.py` asks Overpass, in one query, for each municipal source's boundary (by name in
+  Slovakia; of several of one name only the one whose OSM `website` is the source's host) and the `amenity=townhall`
+  and `amenity=community_centre` objects inside it. The office becomes the source's home (`homes.csv`), the point of
+  an event that names no place or only the municipality ("Obec", "Celá obec", "Obecný úrad", "Obec X"); a single
+  community centre becomes the row of "Kultúrny dom" and its usual spellings. Two culture houses, no office, or an
+  object outside Slovakia's box give no row; never a village centre. Nominatim answered the swarm's address with 429
+  on 2026-10-22, so offices.py does not use it.
+
+```sh
+python3 seeds/bbsk-events/offices.py           # print the rows and every OSM name it read, per municipality
+python3 seeds/bbsk-events/offices.py --write   # append them to venues.csv and homes.csv
+python3 seeds/bbsk-events/generate.py
+```
+
+`report.py` follows the API's `Link: rel="next"` with a parser that keeps the commas inside its target
+(`attrs=source,location,venue`); it stopped after the first page before.
