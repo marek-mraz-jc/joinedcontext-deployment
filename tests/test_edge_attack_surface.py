@@ -661,7 +661,9 @@ def test_the_served_body_limit_starts_at_the_server_blocks_ceiling(apisix_config
     )
     rules = {r["id"]: r for r in yaml.safe_load(cm["data"]["apisix.yaml"]).get("global_rules", [])}
     # `edge-headers` (T-5107) is the header floor; tests/test_apisix_edge.py holds its body.
-    assert set(rules) == {"edge-body", "edge-headers"}, rules
+    # `edge-not-found` (T-5119) hands an unmatched address to the server block's error page;
+    # tests/test_edge_error_pages.py holds its body.
+    assert set(rules) == {"edge-body", "edge-headers", "edge-not-found"}, rules
     assert rules["edge-body"]["plugins"] == {"client-control": {"max_body_size": ceiling}}
     assert ceiling == 16 * 1024 * 1024, "the catalog default of spec.limits.edge.maxRequestBodyMegabytes"
 
