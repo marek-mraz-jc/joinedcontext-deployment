@@ -8,6 +8,7 @@ the two CKAN modules they import; the templates that call them were walked on a 
 """
 
 import importlib.util
+import datetime
 import html as html_lib
 import json
 import os
@@ -18,6 +19,7 @@ import sys
 import types
 from pathlib import Path
 from urllib.parse import urlsplit
+from xml.etree import ElementTree
 
 import pytest
 import yaml
@@ -1540,7 +1542,10 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
-    assert blueprint.name == "jc_pages" and sorted(rules) == ["/accessibility", "/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/support", "/terms"]
+    assert blueprint.name == "jc_pages" and sorted(rules) == ["/accessibility", "/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/robots.txt", "/sitemap.xml", "/support", "/terms"]
+    assert rules["/sitemap.xml"] == ("sitemap", theme.jc_sitemap_page) and rules["/robots.txt"] == ("robots", theme.jc_robots_page)
+    monkeypatch.setattr(theme.toolkit, "config", {"ckan.site_url": "https://opendata.dev.example"}, raising=False)
+    assert theme.jc_robots_page()[1:] == (200, {"Content-Type": "text/plain; charset=utf-8"})
     assert rules["/assistants"][0] == "assistants" and rules["/assistants"][1]() == ("jc/assistants.html", {})
     assert rules["/assistants/<id>"] == ("guide", theme.jc_guide_page)
     endpoint, view = rules["/privacy"]
@@ -2894,3 +2899,134 @@ def test_an_api_resource_links_the_portal_developer_page_of_its_endpoint(theme):
     examples = resource[resource.index('<section class="jc-examples"'):resource.index("</section>", resource.index('<section class="jc-examples"'))]
     assert "h.jc_developer_page(pkg)" in examples and "h.jc_t('developer_page')" in examples
 
+
+# T-5123: datasets findable from outside.
+check_spec = importlib.util.spec_from_file_location("check_schema_org", PROJECT_ROOT / "scripts/check-schema-org.py")
+check_schema_org = importlib.util.module_from_spec(check_spec)
+check_spec.loader.exec_module(check_schema_org)
+DEV_DATASETS = json.loads((PROJECT_ROOT / "tests/fixtures/ckan-schema-org/dev-datasets.json").read_text())
+
+
+def dev_harvest_regions():
+    """`harvest_source` -> spatialUri of dev's harvest sources, as the chart names them."""
+    values = (PROJECT_ROOT / "components/ckan/values/catalogue/development-values.yaml.gotmpl").read_text()
+    sources = yaml.safe_load(values.replace('{{"{{"}}', "{{").replace('{{"}}"}}', "}}"))["harvest"]["sources"]
+    return {f"{s.get('kind', 'nkod')}-{s['name']}": s["spatialUri"] for s in sources}
+
+
+def after_next_harvest(pkg):
+    """The dev dataset (package_search, 2026-10-22) as the next harvest writes it: the harvests
+    wrote no spatial_uri before T-5123."""
+    pkg = json.loads(json.dumps(pkg))
+    extras = {e["key"]: e["value"] for e in pkg["extras"]}
+    if "harvest_source" in extras and "spatial_uri" not in extras:
+        pkg["extras"].append({"key": "spatial_uri", "value": dev_harvest_regions()[extras["harvest_source"]]})
+    return pkg
+
+
+@pytest.fixture
+def site(theme, monkeypatch):
+    monkeypatch.setattr(theme.toolkit, "config", {"ckan.site_url": "https://opendata.dev.example/"}, raising=False)
+    return theme
+
+
+def test_every_dev_dataset_is_a_valid_schema_org_dataset(site):
+    """Done when: each public dataset's JSON-LD passes the validator with 0 problems, all 102 of dev."""
+    assert len(DEV_DATASETS) == 102
+    failed = {}
+    for pkg in DEV_DATASETS:
+        record = json.loads(site.jc_schema_org(after_next_harvest(pkg)))
+        found = check_schema_org.problems(record)
+        if found:
+            failed[pkg["name"]] = found
+        assert record["url"] == "https://opendata.dev.example/dataset/" + pkg["name"]
+    assert failed == {}
+
+
+def test_a_harvested_dataset_without_its_region_is_named_by_the_validator(site):
+    """The gap the harvests had: the validator is not vacuous."""
+    pkg = next(p for p in DEV_DATASETS if p["name"] == "bbsk-zoznam-lekarni-v-bbk-c564de")
+    assert check_schema_org.problems(json.loads(site.jc_schema_org(pkg))) == ["spatialCoverage missing or not a named Place"]
+    assert set(check_schema_org.problems({"@context": "https://schema.org/", "@type": "Dataset"})) == {
+        "name missing", "description missing or not 50 to 5000 characters", "license missing or not a URL",
+        "creator missing or without @type and name", "distribution missing",
+        "spatialCoverage missing or not a named Place", "temporalCoverage missing or not an ISO 8601 date or interval"}
+
+
+def test_the_record_names_the_region_licence_publisher_and_each_door(site):
+    site.page.lang = "sk"
+    pkg = next(p for p in DEV_DATASETS if p["name"] == "banskabystrica-pocasie")
+    record = site.jc_schema_org_dict(pkg)
+    assert record["spatialCoverage"] == {"@type": "Place", "name": "Banskobystrický kraj",
+                                         "sameAs": "http://data.europa.eu/nuts/code/SK032"}
+    assert record["license"] == "http://publications.europa.eu/resource/authority/licence/CC_BY_4_0"
+    assert record["creator"] == {"@type": "Organization", "name": "Mesto Banská Bystrica",
+                                 "sameAs": "https://data.gov.sk/id/legal-subject/00313271"}
+    assert record["temporalCoverage"] == "2025-06-06/.."
+    assert len(record["distribution"]) == len(pkg["resources"])
+    assert all(d["contentUrl"].startswith(("https://", "http://")) and d["encodingFormat"] for d in record["distribution"])
+    harvested = dict(PUBLISHED, name="hki", title="Air", notes="x" * 60, extras=PUBLISHED["extras"] + [
+        {"key": "temporal_end", "value": "2025-12-31"}])
+    assert site.jc_schema_org_dict(harvested)["temporalCoverage"] == "2024-01-01/2025-12-31"
+
+
+def test_a_description_cannot_close_the_script_element(site):
+    """A dataset's words are the publisher's: `</script>` in them must not end the element."""
+    hostile = "</script><script>alert(1)</script> & <!-- " + "x" * 50
+    text = site.jc_schema_org(dict(PUBLISHED, name="x", title="T</script>", notes=hostile))
+    assert "<" not in text and ">" not in text and "&" not in text
+    assert json.loads(text)["description"] == hostile
+
+
+def test_the_dataset_page_carries_the_record_in_its_head():
+    page = (THEME / "templates__package__read_base.html").read_text()
+    assert re.search(r'{% block head_extras %}\s*{{- super\(\) }}\s*<script type="application/ld\+json">'
+                     r'{{ h.jc_schema_org\(pkg\) \| safe }}</script>\s*{% endblock %}', page)
+    assert check_schema_org.check_page(
+        '<head><script type="application/ld+json">{"@type": "Dataset"}</script></head>') != []
+    assert check_schema_org.check_page("<head></head>") == ["0 schema.org Dataset records, expected 1"]
+
+
+def test_the_sitemap_lists_each_public_dataset_and_organization_and_nothing_hidden(site, monkeypatch):
+    """Security: the search is anonymous, without private or draft datasets, and a hidden one is
+    left out even when a sysadmin asks (the hidden filter alone follows the caller)."""
+    monkeypatch.setattr(site, "HIDDEN", frozenset({"bb-dotacie"}))
+    calls = []
+
+    def search(context, data_dict):
+        calls.append((context, data_dict))
+        rows = DEV_DATASETS[data_dict["start"]:data_dict["start"] + 40]
+        # pysolr hands a date back as a datetime.
+        return {"count": len(DEV_DATASETS), "results": [
+            {"name": p["name"], "metadata_modified": datetime.datetime.fromisoformat(p["metadata_modified"])} for p in rows]}
+
+    entries = site.jc_sitemap_entries(search, lambda context, data_dict: ["banskabystrica", "bbsk"])
+    assert all(c[0] == {"user": "", "ignore_auth": False} and c[1]["include_private"] is False
+               and c[1]["include_drafts"] is False for c in calls)
+    assert len(calls) == 3
+    datasets = [loc for loc, _ in entries if "/dataset/" in loc]
+    assert datasets == ["https://opendata.dev.example/dataset/" + p["name"] for p in DEV_DATASETS if p["name"] != "bb-dotacie"]
+    assert entries[-2:] == [("https://opendata.dev.example/organization/banskabystrica", ""),
+                            ("https://opendata.dev.example/organization/bbsk", "")]
+    xml = site.jc_sitemap_xml(entries + [("https://x.example/dataset/a&b", "not a date")])
+    root = ElementTree.fromstring(xml)
+    locs = [e.text for e in root.iter("{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    assert locs[-1] == "https://x.example/dataset/a&b" and len(locs) == len(entries) + 1
+    assert "<lastmod>2026-" in xml and "not a date" not in xml
+    assert calls[0][1]["fl"] == ["name", "metadata_modified"]
+
+
+def test_the_sitemap_stops_at_the_protocol_s_limit(site, monkeypatch):
+    monkeypatch.setattr(site, "SITEMAP_MAX", 5)
+    entries = site.jc_sitemap_entries(
+        lambda c, d: {"count": 10**6, "results": [{"name": f"d{d['start'] + i}"} for i in range(1000)]},
+        lambda c, d: ["org"])
+    assert len(entries) == 5
+
+
+def test_robots_names_the_sitemap_and_a_noindex_demo_closes_the_site(site, monkeypatch):
+    robots = site.jc_robots_txt()
+    assert "Sitemap: https://opendata.dev.example/sitemap.xml\n" in robots and "Disallow: /api/" in robots
+    assert re.findall(r"(?im)^sitemap:\s*(\S+)", robots) == ["https://opendata.dev.example/sitemap.xml"]
+    monkeypatch.setitem(site.BRANDING, "noindex", True)
+    assert site.jc_robots_txt() == "User-agent: *\nDisallow: /\n"

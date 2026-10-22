@@ -3,6 +3,12 @@
 {# The publisher is a bar above the dataset, not a sidebar (owner, 2026-10-12): the tables and the
    usage boxes take the page's whole width. The sidebar's other parts (T-3009: a follower count of
    zero, share buttons, the licence the About list already names) stay gone. #}
+{# The dataset as schema.org for search engines' dataset indexes (T-5123), checked by
+   scripts/check-schema-org.py. #}
+{% block head_extras %}
+  {{- super() }}
+  <script type="application/ld+json">{{ h.jc_schema_org(pkg) | safe }}</script>
+{% endblock %}
 {% block pre_primary %}
   {% if pkg.organization %}
     {% snippet "package/snippets/jc_publisher.html", organization=h.get_organization(pkg.organization.id) %}
