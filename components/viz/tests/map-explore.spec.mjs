@@ -88,3 +88,35 @@ test("the Mapa panel moves the markers, colours them, round-trips the address, r
   await expect(f.locator("#map-count")).toHaveText("On the map 8 of 12 · 4 without a location", { timeout: 20000 });
   await shot(page, "map-count-400-en");
 });
+
+// T-5239: a publisher set the colour field, the popup and clustering in the Portal (widget.json); the
+// widget opens with that legend, the reader's panel starts from it and "Obnoviť predvolené" returns there.
+test("the publisher's map defaults start the map, and the reader's reset returns to them", async ({ page, context }) => {
+  await serve(context);
+  for (const width of [1440, 400]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/publishedmap?lang=sk`);
+    const f = frame(page);
+    await expect(f.locator("#map-count")).toHaveText(/z 12/, { timeout: 20000 });
+    await expect(f.locator("#map-legend")).toContainText("Áno", { timeout: 20000 });
+    await expect(f.locator("#map-legend")).toContainText("Nie");
+    // The publisher's default is no reader's choice: no chip, nothing in the address.
+    await expect(f.locator("#map-chips button")).toHaveCount(0);
+    expect(await hash(page)).not.toMatch(/&(geo|color|pop|cluster)=/);
+    await page.waitForTimeout(400);
+    await shot(page, `map-publisher-defaults-${width}-light`);
+  }
+  const f = frame(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await f.getByRole("button", { name: "Nastaviť mapu" }).click();
+  await expect(f.getByLabel("Farba podľa", { exact: true })).toHaveValue("open");
+  await expect(f.getByRole("checkbox", { name: "Zoskupovať body" })).not.toBeChecked();
+  await shot(page, "map-publisher-panel-1440-light");
+  await f.getByLabel("Farba podľa", { exact: true }).selectOption("type");
+  await expect(f.locator("#map-legend")).toBeHidden();
+  expect(await hash(page)).toContain("&color=type");
+  await f.getByRole("button", { name: "Obnoviť predvolené" }).click();
+  await expect(f.locator("#map-legend")).toContainText("Áno");
+  await expect(f.getByLabel("Farba podľa", { exact: true })).toHaveValue("open");
+  expect(await hash(page)).not.toMatch(/&color=/);
+});

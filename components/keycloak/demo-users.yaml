@@ -44,6 +44,16 @@ demo.editor:
   lastName: Editor
   realmRoles: []
   groups: [banskabystrica, bbsk, helsinki, helsinki-mobility, praha, slovensko]
+# Mesto Žilina's organization administrator (ADR-N-058, T-5242): org-admin of the Organization
+# `zilina` alone (seed/zilina/zilina-rolebinding-admins.yaml), so the PF-123 pair is walkable:
+# this person approves in zilina and is refused in Helsinki's projects, the steward the reverse.
+# The group is the Organization's subtree root, which also makes them one of project zilina's
+# own to the gateway and the forge. `portal-approver` because an org admin approves (CC-70).
+demo.zilina:
+  firstName: Žilina
+  lastName: Admin
+  realmRoles: [portal-approver]
+  groups: [zilina]
 # The residue sweep's approver (T-2627): bound to `janitor` alone, which approves and deletes only
 # journey- and take-named resources of helsinki. No realm role and no project group, so the
 # gateway admits it to no context data.

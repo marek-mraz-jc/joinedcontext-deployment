@@ -151,6 +151,7 @@ v1/Secret minimal/keycloak-user-demo-outsider
 v1/Secret minimal/keycloak-user-demo-probe
 v1/Secret minimal/keycloak-user-demo-steward
 v1/Secret minimal/keycloak-user-demo-viewer
+v1/Secret minimal/keycloak-user-demo-zilina
 v1/Secret minimal/portal-cookie-key
 v1/Service minimal/apisix-gateway
 v1/Service minimal/cnpg-webhook-service

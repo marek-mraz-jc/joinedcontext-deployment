@@ -104,6 +104,8 @@ DATA.presented = {
   model: EVENT_MODEL.replace("{view_order_by: startDate, view_upcoming: startDate}", "{view_order_by: startDate, view_filter: startDate>=today, view_page_length: 10}")
 };
 DATA.stations = { type: "Station", geo: ["location", "observationSpace"], model: STATION_MODEL, rows: Array.from({ length: 12 }, (_, i) => station(i)) };
+// T-5239: the same stations, with the publisher's map defaults the Portal hands over at widget.json.
+DATA.publishedmap = { ...DATA.stations, widget: { map: { Station: { colour: "open", popup: ["url"], cluster: false } } } };
 export const SLUGS = Object.fromEntries(Object.keys(DATA).map((k) => [k, (k + "slug").padEnd(32, "0").slice(0, 32)]));
 const FAIL = { forbidden: 403, missing: 404, gateway: 502, slow: 0 };
 for (const k of Object.keys(FAIL)) SLUGS[k] = (k + "fail").padEnd(32, "0").slice(0, 32);
@@ -202,6 +204,11 @@ export async function serve(context) {
         if (!d || !d.geo || d.type !== typeOne[2]) return route.fulfill({ status: 404, headers: cors, body: "{}" });
         const details = attrs(d.rows).map((a) => ({ id: a, type: "Attribute", attributeName: a, attributeTypes: [d.geo.includes(a) ? "GeoProperty" : "Property"] }));
         return route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify({ id: d.type, type: "EntityTypeInfo", typeName: d.type, entityCount: d.rows.length, attributeDetails: details }) });
+      }
+      const w = /^\/api\/endpoint\/([a-z0-9]+)\/widget\.json$/.exec(url.pathname);
+      if (w) {
+        const d = DATA[key(w[1])];
+        return route.fulfill(d ? { status: 200, contentType: "application/json", headers: cors, body: JSON.stringify(d.widget || { map: {} }) } : { status: 404, headers: cors, body: "{}" });
       }
       const m = /^\/api\/endpoint\/([a-z0-9]+)\/(ngsi-ld\/v1\/types|ngsi-ld\/v1\/entities|schema\/index\.json|schema\/v1\/json-schema|schema\/v1\/model\.linkml\.yaml)$/.exec(url.pathname);
       const name = m && key(m[1]);

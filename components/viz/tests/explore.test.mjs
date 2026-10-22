@@ -201,6 +201,26 @@ test("a choice from the address is kept only when the model offers it; the rest 
   assert.deepEqual([bad.geo, bad.color, bad.pop, bad.cluster], [null, null, null, null]);
 });
 
+// T-5239: the publisher's map defaults from the Portal (card.map) are where the map and its reset start.
+test("the publisher's map defaults start the map when the model offers them; an invalid one keeps the built-in", () => {
+  const card = { ...stationCard, map: { geometry: "observationSpace", colour: "status", popup: ["url", "status"], cluster: false } };
+  const o = x.mapOptions(["location", "observationSpace"], card);
+  assert.deepEqual(o.defaults, { geo: "observationSpace", color: "status", pop: ["url", "status"], cluster: false });
+  // Nothing in the address: the reader's map is the publisher's; a reset (no raw choice) returns there.
+  assert.deepEqual(x.mapChoice({}, o).choice, o.defaults);
+  assert.deepEqual(x.mapChoice({ color: "none" }, o).choice.color, "none");
+  const builtIn = x.mapOptions(["location", "observationSpace"], stationCard).defaults;
+  for (const map of [
+    { geometry: "secretArea" }, { colour: "secret" }, { colour: "name" }, { colour: "type" }, { popup: ["url", "nothing"] }, { popup: [] },
+    { popup: Array.from({ length: 11 }, () => "url") }, { cluster: "no" }, { geometry: 3, colour: ["status"] },
+  ]) {
+    assert.deepEqual(x.mapOptions(["location", "observationSpace"], { ...stationCard, map }).defaults, builtIn, JSON.stringify(map));
+  }
+  // One member holds, another does not: each is checked alone.
+  assert.deepEqual(x.mapOptions(["location"], { ...stationCard, map: { geometry: "observationSpace", colour: "status" } }).defaults,
+    { ...builtIn, color: "status" });
+});
+
 test("a Polygon draws as an area, MultiPoints split into clusterable points, colours follow the field", () => {
   const t = { ...x.TEXT.sk, lang: "sk", locale: "sk-SK" };
   const area = { id: "a", geometry: { type: "Polygon", coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] }, properties: { type: "Station", status: "open" } };
