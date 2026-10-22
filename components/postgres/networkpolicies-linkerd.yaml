@@ -32,6 +32,16 @@ postgres-allow-linkerd:
           protocol: TCP
         - port: 4191
           protocol: TCP
+    # The Prometheus that scrapes the instances' exporter on :9187 (cluster.monitoring.enabled, T-5125),
+    # from its own namespace only; no peer is rendered while monitoring.prometheusNamespace is empty.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
+      ports:
+        - protocol: TCP
+          port: 4143
 
 # A meshed pod under an egress policy needs two things spelled out. The Linkerd control
 # plane — identity (8080), destination (8086), policy (8090) — or the proxy never learns the

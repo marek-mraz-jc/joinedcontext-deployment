@@ -27,6 +27,16 @@ apps-db-allow-linkerd:
       ports:
         - port: 4143
           protocol: TCP
+    # The Prometheus that scrapes the instances' exporter on :9187 (cluster.monitoring.enabled, T-5125),
+    # from its own namespace only; no peer is rendered while monitoring.prometheusNamespace is empty.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
+      ports:
+        - protocol: TCP
+          port: 4143
 
 # Its pods declare egress, so their proxies need the control plane, and an instance dials its
 # peers through their inbound proxy (4143) beside 5432, as components/postgres does.

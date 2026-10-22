@@ -30,6 +30,14 @@ cluster:
     size: "8Gi"
     storageClass: "{{ $global.storage.storageClass.rwo | default "" }}"
 
+  # Chart 0.7.0 reads cluster.monitoring.enabled, never enablePodMonitor: it renders the chart's
+  # PrometheusRule, whose CNPGClusterHighConnectionsWarning fires at 80 % of max_connections for
+  # 5 min (T-5125). The PodMonitor comes from components/monitoring, at the platform's interval.
+  monitoring:
+    enabled: {{ $global.metrics.enabled }}
+    podMonitor:
+      enabled: false
+
   # The database `apps`, owned by the Portal's login, which makes every App's schema and roles
   # through jc_apps (portal apps_db/migrations): CREATEROLE and nothing more.
   initdb:

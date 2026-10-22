@@ -64,7 +64,9 @@ kyverno.io/v1/ClusterPolicy -/require-run-as-non-root-user
 kyverno.io/v1/ClusterPolicy -/require-run-as-nonroot
 kyverno.io/v1/ClusterPolicy -/restrict-cnpg-operator-pod-labels
 kyverno.io/v1/ClusterPolicy -/verify-platform-images
+monitoring.coreos.com/v1/PodMonitor jc/postgres-cluster
 monitoring.coreos.com/v1/PrometheusRule jc/monitoring-monitoring-alerts
+monitoring.coreos.com/v1/PrometheusRule jc/postgres-cluster-alert-rules
 monitoring.coreos.com/v1/ServiceMonitor jc/apisix
 monitoring.coreos.com/v1/ServiceMonitor jc/context-broker
 monitoring.coreos.com/v1/ServiceMonitor jc/context-gateway
