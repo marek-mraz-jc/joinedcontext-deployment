@@ -1,7 +1,7 @@
 """Forum Virium Helsinki's street cleaning air quality pilot in the Helsinki space (T-5255, PL-03).
 
 Bento runs the committed mapping over a recorded answer of the DataSource's URL (fetched on
-2026-10-22, three readings of each of the three devices), gzipped as the source serves it. The
+2026-10-22, three readings of each of the three devices, each device's `locations` track cut to two points, which the mapping never reads), gzipped as the source serves it. The
 recording also holds real readings the plausibility rules drop: a washer reading with no GPS fix
 (null), a brush machine reading at 0,0, a brush machine PM10 of 1371 µg/m³ and a Rastila reading
 whose PM2.5 exceeds its PM10; two are edited in one place each: a reading moved to Tapiola
