@@ -123,6 +123,16 @@ def test_each_page_carries_the_headers_that_keep_a_spec_harmless(dev):
     assert "connect-src https://api.dev.joinedcontext.com https://tiles.dev.joinedcontext.com;" in explore
     assert "frame-ancestors https://opendata.dev.joinedcontext.com" in explore and "frame-ancestors *" not in explore
     assert f"script-src https://{HOST};" in explore and "unsafe-eval" not in explore and "base-uri 'none'" in explore
+    # T-5129: /embed.html is the same page for any site: framed by anyone, reading the API, the tiles and
+    # the catalogue's dataset for its source line, and nothing else.
+    embed = csp(conf, "/embed.html")
+    assert "try_files /explore.html =404;" in conf.split("location = /embed.html {")[1].split("location")[0]
+    assert "connect-src https://api.dev.joinedcontext.com https://tiles.dev.joinedcontext.com https://opendata.dev.joinedcontext.com;" in embed
+    assert "frame-ancestors *" in embed and f"script-src https://{HOST};" in embed and "unsafe-eval" not in embed and "base-uri 'none'" in embed
+    assert embed.replace(" https://opendata.dev.joinedcontext.com;", ";").replace("frame-ancestors *", "frame-ancestors https://opendata.dev.joinedcontext.com") == explore
+    embedjs = (FILES / "site/embed.js").read_text()
+    assert "innerHTML" not in embedjs and "allow-top-navigation" not in embedjs and "allow-forms" not in embedjs
+    assert 'event.origin === origin && event.source === frame.contentWindow' in embedjs
     explorejs = (FILES / "site/explore.js").read_text()
     assert 'credentials: "omit"' in explorejs and "innerHTML" not in explorejs and "Authorization" not in explorejs
     assert "datastore" not in explorejs
@@ -171,7 +181,7 @@ def test_the_explorer_table_is_one_portal_commit_and_rides_in_the_image():
 
 def test_the_refusal_list_and_the_host_page_logic_under_node():
     tests = sorted(str(p) for p in (COMPONENT / "tests").glob("*.test.mjs"))
-    assert len(tests) == 4
+    assert len(tests) == 5
     run = subprocess.run(["node", "--test", *tests], capture_output=True, text=True, timeout=120)
     assert run.returncode == 0, run.stdout[-4000:] + run.stderr[-2000:]
 

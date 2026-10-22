@@ -84,6 +84,21 @@ serviceMonitors:
     port: http-metrics
   {{- end }}
 
+# The CloudNativePG instances' exporter (:9187, named `metrics`), read by the cnpg/cluster chart's
+# rules, CNPGClusterHighConnectionsWarning at 80 % of max_connections among them (T-5125). The
+# chart's own PodMonitor has no interval, so it is off there and rendered here.
+podMonitors:
+  {{- range $c := list "postgres" "apps-db" }}
+  {{- if has $c $components }}
+  - name: {{ index $root $c "cluster" "name" }}
+    namespace: {{ index $root $c "cluster" "namespace" }}
+    selector:
+      cnpg.io/cluster: {{ index $root $c "cluster" "name" }}
+      cnpg.io/podRole: instance
+    port: metrics
+  {{- end }}
+  {{- end }}
+
 # APISIX is deliberately absent: its own chart renders a ServiceMonitor for port 9091
 # (/apisix/prometheus/metrics) as soon as global.metrics.enabled is set, on the same 15s
 # interval. A second monitor here would scrape the edge twice and double every counter.

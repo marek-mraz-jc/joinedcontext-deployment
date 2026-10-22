@@ -605,7 +605,7 @@ def test_the_gateway_admits_the_portal_s_calls(rendered, env):
 
 
 PROMETHEUS = {"app.kubernetes.io/name": "prometheus"}
-SCRAPED = ("context-broker-broker", "context-gateway-gateway", "portal-portal")
+SCRAPED = ("context-broker-broker", "context-gateway-gateway", "portal-portal", "postgres-cluster")
 
 
 def _prometheus_ingress(docs):
@@ -613,7 +613,8 @@ def _prometheus_ingress(docs):
     for doc in docs:
         if doc.get("kind") != "NetworkPolicy":
             continue
-        pods = doc["spec"].get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
+        labels = doc["spec"].get("podSelector", {}).get("matchLabels", {})
+        pods = labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster")
         for rule in doc["spec"].get("ingress") or []:
             for peer in rule.get("from") or []:
                 if peer.get("podSelector", {}).get("matchLabels") == PROMETHEUS:
@@ -632,6 +633,7 @@ def test_prometheus_is_admitted_to_the_scraped_workloads_from_its_own_namespace_
     ports = {(name, tuple(p)) for name, _, _, p in found}
     assert ("context-broker", (9090,)) in ports, ports
     assert ("context-gateway", (8080,)) in ports, ports
+    assert ("postgres", (9187,)) in ports, ports  # the CloudNativePG exporter (T-5125)
 
 
 @pytest.mark.parametrize("env", ("local", "dev"))

@@ -73,6 +73,16 @@ apps-db:
       ports:
         - protocol: TCP
           port: 5432
+    # The Prometheus that scrapes the instances' exporter on :9187 (cluster.monitoring.enabled, T-5125),
+    # from its own namespace only; no peer is rendered while monitoring.prometheusNamespace is empty.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
+      ports:
+        - protocol: TCP
+          port: 9187
 
 # The operator side: it polls every instance's manager for status, and the platform's
 # `postgres-operator-egress` names only postgres-cluster, so without this the operator reports

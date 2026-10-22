@@ -322,8 +322,7 @@ def test_argocd_is_scraped_and_a_stuck_or_failed_sync_alerts_where_monitoring_ru
     services = [d for d in docs if d["kind"] == "Service" and d["metadata"].get("namespace") == "argocd"
                 and d["metadata"].get("labels", {}).get("app.kubernetes.io/name") == "argocd-metrics"]
     assert [p["name"] for s in services for p in s["spec"]["ports"]] == [monitor["spec"]["endpoints"][0]["port"]]
-    rules = next(d for d in docs if d["kind"] == "PrometheusRule")
-    [group] = [g for g in rules["spec"]["groups"] if g["name"] == "gitops"]
+    [group] = [g for d in docs if d["kind"] == "PrometheusRule" for g in d["spec"]["groups"] if g["name"] == "gitops"]
     alerts = {r["alert"]: r for r in group["rules"]}
     assert set(alerts) == {"ArgoCDApplicationOutOfSync", "ArgoCDApplicationDegraded", "ArgoCDSyncFailed"}
     assert alerts["ArgoCDApplicationOutOfSync"]["for"] == "15m" and alerts["ArgoCDApplicationDegraded"]["for"] == "15m"

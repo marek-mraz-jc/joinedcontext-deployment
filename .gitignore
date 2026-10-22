@@ -23,3 +23,7 @@ dev-deployment/.ssl/crlnumber*
 
 # The catalogue smoke's tables (T-4716): the next run rotates from the newest one.
 /.smoke/
+
+# Playwright runs of components/viz/tests (T-5129): installed browsers driver and result shots, never committed.
+node_modules/
+test-results/

@@ -2854,6 +2854,17 @@ def test_the_explorer_frames_the_endpoint_by_its_slug_and_the_resource_by_its_ty
     theme.page.lang = "fi"
 
 
+def test_the_explorer_frame_names_the_dataset_for_its_embed_code(theme):
+    """T-5129: the explorer's Embed code names the dataset, whose title and licence the embed shows."""
+    theme.page.lang = "sk"
+    named = dict(EXPLORED, name="bike-stations")
+    assert theme.jc_explorer(named)["src"] == "https://viz.dev.example/explore.html#scsd2eehkx42n53z2zyd6vshfh7s7irf&inline&lang=sk&dataset=bike-stations"
+    assert "&dataset=" not in theme.jc_explorer(dict(EXPLORED, name="Bike & stations"))["src"]
+    theme.page.lang = "fi"
+    snippet = (THEME / "templates__package__snippets__jc_explorer.html").read_text()
+    assert 'allow="clipboard-write"' in snippet and "allow-forms" not in snippet
+
+
 @pytest.mark.parametrize("endpoint", [
     "https://api.evil.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
     "https://broker.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",

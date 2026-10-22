@@ -45,6 +45,21 @@ Two documents, two origins of trust:
   it connects to the API and the tiles. A Portal change reaches the catalogue when the bundle is
   rebuilt from it and the image pinned (`images.yaml`).
 
+- **Embedding on another site** (`/embed.html`, `embed.js`, T-5129). The explorer's **Embed** button
+  gives a town the code for its own pages: the type, the kept filter (`q`) and order, table and map or
+  table only, language, colours and height. Two forms, both the same page: an `<iframe>` of
+  `/embed.html#{slug}&dataset=…&type=…&q=…&sort=…` (no script; it fits a WordPress "Custom HTML"
+  block), or `<script src="https://viz.{domain}/embed.js">` with
+  `<jc-data-explorer endpoint="…" dataset="…">`, which frames the same address and grows it to its
+  content from the frame's own height messages. `/embed.html` is `/explore.html` with
+  `frame-ancestors *` and `connect-src` adding the catalogue: it reads the dataset by name
+  (`package_show`) and shows its title, publisher and licence above the table, only when that dataset
+  names this very Endpoint. It is anonymous, sets and sends no cookie, and the public Endpoint checks
+  `q` as for the catalogue. Both frames run sandboxed without `allow-forms`.
+  `tests/embed.spec.mjs` runs the dialog to a town's page at 1440 and 400;
+  `tests/wordpress/run.sh` pastes both codes into a real WordPress 6.8 page in Docker and runs
+  `wordpress.spec.mjs` there.
+
 The Vega, MapLibre 6.14.0 and pmtiles 4.5.0 builds are the npm releases byte for byte
 (`images/viz/vendor/SHA256SUMS`), served from this host: no CDN. They are baked into the image
 `ghcr.io/<owner>/joinedcontext-viz` (`images/viz/Dockerfile`, which checks the sums at build time;
