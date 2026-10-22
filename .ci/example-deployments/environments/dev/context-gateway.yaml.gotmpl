@@ -1,0 +1,12 @@
+---
+# Stopgap on dev only (T-5179, 2026-10-22): the gateway was OOMKilled 14 times at its 1Gi limit
+# (development-values) between 03:50Z and 05:10Z under the HFP upsertBatch stream plus anonymous
+# read bursts; prod's 1Gi pod OOMs on the same pattern (later/T-later-prod-gateway-oom-1gi). The
+# request stays 384Mi. smartcity reuses dev's values profile, so this sits in dev's environment and
+# goes away when the code bounds what one burst holds.
+context-gateway:
+  gateway:
+    rawValues:
+      resources:
+        limits:
+          memory: 1536Mi
