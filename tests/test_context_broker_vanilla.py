@@ -38,7 +38,7 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     subject headers the gateway sets (platform T-3641), and `/q` behind the mounted secret with only
     the metrics open."""
     env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
-    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ws-views", "ogc", "linkml", "odata", "sta", "ical"]
+    assert env["ANTARES_API_SURFACES"].split(",") == ["admin", "views", "mcp", "access", "ws", "ws-views", "ogc", "linkml", "odata", "sta", "ical", "feed"]
     # T-3905: the view WebSocket is bounded for the one node, under the broker's own defaults.
     assert 0 < int(env["ANTARES_WS_MAX_CONNECTIONS_PER_TENANT"]) <= int(env["ANTARES_WS_MAX_CONNECTIONS"]) <= 1000
     assert 0 < int(env["ANTARES_WS_MAX_SUBSCRIPTIONS"]) <= 64
