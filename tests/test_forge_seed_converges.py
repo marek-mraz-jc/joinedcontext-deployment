@@ -429,3 +429,57 @@ def test_layout_2_refuses_a_project_without_its_organization(script, tmp_path):
     run = forge.run(script, LAYOUT="2")
     assert run.returncode != 0
     assert "projects/bbsk/project.yaml names no apiVersion or spec.organizationRef" in run.stderr
+
+
+ZILINA_ORG = """apiVersion: joinedcontext.com/v1alpha1
+kind: Organization
+metadata:
+  name: zilina
+  namespace: org
+spec:
+  domain: zilina.sk
+"""
+
+ZILINA = """apiVersion: joinedcontext.com/v1alpha1
+kind: Project
+metadata:
+  name: zilina
+  namespace: org
+spec:
+  organizationRef: zilina
+"""
+
+
+@requires_helmfile
+def test_layout_2_moves_org_yaml_to_two_organizations(script, tmp_path):
+    """ADR-N-058 (T-5242): the seed's `org.yaml` becomes `organizations/hel.yaml` beside
+    `organizations/zilina.yaml`. The run after the move deletes the `org.yaml` an earlier run
+    wrote, so one Organization is never declared twice, and project zilina is registered under
+    its own Organization."""
+    forge = Forge(tmp_path, {".jc/layout": "2\n"})
+    layout2(forge)
+    first = forge.run(script, LAYOUT="2")
+    assert first.returncode == 0, first.stderr
+    assert "org.yaml" in forge.contents
+
+    for old in forge.seed.iterdir():
+        old.unlink()
+    forge.put("organizations/hel.yaml", ORG_MANIFEST.replace("spec:\n", "spec:\n  installation: true\n"))
+    forge.put("organizations/zilina.yaml", ZILINA_ORG)
+    forge.put("projects/helsinki/project.yaml", HELSINKI)
+    forge.put("projects/zilina/project.yaml", ZILINA)
+    moved = forge.run(script, LAYOUT="2")
+    assert moved.returncode == 0, moved.stderr
+
+    org = forge.contents
+    assert "org.yaml" not in org, "the old path is gone, so `hel` is declared once"
+    assert org["organizations/zilina.yaml"] == ZILINA_ORG
+    assert "installation: true" in org["organizations/hel.yaml"]
+    assert "organizationRef: zilina\n" in org["projects/zilina.yaml"]
+    assert "organizationRef: hel\n" in org["projects/helsinki.yaml"]
+    repos = json.loads(forge.state.read_text())["repos"]
+    assert repos["zilina"]["files"]["project.yaml"] == ZILINA
+
+    again = forge.run(script, LAYOUT="2")
+    assert again.returncode == 0, again.stderr
+    assert "created" not in again.stdout, again.stdout
