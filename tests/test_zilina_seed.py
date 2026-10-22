@@ -28,6 +28,8 @@ SPACES = {
     "zilina-verejne": "zilina-verejne",
     "zilina-uniza": "zilina-uniza",
     "zilina-kpi": "key-performance-indicator",
+    # The city's own open data portal, live (T-5232).
+    "zilina-doprava": "zilina-doprava",
 }
 # The two models the project shares with bbsk, copied rather than generated twice.
 SHARED = [
@@ -63,7 +65,7 @@ def test_the_forge_bootstrap_commits_the_seed():
     assert 'seed/zilina/index.yaml' in values
 
 
-def test_one_project_four_spaces_each_pinning_its_segment_and_its_one_model():
+def test_one_project_five_spaces_each_pinning_its_segment_and_its_one_model():
     project = by_name("Project")
     assert list(project) == ["zilina"]
     assert project["zilina"]["spec"]["organizationRef"] == "hel"
@@ -101,7 +103,7 @@ def key_values(entity: dict) -> dict:
 
 # The indicator model leaves its values' JSON types to the gateway's NGSI-LD reading (a number
 # or "not measured", a window object, a DateTime); its example is checked by its attributes below.
-@pytest.mark.parametrize("model", ["statistical-observation", "zilina-verejne", "zilina-uniza"])
+@pytest.mark.parametrize("model", ["statistical-observation", "zilina-verejne", "zilina-uniza", "zilina-doprava"])
 def test_every_example_validates_against_its_model(model):
     jsonschema = pytest.importorskip("jsonschema")
     schema = json.loads((ZILINA / f"{model}.v1.schema.json").read_text())
@@ -137,7 +139,7 @@ def test_no_model_carries_a_person():
     assert uniza["slots"]["license"]["required"] is True, "only works that carry their own licence enter"
 
 
-def test_the_pipelines_account_writes_the_projects_four_spaces_and_nothing_else():
+def test_the_pipelines_account_writes_the_projects_five_spaces_and_nothing_else():
     account = by_name("ServiceAccount")["pipelines"]["spec"]
     scopes = {role["scope"]["contextSpace"] for role in account["roles"]}
     assert scopes == set(SPACES)
@@ -150,11 +152,13 @@ def test_the_catalogue_is_the_projects_own_organisation():
     assert "apiTokenRef" in ckan and "token" not in ckan, "the token is a reference, never a value"
 
 
-CKAN_LICENCE = {"CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa", "CC0": "cc-zero"}
-PUBLIC_SPACES = {"zilina-verejne", "zilina-uniza", "zilina-kpi"}
+CKAN_LICENCE = {"CC_BY_4_0": "cc-by", "CC_BYSA_4_0": "cc-by-sa", "CC0": "cc-zero", "ODC_ODBL": "odc-odbl"}
+PUBLIC_SPACES = {"zilina-verejne", "zilina-uniza", "zilina-kpi", "zilina-doprava"}
 # The public space's three types are three datasets (T-4344); its own Endpoint stays for the Apps.
-PUBLISHED = {"zilina-uniza", "zilina-kpi", "zilina-ovzdusie", "zilina-pamiatky", "zilina-zeleznicne-stanice"}
-PUBLIC = PUBLISHED | {"zilina-verejne"}
+PUBLISHED = {"zilina-uniza", "zilina-kpi", "zilina-ovzdusie", "zilina-pamiatky", "zilina-zeleznicne-stanice",
+             # The city portal's four kinds of thing, one dataset each (T-5232).
+             "zilina-parkoviska", "zilina-mhd", "zilina-scitace", "zilina-svietidla"}
+PUBLIC = PUBLISHED | {"zilina-verejne", "zilina-doprava"}
 
 
 def test_every_public_space_is_published_to_the_projects_catalogue_with_its_record():
