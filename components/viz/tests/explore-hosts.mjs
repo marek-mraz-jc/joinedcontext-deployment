@@ -77,11 +77,33 @@ export const DATA = {
     location: { type: "Point", coordinates: [19.14 + i / 200, 48.73 + i / 400] }
   })) }
 };
+// T-5233: 12 stations, a model with two GeoProperties. 0-7 have a location, 0-9 an observation
+// space 0.8° east of it, 10-11 neither; `open` (boolean) colours the map. The mock honours georel
+// within, geoproperty, geometryProperty, limit=0 and a q of `!attr` and `open==true` terms.
+const STATION_MODEL = `id: https://example.test/stations
+name: stations
+classes:
+  Station:
+    annotations: {label: ${label("Stanica", "Station")}}
+    attributes:
+      name: {rank: 1, annotations: {label: ${label("Názov", "Name")}}}
+      location: {rank: 2, annotations: {label: ${label("Poloha", "Location")}, ngsi_ld_kind: {tag: ngsi_ld_kind, value: GeoProperty}}}
+      observationSpace: {rank: 3, annotations: {label: ${label("Priestor pozorovania", "Observation space")}, ngsi_ld_kind: {tag: ngsi_ld_kind, value: GeoProperty}}}
+      open: {rank: 4, annotations: {label: ${label("Otvorená", "Open")}}}
+      url: {rank: 5, annotations: {label: ${label("Web", "Web")}}}
+`;
+const station = (i) => ({
+  id: `urn:ngsi-ld:Station:zsr:${i}`, type: "Station", name: `Stanica ${i + 1}`, open: i % 2 === 0, url: `https://www.zsr.sk/stanica/${i}`,
+  ...(i < 8 ? { location: { type: "Point", coordinates: [18.7 + i * 0.05, 49.2 + i * 0.02] } } : {}),
+  ...(i < 10 ? { observationSpace: { type: "Point", coordinates: [19.5 + i * 0.05, 49.2 + i * 0.02] } } : {})
+});
+
 // T-5196, DM-134: the same events, presented by the model alone: a default filter, 10 rows a page.
 DATA.presented = {
   ...DATA.events,
   model: EVENT_MODEL.replace("{view_order_by: startDate, view_upcoming: startDate}", "{view_order_by: startDate, view_filter: startDate>=today, view_page_length: 10}")
 };
+DATA.stations = { type: "Station", geo: ["location", "observationSpace"], model: STATION_MODEL, rows: Array.from({ length: 12 }, (_, i) => station(i)) };
 export const SLUGS = Object.fromEntries(Object.keys(DATA).map((k) => [k, (k + "slug").padEnd(32, "0").slice(0, 32)]));
 const FAIL = { forbidden: 403, missing: 404, gateway: 502, slow: 0 };
 for (const k of Object.keys(FAIL)) SLUGS[k] = (k + "fail").padEnd(32, "0").slice(0, 32);
@@ -90,7 +112,7 @@ const key = (slug) => Object.keys(SLUGS).find((k) => SLUGS[k] === slug);
 const attrs = (rows) => [...new Set(rows.flatMap((r) => Object.keys(r).filter((a) => a !== "id" && a !== "type")))];
 const normal = (r) => Object.fromEntries(Object.entries(r).map(([k, v]) => {
   if (k === "id" || k === "type") return [k, v];
-  if (k === "location") return [k, { type: "GeoProperty", value: v }];
+  if (k === "location" || k === "observationSpace") return [k, { type: "GeoProperty", value: v }];
   if (v && v.languageMap) return [k, { type: "LanguageProperty", languageMap: v.languageMap }];
   if (k.startsWith("ref")) return [k, { type: "Relationship", object: v }];
   if (Array.isArray(v)) return [k, v.map((x, i) => ({ type: "Property", value: x, datasetId: `urn:ds:${i}` }))];
@@ -100,7 +122,7 @@ const localized = (r, lang) => Object.fromEntries(Object.entries(r).map(([k, v])
 const manyRows = (offset, limit) => Array.from({ length: Math.max(0, Math.min(limit, 12345 - offset)) }, (_, i) => kpi(offset + i + 1));
 
 // The Endpoint's JSON Schema as the gateway serves it: one definition, a type and a description per attribute.
-const kindOf = (v) => (typeof v === "number" ? { type: "number" } : typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? { type: "string", format: "date-time" }
+const kindOf = (v) => (typeof v === "number" ? { type: "number" } : typeof v === "boolean" ? { type: "boolean" } : typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? { type: "string", format: "date-time" }
   : typeof v === "string" && /^https:\/\//.test(v) ? { type: "string", format: "uri" } : { type: "string" });
 const schemaOf = (d) => {
   const sample = d.sample || d.rows || manyRows(0, 5);
@@ -174,6 +196,13 @@ export async function serve(context) {
         return r ? route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify(localized(r, url.searchParams.get("lang"))) })
           : route.fulfill({ status: 404, headers: cors, body: "{}" });
       }
+      const typeOne = /^\/api\/endpoint\/([a-z0-9]+)\/ngsi-ld\/v1\/types\/([A-Za-z]+)$/.exec(url.pathname);
+      if (typeOne) {
+        const d = DATA[key(typeOne[1])];
+        if (!d || !d.geo || d.type !== typeOne[2]) return route.fulfill({ status: 404, headers: cors, body: "{}" });
+        const details = attrs(d.rows).map((a) => ({ id: a, type: "Attribute", attributeName: a, attributeTypes: [d.geo.includes(a) ? "GeoProperty" : "Property"] }));
+        return route.fulfill({ status: 200, contentType: "application/json", headers: cors, body: JSON.stringify({ id: d.type, type: "EntityTypeInfo", typeName: d.type, entityCount: d.rows.length, attributeDetails: details }) });
+      }
       const m = /^\/api\/endpoint\/([a-z0-9]+)\/(ngsi-ld\/v1\/types|ngsi-ld\/v1\/entities|schema\/index\.json|schema\/v1\/json-schema|schema\/v1\/model\.linkml\.yaml)$/.exec(url.pathname);
       const name = m && key(m[1]);
       if (!name) return route.fulfill({ status: 404, headers: cors, body: "{}" });
@@ -199,11 +228,27 @@ export async function serve(context) {
       const limit = +(p.get("limit") || 20);
       let rows = d.rows || manyRows(offset, limit);
       let count = d.count ?? rows.length;
-      if (p.get("q") && !d.ownQuery) { rows = rows.slice(0, 1); count = rows.length; }
+      if (d.geo) {
+        const gp = p.get("geoproperty") || "location";
+        for (const term of (p.get("q") || "").replace(/[()]/g, "").split(";").filter(Boolean)) {
+          const not = /^!(\w+)$/.exec(term), is = /^open==(true|false)$/.exec(term);
+          if (not) rows = rows.filter((r) => r[not[1]] === undefined);
+          else if (is) rows = rows.filter((r) => r.open === (is[1] === "true"));
+        }
+        if (p.get("georel") === "within") {
+          const ring = JSON.parse(p.get("coordinates"))[0];
+          const [w, s0, e, n] = [ring[0][0], ring[0][1], ring[2][0], ring[2][1]];
+          rows = rows.filter((r) => r[gp] && r[gp].coordinates[0] >= w && r[gp].coordinates[0] <= e && r[gp].coordinates[1] >= s0 && r[gp].coordinates[1] <= n);
+        }
+        count = rows.length;
+        if (limit === 0) rows = [];
+      }
+      if (p.get("q") && !d.ownQuery && !d.geo) { rows = rows.slice(0, 1); count = rows.length; }
       rows = ordered(rows, p.get("orderBy"));
       if (d.rows) rows = rows.slice(offset, offset + limit);
       if (request.headers().accept === "application/geo+json") {
-        return json({ type: "FeatureCollection", features: rows.filter((r) => r.location).map((r) => ({ id: r.id, type: "Feature", geometry: r.location, properties: localized(r, p.get("lang")) })) }, count);
+        const g = p.get("geometryProperty") || "location";
+        return json({ type: "FeatureCollection", features: rows.filter((r) => r[g]).map((r) => ({ id: r.id, type: "Feature", geometry: r[g], properties: localized(r, p.get("lang")) })) }, count);
       }
       return json(p.get("format") === "keyValues" ? rows.map((r) => localized(r, p.get("lang"))) : rows.map(normal), count);
     }
