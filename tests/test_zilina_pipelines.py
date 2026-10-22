@@ -258,6 +258,10 @@ def test_every_page_is_read_and_only_the_openly_licensed_works_enter():
     assert (first["workType"]["value"], first["yearPublished"]["value"]) == ("Conference paper", 2023)
     assert first["url"]["value"] == "http://drepo.uniza.sk/handle/hdluniza/936"
     assert first["identifier"]["value"] == "hdluniza/936"
+    # isPartOf is the collection's address (the Article extension's format uri), its name collectionName.
+    # The harness serves DSpace from a local address, so only the path is fixed here.
+    assert first["isPartOf"]["value"].endswith("/handle/hdluniza/933")
+    assert first["collectionName"]["value"] == "Práce a štúdie - Vydanie 13"
     # No author name of any recorded item reaches the output, in any attribute.
     assert "Kardoš" not in result.stdout.decode()
 

@@ -56,6 +56,7 @@ pipeline:
         let publisher = $values."dc.publisher".or([]).index(0).value.catch(null)
         let handle = $values."dc.identifier.uri".or([]).index(0).value.catch(null)
         let collection = this._embedded.owningCollection.name.catch(null)
+        let collection_handle = this._embedded.owningCollection.handle.catch(null)
         root = {
           # The handle is the item's persistent name; its slash would open a URN segment.
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Article", "zilina.sk", env("JC_SPACE"), this.handle.replace_all("/", "-")),
@@ -64,7 +65,9 @@ pipeline:
           "name": { "type": "LanguageProperty", "languageMap": { $language: $values."dc.title".index(0).value } },
           "workType": if $type_ == null { null } else { { "type": "Property", "value": $type_ } },
           "yearPublished": if $year == null || $year < 1900 { null } else { { "type": "Property", "value": $year.int64() } },
-          "isPartOf": if $collection == null { null } else { { "type": "Property", "value": $collection.trim() } },
+          # isPartOf is the collection's own address (schema:isPartOf, a URI); its name is collectionName.
+          "isPartOf": if $collection_handle == null { null } else { { "type": "Property", "value": "https://dspace.uniza.sk/handle/" + $collection_handle } },
+          "collectionName": if $collection == null { null } else { { "type": "Property", "value": $collection.trim() } },
           "publisher": if $publisher == null { null } else { { "type": "Property", "value": $publisher } },
           "license": { "type": "Property", "value": @licence },
           "url": if $handle == null { null } else { { "type": "Property", "value": $handle } },
