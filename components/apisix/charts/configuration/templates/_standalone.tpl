@@ -50,6 +50,17 @@
                     h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
                   end
                 end
+    {{- /* T-5122 (web performance budget): the Portal, CKAN and the viz host sent their scripts and
+           styles uncompressed, 2.1 MB for the catalogue's first view on a phone. Only static code
+           is compressed: an HTML or JSON answer can carry a CSRF token or session data beside text
+           a visitor typed, which compression would leak through its length (BREACH). */}}
+      - id: edge-gzip
+        plugins:
+          gzip:
+            types: ["text/javascript", "application/javascript", "text/css", "image/svg+xml"]
+            min_length: 1024
+            comp_level: 5
+            vary: true
     upstreams:
 {{- range $id, $config := .Values.routes }}
       - id: {{ $id }}

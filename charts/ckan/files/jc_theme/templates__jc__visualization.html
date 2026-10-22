@@ -10,8 +10,10 @@
       <h3 id="jc-viz-{{ viz.id }}-title">{{ viz.title }}</h3>
       {% if viz.description %}<p id="jc-viz-{{ viz.id }}-desc">{{ viz.description }}</p>{% endif %}
     </figcaption>
-    <iframe class="jc-viz-frame" loading="lazy" title="{{ viz.title }}" src="{{ viz.src }}" data-jc-viz="{{ viz.origin }}"
+    <iframe class="jc-viz-frame" loading="lazy" title="{{ viz.title }}" data-src="{{ viz.src }}" data-jc-viz="{{ viz.origin }}"
             referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-downloads"></iframe>
+    {# The frame starts from data-src when it nears the screen (T-5122); CKAN's view page has no other loader. #}
+    <script src="{{ h.url_for_static('/jc-viz.js') }}" defer></script>
     <div class="jc-viz-actions">
       {% if viz.package %}<a href="{{ h.url_for('dataset.read', id=viz.package) }}#jc-preview-title">{{ h.jc_t('viz_table') }}</a>{% endif %}
       <details class="jc-viz-embed">

@@ -612,6 +612,21 @@ def test_without_the_app_wildcard_nothing_of_it_renders(rendered):
         assert not any("*" in rule["host"] for rule in ingress["rules"]), env
 
 
+def test_the_edge_compresses_static_code_and_leaves_pages_and_json_alone(rendered):
+    """T-5122: the scripts and styles of the Portal, CKAN and viz go out compressed (the catalogue's
+    first view on a phone fell from 2.1 MB to 0.8 MB). HTML and JSON stay as they are: either can
+    carry a token beside text the visitor typed, and compression leaks it by length (BREACH)."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    rules = {r["id"]: r["plugins"] for r in yaml.safe_load(cm["data"]["apisix.yaml"])["global_rules"]}
+    gzip = rules["edge-gzip"]["gzip"]
+    assert set(gzip["types"]) == {"text/javascript", "application/javascript", "text/css", "image/svg+xml"}
+    assert not any("html" in t or "json" in t for t in gzip["types"]), gzip["types"]
+    assert gzip["vary"] is True and 1 <= gzip["comp_level"] <= 6 and gzip["min_length"] >= 1024
+
+
 def test_every_answer_gets_the_header_floor_where_nothing_set_it(rendered):
     """T-5107 (ZAP 10035, 10063): a global rule adds HSTS, nosniff and a Permissions-Policy to an
     answer that has none, the edge's own 404 for an address no route serves included; it never

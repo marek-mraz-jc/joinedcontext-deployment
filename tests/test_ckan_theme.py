@@ -2860,6 +2860,22 @@ def test_an_endpoint_s_dataset_page_opens_the_explorer_and_asks_no_datastore():
     assert "jc-viz.js" in read and "jc-viz.js" in resource, "the frame's height comes from jc-viz.js"
 
 
+def test_every_chart_and_explorer_frame_loads_only_near_the_viewport():
+    """T-5122: each frame pulls the renderer (vega, maplibre, about 500 kB); three eager frames on
+    a dataset page held a phone's main thread for 4.5 s before the page answered a tap."""
+    for name in sorted(p.name for p in THEME.glob("templates__*.html")):
+        for frame in re.findall(r"<iframe\b[^>]*>", (THEME / name).read_text()):
+            assert 'loading="lazy"' in frame, f"{name}: {frame}"
+    # A renderer frame waits in data-src for jc-viz.js, which starts one at a time, so seven charts
+    # download vega once and not seven times; each template that draws one loads the queue.
+    for name in ("templates__jc__visualization.html", "templates__package__snippets__jc_explorer.html"):
+        template = (THEME / name).read_text()
+        frame = re.search(r"<iframe\b[^>]*>", template).group(0)
+        assert "data-src=" in frame and not re.search(r"\ssrc=", frame), f"{name}: {frame}"
+    for name in ("templates__jc__visualization.html", "templates__package__read.html", "templates__package__resource_read.html"):
+        assert "url_for_static('/jc-viz.js')" in (THEME / name).read_text(), name
+
+
 def test_the_publishers_picture_link_is_not_a_second_nameless_stop_for_a_keyboard():
     """T-5108: axe link-name (serious) on every dataset page; the name link beside it carries the name."""
     snippet = (THEME / "templates__package__snippets__jc_publisher.html").read_text()

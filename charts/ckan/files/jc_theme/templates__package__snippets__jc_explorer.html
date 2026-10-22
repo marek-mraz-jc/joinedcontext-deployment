@@ -9,7 +9,7 @@
       <h2 id="jc-explorer-title">{{ explorer.title }}</h2>
     </div>
     <p class="jc-lead">{{ h.jc_t('explorer_lead') }}</p>
-    <iframe class="jc-viz-frame jc-explorer-frame" title="{{ explorer.title }}" src="{{ explorer.src }}" data-jc-viz="{{ explorer.origin }}"
+    <iframe class="jc-viz-frame jc-explorer-frame" loading="lazy" title="{{ explorer.title }}" data-src="{{ explorer.src }}" data-jc-viz="{{ explorer.origin }}"
             referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
   </section>
 {% endif %}
