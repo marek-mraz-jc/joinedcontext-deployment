@@ -63,7 +63,7 @@ def theme(tmp_path, monkeypatch):
     page.loaded = set()
     plugins.plugin_loaded = lambda name: name in page.loaded
     plugins.IConfigurer = plugins.ITemplateHelpers = plugins.IFacets = plugins.IPackageController = object
-    plugins.IBlueprint = plugins.IResourceView = object
+    plugins.IBlueprint = plugins.IResourceView = plugins.IFeed = object
     ckan = types.ModuleType("ckan")
     ckan.__file__ = str(tmp_path / "ckan/__init__.py")
     ckan.plugins = plugins
@@ -3036,8 +3036,14 @@ def test_a_description_cannot_close_the_script_element(site):
 
 def test_the_dataset_page_carries_the_record_in_its_head():
     page = (THEME / "templates__package__read_base.html").read_text()
-    assert re.search(r'{% block head_extras %}\s*{{- super\(\) }}\s*<script type="application/ld\+json">'
-                     r'{{ h.jc_schema_org\(pkg\) \| safe }}</script>\s*{% endblock %}', page)
+    head = re.search(r'{% block head_extras %}\s*{{- super\(\) }}\s*<script type="application/ld\+json">'
+                     r'{{ h.jc_schema_org\(pkg\) \| safe }}</script>(.*?){% endblock %}', page, re.S)
+    assert head
+    # T-5203: and one alternate link per feed output and format, nothing else.
+    alternates = re.sub(r"{#.*?#}", "", head.group(1), flags=re.S).split()
+    assert " ".join(alternates) == (
+        '{% for feed in h.jc_subscriptions(pkg).news %} <link rel="alternate" type="{{ feed.mimetype }}" '
+        'title="{{ feed.name }}" href="{{ feed.url }}"> {% endfor %}')
     assert check_schema_org.check_page(
         '<head><script type="application/ld+json">{"@type": "Dataset"}</script></head>') != []
     assert check_schema_org.check_page("<head></head>") == ["0 schema.org Dataset records, expected 1"]
@@ -3116,3 +3122,58 @@ def test_viz_frames_are_sized_by_content_and_hear_the_visible_slice():
     script = (THEME / "public__jc-viz.js").read_text()
     assert "var JC_VIZ_MAX = 20000;" in script and "2000)" not in script
     assert 'type: "jc-viz-viewport"' in script and 'frame.getAttribute("data-jc-viz"))' in script
+
+
+# T-5203: the dataset page offers its calendar and feeds, and the catalogue's own Atom feed is valid.
+SUBSCRIBED = {
+    "resources": [
+        {"name": "NGSI-LD API", "url": "https://dev.example/api/endpoint/e/ngsi-ld/v1/", "mimetype": "application/json"},
+        {"name": "iCalendar feed", "url": "https://dev.example/api/endpoint/e/ical/v1/events.ics", "mimetype": "text/calendar"},
+        {"name": "Kultúra (Atom)", "url": "https://dev.example/api/endpoint/e/feed/v1/kultura/atom.xml", "mimetype": "application/atom+xml"},
+        {"name": "Kultúra (JSON Feed)", "url": "https://dev.example/api/endpoint/e/feed/v1/kultura/feed.json", "mimetype": "application/feed+json"},
+        {"name": "Planted", "url": "javascript:alert(1)", "mimetype": "application/rss+xml"},
+    ]
+}
+
+
+def test_subscriptions_group_calendar_and_news_and_keep_https_only(theme):
+    found = theme.jc_subscriptions(SUBSCRIBED)
+    assert [item["name"] for item in found["calendar"]] == ["iCalendar feed"]
+    assert [item["name"] for item in found["news"]] == ["Kultúra (Atom)", "Kultúra (JSON Feed)"]
+    assert theme.jc_subscriptions({"resources": SUBSCRIBED["resources"][:1]}) == {"calendar": [], "news": []}
+
+
+def test_the_catalogue_feeds_paging_links_are_absolute_and_followable(theme):
+    site = "https://opendata.dev.example"
+    assert theme._feed_href("/feeds/dataset.atom?query=page&query=2", site) == f"{site}/feeds/dataset.atom?page=2"
+    assert theme._feed_href("/feeds/dataset.atom?query=page&query=5.0", site) == f"{site}/feeds/dataset.atom?page=5"
+    assert theme._feed_href("/dataset/", site) == f"{site}/dataset/"
+    assert theme._feed_href("https://other.example/x?page=1", site) == "https://other.example/x?page=1"
+
+
+def test_the_catalogue_feed_names_its_language_author_and_each_publisher(theme):
+    made = {}
+
+    class Base:
+        def __init__(self, title, link, description, **kwargs):
+            made.update(title=title, link=link, **kwargs)
+            made["items"] = []
+
+        def add_item(self, **kwargs):
+            made["items"].append(kwargs)
+
+    feed = theme.jc_feed_class(Base, "https://opendata.dev.example", "sk", "Otvorené dáta")(
+        "Otvorené dáta", "/dataset/", "Recently", language="en", author_name="default",
+        next_page="/feeds/dataset.atom?query=page&query=2", previous_page=None,
+    )
+    assert made["language"] == "sk" and made["author_name"] == "Otvorené dáta"
+    assert made["link"] == "https://opendata.dev.example/dataset/"
+    assert made["next_page"] == "https://opendata.dev.example/feeds/dataset.atom?page=2"
+    assert made["previous_page"] is None
+    feed.add_item(title="Ovzdušie", link="https://opendata.dev.example/api/3/action/package_show?id=x",
+                  author_name="", author_email="", jc_publisher="Mesto Banská Bystrica",
+                  jc_page="https://opendata.dev.example/dataset/ovzdusie")
+    feed.add_item(title="Bez vydavateľa", link="l", author_name="", author_email="")
+    assert made["items"][0] == {"title": "Ovzdušie", "link": "https://opendata.dev.example/dataset/ovzdusie",
+                                "author_name": "Mesto Banská Bystrica"}
+    assert made["items"][1] == {"title": "Bez vydavateľa", "link": "l"}
