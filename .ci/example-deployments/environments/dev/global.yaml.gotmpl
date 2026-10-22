@@ -69,6 +69,8 @@ components:
   - viz
   # The standalone assistant (T-4694): ai.{domain}/{publicId}, a static copy of the widget.
   - ai
+  # Synthetic probes of every public surface through the public hosts, every minute (T-5103).
+  - probes
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}

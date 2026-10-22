@@ -2878,3 +2878,19 @@ def test_the_accessibility_statement_names_status_gaps_method_date_and_enforceme
         assert len(page["sections"]) == 8 and len(page["sections"][3]["paragraphs"]) == 4
     footer = (THEME / "footer.html").read_text()
     assert "'accessibility')" in footer
+
+
+def test_an_api_resource_links_the_portal_developer_page_of_its_endpoint(theme):
+    """T-5111: the resource page of a public Endpoint links its developer page on the Portal."""
+    theme.page.lang = "sk"
+    assert theme.jc_developer_page(EXPLORED) == "https://portal.dev.example/d/scsd2eehkx42n53z2zyd6vshfh7s7irf?lang=sk"
+    theme.page.lang = "fi"
+    for endpoint in ("https://api.evil.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/",
+                     "https://api.dev.example/api/endpoint/SHORT/",
+                     "http://api.dev.example/api/endpoint/scsd2eehkx42n53z2zyd6vshfh7s7irf/"):
+        assert theme.jc_developer_page({"extras": [{"key": "endpoint", "value": endpoint}]}) is None
+    assert theme.jc_developer_page({}) is None
+    resource = (THEME / "templates__package__resource_read.html").read_text()
+    examples = resource[resource.index('<section class="jc-examples"'):resource.index("</section>", resource.index('<section class="jc-examples"'))]
+    assert "h.jc_developer_page(pkg)" in examples and "h.jc_t('developer_page')" in examples
+
