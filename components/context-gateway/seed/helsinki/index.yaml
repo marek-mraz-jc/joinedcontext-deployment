@@ -24,6 +24,7 @@ helsinki-endpoint-transport.yaml: projects/helsinki/spaces/helsinki/endpoints/he
 helsinki-endpoint-all.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-all.yaml
 helsinki-endpoint-news.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-news.yaml
 helsinki-endpoint-weather.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-weather.yaml
+helsinki-endpoint-air-quality.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-air-quality.yaml
 helsinki-endpoint-alerts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-alerts.yaml
 helsinki-policy-public-events.yaml: projects/helsinki/spaces/helsinki/policies/public-events.yaml
 helsinki-policy-public-bikes.yaml: projects/helsinki/spaces/helsinki/policies/public-bikes.yaml
@@ -36,6 +37,7 @@ helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/publ
 helsinki-policy-public-all-history.yaml: projects/helsinki/spaces/helsinki/policies/public-all-history.yaml
 helsinki-policy-public-news.yaml: projects/helsinki/spaces/helsinki/policies/public-news.yaml
 helsinki-policy-public-weather.yaml: projects/helsinki/spaces/helsinki/policies/public-weather.yaml
+helsinki-policy-public-air-quality.yaml: projects/helsinki/spaces/helsinki/policies/public-air-quality.yaml
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
 helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
 helsinki-policy-pipelines-delete-alerts.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-delete-alerts.yaml

@@ -112,8 +112,18 @@ def test_an_alert_without_a_dated_period_is_issued_when_the_feed_was_produced():
     produced = datetime.fromtimestamp(NOW, UTC)
     assert alerts["hsl-1"]["dateIssued"]["value"] == produced.strftime("%Y-%m-%dT%H:%M:%SZ")
     assert "validFrom" not in alerts["hsl-1"]
-    # Two periods: the earlier start is the issue time.
-    assert alerts["hsl-2"]["dateIssued"]["value"] == "2026-10-14T08:00:00Z"
+    # Two periods, both after the feed was produced: an issue time never lies ahead (T-5259).
+    assert alerts["hsl-2"]["dateIssued"]["value"] == produced.strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert alerts["hsl-2"]["validFrom"]["value"] == "2026-10-14T08:00:00Z"
+
+
+@requires_docker
+def test_an_alert_whose_period_began_before_the_feed_is_issued_at_its_start():
+    begun = alert(1, {"agencyId": "HSL"})
+    begun["alert"]["activePeriod"] = [{"start": str(NOW - 7200)}, {"start": str(NOW - 3600)}]
+    alerts = run(encode(feed(begun)), held())
+    started = datetime.fromtimestamp(NOW - 7200, UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert alerts["hsl-1"]["dateIssued"]["value"] == started == alerts["hsl-1"]["validFrom"]["value"]
 
 
 @requires_docker
