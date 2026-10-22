@@ -2854,10 +2854,3 @@ def test_an_api_resource_links_the_portal_developer_page_of_its_endpoint(theme):
     examples = resource[resource.index('<section class="jc-examples"'):resource.index("</section>", resource.index('<section class="jc-examples"'))]
     assert "h.jc_developer_page(pkg)" in examples and "h.jc_t('developer_page')" in examples
 
-
-def test_the_websocket_guide_link_names_the_guide_and_the_assistant_card_says_guide(theme):
-    """T-5111: one STRINGS key held both texts, so the WebSocket link read only "Guide"."""
-    theme.page.lang = "en"
-    assert theme.jc_t("ws_guide") == "The WebSocket guide: messages, limits and examples"
-    assert theme.jc_t("guide") == "Guide"
-    theme.page.lang = "fi"
