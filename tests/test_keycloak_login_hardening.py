@@ -8,6 +8,7 @@ documented ones. scripts/keycloak-login-journey.py walks the same rules in a bro
 
 import base64
 import json
+import uuid
 
 import pytest
 
@@ -128,6 +129,17 @@ def test_every_demo_person_with_an_mfa_role_has_a_totp_seed_from_its_secret(env_
         else:
             assert not otp, (env, name)
             assert "totp" not in seeded.get(secret, set()), (env, secret)
+
+
+def test_every_seeded_totp_credential_has_a_fixed_id(env_docs, realm):
+    # keycloak-config-cli re-imports the users on every realm change; Keycloak skips a credential
+    # whose id the user already holds and creates any other again, which a second OTP of the same
+    # label refuses with 409 and the whole import fails (T-5214, ci-full 39744036293).
+    env, _ = env_docs
+    ids = [c.get("id") for u in realm["users"] for c in u.get("credentials", []) if c["type"] == "otp"]
+    for cid in ids:
+        assert cid and str(uuid.UUID(cid)) == cid, (env, cid)
+    assert len(set(ids)) == len(ids), (env, ids)
 
 
 def test_the_initial_owner_gets_no_seed_and_enrols_at_first_login(realm):

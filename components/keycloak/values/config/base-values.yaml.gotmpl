@@ -508,8 +508,13 @@ config:
               temporary: false
             {{- if or (has "portal-approver" ($user.realmRoles | default list)) (has "platform-admin" ($user.realmRoles | default list)) }}
             {{- /* Keycloak keeps an OTP secret as the text itself and hashes its UTF-8 bytes; the
-                   journeys compute the code from the same text (T-5120). */}}
+                   journeys compute the code from the same text (T-5120). The fixed id makes a
+                   re-import skip the credential it already holds; without one Keycloak creates it
+                   again and answers 409 for the duplicate label, so any later realm change failed
+                   (T-5214). */}}
+            {{- $otpId := sha256sum (printf "%s:%s@%s:otp" $global.instanceSlug $name $global.orgDomain) }}
             - type: otp
+              id: {{ printf "%s-%s-%s-%s-%s" (substr 0 8 $otpId) (substr 8 12 $otpId) (substr 12 16 $otpId) (substr 16 20 $otpId) (substr 20 32 $otpId) }}
               userLabel: journey seed
               secretData: '{"value":"$(USER_TOTP_{{ $name | upper | replace "." "_" }})"}'
               credentialData: '{"subType":"totp","digits":6,"counter":0,"period":30,"algorithm":"HmacSHA256"}'
