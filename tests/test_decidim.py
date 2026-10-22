@@ -8,6 +8,7 @@ check the space, its two Endpoints, the read Policy and that generate.py wrote w
 import copy
 import http.server
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -377,3 +378,13 @@ def test_the_space_reads_publicly_and_only_pipelines_write():
         if path.name.endswith("-bento.yaml"):
             continue
         assert seed(path.name)["spec"]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{SPACE}:{SPACE}-zapis"
+
+
+def test_every_http_step_writes_its_host_out():
+    # The runner refuses a pipeline whose URL takes any part of its host from a message (PL-07,
+    # jc-core data_source.rs refused_target): `https://host${! @path }` ran as RunnerRefused on dev
+    # since 2026-10-22T06:12Z, since a path not starting with "/" would extend the host.
+    authority = re.compile(r"://([^/?#\"'`\s]*)")
+    for bento in sorted(SEED.glob("*-bento.yaml")):
+        for host in authority.findall(bento.read_text()):
+            assert "${!" not in host, (bento.name, host)

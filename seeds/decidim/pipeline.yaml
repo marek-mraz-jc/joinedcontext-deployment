@@ -250,11 +250,11 @@ pipeline:
                                               - branch:
                                                   request_map: |
                                                     let job = this.jobs.index(0)
-                                                    meta path = $job.list.trim_prefix(this.cfg.base) + "?per_page=100&page=" + $job.page.string() + (if $job.kind == "proposals" { "&order=recent&filter%5Bwith_any_state%5D%5B%5D=" } else { "" })
+                                                    meta path = $job.list.trim_prefix(this.cfg.base + "/") + "?per_page=100&page=" + $job.page.string() + (if $job.kind == "proposals" { "&order=recent&filter%5Bwith_any_state%5D%5B%5D=" } else { "" })
                                                     root = ""
                                                   processors:
                                                     - http:
-                                                        url: __BASE__${! @path }
+                                                        url: __BASE__/${! @path }
                                                         verb: GET
                                                         headers:
                                                           User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public participation data)
