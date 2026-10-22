@@ -182,6 +182,22 @@ def test_workflows_take_tool_versions_from_tools_env():
         assert not written, f"{workflow.name}: {written} belongs in tools.env"
 
 
+def test_just_comes_from_tools_env():
+    """T-5237: setup-just resolved its version through the GitHub API and failed whole shards when
+    the answer came back empty; .github/actions/tools installs the pinned, checksummed release."""
+    action = (ROOT / ".github/actions/tools/action.yml").read_text()
+    assert "JUST_CHECKSUM" in action and "sha256sum --check" in action
+    for workflow in WORKFLOWS.glob("*.yml"):
+        text = workflow.read_text()
+        assert "extractions/setup-just@" not in text, (
+            f"{workflow.name}: use ./.github/actions/tools"
+        )
+        if re.search(r"^\s+(- )?(run: )?just ", text, re.MULTILINE):
+            assert "uses: ./.github/actions/tools" in text, (
+                f"{workflow.name} runs just without it"
+            )
+
+
 def remote_charts(node) -> int:
     """Chart entries pulled from an HTTP(S) repository (`repository` + `chart` + `version`)."""
     if isinstance(node, dict):
