@@ -28,5 +28,7 @@ spec:
       - resources:
           kinds:
             - DaemonSet
+          namespaces:
+            - kube-system
           names:
             - node-exporter

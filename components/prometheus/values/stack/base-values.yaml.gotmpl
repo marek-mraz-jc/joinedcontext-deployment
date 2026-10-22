@@ -139,6 +139,18 @@ prometheus:
     retentionSize: {{ $this.retentionSize | quote }}
     scrapeInterval: 30s
     evaluationInterval: 30s
+    # Per-scrape ceilings, so one target's series jump fails that scrape (up == 0, the
+    # TargetDown rule fires) instead of growing the head block until the 1536Mi limit
+    # OOM-kills Prometheus in a loop. The largest target on a single node is the kubelet's
+    # cAdvisor, about 12k series for dev's ~150 containers after the chart's drop rules, and
+    # kube-state-metrics about 10k; 40000 leaves 3x headroom. Prometheus holds roughly 200k
+    # active series in 1536Mi, so ~30 targets at their usual size stay well under it.
+    enforcedSampleLimit: 40000
+    enforcedTargetLimit: 200
+    enforcedLabelLimit: 64
+    enforcedLabelNameLengthLimit: 128
+    enforcedLabelValueLengthLimit: 1024
+    enforcedBodySizeLimit: 32MB
     # Every ServiceMonitor, PodMonitor, Probe and PrometheusRule on the cluster, not only the
     # ones labelled with this release: the monitoring component renders its monitors into the
     # namespace of each component it scrapes, and the APISIX, Keycloak and CNPG charts render

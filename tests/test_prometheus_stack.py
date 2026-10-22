@@ -2,9 +2,11 @@
 Alertmanager, node-exporter and kube-state-metrics, every image by digest, sized requests and
 limits, nothing at the edge, and every target's policy admitting it."""
 
+import pathlib
 import re
 
 import pytest
+import yaml
 
 
 @pytest.fixture(scope="module", params=["dev", "smartcity"])
@@ -39,6 +41,24 @@ def test_prometheus_keeps_31_days_on_a_sized_volume_and_reads_every_monitor(env)
         assert spec[selector] == {}, f"{selector} narrows to {spec[selector]}"
     assert spec["resources"]["limits"]["memory"] and spec["resources"]["requests"]["memory"]
     assert one(env, "Alertmanager")["spec"]["automountServiceAccountToken"] is False
+
+
+def test_prometheus_caps_each_scrape_so_a_series_jump_cannot_oom_it(env):
+    spec = one(env, "Prometheus")["spec"]
+    assert spec["enforcedSampleLimit"] == 40000
+    assert spec["enforcedTargetLimit"] == 200
+    assert spec["enforcedLabelLimit"] == 64
+    assert spec["enforcedLabelNameLengthLimit"] == 128
+    assert spec["enforcedLabelValueLengthLimit"] == 1024
+    assert spec["enforcedBodySizeLimit"] == "32MB"
+
+
+def test_host_path_exception_matches_only_kube_system_node_exporter():
+    path = pathlib.Path(__file__).resolve().parents[1] / "components/prometheus/policy-exceptions.yaml"
+    (exception,) = [d for d in yaml.safe_load_all(path.read_text()) if d]
+    assert exception["spec"]["match"]["any"] == [
+        {"resources": {"kinds": ["DaemonSet"], "namespaces": ["kube-system"], "names": ["node-exporter"]}}
+    ]
 
 
 def test_every_image_is_pinned_by_digest(env):
