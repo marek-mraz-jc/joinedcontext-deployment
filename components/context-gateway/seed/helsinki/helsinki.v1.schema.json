@@ -23,7 +23,7 @@
         },
         "divisionLevel": {
           "$ref": "#/definitions/DivisionLevel",
-          "description": "Which of the city's two divisions the area belongs to.",
+          "description": "Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
@@ -700,6 +700,16 @@
       "title": "BikeHireDockingStation",
       "type": "object"
     },
+    "CalculationFrequency": {
+      "description": "",
+      "enum": [
+        "monthly",
+        "quarterly",
+        "yearly"
+      ],
+      "title": "CalculationFrequency",
+      "type": "string"
+    },
     "CityWork": {
       "additionalProperties": false,
       "description": "One permit of the city's public-area register: an excavation, a temporary traffic arrangement or an event, with every area it covers as one outline. The applicant and the contractor are left out, because they can name a person. The Smart Data Model of works that occupy the street; an event's permit covers its build and teardown on it.",
@@ -859,15 +869,15 @@
     "DivisionLevel": {
       "description": "",
       "enum": [
+        "city",
+        "majorDistrict",
+        "basicDistrict",
+        "cityPart",
         "district",
         "subDistrict"
       ],
       "title": "DivisionLevel",
-      "type": "string",
-      "x-enum-descriptions": {
-        "district": "A district (kaupunginosa), 60 of them.",
-        "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use."
-      }
+      "type": "string"
     },
     "Entity": {
       "additionalProperties": false,
@@ -1682,6 +1692,229 @@
         "type"
       ],
       "title": "GtfsStop",
+      "type": "object"
+    },
+    "KeyPerformanceIndicator": {
+      "additionalProperties": false,
+      "description": "One indicator of the city's area statistics (Aluesarjat) for one area: the newest period's value, its history one row per period. Read daily from stat.hel.fi.",
+      "properties": {
+        "area": {
+          "description": "The name of the area the value describes, a sub-district, district or the whole city.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "calculatedBy": {
+          "description": "The organization that computes the value.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "calculationFrequency": {
+          "$ref": "#/definitions/CalculationFrequency",
+          "description": "How often the source publishes a new period.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "calculationPeriod": {
+          "$ref": "#/definitions/KpiPeriod",
+          "description": "The period the value covers, its first and last day.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "dimensionKey": {
+          "description": "Which cell of the table the value is: each kept dimension and its code, such as Sukupuoli=ALL;Tiedot=tyottomyysaste.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "districtCode": {
+          "description": "The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it.",
+          "pattern": "^[0-9]{1,10}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "divisionLevel": {
+          "$ref": "#/definitions/DivisionLevel",
+          "description": "Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "kpiValue": {
+          "description": "The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count, P1 a percentage, EUR euros, MTK square metres) and the period's last day as `observedAt`, so the history holds one value per period.",
+          "type": "number",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "organization": {
+          "description": "The organization the indicator describes.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "process": {
+          "description": "The statistics table the value comes from, in the source's words.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refArea": {
+          "description": "The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the city's register holds; a district or the whole city is named by `area` and `districtCode`.",
+          "pattern": "^urn:ngsi-ld:AdministrativeArea:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "onDelete": "set-null",
+            "target": "AdministrativeArea",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "statisticsTable": {
+          "description": "The source's own table code, such as alu_vamuu_010h, which `source` links to.",
+          "pattern": "^[a-z]+_[a-z]+_[0-9]{3}[a-z]$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "updatedAt": {
+          "description": "When the source last updated the table.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "kpiValue",
+        "calculationPeriod",
+        "id",
+        "type"
+      ],
+      "title": "KeyPerformanceIndicator",
+      "type": "object"
+    },
+    "KpiPeriod": {
+      "additionalProperties": false,
+      "description": "The value of `calculationPeriod`, never an entity of its own.",
+      "properties": {
+        "from": {
+          "description": "The first day of the period.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "to": {
+          "description": "The last day of the period.",
+          "format": "date",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "title": "KpiPeriod",
       "type": "object"
     },
     "OffStreetParking": {

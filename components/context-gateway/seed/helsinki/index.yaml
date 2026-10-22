@@ -239,3 +239,17 @@ helsinki-endpoint-districts.yaml: projects/helsinki/spaces/helsinki/endpoints/he
 helsinki-policy-public-districts.yaml: projects/helsinki/spaces/helsinki/policies/public-districts.yaml
 helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
 helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml
+# Helsinki area statistics (T-5258): one pipeline, one Endpoint and one public Policy per theme.
+helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-subdistrict-codes.yaml
+helsinki-pipeline-statistics.yaml: projects/helsinki/pipelines/statistics/pipeline.yaml
+helsinki-pipeline-statistics-bento.yaml: projects/helsinki/pipelines/statistics/bento.yaml
+helsinki-endpoint-statistics-population.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-population.yaml
+helsinki-policy-public-statistics-population.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-population.yaml
+helsinki-endpoint-statistics-housing.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-housing.yaml
+helsinki-policy-public-statistics-housing.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-housing.yaml
+helsinki-endpoint-statistics-employment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-employment.yaml
+helsinki-policy-public-statistics-employment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-employment.yaml
+helsinki-endpoint-statistics-income.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-income.yaml
+helsinki-policy-public-statistics-income.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-income.yaml
+helsinki-endpoint-statistics-education.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-education.yaml
+helsinki-policy-public-statistics-education.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-education.yaml
