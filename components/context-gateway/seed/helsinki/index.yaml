@@ -1,9 +1,10 @@
 # file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
 # by the gateway's development values (flat /repo, every file under its own name) and by the
 # forge bootstrap's seed (this layout). One list, two consumers.
-# The organization itself and the settings the whole repository shares (PF-02, PF-41, DM-19):
-# one repository, one Organization, and every project below it names it.
-helsinki-org.yaml: org.yaml
+# The installation's Organization and the settings the whole repository shares (PF-02, PF-41,
+# DM-19, PF-121): one repository; every project below names `hel` except zilina, which belongs to
+# the Organization of its own in seed/zilina (ADR-N-058).
+helsinki-org.yaml: organizations/hel.yaml
 helsinki-platform-settings.yaml: platform-settings.yaml
 helsinki-project.yaml: projects/helsinki/project.yaml
 helsinki-mobility-project.yaml: projects/helsinki-mobility/project.yaml

@@ -56,7 +56,10 @@ def test_the_index_lists_every_file_and_names_no_missing_one():
     index = yaml.safe_load((ZILINA / "index.yaml").read_text())
     files = {p.name for p in ZILINA.iterdir() if p.is_file() and p.name not in {"index.yaml", "README.md"}}
     assert set(index) == files
-    assert all(path.startswith("projects/zilina/") for path in index.values())
+    # The Organization and its bindings live in the organization repository (ADR-N-058).
+    own = {"organizations/zilina.yaml", "users/assignments/zilina-admins.yaml", "users/assignments/zilina-viewers.yaml"}
+    assert all(path.startswith("projects/zilina/") or path in own for path in index.values())
+    assert own <= set(index.values())
     assert len(set(index.values())) == len(index), "two files on one repository path"
 
 
@@ -68,7 +71,7 @@ def test_the_forge_bootstrap_commits_the_seed():
 def test_one_project_five_spaces_each_pinning_its_segment_and_its_one_model():
     project = by_name("Project")
     assert list(project) == ["zilina"]
-    assert project["zilina"]["spec"]["organizationRef"] == "hel"
+    assert project["zilina"]["spec"]["organizationRef"] == "zilina"
     spaces = by_name("ContextSpace")
     assert set(spaces) == set(SPACES)
     models = by_name("DataModel")
@@ -243,3 +246,49 @@ def test_the_four_apps_are_public_read_only_and_granted_exactly_what_they_show()
         for need in further:
             assert need["contextSpaceRef"]["name"] in {e["spec"]["contextSpaceRef"] for e in endpoints.values()
                                                        if e["spec"]["audience"] == "public" and "publish" in e["spec"]}
+
+
+def test_zilina_is_an_organization_of_its_own_pf121_pf122():
+    """ADR-N-058 (T-5242): Mesto Žilina is its own Organization, not the installation's, and its
+    project publishes under its domain; its publisher is the city by its registry IRI."""
+    org = by_name("Organization")["zilina"]
+    assert org["metadata"]["title"]["sk"] == "Mesto Žilina"
+    spec = org["spec"]
+    assert spec["domain"] == "zilina.sk"
+    assert spec["locales"] == ["sk", "en"] and spec["defaultLocale"] == "sk"
+    assert spec["dcatProfiles"] == ["dcat-ap-sk"]
+    assert not spec.get("installation"), "Helsinki stays the installation's Organization"
+    assert spec["catalog"]["publisher"]["uri"] == "https://data.gov.sk/id/legal-subject/00321796"
+    project = by_name("Project")["zilina"]["spec"]
+    domain = project["domain"]
+    assert domain == spec["domain"] or domain.endswith("." + spec["domain"]), "PF-122"
+
+
+def test_the_zilina_bindings_end_at_its_organization_pf123():
+    """Each seeded binding of Žilina is scoped to the Organization `zilina`, and no binding of the
+    seed reaches both Organizations (ADR-N-058 2.4)."""
+    bindings = by_name("RoleBinding")
+    admins, viewers = bindings["zilina-admins"]["spec"], bindings["zilina-viewers"]["spec"]
+    assert admins == {"subjects": [{"user": "demo.zilina@hel.fi"}], "role": "org-admin", "scope": {"organization": "zilina"}}
+    assert viewers == {
+        "subjects": [{"group": "zilina", "source": "provider"}], "role": "viewer", "scope": {"organization": "zilina"},
+    }
+    every = [
+        doc["spec"]
+        for path in sorted(SEED.glob("*/*.yaml"))
+        for doc in yaml.safe_load_all(path.read_text())
+        if isinstance(doc, dict) and doc.get("kind") == "RoleBinding"
+    ]
+    zilina_people = {"demo.zilina@hel.fi", "zilina"}
+    for spec in every:
+        names = {s.get("user") or s.get("group") for s in spec["subjects"]}
+        if spec.get("scope", {}).get("organization") == "hel":
+            assert not names & zilina_people, f"a Helsinki binding names Žilina's people: {spec}"
+
+
+def test_the_ckan_organisation_is_titled_mesto_zilina():
+    """The instance title is what the publisher creates the CKAN organisation with and renames
+    an existing one to (jcctl, ADR-N-058 2.6)."""
+    instance = by_name("CkanInstance")["zilina"]
+    assert instance["metadata"]["title"]["sk"] == "Mesto Žilina"
+    assert instance["spec"]["organizationDefault"] == "zilina"
