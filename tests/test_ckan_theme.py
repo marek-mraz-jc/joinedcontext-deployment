@@ -2393,7 +2393,8 @@ def mapped(theme, tmp_path, monkeypatch):
 def test_the_map_reads_each_table_s_type_from_the_dataset_s_own_ogc_features(mapped):
     config = mapped.jc_map(MAP_PKG)
     base = "https://dev.example/api/endpoint/abc/ogc/features/collections/WeatherObserved"
-    assert config["layers"] == [{"type": "WeatherObserved", "items": base + "/items", "schema": base + "/schema"}]
+    assert config["layers"] == [{"type": "WeatherObserved", "items": base + "/items", "schema": base + "/schema",
+                                 "tiles": base + "/tiles/WebMercatorQuad"}]
     assert config["lib"] == "/maplibre-gl-6.14.0/maplibre-gl.mjs"
     assert config["embed"] == "https://data.dev.example/jc_pages.map/pocasie"
     assert config["title"] == "Počasie" and set(config["t"]) >= {"map_cap", "map_close", "map_area"}
@@ -2531,6 +2532,36 @@ console.log(JSON.stringify({
     assert out["line"]["rows"][0][0] == "Dĺžka" and re.fullmatch(r"1\.1\d\u00a0km", out["line"]["rows"][0][1])
     assert 1100 < out["length"] < 1125  # 0.01° of latitude
     assert 0.8e6 < out["area"] < 0.85e6 and out["square"]["rows"][0][1].endswith("\u00a0ha")
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_the_tile_address_stays_on_the_collection_s_own_tiles_path():
+    # T-5189: the map reads a tileset's item template only under the layer's own tileset address.
+    script = (THEME / "public__jc-map.js").resolve().as_uri()
+    at = "https://api.dev.example/api/endpoint/abc/ogc/features/collections/Bike/tiles/WebMercatorQuad"
+    code = """
+import { templateOf, itemUrl } from %s;
+const at = %s;
+const mvt = "application/vnd.mapbox-vector-tile";
+const of = (href, type = mvt) => templateOf({ links: [{ rel: "self", type: "application/json", href: at }, { rel: "item", type, templated: true, href }] }, at);
+console.log(JSON.stringify({
+  own: of(at + "/{tileMatrix}/{tileRow}/{tileCol}"),
+  elsewhere: of("https://evil.example/t/{tileMatrix}/{tileRow}/{tileCol}"),
+  broker: of("http://antares:9471/ngsi-ld/ogc/collections/Bike/tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}"),
+  sibling: of(at.replace("/Bike/", "/Other/") + "/{tileMatrix}/{tileRow}/{tileCol}"),
+  query: of(at + "/{tileMatrix}/{tileRow}/{tileCol}?f=mvt"),
+  order: of(at + "/{tileMatrix}/{tileCol}/{tileRow}"),
+  json: of(at + "/{tileMatrix}/{tileRow}/{tileCol}", "application/json"),
+  none: templateOf({}, at),
+  item: itemUrl(at.replace("/tiles/WebMercatorQuad", "/items"), "urn:ngsi-ld:Bike:a/b"),
+}));
+""" % (json.dumps(script), json.dumps(at))
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    out = json.loads(done.stdout)
+    assert out["own"] == at + "/{z}/{y}/{x}"
+    assert [k for k, v in out.items() if v is None] == ["elsewhere", "broker", "sibling", "query", "order", "json", "none"]
+    assert out["item"] == at.replace("/tiles/WebMercatorQuad", "/items") + "/urn%3Angsi-ld%3ABike%3Aa%2Fb"
 
 
 # T-4672: the popup reads in the order, with the labels and key attributes, the publisher wrote

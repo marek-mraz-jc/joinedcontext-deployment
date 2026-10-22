@@ -49,7 +49,8 @@ test("links stay under the Endpoint and carry the query", () => {
   assert.ok(l[1].href.includes("q=status%3D%3D%22x%22") && l[1].href.includes("orderBy=bikes%3Bdesc"));
   // The CSV of exactly this view: its query and its order.
   assert.equal(l[4].href, api + "file.csv?type=Bike&q=status%3D%3D%22x%22&orderBy=bikes%3Bdesc");
-  assert.equal(x.links(api, "Bike", "", null).length, 4);
+  assert.equal(l[5].href, api + "ogc/features/collections/Bike/tiles/WebMercatorQuad");
+  assert.equal(x.links(api, "Bike", "", null).length, 5);
 });
 
 test("cells read as text: numbers by locale, links only for http(s), no raw JSON", () => {
@@ -73,4 +74,18 @@ test("both languages name every string", () => {
 test("a timestamp reads as a date in the page's language, in UTC", () => {
   assert.equal(x.show("2026-10-21T19:35:26Z", { locale: "en-GB" }).text, "21 Oct 2026, 19:35 UTC");
   assert.equal(x.show("2026-10-21", { locale: "en-GB" }).text, "2026-10-21");
+});
+
+test("the map's tiles come only from the type's own tileset path (T-5189)", () => {
+  const api = "https://api.dev.joinedcontext.com/api/endpoint/abc/";
+  const at = x.tilesetUrl(api, "Bike");
+  const of = (href, type = "application/vnd.mapbox-vector-tile") => x.templateOf({ links: [{ rel: "item", type, templated: true, href }] }, at);
+  assert.equal(of(at + "/{tileMatrix}/{tileRow}/{tileCol}"), at + "/{z}/{y}/{x}");
+  assert.equal(of("https://evil.example/t/{tileMatrix}/{tileRow}/{tileCol}"), null);
+  assert.equal(of("http://antares:9471/ngsi-ld/ogc/collections/Bike/tiles/WebMercatorQuad/{tileMatrix}/{tileRow}/{tileCol}"), null);
+  assert.equal(of(at.replace("/Bike/", "/Car/") + "/{tileMatrix}/{tileRow}/{tileCol}"), null);
+  assert.equal(of(at + "/{tileMatrix}/{tileRow}/{tileCol}?f=mvt"), null);
+  assert.equal(of(at + "/{tileMatrix}/{tileCol}/{tileRow}"), null);
+  assert.equal(of(at + "/{tileMatrix}/{tileRow}/{tileCol}", "application/json"), null);
+  assert.equal(x.templateOf(null, at), null);
 });
