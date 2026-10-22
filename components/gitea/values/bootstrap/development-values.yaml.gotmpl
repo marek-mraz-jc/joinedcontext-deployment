@@ -70,6 +70,14 @@ seed:
 {{ readFile (printf "../../../context-gateway/seed/zilina/%s" $file) | indent 4 }}
 {{- end }}
 {{- end }}
+  # Barcelona (T-5260): Ajuntament de Barcelona's Organization, its bindings and its project of
+  # one space of Open Data BCN.
+{{- range $file, $path := readFile "../../../context-gateway/seed/barcelona/index.yaml" | fromYaml }}
+{{- if regexMatch "^projects/[^/]+/." $path }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ else }}
+  {{ $path | replace "/" "__" }}: |
+{{ readFile (printf "../../../context-gateway/seed/barcelona/%s" $file) | indent 4 }}
+{{- end }}
+{{- end }}
   # Slovakia (T-4340): national open data as one project of the same organization, its first
   # space the air quality of every Slovak station.
 {{- range $file, $path := readFile "../../../context-gateway/seed/slovensko/index.yaml" | fromYaml }}
@@ -99,7 +107,7 @@ seed:
 {{- end }}
 {{- end }}
 {{- /* The ConfigMaps values/seed renders, named by the same layout (values/seed-layout.tpl, T-4431). */}}
-{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/slovensko" }}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/barcelona" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
 {{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
