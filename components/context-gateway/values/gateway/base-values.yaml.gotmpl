@@ -125,6 +125,9 @@ env:
   # A person's own MCP connectors, read from the same listener with the same token, so
   # `/api/mcp/me/{name}` answers (EP-123, T-4538, T-4546); unset, no personal address is served.
   JC_GATEWAY_CONNECTORS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/connectors"
+  # Answered calls per Endpoint and surface, posted every five minutes with the same token for the
+  # publishers' Usage tab (T-5118): names and numbers, no address or person.
+  JC_GATEWAY_USAGE_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/usage"
 {{- end }}
 {{- if has "assistant" .Values.components }}
   # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its
