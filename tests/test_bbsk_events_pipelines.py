@@ -21,6 +21,7 @@ import sys
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import jsonschema
 import pytest
@@ -154,6 +155,11 @@ def run(steps: list, payload: str, space: str = "bbsk-podujatia", refused: bool 
 def pipeline(name: str, fixture: str, pages: str | None = None) -> list:
     recorded = json.loads((FIXTURES / "pages" / pages).read_text()) if pages else {}
     return run(offline(processors(name), recorded), (FIXTURES / fixture).read_text())
+
+
+def pipeline_ns(name: str, fixture: str) -> list:
+    """A national-store source's generated steps over its recorded feed."""
+    return run(offline(processors(name, "slovensko"), {}), (FIXTURES / fixture).read_text(), "slovensko-podujatia")
 
 
 def home_point(events_url: str) -> list[float]:
@@ -1066,6 +1072,39 @@ def test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest(
             "address": {"streetAddress": "Obrancov mieru 871/1", "addressLocality": "Detva", "addressCountry": "SK"},
             "areaServed": "Detva", "source": "https://www.openstreetmap.org/way/292648504",
             "dataProvider": "© OpenStreetMap contributors, ODbL 1.0"}
+
+
+def test_every_wp_rest_fields_source_names_where_its_start_date_is():
+    kinds = {urlsplit(r["check_url"]).hostname for r in generate.kept_sources() if r["feed_kind"] == "wp-rest-fields"}
+    assert kinds == set(generate.WP_FIELDS), "a wp-rest-fields row without its WP_FIELDS entry writes nothing"
+    assert all(f.get("start") for f in generate.WP_FIELDS.values())
+
+
+@requires_docker
+def test_wordpress_events_with_their_dates_in_fields_of_their_own_are_read_per_site():
+    # Fixtures recorded 2026-10-23 from each site's REST list (T-5365), contacts scrubbed.
+    out = {}
+    for name in ("zilina", "regiontatry", "podujatiaksk", "upjs", "senec", "ruzomberok"):
+        entities = pipeline_ns(name, f"{name}-wp-rest.json")
+        assert entities, name
+        for e in entities:
+            assert VALID.is_valid(key_values(e)), (name, list(VALID.iter_errors(key_values(e))))
+        out[name] = {e["name"]["value"]: e for e in entities}
+    # Žilina: meta.iq_dateStart; a post titled only by its day ("19.&nbsp;10.&nbsp;2026 (PONDELOK)") is no event.
+    assert out["zilina"]["MindLab"]["startDate"]["value"] == "2026-11-02"
+    assert not any(n[0].isdigit() for n in out["zilina"])
+    # regiontatry.sk: YYYYMMDD plus a time; 00:00:00 is the empty time field, so the event keeps its day.
+    tatry = out["regiontatry"]
+    assert tatry["To ťa musí baviť – Pavol Jackovič"]["startDate"]["value"] == "2026-10-29T17:30:00+01:00"
+    assert tatry["Halloweenska večera pod hviezdami"]["startDate"]["value"] == "2026-10-31"
+    # KSK calendar: one ACF group with a local datetime.
+    assert out["podujatiaksk"]["Čo nás učia knihy: Mengeleho dievča"]["startDate"]["value"] == "2026-10-26T13:00:00+01:00"
+    # UPJŠ: YYYYMMDD start and end.
+    assert out["upjs"]["Univerzitné dni športu 2026"]["startDate"]["value"] == "2026-11-09"
+    assert out["upjs"]["Univerzitné dni športu 2026"]["endDate"]["value"] == "2026-11-11"
+    # Senec and Ružomberok run the smart-city theme of Banská Bystrica: Meta Box date_start and time_start.
+    assert out["senec"]["Koncert úcty k starším v Senci"]["startDate"]["value"] == "2026-10-22T18:00:00+02:00"
+    assert out["ruzomberok"]
 
 
 # --- the HTML sources of T-5354 ----------------------------------------------------------------------------------
