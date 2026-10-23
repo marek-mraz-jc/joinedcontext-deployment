@@ -14,8 +14,46 @@ spec:
   slug: hqgmj6ieuq57y37g5g4ckz5eyhebklox
   audience: public
   policyRef: urn:ngsi-ld:Policy:bbsk.sk:bbsk-podujatia:podujatia-kraj-read
-  # ical: the calendar a person subscribes to, /api/endpoint/{slug}/ical/v1/events.ics (EP-125).
+  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
+  # representations.ical (EP-125, EP-159); events.ics is the first one (deprecated alias).
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]
+  representations:
+    ical:
+      - name: vsetky
+        title: { sk: "Všetky podujatia v kraji", en: "All events in the region" }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
+      - name: kultura
+        title: { sk: "Kultúra v kraji", en: "Culture in the region" }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
+        filter: { q: 'eventCategory~="(?i)kult|koncert|divadl|výstav|festival|film"' }
+      - name: sport
+        title: { sk: "Šport v kraji", en: "Sports in the region" }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
+        filter: { q: 'eventCategory~="(?i)šport|sport|turnaj|beh"' }
+      - name: deti
+        title: { sk: "Pre deti a rodiny", en: "For children and families" }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
+        filter: { q: 'eventCategory~="(?i)det[ií]|rodin"' }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
