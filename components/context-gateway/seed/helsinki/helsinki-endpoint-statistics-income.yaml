@@ -56,4 +56,9 @@ spec:
         description:
           fi: '15 vuotta täyttänyt väestö valtionveronalaisten tulojen mukaan osa-alueittain Helsingissä, Espoossa ja Vantaalla 2010–'
           en: Population of Helsinki, Espoo and Vantaa by taxable income 2010-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__tul__astul/alu_astul_011y.px/
+        title: { fi: Aluesarjat alu_astul_011y, en: Area statistics table alu_astul_011y }
+        description:
+          fi: Helsingin asuntokuntien kulutusyksikkökohtainen käytettävissä oleva rahatulo
+          en: Dwelling-unit disposable money income by quintale rank per consumption unit in Helsinki 19
     pipelineRef: { kind: Pipeline, name: statistics }
