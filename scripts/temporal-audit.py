@@ -25,6 +25,7 @@ Usage: temporal-audit.py [--seed DIR] [--out FILE]; prints the non-ok rows, writ
 
 import argparse
 import functools
+import importlib.util
 import json
 import re
 import sys
@@ -34,6 +35,9 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
+_datacube = importlib.util.spec_from_file_location("datacube", ROOT / "scripts/open-data/datacube.py")
+datacube = importlib.util.module_from_spec(_datacube)
+_datacube.loader.exec_module(datacube)
 KINDS = {"Property", "GeoProperty", "Relationship", "LanguageProperty", "ListProperty", "VocabProperty", "JsonProperty"}
 GEOJSON = {"Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon", "GeometryCollection", "Feature", "FeatureCollection"}
 MEMBERS = {"type", "value", "object", "observedAt", "unitCode", "datasetId", "languageMap", "vocab", "json", "valueList", "coordinates"}
@@ -163,8 +167,10 @@ def scan(text: str, default_type: str | None) -> dict[tuple[str, str], dict]:
 
 
 def mapping_text(spec: dict, bento: str | None) -> str:
-    """Every Bloblang the pipeline runs: its steps', its compute's and the bento.yaml beside it."""
-    parts = [s.get("bloblang", "") for s in spec.get("steps", []) or []]
+    """Every Bloblang the pipeline runs: its steps' (a datacube step's as jc-core renders it), its
+    compute's and the bento.yaml beside it."""
+    parts = [datacube.mapping(s["datacube"]) if s.get("kind") == "datacube" else s.get("bloblang", "")
+             for s in spec.get("steps", []) or []]
     parts.append((spec.get("compute") or {}).get("bloblang") or "")
     if bento:
         parts.append(bento)
