@@ -593,6 +593,14 @@ slots:
       name and in Finnish otherwise (Smart Data Models Event `thematic`).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Témy
+          cs: Témata
+          fi: Teemat
+          en: Topics
+          de: Themen
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   isAccessibleForFree:
@@ -600,6 +608,14 @@ slots:
     description: True when every offer of the event is free of charge, as the register marks it.
     range: boolean
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Vstup zdarma
+          cs: Vstup zdarma
+          fi: Maksuton
+          en: Free admission
+          de: Eintritt frei
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/isAccessibleForFree
   webSite:
@@ -607,6 +623,14 @@ slots:
     description: The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          fi: Verkkosivu
+          en: Website
+          de: Webseite
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   superEvent:
@@ -1036,6 +1060,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
     slots:
       - name
       - description
@@ -1150,6 +1181,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Stanica zdieľaných bicyklov
+          cs: Stanice sdílených kol
+          en: Bike sharing station
+          de: Leihradstation
     slots:
       - name
       - availableBikeNumber
@@ -1224,6 +1262,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Vozidlo
+          cs: Vozidlo
+          en: Vehicle
+          de: Fahrzeug
     slots:
       - speed
       - heading
@@ -1324,6 +1369,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
+      label:
+        tag: label
+        value:
+          sk: Článok
+          cs: Článek
+          en: Article
+          de: Artikel
     slots: [identifier, name, description, url, datePublished, image, source]
   WeatherObserved:
     class_uri: sdm:WeatherObserved
@@ -1331,6 +1383,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
+      label:
+        tag: label
+        value:
+          sk: Meranie počasia
+          cs: Měření počasí
+          en: Weather reading
+          de: Wetterbeobachtung
     slots:
       - name
       - dateObserved
@@ -1440,6 +1499,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+      label:
+        tag: label
+        value:
+          sk: Upozornenie
+          cs: Upozornění
+          en: Alert
+          de: Warnung
     slots:
       - name
       - description
@@ -1465,6 +1531,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, dateObserved, pm10, pm25, airQualityIndex, stewardNote, source]
     slot_usage:
       name:
@@ -1535,6 +1608,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots:
       - name
       - serviceCategory
@@ -1553,6 +1633,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality vody
+          cs: Měření kvality vody
+          en: Water quality reading
+          de: Wasserqualitätsmessung
     slots: [name, temperature, dateObserved, refPointOfInterest, dataProvider, source]
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -1564,6 +1651,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovanie na ulici
+          cs: Parkování na ulici
+          en: On-street parking
+          de: Parken an der Straße
     slots: [name, category, totalSpotNumber, zoneCode, description, url, dataProvider, source]
     slot_usage:
       category:
@@ -1579,6 +1673,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovisko
+          cs: Parkoviště
+          en: Car park
+          de: Parkplatz
     slots:
       - name
       - status
@@ -1599,6 +1700,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Práce v meste
+          cs: Práce ve městě
+          en: City works
+          de: Bauarbeiten in der Stadt
     slots:
       - name
       - permitKind
@@ -1619,6 +1727,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Administrative area
+          de: Verwaltungsgebiet
     slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
   GtfsStop:
     class_uri: sdm:GtfsStop
@@ -1626,6 +1741,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Zastávka
+          cs: Zastávka
+          en: Stop
+          de: Haltestelle
     slots:
       - name
       - stopCode
@@ -1648,6 +1770,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka MHD
+          cs: Linka MHD
+          en: Public transport route
+          de: ÖPNV-Linie
     slots:
       - name
       - route
@@ -1665,6 +1794,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Stanica
+          cs: Stanice
+          en: Station
+          de: Station
     slots:
       - name
       - fareZone
@@ -1681,6 +1817,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Dopravca
+          cs: Dopravce
+          en: Transit agency
+          de: Verkehrsunternehmen
     slots: [agencyName, page, timezone, language, phone, routes, dataProvider, source]
   GtfsRoute:
     class_uri: sdm:GtfsRoute
@@ -1690,6 +1833,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka
+          cs: Linka
+          en: Route
+          de: Linie
     slots:
       - shortName
       - name
@@ -1708,6 +1858,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Trasa linky
+          cs: Trasa linky
+          en: Route shape
+          de: Linienverlauf
     slots: [name, distanceTravelled, dataProvider, source]
 
   ServiceRequest:
@@ -1793,6 +1950,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie dopravy
+          cs: Sčítání dopravy
+          en: Traffic count
+          de: Verkehrszählung
     slots:
       - name
       - dateObserved
