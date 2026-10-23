@@ -265,6 +265,10 @@ helsinki-endpoint-statistics-income.yaml: projects/helsinki/spaces/helsinki/endp
 helsinki-policy-public-statistics-income.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-income.yaml
 helsinki-endpoint-statistics-education.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-education.yaml
 helsinki-policy-public-statistics-education.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-education.yaml
+helsinki-endpoint-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-welfare.yaml
+helsinki-policy-public-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-welfare.yaml
+helsinki-endpoint-statistics-environment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-environment.yaml
+helsinki-policy-public-statistics-environment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-environment.yaml
 # Service usage (T-5258): the zoo visitor and web analytics counters, one more statistics theme.
 helsinki-datasource-zoo-visitors.yaml: projects/helsinki/datasources/hel-zoo-visitors.yaml
 helsinki-pipeline-service-usage.yaml: projects/helsinki/pipelines/service-usage/pipeline.yaml

@@ -194,6 +194,22 @@ helsinki-agent-proxy:
           included.custom.audience: 7qsdid06pjaxmzd44rheqngd7o6cvj8h
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-statistics-welfare-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: c8dnu3ta9fdvyjqwv5swdkd0dkc8kbhk
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-environment-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 4gr7xjetq25axmbpn1obvyspuvlf5kbt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-parking-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper

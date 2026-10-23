@@ -110,7 +110,8 @@ MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
 # one daily series, the zoo's visitors), whose whole kept history is cheaper to read than a month
 # of a sensor's: they read all of it (T-5258).
 WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
-                 ("population", "housing", "employment", "income", "education", "services")}
+                 ("population", "housing", "employment", "income", "education", "services",
+                  "welfare", "environment")}
 
 
 def public_policies():
