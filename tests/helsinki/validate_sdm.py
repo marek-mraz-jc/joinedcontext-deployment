@@ -52,6 +52,7 @@ MODELS = {
     "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
     "CityWork": ("dataModel.Transportation", "CityWork"),
     "PublicTransportRoute": ("dataModel.UrbanMobility", "PublicTransportRoute"),
+    "KeyPerformanceIndicator": ("dataModel.KeyPerformanceIndicator", "KeyPerformanceIndicator"),
     # The platform's extensions of an official model (T-4336, T-4338), read from the vendored copy.
     "Article": ("extension", "Article"),
     "AdministrativeArea": ("extension", "AdministrativeArea"),
@@ -60,9 +61,7 @@ MODELS = {
 EXTENSIONS = Path(__file__).resolve().parents[2] / "scripts/open-data/sdm/extensions"
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
-EXCEPTIONS = {
-    "KeyPerformanceIndicator": "the platform's own KPI type, outside the Helsinki feeds",
-}
+EXCEPTIONS: dict[str, str] = {}
 
 #: Attributes of a validated type that knowingly differ from the SDM schema, and why. A failure on
 #: one is reported as excepted and does not fail the run.
