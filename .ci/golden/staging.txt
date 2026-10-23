@@ -227,6 +227,7 @@ rbac.authorization.k8s.io/v1/Role staging/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role staging/portal
 rbac.authorization.k8s.io/v1/Role staging/portal-build-pods
 rbac.authorization.k8s.io/v1/Role staging/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role staging/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role staging/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role staging/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role staging/postgres-operator-cloudnative-pg
@@ -236,6 +237,7 @@ rbac.authorization.k8s.io/v1/RoleBinding staging/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding staging/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding staging/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding staging/postgres-operator-cloudnative-pg

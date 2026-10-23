@@ -401,6 +401,7 @@ rbac.authorization.k8s.io/v1/Role smartcity/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role smartcity/portal
 rbac.authorization.k8s.io/v1/Role smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/Role smartcity/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role smartcity/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role smartcity/postgres-cluster-dr-drill
@@ -417,6 +418,7 @@ rbac.authorization.k8s.io/v1/RoleBinding smartcity/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-cluster-dr-drill

@@ -411,6 +411,11 @@ env:
   JC_PORTAL_APP_IDENTITY_NAMESPACE: {{ index .Values "wasm-host" "identities" "appNamespace" | quote }}
   {{- end }}
 {{- end }}
+{{- if has "context-gateway" .Values.components }}
+  # Where the reconciler writes each space's personal-data key as the Secret the gateway mounts,
+  # with the Role context-gateway's portal-access part grants it there (DM-121).
+  JC_PORTAL_GATEWAY_NAMESPACE: {{ index .Values "context-gateway" "gateway" "namespace" | quote }}
+{{- end }}
 {{- if has "mqtt-brokers" .Values.components }}
   # Where the reconciler stamps one release per MqttBroker from the chart's template, with the
   # Role mqtt-brokers grants it there (ADR-N-048, T-3994).

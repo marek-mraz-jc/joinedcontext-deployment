@@ -419,6 +419,7 @@ rbac.authorization.k8s.io/v1/Role dev/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role dev/portal
 rbac.authorization.k8s.io/v1/Role dev/portal-build-pods
 rbac.authorization.k8s.io/v1/Role dev/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role dev/postgres-cluster-dr-drill
@@ -435,6 +436,7 @@ rbac.authorization.k8s.io/v1/RoleBinding dev/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-cluster-dr-drill
