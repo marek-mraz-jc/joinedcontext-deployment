@@ -727,7 +727,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One place a resident goes to: a school, a cultural venue, a public toilet or a public transport ticket point.",
+      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner or a landmark.",
       "properties": {
         "address": {
           "anyOf": [
@@ -937,7 +937,21 @@
         "police",
         "garden",
         "playground",
-        "wasteCollectionYard"
+        "wasteCollectionYard",
+        "healthCentre",
+        "university",
+        "placeOfWorship",
+        "communityCentre",
+        "accommodation",
+        "groceryStore",
+        "drinkingFountain",
+        "fountain",
+        "spring",
+        "waterPump",
+        "mistShower",
+        "bathingPlace",
+        "animalCorner",
+        "landmark"
       ],
       "title": "ServiceCategory",
       "type": "string"

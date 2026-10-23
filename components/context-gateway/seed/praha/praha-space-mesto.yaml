@@ -11,15 +11,15 @@ metadata:
     cs: >-
       Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný
       odpad a zaplněnost kontejnerů, P+R a jejich obsazenost, vozidla PID v provozu, prodejní místa PID, rozpočet města,
-      služebny městské policie, knihovny, úřady, zahrady, dětská hřiště a sběrné dvory.
+      služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost a oázy chladu.
       Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
       Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
       otevřená data.
     en: >-
       Shared bikes, air quality, city districts, schools, culture, public toilets, sorted waste
       and how full its containers are, park and ride and how full it is, the PID vehicles in service, PID ticket points,
-      the city budget, municipal police stations, libraries, municipal offices, gardens, playgrounds
-      and waste collection yards. Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
+      the city budget, municipal police stations, libraries, municipal offices, gardens, playgrounds,
+      waste collection yards, city amenities and cool spots. Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
       under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
       hl. m. Prahy's counters) as open data.
 spec:

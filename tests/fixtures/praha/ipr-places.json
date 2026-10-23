@@ -1,0 +1,1121 @@
+{
+ "accommodation": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_kv_ubytzar_b_fsv_cur_kv_ubytzar_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1,
+     "nazev_zar": "HILTON PRAGUE",
+     "adresa": "Pobřežní 311/1, Karlín, 18600 Praha 8",
+     "sezona": "celoroční provoz",
+     "typ_uap": "10_05",
+     "druh_uap": 10,
+     "poskyt": "ČSÚ",
+     "id_poskyt": 7,
+     "globalid": "{629CE4E7-59C1-413B-AEC9-F513CBF110F7}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.439572918000067,
+      50.09300488100007
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2,
+     "nazev_zar": "HOTEL ROYAL PALACE",
+     "adresa": "Letenská 594/11, Malá Strana, 11800 Praha 1",
+     "sezona": "celoroční provoz",
+     "typ_uap": "10_05",
+     "druh_uap": 10,
+     "poskyt": "ČSÚ",
+     "id_poskyt": 7,
+     "globalid": "{91B5D7F4-7DCF-4024-8712-B5A903AB6C07}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.40757092900003,
+      50.08952244400007
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 3,
+     "nazev_zar": "HOTEL AUGUSTIN",
+     "adresa": "Letenská 33/12, Malá Strana, 11800 Praha 1",
+     "sezona": "celoroční provoz",
+     "typ_uap": "10_05",
+     "druh_uap": 10,
+     "poskyt": "ČSÚ",
+     "id_poskyt": 7,
+     "globalid": "{F6A9C86D-348A-447A-A4FE-3561AD7BCA93}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.40649610500003,
+      50.08906011300007
+     ]
+    }
+   }
+  ]
+ },
+ "animal-corners": {
+  "type": "FeatureCollection",
+  "name": "zpa_cur_zpa_zookoutky_b_zpa_cur_zpa_zookoutky_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 662,
+     "nazev": "Stanice přírodovědců DDM hl. m. Prahy",
+     "adresa": "Drtinova 1a/199",
+     "mc": "Praha 5           ",
+     "typ": "farma a terárium",
+     "pristupnost": "ano",
+     "omezeni": "ZAHRADA: po–pá 8:00–17:00, so 9:00–17:00 (duben-říjen). Vstup volný. SKLENÍK – TROPICKÉ TERÁRIUM: út 13:00–15:00, st 13:00–16:00, vstupné: 40 Kč, snížené (děti, studenti, senioři) 20 Kč, děti do 1 m – vstup volný.Platba pouze v hotovosti, připravte si prosím drobné. ",
+     "zrizovatel": "Stanice přírodovědců - DDM hl. m. Prahy",
+     "web": "http://www.ddmpraha.cz/stanice-prirodovedcu",
+     "zajimavosti": "Kroužky pro děti, příměstské tábory, akce pro školní skupiny, organizace  krajských kol olympiád (chemie, biologie, zeměpis).",
+     "poznamka": "<Null>",
+     "chov": "krokodýl, kosmani, varani, hadi, kozy, poníci, prasata, klokani, andulky a další domácí mazlíčci",
+     "poskyt": "MHMP-OCP",
+     "id_poskyt": 17,
+     "typ_vlastnik": "HMP_organizace",
+     "globalid": "{FCC61C94-3F0B-4B92-A5F3-722F3FF6478A}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.400120005000076,
+      50.07526900500005
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 663,
+     "nazev": "Zookoutek Divoká zahrada Hostivař",
+     "adresa": "K Obecním Hájovnám 275/1",
+     "mc": "Praha 15",
+     "typ": "lesní zokoutek",
+     "pristupnost": "ano",
+     "omezeni": "Přístupný každodenně, vyhlídková část za vhodného počasí. Otevírací doba: květen-září 8:00 - 20:00; říjen-duben: 8:00 - 17:00 . Do konce listopadu otevřeno bez omezení.",
+     "zrizovatel": "Lesy hl. m. Prahy",
+     "web": "https://lhmp.cz/zachranna-stanice/lesni-zookoutky/divoka-zahrada-hostivar/",
+     "zajimavosti": "výběhy,vyhlídky, hmyzí hotel, naučné panely",
+     "poznamka": "<Null>",
+     "chov": "Bílí daňci, mufloni, vodní ptactvo, včely",
+     "poskyt": "MHMP-OCP",
+     "id_poskyt": 17,
+     "typ_vlastnik": "HMP_organizace",
+     "globalid": "{C9614B9D-8DD8-41CD-B821-9596F83FA6DE}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.517367805000049,
+      50.04014530500007
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 664,
+     "nazev": "Záchranná stanice pro volně žijící živočichy",
+     "adresa": "Pod Remízkem, Praha 12 – Cholupice",
+     "mc": "Praha 4",
+     "typ": "záchranná stanice/sokolník",
+     "pristupnost": "objednané skupiny",
+     "omezeni": "Nabídka pro školy a školky, termíny prohlídek po domluvě. bDvouhodinový zážitek v záchranné a chovné stanici pro 1 osobu  - 789 Kč.",
+     "zrizovatel": "PENTHEA, z.s.",
+     "web": "http://www.dravci-penthea.cz/",
+     "zajimavosti": "<Null>",
+     "poznamka": "<Null>",
+     "chov": "Dravci a sovy, ptactvo, ježci, agamy, plazi.",
+     "poskyt": "MHMP-OCP",
+     "id_poskyt": 17,
+     "typ_vlastnik": "OSTATNÍ",
+     "globalid": "{523E51EA-D474-405D-BF38-0883DCFED77F}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.44084000600003,
+      49.99567000500008
+     ]
+    }
+   }
+  ]
+ },
+ "bathing-places": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_koupani_b_agd_cur_agd_och_koupani_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 435,
+     "nazev": "Areál SK Slavia Eden",
+     "x": 14.47924114,
+     "y": 50.06776834,
+     "typ": 3,
+     "spravce": null,
+     "provozovatel": "HC Slavia Praha a.s.",
+     "web": "https://www.sk-slavia.cz/plavecky-stadion",
+     "provoz_spec": "vyhrazené hodiny pro veřejnost",
+     "provoz": null,
+     "globalid": "{F700D19D-9ADC-4742-A888-5882BD28A745}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.479241138000077,
+      50.06776833600003,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 436,
+     "nazev": "Bazén a biotop Radotín",
+     "x": 14.35975511,
+     "y": 49.97904279,
+     "typ": 3,
+     "spravce": null,
+     "provozovatel": "Radotínská o.p.s.",
+     "web": "http://biotopradotin.cz/",
+     "provoz_spec": "celotýdenní provoz",
+     "provoz": null,
+     "globalid": "{D8D5DDAD-23B6-4F62-AAD6-D9DBF6DFC688}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.359755110000037,
+      49.979042787000026,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 437,
+     "nazev": "Hostivařská přehrada",
+     "x": 14.53662727,
+     "y": 50.04026392,
+     "typ": 3,
+     "spravce": null,
+     "provozovatel": "Hlavní město Praha",
+     "web": "http://www.hostivarskaprehrada.cz/",
+     "provoz_spec": "letní provoz",
+     "provoz": 1,
+     "globalid": "{301EFF77-CC7E-4432-BE34-B11B4E324C5B}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.536627275000058,
+      50.040263922000065,
+      0.0
+     ]
+    }
+   }
+  ]
+ },
+ "community-centres": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_ov_kultkkc_b_fsv_cur_ov_kultkkc_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2401,
+     "id_zar": 90,
+     "druh_uap": 5,
+     "zrizovatel_uap": 3,
+     "nazev_zar": "Místní knihovna Praha – Běchovice",
+     "cpop": 479,
+     "cor": null,
+     "pism_cor": null,
+     "x": -728936.66,
+     "y": -1045510.68,
+     "zdroj": "POV2024",
+     "web": "www.bechovice.knihovna.cz/",
+     "bezbar": 1,
+     "nabozenstvi": null,
+     "typ_kkc": 3,
+     "typ_kkc_txt": "knihovna",
+     "id_poskyt": 43,
+     "typ_uap": "05_11",
+     "adresa_zar": "Za poštovskou zahradou 479",
+     "globalid": "{C59C4DB3-F1C9-4EAB-B7D0-7AE37C8CACC5}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.618048660000056,
+      50.082054707000054
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2402,
+     "id_zar": 144,
+     "druh_uap": 5,
+     "zrizovatel_uap": 3,
+     "nazev_zar": "Místní knihovna Praha – Benice",
+     "cpop": 21,
+     "cor": null,
+     "pism_cor": null,
+     "x": -730885.83,
+     "y": -1052910.84,
+     "zdroj": "POV2024",
+     "web": "https://www.praha-benice.cz/benice/knihovna/",
+     "bezbar": 0,
+     "nabozenstvi": null,
+     "typ_kkc": 3,
+     "typ_kkc_txt": "knihovna",
+     "id_poskyt": 43,
+     "typ_uap": "05_11",
+     "adresa_zar": "Květnového povstání 21",
+     "globalid": "{25F19E84-35EB-4041-95A6-7D8B9F507472}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.604903480000075,
+      50.01377165100007
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2403,
+     "id_zar": 185,
+     "druh_uap": 5,
+     "zrizovatel_uap": 99,
+     "nazev_zar": "KC Béčko",
+     "cpop": 14,
+     "cor": 41,
+     "pism_cor": null,
+     "x": -737230.85,
+     "y": -1034932.4,
+     "zdroj": "POV2024",
+     "web": "https://www.kcbecko.cz/",
+     "bezbar": 99,
+     "nabozenstvi": null,
+     "typ_kkc": 1,
+     "typ_kkc_txt": "komunitní centrum",
+     "id_poskyt": 43,
+     "typ_uap": "05_12",
+     "adresa_zar": "Na hlavní 14/41",
+     "globalid": "{41AB9CA7-04C4-40F0-913B-9ABC2B20D5BC}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.483194861000072,
+      50.16626048400008
+     ]
+    }
+   }
+  ]
+ },
+ "drinking-fountains": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_pitka_b_agd_cur_agd_och_pitka_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1892,
+     "nazev": "Pítko Senovážné náměstí",
+     "x": 14.43229295,
+     "y": 50.08592693,
+     "spravce": "neznámo",
+     "provozovatel": "není v provozování PVK a.s.",
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": null,
+     "globalid": "{8BDAB555-927F-4AA1-9F63-888F3B488083}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.432363895000037,
+      50.08600274500003,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1893,
+     "nazev": "Pítko Slovanský ostrov",
+     "x": 14.41312871,
+     "y": 50.07783729000001,
+     "spravce": "PVS a.s.",
+     "provozovatel": "PVK a.s.",
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": null,
+     "globalid": "{AF780DFD-53AD-4826-B6B5-0135043BB319}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.413199226000074,
+      50.07791358000003,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1894,
+     "nazev": "Pítko Sladkovského náměstí",
+     "x": 14.45088993,
+     "y": 50.0842536,
+     "spravce": "neznámo",
+     "provozovatel": "neznámo",
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": null,
+     "globalid": "{165B74EF-8068-4E17-81A3-7E7C59672369}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.450960744000042,
+      50.08432897500006,
+      0.0
+     ]
+    }
+   }
+  ]
+ },
+ "fountains": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_fontany_b_agd_cur_agd_och_fontany_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 14539,
+     "nazev": "Bazén s fontánou v severní části parku - Karlovo náměstí",
+     "x": 14.42025378,
+     "y": 50.07675009,
+     "typ": 1,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": 1,
+     "globalid": "{4F4F4EB8-2434-4376-AC24-7F3C8AB195E7}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.420253785000057,
+      50.076750092000054,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 14540,
+     "nazev": "Pomník Vítězslava Hálka",
+     "x": 14.42044511,
+     "y": 50.07780926,
+     "typ": 2,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": 1,
+     "globalid": "{1CEAC523-6133-4BC5-B37D-B050CFD6FF4B}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.420445107000035,
+      50.07780925700007,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 14541,
+     "nazev": "Kašna s morovým sloupem",
+     "x": 14.42098074,
+     "y": 50.07791123,
+     "typ": 2,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": null,
+     "pristupnost": 1,
+     "provoz": 1,
+     "globalid": "{DDAFE271-BBBF-4709-9084-9ABCD20A2991}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.420980740000061,
+      50.077911234000055,
+      0.0
+     ]
+    }
+   }
+  ]
+ },
+ "grocery-stores": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_kv_obchplnosort_b_fsv_cur_kv_obchplnosort_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1,
+     "nazev_zar": "Penny Market Prosek I",
+     "ulice": "Prosecká",
+     "cpop": 824,
+     "cor": 82,
+     "pism_cor": null,
+     "x": -736189.8897,
+     "y": -1040023.5433,
+     "velikost": 2,
+     "forma": 5,
+     "retezec": "Penny Market",
+     "zdroj": "POV_2024",
+     "typ_uap": "09_06",
+     "druh_uap": 9,
+     "vyznam_uap": 5,
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "globalid": "{17E6D3C9-3753-43C5-899C-3ECE0D097A44}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.507265489000076,
+      50.12217380700008
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2,
+     "nazev_zar": "Billa Radotín",
+     "ulice": "Vrážská",
+     "cpop": 1507,
+     "cor": null,
+     "pism_cor": null,
+     "x": -748317.0993,
+     "y": -1053703.3672,
+     "velikost": 2,
+     "forma": 1,
+     "retezec": "Billa",
+     "zdroj": "POV_2024",
+     "typ_uap": "09_06",
+     "druh_uap": 9,
+     "vyznam_uap": 5,
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "globalid": "{B6EB3C70-9999-496F-A3FE-E9204C87E05C}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.36549345700007,
+      49.985477537000065
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 3,
+     "nazev_zar": "Albert Rohožník",
+     "ulice": "Malešovská ",
+     "cpop": 1652,
+     "cor": null,
+     "pism_cor": null,
+     "x": -724626.452,
+     "y": -1047173.0006,
+     "velikost": 2,
+     "forma": 1,
+     "retezec": "Albert",
+     "zdroj": "POV_2024",
+     "typ_uap": "09_06",
+     "druh_uap": 9,
+     "vyznam_uap": 5,
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "globalid": "{FE2D5678-2A4C-474D-B31E-11A733FAB7E5}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.680827176000037,
+      50.07240806300007
+     ]
+    }
+   }
+  ]
+ },
+ "health-centres": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_ov_zdravpolikliniky_b_fsv_cur_ov_zdravpolikl",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 641,
+     "id_zar": 27,
+     "nazev_zar": "Poliklinika Michnova",
+     "adresa_zar": "Michnova 1622/4",
+     "druh_uap": 3,
+     "zdroj": "IPR250920",
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "typ_uap": "03_03",
+     "globalid": "{A3A83AA6-A528-4DED-958C-7F5867917A77}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.520624804000022,
+      50.031336026000076
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 642,
+     "id_zar": 28,
+     "nazev_zar": "Poliklinika Vajgarská",
+     "adresa_zar": "Vajgarská 1141",
+     "druh_uap": 3,
+     "zdroj": "IPR250920",
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "typ_uap": "03_03",
+     "globalid": "{F80FD6A1-D0CA-4F7A-A3A1-8EE7CFC442DD}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.554042516000038,
+      50.10161121900006
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 643,
+     "id_zar": 29,
+     "nazev_zar": "Poliklinika Budějovická",
+     "adresa_zar": "Antala Staška 1670/80",
+     "druh_uap": 3,
+     "zdroj": "IPR250920",
+     "poskyt": "HMP-IPR",
+     "id_poskyt": 43,
+     "typ_uap": "03_03",
+     "globalid": "{D567478A-D451-4AFF-87CD-E937310E5FBC}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.451070340000058,
+      50.04253251600005
+     ]
+    }
+   }
+  ]
+ },
+ "landmarks": {
+  "type": "FeatureCollection",
+  "name": "urk_cur_urk_vyznstavbymista_b_urk_cur_urk_vyznstavby",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1,
+     "nazev": "modlitebna Bratrské jednoty baptistů",
+     "typ": 1,
+     "popis": "purismus",
+     "id_poskyt": 43,
+     "globalid": "{607AF445-4AC8-4FA5-8FC0-735A9BC680FC}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.425206941000056,
+      50.05921183600003
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2,
+     "nazev": "rodinný dům",
+     "typ": 1,
+     "popis": "funkcionalismus",
+     "id_poskyt": 43,
+     "globalid": "{DACDA403-42BB-4B69-A548-830C3FA38F90}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.369923712000059,
+      50.09796595900008
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 3,
+     "nazev": "rodinný dům s ateliérem",
+     "typ": 1,
+     "popis": "secese",
+     "id_poskyt": 43,
+     "globalid": "{26858FCB-6242-40C5-B7D5-42788E456643}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.392305862000057,
+      50.07620987000007
+     ]
+    }
+   }
+  ]
+ },
+ "mist-showers": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_mlzitka_b_agd_cur_agd_och_mlzitka_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 45,
+     "nazev": "Mariánské náměstí",
+     "x": 14.41768686,
+     "y": 50.08687973,
+     "typ": 1,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": "květen - září",
+     "provoz": 1,
+     "globalid": "{91B78C6A-FC7D-4EB7-8705-DBA36DEBFFFB}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.41768686100005,
+      50.08687972900003,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 46,
+     "nazev": "Újezd",
+     "x": 14.40463101,
+     "y": 50.083237,
+     "typ": 1,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": "květen - září",
+     "provoz": 1,
+     "globalid": "{6F9B2BDD-18C3-4E85-B064-AB8AF6BBFB82}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.404631005000056,
+      50.08323700500006,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 47,
+     "nazev": "Jungmannovo náměstí",
+     "x": 14.42259401,
+     "y": 50.083024,
+     "typ": 1,
+     "spravce": null,
+     "provozovatel": null,
+     "provoz_spec": "květen - září",
+     "provoz": 1,
+     "globalid": "{C1E2C380-457B-4035-A888-B4FF795A91FC}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.422594006000054,
+      50.08302400500003,
+      0.0
+     ]
+    }
+   }
+  ]
+ },
+ "places-of-worship": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_ov_kultsakralobj_b_fsv_cur_ov_kultsakralobj_",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1,
+     "id_zar": 2,
+     "nazev_zar": "Unitaria (Pražská obec unitářů)",
+     "ulice": "Anenská",
+     "adresa_zar": "Anenská 186/5",
+     "fcni_od": "před 1989",
+     "id_poskyt": 43,
+     "globalid": "{317844EE-0B83-4786-8396-40AF4AE959BA}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.415082506000033,
+      50.085454405000064
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2,
+     "id_zar": 3,
+     "nazev_zar": "Kostel Svatého Františka",
+     "ulice": "Anežská",
+     "adresa_zar": null,
+     "fcni_od": "před 1989",
+     "id_poskyt": 43,
+     "globalid": "{049DFF42-FB38-4E6F-A776-C266FE8DFB97}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.424418906000028,
+      50.092291405000026
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 3,
+     "id_zar": 4,
+     "nazev_zar": "Klášter františkánek Marie Immaculaty (dříve Šedých sester)",
+     "ulice": "Bartolomějská",
+     "adresa_zar": "Bartolomějská 293/9a",
+     "fcni_od": "před 1989",
+     "id_poskyt": 43,
+     "globalid": "{B2374FD4-281D-41BF-87FD-E121E5920B0A}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.417047506000074,
+      50.082801705000065
+     ]
+    }
+   }
+  ]
+ },
+ "springs": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_studankyprameny_b_agd_cur_agd_och_st",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 536,
+     "nazev": "studánka V Obsinách",
+     "x": 14.35329195,
+     "y": 49.9510725,
+     "pristupnost": 1,
+     "druh_vody": "N",
+     "typ": 1,
+     "globalid": "{5AA2109A-6179-4C2E-8134-329883D67E58}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.353291950000028,
+      49.95107250500007,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 537,
+     "nazev": "studánka Pod Baněmi",
+     "x": 14.39115834,
+     "y": 49.96111389,
+     "pristupnost": 1,
+     "druh_vody": "N",
+     "typ": 1,
+     "globalid": "{E8E5DC9A-A40F-4666-AC28-31D0288E39BE}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.391158339000071,
+      49.96111389400005,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 538,
+     "nazev": "studánka U Žlábku",
+     "x": 14.36747417,
+     "y": 49.95996556,
+     "pristupnost": 1,
+     "druh_vody": "N",
+     "typ": 1,
+     "globalid": "{710E57FA-942F-4C96-8B64-ECD7C51FFCC5}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.367474173000062,
+      49.95996556100005,
+      0.0
+     ]
+    }
+   }
+  ]
+ },
+ "universities": {
+  "type": "FeatureCollection",
+  "name": "fsv_cur_ov_skolyvs_b_fsv_cur_ov_skolyvs_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 447,
+     "id_zar": 250001,
+     "nazev_zar": "Akademie múzických umění v Praze",
+     "ulice": "Malostranské náměstí",
+     "cpop": 259,
+     "cor": 12,
+     "pism_cor": null,
+     "adresa_zar": "Malostranské náměstí 259/12",
+     "nazev_vs": "Akademie múzických umění",
+     "druh_vs": "VVS",
+     "typ_prac_hl": "CEL",
+     "rektorat": null,
+     "dekanat": null,
+     "fakulta": null,
+     "katedra": null,
+     "ustav": null,
+     "inov_centrum": null,
+     "sport": null,
+     "admin": null,
+     "suz": null,
+     "menza": null,
+     "id_poskyt": 43,
+     "zrizovatel_uap": null,
+     "typ_uap": "02_01",
+     "kolej": null,
+     "globalid": "{87B5666E-2F2B-4431-AE79-D66BBFC1D3F6}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.402310115000034,
+      50.08767035500006
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 448,
+     "id_zar": 240001,
+     "nazev_zar": "Akademie výtvarných umění v Praze ",
+     "ulice": "U akademie",
+     "cpop": 172,
+     "cor": 4,
+     "pism_cor": null,
+     "adresa_zar": "U akademie 172/4",
+     "nazev_vs": "Akademie výtvarných umění",
+     "druh_vs": "VVS",
+     "typ_prac_hl": "CEL",
+     "rektorat": null,
+     "dekanat": null,
+     "fakulta": null,
+     "katedra": null,
+     "ustav": null,
+     "inov_centrum": null,
+     "sport": null,
+     "admin": null,
+     "suz": null,
+     "menza": null,
+     "id_poskyt": 43,
+     "zrizovatel_uap": null,
+     "typ_uap": "02_01",
+     "kolej": null,
+     "globalid": "{044746C6-0EA1-438E-88D7-66E1BE41D39C}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.424005156000021,
+      50.10270905900006
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 449,
+     "id_zar": 290001,
+     "nazev_zar": "Prague City University ",
+     "ulice": "Hybernská",
+     "cpop": 1009,
+     "cor": 24,
+     "pism_cor": null,
+     "adresa_zar": "Hybernská 1009/24",
+     "nazev_vs": "Prague City University",
+     "druh_vs": "SVS",
+     "typ_prac_hl": "CEL",
+     "rektorat": null,
+     "dekanat": null,
+     "fakulta": null,
+     "katedra": null,
+     "ustav": null,
+     "inov_centrum": null,
+     "sport": null,
+     "admin": null,
+     "suz": null,
+     "menza": null,
+     "id_poskyt": 43,
+     "zrizovatel_uap": null,
+     "typ_uap": "02_01",
+     "kolej": null,
+     "globalid": "{3877A41F-CAC8-4229-ABAC-39A3AE5BD28E}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.433809199000052,
+      50.087143033000075
+     ]
+    }
+   }
+  ]
+ },
+ "water-pumps": {
+  "type": "FeatureCollection",
+  "name": "agd_cur_agd_och_pumpy_b_agd_cur_agd_och_pumpy_b",
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 415,
+     "nazev": "Křemencova",
+     "x": 14.41704509,
+     "y": 50.07909534,
+     "druh_vody": "N",
+     "provoz_spec": null,
+     "provoz": null,
+     "globalid": "{802A84D5-3A9A-4B61-BC11-35FA3F061142}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.41704509300007,
+      50.07909534100003,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 416,
+     "nazev": "Pštrossova",
+     "x": 14.41576414,
+     "y": 50.07841746,
+     "druh_vody": "N",
+     "provoz_spec": null,
+     "provoz": null,
+     "globalid": "{9DB4EEA3-B601-4D48-8B4C-2568EA947070}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.415764144000036,
+      50.07841746300005,
+      0.0
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 417,
+     "nazev": "Ungelt",
+     "x": 14.42359945,
+     "y": 50.08785747,
+     "druh_vody": "N",
+     "provoz_spec": null,
+     "provoz": null,
+     "globalid": "{9FAA8B78-E4B3-4261-802A-33B6A76B19E0}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.423599455000044,
+      50.087857470000074,
+      0.0
+     ]
+    }
+   }
+  ]
+ }
+}
