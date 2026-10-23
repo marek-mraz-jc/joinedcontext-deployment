@@ -7,6 +7,58 @@
       "additionalProperties": false,
       "description": "One air-quality station of Barcelona and its hourly means.",
       "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "areaServed": {
+          "description": "The neighbourhood (barri) the station is in, as the city names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "blackCarbon": {
+          "description": "Black carbon, the hour's mean at the station. A property of this model: the Smart Data Model AirQualityObserved names no black carbon attribute. The city's file gives it in ng/m\u00b3 under a \u00b5g/m\u00b3 label; the pipeline divides by 1000.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "ug/m3"
+          }
+        },
+        "co": {
+          "description": "Carbon monoxide, the hour's mean at the station, in mg/m\u00b3 as the city measures it.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "mg/m3"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dateObserved": {
           "description": "The end of the hour the entity's readings cover, UTC.",
           "format": "date-time",
@@ -47,15 +99,42 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The station's name as the city publishes it.",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
           "type": [
-            "string",
+            "object",
             "null"
           ],
-          "x-ngsi-ld-kind": "Property"
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "no": {
+          "description": "Nitrogen monoxide, the hour's mean at the station.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "ug/m3"
+          }
         },
         "no2": {
           "description": "Nitrogen dioxide, the hour's mean at the station.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "ug/m3"
+          }
+        },
+        "nox": {
+          "description": "Nitrogen oxides (NO + NO2 as NO2), the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -110,6 +189,39 @@
           "x-unit": {
             "ucumCode": "ug/m3"
           }
+        },
+        "so2": {
+          "description": "Sulphur dioxide, the hour's mean at the station.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "ug/m3"
+          }
+        },
+        "source": {
+          "description": "The open-data file the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stationCode": {
+          "description": "The station's code in the Catalan air-quality network (XVPCA, the city's codi_eoi), such as `8019043`.",
+          "examples": [
+            "8019043"
+          ],
+          "pattern": "^80190[0-9]{2}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
         },
         "type": {
           "description": "The entity type, one class of a published data model.",
@@ -182,6 +294,46 @@
         "type"
       ],
       "title": "Entity",
+      "type": "object"
+    },
+    "PostalAddress": {
+      "additionalProperties": false,
+      "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
+      "properties": {
+        "addressCountry": {
+          "description": "The country, as an ISO 3166-1 alpha-2 code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "addressLocality": {
+          "description": "The municipality.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "district": {
+          "description": "The city district (districte) the station is in.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "streetAddress": {
+          "description": "The square, park or street corner of the station.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "PostalAddress",
       "type": "object"
     }
   },

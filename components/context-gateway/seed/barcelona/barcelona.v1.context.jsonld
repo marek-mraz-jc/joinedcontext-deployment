@@ -7,22 +7,61 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
+    },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
+    "blackCarbon": {
+      "@id": "jc:blackCarbon",
+      "@type": "xsd:float"
+    },
+    "co": {
+      "@id": "sdm:co",
+      "@type": "xsd:float"
+    },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
+    },
     "dateObserved": {
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "district": {
+      "@id": "sdm:district"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
     },
     "name": {
+      "@container": "@language",
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "no": {
+      "@id": "sdm:no",
+      "@type": "xsd:float"
+    },
     "no2": {
       "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
+    "nox": {
+      "@id": "sdm:nox",
       "@type": "xsd:float"
     },
     "o3": {
@@ -44,6 +83,20 @@
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "so2": {
+      "@id": "sdm:so2",
+      "@type": "xsd:float"
+    },
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "stationCode": {
+      "@id": "jc:stationCode"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
+    },
     "type": "@type",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
