@@ -6,12 +6,14 @@ description: >-
   (data.bratislava.sk) as Smart Data Models types, their IRIs cited rather than minted (DM-04,
   DM-16). The first type is AirQualityObserved, one entity per air-quality station in the city
   with the PM10 concentration the city publishes for it; each batch of the ranked matrix adds its
-  own classes.
+  own classes: the city districts, places and services, and the hub's district tables as key
+  performance indicators (T-5274).
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
+  jc: https://joinedcontext.com/models/
 default_prefix: sdm
 default_range: string
 imports:
@@ -21,7 +23,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The station's name as the city publishes it.
+    description: The name of the station, district, place or indicator as the city publishes it.
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
@@ -42,6 +44,128 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  description:
+    slot_uri: schema:description
+    description: What the place offers or how it is reached, or the hub table an indicator comes from.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/description
+  category:
+    slot_uri: sdm:category
+    description: >-
+      The kind of place (its table's code first, then the table's own word, such as
+      `barrier-free`, `Kultúra, kostoly`), or of indicator (`quantitative`).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+  address:
+    slot_uri: schema:address
+    description: The Smart Data Models PostalAddress of the place, its street, district and city.
+    range: PostalAddress
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and number as the publisher writes them.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  district:
+    slot_uri: sdm:district
+    description: The city district (mestská časť) as the publisher writes it.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The city, Bratislava.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  url:
+    slot_uri: schema:url
+    description: The place's own web page.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/url
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: Who publishes the data the entity was read from, with the credit its licence asks for.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The hub page of the dataset the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  districtCode:
+    slot_uri: jc:districtCode
+    description: The district's ZÚJ code (základná územná jednotka), the key the national registers use.
+    required: true
+    pattern: ^5[0-9]{5}$
+    annotations: { ngsi_ld_kind: Property }
+  process:
+    slot_uri: sdm:process
+    description: What the indicator counts or measures, in the hub's words, with its unit.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  kpiValue:
+    slot_uri: sdm:kpiValue
+    description: The figure for the district and period, as the hub's table states it.
+    range: float
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationPeriod:
+    slot_uri: sdm:calculationPeriod
+    description: The period the figure covers, its first and last day.
+    range: KpiPeriod
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  from:
+    slot_uri: sdm:from
+    description: The first day of the period.
+    range: date
+    required: true
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  to:
+    slot_uri: sdm:to
+    description: The last day of the period.
+    range: date
+    required: true
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationFrequency:
+    slot_uri: sdm:calculationFrequency
+    description: How often the hub publishes the figure (yearly, quarterly, every five years).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  area:
+    slot_uri: sdm:area
+    description: The city district the figure describes, by its name.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  organization:
+    slot_uri: sdm:organization
+    description: The body the figure describes, the City of Bratislava.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
 
 classes:
   AirQualityObserved:
@@ -51,3 +175,54 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
     slots: [name, dateObserved, pm10]
+  AdministrativeArea:
+    class_uri: jc:AdministrativeArea
+    description: >-
+      One of the 17 city districts (mestské časti) of Bratislava, its outline and its ZÚJ code, as
+      the Smart Data Model extension AdministrativeArea (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+    slots: [name, districtCode, dataProvider, source]
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One place a resident goes to: a barrier-free place, a lifelong-learning provider, a needle
+      drop point or a service for homeless people, with its own coordinates from the hub.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+    slots: [name, category, description, address, url, dataProvider, source]
+  KeyPerformanceIndicator:
+    class_uri: sdm:KeyPerformanceIndicator
+    description: >-
+      One figure of one hub table for one city district and one period: a count, a rate or an
+      area, such as the offences the city police recorded in Nové Mesto in 2025.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+    slots:
+      - name
+      - description
+      - process
+      - category
+      - kpiValue
+      - calculationPeriod
+      - calculationFrequency
+      - area
+      - organization
+      - dataProvider
+      - source
+
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: >-
+      The value of `address`: a postal address, never an entity of its own (Smart Data Models'
+      common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots: [streetAddress, district, addressLocality, addressCountry]
+  KpiPeriod:
+    class_uri: jc:KpiPeriod
+    description: The value of `calculationPeriod`, never an entity of its own.
+    slots: [from, to]

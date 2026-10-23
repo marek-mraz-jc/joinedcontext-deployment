@@ -28,11 +28,24 @@ spec:
         dateObserved: { record: onChange, heartbeat: P1D }
         location: { record: onChange, heartbeat: P1D }
         name: { record: onChange, heartbeat: P1D }
+    # A district, a place and a figure of one period are records, not measurements: their current
+    # state only; an indicator's history is its periods, one entity each (T-5274).
+    - entityType: AdministrativeArea
+      history: 'off'
+    - entityType: PointOfInterest
+      history: 'off'
+    - entityType: KeyPerformanceIndicator
+      history: 'off'
   # The municipality of Bratislava (OSM relation, lon 16.946..17.285, lat 48.007..48.265) with a
   # 1 km margin (owner 2026-10-22T18:10Z); an entity outside it is flagged, never refused (DM-87).
   quality:
     - name: in-area
       entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area
+      entityType: PointOfInterest
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]

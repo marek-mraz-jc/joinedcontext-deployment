@@ -1,0 +1,17 @@
+# The hub's district tables as KeyPerformanceIndicator, one entity per figure, district and period
+# (T-5274). The tables change once a year at most; a weekly run shows a new year within a week.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: statistics
+  namespace: bratislava
+  title: { sk: Štatistiky mestských častí, en: City district statistics }
+spec:
+  class: auto
+  period: 168h
+  schedule: '45 3 * * 1'
+  source:
+    dataSourceRef: { kind: DataSource, name: bratislava-hub }
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

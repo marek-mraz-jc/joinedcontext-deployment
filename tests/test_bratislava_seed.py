@@ -15,7 +15,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BRATISLAVA = SEED / "bratislava"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved"}
+TYPES = {"AirQualityObserved", "AdministrativeArea", "PointOfInterest", "KeyPerformanceIndicator"}
+# The districts pipeline checks every vertex of an outline itself; an indicator has no location.
+LOCATED = TYPES - {"AdministrativeArea", "KeyPerformanceIndicator"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -85,13 +87,13 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     assert model["contextSpaceRef"] == "bratislava" and model["lifecycle"] == "published"
     assert set(model["classes"]) == TYPES
     linkml = yaml.safe_load((BRATISLAVA / "bratislava.linkml.yaml").read_text())
-    assert set(linkml["classes"]) == TYPES
+    assert {n for n, c in linkml["classes"].items() if c.get("is_a") == "Entity"} == TYPES
     for artifact in model["artifacts"].values():
         assert (BRATISLAVA / artifact.removeprefix("./")).is_file(), artifact
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
     assert {row["entityType"] for row in spec["retention"]} == TYPES
     areas = {q["entityType"]: q["bbox"] for q in spec["quality"] if q["kind"] == "area"}
-    assert set(areas) == TYPES
+    assert set(areas) == LOCATED
     for west, south, east, north in areas.values():
         # The municipality (16.946..17.285 E, 48.007..48.265 N, OSM) with about 1 km to spare,
         # nothing wider.
@@ -140,8 +142,7 @@ def test_the_public_reads_and_never_writes():
 
 
 def test_the_one_door_is_public_cc_by_and_credits_the_city():
-    (endpoint,) = by_name("Endpoint").values()
-    spec = endpoint["spec"]
+    spec = by_name("Endpoint")["bratislava"]["spec"]
     assert spec["contextSpaceRef"] == "bratislava" and spec["audience"] == "public"
     assert len(spec["slug"]) == 32
     catalog = spec["catalog"]
