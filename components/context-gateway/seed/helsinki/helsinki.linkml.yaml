@@ -966,11 +966,11 @@ slots:
       label:
         tag: label
         value:
-          sk: Kľúčové slová
-          cs: Klíčová slova
-          en: Keywords
-          de: Schlagwörter
-        annotations: { generated: sk cs en de }
+          sk: Témy
+          cs: Témata
+          fi: Teemat
+          en: Topics
+          de: Themen
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   isAccessibleForFree:
@@ -983,9 +983,9 @@ slots:
         value:
           sk: Vstup zdarma
           cs: Vstup zdarma
-          en: Free of charge
+          fi: Maksuton
+          en: Free admission
           de: Eintritt frei
-        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/isAccessibleForFree
   webSite:
@@ -998,9 +998,9 @@ slots:
         value:
           sk: Webová stránka
           cs: Webová stránka
+          fi: Verkkosivu
           en: Website
           de: Webseite
-        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   superEvent:
