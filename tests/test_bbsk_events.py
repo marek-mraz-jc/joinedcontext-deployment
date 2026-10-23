@@ -96,7 +96,7 @@ def test_the_space_names_its_one_model_and_keeps_no_history():
     [rule] = space["spec"]["quality"]
     assert (rule["entityType"], rule["attribute"], tuple(rule["bbox"])) == ("Event", "location", SLOVAKIA)
     [model] = of_space("DataModel").values()
-    # The events and the venues they link (T-5364, DM-136).
+    # The events and the venues they link (T-5364, DM-141).
     assert model["spec"]["classes"] == ["Event", "PointOfInterest"] and model["spec"]["lifecycle"] == "published"
 
 

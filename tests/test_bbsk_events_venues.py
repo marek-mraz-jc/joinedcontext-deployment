@@ -1,4 +1,4 @@
-"""One PointOfInterest per real venue of the events' venue table (T-5364, DM-136): rows of one OpenStreetMap
+"""One PointOfInterest per real venue of the events' venue table (T-5364, DM-141): rows of one OpenStreetMap
 object or of one name within 50 m are one venue, every event the table places links it, and each store's
 miesta-podujati pipeline writes the venues its events can link."""
 
@@ -24,7 +24,7 @@ def row(venue: str, lat: float, lon: float, osm: str = "", town: str = "detva") 
 
 
 def test_one_name_within_50_m_is_one_venue_and_200_m_apart_two():
-    """DM-136: rows of one name merge within 50 m and stay apart at 200 m."""
+    """DM-141: rows of one name merge within 50 m and stay apart at 200 m."""
     # 0.0003° of latitude is about 33 m, 0.0018° about 200 m.
     groups = generate.venue_groups([
         row("Kultúrny dom", 48.5, 19.4),
@@ -58,7 +58,7 @@ def test_the_venue_table_counts_its_real_venues_and_two_galleries_of_kosice_stay
 
 
 def test_every_venue_an_event_can_link_is_written_by_its_stores_venue_pipeline():
-    """DM-136: each store writes exactly the venues its events link, from the table, with no outbound call."""
+    """DM-141: each store writes exactly the venues its events link, from the table, with no outbound call."""
     for store in generate.STORES:
         ns = store["ns"]
         bento = yaml.safe_load((SEED / ns / f"{ns}-pipeline-{generate.VENUES}-bento.yaml").read_text())

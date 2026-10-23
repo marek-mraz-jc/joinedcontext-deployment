@@ -35,7 +35,7 @@ def test_the_geocoded_share_counts_each_points_origin_per_source():
     assert (b["events"], b["gps"], b["home"], b["nominatim"]) == (3, 2, 1, 1)
     assert (out["total"], out["gps"], round(out["share"], 3)) == (6, 4, 0.667)
     assert dict(out["unplaced"]) == {("a", "Neznáma sála"): 1}, "an event without a venue gives nothing to geocode"
-    assert (out["municipality"], out["venue_link"]) == (1, 1)  # DM-136
+    assert (out["municipality"], out["venue_link"]) == (1, 1)  # DM-141
 
 
 def test_the_report_prints_the_share_and_writes_the_unplaced_venues_for_geocoding(tmp_path, capsys):

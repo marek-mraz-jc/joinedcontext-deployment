@@ -91,7 +91,7 @@ def summarise(events: list[dict], known: dict[tuple[float, float], str]) -> dict
     gps = sum(c["gps"] for c in per.values())
     return {"sources": per, "total": total, "gps": gps, "share": gps / total if total else 0.0, "unplaced": unplaced,
             "precision": precision, "streets": streets,
-            # DM-136: every event names its municipality; one the venue table placed links its PointOfInterest.
+            # DM-141: every event names its municipality; one the venue table placed links its PointOfInterest.
             "municipality": sum(1 for e in events if e.get("areaServed")),
             "venue_link": sum(1 for e in events if e.get("refPointOfInterest"))}
 

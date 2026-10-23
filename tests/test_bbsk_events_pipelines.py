@@ -999,7 +999,7 @@ def town_point(town: str) -> list[float]:
 
 @requires_docker
 def test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office(monkeypatch):
-    """DM-136: the fill order source > venue table > office > centre, the venue link and the municipality."""
+    """DM-141: the fill order source > venue table > office > centre, the venue link and the municipality."""
     out = records(monkeypatch, [
         {"venue": "Futbalové ihrisko"},                        # nobody placed it: the town's office
         {"venue": "Futbalové ihrisko", "lat": 48.31, "lon": 17.49},  # the publisher's own point
@@ -1012,7 +1012,7 @@ def test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns
     assert out["2"]["locationPrecision"]["value"] == "building" and out["2"]["venue"]["value"] == "Kultúrny dom"
     assert out["2"]["location"]["value"]["coordinates"] == [17.5184876, 48.3025638]
     assert "location" not in out["3"] and "locationPrecision" not in out["3"]
-    # Only the venue table's place links its PointOfInterest; every event names its municipality (DM-136).
+    # Only the venue table's place links its PointOfInterest; every event names its municipality (DM-141).
     kd = [v for v in generate.venues_for("cifer") if v["venue"] == "Kultúrny dom"][0]
     assert out["2"]["refPointOfInterest"] == {"type": "Relationship",
                                               "object": f"urn:ngsi-ld:PointOfInterest:slovensko-podujatia:{kd['poi']}"}
@@ -1056,7 +1056,7 @@ POI = jsonschema.Draft7Validator({**copy.deepcopy(SCHEMA), "$ref": "#/definition
 
 @requires_docker
 def test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest():
-    """DM-136: one PointOfInterest per venue, valid against the store's model."""
+    """DM-141: one PointOfInterest per venue, valid against the store's model."""
     for ns, space in (("bbsk", "bbsk-podujatia"), ("slovensko", "slovensko-podujatia")):
         steps = yaml.safe_load((ROOT / "components/context-gateway/seed" / ns / f"{ns}-pipeline-miesta-podujati-bento.yaml").read_text())
         out = run(steps["pipeline"]["processors"], "tick", space)

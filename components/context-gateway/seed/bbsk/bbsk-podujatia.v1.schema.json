@@ -79,7 +79,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or a filter per town reads, on every event (DM-136).",
+          "description": "The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or a filter per town reads, on every event (DM-141).",
           "type": [
             "string",
             "null"
@@ -193,7 +193,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "refPointOfInterest": {
-          "description": "The venue as a PointOfInterest of this space, when the venue table placed the event; every event held there links the same one (DM-136).",
+          "description": "The venue as a PointOfInterest of this space, when the venue table placed the event; every event held there links the same one (DM-141).",
           "type": [
             "string",
             "null"
@@ -291,7 +291,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One venue of the venue table (seeds/bbsk-events/venues.csv): a hall, a square, a museum where events take place, one entity per real place (table rows of one name within 50 m are one venue), its id the OpenStreetMap object of its building or a hash of its town, name and point (DM-136).",
+      "description": "One venue of the venue table (seeds/bbsk-events/venues.csv): a hall, a square, a museum where events take place, one entity per real place (table rows of one name within 50 m are one venue), its id the OpenStreetMap object of its building or a hash of its town, name and point (DM-141).",
       "properties": {
         "address": {
           "anyOf": [
@@ -306,7 +306,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or a filter per town reads, on every event (DM-136).",
+          "description": "The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or a filter per town reads, on every event (DM-141).",
           "type": [
             "string",
             "null"
