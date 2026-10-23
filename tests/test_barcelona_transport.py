@@ -263,7 +263,7 @@ def test_the_seed_reads_the_parking_sections_daily_and_publishes_them():
     source = yaml.safe_load((SEED / "barcelona-datasource-parking-sections.yaml").read_text())["spec"]["http"]
     assert source["url"] == f"{HOST}/resources/bsm/TRAMS.CSV"
     pipeline = yaml.safe_load((SEED / "barcelona-pipeline-parking-sections.yaml").read_text())["spec"]
-    assert pipeline["period"] == "24h" and pipeline["output"] == {"type": "OnStreetParking", "mode": "upsert"}
+    assert "period" not in pipeline and pipeline["schedule"] == "20 4 * * *" and pipeline["output"] == {"type": "OnStreetParking", "mode": "upsert"}
     # 10,596 sections of the 3.1 MB file need about 256 MB in Bento (docker --memory, 2026-10-22).
     assert pipeline["quotas"]["maxMemoryMb"] >= 256
     endpoint = yaml.safe_load((SEED / "barcelona-endpoint-parking.yaml").read_text())["spec"]
