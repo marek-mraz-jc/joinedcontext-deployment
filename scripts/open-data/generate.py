@@ -103,12 +103,13 @@ PROJECTS = {
         "spatial": ["SK032"],
     },
 }
-# Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
-# column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
-# for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
+# Every standard the open data is served in (T-4279). No `sta` (T-5299): a SensorThings Datastream
+# needs its unitOfMeasurement (STA 1.1 §9.2.5) and these models declare no `unit`, so the Portal and
+# jcctl validate refuse it (EP-125); `series` lists it again once they do. No `mqtt` until 8883
+# opens (T-3996); the WebSocket pushes changes.
 # One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
 # a map reads GeoJSON from NGSI-LD (Accept: application/geo+json) or OGC API Features.
-REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "sta", "mcp"]
+REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
@@ -1095,7 +1096,7 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
     for e in mapped:
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
-                                                 "dataset": e["dataset"], "location": located(e), "series": series(e),
+                                                 "dataset": e["dataset"], "location": located(e), "series": "sta" in REPRESENTATIONS and series(e),
                                                  "filtered": True}
     for e in whole:
         slug, kind = existing_door(e)
