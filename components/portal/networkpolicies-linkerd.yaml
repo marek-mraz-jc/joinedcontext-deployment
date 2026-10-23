@@ -153,6 +153,17 @@ portal-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # The open-data catalogue's API (T-5314), through its inbound proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: ckan
+          componentNamespace: ckan
+      ports:
+        - protocol: TCP
+          port: 4143
     # The UI bundle (T-5297), through its inbound proxy.
     - to:
         - podSelector:

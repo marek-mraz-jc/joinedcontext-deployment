@@ -242,6 +242,14 @@ env:
   # browser resolves no .svc.cluster.local name. Same prefix as the forge's ROOT_URL.
   JC_GITEA_PUBLIC_URL: "https://{{ $global.domain }}{{ .Values.gitea.forge.pathPrefix | trimSuffix "/" }}"
 {{- end }}
+{{- if has "ckan" .Values.components }}
+  # The catalogue's own public URL, which every CkanInstance of this deployment names, and its
+  # Service, which the reconciler publishes through instead (T-5314): through the edge every
+  # publication spent the visitors' per-address limit (184 organization lookups in two minutes
+  # on prod). Linkerd carries the token between the two pods.
+  JC_PORTAL_CKAN_URL: "https://{{ .Values.ckan.catalogue.subDomain }}.{{ $global.domain }}"
+  JC_PORTAL_CKAN_API_URL: "http://ckan.{{ .Values.ckan.catalogue.namespace }}.svc.cluster.local:5000"
+{{- end }}
 {{- if $mirrorOwner }}
   # The GitHub organization or user every application repository is copied to (AP-79).
   JC_APP_MIRROR_GITHUB_OWNER: {{ $mirrorOwner | quote }}

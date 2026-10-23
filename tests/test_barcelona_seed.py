@@ -24,6 +24,9 @@ TYPES = {
     "EVChargingStation",
     "Event",
     "PointOfInterest",
+    "AdministrativeArea",
+    "CityWork",
+    "PedestrianCrossing",
 }
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
