@@ -1,6 +1,6 @@
 # One TrafficFlowObserved per counting station and direction of `lidotiku-traffic-counters` with
-# yesterday's count, once a day after the city's API has closed the day (T-5253). Each run reads
-# one small answer per station.
+# the count of the newest day the source has closed (it lags about a day), once a day (T-5253).
+# Each run reads three small answers per station.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
