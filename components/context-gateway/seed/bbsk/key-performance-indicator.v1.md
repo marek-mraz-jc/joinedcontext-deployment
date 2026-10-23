@@ -4,7 +4,7 @@ The model the indicator spaces of `bbsk` and `banskabystrica` publish, generated
 `key-performance-indicator.linkml.yaml`. One class, `KeyPerformanceIndicator`, specialising the
 shared `Entity` of `ngsi-ld-core`. It states the contract the platform already enforces:
 `schemas/kinds/KeyPerformanceIndicator.json` closes the object and requires every attribute
-below.
+below but `title`.
 
 | Attribute | NGSI-LD kind | Range | Unit | IRI |
 |---|---|---|---|---|
@@ -13,6 +13,7 @@ below.
 | `location` | GeoProperty | GeoJSON geometry | | `geojson:geometry` |
 | `observedAt` | Property | datetime | | `ngsi-ld:observedAt` |
 | `name` | Property | string | | `jc:name` |
+| `title` | LanguageProperty | string per language | | `jc:title` |
 | `currentValue` | Property | number or string | on the Property as `unitCode` | `jc:currentValue` |
 | `calculationPeriod` | Property | `{ start, end }` | RFC 3339 instants | `jc:calculationPeriod` |
 | `calculationFormula` | Property | string | | `jc:calculationFormula` |
@@ -20,7 +21,8 @@ below.
 | `computedBy` | Property | uri | | `jc:computedBy` |
 | `updatedAt` | Property | datetime | | `jc:updatedAt` |
 
-All seven own attributes are required, as are `id` and `type`.
+Seven own attributes are required, as are `id` and `type`. `title` is the indicator's human name
+in the space's languages, which a table labels the row with; `name` stays the slug.
 
 `state` and `threshold` are absent by decision. A threshold is the judgement of whoever reads the
 number: it changes without the number changing, and two departments may hold different ones for

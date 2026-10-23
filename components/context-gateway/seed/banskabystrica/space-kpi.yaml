@@ -29,4 +29,5 @@ spec:
         currentValue: { record: onChange, heartbeat: P7D }
         derivedFrom: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
+        title: { record: onChange, heartbeat: P7D }
         updatedAt: { record: onChange, heartbeat: P7D }
