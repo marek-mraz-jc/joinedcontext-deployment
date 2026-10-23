@@ -7,13 +7,15 @@ description: >-
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; Event holds the city's activity
   agendas (cultural, daily and sports); PointOfInterest the city's register of facilities
-  (equipaments); each Open Data BCN batch adds its own classes.
+  (equipaments); batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the
+  works on the public space as CityWork and the street inventory's crossings as
+  PedestrianCrossing; each Open Data BCN batch adds its own classes.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
+  jc: https://joinedcontext.com/models/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
-  jc: https://joinedcontext.com/models/
 default_prefix: sdm
 default_range: string
 imports:
@@ -23,7 +25,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name as the city publishes it, in Catalan.
+    description: The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
@@ -278,8 +280,8 @@ slots:
   startDate:
     slot_uri: schema:startDate
     description: >-
-      The first day of the event, local midnight in Europe/Madrid; the agenda publishes the
-      day, its hours sit in a free-text timetable.
+      The first day, local midnight in Europe/Madrid: of an event (the agenda publishes the
+      day, its hours sit in a free-text timetable) or of a work on the public space.
     range: datetime
     required: true
     annotations:
@@ -287,7 +289,9 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   endDate:
     slot_uri: schema:endDate
-    description: The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.
+    description: >-
+      The last day, local midnight in Europe/Madrid: of an event (absent when the agenda gives
+      none) or the planned last day of a work on the public space.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
@@ -348,7 +352,9 @@ slots:
       upstream_source: https://schema.org/addressCountry
   areaServed:
     slot_uri: sdm:areaServed
-    description: The neighbourhood (barri) the station or well is in, as the city names it.
+    description: >-
+      Where the entity is as the city names it: the barri of a station or well, the place of a work
+      (a street and number, a square, a park).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
@@ -385,14 +391,145 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
-enums:
-  MeasurementType:
-    description: What a PhreaticObserved measures (Smart Data Models' enum).
-    permissible_values:
-      depth: {}
-      volume: {}
-      quality: {}
-      other: {}
+  districtCode:
+    slot_uri: jc:districtCode
+    description: >-
+      The city's own two-digit code of the area: the district number 01..10, or for a barri its
+      number 01..73, which runs across the whole city.
+    pattern: ^[0-9]{2}$
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  divisionLevel:
+    slot_uri: jc:divisionLevel
+    description: Which of the city's two divisions the area belongs to.
+    range: DivisionLevel
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  refParentDistrict:
+    slot_uri: jc:refParentDistrict
+    description: The district a barri belongs to.
+    range: AdministrativeArea
+    inverse: neighbourhoods
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+  refDistrict:
+    slot_uri: jc:refDistrict
+    description: The district the work lies in, when it lies in one district only.
+    range: AdministrativeArea
+    inverse: cityWorks
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+  refNeighbourhood:
+    slot_uri: jc:refNeighbourhood
+    description: The barri the crossing lies in; none for a crossing on the city's edge.
+    range: AdministrativeArea
+    inverse: pedestrianCrossings
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+  pedestrianCrossings:
+    slot_uri: jc:pedestrianCrossings
+    description: The crossings in this barri, computed from their refNeighbourhood and never stored.
+    range: PedestrianCrossing
+    multivalued: true
+    inverse: refNeighbourhood
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
+  crossingType:
+    slot_uri: jc:crossingType
+    description: How the crossing is marked, from the city's typology (infraestructures-tipologia-pas-vianants).
+    range: CrossingType
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  crossingTypeLabel:
+    slot_uri: jc:crossingTypeLabel
+    description: The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes).
+    annotations: { ngsi_ld_kind: Property }
+  markedArea:
+    slot_uri: jc:markedArea
+    description: The painted area of the crossing in square metres (unitCode MTK).
+    range: float
+    minimum_value: 0
+    maximum_value: 500
+    unit: { ucum_code: m2 }
+    annotations: { ngsi_ld_kind: Property }
+  neighbourhoods:
+    slot_uri: jc:neighbourhoods
+    description: The barris of this district, computed from their refParentDistrict and never stored.
+    range: AdministrativeArea
+    multivalued: true
+    inverse: refParentDistrict
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
+  cityWorks:
+    slot_uri: jc:cityWorks
+    description: The works that lie in this district only, computed from their refDistrict and never stored.
+    range: CityWork
+    multivalued: true
+    inverse: refDistrict
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
+  description:
+    slot_uri: schema:description
+    description: The work's description as the city publishes it, in Catalan.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/description
+  workNumber:
+    slot_uri: sdm:workNumber
+    description: The city's code of the work, such as 05-2025G0074 (district, year, number).
+    pattern: ^[0-9]{2}-[0-9]{4}[A-Z][0-9]{4}$
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  workState:
+    slot_uri: sdm:workState
+    description: Where the work stands, in the Smart Data Model's terms.
+    range: WorkState
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  workStateLabel:
+    slot_uri: jc:workStateLabel
+    description: The work's state as the city writes it, in Catalan (En execució, Aturada, Finalitzada).
+    annotations: { ngsi_ld_kind: Property }
+  workCategory:
+    slot_uri: jc:workCategory
+    description: The city's kind of work, in Catalan (Urbanització, Serveis, Clavegueram...).
+    annotations: { ngsi_ld_kind: Property }
+  contractingAuthority:
+    slot_uri: sdm:contractingAuthority
+    description: >-
+      The work's promoter, a public body, utility or company; left out when it may name a person.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  tenderAmount:
+    slot_uri: jc:tenderAmount
+    description: The budget the work was put out to tender with, in euros.
+    range: float
+    minimum_value: 0
+    annotations: { ngsi_ld_kind: Property }
+  awardAmount:
+    slot_uri: jc:awardAmount
+    description: The budget the work was awarded for, in euros.
+    range: float
+    minimum_value: 0
+    annotations: { ngsi_ld_kind: Property }
+  territorialArea:
+    slot_uri: sdm:territorialArea
+    description: Every district the work touches, by name, separated by "; ".
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  seeAlso:
+    slot_uri: sdm:seeAlso
+    description: The work's page on the city's works site.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
 
 classes:
   AirQualityObserved:
@@ -462,6 +599,62 @@ classes:
       - areaServed
       - dataProvider
       - source
+  AdministrativeArea:
+    class_uri: jc:AdministrativeArea
+    description: >-
+      One district (10) or barri (73) of Barcelona, its outline and its code, as the Smart Data
+      Model extension AdministrativeArea (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+    slots:
+      - name
+      - districtCode
+      - divisionLevel
+      - refParentDistrict
+      - neighbourhoods
+      - cityWorks
+      - pedestrianCrossings
+      - dataProvider
+      - source
+  CityWork:
+    class_uri: sdm:CityWork
+    description: >-
+      One work on Barcelona's public space, in execution, stopped or finished within 30 days, with
+      its outline, its dates and its promoter. The constructor is left out.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - description
+      - workNumber
+      - workState
+      - workStateLabel
+      - workCategory
+      - startDate
+      - endDate
+      - contractingAuthority
+      - tenderAmount
+      - awardAmount
+      - areaServed
+      - territorialArea
+      - refDistrict
+      - seeAlso
+      - dataProvider
+      - source
+    slot_usage:
+      endDate: { required: true }
+  PedestrianCrossing:
+    class_uri: jc:PedestrianCrossing
+    description: >-
+      One pedestrian or cycle crossing painted on Barcelona's streets, from the city's street
+      inventory, with its kind, its painted area and its barri. Smart Data Models has no crossing
+      model; the class is the project's own, with SDM's common names where they exist (location,
+      dataProvider, source).
+    is_a: Entity
+    slots: [crossingType, crossingTypeLabel, markedArea, refNeighbourhood, dataProvider, source]
+
   Event:
     class_uri: sdm:Event
     description: >-
@@ -492,3 +685,31 @@ classes:
     annotations:
       upstream_source: https://schema.org/ContactPoint
     slots: [telephone]
+
+enums:
+  MeasurementType:
+    description: What a PhreaticObserved measures (Smart Data Models' enum).
+    permissible_values:
+      depth: {}
+      volume: {}
+      quality: {}
+      other: {}
+  DivisionLevel:
+    permissible_values:
+      district:
+        description: A district (districte), 10 of them.
+      neighbourhood:
+        description: A barri, 73 of them, each inside one district.
+  WorkState:
+    description: The Smart Data Model CityWork workState values the city's states map to.
+    permissible_values:
+      open: { description: In execution (En execució). }
+      other: { description: Stopped (Aturada). }
+      completed: { description: Finished (Finalitzada). }
+  CrossingType:
+    description: The three kinds of crossing marking the city's typology names.
+    permissible_values:
+      stripes:
+        description: Painted bars across the road, the zebra crossing (Pas de pastilles).
+      blocks: { description: A crossing marked with painted square blocks (Pas de tacs). }
+      cycle: { description: A crossing for bicycles (Pas de bicicletes). }

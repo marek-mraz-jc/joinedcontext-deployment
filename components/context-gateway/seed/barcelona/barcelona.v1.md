@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; Event holds the city's activity agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); each Open Data BCN batch adds its own classes.
+What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; Event holds the city's activity agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the works on the public space as CityWork and the street inventory's crossings as PedestrianCrossing; each Open Data BCN batch adds its own classes.
 
 - Namespace: `https://joinedcontext.com/models/barcelona/barcelona`
 - Rendered by: `linkml-1.12.0`
@@ -21,7 +21,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
 | `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
 | `pm10` | Property | `float` |  | ug/m3 | `sdm:pm10` | Particulate matter up to 10 µm, the hour's mean at the station. |
 | `pm25` | Property | `float` |  | ug/m3 | `sdm:pm25` | Particulate matter up to 2.5 µm, the hour's mean at the station. |
@@ -34,7 +34,7 @@ Specialises `Entity`.
 | `blackCarbon` | Property | `float` |  | ug/m3 | `jc:blackCarbon` | Black carbon, the hour's mean at the station. A property of this model: the Smart Data Model AirQualityObserved names no black carbon attribute. The city's file gives it in ng/m³ under a µg/m³ label; the pipeline divides by 1000. |
 | `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park). |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -52,7 +52,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
 | `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
 | `temperature` | Property | `float` |  | Cel | `sdm:temperature` | The day's mean air temperature at the station. |
 | `maxTemperature` | Property | `float` |  | Cel | `jc:maxTemperature` | The day's highest air temperature at the station. A property of this model: the Smart Data Model WeatherObserved names only the mean. |
@@ -67,7 +67,7 @@ Specialises `Entity`.
 | `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
 | `altitude` | Property | `float` |  |  | `jc:altitude` | The station's height above sea level in metres, as the weather service lists it. A fixed property of the station, written without a unit code so its rows are never read as a measurement stamped on receipt. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park). |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -85,7 +85,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
 | `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
 | `measurementType` | Property | [`MeasurementType`](#measurementtype) (list) |  |  | `sdm:measurementType` | What the well's readings measure; `depth` for each of the city's wells. |
 | `waterTable` | Property | `float` |  | m | `sdm:waterTable` | The depth from the surface to the water in the well at the newest reading. |
@@ -94,7 +94,84 @@ Specialises `Entity`.
 | `aquifer` | Property | `string` |  |  | `jc:aquifer` | The groundwater body (massa d'aigua) the well reaches, as the water agency names it. |
 | `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### AdministrativeArea
+
+One district (10) or barri (73) of Barcelona, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
+
+IRI: `jc:AdministrativeArea`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
+| `districtCode` | Property | `string` | yes |  | `jc:districtCode` | The city's own two-digit code of the area: the district number 01..10, or for a barri its number 01..73, which runs across the whole city. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to. |
+| `refParentDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refParentDistrict` | The district a barri belongs to. |
+| `neighbourhoods` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:neighbourhoods` | The barris of this district, computed from their refParentDistrict and never stored. |
+| `cityWorks` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:cityWorks` | The works that lie in this district only, computed from their refDistrict and never stored. |
+| `pedestrianCrossings` | Relationship | [`PedestrianCrossing`](#pedestriancrossing) (list) |  |  | `jc:pedestrianCrossings` | The crossings in this barri, computed from their refNeighbourhood and never stored. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### CityWork
+
+One work on Barcelona's public space, in execution, stopped or finished within 30 days, with its outline, its dates and its promoter. The constructor is left out.
+
+IRI: `sdm:CityWork`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
+| `description` | Property | `string` |  |  | `schema:description` | The work's description as the city publishes it, in Catalan. |
+| `workNumber` | Property | `string` | yes |  | `sdm:workNumber` | The city's code of the work, such as 05-2025G0074 (district, year, number). |
+| `workState` | Property | [`WorkState`](#workstate) | yes |  | `sdm:workState` | Where the work stands, in the Smart Data Model's terms. |
+| `workStateLabel` | Property | `string` |  |  | `jc:workStateLabel` | The work's state as the city writes it, in Catalan (En execució, Aturada, Finalitzada). |
+| `workCategory` | Property | `string` |  |  | `jc:workCategory` | The city's kind of work, in Catalan (Urbanització, Serveis, Clavegueram...). |
+| `startDate` | Property | `datetime` | yes |  | `schema:startDate` | The first day, local midnight in Europe/Madrid: of an event (the agenda publishes the day, its hours sit in a free-text timetable) or of a work on the public space. |
+| `endDate` | Property | `datetime` | yes |  | `schema:endDate` | The last day, local midnight in Europe/Madrid: of an event (absent when the agenda gives none) or the planned last day of a work on the public space. |
+| `contractingAuthority` | Property | `string` |  |  | `sdm:contractingAuthority` | The work's promoter, a public body, utility or company; left out when it may name a person. |
+| `tenderAmount` | Property | `float` |  |  | `jc:tenderAmount` | The budget the work was put out to tender with, in euros. |
+| `awardAmount` | Property | `float` |  |  | `jc:awardAmount` | The budget the work was awarded for, in euros. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park). |
+| `territorialArea` | Property | `string` |  |  | `sdm:territorialArea` | Every district the work touches, by name, separated by "; ". |
+| `refDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refDistrict` | The district the work lies in, when it lies in one district only. |
+| `seeAlso` | Property | `uri` |  |  | `sdm:seeAlso` | The work's page on the city's works site. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PedestrianCrossing
+
+One pedestrian or cycle crossing painted on Barcelona's streets, from the city's street inventory, with its kind, its painted area and its barri. Smart Data Models has no crossing model; the class is the project's own, with SDM's common names where they exist (location, dataProvider, source).
+
+IRI: `jc:PedestrianCrossing`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `crossingType` | Property | [`CrossingType`](#crossingtype) | yes |  | `jc:crossingType` | How the crossing is marked, from the city's typology (infraestructures-tipologia-pas-vianants). |
+| `crossingTypeLabel` | Property | `string` |  |  | `jc:crossingTypeLabel` | The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes). |
+| `markedArea` | Property | `float` |  | m2 | `jc:markedArea` | The painted area of the crossing in square metres (unitCode MTK). |
+| `refNeighbourhood` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refNeighbourhood` | The barri the crossing lies in; none for a crossing on the city's edge. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -112,9 +189,9 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan. |
-| `startDate` | Property | `datetime` | yes |  | `schema:startDate` | The first day of the event, local midnight in Europe/Madrid; the agenda publishes the day, its hours sit in a free-text timetable. |
-| `endDate` | Property | `datetime` |  |  | `schema:endDate` | The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
+| `startDate` | Property | `datetime` | yes |  | `schema:startDate` | The first day, local midnight in Europe/Madrid: of an event (the agenda publishes the day, its hours sit in a free-text timetable) or of a work on the public space. |
+| `endDate` | Property | `datetime` |  |  | `schema:endDate` | The last day, local midnight in Europe/Madrid: of an event (absent when the agenda gives none) or the planned last day of a work on the public space. |
 | `category` | Property | `string` (list) |  |  | `sdm:category` | An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius). |
 | `subCategory` | Property | `string` (list) |  |  | `sdm:subCategory` | The Smart Data Models sub-category where the name says it (music, theater). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
@@ -135,7 +212,7 @@ Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
-| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan. |
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
 | `category` | Property | `string` (list) |  |  | `sdm:category` | An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
 | `contactPoint` | Property | [`ContactPoint`](#contactpoint) |  |  | `schema:contactPoint` | The public telephone line the agenda or the facility register lists. |
@@ -194,3 +271,30 @@ What a PhreaticObserved measures (Smart Data Models' enum).
 | `volume` |  |
 | `quality` |  |
 | `other` |  |
+
+### DivisionLevel
+
+| Value | Meaning |
+|---|---|
+| `district` | A district (districte), 10 of them. |
+| `neighbourhood` | A barri, 73 of them, each inside one district. |
+
+### WorkState
+
+The Smart Data Model CityWork workState values the city's states map to.
+
+| Value | Meaning |
+|---|---|
+| `open` | In execution (En execució). |
+| `other` | Stopped (Aturada). |
+| `completed` | Finished (Finalitzada). |
+
+### CrossingType
+
+The three kinds of crossing marking the city's typology names.
+
+| Value | Meaning |
+|---|---|
+| `stripes` | Painted bars across the road, the zebra crossing (Pas de pastilles). |
+| `blocks` | A crossing marked with painted square blocks (Pas de tacs). |
+| `cycle` | A crossing for bicycles (Pas de bicicletes). |

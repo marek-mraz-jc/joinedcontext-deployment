@@ -1,8 +1,14 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
+    },
+    "CityWork": {
+      "@id": "sdm:CityWork"
     },
     "ContactPoint": {
       "@id": "schema:ContactPoint"
@@ -12,6 +18,9 @@
     },
     "Event": {
       "@id": "sdm:Event"
+    },
+    "PedestrianCrossing": {
+      "@id": "jc:PedestrianCrossing"
     },
     "PhreaticObserved": {
       "@id": "sdm:PhreaticObserved"
@@ -48,12 +57,20 @@
       "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
     },
+    "awardAmount": {
+      "@id": "jc:awardAmount",
+      "@type": "xsd:float"
+    },
     "blackCarbon": {
       "@id": "jc:blackCarbon",
       "@type": "xsd:float"
     },
     "category": {
       "@id": "sdm:category"
+    },
+    "cityWorks": {
+      "@id": "jc:cityWorks",
+      "@type": "@id"
     },
     "co": {
       "@id": "sdm:co",
@@ -62,6 +79,20 @@
     "contactPoint": {
       "@id": "schema:contactPoint"
     },
+    "contractingAuthority": {
+      "@id": "sdm:contractingAuthority"
+    },
+    "crossingType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:crossingType"
+    },
+    "crossingTypeLabel": {
+      "@id": "jc:crossingTypeLabel"
+    },
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
@@ -69,8 +100,22 @@
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "description": {
+      "@id": "schema:description"
+    },
     "district": {
       "@id": "sdm:district"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
+    "divisionLevel": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:divisionLevel"
     },
     "endDate": {
       "@id": "schema:endDate",
@@ -91,6 +136,10 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "markedArea": {
+      "@id": "jc:markedArea",
+      "@type": "xsd:float"
+    },
     "maxTemperature": {
       "@id": "jc:maxTemperature",
       "@type": "xsd:float"
@@ -109,6 +158,10 @@
     },
     "name": {
       "@id": "schema:name"
+    },
+    "neighbourhoods": {
+      "@id": "jc:neighbourhoods",
+      "@type": "@id"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no": {
@@ -131,6 +184,10 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "pedestrianCrossings": {
+      "@id": "jc:pedestrianCrossings",
+      "@type": "@id"
+    },
     "piezometricLevel": {
       "@id": "jc:piezometricLevel",
       "@type": "xsd:float"
@@ -150,12 +207,28 @@
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
     },
+    "refDistrict": {
+      "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refNeighbourhood": {
+      "@id": "jc:refNeighbourhood",
+      "@type": "@id"
+    },
+    "refParentDistrict": {
+      "@id": "jc:refParentDistrict",
+      "@type": "@id"
+    },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",
       "@type": "xsd:float"
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "seeAlso": {
+      "@id": "sdm:seeAlso",
+      "@type": "xsd:anyURI"
+    },
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "so2": {
@@ -190,6 +263,13 @@
       "@id": "sdm:temperature",
       "@type": "xsd:float"
     },
+    "tenderAmount": {
+      "@id": "jc:tenderAmount",
+      "@type": "xsd:float"
+    },
+    "territorialArea": {
+      "@id": "sdm:territorialArea"
+    },
     "type": "@type",
     "waterTable": {
       "@id": "sdm:waterTable",
@@ -202,6 +282,23 @@
     "windSpeed": {
       "@id": "sdm:windSpeed",
       "@type": "xsd:float"
+    },
+    "workCategory": {
+      "@id": "jc:workCategory"
+    },
+    "workNumber": {
+      "@id": "sdm:workNumber"
+    },
+    "workState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:workState"
+    },
+    "workStateLabel": {
+      "@id": "jc:workStateLabel"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },

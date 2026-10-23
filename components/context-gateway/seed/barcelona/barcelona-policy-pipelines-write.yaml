@@ -20,5 +20,8 @@ spec:
         - type: AirQualityObserved
         - type: WeatherObserved
         - type: PhreaticObserved
+        - type: AdministrativeArea
+        - type: CityWork
+        - type: PedestrianCrossing
         - type: Event
         - type: PointOfInterest
