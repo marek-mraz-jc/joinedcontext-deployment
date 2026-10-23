@@ -1,5 +1,5 @@
 # The weather dataset of Barcelona in the city's CKAN organisation: the Meteocat stations in the
-# city and their daily values as NGSI-LD (with 400 days of history), CSV, GeoJSON by OGC API
+# city and their daily values as NGSI-LD (with 30 days of history), CSV, GeoJSON by OGC API
 # Features, OData and MCP (T-5263, EP-118).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
@@ -13,7 +13,7 @@ metadata:
   description:
     ca: Les estacions del Servei Meteorològic de Catalunya a Barcelona i els valors del darrer dia (temperatura mitjana, màxima i mínima, humitat, pressió, precipitació, vent, ratxa màxima, radiació solar), amb 400 dies d'història.
     es: Las estaciones del Servicio Meteorológico de Cataluña en Barcelona y los valores del último día (temperatura media, máxima y mínima, humedad, presión, precipitación, viento, racha máxima, radiación solar), con 400 días de historia.
-    en: The Catalan weather service's stations in Barcelona and their latest day's values (mean, highest and lowest temperature, humidity, pressure, precipitation, wind, strongest gust, solar radiation), with 400 days of history.
+    en: The Catalan weather service's stations in Barcelona and their latest day's values (mean, highest and lowest temperature, humidity, pressure, precipitation, wind, strongest gust, solar radiation), with 30 days of history.
 spec:
   contextSpaceRef: barcelona
   slug: skxp72estsqe7ftaazudrtwhutdvrkq4

@@ -27,7 +27,7 @@ spec:
     - deleteSubscription
     - queryTemporal
     - retrieveTemporal
-  temporalQ: timerel=after;timeAt=P-400D
+  temporalQ: timerel=after;timeAt=P-30D
   information:
     - entities:
         - type: PhreaticObserved

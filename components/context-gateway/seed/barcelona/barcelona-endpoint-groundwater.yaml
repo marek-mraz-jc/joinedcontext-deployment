@@ -1,5 +1,5 @@
 # The groundwater dataset of Barcelona in the city's CKAN organisation: the piezometers and wells
-# the city reads and their newest reading as NGSI-LD (with 400 days of history), CSV, GeoJSON by
+# the city reads and their newest reading as NGSI-LD (with 30 days of history), CSV, GeoJSON by
 # OGC API Features, OData and MCP (T-5263, EP-118).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
@@ -13,7 +13,7 @@ metadata:
   description:
     ca: Els piezòmetres i pous de Barcelona i la seva darrera mesura (fondària de l'aigua i cota piezomètrica), amb 400 dies d'història.
     es: Los piezómetros y pozos de Barcelona y su última medida (profundidad del agua y cota piezométrica), con 400 días de historia.
-    en: Barcelona's piezometers and wells and their newest reading (depth to the water and its height above sea level), with 400 days of history.
+    en: Barcelona's piezometers and wells and their newest reading (depth to the water and its height above sea level), with 30 days of history.
 spec:
   contextSpaceRef: barcelona
   slug: 6cy6upunqzvimnf3zxiivp5jo4yarmyf
