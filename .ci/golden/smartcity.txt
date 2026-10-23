@@ -452,7 +452,7 @@ v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--3
 v1/ConfigMap smartcity/gitea-seed-s1-slovensko--19
-v1/ConfigMap smartcity/gitea-seed-s1-slovensko--24
+v1/ConfigMap smartcity/gitea-seed-s1-slovensko--23
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--2
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--3
@@ -465,7 +465,7 @@ v1/ConfigMap smartcity/gitea-seed-s2-barcelona
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--13
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--14
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--15
-v1/ConfigMap smartcity/gitea-seed-s2-slovensko--23
+v1/ConfigMap smartcity/gitea-seed-s2-slovensko--24
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--2
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--3
