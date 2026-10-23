@@ -25,6 +25,13 @@
     fi: "Tämän kaavion tiedot eivät ole nyt saatavilla.",
     en: "The data of this chart is not available now."
   };
+  // T-5414: a temporal chart cut at a limit says so instead of passing for the whole window.
+  var PARTIAL = {
+    sk: "Graf je neúplný: zobrazuje údaje do {at}, zvyšok presahuje limity stránky.",
+    cs: "Graf je neúplný: ukazuje data do {at}, zbytek přesahuje limity stránky.",
+    fi: "Kaavio on vajaa: se näyttää tiedot {at} asti, loput ylittävät sivun rajat.",
+    en: "Partial chart: it shows data up to {at}; the rest is over the page's limits."
+  };
 
   // `#{viewId}`, then `&inline` (the catalogue shows title and description itself) and
   // `&lang=sk` (the page's language) in any order.
@@ -168,6 +175,14 @@
     });
   }
 
+  // An error of the page's own limits: a temporal chart past its first page stops there and
+  // draws what it has, with a note.
+  function limit(message) {
+    var error = new Error(message);
+    error.limit = true;
+    return error;
+  }
+
   // A JSON or text answer, stopped once the budget's bytes are spent.
   function read(response, budget) {
     if (!response.ok) {
@@ -176,7 +191,7 @@
       throw refused;
     }
     var length = +response.headers.get("Content-Length") || 0;
-    if (length > budget.bytes) throw new Error("over 20 MB: aggregate on the server");
+    if (length > budget.bytes) throw limit("over 20 MB: aggregate on the server");
     var reader = response.body.getReader();
     var chunks = [];
     function pump() {
@@ -185,7 +200,7 @@
         budget.bytes -= step.value.length;
         if (budget.bytes < 0) {
           reader.cancel();
-          throw new Error("over 20 MB: aggregate on the server");
+          throw limit("over 20 MB: aggregate on the server");
         }
         chunks.push(step.value);
         return pump();
@@ -209,7 +224,7 @@
 
   function count(rows, budget) {
     budget.rows -= rows.length;
-    if (budget.rows < 0) throw new Error("over 50,000 rows: aggregate on the server");
+    if (budget.rows < 0) throw limit("over 50,000 rows: aggregate on the server");
     return rows;
   }
 
@@ -222,12 +237,75 @@
     return next;
   }
 
-  function load(view, api, lang, fetcher, now) {
+  // The next window of a cut (206) temporal answer (T-5414). Antares names it in Link
+  // rel="intervalafter", offsetN per attribute, so no instance is skipped or repeated; a broker
+  // with Content-Range alone continues `after` the range's end, whose boundary instant comes again
+  // (4.11 `after` includes it) and is merged once. Content-Range's end is the newest instance of
+  // any entity, so it skips the rest of an entity cut earlier: the Link comes first.
+  function nextWindow(response, url, request) {
+    if (response.status !== 206) return null;
+    var link = /<([^>]*)>[^<]*?rel="?intervalafter\b/.exec(response.headers.get("Link") || "");
+    if (link) return sameEndpoint(new URL(link[1], url).href, request);
+    var range = /^date-time \S+-(\d{4}-\d\d-\d\dT[^/\s]+)\/\S+$/.exec(response.headers.get("Content-Range") || "");
+    if (!range || !/[?&]timerel=after(&|$)/.test(url)) return null;
+    return url.replace(/([?&]timeAt=)[^&]*/, "$1" + encodeURIComponent(range[1]));
+  }
+
+  // A temporal answer's instances, every attribute of every entity.
+  function instances(body, request) {
+    var key = request.method || "values";
+    return (Array.isArray(body) ? body : []).reduce(function (n, entity) {
+      return request.attrs.reduce(function (m, attr) {
+        var pairs = entity && entity[attr] && entity[attr][key];
+        return m + (Array.isArray(pairs) ? pairs.length : 0);
+      }, n);
+    }, 0);
+  }
+
+  // Windows of one temporal read, merged per entity and attribute; an instant served twice (the
+  // boundary of an `after` window) is kept once.
+  function merger(request) {
+    var key = request.method || "values";
+    var entities = [];
+    var byId = {};
+    var seen = {};
+    return {
+      entities: entities,
+      add: function (body) {
+        (Array.isArray(body) ? body : []).forEach(function (entity) {
+          if (!entity || typeof entity.id !== "string") return;
+          var into = byId[entity.id];
+          if (!into) entities.push(into = byId[entity.id] = { id: entity.id });
+          request.attrs.forEach(function (attr) {
+            var pairs = entity[attr] && entity[attr][key];
+            if (!Array.isArray(pairs)) return;
+            var list = (into[attr] = into[attr] || {})[key] = into[attr][key] || [];
+            var keys = seen[entity.id + "\n" + attr] = seen[entity.id + "\n" + attr] || {};
+            pairs.forEach(function (pair) {
+              var k = JSON.stringify(pair);
+              if (!keys[k]) list.push(pair);
+              keys[k] = true;
+            });
+          });
+        });
+      }
+    };
+  }
+
+  // `deadline`: past it no further window is asked for, so a slow read still draws before the
+  // page's 15 s timeout; by default 3 s short of it.
+  function load(view, api, lang, fetcher, now, deadline) {
     var source = JSON.parse(view.source || "{}");
     var request = firstRequest(source, view.endpoint, api, now);
     var budget = { rows: LIMIT_ROWS, bytes: LIMIT_BYTES };
+    var stopAt = deadline || Date.now() + TIMEOUT_MS - 3000;
+    var open = function (url) {
+      return fetcher(url, { credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) {
+        return read(r, budget).then(function (text) { return { response: r, text: text }; });
+      });
+    };
     var get = function (url) {
-      return fetcher(url, { credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) { return read(r, budget); });
+      return open(url).then(function (page) { return page.text; });
     };
     var names = function (type) {
       var url = api + "/api/endpoint/" + view.endpoint + "/ngsi-ld/v1/entities?" +
@@ -244,8 +322,45 @@
         return { format: "csv", text: body };
       });
     }
+    if (request.kind === "temporal") {
+      var merged = merger(request);
+      var partial = false;
+      // `block`: the entities the first window of this entity page listed; a full one (PAGE)
+      // continues with the next entities once its windows are read.
+      var windowOf = function (url, offset, block) {
+        return open(url).then(function (page) {
+          var body = JSON.parse(page.text);
+          count(new Array(instances(body, request)), budget);
+          return { page: page, body: body };
+        }).catch(function (error) {
+          if (!merged.entities.length || !(error.limit || error.name === "AbortError")) throw error;
+          partial = true;
+          return null;
+        }).then(function (got) {
+          if (!got) return null;
+          merged.add(got.body);
+          if (block === null) block = Array.isArray(got.body) ? got.body.length : 0;
+          var next = nextWindow(got.page.response, url, request);
+          if (next && (next === url || Date.now() > stopAt)) partial = true;
+          else if (next) return windowOf(next, offset, block);
+          if (!partial && block === PAGE) return windowOf(request.url + "&offset=" + (offset + PAGE), offset + PAGE, null);
+          return null;
+        });
+      };
+      return windowOf(request.url, 0, null).then(function () {
+        return names(request.type);
+      }).then(function (map) {
+        var out = rowsFromTemporal(merged.entities, request, map);
+        var data = { format: "json", rows: count(out, { rows: LIMIT_ROWS }) };
+        if (partial) {
+          var at = out.reduce(function (m, row) { return row.observedAt > m ? row.observedAt : m; }, "");
+          data.partial = (PARTIAL[lang] || PARTIAL.en).replace("{at}", at ? at.slice(0, 16).replace("T", " ") + " UTC" : "?");
+        }
+        return data;
+      });
+    }
     var rows = [];
-    function page(url, offset) {
+    function page(url) {
       return get(url).then(JSON.parse).then(function (body) {
         if (request.kind === "ogc") {
           rows = rows.concat(count(rowsFromOgc(body), budget));
@@ -253,21 +368,15 @@
           next = next && sameEndpoint(next.href, request);
           return next ? page(next) : rows;
         }
-        if (request.kind === "odata") {
-          rows = rows.concat(count(body.value || [], budget));
-          var link = sameEndpoint(body["@odata.nextLink"], request);
-          return link ? page(link) : rows;
-        }
-        var list = count(Array.isArray(body) ? body : [], budget);
-        rows = rows.concat(list);
-        return list.length === PAGE ? page(request.url + "&offset=" + (offset + PAGE), offset + PAGE) : rows;
+        rows = rows.concat(count(body.value || [], budget));
+        var link = sameEndpoint(body["@odata.nextLink"], request);
+        return link ? page(link) : rows;
       });
     }
-    return page(request.url, 0).then(function (list) {
+    return page(request.url).then(function (list) {
       if (request.kind === "ogc") return { format: "json", rows: list };
       return names(request.type).then(function (map) {
-        var out = request.kind === "temporal" ? rowsFromTemporal(list, request, map) : named(list, map, lang);
-        return { format: "json", rows: count(out, { rows: LIMIT_ROWS }) };
+        return { format: "json", rows: count(named(list, map, lang), { rows: LIMIT_ROWS }) };
       });
     });
   }
@@ -280,6 +389,7 @@
     var lang = (where && where.lang) || (navigator.language || "en").slice(0, 2);
     var fail = function (message) {
       status.textContent = message;
+      status.className = "";
       status.hidden = false;
       frame.hidden = true;
       resize();
@@ -330,6 +440,11 @@
         table.textContent = LINK[lang] || LINK.en;
         table.href = h.data + "/dataset/" + encodeURIComponent(view.package_id || "");
         return load(view, h.api, lang, fetcher, Date.now()).then(function (data) {
+          if (data.partial) {
+            status.textContent = data.partial;
+            status.className = "note";
+            status.hidden = false;
+          }
           return ready.then(function () {
             frame.contentWindow.postMessage({ type: "jc-viz-render", spec: spec, data: data, lang: lang }, "*");
           });
@@ -420,6 +535,7 @@
     duration: duration,
     firstRequest: firstRequest,
     rowsFromTemporal: rowsFromTemporal,
+    nextWindow: nextWindow,
     rowsFromOgc: rowsFromOgc,
     named: named,
     load: load

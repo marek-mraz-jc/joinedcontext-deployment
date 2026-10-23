@@ -109,3 +109,72 @@ test("only a page on our own hosts may hand the host page a spec (T-4657)", () =
     assert.equal(host.ourOrigin(origin, domain), false, String(origin));
   }
 });
+
+// T-5414: a temporal read cut at the broker's page size (206) reads the rest of its window.
+const cut = (body, headers = {}, status = 206) => {
+  const a = answer(body);
+  const all = { ...headers };
+  return { ...a, ok: true, status, headers: { get: (name) => (name in all ? all[name] : name === "Content-Length" ? a.headers.get() : null) } };
+};
+const pm = { source: "temporal", type: "AirQualityObserved", attrs: ["no2"], last: "P7D" };
+const series = (id, pairs) => ({ id, type: "AirQualityObserved", no2: { type: "Property", values: pairs } });
+const no2 = (rows) => rows.map((r) => [r.id, r.observedAt, r.no2]);
+
+test("a 206 window follows Link intervalafter on the Endpoint and merges one series per entity", async () => {
+  const asked = [];
+  const next = `/api/endpoint/${SLUG}/ngsi-ld/v1/temporal/entities?attrs=no2&format=temporalValues&limit=1000&offsetN=2&timeAt=2026-10-11T16%3A00%3A00Z&timerel=after&type=AirQualityObserved`;
+  const fetcher = async (url) => {
+    asked.push(url);
+    if (!url.includes("/temporal/")) return answer([{ id: "urn:a", name: "Letňany" }]);
+    if (!url.includes("offsetN")) {
+      return cut([series("urn:a", [[30, "2026-10-16T06:00:00Z"], [29, "2026-10-21T04:00:00Z"]]), series("urn:b", [[1, "2026-10-16T06:00:00Z"], [2, "2026-10-21T08:00:00Z"]])],
+        { "Content-Range": "date-time 2026-10-11T16:00:00Z-2026-10-21T08:00:00Z/*", Link: `<https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.9.jsonld>; rel="http://www.w3.org/ns/json-ld#context", <${next}>; rel="intervalafter";type="application/json"` });
+    }
+    return cut([series("urn:a", [[45, "2026-10-21T05:00:00Z"], [8, "2026-10-23T03:00:00Z"]]), series("urn:b", [[3, "2026-10-23T03:00:00Z"]])], {}, 200);
+  };
+  const data = await host.load(view(pm), API, "en", fetcher, NOW);
+  assert.equal(asked[1], `${API}${next}`);
+  assert.deepEqual(no2(data.rows), [
+    ["urn:a", "2026-10-16T06:00:00Z", 30], ["urn:a", "2026-10-21T04:00:00Z", 29], ["urn:a", "2026-10-21T05:00:00Z", 45], ["urn:a", "2026-10-23T03:00:00Z", 8],
+    ["urn:b", "2026-10-16T06:00:00Z", 1], ["urn:b", "2026-10-21T08:00:00Z", 2], ["urn:b", "2026-10-23T03:00:00Z", 3]]);
+  assert.equal(data.rows[0].name, "Letňany");
+  assert.equal(data.partial, undefined);
+});
+
+test("a 206 with Content-Range alone continues after its end and keeps the boundary instant once", async () => {
+  const asked = [];
+  const fetcher = async (url) => {
+    asked.push(url);
+    if (!url.includes("/temporal/")) return answer([]);
+    if (url.includes("timeAt=2026-10-11")) {
+      return cut([series("urn:a", [[30, "2026-10-16T06:00:00Z"], [29, "2026-10-21T08:00:00Z"]])], { "Content-Range": "date-time 2026-10-11T16:00:00Z-2026-10-21T08:00:00Z/*" });
+    }
+    return cut([series("urn:a", [[29, "2026-10-21T08:00:00Z"], [8, "2026-10-23T03:00:00Z"]])], {}, 200);
+  };
+  const data = await host.load(view(pm), API, "en", fetcher, NOW);
+  assert.ok(asked[1].startsWith(`${base}ngsi-ld/v1/temporal/entities?`) && asked[1].includes("timeAt=2026-10-21T08%3A00%3A00Z"), asked[1]);
+  assert.deepEqual(no2(data.rows), [["urn:a", "2026-10-16T06:00:00Z", 30], ["urn:a", "2026-10-21T08:00:00Z", 29], ["urn:a", "2026-10-23T03:00:00Z", 8]]);
+});
+
+test("a 206 that never ends stops at the limits with a partial note; a next window off the Endpoint stops the chart", async () => {
+  let n = 0;
+  const endless = async (url) => {
+    if (!url.includes("/temporal/")) return answer([]);
+    n += 1;
+    const pairs = Array.from({ length: 1000 }, (_, i) => [i, new Date(Date.parse("2026-10-12T00:00:00Z") + (n * 1000 + i) * 1000).toISOString()]);
+    return cut(Array.from({ length: 12 }, (_, i) => series(`urn:${i}`, pairs)), { Link: `<${base}ngsi-ld/v1/temporal/entities?offsetN=${n * 1000}&type=AirQualityObserved>; rel="intervalafter"` });
+  };
+  const rows = await host.load(view(pm), API, "sk", endless, NOW, Date.now() + 60000);
+  assert.ok(rows.rows.length <= 50000 && rows.rows.length >= 48000, String(rows.rows.length));
+  assert.match(rows.partial, /^Graf je neúplný: zobrazuje údaje do 2026-10-12 0\d:\d\d UTC/);
+  n = 0;
+  const late = await host.load(view(pm), API, "en", endless, NOW, Date.now() - 1);
+  assert.equal(n, 1);
+  assert.match(late.partial, /^Partial chart/);
+  const looping = async (url) => (url.includes("/temporal/") ? cut([series("urn:a", [[1, "2026-10-20T00:00:00Z"]])], { Link: `<${url}>; rel="intervalafter"` }) : answer([]));
+  assert.match((await host.load(view(pm), API, "en", looping, NOW)).partial, /up to 2026-10-20 00:00 UTC/);
+  const off = async (url) => (url.includes("/temporal/") ? cut([series("urn:a", [[1, "2026-10-20T00:00:00Z"]])], { Link: '<https://evil.example/t>; rel="intervalafter"' }) : answer([]));
+  await assert.rejects(host.load(view(pm), API, "en", off, NOW), /not on the Endpoint/);
+  const first = async () => cut(Array.from({ length: 51 }, (_, i) => series(`urn:${i}`, Array.from({ length: 1000 }, (_, j) => [j, "x"]))));
+  await assert.rejects(host.load(view(pm), API, "en", first, NOW), /50,000 rows/);
+});
