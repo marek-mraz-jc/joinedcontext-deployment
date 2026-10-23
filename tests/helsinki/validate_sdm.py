@@ -124,8 +124,8 @@ def failures(check: Draft7Validator, entities: list[dict[str, Any]]) -> Counter:
     return found
 
 
-def entities(endpoint: str, kind: str, limit: int) -> list[dict[str, Any]]:
-    query = urllib.parse.urlencode({"type": kind, "limit": limit, "options": "keyValues", "lang": "fi"})
+def entities(endpoint: str, kind: str, limit: int, lang: str = "fi") -> list[dict[str, Any]]:
+    query = urllib.parse.urlencode({"type": kind, "limit": limit, "options": "keyValues", "lang": lang})
     return fetch(f"{endpoint.rstrip('/')}/ngsi-ld/v1/entities?{query}")
 
 

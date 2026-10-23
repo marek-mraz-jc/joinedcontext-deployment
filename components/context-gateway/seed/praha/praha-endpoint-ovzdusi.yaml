@@ -14,7 +14,8 @@ spec:
   slug: muwmdpwigo7paq3gpy7hrwe7ou35lmaa
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-ovzdusi
-  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
+  # SensorThings too: the pollutant slots declare their UCUM unit, which a Datastream needs (EP-125, T-5270).
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, sta]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
