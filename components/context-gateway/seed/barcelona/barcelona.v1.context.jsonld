@@ -4,17 +4,40 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "EVChargingStation": {
+      "@id": "sdm:EVChargingStation"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
     "OnStreetParking": {
       "@id": "sdm:OnStreetParking"
     },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
     },
+    "address": {
+      "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
+    },
     "allowedVehicleType": {
       "@id": "sdm:allowedVehicleType"
+    },
+    "availableCapacity": {
+      "@id": "sdm:availableCapacity",
+      "@type": "xsd:integer"
+    },
+    "capacity": {
+      "@id": "sdm:capacity",
+      "@type": "xsd:integer"
     },
     "category": {
       "@context": {
@@ -42,6 +65,9 @@
     "name": {
       "@id": "schema:name"
     },
+    "network": {
+      "@id": "sdm:network"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no2": {
       "@id": "sdm:no2",
@@ -55,6 +81,12 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "openingHours": {
+      "@id": "schema:openingHours"
+    },
+    "operator": {
+      "@id": "sdm:operator"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -63,13 +95,39 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "socketNumber": {
+      "@id": "sdm:socketNumber",
+      "@type": "xsd:integer"
+    },
+    "socketType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:socketType"
+    },
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
+    },
+    "status": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:status"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
     },
     "tariffCode": {
       "@id": "jc:tariffCode"
@@ -94,7 +152,15 @@
       },
       "@id": "jc:trafficStateForecast"
     },
+    "travelTime": {
+      "@id": "jc:travelTime",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
+    "usualTravelTime": {
+      "@id": "jc:usualTravelTime",
+      "@type": "xsd:integer"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "jc:zoneCode"

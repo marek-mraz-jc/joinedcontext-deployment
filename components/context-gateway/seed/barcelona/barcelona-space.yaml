@@ -41,6 +41,15 @@ spec:
       heartbeat: PT1H
       attributes:
         dateObserved: { record: never }
+    # A charging point's free ports and status are levels each 5-minute read repeats: a row when
+    # one changes and at least one an hour, as for the traffic state (T-5262).
+    - entityType: EVChargingStation
+      current: P30D
+      history: P30D
+      record: onChange
+      heartbeat: PT1H
+      attributes:
+        dateObserved: { record: never }
     # The register of parking sections changes with a monthly file: no history (T-5262).
     - entityType: OnStreetParking
       current: P30D
@@ -60,6 +69,11 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: parking-in-area
       entityType: OnStreetParking
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: charging-in-area
+      entityType: EVChargingStation
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

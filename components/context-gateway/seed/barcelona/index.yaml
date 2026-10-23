@@ -32,3 +32,13 @@ barcelona-pipeline-parking-sections.yaml: projects/barcelona/pipelines/parking-s
 barcelona-pipeline-parking-sections-bento.yaml: projects/barcelona/pipelines/parking-sections/bento.yaml
 barcelona-endpoint-parking.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-parking.yaml
 barcelona-policy-public-parking.yaml: projects/barcelona/spaces/barcelona/policies/public-parking.yaml
+# The travel time of the city's traffic routes every five minutes, into the traffic dataset, and
+# the Endolla charging points with their free ports every five minutes, a dataset of its own.
+barcelona-datasource-traffic-routes.yaml: projects/barcelona/datasources/bcn-traffic-routes.yaml
+barcelona-pipeline-traffic-routes.yaml: projects/barcelona/pipelines/traffic-routes/pipeline.yaml
+barcelona-pipeline-traffic-routes-bento.yaml: projects/barcelona/pipelines/traffic-routes/bento.yaml
+barcelona-datasource-ev-charging.yaml: projects/barcelona/datasources/bcn-ev-charging.yaml
+barcelona-pipeline-ev-charging.yaml: projects/barcelona/pipelines/ev-charging/pipeline.yaml
+barcelona-pipeline-ev-charging-bento.yaml: projects/barcelona/pipelines/ev-charging/bento.yaml
+barcelona-endpoint-charging.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-charging.yaml
+barcelona-policy-public-charging.yaml: projects/barcelona/spaces/barcelona/policies/public-charging.yaml

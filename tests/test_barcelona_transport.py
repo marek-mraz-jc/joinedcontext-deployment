@@ -274,3 +274,248 @@ def test_the_seed_reads_the_parking_sections_daily_and_publishes_them():
     for name in ("datasource-parking-sections", "pipeline-parking-sections", "pipeline-parking-sections-bento",
                  "endpoint-parking", "policy-public-parking"):
         assert f"barcelona-{name}.yaml" in index
+
+
+ROUTE = "urn:ngsi-ld:TrafficFlowObserved:barcelona.cat:barcelona:itinerari-{}"
+# The route file was written at 07:55:53 Barcelona time, 05:55:53 UTC.
+ROUTES_NOW = "2026-10-23T06:00:00Z"
+
+
+class RouteLists(http.server.BaseHTTPRequestHandler):
+    """The route list and the section list as recorded, by path, or `status` instead of both."""
+
+    status: ClassVar[int] = 200
+    routes: ClassVar[bytes] = b""
+    sections: ClassVar[bytes] = b""
+
+    def do_GET(self):
+        self.send_response(RouteLists.status)
+        self.send_header("Content-Type", "text/csv")
+        self.end_headers()
+        self.wfile.write(RouteLists.routes if "per_itinerari" in self.path else RouteLists.sections)
+
+    def log_message(self, *_):
+        pass
+
+
+def routes(document: bytes, route_list: bytes | None = None, sections: bytes | None = None, status: int = 200,
+           now: str = ROUTES_NOW, counted: bool = False) -> tuple[list[dict], list[str]]:
+    """The traffic-routes mapping over `document` with its clock at `now`."""
+    RouteLists.status = status
+    RouteLists.routes = (FIXTURES / "transit_relacio_tram_per_itinerari.csv").read_bytes() if route_list is None else route_list
+    RouteLists.sections = (FIXTURES / "transit_relacio_trams.csv").read_bytes() if sections is None else sections
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), RouteLists)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        text = (SEED / "barcelona-pipeline-traffic-routes-bento.yaml").read_text()
+        text = text.replace(f"{HOST}/data/dataset/", f"http://127.0.0.1:{server.server_port}/data/dataset/")
+        text = text.replace("now()", f'"{now}".ts_parse("2006-01-02T15:04:05Z07:00")')
+        processors = yaml.safe_load(text)["pipeline"]["processors"]
+        if counted:
+            steps = processors[0]["try"]
+            processors = [{"try": steps[:steps.index(next(s for s in steps if "log" in s))]}]
+        return bento(processors, document)
+    finally:
+        server.shutdown()
+
+
+def route_rows() -> list[list[str]]:
+    text = (FIXTURES / "itineraris.dat").read_bytes().decode()
+    return [line.strip().split("#") for line in text.splitlines() if line.strip()]
+
+
+def route_sections() -> dict[str, list[str]]:
+    text = (FIXTURES / "transit_relacio_tram_per_itinerari.csv").read_bytes().decode("utf-8-sig")
+    members: dict[str, list[str]] = {}
+    for row in __import__("csv").DictReader(text.splitlines()):
+        if row["Tram"] != "0":
+            members.setdefault(row["Itinerari"], []).append(row["Tram"])
+    return members
+
+
+@requires_docker
+def test_every_recorded_route_is_a_valid_traffic_flow_observed_with_its_sections_lines():
+    written, errors = routes((FIXTURES / "itineraris.dat").read_bytes())
+    assert errors == []
+    by_id = {e["id"]: e for e in written}
+    assert len(written) == len(route_rows()) == 10
+    members = route_sections()
+    for route, available, _at, now, usual, *_ in route_rows():
+        entity = by_id[ROUTE.format(route)]
+        assert not open_data.schema_errors(SCHEMA, entity), entity
+        assert entity["dateObserved"]["value"] == "2026-10-23T05:55:53Z"
+        lines = entity["location"]["value"]
+        assert lines["type"] == "MultiLineString" and len(lines["coordinates"]) == len(members[route])
+        assert all(2.04 <= lon <= 2.24 and 41.30 <= lat <= 41.48 for line in lines["coordinates"] for lon, lat in line)
+        if available == "1" and int(now) > 0:
+            assert entity["travelTime"] == {"type": "Property", "value": int(now), "unitCode": "SEC", "observedAt": "2026-10-23T05:55:53Z"}
+            assert entity["usualTravelTime"]["value"] == int(usual)
+        else:
+            # No reading: the last travel time stays as it was, with the time it was read.
+            assert "travelTime" not in entity and "usualTravelTime" not in entity
+    assert by_id[ROUTE.format("3")]["name"]["value"] == "Guipúscoa de Meridiana a Cantàbria"
+    assert by_id[ROUTE.format("3")]["travelTime"]["value"] == 306
+
+
+@requires_docker
+def test_an_out_of_area_section_a_travel_time_out_of_range_and_a_duplicate_route_are_left_out_and_counted():
+    rows = (FIXTURES / "itineraris.dat").read_bytes().decode().splitlines()
+    # Route 15's three sections with lat/lon swapped leave the route without a line.
+    sections = (FIXTURES / "transit_relacio_trams.csv").read_bytes().decode("utf-8")
+    for section in route_sections()["15"]:
+        line = next(s for s in sections.splitlines() if s.startswith(f"{section},"))
+        coordinates = line.rsplit(',"', 1)[1].rstrip('"')
+        numbers = coordinates.split(",")
+        swapped = ",".join(v for pair in zip(numbers[1::2], numbers[0::2]) for v in pair)
+        sections = sections.replace(line, line.replace(coordinates, swapped))
+    extra = ["4#1#20261023075553#9999#300#1#1#1", "5#1#20261023075553#100#100#1#1#1", "x#y",
+             "6#1#20261026075553#100#100#1#1#1"]
+    out, errors = routes("\r\n".join(rows + extra).encode(), sections=sections.encode(), counted=True)
+    assert errors == []
+    assert out[0]["dropped"] == {
+        "malformedLine": 1, "travelTimeOutOfRange": 1, "timeInFuture": 1, "duplicateRoute": 1,
+        "routeWithoutLine": 1, "lineMalformed": 0, "lineOutOfArea": 3,
+    }
+    ids = [e["id"] for e in out[0]["entities"]]
+    assert ROUTE.format("15") not in ids and len(ids) == len(set(ids)) == 9
+    # The duplicate 5 is the second line: the first, as recorded, is kept.
+    five = next(e for e in out[0]["entities"] if e["id"] == ROUTE.format("5"))
+    assert five["travelTime"]["value"] == 174
+
+
+@pytest.mark.parametrize("document, route_list, status, now, reason", [
+    (b"", None, 200, ROUTES_NOW, "names no route"),
+    (b"<html>302 Found</html>", None, 200, ROUTES_NOW, "names no route"),
+    (None, None, 200, "2026-10-23T06:20:00Z", "older than three 5-minute periods"),
+    (None, None, 503, ROUTES_NOW, ""),
+    (None, b"id;name\r\n1;x\r\n", 200, ROUTES_NOW, "Itinerari, Tram, Descripci"),
+    (b" " * 262145, None, 200, ROUTES_NOW, "more than the 256 kB read"),
+], ids=["empty", "html", "stale", "lists-503", "route-columns", "oversize"])
+@requires_docker
+def test_an_empty_stale_or_broken_route_source_fails_the_run_and_writes_nothing(document, route_list, status, now, reason):
+    document = (FIXTURES / "itineraris.dat").read_bytes() if document is None else document
+    written, errors = routes(document, route_list, status=status, now=now)
+    assert written == []
+    assert len(errors) == 1 and reason in errors[0], errors
+
+
+def test_the_seed_reads_the_routes_every_five_minutes_from_the_city_hosts_only():
+    source = yaml.safe_load((SEED / "barcelona-datasource-traffic-routes.yaml").read_text())["spec"]["http"]
+    # The dataset's download link answers 302 to this file.
+    assert source["url"] == "https://www.bcn.cat/transit/dades/dadesitineraris.dat"
+    pipeline = yaml.safe_load((SEED / "barcelona-pipeline-traffic-routes.yaml").read_text())["spec"]
+    assert pipeline["period"] == "300s"
+    assert pipeline["output"] == {"type": "TrafficFlowObserved", "mode": "upsert"}
+    text = (SEED / "barcelona-pipeline-traffic-routes-bento.yaml").read_text()
+    urls = [line.split("url:", 1)[1].strip() for line in text.splitlines() if line.strip().startswith("url:")]
+    assert len(urls) == 2 and all(u.startswith(f"{HOST}/data/dataset/") for u in urls)
+    endpoint = yaml.safe_load((SEED / "barcelona-endpoint-traffic.yaml").read_text())["spec"]
+    assert f"{HOST}/data/ca/dataset/itineraris" in [s["url"] for s in endpoint["catalog"]["source"]]
+    index = yaml.safe_load((SEED / "index.yaml").read_text())
+    for name in ("datasource-traffic-routes", "pipeline-traffic-routes", "pipeline-traffic-routes-bento"):
+        assert f"barcelona-{name}.yaml" in index
+
+
+CHARGING = "urn:ngsi-ld:EVChargingStation:barcelona.cat:barcelona:endolla-{}"
+# The newest port change of the recorded file is 2026-10-23T07:55:55+02:00 (05:55:55 UTC).
+CHARGING_NOW = "2026-10-23T06:05:00Z"
+
+
+def charging(document: bytes, now: str = CHARGING_NOW, counted: bool = False) -> tuple[list[dict], list[str]]:
+    text = (SEED / "barcelona-pipeline-ev-charging-bento.yaml").read_text()
+    text = text.replace("now()", f'"{now}".ts_parse("2006-01-02T15:04:05Z07:00")')
+    processors = yaml.safe_load(text)["pipeline"]["processors"]
+    if counted:
+        steps = processors[0]["try"]
+        processors = [{"try": steps[:steps.index(next(s for s in steps if "log" in s))]}]
+    return bento(processors, document)
+
+
+def points() -> list[dict]:
+    return json.loads((FIXTURES / "informacio-punts-recarrega-electric.json").read_bytes())["locations"]
+
+
+@requires_docker
+def test_every_recorded_charging_point_is_a_valid_ev_charging_station_with_its_free_ports():
+    written, errors = charging((FIXTURES / "informacio-punts-recarrega-electric.json").read_bytes())
+    assert errors == []
+    by_id = {e["id"]: e for e in written}
+    assert len(written) == len(points()) == 15
+    for point in points():
+        entity = by_id[CHARGING.format(point["id"])]
+        assert not open_data.schema_errors(SCHEMA, entity), entity
+        ports = [p for s in point["stations"] for p in s["ports"]]
+        states = [p["port_status"][0]["status"] for p in ports]
+        assert entity["capacity"]["value"] == entity["socketNumber"]["value"] == len(ports)
+        assert entity["availableCapacity"]["value"] == states.count("AVAILABLE") <= len(ports)
+        assert entity["status"]["value"] == ("working" if "AVAILABLE" in states else "full" if "IN_USE" in states else "outOfService")
+        assert entity["location"]["value"] == {"type": "Point", "coordinates": [point["coordinates"]["longitude"], point["coordinates"]["latitude"]]}
+        assert entity["name"]["value"] == point["address"]["address_string"].strip()
+        assert entity["openingHours"]["value"] == "Mo-Su 00:00-24:00"
+    assert {e["status"]["value"] for e in written} == {"working", "outOfService"}
+    fast = by_id[CHARGING.format("3817")]
+    assert fast["socketType"]["value"] == ["CCS/SAE", "CHAdeMO", "Type2"] and fast["allowedVehicleType"]["value"] == ["car"]
+    # Household sockets: a motorcycle bay on the street, cars and motorcycles in a car park.
+    assert by_id[CHARGING.format("3763")]["allowedVehicleType"]["value"] == ["motorcycle"]
+    assert by_id[CHARGING.format("3757")]["allowedVehicleType"]["value"] == ["car", "motorcycle"]
+    assert by_id[CHARGING.format("3757")]["socketType"]["value"] == ["Wall_Euro"]
+    assert by_id[CHARGING.format("3758")]["socketType"]["value"] == ["Type2"]
+
+
+@requires_docker
+def test_an_out_of_area_point_a_port_out_of_range_and_a_duplicate_point_are_left_out_and_counted():
+    recorded_points = points()
+    swapped = json.loads(json.dumps(recorded_points[0]))
+    swapped["id"] = "9001"
+    swapped["coordinates"] = {"latitude": swapped["coordinates"]["longitude"], "longitude": swapped["coordinates"]["latitude"]}
+    again = json.loads(json.dumps(recorded_points[1]))
+    again["id"] = "9002"  # the same address and place under another id
+    over = json.loads(json.dumps(recorded_points[2]))
+    over["stations"][0]["ports"][0]["power_kw"] = 4000
+    full = json.loads(json.dumps(recorded_points[3]))
+    for station in full["stations"]:
+        for port in station["ports"]:
+            port["port_status"] = [{"status": "IN_USE"}]
+    document = {"locations": [*recorded_points[:2], over, full, *recorded_points[4:], swapped, again, recorded_points[5], {"id": "x"}]}
+    out, errors = charging(json.dumps(document).encode(), counted=True)
+    assert errors == []
+    assert out[0]["dropped"] == {"pointMalformed": 1, "pointOutOfArea": 1, "portOutOfRange": 1, "pointWithoutPort": 0,
+                                 "timeInFuture": 0, "duplicatePoint": 2}
+    by_id = {e["id"]: e for e in out[0]["entities"]}
+    assert len(by_id) == 15 and CHARGING.format("9001") not in by_id and CHARGING.format("9002") not in by_id
+    assert by_id[CHARGING.format(over["id"])]["capacity"]["value"] == 2
+    assert by_id[CHARGING.format(full["id"])]["status"]["value"] == "full"
+    assert by_id[CHARGING.format(full["id"])]["availableCapacity"]["value"] == 0
+
+
+@pytest.mark.parametrize("document, now, reason", [
+    (b"", CHARGING_NOW, "names no charging point"),
+    (b"<html><body>503</body></html>", CHARGING_NOW, "names no charging point"),
+    (b'{"gelfs_version":"0.96","locations":[]}', CHARGING_NOW, "names no charging point"),
+    (b'{"locations":[{"id":"1","coordinates":{"latitude":0,"longitude":0},"stations":[]}]}', CHARGING_NOW, "no usable charging point"),
+    (None, "2026-10-23T12:00:00Z", "more than six hours ago"),
+    (b" " * 2097153, CHARGING_NOW, "more than the 2 MB read"),
+], ids=["empty", "html", "no-point", "only-0-0", "stale", "oversize"])
+@requires_docker
+def test_a_charging_file_that_is_empty_stale_or_broken_fails_the_run_and_writes_nothing(document, now, reason):
+    document = (FIXTURES / "informacio-punts-recarrega-electric.json").read_bytes() if document is None else document
+    written, errors = charging(document, now)
+    assert written == []
+    assert len(errors) == 1 and reason in errors[0], errors
+
+
+def test_the_seed_reads_the_charging_points_every_five_minutes_and_publishes_them():
+    source = yaml.safe_load((SEED / "barcelona-datasource-ev-charging.yaml").read_text())["spec"]["http"]
+    assert source["url"].startswith(f"{HOST}/data/dataset/")
+    pipeline = yaml.safe_load((SEED / "barcelona-pipeline-ev-charging.yaml").read_text())["spec"]
+    assert pipeline["period"] == "300s" and pipeline["output"] == {"type": "EVChargingStation", "mode": "upsert"}
+    assert "url:" not in (SEED / "barcelona-pipeline-ev-charging-bento.yaml").read_text()
+    endpoint = yaml.safe_load((SEED / "barcelona-endpoint-charging.yaml").read_text())["spec"]
+    assert endpoint["policyRef"].endswith(":public-charging") and "ckan" in endpoint["publish"]
+    policy = yaml.safe_load((SEED / "barcelona-policy-public-charging.yaml").read_text())["spec"]
+    assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == ["EVChargingStation"]
+    assert not {"upsertBatch", "createBatch", "deleteBatch"} & set(policy["operations"])
+    index = yaml.safe_load((SEED / "index.yaml").read_text())
+    for name in ("datasource-ev-charging", "pipeline-ev-charging", "pipeline-ev-charging-bento",
+                 "endpoint-charging", "policy-public-charging"):
+        assert f"barcelona-{name}.yaml" in index

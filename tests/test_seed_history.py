@@ -77,6 +77,8 @@ CHOSEN = {
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
     # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
     ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
+    # Barcelona's charging points keep a month of free ports (T-5262).
+    ("barcelona/barcelona", "EVChargingStation"): "P30D",
 }
 
 

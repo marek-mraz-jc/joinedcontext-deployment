@@ -7,8 +7,9 @@ description: >-
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
   own classes. Transport: TrafficFlowObserved, the traffic state of each street
-  section the city reports every five minutes, and OnStreetParking, each regulated surface
-  parking section (blue, green, loading and bus zones).
+  section and each route of sections the city reports every five minutes, OnStreetParking, each
+  regulated surface parking section (blue, green, loading and bus zones), and EVChargingStation,
+  each public charging point of the Endolla Barcelona network with its live socket states.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -30,7 +31,7 @@ slots:
       upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
-    description: The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).
+    description: The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report, a charging point's newest port change).
     range: datetime
     required: true
     annotations:
@@ -94,6 +95,26 @@ slots:
     description: The state the city forecasts for the section in 15 minutes, same codes as trafficState (custom).
     range: TrafficState
     annotations: { ngsi_ld_kind: Property }
+  travelTime:
+    slot_uri: jc:travelTime
+    description: >-
+      How long a vehicle takes now to drive the route, in seconds (custom: TrafficFlowObserved
+      has no travel time); Open Data BCN dataset itineraris, its fourth field. Absent while the
+      city reports no reading for the route.
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: s }
+    annotations: { ngsi_ld_kind: Property }
+  usualTravelTime:
+    slot_uri: jc:usualTravelTime
+    description: >-
+      The time the city expects for the route now from its history of the same kind of day, in
+      seconds (custom; itineraris, its fifth field, temps previst). travelTime above it means
+      slower traffic than usual.
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: s }
+    annotations: { ngsi_ld_kind: Property }
   category:
     slot_uri: sdm:category
     description: The kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
@@ -104,7 +125,10 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   allowedVehicleType:
     slot_uri: sdm:allowedVehicleType
-    description: What may park there, the section's own kind first.
+    description: >-
+      What may park there, the section's own kind first; at a charging point, what its sockets
+      serve (car for Type 2, CCS and CHAdeMO and for a car park's household sockets, motorcycle
+      for the 3.6 kW household sockets).
     multivalued: true
     annotations:
       ngsi_ld_kind: Property
@@ -128,6 +152,96 @@ slots:
       rate/timetable, kept as published (custom; Open Data BCN tarifes- and
       horaris-aparcament-superficie).
     annotations: { ngsi_ld_kind: Property }
+  address:
+    slot_uri: schema:address
+    description: The postal address the city publishes for the charging point, field by field.
+    range: PostalAddress
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and the house number.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  postalCode:
+    slot_uri: schema:postalCode
+    description: The postal code.
+    annotations:
+      upstream_source: https://schema.org/postalCode
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The municipality.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  capacity:
+    slot_uri: sdm:capacity
+    description: How many vehicles the charging point charges at once, one per port the city lists.
+    range: integer
+    minimum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  socketNumber:
+    slot_uri: sdm:socketNumber
+    description: The ports of the charging point.
+    range: integer
+    minimum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  availableCapacity:
+    slot_uri: sdm:availableCapacity
+    description: The ports free now (port status AVAILABLE); never more than capacity.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  socketType:
+    slot_uri: sdm:socketType
+    description: >-
+      The kinds of socket, in Smart Data Models' words: CCS_TYPE_2 is CCS/SAE, CHADEMO CHAdeMO,
+      MENNEKES and a wall outlet over 3.7 kW Type2, a wall outlet up to 3.7 kW Wall_Euro.
+    multivalued: true
+    range: SocketType
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  status:
+    slot_uri: sdm:status
+    description: >-
+      The state of the charging point from its ports: working while one is free, full when none
+      is free and one charges, outOfService when every port is out of order, unavailable or
+      unknown.
+    range: ChargingStationStatus
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  network:
+    slot_uri: sdm:network
+    description: The brand of the charging network (Endolla Barcelona).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  operator:
+    slot_uri: sdm:operator
+    description: Who runs the charging point (Barcelona de Serveis Municipals S.A.).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  openingHours:
+    slot_uri: schema:openingHours
+    description: When the charging point may be used, in schema.org's syntax (Mo-Su 00:00-24:00).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/openingHours
   source:
     slot_uri: sdm:source
     description: The Open Data BCN dataset the entity was read from.
@@ -153,7 +267,15 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
-    slots: [name, dateObserved, congested, trafficState, trafficStateForecast, source]
+    slots:
+      - name
+      - dateObserved
+      - congested
+      - trafficState
+      - trafficStateForecast
+      - travelTime
+      - usualTravelTime
+      - source
   OnStreetParking:
     class_uri: sdm:OnStreetParking
     description: >-
@@ -164,6 +286,36 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
     slots: [name, category, allowedVehicleType, totalSpotNumber, zoneCode, tariffCode, source]
+  EVChargingStation:
+    class_uri: sdm:EVChargingStation
+    description: >-
+      One public charging point of the Endolla Barcelona network run by B:SM, its ports, socket
+      kinds and how many are free now, every five minutes (Open Data BCN
+      informacio-punts-recarrega-electric, which carries the port states of
+      estat-ports-recarrega-electric too).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - address
+      - dateObserved
+      - capacity
+      - socketNumber
+      - availableCapacity
+      - socketType
+      - allowedVehicleType
+      - status
+      - network
+      - operator
+      - openingHours
+      - source
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: The value of `address`, never an entity of its own (Smart Data Models' common schema).
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots: [streetAddress, postalCode, addressLocality, addressCountry]
 
 enums:
   TrafficState:
@@ -176,6 +328,23 @@ enums:
       veryDense: { description: '4 molt dens.' }
       congestion: { description: '5 congestió.' }
       closed: { description: '6 tallat.' }
+  SocketType:
+    description: The EVChargingStation `socketType` values the Endolla connector types map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      CCS/SAE:
+        description: CCS_TYPE_2, the combined DC socket.
+      CHAdeMO: { description: CHADEMO. }
+      Type2:
+        description: MENNEKES, and a WALL_OUTLET above 3.7 kW (the 22 kW AC outlets).
+      Wall_Euro:
+        description: A WALL_OUTLET up to 3.7 kW, the household socket.
+  ChargingStationStatus:
+    description: The EVChargingStation `status` values the port states map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      working: { description: At least one port AVAILABLE. }
+      full: { description: No port free and at least one IN_USE. }
+      outOfService:
+        description: Every port OUT_OF_ORDER, UNAVAILABLE or UNKNOWN.
   StreetParkingCategory:
     description: The OnStreetParking `category` values the B:SM section types map to, a subset of the Smart Data Model's enum.
     permissible_values:

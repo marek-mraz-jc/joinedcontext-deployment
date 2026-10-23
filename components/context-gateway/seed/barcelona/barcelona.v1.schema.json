@@ -8,7 +8,7 @@
       "description": "One air-quality station of Barcelona and its hourly means.",
       "properties": {
         "dateObserved": {
-          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).",
+          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report, a charging point's newest port change).",
           "format": "date-time",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -125,6 +125,201 @@
       "title": "AirQualityObserved",
       "type": "object"
     },
+    "ChargingStationStatus": {
+      "description": "The EVChargingStation `status` values the port states map to, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "working",
+        "full",
+        "outOfService"
+      ],
+      "title": "ChargingStationStatus",
+      "type": "string",
+      "x-enum-descriptions": {
+        "full": "No port free and at least one IN_USE.",
+        "outOfService": "Every port OUT_OF_ORDER, UNAVAILABLE or UNKNOWN.",
+        "working": "At least one port AVAILABLE."
+      }
+    },
+    "EVChargingStation": {
+      "additionalProperties": false,
+      "description": "One public charging point of the Endolla Barcelona network run by B:SM, its ports, socket kinds and how many are free now, every five minutes (Open Data BCN informacio-punts-recarrega-electric, which carries the port states of estat-ports-recarrega-electric too).",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address the city publishes for the charging point, field by field.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "allowedVehicleType": {
+          "description": "What may park there, the section's own kind first; at a charging point, what its sockets serve (car for Type 2, CCS and CHAdeMO and for a car park's household sockets, motorcycle for the 3.6 kW household sockets).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "availableCapacity": {
+          "description": "The ports free now (port status AVAILABLE); never more than capacity.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "capacity": {
+          "description": "How many vehicles the charging point charges at once, one per port the city lists.",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report, a charging point's newest port change).",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "network": {
+          "description": "The brand of the charging network (Endolla Barcelona).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "openingHours": {
+          "description": "When the charging point may be used, in schema.org's syntax (Mo-Su 00:00-24:00).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "operator": {
+          "description": "Who runs the charging point (Barcelona de Serveis Municipals S.A.).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "socketNumber": {
+          "description": "The ports of the charging point.",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "socketType": {
+          "description": "The kinds of socket, in Smart Data Models' words: CCS_TYPE_2 is CCS/SAE, CHADEMO CHAdeMO, MENNEKES and a wall outlet over 3.7 kW Type2, a wall outlet up to 3.7 kW Wall_Euro.",
+          "items": {
+            "$ref": "#/definitions/SocketType"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ChargingStationStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The state of the charging point from its ports: working while one is free, full when none is free and one charges, outOfService when every port is out of order, unavailable or unknown.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "dateObserved",
+        "id",
+        "type"
+      ],
+      "title": "EVChargingStation",
+      "type": "object"
+    },
     "Entity": {
       "additionalProperties": false,
       "description": "The root every NGSI-LD entity class specialises.",
@@ -189,7 +384,7 @@
       "description": "One regulated surface parking section of B:SM (blue, green, residents, loading or coach zone), its curb lines, its places and its rate and timetable codes (Open Data BCN trams-aparcament-superficie).",
       "properties": {
         "allowedVehicleType": {
-          "description": "What may park there, the section's own kind first.",
+          "description": "What may park there, the section's own kind first; at a charging point, what its sockets serve (car for Type 2, CCS and CHAdeMO and for a car park's household sockets, motorcycle for the 3.6 kW household sockets).",
           "items": {
             "type": "string"
           },
@@ -307,6 +502,63 @@
       "title": "OnStreetParking",
       "type": "object"
     },
+    "PostalAddress": {
+      "additionalProperties": false,
+      "description": "The value of `address`, never an entity of its own (Smart Data Models' common schema).",
+      "properties": {
+        "addressCountry": {
+          "description": "The country, as an ISO 3166-1 alpha-2 code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "addressLocality": {
+          "description": "The municipality.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "postalCode": {
+          "description": "The postal code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "streetAddress": {
+          "description": "The street and the house number.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "PostalAddress",
+      "type": "object"
+    },
+    "SocketType": {
+      "description": "The EVChargingStation `socketType` values the Endolla connector types map to, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "CCS/SAE",
+        "CHAdeMO",
+        "Type2",
+        "Wall_Euro"
+      ],
+      "title": "SocketType",
+      "type": "string",
+      "x-enum-descriptions": {
+        "CCS/SAE": "CCS_TYPE_2, the combined DC socket.",
+        "CHAdeMO": "CHADEMO.",
+        "Type2": "MENNEKES, and a WALL_OUTLET above 3.7 kW (the 22 kW AC outlets).",
+        "Wall_Euro": "A WALL_OUTLET up to 3.7 kW, the household socket."
+      }
+    },
     "StreetParkingCategory": {
       "description": "The OnStreetParking `category` values the B:SM section types map to, a subset of the Smart Data Model's enum.",
       "enum": [
@@ -341,7 +593,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateObserved": {
-          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).",
+          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report, a charging point's newest port change).",
           "format": "date-time",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -429,10 +681,34 @@
           "description": "The state the city forecasts for the section in 15 minutes, same codes as trafficState (custom).",
           "x-ngsi-ld-kind": "Property"
         },
+        "travelTime": {
+          "description": "How long a vehicle takes now to drive the route, in seconds (custom: TrafficFlowObserved has no travel time); Open Data BCN dataset itineraris, its fourth field. Absent while the city reports no reading for the route.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "s"
+          }
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
+        },
+        "usualTravelTime": {
+          "description": "The time the city expects for the route now from its history of the same kind of day, in seconds (custom; itineraris, its fifth field, temps previst). travelTime above it means slower traffic than usual.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "s"
+          }
         }
       },
       "required": [

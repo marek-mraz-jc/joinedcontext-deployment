@@ -32,8 +32,8 @@ rate_limit_resources:
     local:
       count: 1
       interval: 1s
-  # barcelona traffic-state: Open Data BCN (opendata-ajuntament.barcelona.cat), the section list
-  # once a run (T-5262).
+  # barcelona traffic-state and traffic-routes: Open Data BCN (opendata-ajuntament.barcelona.cat),
+  # the section and route lists once a run (T-5262).
   - label: barcelona_opendata
     local:
       count: 1

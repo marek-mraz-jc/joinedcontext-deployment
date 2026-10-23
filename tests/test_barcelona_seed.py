@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved", "TrafficFlowObserved", "OnStreetParking"}
+TYPES = {"AirQualityObserved", "TrafficFlowObserved", "OnStreetParking", "EVChargingStation"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -84,7 +84,8 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     assert model["contextSpaceRef"] == "barcelona" and model["lifecycle"] == "published"
     assert set(model["classes"]) == TYPES
     linkml = yaml.safe_load((BARCELONA / "barcelona.linkml.yaml").read_text())
-    assert set(linkml["classes"]) == TYPES
+    # PostalAddress is the value of `address`, never an entity of its own.
+    assert set(linkml["classes"]) == TYPES | {"PostalAddress"}
     for artifact in model["artifacts"].values():
         assert (BARCELONA / artifact.removeprefix("./")).is_file(), artifact
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).

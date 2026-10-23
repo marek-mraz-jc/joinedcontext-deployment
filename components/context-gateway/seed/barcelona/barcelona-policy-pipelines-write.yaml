@@ -20,3 +20,4 @@ spec:
         - type: AirQualityObserved
         - type: TrafficFlowObserved
         - type: OnStreetParking
+        - type: EVChargingStation

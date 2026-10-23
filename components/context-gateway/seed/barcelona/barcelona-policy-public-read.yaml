@@ -31,3 +31,4 @@ spec:
     - entities:
         - type: AirQualityObserved
         - type: TrafficFlowObserved
+        - type: EVChargingStation
