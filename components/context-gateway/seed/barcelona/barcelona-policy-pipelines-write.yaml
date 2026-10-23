@@ -18,3 +18,5 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: AdministrativeArea
+        - type: CityWork

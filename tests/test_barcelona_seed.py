@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved"}
+TYPES = {"AirQualityObserved", "AdministrativeArea", "CityWork"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -84,7 +84,8 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     assert model["contextSpaceRef"] == "barcelona" and model["lifecycle"] == "published"
     assert set(model["classes"]) == TYPES
     linkml = yaml.safe_load((BARCELONA / "barcelona.linkml.yaml").read_text())
-    assert set(linkml["classes"]) == TYPES
+    # Beside the entity types, the value classes an attribute holds (PostalAddress), never an entity.
+    assert {n for n, c in linkml["classes"].items() if c.get("is_a") == "Entity"} == TYPES
     for artifact in model["artifacts"].values():
         assert (BARCELONA / artifact.removeprefix("./")).is_file(), artifact
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
@@ -102,7 +103,7 @@ def test_the_example_validates_against_its_model():
     schema = json.loads((BARCELONA / "barcelona.v1.schema.json").read_text())
     example = json.loads((BARCELONA / "barcelona.v1.example.jsonld").read_text())
     example.pop("@context", None)
-    validator = jsonschema.Draft7Validator(schema["definitions"][example["type"]])
+    validator = jsonschema.Draft7Validator({**schema["definitions"][example["type"]], "definitions": schema["definitions"]})
     assert not sorted(validator.iter_errors(example), key=str)
 
 
@@ -138,7 +139,7 @@ def test_the_public_reads_and_never_writes():
 
 
 def test_the_one_door_is_public_cc_by_and_credits_the_ajuntament():
-    (endpoint,) = by_name("Endpoint").values()
+    endpoint = by_name("Endpoint")["barcelona"]
     spec = endpoint["spec"]
     assert spec["contextSpaceRef"] == "barcelona" and spec["audience"] == "public"
     assert len(spec["slug"]) == 32
