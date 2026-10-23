@@ -4,7 +4,7 @@
 # - [x] Resources (requests and limits)
 # - [x] Larger Storage -> stateless broker pods
 # - [ ] 2+ Replicas or HorizontalPodAutoscaler -> one process per database, see below
-# - [x] Rolling updates maxUnavailable: 0, maxSurge: 1 -> default in workload chart
+# - [ ] Rolling updates maxUnavailable: 0 -> Recreate, one process per database (T-5311, base-values)
 # - [ ] PodDisruptionBudget -> a single-replica PDB would block every node drain
 
 # Stays at one: ANTARES_BUS=local (see base-values) allows exactly one broker process

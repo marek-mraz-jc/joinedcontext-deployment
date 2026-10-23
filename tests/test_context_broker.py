@@ -81,6 +81,17 @@ def test_liveness_waits_an_hour_for_a_migration_on_boot(dev):
 
 
 @requires_helmfile
+@pytest.mark.parametrize("env", ["dev", "production"])
+def test_the_old_broker_stops_before_the_new_one_migrates(rendered, env):
+    """T-5311: under a rolling update the old pod kept writing to attr_instances, so migration
+    0011's ACCESS EXCLUSIVE lock timed out on every retry, and two in-process matchers shared one
+    database for the rollout. Recreate stops the old pod first."""
+    deployment = one(rendered(env), "Deployment", "context-broker")
+    assert deployment["spec"]["strategy"] == {"type": "Recreate"}
+    assert deployment["spec"]["replicas"] == 1
+
+
+@requires_helmfile
 def test_the_broker_has_limits_that_fit_the_16_gb_node(dev):
     (container,) = pod_of(dev)["containers"]
     resources = container["resources"]
