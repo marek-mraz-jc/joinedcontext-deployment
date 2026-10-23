@@ -38,7 +38,7 @@ parts:
     needs:
       - gitea.sample-apps-6
   # The projects' seed out of the bootstrap's release for the same reason (T-3998), packed by
-  # size into these twelve (values/seed-layout.tpl, T-4431; twelve since T-5332).
+  # size into these twelve (values/seed-layout.tpl, T-4431; eleven since T-5364, twelve since T-5254).
   - name: seed
   - name: seed-2
     valuesFrom: seed

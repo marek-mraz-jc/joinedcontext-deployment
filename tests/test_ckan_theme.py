@@ -1677,9 +1677,14 @@ def test_the_four_pages_are_routes_of_one_template_and_every_page_links_them(the
         def add_url_rule(self, path, endpoint, view):
             rules[path] = (endpoint, view)
 
+        def after_app_request(self, hook):
+            rules["after"] = hook
+
     monkeypatch.setitem(sys.modules, "flask", types.SimpleNamespace(Blueprint=Blueprint))
     theme.toolkit.render = lambda template, extra: (template, extra)
     blueprint = theme.JcThemePlugin().get_blueprint()
+    # Every answer of the app passes the CSP hook (T-5147), not only this blueprint's.
+    assert rules.pop("after") is theme.jc_csp_header
     assert blueprint.name == "jc_pages" and sorted(rules) == ["/accessibility", "/assistants", "/assistants/<id>", "/connector", "/map/<id>", "/map/<id>/<resource_id>", "/privacy", "/robots.txt", "/sitemap.xml", "/support", "/terms"]
     assert rules["/sitemap.xml"] == ("sitemap", theme.jc_sitemap_page) and rules["/robots.txt"] == ("robots", theme.jc_robots_page)
     monkeypatch.setattr(theme.toolkit, "config", {"ckan.site_url": "https://opendata.dev.example"}, raising=False)
@@ -1903,7 +1908,7 @@ def test_a_short_table_gets_a_short_frame_and_the_live_address_wraps():
     # `.jc-live pre` paints commands dark; the address box stays light, its text readable (T-4333).
     assert ".jc-live .jc-live-url { padding: .5rem .75rem; background: var(--jc-surface); color: var(--jc-ink);" in css
     page = (THEME / "templates__package__read.html").read_text()
-    assert 'style="--jc-rows: {{ [preview.total or 20, 20]|min }}"' in page
+    assert 'data-jc-rows="{{ [preview.total or 20, 20]|min }}"' in page
     assert '<pre id="jc-live-url"' in page and 'readonly value="{{ live.url }}"' not in page
     css = (THEME / "public__jc-theme.css").read_text()
     assert "calc(15rem + var(--jc-rows, 20) * 2.6rem)" in css
@@ -2573,10 +2578,12 @@ def test_the_map_page_is_a_404_for_an_unknown_or_unmapped_dataset(mapped):
     with pytest.raises(Abort):
         mapped.jc_map_page("empty")
     mapped.page.actions["package_show"] = lambda d: MAP_PKG
+    mapped.toolkit.g = types.SimpleNamespace()
     (template, extra), status, headers = mapped.jc_map_page("pocasie", "w")
     assert template == "jc/map.html" and extra["jc_map_config"]["layers"][0]["type"] == "WeatherObserved"
-    # The page owns its policy (OPS-34): any site may frame it, nothing else is loosened.
-    assert status == 200 and headers == {"Content-Security-Policy": "frame-ancestors *; object-src 'none'; base-uri 'self'"}
+    # The page owns its policy (OPS-34): any site may frame it, nothing else is loosened (T-5147).
+    assert status == 200 and headers == {"Content-Security-Policy": mapped._csp(mapped.jc_csp_nonce(), "*")}
+    assert "frame-ancestors *;" in headers["Content-Security-Policy"]
 
 
 def test_the_map_page_may_be_framed_anywhere_and_carries_no_cookie():
@@ -3304,3 +3311,142 @@ def test_the_catalogue_feed_names_its_language_author_and_each_publisher(theme):
     assert made["items"][0] == {"title": "Ovzdušie", "link": "https://opendata.dev.example/dataset/ovzdusie",
                                 "author_name": "Mesto Banská Bystrica"}
     assert made["items"][1] == {"title": "Bez vydavateľa", "link": "l"}
+
+
+# T-5147: the catalogue's own CSP, a nonce per request for the inline scripts and styles CKAN and
+# the theme still write, nothing inline else.
+@pytest.fixture
+def request_g(theme, monkeypatch):
+    g = types.SimpleNamespace()
+    monkeypatch.setattr(theme.toolkit, "g", g, raising=False)
+    return g
+
+
+def _directives(policy):
+    return {part.split()[0]: part.split()[1:] for part in policy.split("; ")}
+
+
+def test_the_catalogue_policy_allows_scripts_and_styles_from_itself_and_the_nonce_only(theme):
+    policy = theme._csp("n0nce")
+    d = _directives(policy)
+    assert d["script-src"] == ["'self'", "'nonce-n0nce'"] and d["style-src"] == ["'self'", "'nonce-n0nce'"]
+    assert "unsafe" not in policy and "*;" not in policy and " https:;" not in policy and " data:;" not in policy.replace("img-src 'self' data:", "")
+    # Frames, fetches and images: this installation's own hosts, the Endpoints, tiles, viz and the assistant.
+    own = ["'self'", "https://dev.example", "https://*.dev.example"]
+    assert d["connect-src"] == own and d["frame-src"] == own and d["img-src"] == ["'self'", "data:"] + own[1:]
+    # The directives that fall back to nothing are named (ZAP 10055), the edge's baseline kept.
+    assert d["form-action"] == ["'self'"] and d["frame-ancestors"] == ["'self'"]
+    assert d["object-src"] == ["'none'"] and d["base-uri"] == ["'self'"] and d["default-src"] == ["'self'"]
+
+
+def test_without_a_branded_domain_the_policy_names_no_other_host(theme, monkeypatch):
+    monkeypatch.setitem(theme.BRANDING, "domain", "evil.example; script-src *")
+    assert "evil" not in theme._csp("n") and _directives(theme._csp("n"))["connect-src"] == ["'self'"]
+    monkeypatch.delitem(theme.BRANDING, "domain")
+    assert _directives(theme._csp("n"))["frame-src"] == ["'self'"]
+
+
+def test_the_nonce_is_one_per_request_and_unguessable(theme, request_g, monkeypatch):
+    first = theme.jc_csp_nonce()
+    assert theme.jc_csp_nonce() == first and len(first) >= 24 and re.fullmatch(r"[A-Za-z0-9_-]+", first)
+    monkeypatch.setattr(theme.toolkit, "g", types.SimpleNamespace(), raising=False)
+    assert theme.jc_csp_nonce() != first
+
+
+class _Response:
+    def __init__(self, mimetype, headers=None):
+        self.mimetype = mimetype
+        self.headers = dict(headers or {})
+
+
+def test_every_html_answer_without_a_policy_gets_the_catalogue_s_with_the_page_s_nonce(theme, request_g):
+    nonce = theme.jc_csp_nonce()  # the page's templates asked for it while rendering
+    page = theme.jc_csp_header(_Response("text/html"))
+    assert page.headers["Content-Security-Policy"] == theme._csp(nonce)
+    # A page naming its own policy (the map page, OPS-34) keeps it; JSON and files get none here.
+    own = theme.jc_csp_header(_Response("text/html", {"Content-Security-Policy": "frame-ancestors *"}))
+    assert own.headers == {"Content-Security-Policy": "frame-ancestors *"}
+    assert theme.jc_csp_header(_Response("application/json")).headers == {}
+
+
+INLINE_SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)(?![^>]*type=\"application/ld\+json\")[^>]*>")
+
+
+def test_no_theme_template_writes_a_script_style_or_handler_the_policy_refuses():
+    for f in THEME.glob("templates__*.html"):
+        # The embed snippet a reader copies is text in a textarea, not markup of this page.
+        text = re.sub(r"<textarea[^>]*>.*?</textarea>", "", f.read_text(), flags=re.S)
+        for tag in INLINE_SCRIPT.findall(text) + re.findall(r"<style\b[^>]*>", text):
+            assert 'nonce="{{ h.jc_csp_nonce() }}"' in tag, (f.name, tag)
+        assert not re.search(r"\son[a-z]+\s*=", text), f.name
+        assert not re.search(r"\sstyle\s*=", text), f.name
+        assert "javascript:" not in text, f.name
+
+
+def test_the_core_templates_with_inline_script_or_handlers_are_overridden():
+    """CKAN 2.11.6's inline scripts (dataviewer, text view, table view) and onclick attributes
+    (resource upload field, Refit) each have a theme copy that the test above holds."""
+    for name in ("dataviewer__base", "text_view", "datatables__datatables_view", "package__snippets__resource_upload_field", "image_view"):
+        assert (THEME / ("templates__%s.html" % name)).exists(), name
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    assert view.count("{%- block page -%}") == 1 and 'id="refit-button"' in view and '<div id="dtv-resource-info" hidden>' in view
+    for name in ("templates__base.html", "templates__datatables__datatables_view.html"):
+        assert "/jc-forms.js" in (THEME / name).read_text(), name
+
+
+def test_the_theme_stylesheet_holds_what_style_attributes_and_htmx_wrote_inline():
+    css = (THEME / "public__jc-theme.css").read_text()
+    for rows in range(1, 20):
+        assert '.jc-grid[data-jc-rows="%d"] { --jc-rows: %d; }' % (rows, rows) in css
+    assert ".htmx-request .htmx-indicator" in css and ".jc-image-view {" in css
+    assert """<meta name="htmx-config" content='{"includeIndicatorStyles": false}'>""" in (THEME / "templates__base.html").read_text()
+
+
+def _forms_click(button_attrs, elements):
+    """Runs jc-forms.js on one click in node, with the few DOM calls it makes."""
+    script = (THEME / "public__jc-forms.js").read_text()
+    code = """
+const log = [];
+const els = %s;
+for (const [id, el] of Object.entries(els)) {
+  el.id = id;
+  el.click = () => log.push("click " + id);
+  el.focus = () => log.push("focus " + id);
+}
+class Element {}
+globalThis.Element = Element;
+let listener;
+globalThis.window = {};
+globalThis.document = { addEventListener: (t, fn) => { listener = fn; }, getElementById: (id) => els[id] ?? null };
+%s
+const button = Object.assign(new Element(), { dataset: %s, closest: (sel) => sel === "[data-jc-check]" ? button : null });
+listener({ target: button, preventDefault() {} });
+console.log(JSON.stringify({ log, els }));
+""" % (json.dumps(elements), script, json.dumps(button_attrs))
+    done = subprocess.run(["node", "--input-type=module", "-e", code], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+    return json.loads(done.stdout)
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_the_resource_form_buttons_do_what_their_onclick_did():
+    # Upload: tick the upload radio and open the file picker.
+    out = _forms_click({"jcCheck": "resource-url-upload", "jcClick": "field-resource-upload"},
+                       {"resource-url-upload": {"checked": False}, "field-resource-upload": {"value": ""}})
+    assert out["els"]["resource-url-upload"]["checked"] is True and out["log"] == ["click field-resource-upload"]
+    # Remove: back to no data, the field emptied, focus on the first button.
+    out = _forms_click({"jcCheck": "resource-url-none", "jcClear": "field-resource-url", "jcFocus": "resource-upload-button"},
+                       {"resource-url-none": {"checked": False}, "field-resource-url": {"value": "https://x/a.csv"},
+                        "resource-upload-button": {}})
+    assert out["els"]["resource-url-none"]["checked"] is True and out["els"]["field-resource-url"]["value"] == ""
+    assert out["log"] == ["focus resource-upload-button"]
+    # A button naming an element the page lacks does nothing else.
+    assert _forms_click({"jcCheck": "nope", "jcFocus": "gone"}, {})["log"] == []
+
+
+def test_the_upload_field_copy_keeps_every_button_of_ckan_s():
+    text = (THEME / "templates__package__snippets__resource_upload_field.html").read_text()
+    assert 'data-jc-check="resource-url-upload" data-jc-click="field-resource-upload"' in text
+    assert 'data-jc-check="resource-url-link" data-jc-focus="field-resource-url"' in text
+    assert 'data-jc-check="field-clear-upload" data-jc-focus="field-resource-upload"' in text
+    assert "{{ remove_button('field-resource-upload') }}" in text and "{{ remove_button('field-resource-url') }}" in text

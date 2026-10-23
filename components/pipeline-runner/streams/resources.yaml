@@ -32,6 +32,12 @@ rate_limit_resources:
     local:
       count: 1
       interval: 1s
+  # barcelona traffic-state and traffic-routes: Open Data BCN (opendata-ajuntament.barcelona.cat),
+  # the section and route lists once a run (T-5262).
+  - label: barcelona_opendata
+    local:
+      count: 1
+      interval: 1s
   # helsinki statistics: the city's statistics service (stat.hel.fi PXWEB) is called at most once
   # a second, one table after another (T-5258).
   - label: hel_stat

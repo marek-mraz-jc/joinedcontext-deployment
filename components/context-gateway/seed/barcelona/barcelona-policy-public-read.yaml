@@ -8,7 +8,8 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: barcelona }
   assigner: did:web:barcelona.cat
   assignee: { kind: role, id: public }
-  # Read only, the types of the space: open data under CC BY 4.0, nothing about a person.
+  # Read only, the types of the space with a history (OnStreetParking keeps none and is read
+  # through barcelona-parking): open data under CC BY 4.0, nothing about a person.
   # Discovery beside the reads (T-4258, EP-116), so an anonymous MCP client finds the types first.
   operations:
     - retrieveOps
@@ -31,3 +32,5 @@ spec:
         - type: AirQualityObserved
         - type: WeatherObserved
         - type: PhreaticObserved
+        - type: TrafficFlowObserved
+        - type: EVChargingStation
