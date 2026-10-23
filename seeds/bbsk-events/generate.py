@@ -84,6 +84,7 @@ STORES = (
 #: feed kind of the inventory -> template files under pipelines/, run in this order.
 TEMPLATES = {
     "wp-rest-sc": ("wp-rest-sc",),
+    "wp-rest-fields": ("wp-rest-fields",),
     "tribe-rest": ("tribe-rest",),
     "ical": ("ical",),
     "weby-feed": ("weby-feed",),
@@ -102,10 +103,23 @@ TEMPLATES = {
 _PAGES = "_fields=id,link,title,modified_gmt&per_page=50"
 TRIM = {
     "wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box",
+    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info",
     "mec-rest": _PAGES,
     "lsvr-rest": _PAGES,
     "eventon-rest": _PAGES,
     "wp-rest-jsonld": _PAGES,
+}
+#: wp-rest-fields: per feed host, the dotted path of each field the template reads in a REST item (T-5365,
+#: read on each site 2026-10-23). A path absent here is no field of that site.
+WP_FIELDS = {
+    "zilina.sk": {"start": "meta.iq_dateStart", "end": "meta.iq_dateEnd", "time_start": "meta.iq_timeStart",
+                  "time_end": "meta.iq_timeEnd", "venue": "meta.iq_addressLocality", "lat": "meta.iq_coordinatesLat",
+                  "lon": "meta.iq_coordinatesLng"},
+    "regiontatry.sk": {"start": "more_info.datum_od", "end": "more_info.datum_do", "time_start": "more_info.cas_od",
+                       "time_end": "more_info.cas_do", "venue": "more_info.miesto_konania"},
+    "www.podujatiaksk.sk": {"start": "acf.podujatie_datum.podujatie_datum_od", "end": "acf.podujatie_datum.podujatie_datum_do"},
+    "www.upjs.sk": {"start": "acf.cpt_udalost_datum_konania", "end": "acf.cpt_udalost_datum_koniec",
+                    "time_start": "acf.cpt_udalost_cas_konania", "venue": "acf.cpt_udalost_miesto_konania"},
 }
 #: Upcoming events first where the feed sorts and filters itself (owner 2026-10-20).
 UPCOMING = {"tribe-rest": "start_date=now"}
@@ -326,6 +340,7 @@ def processors(row: dict, store: dict) -> list:
         "__LIST_PATH_RE__": re.escape(urlsplit(row["check_url"]).path).replace("\\", "\\\\"),
         "__LIST_PATH__": json.dumps(urlsplit(row["check_url"]).path),
         "__GRACE__": json.dumps(store["grace"]),
+        "__FIELDS__": json.dumps(WP_FIELDS.get(urlsplit(row["check_url"]).hostname)),
         "__LEASE__": json.dumps(cadence(row, store)["lease"]),
     }
     text = "".join(
