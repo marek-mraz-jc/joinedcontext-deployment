@@ -75,6 +75,8 @@ CHOSEN = {
     # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
     ("praha/praha-mesto", "WasteContainer"): "P7D",
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
+    # Bratislava's pedestrian counters keep a month of days, as its cyclist counters (T-5273).
+    ("bratislava/bratislava", "CrowdFlowObserved"): "P30D",
 }
 
 

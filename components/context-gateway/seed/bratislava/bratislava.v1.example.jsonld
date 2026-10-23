@@ -8,7 +8,9 @@
     ],
     "type": "Point"
   },
-  "name": "name",
+  "name": {
+    "en": "name"
+  },
   "observedAt": "2026-01-01T00:00:00Z",
   "pm10": 0.0,
   "type": "AirQualityObserved"

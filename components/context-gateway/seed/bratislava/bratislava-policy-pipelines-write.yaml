@@ -15,3 +15,6 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: TrafficFlowObserved
+        - type: CrowdFlowObserved
+        - type: BikeHireDockingStation

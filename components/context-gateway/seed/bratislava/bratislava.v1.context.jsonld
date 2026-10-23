@@ -4,26 +4,83 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "BikeHireDockingStation": {
+      "@id": "sdm:BikeHireDockingStation"
+    },
+    "CrowdFlowObserved": {
+      "@id": "sdm:CrowdFlowObserved"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
+    },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
+    },
+    "availableBikeNumber": {
+      "@id": "sdm:availableBikeNumber",
+      "@type": "xsd:integer"
+    },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
+    },
+    "dateModified": {
+      "@id": "sdm:dateModified",
+      "@type": "xsd:dateTime"
     },
     "dateObserved": {
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "dateObservedFrom": {
+      "@id": "sdm:dateObservedFrom",
+      "@type": "xsd:dateTime"
+    },
+    "dateObservedTo": {
+      "@id": "sdm:dateObservedTo",
+      "@type": "xsd:dateTime"
+    },
+    "freeSlotNumber": {
+      "@id": "sdm:freeSlotNumber",
+      "@type": "xsd:integer"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "intensity": {
+      "@id": "sdm:intensity",
+      "@type": "xsd:integer"
+    },
+    "laneDirection": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:laneDirection"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
     },
     "name": {
+      "@container": "@language",
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "peopleCount": {
+      "@id": "sdm:peopleCount",
+      "@type": "xsd:integer"
+    },
+    "peopleCountAway": {
+      "@id": "sdm:peopleCountAway",
+      "@type": "xsd:integer"
+    },
+    "peopleCountTowards": {
+      "@id": "sdm:peopleCountTowards",
+      "@type": "xsd:integer"
     },
     "pm10": {
       "@id": "sdm:pm10",
@@ -32,7 +89,32 @@
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "status": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:status"
+    },
+    "totalSlotNumber": {
+      "@id": "sdm:totalSlotNumber",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
+    "vehicleType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:vehicleType"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "x-generator-version": "linkml-1.12.0"

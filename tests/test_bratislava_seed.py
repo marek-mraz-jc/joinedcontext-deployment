@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BRATISLAVA = SEED / "bratislava"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved"}
+TYPES = {"AirQualityObserved", "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -140,8 +140,7 @@ def test_the_public_reads_and_never_writes():
 
 
 def test_the_one_door_is_public_cc_by_and_credits_the_city():
-    (endpoint,) = by_name("Endpoint").values()
-    spec = endpoint["spec"]
+    spec = by_name("Endpoint")["bratislava"]["spec"]
     assert spec["contextSpaceRef"] == "bratislava" and spec["audience"] == "public"
     assert len(spec["slug"]) == 32
     catalog = spec["catalog"]
@@ -185,3 +184,37 @@ def test_keycloak_makes_the_subtree_root_and_the_administrator():
     users = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
     assert users["demo.bratislava"]["groups"] == ["bratislava"]
     assert users["demo.bratislava"]["realmRoles"] == ["portal-approver"]
+
+
+# T-5273: each catalogue dataset is its own door with its own public Policy.
+DATASETS = {"bratislava-cyklisti": "public-cyklisti", "bratislava-vozidla": "public-vozidla",
+            "bratislava-chodci": "public-chodci", "bratislava-bajk": "public-bajk"}
+
+
+def test_each_dataset_door_reads_through_its_own_public_policy_and_publishes_to_the_city():
+    endpoints, policies = by_name("Endpoint"), by_name("Policy")
+    assert set(endpoints) == {"bratislava", *DATASETS}
+    slugs = [e["spec"]["slug"] for e in endpoints.values()]
+    assert len(set(slugs)) == len(slugs) and all(len(slug) == 32 for slug in slugs)
+    for name, policy in DATASETS.items():
+        spec = endpoints[name]["spec"]
+        assert spec["policyRef"] == f"urn:ngsi-ld:Policy:bratislava.sk:bratislava:{policy}"
+        assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "bratislava"}
+        read = policies[policy]["spec"]
+        assert read["assignee"] == {"kind": "role", "id": "public"}
+        assert all(op.startswith(("retrieve", "query", "createSub", "updateSub", "deleteSub")) for op in read["operations"])
+        assert "queryBatch" not in read["operations"]
+        assert spec["catalog"]["pipelineRef"]["name"] in by_name("Pipeline")
+    # The two TrafficFlowObserved datasets split the type by id, so neither reads the other's.
+    patterns = [policies[p]["spec"]["information"][0]["entities"][0]["idPattern"] for p in ("public-cyklisti", "public-vozidla")]
+    assert ":cycle-" in patterns[0] and ":vehicle-" in patterns[1]
+    assert endpoints["bratislava-bajk"]["spec"]["catalog"]["license"] == "CC0", "nextbike's feed is CC0 1.0"
+
+
+def test_every_pipeline_writes_through_the_door_with_a_type_the_write_policy_grants():
+    write = granted_types(by_name("Policy")["pipelines-write"])
+    for name, pipeline in by_name("Pipeline").items():
+        spec = pipeline["spec"]
+        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:bratislava:bratislava", name
+        assert spec["output"]["type"] in write and spec["output"]["mode"] == "upsert", name
+        assert spec["source"]["dataSourceRef"]["name"] in by_name("DataSource"), name

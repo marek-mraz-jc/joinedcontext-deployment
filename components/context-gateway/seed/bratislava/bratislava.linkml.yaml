@@ -4,9 +4,10 @@ title: Bratislava, open data
 description: >-
   What the space bratislava carries (DM-01, DM-61): the open data of the City of Bratislava
   (data.bratislava.sk) as Smart Data Models types, their IRIs cited rather than minted (DM-04,
-  DM-16). The first type is AirQualityObserved, one entity per air-quality station in the city
-  with the PM10 concentration the city publishes for it; each batch of the ranked matrix adds its
-  own classes.
+  DM-16). AirQualityObserved is one air-quality station with its PM10 mean. The space also holds the
+  city's counter sites (TrafficFlowObserved for cyclists and motor vehicles, CrowdFlowObserved for
+  pedestrians) and the Slovnaft BAjk bike stations (BikeHireDockingStation); each batch of the
+  ranked matrix adds its own classes.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -21,9 +22,9 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The station's name as the city publishes it.
+    description: The name, per language, as the publisher writes it.
     annotations:
-      ngsi_ld_kind: Property
+      ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
@@ -33,6 +34,20 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  dateObservedFrom:
+    slot_uri: sdm:dateObservedFrom
+    description: The start of the counted day, the Bratislava midnight that opens it, UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedTo:
+    slot_uri: sdm:dateObservedTo
+    description: The end of the counted day, the Bratislava midnight that closes it, UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   pm10:
     slot_uri: sdm:pm10
     description: Particulate matter up to 10 µm, the period's mean at the station.
@@ -42,6 +57,125 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  intensity:
+    slot_uri: sdm:intensity
+    description: How many bicycles, or motor vehicles, the counter site detected in the day in one direction.
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: /d }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: The one kind of vehicle the observation counts; absent when the site sums every motor vehicle.
+    range: CountedVehicleType
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  laneDirection:
+    slot_uri: sdm:laneDirection
+    description: >-
+      The direction the counted traffic travels: forward towards the place the city's counter
+      names first (SMER_DO), backward towards the second (SMER_Z, or against a one-way street).
+    range: LaneDirection
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  peopleCount:
+    slot_uri: sdm:peopleCount
+    description: The pedestrians the counter site detected in the day, both directions.
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: /d }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  peopleCountTowards:
+    slot_uri: sdm:peopleCountTowards
+    description: The pedestrians of the day walking towards the place the counter names first (SMER_DO).
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: /d }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  peopleCountAway:
+    slot_uri: sdm:peopleCountAway
+    description: The pedestrians of the day walking towards the second place the counter names (SMER_Z).
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: /d }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  totalSlotNumber:
+    slot_uri: sdm:totalSlotNumber
+    description: The number of docks the station has, where the feed names one.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  availableBikeNumber:
+    slot_uri: sdm:availableBikeNumber
+    description: Bikes ready to rent at the station right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  freeSlotNumber:
+    slot_uri: sdm:freeSlotNumber
+    description: Empty docks a bike can be returned to right now.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  status:
+    slot_uri: sdm:status
+    description: Whether the station rents bikes right now.
+    range: StationStatus
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateModified:
+    slot_uri: sdm:dateModified
+    description: When the station last reported the values beside it.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: Who publishes the data the entity was read from, with the licence its credit names.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  source:
+    slot_uri: sdm:source
+    description: The open-data service the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+
+enums:
+  CountedVehicleType:
+    description: The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.
+    permissible_values:
+      bicycle:
+        description: A bicycle, as the city's counter sites count it.
+  LaneDirection:
+    permissible_values:
+      forward: { description: Towards the first place the counter names. }
+      backward:
+        description: Towards the second place the counter names, or against a one-way street.
+  StationStatus:
+    permissible_values:
+      working: { description: The station rents bikes and takes them back. }
+      outOfService: { description: The station neither rents nor takes back bikes right now. }
 
 classes:
   AirQualityObserved:
@@ -51,3 +185,54 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
     slots: [name, dateObserved, pm10]
+  TrafficFlowObserved:
+    class_uri: sdm:TrafficFlowObserved
+    description: >-
+      One day of one of the city's counter sites in one direction: the cyclists or the motor
+      vehicles it counted, from the hub's hourly tables. The site's name and place ride on the
+      observation; the history of the days is the entity's temporal history.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - dateObserved
+      - dateObservedFrom
+      - dateObservedTo
+      - intensity
+      - vehicleType
+      - laneDirection
+      - dataProvider
+      - source
+  CrowdFlowObserved:
+    class_uri: sdm:CrowdFlowObserved
+    description: >-
+      One day of one of the city's counter sites: the pedestrians it counted, each direction apart.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - dateObserved
+      - dateObservedFrom
+      - dateObservedTo
+      - peopleCount
+      - peopleCountTowards
+      - peopleCountAway
+      - dataProvider
+      - source
+  BikeHireDockingStation:
+    class_uri: sdm:BikeHireDockingStation
+    description: One Slovnaft BAjk station of nextbike's Bratislava system and what it holds right now.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - totalSlotNumber
+      - availableBikeNumber
+      - freeSlotNumber
+      - status
+      - dateModified
+      - dataProvider
+      - source
