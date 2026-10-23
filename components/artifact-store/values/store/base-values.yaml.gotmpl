@@ -44,6 +44,11 @@ appsBucket:
   retiredPrefix: apps/retired/
   retiredExpiryDays: 90
 {{- end }}
+{{- $pgBackups := dig "postgres" "cluster" "backups" dict .Values }}
+backupBucket:
+  enabled: {{ and (has "postgres" .Values.components) ($pgBackups.enabled | default false) (eq ($pgBackups.target | default "") "artifact-store") }}
+  name: {{ ($this.backupBucket | default dict).name | default "postgres-backups" | quote }}
+  credentialsSecret: postgres-backup-artifact-store
 {{- $fileCache := $this.fileCache | default dict }}
 fileCache:
   prefix: {{ $fileCache.prefix | default "filecache/" | quote }}

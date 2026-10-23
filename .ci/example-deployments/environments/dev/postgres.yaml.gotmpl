@@ -30,3 +30,10 @@ postgres:
             # extension; the databases chart's stat-statements Job then takes it from PUBLIC.
             pg_stat_statements.track: "top"
             pg_stat_statements.max: "5000"
+    # Base backups and the WAL archive in the artifact store on the same node (T-5289): point-in-time
+    # recovery, the monthly restore drill and upgrade.py's pre-upgrade backup, none of which ran
+    # before. Seven days, not 30: the store's volume is 10Gi and holds the artifacts too.
+    backups:
+      enabled: true
+      target: 'artifact-store'
+      retentionPolicy: '7d'

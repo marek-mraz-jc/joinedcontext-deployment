@@ -29,6 +29,15 @@ postgres:
       ports:
         - protocol: TCP
           port: 5432
+    # The in-cluster artifact store, where an environment archives to it (T-5289).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
     # Two destinations that are not pods and cannot be written as a selector.
     #
     # The instance manager runs a controller inside every instance pod and watches the
@@ -213,6 +222,15 @@ postgres-drill:
           port: 53
         - protocol: TCP
           port: 53
+    # The in-cluster artifact store, as in `postgres` above.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
     # The object store and the API server, as in `postgres` above.
     - to:
         - ipBlock:
