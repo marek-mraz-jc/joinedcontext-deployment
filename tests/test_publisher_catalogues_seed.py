@@ -55,7 +55,11 @@ def test_the_public_catalogued_endpoints_of_bb_and_praha_complete_their_profile(
         lang = language[project]
         assert d["metadata"]["description"].get(lang), path.name
         assert catalog["keywords"].get(lang), path.name
-        assert catalog["themes"] and catalog["frequency"] and catalog["license"], path.name
+        assert catalog["themes"] and catalog["frequency"], path.name
+        # Every dataset names its licence, except one read only from Golemio: its terms allow
+        # republishing but grant no sublicence, so the record claims none (owner 2026-10-22, T-5268).
+        golemio = all(s["url"].startswith("https://api.golemio.cz/") for s in catalog.get("source", []))
+        assert catalog.get("license") or (golemio and catalog.get("source")), path.name
         assert nuts[project] in catalog["spatial"], path.name
         assert catalog["personalData"] in {"contains", "does-not-contain"}, path.name
         # The Project's registry IRI is the record's publisher only where the Endpoint names none.
