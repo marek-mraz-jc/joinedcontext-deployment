@@ -4,6 +4,10 @@
 # share, so the relationship lands on the WasteContainerIsle the `waste-stations` pipeline writes.
 # A container at a point IPR does not publish (113 of 3456 on 2026-09-25) is refused on its own by
 # the gateway's relationship check, the rest of the batch lands (DM-70).
+# A container Golemio stops monitoring drops out of the answer, and an upsert never deletes: each
+# write carries expiresAt a week ahead, so the hourly run keeps a monitored container and one that
+# left the list goes a week after its last write instead of showing an old fill level as today's
+# (199 such on dev on 2026-10-23, the oldest written 2026-09-29; T-5270).
 
 pipeline:
   processors:
@@ -22,5 +26,6 @@ pipeline:
           "location": { "type": "GeoProperty", "value": f.geometry },
           "refWasteContainerIsle": { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:station-%v".format("WasteContainerIsle", env("JC_ORG_DOMAIN"), env("JC_SPACE"), f.properties.station_number.string().trim().lowercase().replace_all("/ ", "-").replace_all("/-", "--")) },
           "dataProvider": { "type": "Property", "value": "Golemio, Operátor ICT" },
-          "source": { "type": "Property", "value": "https://api.golemio.cz/v2/sortedwastestations" }
+          "source": { "type": "Property", "value": "https://api.golemio.cz/v2/sortedwastestations" },
+          "expiresAt": (now().ts_unix() + 604800).ts_format("2006-01-02T15:04:05Z", "UTC")
         }.filter(entry -> entry.value != null))).flatten()
