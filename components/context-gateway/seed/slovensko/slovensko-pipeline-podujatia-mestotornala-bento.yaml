@@ -90,7 +90,7 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"poi":"osm-node-2511279860","match":"mestský úrad tornaľa","town":"tornala","venue":"Mestský úrad Tornaľa","streetAddress":null,"addressLocality":"Tornaľa","lat":48.422138,"lon":20.3223728}]
+      let venues = [{"poi":"osm-node-2511279860","match":"mestský úrad tornaľa","town":"tornala","venue":"Mestský úrad Tornaľa","streetAddress":null,"addressLocality":"Tornaľa","lat":48.422138,"lon":20.3223728},{"poi":"osm-ra-2650185A","match":"mestské kultúrne stredisko","town":"tornala","venue":"Mestské kultúrne stredisko","streetAddress":"Hlavné Námestie 505/6","addressLocality":"Tornaľa","lat":48.421837,"lon":20.324677}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }

@@ -460,6 +460,7 @@ v1/ConfigMap smartcity/gitea-sample-apps-transit-reach
 v1/ConfigMap smartcity/gitea-seed-s1-*
 v1/ConfigMap smartcity/gitea-seed-s10-*
 v1/ConfigMap smartcity/gitea-seed-s11-*
+v1/ConfigMap smartcity/gitea-seed-s12-*
 v1/ConfigMap smartcity/gitea-seed-s2-*
 v1/ConfigMap smartcity/gitea-seed-s3-*
 v1/ConfigMap smartcity/gitea-seed-s4-*

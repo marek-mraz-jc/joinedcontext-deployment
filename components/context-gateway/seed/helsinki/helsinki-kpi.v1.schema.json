@@ -182,6 +182,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "title": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The indicator's human name, one text per language of the space, such as `{sk: Index starnutia, en: Ageing index}`: what a table labels the row with, because `name` is the slug. Optional: an indicator written before it, or by a writer that names none, has none.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
