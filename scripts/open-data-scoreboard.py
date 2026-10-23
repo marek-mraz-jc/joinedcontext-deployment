@@ -346,9 +346,9 @@ class Board:
             # Every dataset's type first: a Relationship is looked up in the datasets of its type.
             # ponytail: a dataset over several types (helsinki-transport) is judged by its first one.
             described = [(city, package, smoke.describe(package, self.domain)) for city, package in pending]
-            for _, _, data in described:
-                if data.slug and self.run.entity_type(data):
-                    self.run.holders.setdefault(data.type, []).append((data.org, data.slug))
+            # run.holders() derives (publisher, slug) per type from these (T-5402).
+            self.run.datasets = [data for _, _, data in described]
+            self.run.public = {data.slug for data in self.run.datasets if data.slug}
             for city, package, data in described:
                 rows.append(self.row(city, CITIES[city][1], package, data))
                 verdicts = " ".join(f"{c} {smoke.verdict(rows[-1][c])}" for c in COLUMNS)
