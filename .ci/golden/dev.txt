@@ -497,7 +497,7 @@ v1/ConfigMap dev/gitea-seed-s2-slovensko--23
 v1/ConfigMap dev/gitea-seed-s3-bbsk
 v1/ConfigMap dev/gitea-seed-s3-bbsk--2
 v1/ConfigMap dev/gitea-seed-s3-bbsk--3
-v1/ConfigMap dev/gitea-seed-s3-slovensko--20
+v1/ConfigMap dev/gitea-seed-s3-slovensko--21
 v1/ConfigMap dev/gitea-seed-s4-bbsk--4
 v1/ConfigMap dev/gitea-seed-s4-bbsk--5
 v1/ConfigMap dev/gitea-seed-s4-bbsk--6
@@ -507,12 +507,12 @@ v1/ConfigMap dev/gitea-seed-s5-bbsk--10
 v1/ConfigMap dev/gitea-seed-s5-bbsk--11
 v1/ConfigMap dev/gitea-seed-s5-bbsk--8
 v1/ConfigMap dev/gitea-seed-s5-bbsk--9
-v1/ConfigMap dev/gitea-seed-s5-zilina
+v1/ConfigMap dev/gitea-seed-s5-slovensko--26
 v1/ConfigMap dev/gitea-seed-s6-bbsk--12
 v1/ConfigMap dev/gitea-seed-s6-bbsk--13
 v1/ConfigMap dev/gitea-seed-s6-bbsk--14
 v1/ConfigMap dev/gitea-seed-s6-bbsk--15
-v1/ConfigMap dev/gitea-seed-s6-slovensko--26
+v1/ConfigMap dev/gitea-seed-s6-zilina
 v1/ConfigMap dev/gitea-seed-s7-bratislava
 v1/ConfigMap dev/gitea-seed-s7-slovensko--10
 v1/ConfigMap dev/gitea-seed-s7-slovensko--11
@@ -520,7 +520,7 @@ v1/ConfigMap dev/gitea-seed-s7-slovensko--12
 v1/ConfigMap dev/gitea-seed-s7-slovensko--9
 v1/ConfigMap dev/gitea-seed-s8-helsinki
 v1/ConfigMap dev/gitea-seed-s8-slovensko--18
-v1/ConfigMap dev/gitea-seed-s8-slovensko--21
+v1/ConfigMap dev/gitea-seed-s8-slovensko--20
 v1/ConfigMap dev/gitea-seed-s9-helsinki-mobility
 v1/ConfigMap dev/gitea-seed-s9-sharing-other
 v1/ConfigMap dev/gitea-seed-s9-slovensko
