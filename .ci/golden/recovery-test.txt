@@ -214,6 +214,7 @@ policy/v1/PodDisruptionBudget jc/keycloak-app-keycloakx
 policy/v1/PodDisruptionBudget jc/model-tools
 policy/v1/PodDisruptionBudget jc/observability-collector
 policy/v1/PodDisruptionBudget jc/portal
+policy/v1/PodDisruptionBudget jc/portal-ui
 postgresql.cnpg.io/v1/Cluster jc/postgres-cluster
 postgresql.cnpg.io/v1/Database jc/antares
 postgresql.cnpg.io/v1/Database jc/gitea

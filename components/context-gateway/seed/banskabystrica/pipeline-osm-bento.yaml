@@ -141,17 +141,22 @@ pipeline:
               let keep = @keep.split(" ")
               let held = this.or([])
               let gone = if $held.length() >= 1000 { [] } else { $held.map_each(e -> e.id).filter(id -> !$keep.contains(id)) }
-              root = if $gone.length() == 0 { deleted() } else { $gone }
-          - http:
-              url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/delete
-              verb: POST
-              headers: { Content-Type: application/json }
-              oauth2:
-                enabled: true
-                client_key: ${JC_CLIENT_ID}
-                client_secret: ${JC_CLIENT_SECRET}
-                token_url: ${JC_TOKEN_URL}
-              timeout: 30s
-              rate_limit: pipeline_egress
+              root = $gone
+          # Nothing gone skips the call but keeps the message: a branch whose processors end
+          # with no message fails, and Bento then flags every entity errored, so none is written.
+          - switch:
+              - check: this.length() > 0
+                processors:
+                  - http:
+                      url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/delete
+                      verb: POST
+                      headers: { Content-Type: application/json }
+                      oauth2:
+                        enabled: true
+                        client_key: ${JC_CLIENT_ID}
+                        client_secret: ${JC_CLIENT_SECRET}
+                        token_url: ${JC_TOKEN_URL}
+                      timeout: 30s
+                      rate_limit: pipeline_egress
         # The entities pass on unchanged; only the helper metadata goes.
         result_map: meta keep = deleted()
