@@ -62,6 +62,30 @@ spec:
         areaServed: { record: onChange, heartbeat: P1D }
         dataProvider: { record: onChange, heartbeat: P1D }
         source: { record: onChange, heartbeat: P1D }
+    # A section's state and forecast are levels each 5-minute read repeats: a row when one
+    # changes and at least one an hour; dateObserved changes every read and is the instant of
+    # each row already, so it records none (T-5262).
+    # A section the source stops publishing leaves 30 days after its last write (T-5262 review).
+    - entityType: TrafficFlowObserved
+      current: P30D
+      history: P30D
+      record: onChange
+      heartbeat: PT1H
+      attributes:
+        dateObserved: { record: never }
+    # A charging point's free ports and status are levels each 5-minute read repeats: a row when
+    # one changes and at least one an hour, as for the traffic state (T-5262).
+    - entityType: EVChargingStation
+      current: P30D
+      history: P30D
+      record: onChange
+      heartbeat: PT1H
+      attributes:
+        dateObserved: { record: never }
+    # The register of parking sections changes with a monthly file: no history (T-5262).
+    - entityType: OnStreetParking
+      current: P30D
+      history: 'off'
     # An activity is a record, not a measurement: its current state only (T-5265).
     - entityType: Event
       history: 'off'
@@ -72,6 +96,21 @@ spec:
   quality:
     - name: in-area
       entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: traffic-in-area
+      entityType: TrafficFlowObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: parking-in-area
+      entityType: OnStreetParking
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: charging-in-area
+      entityType: EVChargingStation
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

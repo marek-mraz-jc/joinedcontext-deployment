@@ -547,8 +547,8 @@ slots:
     slot_uri: jc:districtCode
     description: >-
       The city's own code of the area: the district number, or for a sub-district the full
-      ten-digit code the city's statistics use for it.
-    required: true
+      ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its
+      `fareZone`. The districts and sub-districts mappings write no area without it.
     pattern: ^[0-9]{1,10}$
     annotations: { ngsi_ld_kind: Property }
   divisionLevel:
@@ -719,13 +719,21 @@ slots:
     inverse: refDistrict
     inlined: false
     annotations: { ngsi_ld_kind: Relationship }
+  areaIndicators:
+    slot_uri: jc:areaIndicators
+    description: The statistics indicators that describe this sub-district, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
   stopCode:
     slot_uri: jc:stopCode
     description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
     annotations: { ngsi_ld_kind: Property }
   fareZone:
     slot_uri: jc:fareZone
-    description: The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.
+    description: The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.
     pattern: ^[A-Z]$
     annotations: { ngsi_ld_kind: Property }
   routeShortName:
@@ -989,6 +997,7 @@ slots:
       The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the
       city's register holds; a district or the whole city is named by `area` and `districtCode`.
     range: AdministrativeArea
+    inverse: areaIndicators
     inlined: false
     annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
   statisticsTable:
@@ -1177,7 +1186,10 @@ classes:
               de: Kontakt
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
-    description: One HSL city bike station, its position and what it holds right now.
+    description: >-
+      One city bike station, its position and what it holds right now: HSL's stations from the live
+      GBFS feed, and City Bike Vantaa's stations from HSL's register, which carries their address and
+      number of slots but no live count.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -1194,7 +1206,9 @@ classes:
       - freeSlotNumber
       - totalSlotNumber
       - status
+      - address
       - dateModified
+      - dataProvider
       - source
     slot_usage:
       name:
@@ -1256,6 +1270,16 @@ classes:
               fi: Tila
               en: Status
               de: Status
+      address:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Adresa
+              cs: Adresa
+              fi: Osoite
+              en: Address
+              de: Adresse
   Vehicle:
     class_uri: sdm:Vehicle
     description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
@@ -1603,8 +1627,9 @@ classes:
     class_uri: sdm:PointOfInterest
     description: >-
       One place of the city's service register a resident goes to: a library, a health station,
-      a swimming hall, a beach, a school, or any other unit of the register (`other`). The register's contact lines are left out, because
-      they can name a person.
+      a swimming hall, a beach, a school, or any other unit of the register (`other`); or one of
+      HSL's ticket sales points (a kiosk, a service point, a ticket machine or a parking meter that
+      sells tickets). The register's contact lines are left out, because they can name a person.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -1621,6 +1646,8 @@ classes:
       - address
       - url
       - openingHours
+      - description
+      - fareZone
       - dateModified
       - dataProvider
       - source
@@ -1734,7 +1761,15 @@ classes:
           cs: Území
           en: Administrative area
           de: Verwaltungsgebiet
-    slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
+    slots:
+      - name
+      - districtCode
+      - divisionLevel
+      - fareZone
+      - dataProvider
+      - source
+      - publicAreaPermits
+      - areaIndicators
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -2003,6 +2038,12 @@ enums:
       school: { description: A comprehensive school. }
       other:
         description: Any other unit of the service register, such as a youth centre, a playground or a city office.
+      ticketSalesPoint: { description: An HSL ticket sales point in a shop or kiosk (Myyntipiste). }
+      ticketServicePoint: { description: An HSL customer service point (Palvelupiste). }
+      ticketMachine:
+        description: An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).
+      ticketParkingMeter:
+        description: A parking meter that also sells HSL tickets (Pysäköintiautomaatti).
   ServiceRequestStatus:
     description: Open311's two report states, as Smart Data Models' service_requests names them.
     permissible_values:
@@ -2041,6 +2082,8 @@ enums:
         description: A district (kaupunginosa), 60 of them.
       subDistrict:
         description: A sub-district (osa-alue), the unit the city's statistics use.
+      fareZone:
+        description: An HSL fare zone (A, B, C or D), the area a ticket is valid in.
   TransportMode:
     permissible_values:
       bus: { description: A bus. }
