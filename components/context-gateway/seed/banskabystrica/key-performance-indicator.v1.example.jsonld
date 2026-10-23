@@ -9,6 +9,13 @@
     "type": "Property",
     "value": "spotreba-vody-obyvatel-mesto"
   },
+  "title": {
+    "type": "LanguageProperty",
+    "languageMap": {
+      "sk": "Fakturovaná spotreba pitnej vody na obyvateľa za deň",
+      "en": "Invoiced drinking water per inhabitant per day"
+    }
+  },
   "currentValue": {
     "type": "Property",
     "value": 154,
