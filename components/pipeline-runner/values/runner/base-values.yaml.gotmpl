@@ -36,6 +36,13 @@ args:
   # 45 % of the runner's heap on dev (T-3537); the Portal reads p99 from the buckets (T-3625).
   - --set
   - metrics.prometheus.use_histogram_timing=true
+  # Per stream only the series the Portal reads (joinedcontext-portal src/api/pipelines.rs `family`:
+  # counts, errors, backlog, output latency, the writes' latency). Bento keeps a deleted stream's
+  # series until it restarts, about 900 lines per seeded pipeline, so every scheduled run's name
+  # stayed in memory: 2.7-10.6 MB each, 2.64 GiB on prod (T-5282). Kept: about 80 lines (T-5285,
+  # scripts/runner-rss-rig.py measures it). `--set` splits on commas: the lists are regexes.
+  - --set
+  - 'metrics.mapping=root = if @stream != null && !this.re_match("^(input_received|output_sent|output_error|processor_error|buffer_backlog|output_latency_ns)$") && !(this == "processor_latency_ns" && @label.or("").re_match("^(.*_)?write_[0-9]+$")) { deleted() }'
   - -r
   - /streams/resources.yaml
   - streams

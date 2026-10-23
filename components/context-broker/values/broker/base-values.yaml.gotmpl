@@ -153,6 +153,12 @@ env:
   # Source clauses; the gateway's own hops speak as its client (T-3767).
   ANTARES_POLICY: "joinedcontext"
   ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
+  {{- if and $mesh (dig "enabled" false $gateway) }}
+  # The gateway's mesh identity (Linkerd sets l5d-client-id from its mTLS certificate): the only
+  # caller whose JC-Provenance-* and X-Request-Id headers the broker stores in history
+  # (ADR-N-054 2.3, T-5361). Unset, every write was recorded as channel api with no actor.
+  ANTARES_PROVENANCE_FROM: "context-gateway.{{ $gateway.namespace }}.serviceaccount.identity.linkerd.cluster.local"
+  {{- end }}
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
   # A scraper cannot send the admin secret; the metrics carry no tenant data. Only the metrics
   # port is open to Prometheus (networkpolicies.yaml), and that port serves no API path (T-5095).
