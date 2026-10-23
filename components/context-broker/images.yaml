@@ -160,5 +160,7 @@ context-broker:
     # Antares dev 4b73e52 (dev-44, over f945ccb: T-5246, T-5157, T-5200, T-5134, T-5279 area_overview; same FEATURES).
     # Migration 0020 adds empty iri_ids, attr_rows and history_cutover (NULL), rollback compatible. New runtime keys
     # ANTARES_SUMMARY_CONCURRENCY/_MAX_BYTES keep their defaults (not set here). Rollback: dev-43. Signed by ship.yml on dev at 4b73e52.
-    tag: 'dev-44'
-    digest: 'sha256:53cfdb02031864f451cce339b78fb084a1a56d52ffb7fd324035e3b7c62f7a32'
+    # Antares dev 18dd4c2 (dev-45, over 4b73e52: T-5361 provenance actor percent-decoded, writtenAt per history row; same
+    # FEATURES). No migration, no new runtime key. Rollback: dev-44. Signed by ship.yml on dev at 18dd4c2.
+    tag: 'dev-45'
+    digest: 'sha256:18d12e0b840c0fde65f301d43869ede34b53a6175ef9988cc4edc02a3236d3c8'

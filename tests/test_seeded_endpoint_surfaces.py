@@ -125,3 +125,60 @@ def test_no_seed_or_app_names_a_removed_representation():
                 stack.extend(node)
     assert len(list(APPS.rglob("app.yaml"))) > 0
     assert not found, found
+
+
+NUMERIC = {"integer", "float", "double", "decimal"}
+
+
+def first(nodes: list[dict], key: str):
+    """The slot_usage's value of `key`, else the global slot's (LinkML's own precedence)."""
+    return next((n[key] for n in nodes if n.get(key) is not None), None)
+
+
+def measurements(linkml: dict) -> list[tuple[str, str]]:
+    """jc-core `linkml_measurements`: each (class, slot) whose range is numeric and that declares a
+    `unit`, the Datastream.unitOfMeasurement SensorThings needs (STA 1.1 §9.2.5, EP-125)."""
+    found = []
+    slots = linkml.get("slots") or {}
+    for name, declared in (linkml.get("classes") or {}).items():
+        declared = declared or {}
+        for slot in declared.get("slots") or []:
+            nodes = [(declared.get("slot_usage") or {}).get(slot) or {}, slots.get(slot) or {}]
+            if first(nodes, "range") in NUMERIC and first(nodes, "unit") is not None:
+                found.append((name, slot))
+        for slot, attribute in (declared.get("attributes") or {}).items():
+            attribute = attribute or {}
+            if attribute.get("range") in NUMERIC and attribute.get("unit") is not None:
+                found.append((name, slot))
+    return found
+
+
+def test_sta_is_listed_only_where_the_space_model_has_a_measurement():
+    """`sta` makes every numeric Property a Datastream, which needs its unit (EP-125, T-5299); the
+    Portal and jcctl validate refuse an Endpoint whose space model declares none, so a seed
+    listing `sta` there would never apply."""
+    models = {}
+    for path, doc in manifests("DataModel"):
+        if doc["spec"].get("linkml") and doc["spec"].get("lifecycle") in ("published", "deprecated"):
+            linkml = yaml.safe_load((path.parent / doc["spec"]["linkml"]).read_text())
+            models[(doc["metadata"]["namespace"], doc["spec"]["contextSpaceRef"])] = linkml
+    listed = [(path, doc) for path, doc in manifests("Endpoint") if "sta" in doc["spec"]["enabledRepresentations"]]
+    for path, doc in listed:
+        space = doc["spec"]["contextSpaceRef"]
+        space = space["name"] if isinstance(space, dict) else space
+        model = models.get((doc["metadata"]["namespace"], space))
+        assert model is not None, f"{path.name}: `sta` needs a published data model in space {space}"
+        assert measurements(model), f"{path.name}: `sta` needs a numeric attribute that declares its unit in {space}"
+
+
+def test_measurements_reads_slot_usage_global_slots_and_attributes():
+    linkml = {
+        "slots": {"pm10": {"range": "float", "unit": {"ucum_code": "ug/m3"}}, "count": {"range": "integer"}},
+        "classes": {
+            "Air": {"slots": ["pm10", "count"]},
+            "Article": {"slots": ["count"], "attributes": {"words": {"range": "integer"}}},
+            "Road": {"slots": ["count"], "slot_usage": {"count": {"unit": {"ucum_code": "1"}}},
+                     "attributes": {"length": {"range": "float", "unit": {"ucum_code": "km"}}}},
+        },
+    }
+    assert measurements(linkml) == [("Air", "pm10"), ("Road", "count"), ("Road", "length")]
