@@ -195,6 +195,7 @@
       return { text: String(m[t.lang] || m[Object.keys(m)[0]] || "–") };
     }
     if (value["@value"] !== undefined) return show(value["@value"], t);
+    if (namedLink(value)) return { text: value.name.trim(), href: value.url.trim() };
     return { text: Object.keys(value).map(function (k) { return k + ": " + show(value[k], t).text; }).join(", ") };
   }
 
@@ -221,6 +222,11 @@
   function hostOf(value) {
     if (typeof value !== "string" || !/^https?:\/\/[^\s]+$/i.test(value.trim())) return null;
     try { return new URL(value.trim()).hostname.replace(/^www\./, ""); } catch (e) { return null; }
+  }
+
+  // A `{name, url}` object (an Event's organizer, T-5134): read as its name, linked to its web site.
+  function namedLink(value) {
+    return typeof value.name === "string" && value.name.trim() !== "" && hostOf(value.url) !== null;
   }
 
   // One value as a reader reads it: local dates, numbers and units of the page's language, enum
@@ -254,6 +260,7 @@
     }
     if (value["@value"] !== undefined) return cardValue(value["@value"], field, t);
     if (isGeo(value)) return null;
+    if (namedLink(value)) return { text: value.name.trim(), href: value.url.trim() };
     var parts = Object.keys(value).map(function (k) { var v = cardValue(value[k], {}, t); return v && v.text; }).filter(Boolean);
     return parts.length ? { text: parts.join(", ") } : null;
   }
@@ -1050,7 +1057,7 @@
     height();
   }
 
-  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, geoProps: geoProps, mapOptions: mapOptions, mapChoice: mapChoice, colourClasses: colourClasses, splitPoints: splitPoints, countLine: countLine, show: show, cardValue: cardValue, cardOf: cardOf, hostOf: hostOf, humanise: humanise, TEXT: TEXT };
+  root.jcExplore = { parseHash: parseHash, hashOf: hashOf, base: base, entitiesUrl: entitiesUrl, bboxQuery: bboxQuery, links: links, templateOf: templateOf, tilesetUrl: tilesetUrl, geoProps: geoProps, mapOptions: mapOptions, mapChoice: mapChoice, colourClasses: colourClasses, splitPoints: splitPoints, countLine: countLine, show: show, cardValue: cardValue, namedLink: namedLink, cardOf: cardOf, hostOf: hostOf, humanise: humanise, TEXT: TEXT };
   if (typeof module === "object" && module.exports) module.exports = root.jcExplore;
   else if (typeof document !== "undefined") main();
 })(typeof self !== "undefined" ? self : this);

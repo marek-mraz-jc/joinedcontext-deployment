@@ -298,8 +298,10 @@ context-endpoint:
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
       # A browser page reads how many entities a query matched, as the catalogue's resource
-      # page counts its records (T-4333); a count is no credential and no row.
-      expose_headers: 'NGSILD-Results-Count'
+      # page counts its records (T-4333), and where a cut temporal answer continues (Link
+      # rel="intervalafter", Content-Range), as a catalogue chart reads its whole window
+      # (T-5414). Counts, ranges and Endpoint URLs are no credential and no row.
+      expose_headers: 'NGSILD-Results-Count,Content-Range,Link'
       allow_credential: false
     proxy-rewrite:
       headers:
@@ -384,8 +386,10 @@ context-endpoint-portal:
       allow_methods: 'GET,HEAD,OPTIONS'
       allow_headers: 'Authorization,Content-Type'
       # A browser page reads how many entities a query matched, as the catalogue's resource
-      # page counts its records (T-4333); a count is no credential and no row.
-      expose_headers: 'NGSILD-Results-Count'
+      # page counts its records (T-4333), and where a cut temporal answer continues (Link
+      # rel="intervalafter", Content-Range), as a catalogue chart reads its whole window
+      # (T-5414). Counts, ranges and Endpoint URLs are no credential and no row.
+      expose_headers: 'NGSILD-Results-Count,Content-Range,Link'
       allow_credential: false
     # The edge session as the bearer the gateway verifies (ADR-N-019, AP-62): `pass` leaves an
     # anonymous visitor anonymous and a presented bearer untouched, like portal-api.

@@ -313,6 +313,43 @@ zilina-pipelines:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# Barcelona's ingestion pipelines (T-5262), the same rule for project `barcelona`: the Open Data
+# BCN streams write the one space `barcelona` through its door of the same name.
+barcelona-pipelines:
+  # An account of the demo seed: rendered by the development profile only (T-1720, CC-73).
+  profiles: [development]
+  name: Barcelona ingestion pipelines
+  description: Service account of the Bento streams of the Barcelona project; client_credentials only, no browser flow
+  subdomain: ''
+  redirectPath: /
+  componentNamespaces:
+    - pipeline-runner
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    protocolMappers:
+      - name: portal-internal-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        # The Portal's internal listener: the streams' outcome, rejected and samples sinks post
+        # with this client's own token, admitted for this project's pipelines only (T-3193, T-4038).
+        config:
+          included.custom.audience: portal-internal
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: barcelona-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: pbyqbuyoeikryocvqb5uev7nxbx5mr4a
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # Bratislava's ingestion pipelines (T-5273), the same rule for project `bratislava`: the
 # data.bratislava.sk and Slovnaft BAjk streams write the one space `bratislava` through its door of
 # the same name.

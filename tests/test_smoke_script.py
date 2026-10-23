@@ -477,6 +477,10 @@ OGC_HEADERS = "HTTP/2 200\r\ncontent-type: application/geo+json\r\n"
 
 HUB_METADATA = '{"resource":"https://api.example.test/api/mcp","authorization_servers":["https://api.example.test"]}'
 
+# GET /api/v1/version of a Portal whose UI bundle was built against its API (T-2485, T-5297).
+VERSION_MATCH = json.dumps({"portal": {"commit": "a9ff173", "openapi": "befc4155"},
+                            "ui": {"commit": "fca645d", "openapi": "befc4155"}, "contract": "match"})
+
 HEALTHY = {
     "ogcSeed": OGC_SEED,
     "routes": ["portal-ui", "portal-api", "portal-public-assets", "context-space", "context-endpoint", "context-mcp-hub",
@@ -496,6 +500,7 @@ HEALTHY = {
     ],
     "helsinkiSeed": HELSINKI_SEED,
     "bodies": [["https://api.example.test/api/mcp/.well-known/oauth-protected-resource", HUB_METADATA],
+               ["/api/v1/version", VERSION_MATCH],
                ["/ogc/features/collections/", OGC_ITEMS],
                ["/ogc/features/collections", OGC_COLLECTIONS],
                ["/api/v1/projects/helsinki/apps/helsinki-", BUILT_APP],
@@ -592,6 +597,8 @@ def test_full_platform_passes(tmp_path):
         "  skip  ogc cube (no seeded Endpoint serves a LinkML cube, T-3805)"]
     assert "ok    portal host sends an anonymous visitor to the edge login" in result.stdout
     assert "ok    apex redirects to the portal host" in result.stdout
+    assert "ok    portal UI bundle was built against the binary's API (contract match)" in result.stdout
+    assert "warnings" not in result.stdout
     assert "ok    portal API answers a bearer call through the edge (200)" in result.stdout
     assert "client_credentials token" in result.stdout
     assert "ok    demo user demo.viewer@hel.fi logs in with a password grant" in result.stdout
@@ -650,6 +657,29 @@ def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
     """No seed, no 210 s wait for data that will never come: the section is a skip."""
     result = run(tmp_path, dict(HEALTHY, helsinkiSeed={}), "https://example.test", "https://idm.example.test")
     assert "skip  helsinki endpoints (no Helsinki seed on the gateway in this instance)" in result.stdout
+
+
+def bodies_with_version(version: str) -> list:
+    return [["/api/v1/version", version]] + [b for b in HEALTHY["bodies"] if b[0] != "/api/v1/version"]
+
+
+def test_a_ui_bundle_built_against_another_api_warns_without_failing(tmp_path):
+    """T-5297: a mismatched bundle still serves pages, so the run stays green and says why."""
+    mismatch = json.dumps({"portal": {"commit": "b", "openapi": "1"}, "ui": {"commit": "a", "openapi": "2"},
+                           "contract": "mismatch"})
+    result = run(tmp_path, dict(HEALTHY, bodies=bodies_with_version(mismatch)),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "warn  portal UI bundle contract is mismatch, not match: " in result.stdout
+    assert "\n1 warnings\n" in result.stdout
+
+
+def test_a_version_that_does_not_answer_warns_as_unreadable(tmp_path):
+    """No answer (an older Portal, a 404 page) is no contract: a warning naming it, not a pass."""
+    result = run(tmp_path, dict(HEALTHY, bodies=bodies_with_version("<html>not found</html>")),
+                 "https://example.test", "https://idm.example.test")
+    assert result.returncode == 0, result.stdout
+    assert "warn  portal UI bundle contract is unreadable, not match: <html>not found</html>" in result.stdout
 
 
 def test_a_transport_websocket_that_is_not_public_fails_with_its_answer(tmp_path):
