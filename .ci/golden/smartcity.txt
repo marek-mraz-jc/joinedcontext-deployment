@@ -387,7 +387,7 @@ v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--3
 v1/ConfigMap smartcity/gitea-seed-s1-slovensko--17
-v1/ConfigMap smartcity/gitea-seed-s1-slovensko--23
+v1/ConfigMap smartcity/gitea-seed-s1-slovensko--22
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--18
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--2
@@ -429,7 +429,7 @@ v1/ConfigMap smartcity/gitea-seed-s9-praha
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--11
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--12
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--13
-v1/ConfigMap smartcity/gitea-seed-s9-slovensko--22
+v1/ConfigMap smartcity/gitea-seed-s9-slovensko--23
 v1/ConfigMap smartcity/keycloak-admin-permissions
 v1/ConfigMap smartcity/keycloak-theme
 v1/ConfigMap smartcity/pipeline-runner-helsinki-streams
