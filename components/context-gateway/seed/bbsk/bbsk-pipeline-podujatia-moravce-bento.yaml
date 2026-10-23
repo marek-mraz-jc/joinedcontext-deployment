@@ -99,7 +99,7 @@ pipeline:
       let lat = $pick.lat.or(null)
       let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
-      let town = $known.town.or($area.town.or("hontianske-moravce"))
+      let town = $known.town.or($area.town.or(null))
       # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
       # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
       # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
@@ -140,7 +140,7 @@ pipeline:
         "type": "Event",
         # The scope comes from the inventory row's region and town, never from the feed (T-4898). A
         # scope level is letters, digits and "_" (CIM 009 4.18): the broker refuses a hyphen (T-5051).
-        "scope": if $town != null { "/SK/BB" + "/" + $town.replace_all("-", "_") } else { "/SK/BB" },
+        "scope": if $town != null { "/SK/BB" + "/" + $town.replace_all("-", "_") } else { "/SK/BB/hontianske_moravce" },
         "name": $name.apply("prop"),
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),

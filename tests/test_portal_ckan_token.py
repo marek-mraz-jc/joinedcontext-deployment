@@ -51,6 +51,43 @@ def test_an_environment_without_the_catalogue_asks_the_portal_for_no_token(rende
     assert "CKAN_API_TOKEN" not in {e["name"] for e in env}
 
 
+@requires_helmfile
+def test_the_portal_publishes_on_the_catalogues_service_and_both_policies_admit_it(rendered):
+    """T-5314: through the edge every publication spent the visitors' per-address limit."""
+    docs = rendered("dev")
+    _, env = portal_env(docs)
+    values = {e["name"]: e.get("value") for e in env}
+    service = next(d for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] == "ckan")
+    assert values["JC_PORTAL_CKAN_API_URL"] == f"http://ckan.{service['metadata']['namespace']}.svc.cluster.local:5000"
+    instance = yaml.safe_load((PROJECT_ROOT / "components/context-gateway/seed/zilina/zilina-ckan.yaml").read_text())
+    assert values["JC_PORTAL_CKAN_URL"] == instance["spec"]["url"], "the seed's instance is not the one mapped"
+
+    def admits(policy, peer_name, port):
+        rules = policy["spec"].get("egress" if peer_name == "ckan" else "ingress", [])
+        for rule in rules:
+            peers = rule.get("to" if peer_name == "ckan" else "from", [])
+            named = any(
+                (p.get("podSelector") or {}).get("matchLabels", {}).get("app.kubernetes.io/name") == peer_name
+                for p in peers
+            )
+            if named and any(r.get("port") == port for r in rule.get("ports", [])):
+                return True
+        return False
+
+    policies = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "NetworkPolicy"}
+    portal = [p for p in policies.values() if p["spec"]["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/name") == "portal-portal"]
+    assert any(admits(p, "ckan", 5000) for p in portal), "the Portal may not leave for the catalogue"
+    ckan = [p for p in policies.values() if p["spec"]["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/component") == "ckan"]
+    assert any(admits(p, "portal-portal", 5000) for p in ckan), "the catalogue does not take the Portal"
+    assert any(admits(p, "portal-portal", 4143) for p in ckan), "the catalogue's mesh port does not take the Portal"
+
+
+@requires_helmfile
+def test_an_environment_without_the_catalogue_maps_no_catalogue(rendered):
+    _, env = portal_env(rendered("local"))
+    assert not {"JC_PORTAL_CKAN_URL", "JC_PORTAL_CKAN_API_URL"} & {e["name"] for e in env}
+
+
 @pytest.mark.parametrize("env", sorted(p.name for p in ENVIRONMENTS.iterdir() if (p / "global.yaml.gotmpl").is_file()))
 def test_the_catalogue_is_deployed_before_the_portal_that_reads_its_token(env):
     """The Secret exists before the pod that references it, so a first apply does not stall."""

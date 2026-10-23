@@ -275,3 +275,11 @@ def test_every_bound_group_is_seeded_or_the_identity_providers():
         else:
             assert "source" not in subject, f"{name}: unknown source {subject['source']}"
             assert subject["group"] in seeded, f"{name}: {subject['group']} is no seeded Group and not marked provider"
+
+
+def test_every_quality_rule_name_is_unique_in_its_space():
+    # The Portal refuses a whole space whose quality rules share a name (DM-87); dev kept
+    # barcelona's last valid space while six rules were all `in-area` (T-5265, T-5264).
+    for path, space in manifests("ContextSpace"):
+        names = [rule["name"] for rule in space["spec"].get("quality", [])]
+        assert len(names) == len(set(names)), f"{path.name}: {sorted(n for n in names if names.count(n) > 1)}"

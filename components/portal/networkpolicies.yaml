@@ -114,6 +114,18 @@ portal:
       ports:
         - protocol: TCP
           port: 9000
+    # The open-data catalogue's API (T-5314): the reconciler publishes each Endpoint's dataset
+    # on the Service rather than through the edge. The catalogue's ingress names this pod too.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ckan
+              app.kubernetes.io/instance: ckan-catalogue
+              app.kubernetes.io/component: ckan
+          componentNamespace: ckan
+      ports:
+        - protocol: TCP
+          port: 5000
     # The pipeline test creates and deletes an ephemeral stream on the runner (PL-43).
     - to:
         - podSelector:
