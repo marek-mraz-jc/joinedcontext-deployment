@@ -68,8 +68,8 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # the data workspace journey's test alerts (T-5092), and the public read of the street cleaning
     # air pilot (T-5255), and one public read per area statistics theme (T-5258), and the public read
     # of air quality (T-5259), and the public reads of the heat vulnerability index and the service
-    # property energy use (T-5278).
-    assert len(policies) == 34
+    # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253).
+    assert len(policies) == 36
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

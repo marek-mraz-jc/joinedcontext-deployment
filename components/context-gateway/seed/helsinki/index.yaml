@@ -195,10 +195,16 @@ helsinki-pipeline-service-alerts-bento.yaml: projects/helsinki/pipelines/hsl-ser
 # Fintraffic LIIPI park and ride (T-3894): the HSL area's sites daily, their free spaces every 5 min.
 helsinki-datasource-liipi-facilities.yaml: projects/helsinki/datasources/liipi-facilities.yaml
 helsinki-datasource-liipi-utilizations.yaml: projects/helsinki/datasources/liipi-utilizations.yaml
+helsinki-datasource-cycle-counters.yaml: projects/helsinki/datasources/lidotiku-cycle-counters.yaml
+helsinki-datasource-traffic-counters.yaml: projects/helsinki/datasources/lidotiku-traffic-counters.yaml
 helsinki-pipeline-liipi-facilities.yaml: projects/helsinki/pipelines/liipi-facilities/pipeline.yaml
 helsinki-pipeline-liipi-facilities-bento.yaml: projects/helsinki/pipelines/liipi-facilities/bento.yaml
 helsinki-pipeline-liipi-utilizations.yaml: projects/helsinki/pipelines/liipi-utilizations/pipeline.yaml
 helsinki-pipeline-liipi-utilizations-bento.yaml: projects/helsinki/pipelines/liipi-utilizations/bento.yaml
+helsinki-pipeline-cycle-counters.yaml: projects/helsinki/pipelines/cycle-counters/pipeline.yaml
+helsinki-pipeline-cycle-counters-bento.yaml: projects/helsinki/pipelines/cycle-counters/bento.yaml
+helsinki-pipeline-traffic-counters.yaml: projects/helsinki/pipelines/traffic-counters/pipeline.yaml
+helsinki-pipeline-traffic-counters-bento.yaml: projects/helsinki/pipelines/traffic-counters/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
@@ -240,6 +246,8 @@ helsinki-policy-public-permits.yaml: projects/helsinki/spaces/helsinki/policies/
 helsinki-endpoint-districts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-districts.yaml
 helsinki-policy-public-districts.yaml: projects/helsinki/spaces/helsinki/policies/public-districts.yaml
 helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
+helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-cycle-counts.yaml
+helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml
 helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml
 # Helsinki area statistics (T-5258): one pipeline, one Endpoint and one public Policy per theme.
 helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-subdistrict-codes.yaml
@@ -267,3 +275,5 @@ helsinki-pipeline-service-property-energy.yaml: projects/helsinki/pipelines/serv
 helsinki-pipeline-service-property-energy-bento.yaml: projects/helsinki/pipelines/service-property-energy/bento.yaml
 helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-service-property-energy.yaml
 helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
+helsinki-policy-public-cycle-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-cycle-counts.yaml
+helsinki-policy-public-traffic-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-counts.yaml
