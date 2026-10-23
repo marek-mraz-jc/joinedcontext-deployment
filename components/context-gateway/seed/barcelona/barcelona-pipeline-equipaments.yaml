@@ -8,7 +8,6 @@ metadata:
   title: { ca: Equipaments de Barcelona, es: Equipamientos de Barcelona, en: Barcelona facilities }
 spec:
   class: auto
-  period: 24h
   schedule: '47 6 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-equipaments }
