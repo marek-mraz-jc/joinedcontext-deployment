@@ -398,7 +398,7 @@ classes:
         description: The organizer's own web site, when the source names it.
 enums:
   EventCategory:
-    description: The main event categories of the platform (T-5363); labels in sk, cs, en and de.
+    description: The main event categories of the platform, with labels in sk, cs, en and de.
     permissible_values:
       sport:
         annotations:
