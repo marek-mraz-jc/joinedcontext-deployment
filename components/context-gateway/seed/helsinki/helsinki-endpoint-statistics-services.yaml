@@ -1,0 +1,62 @@
+# Helsinki service usage (T-5258): the KeyPerformanceIndicator entities of the service-usage
+# pipeline, whose id carries the theme `services`: Korkeasaari zoo's visitors per day and month,
+# and visits and page views per city website and month. The newest period as the value and every
+# period since the first run in the history.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: helsinki-statistics-services
+  namespace: helsinki
+  title:
+    fi: Palvelujen käyttö — Helsingin tilastot
+    sv: Användning av tjänster — Helsingfors statistik
+    en: Service usage — Helsinki statistics
+  description:
+    fi: 'Helsingin palvelujen käyttö: Korkeasaaren eläintarhan kävijät päivässä ja kuukaudessa sekä kaupungin verkkosivustojen käynnit ja sivunäytöt kuukaudessa sivustoittain. Yksi Smart Data Models KeyPerformanceIndicator kutakin tunnuslukua kohden. Lähteet: Korkeasaaren eläintarha ja Helsingin kaupunginkanslia, CC BY 4.0.'
+    sv: 'Användning av Helsingfors tjänster: besökare på Högholmens djurgård per dag och månad samt besök och sidvisningar per månad för stadens webbplatser. En Smart Data Models KeyPerformanceIndicator per nyckeltal. Källor: Högholmens djurgård och Helsingfors stadskansli, CC BY 4.0.'
+    en: 'Usage of Helsinki services: Korkeasaari zoo visitors per day and month, and visits and page views per city website and month. One Smart Data Models KeyPerformanceIndicator per indicator, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (0910000000, the whole city), divisionLevel (city), statisticsTable (the series: zoo-visitors-day, zoo-visitors-month, web-visits, web-pageviews) and dimensionKey (count=total, or idsite=<the site id of the export>). Sources: Korkeasaari Zoo and the City of Helsinki Digitalisation unit, CC BY 4.0.'
+spec:
+  contextSpaceRef: helsinki
+  slug: 7qsdid06pjaxmzd44rheqngd7o6cvj8h
+  audience: public
+  policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-services
+  # The NGSI-LD door also answers the temporal API, the series per indicator. An indicator has
+  # no geometry of its own: OGC API Features serves it as a feature without one.
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
+  publish:
+    ckan:
+      instanceRef: { kind: CkanInstance, name: hel-fi }
+      license: cc-by
+      datastore: { representation: csv, refresh: onReconcile }
+  catalog:
+    publisher:
+      name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
+      uri: https://www.hel.fi/
+    license: CC_BY_4_0
+    attribution:
+      fi: 'Lähde: Korkeasaaren eläintarha ja Helsingin kaupunginkanslia, Helsinki Region Infoshare, CC BY 4.0'
+      sv: 'Källa: Högholmens djurgård och Helsingfors stadskansli, Helsinki Region Infoshare, CC BY 4.0'
+      en: 'Source: Korkeasaari Zoo and City of Helsinki Executive Office, Helsinki Region Infoshare, CC BY 4.0'
+    themes: [SOCI, EDUC]
+    keywords:
+      fi: [kävijämäärät, Korkeasaari, verkkoanalytiikka, palvelut]
+      sv: [besökare, Högholmen, webbanalys, tjänster]
+      en: [visitors, Korkeasaari, web analytics, services]
+    spatial:
+      - FI1B1
+      - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
+    frequency: DAILY
+    source:
+      - url: https://hri.fi/data/fi/dataset/korkeasaaren-kavijamaarat
+        title: { fi: Korkeasaaren kävijämäärät, en: Korkeasaari zoo visitors }
+        description:
+          fi: Korkeasaaren eläintarhan kävijämäärät vuosittain, kuukausittain ja päivittäin (JSON-rajapinta 2024-)
+          en: Korkeasaari zoo visitors per year, month and day (JSON API since 2024)
+      - url: https://hri.fi/data/fi/dataset/helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka
+        title:
+          fi: Helsingin kaupungin verkkosivustojen kävijäanalytiikka
+          en: Web analytics of the City of Helsinki websites
+        description:
+          fi: Kuukausittainen Matomo-vienti sivustoittain
+          en: Monthly Matomo export per website
+    pipelineRef: { kind: Pipeline, name: service-usage }

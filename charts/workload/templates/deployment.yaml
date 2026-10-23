@@ -10,6 +10,11 @@ spec:
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   strategy:
+    {{- if eq (.Values.updateStrategy | default "RollingUpdate") "Recreate" }}
+    # One process per database (the broker with an in-process bus): the old pod stops before the
+    # new one starts, so a boot migration gets its exclusive lock and no two writers overlap (T-5311).
+    type: Recreate
+    {{- else }}
     type: RollingUpdate
     rollingUpdate:
       # Never take a pod away before its replacement is serving: the platform stays up through
@@ -18,6 +23,7 @@ spec:
       # pod at a time.
       maxUnavailable: 0
       maxSurge: {{ .Values.maxSurge | default "25%" | quote }}
+    {{- end }}
   selector:
     matchLabels:
       {{- include "workload.selectorLabels" . | nindent 6 }}
