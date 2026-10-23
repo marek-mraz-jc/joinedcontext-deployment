@@ -111,7 +111,7 @@ def test_the_query_takes_only_a_uuid_resource_and_reads_no_association():
     assert '"equipament-associacions"' not in mapping.split("let families = [")[1].split("\n        ]")[0]
     assert 're_match("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")' in mapping
     pipeline = yaml.safe_load((BARCELONA / "barcelona-pipeline-equipaments.yaml").read_text())["spec"]
-    assert pipeline["output"] == {"type": "PointOfInterest", "mode": "upsert"} and pipeline["period"] == "24h"
+    assert pipeline["output"] == {"type": "PointOfInterest", "mode": "upsert"} and pipeline["schedule"] == "47 6 * * *"
     policy = yaml.safe_load((BARCELONA / "barcelona-policy-public-places.yaml").read_text())["spec"]
     assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == ["PointOfInterest"]
     endpoint = yaml.safe_load((BARCELONA / "barcelona-endpoint-places.yaml").read_text())["spec"]
