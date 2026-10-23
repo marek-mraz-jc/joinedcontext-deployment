@@ -6,7 +6,10 @@ kind: Endpoint
 metadata:
   name: helsinki-statistics-employment
   namespace: helsinki
-  title: { fi: 'Työmarkkinat — Helsingin aluesarjat', sv: 'Arbetsmarknad — Helsingfors områdesserier', en: 'Employment — Helsinki area statistics' }
+  title:
+    fi: Työmarkkinat — Helsingin aluesarjat
+    sv: Arbetsmarknad — Helsingfors områdesserier
+    en: Employment — Helsinki area statistics
   description:
     fi: 'Helsingin aluesarjojen tilastot: työttömät ja työttömyysaste, kuukausittainen työttömyys, työpaikat ja työllinen työvoima; kaupungin, suurpiirien, peruspiirien ja osa-alueiden tasolla. Yksi Smart Data Models KeyPerformanceIndicator kutakin tunnuslukua ja aluetta kohden. Lähde: Helsingin kaupunki, kaupunkitutkimus ja -tilastot (Aluesarjat), CC BY 4.0.'
     sv: 'Helsingfors områdesserier: arbetslösa och arbetslöshetsgrad, månatlig arbetslöshet, arbetsplatser och sysselsatt arbetskraft; för staden, stordistrikten, distrikten och delområdena. En Smart Data Models KeyPerformanceIndicator per nyckeltal och område. Källa: Helsingfors stad, stadsforskning och statistik (Aluesarjat), CC BY 4.0.'
@@ -44,15 +47,23 @@ spec:
     frequency: MONTHLY
     source:
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__tyo__tyom/alu_tyom_003t.px/
-        title: { fi: 'Aluesarjat alu_tyom_003t', en: 'Area statistics table alu_tyom_003t' }
-        description: { fi: 'Työttömät ja työttömyysaste', en: 'Unemployed and unemployment rate in Helsinki, Espoo, Vantaa and Kauniainen by gender 31.12.2000-' }
+        title: { fi: Aluesarjat alu_tyom_003t, en: Area statistics table alu_tyom_003t }
+        description:
+          fi: Työttömät ja työttömyysaste
+          en: Unemployed and unemployment rate in Helsinki, Espoo, Vantaa and Kauniainen by gender 31.12.2000-
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__tyo__tyom/alu_tyom_040k.px/
-        title: { fi: 'Aluesarjat alu_tyom_040k', en: 'Area statistics table alu_tyom_040k' }
-        description: { fi: 'Työttömyystietoja kuukausittain (KEHA-keskus)', en: 'Monthly unemployment figures for the Helsinki region (KEHA Centre)' }
+        title: { fi: Aluesarjat alu_tyom_040k, en: Area statistics table alu_tyom_040k }
+        description:
+          fi: Työttömyystietoja kuukausittain (KEHA-keskus)
+          en: Monthly unemployment figures for the Helsinki region (KEHA Centre)
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__tyo__tyop/alu_tyop_003y.px/
-        title: { fi: 'Aluesarjat alu_tyop_003y', en: 'Area statistics table alu_tyop_003y' }
-        description: { fi: 'Pääkaupunkiseudun työpaikat (alueella työssäkäyvät)', en: 'Workplaces (employees in the area) in Helsinki, Espoo, Vantaa and Kauniainen by the industry classification 2008-' }
+        title: { fi: Aluesarjat alu_tyop_003y, en: Area statistics table alu_tyop_003y }
+        description:
+          fi: Pääkaupunkiseudun työpaikat (alueella työssäkäyvät)
+          en: Workplaces (employees in the area) in Helsinki, Espoo, Vantaa and Kauniainen by the industry classification 2008-
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__tyo__tyov/alu_tyov_004d.px/
-        title: { fi: 'Aluesarjat alu_tyov_004d', en: 'Area statistics table alu_tyov_004d' }
-        description: { fi: 'Työllinen työvoima', en: 'Labour force living in Helsinki, Espoo, Vantaa and Kauniainen by gender and age 31.12.1999-' }
+        title: { fi: Aluesarjat alu_tyov_004d, en: Area statistics table alu_tyov_004d }
+        description:
+          fi: Työllinen työvoima
+          en: Labour force living in Helsinki, Espoo, Vantaa and Kauniainen by gender and age 31.12.1999-
     pipelineRef: { kind: Pipeline, name: statistics }

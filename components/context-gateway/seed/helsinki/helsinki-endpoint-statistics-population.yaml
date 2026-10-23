@@ -6,7 +6,10 @@ kind: Endpoint
 metadata:
   name: helsinki-statistics-population
   namespace: helsinki
-  title: { fi: 'Väestö — Helsingin aluesarjat', sv: 'Befolkning — Helsingfors områdesserier', en: 'Population — Helsinki area statistics' }
+  title:
+    fi: Väestö — Helsingin aluesarjat
+    sv: Befolkning — Helsingfors områdesserier
+    en: Population — Helsinki area statistics
   description:
     fi: 'Helsingin aluesarjojen tilastot: syntyneet, kuolleet, perheet ja väestö äidinkielen mukaan; kaupungin, suurpiirien, peruspiirien ja osa-alueiden tasolla. Yksi Smart Data Models KeyPerformanceIndicator kutakin tunnuslukua ja aluetta kohden. Lähde: Helsingin kaupunki, kaupunkitutkimus ja -tilastot (Aluesarjat), CC BY 4.0.'
     sv: 'Helsingfors områdesserier: födda, döda, familjer och befolkningen efter modersmål; för staden, stordistrikten, distrikten och delområdena. En Smart Data Models KeyPerformanceIndicator per nyckeltal och område. Källa: Helsingfors stad, stadsforskning och statistik (Aluesarjat), CC BY 4.0.'
@@ -44,18 +47,28 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__vrm__vaerak/alu_vaerak_004r.px/
-        title: { fi: 'Aluesarjat alu_vaerak_004r', en: 'Area statistics table alu_vaerak_004r' }
-        description: { fi: 'Pääkaupunkiseudun väestö', en: 'Population of Helsinki, Espoo, Vantaa and Kauniainen by age groups 31.12.1961-' }
+        title: { fi: Aluesarjat alu_vaerak_004r, en: Area statistics table alu_vaerak_004r }
+        description:
+          fi: Pääkaupunkiseudun väestö
+          en: Population of Helsinki, Espoo, Vantaa and Kauniainen by age groups 31.12.1961-
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__vrm__vaerak/alu_vaerak_004p.px/
-        title: { fi: 'Aluesarjat alu_vaerak_004p', en: 'Area statistics table alu_vaerak_004p' }
-        description: { fi: 'Pääkaupunkiseudun väestö', en: 'Population of Helsinki, Espoo, Vantaa and Kauniainen by native language and age group 31.12.1998-' }
+        title: { fi: Aluesarjat alu_vaerak_004p, en: Area statistics table alu_vaerak_004p }
+        description:
+          fi: Pääkaupunkiseudun väestö
+          en: Population of Helsinki, Espoo, Vantaa and Kauniainen by native language and age group 31.12.1998-
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__vrm__vamuu/alu_vamuu_010h.px/
-        title: { fi: 'Aluesarjat alu_vamuu_010h', en: 'Area statistics table alu_vamuu_010h' }
-        description: { fi: 'Pääkaupunkiseudun syntyneet', en: 'Births by area in Helsinki, Espoo, Vantaa and Kauniainen beginning from 1998' }
+        title: { fi: Aluesarjat alu_vamuu_010h, en: Area statistics table alu_vamuu_010h }
+        description:
+          fi: Pääkaupunkiseudun syntyneet
+          en: Births by area in Helsinki, Espoo, Vantaa and Kauniainen beginning from 1998
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__vrm__vamuu/alu_vamuu_010o.px/
-        title: { fi: 'Aluesarjat alu_vamuu_010o', en: 'Area statistics table alu_vamuu_010o' }
-        description: { fi: 'Pääkaupunkiseudun kuolleet', en: 'Deaths in Helsinki, Espoo, Vantaa and Kauniainen 1998-' }
+        title: { fi: Aluesarjat alu_vamuu_010o, en: Area statistics table alu_vamuu_010o }
+        description:
+          fi: Pääkaupunkiseudun kuolleet
+          en: Deaths in Helsinki, Espoo, Vantaa and Kauniainen 1998-
       - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__vrm__perh/alu_perh_006t.px/
-        title: { fi: 'Aluesarjat alu_perh_006t', en: 'Area statistics table alu_perh_006t' }
-        description: { fi: 'Pääkaupunkiseudun perheväestö', en: 'Families in Helsinki, Espoo, Vantaa and Kauniainen starting 31.12.1998' }
+        title: { fi: Aluesarjat alu_perh_006t, en: Area statistics table alu_perh_006t }
+        description:
+          fi: Pääkaupunkiseudun perheväestö
+          en: Families in Helsinki, Espoo, Vantaa and Kauniainen starting 31.12.1998
     pipelineRef: { kind: Pipeline, name: statistics }

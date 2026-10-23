@@ -1622,24 +1622,36 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
-    slots: [name, description, kpiValue, calculationPeriod, calculationFrequency, area, districtCode, divisionLevel, refArea, process, statisticsTable, dimensionKey, calculatedBy, organization, updatedAt, dataProvider, source]
+    slots:
+      - name
+      - description
+      - kpiValue
+      - calculationPeriod
+      - calculationFrequency
+      - area
+      - districtCode
+      - divisionLevel
+      - refArea
+      - process
+      - statisticsTable
+      - dimensionKey
+      - calculatedBy
+      - organization
+      - updatedAt
+      - dataProvider
+      - source
     slot_usage:
       name:
         rank: 1
-        annotations:
-          summary: true
+        annotations: { summary: true }
       kpiValue:
         rank: 2
-        annotations:
-          summary: true
+        annotations: { summary: true }
       area:
         rank: 3
-        annotations:
-          summary: true
-      districtCode:
-        required: false
-      divisionLevel:
-        required: false
+        annotations: { summary: true }
+      districtCode: { required: false }
+      divisionLevel: { required: false }
   KpiPeriod:
     class_uri: jc:KpiPeriod
     description: The value of `calculationPeriod`, never an entity of its own.
@@ -1689,8 +1701,7 @@ enums:
       teardown: { description: The event's structures are being taken down. }
   DivisionLevel:
     permissible_values:
-      city:
-        description: The whole city (statistics only).
+      city: { description: The whole city (statistics only). }
       majorDistrict:
         description: A major district (suurpiiri), 8 of them (statistics only).
       basicDistrict:
