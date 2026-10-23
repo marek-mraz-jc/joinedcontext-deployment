@@ -433,6 +433,8 @@ classes:
               en: Location
               de: Standort
             annotations: { generated: sk cs en de }
+          ngsi_ld_kind: GeoProperty
+          upstream_source: ETSI NGSI-LD core context v1.8
       venue:
         rank: 5
         annotations: { summary: true }
@@ -476,6 +478,8 @@ classes:
               en: Location
               de: Standort
             annotations: { generated: sk cs en de }
+          ngsi_ld_kind: GeoProperty
+          upstream_source: ETSI NGSI-LD core context v1.8
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.

@@ -2810,13 +2810,46 @@ classes:
     slot_usage:
       name:
         rank: 1
-        annotations: { summary: true }
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              en: Name
+              de: Name
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: LanguageProperty
+          upstream_source: https://schema.org/name
       kpiValue:
         rank: 2
-        annotations: { summary: true }
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Hodnota ukazovateľa
+              cs: Hodnota ukazatele
+              en: Indicator value
+              de: Indikatorwert
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
       area:
         rank: 3
-        annotations: { summary: true }
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Oblasť
+              cs: Oblast
+              en: Area
+              de: Gebiet
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
       districtCode: { required: false }
       divisionLevel: { required: false }
   KpiPeriod:

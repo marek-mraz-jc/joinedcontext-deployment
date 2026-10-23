@@ -47,6 +47,8 @@ classes:
               fi: Linja
               en: Route
               de: Linie
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
       vehicleType:
         rank: 2
         annotations:
@@ -58,6 +60,8 @@ classes:
               fi: Ajoneuvotyyppi
               en: Vehicle type
               de: Fahrzeugtyp
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
       nextStop:
         rank: 3
         annotations:
@@ -70,6 +74,7 @@ classes:
               fi: Seuraava pysäkki
               en: Next stop
               de: Nächste Haltestelle
+          ngsi_ld_kind: Relationship
       delay:
         rank: 4
         annotations:
@@ -82,6 +87,7 @@ classes:
               fi: Myöhästyminen
               en: Delay
               de: Verspätung
+          ngsi_ld_kind: Property
       speed:
         rank: 5
         annotations:
@@ -93,6 +99,8 @@ classes:
               fi: Nopeus
               en: Speed
               de: Geschwindigkeit
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
       occupancy:
         rank: 6
         annotations:
@@ -105,6 +113,7 @@ classes:
               fi: Kuormitus
               en: Occupancy
               de: Auslastung
+          ngsi_ld_kind: Property
       heading:
         annotations:
           label:
@@ -115,6 +124,8 @@ classes:
               fi: Suunta
               en: Heading
               de: Fahrtrichtung
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   KeyPerformanceIndicator:
     class_uri: jc:KeyPerformanceIndicator
     description: One computed indicator, registered from the helsinki-kpi space.
@@ -142,6 +153,7 @@ classes:
               en: Name
               de: Name
             annotations: { generated: de }
+          ngsi_ld_kind: Property
       currentValue:
         rank: 2
         annotations:
@@ -155,6 +167,8 @@ classes:
               en: Value
               de: Wert
             annotations: { generated: de }
+          ngsi_ld_kind: Property
+          upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
       calculationPeriod:
         rank: 3
         annotations:
@@ -168,6 +182,7 @@ classes:
               en: Period
               de: Berechnungszeitraum
             annotations: { generated: de }
+          ngsi_ld_kind: Property
       updatedAt:
         rank: 4
         annotations:
@@ -181,6 +196,7 @@ classes:
               en: Updated
               de: Zuletzt berechnet
             annotations: { generated: de }
+          ngsi_ld_kind: Property
       calculationFormula:
         annotations:
           label:
@@ -192,6 +208,8 @@ classes:
               en: Formula
               de: Berechnungsmethode
             annotations: { generated: de }
+          ngsi_ld_kind: Property
+          hidden: true
   CalculationPeriod:
     class_uri: jc:CalculationPeriod
     description: >-
