@@ -75,6 +75,9 @@ CHOSEN = {
     # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
     ("praha/praha-mesto", "WasteContainer"): "P7D",
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
+    # Barcelona's wells are read by hand about once a month and published months late: 400 days keep
+    # a year of readings (T-5263, worker decision, owner may override); the public reads the last 30.
+    ("barcelona/barcelona", "PhreaticObserved"): "P400D",
     # Barcelona's statistics keep ten years, the longest a space keeps (DM-82): one row per
     # published year or month (T-5266).
     ("barcelona/barcelona", "KeyPerformanceIndicator"): "P3650D",

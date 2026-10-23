@@ -28,11 +28,17 @@
     "PedestrianCrossing": {
       "@id": "jc:PedestrianCrossing"
     },
+    "PhreaticObserved": {
+      "@id": "sdm:PhreaticObserved"
+    },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
     },
     "address": {
       "@id": "schema:address"
@@ -43,14 +49,29 @@
     "addressLocality": {
       "@id": "schema:addressLocality"
     },
+    "altitude": {
+      "@id": "jc:altitude",
+      "@type": "xsd:float"
+    },
+    "aquifer": {
+      "@id": "jc:aquifer"
+    },
     "area": {
       "@id": "sdm:area"
     },
     "areaServed": {
       "@id": "sdm:areaServed"
     },
+    "atmosphericPressure": {
+      "@id": "sdm:atmosphericPressure",
+      "@type": "xsd:float"
+    },
     "awardAmount": {
       "@id": "jc:awardAmount",
+      "@type": "xsd:float"
+    },
+    "blackCarbon": {
+      "@id": "jc:blackCarbon",
       "@type": "xsd:float"
     },
     "calculatedBy": {
@@ -73,6 +94,10 @@
     "cityWorks": {
       "@id": "jc:cityWorks",
       "@type": "@id"
+    },
+    "co": {
+      "@id": "sdm:co",
+      "@type": "xsd:float"
     },
     "contactPoint": {
       "@id": "schema:contactPoint"
@@ -127,10 +152,18 @@
       "@type": "xsd:date"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "gustSpeed": {
+      "@id": "sdm:gustSpeed",
+      "@type": "xsd:float"
+    },
     "id": "@id",
     "indicators": {
       "@id": "jc:indicators",
       "@type": "@id"
+    },
+    "investigationDepth": {
+      "@id": "sdm:investigationDepth",
+      "@type": "xsd:float"
     },
     "jc": "https://joinedcontext.com/models/",
     "kpiValue": {
@@ -145,6 +178,22 @@
       "@id": "jc:markedArea",
       "@type": "xsd:float"
     },
+    "maxTemperature": {
+      "@id": "jc:maxTemperature",
+      "@type": "xsd:float"
+    },
+    "measurementType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:measurementType"
+    },
+    "minTemperature": {
+      "@id": "jc:minTemperature",
+      "@type": "xsd:float"
+    },
     "name": {
       "@id": "schema:name"
     },
@@ -153,8 +202,16 @@
       "@type": "@id"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "no": {
+      "@id": "sdm:no",
+      "@type": "xsd:float"
+    },
     "no2": {
       "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
+    "nox": {
+      "@id": "sdm:nox",
       "@type": "xsd:float"
     },
     "o3": {
@@ -172,6 +229,10 @@
       "@id": "jc:pedestrianCrossings",
       "@type": "@id"
     },
+    "piezometricLevel": {
+      "@id": "jc:piezometricLevel",
+      "@type": "xsd:float"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -182,6 +243,10 @@
     },
     "postalCode": {
       "@id": "schema:postalCode"
+    },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
     },
     "process": {
       "@id": "sdm:process"
@@ -202,6 +267,10 @@
       "@id": "jc:refParentDistrict",
       "@type": "@id"
     },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "seeAlso": {
@@ -210,6 +279,14 @@
     },
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "so2": {
+      "@id": "sdm:so2",
+      "@type": "xsd:float"
+    },
+    "solarRadiation": {
+      "@id": "sdm:solarRadiation",
+      "@type": "xsd:float"
+    },
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
@@ -217,6 +294,9 @@
     "startDate": {
       "@id": "schema:startDate",
       "@type": "xsd:dateTime"
+    },
+    "stationCode": {
+      "@id": "jc:stationCode"
     },
     "statisticsTable": {
       "@id": "jc:statisticsTable"
@@ -230,6 +310,10 @@
     "telephone": {
       "@id": "schema:telephone"
     },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
+    },
     "tenderAmount": {
       "@id": "jc:tenderAmount",
       "@type": "xsd:float"
@@ -242,6 +326,18 @@
       "@type": "xsd:date"
     },
     "type": "@type",
+    "waterTable": {
+      "@id": "sdm:waterTable",
+      "@type": "xsd:float"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
+    },
     "workCategory": {
       "@id": "jc:workCategory"
     },

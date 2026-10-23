@@ -18,6 +18,8 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: WeatherObserved
+        - type: PhreaticObserved
         - type: AdministrativeArea
         - type: CityWork
         - type: PedestrianCrossing

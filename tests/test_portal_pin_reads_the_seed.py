@@ -158,3 +158,44 @@ def test_an_older_pin_is_caught():
     if known is None:
         pytest.skip("no platform clone and no answer from GitHub")
     assert known is False
+
+
+# A Pipeline step kind, and the platform commit whose jc-core first renders it: an older Portal refuses
+# an unknown compute kind and the pipeline stops (T-5382 converted 45 ŠÚ SR pipelines to `datacube`).
+STEP_SINCE = {
+    "datacube": "12d5f50ba5a469d742a62ebff027f17e6bffcdb8",  # T-5295
+}
+
+
+def step_kinds() -> dict[str, list[str]]:
+    """Each kind of STEP_SINCE a seed Pipeline's steps use, with the files that use it."""
+    found: dict[str, list[str]] = {}
+    for path in sorted(ROOT.glob("components/*/seed/**/*.yaml")):
+        for document in yaml.safe_load_all(path.read_text()):
+            if isinstance(document, dict) and document.get("kind") == "Pipeline":
+                for step in (document.get("spec") or {}).get("steps") or []:
+                    if step.get("kind") in STEP_SINCE:
+                        found.setdefault(step["kind"], []).append(str(path.relative_to(ROOT)))
+    return found
+
+
+def test_a_step_kind_in_the_seed_is_one_the_pinned_portal_renders():
+    kinds = step_kinds()
+    assert kinds, "the susr-* pipelines carry datacube steps"
+    pin = pinned_platform()
+    for kind, files in kinds.items():
+        known = contains(pin, STEP_SINCE[kind])
+        if known is None:
+            pytest.skip("no platform clone and no answer from GitHub")
+        assert known, (
+            f"{len(files)} pipelines ({files[0]}, ...) use `kind: {kind}`, which jc-core renders from platform "
+            f"{STEP_SINCE[kind][:7]} on; the pinned Portal is built on {pin[:7]}: pin a Portal that has it first"
+        )
+
+
+def test_the_datacube_step_is_caught_on_the_pin_before_it():
+    """platform 0069530, the pin this file named before T-5382, has no datacube step."""
+    known = contains("0069530d691bd35438d6eac0c3367e8adb2c0a8c", STEP_SINCE["datacube"])
+    if known is None:
+        pytest.skip("no platform clone and no answer from GitHub")
+    assert known is False
