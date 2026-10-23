@@ -69,6 +69,9 @@ CHOSEN = {
     # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
     ("zilina/zilina-doprava", "Vehicle"): "PT1H",
     ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
+    # Helsinki's area statistics keep ten years, the longest a space keeps (DM-82): one row per
+    # published year, quarter or month (T-5258).
+    ("helsinki/helsinki", "KeyPerformanceIndicator"): "P3650D",
     # Prague's PID vehicles keep an hour of track, as Žilina's (T-4624, T-5268).
     ("praha/praha-mesto", "Vehicle"): "PT1H",
     # Prague's container fill levels keep a week, and the collection points beside them on the one
@@ -106,6 +109,13 @@ TEMPORAL = {"queryTemporal", "retrieveTemporal"}
 # cannot grant the history of some types and not of others, so it serves no history (T-4372).
 # The space's other public Endpoints serve that history.
 MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
+# Public reads of series with at most one row per month and entity, whose whole kept history is
+# cheaper to read than a month of a sensor's: they read all of it (T-5258).
+WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
+                 ("population", "housing", "employment", "income", "education")}
+# The heat vulnerability index (one period) and the monthly energy use of the service properties
+# are such series too (T-5278).
+WHOLE_HISTORY |= {"helsinki/public-heat-vulnerability", "helsinki/public-service-property-energy"}
 
 
 def public_policies():
@@ -141,7 +151,8 @@ def test_a_public_temporal_grant_names_only_history_and_is_capped_to_it():
         days = kept(space)
         types = entries(spec)
         assert types and set(types) <= set(days), f"{name}: history off for {sorted(set(types) - set(days))}"
-        assert spec.get("temporalQ") == f"timerel=after;timeAt=P-{min(max(days[t] for t in types), 30)}D", name
+        window = max(days[t] for t in types) if name in WHOLE_HISTORY else min(max(days[t] for t in types), 30)
+        assert spec.get("temporalQ") == f"timerel=after;timeAt=P-{window}D", name
     assert granting >= 15
 
 
