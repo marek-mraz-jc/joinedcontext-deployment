@@ -36,3 +36,15 @@ barcelona-pipeline-groundwater.yaml: projects/barcelona/pipelines/groundwater/pi
 barcelona-pipeline-groundwater-bento.yaml: projects/barcelona/pipelines/groundwater/bento.yaml
 barcelona-endpoint-groundwater.yaml: projects/barcelona/spaces/barcelona/endpoints/groundwater.yaml
 barcelona-policy-public-groundwater.yaml: projects/barcelona/spaces/barcelona/policies/public-groundwater.yaml
+# The activity agendas (T-5265): one DataStore query, one daily pipeline, one public dataset.
+barcelona-datasource-agenda.yaml: projects/barcelona/datasources/bcn-agenda.yaml
+barcelona-pipeline-agenda.yaml: projects/barcelona/pipelines/agenda/pipeline.yaml
+barcelona-pipeline-agenda-bento.yaml: projects/barcelona/pipelines/agenda/bento.yaml
+barcelona-endpoint-events.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-events.yaml
+barcelona-policy-public-events.yaml: projects/barcelona/spaces/barcelona/policies/public-events.yaml
+# The register of facilities, equipaments (T-5265): sixteen families and seven thematic extracts, one daily pipeline, one dataset.
+barcelona-datasource-equipaments.yaml: projects/barcelona/datasources/bcn-equipaments.yaml
+barcelona-pipeline-equipaments.yaml: projects/barcelona/pipelines/equipaments/pipeline.yaml
+barcelona-pipeline-equipaments-bento.yaml: projects/barcelona/pipelines/equipaments/bento.yaml
+barcelona-endpoint-places.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-places.yaml
+barcelona-policy-public-places.yaml: projects/barcelona/spaces/barcelona/policies/public-places.yaml

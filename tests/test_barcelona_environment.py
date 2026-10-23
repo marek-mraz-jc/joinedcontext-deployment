@@ -94,7 +94,7 @@ def test_every_station_of_the_file_is_one_entity_with_its_newest_valid_hour(writ
                                "observedAt": "2026-10-22T19:00:00Z"}
     assert eixample["co"]["unitCode"] == "GP"
     assert eixample["dateObserved"] == {"type": "Property", "value": "2026-10-22T19:00:00Z"}
-    assert eixample["name"] == {"type": "LanguageProperty", "languageMap": {"ca": "Barcelona - Eixample"}}
+    assert eixample["name"] == {"type": "Property", "value": "Barcelona - Eixample"}
     assert eixample["address"]["value"] == {"streetAddress": "Av. Roma - c/ Comte Urgell", "addressLocality": "Barcelona",
                                             "district": "Eixample", "addressCountry": "ES"}
     assert eixample["stationCode"]["value"] == "8019043"

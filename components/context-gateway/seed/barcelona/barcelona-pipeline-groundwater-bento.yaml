@@ -112,7 +112,7 @@ pipeline:
         root.entities = $current.sort_by(r -> r.well).map_each(r -> $wells.get(r.well).assign({ "code": r.well, "reading": r })).map_each(w -> {
           "id": "urn:ngsi-ld:%v:%v:%v:aca-%v".format("PhreaticObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), w.code),
           "type": "PhreaticObserved",
-          "name": { "type": "LanguageProperty", "languageMap": { "ca": w.name } },
+          "name": { "type": "Property", "value": w.name },
           "stationCode": { "type": "Property", "value": w.code },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": w.coordinates } },
           "address": { "type": "Property", "value": { "streetAddress": w.place, "addressLocality": "Barcelona", "district": w.district, "addressCountry": "ES" } },

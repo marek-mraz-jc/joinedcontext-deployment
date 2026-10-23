@@ -16,7 +16,7 @@
               "type": "null"
             }
           ],
-          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "description": "Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
@@ -99,15 +99,12 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
+          "description": "The name as the city publishes it, in Catalan.",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "no": {
           "description": "Nitrogen monoxide, the hour's mean at the station.",
@@ -203,7 +200,7 @@
           }
         },
         "source": {
-          "description": "The open-data file the entity was read from.",
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
           "format": "uri",
           "type": [
             "string",
@@ -237,6 +234,22 @@
         "type"
       ],
       "title": "AirQualityObserved",
+      "type": "object"
+    },
+    "ContactPoint": {
+      "additionalProperties": false,
+      "description": "The value of `contactPoint`: how to reach the organizer, never an entity of its own.",
+      "properties": {
+        "telephone": {
+          "description": "A telephone number as the agenda writes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "ContactPoint",
       "type": "object"
     },
     "Entity": {
@@ -298,6 +311,144 @@
       "title": "Entity",
       "type": "object"
     },
+    "Event": {
+      "additionalProperties": false,
+      "description": "One activity of the Ajuntament's agendas (agenda di\u00e0ria, agenda cultural, agenda d'activitats esportives), the day it starts and ends, where it happens and its category.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "contactPoint": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContactPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The public telephone line the agenda or the facility register lists.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "endDate": {
+          "description": "The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name as the city publishes it, in Catalan.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "startDate": {
+          "description": "The first day of the event, local midnight in Europe/Madrid; the agenda publishes the day, its hours sit in a free-text timetable.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "subCategory": {
+          "description": "The Smart Data Models sub-category where the name says it (music, theater).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "startDate",
+        "id",
+        "type"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
     "MeasurementType": {
       "description": "What a PhreaticObserved measures (Smart Data Models' enum).",
       "enum": [
@@ -322,7 +473,7 @@
               "type": "null"
             }
           ],
-          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "description": "Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
           "x-ngsi-ld-kind": "Property"
         },
         "aquifer": {
@@ -409,15 +560,12 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
+          "description": "The name as the city publishes it, in Catalan.",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -440,7 +588,7 @@
           }
         },
         "source": {
-          "description": "The open-data file the entity was read from.",
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
           "format": "uri",
           "type": [
             "string",
@@ -488,6 +636,117 @@
       "title": "PhreaticObserved",
       "type": "object"
     },
+    "PointOfInterest": {
+      "additionalProperties": false,
+      "description": "One facility of the city's register (Guia BCN equipaments): a library, a sports hall, a school, a market, a social services centre; its family, where it is and its telephone.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "contactPoint": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContactPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The public telephone line the agenda or the facility register lists.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name as the city publishes it, in Catalan.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PointOfInterest",
+      "type": "object"
+    },
     "PostalAddress": {
       "additionalProperties": false,
       "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
@@ -501,7 +760,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "addressLocality": {
-          "description": "The municipality.",
+          "description": "The town or the municipality.",
           "type": [
             "string",
             "null"
@@ -509,7 +768,15 @@
           "x-ngsi-ld-kind": "Property"
         },
         "district": {
-          "description": "The city district (districte) the station is in.",
+          "description": "The city district (districte) the address lies in.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "postalCode": {
+          "description": "The postal code.",
           "type": [
             "string",
             "null"
@@ -517,7 +784,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "streetAddress": {
-          "description": "The square, park or street corner of the station.",
+          "description": "The street and the house number, or for a station its square, park or street corner.",
           "type": [
             "string",
             "null"
@@ -541,7 +808,7 @@
               "type": "null"
             }
           ],
-          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "description": "Where the station, the well, the event or the facility is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
           "x-ngsi-ld-kind": "Property"
         },
         "altitude": {
@@ -658,15 +925,12 @@
           }
         },
         "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
+          "description": "The name as the city publishes it, in Catalan.",
           "type": [
-            "object",
+            "string",
             "null"
           ],
-          "x-ngsi-ld-kind": "LanguageProperty"
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -715,7 +979,7 @@
           }
         },
         "source": {
-          "description": "The open-data file the entity was read from.",
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
           "format": "uri",
           "type": [
             "string",

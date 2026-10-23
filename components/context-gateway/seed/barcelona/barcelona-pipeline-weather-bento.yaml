@@ -90,7 +90,7 @@ pipeline:
         root.entities = $by_station.key_values().sort_by(s -> s.key).map_each(s -> $stations.get(s.key).assign({ "code": s.key, "readings": s.value })).map_each(st -> {
           "id": "urn:ngsi-ld:%v:%v:%v:meteocat-%v".format("WeatherObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), st.code),
           "type": "WeatherObserved",
-          "name": { "type": "LanguageProperty", "languageMap": { "ca": st.name } },
+          "name": { "type": "Property", "value": st.name },
           "stationCode": { "type": "Property", "value": st.code },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": st.coordinates } },
           "altitude": { "type": "Property", "value": st.altitude },

@@ -4,11 +4,20 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "ContactPoint": {
+      "@id": "schema:ContactPoint"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "Event": {
+      "@id": "sdm:Event"
+    },
     "PhreaticObserved": {
       "@id": "sdm:PhreaticObserved"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
@@ -43,9 +52,15 @@
       "@id": "jc:blackCarbon",
       "@type": "xsd:float"
     },
+    "category": {
+      "@id": "sdm:category"
+    },
     "co": {
       "@id": "sdm:co",
       "@type": "xsd:float"
+    },
+    "contactPoint": {
+      "@id": "schema:contactPoint"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -56,6 +71,10 @@
     },
     "district": {
       "@id": "sdm:district"
+    },
+    "endDate": {
+      "@id": "schema:endDate",
+      "@type": "xsd:dateTime"
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "gustSpeed": {
@@ -89,7 +108,6 @@
       "@type": "xsd:float"
     },
     "name": {
-      "@container": "@language",
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
@@ -125,6 +143,9 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
     "precipitation": {
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
@@ -149,11 +170,21 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "startDate": {
+      "@id": "schema:startDate",
+      "@type": "xsd:dateTime"
+    },
     "stationCode": {
       "@id": "jc:stationCode"
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
+    },
+    "subCategory": {
+      "@id": "sdm:subCategory"
+    },
+    "telephone": {
+      "@id": "schema:telephone"
     },
     "temperature": {
       "@id": "sdm:temperature",

@@ -20,3 +20,5 @@ spec:
         - type: AirQualityObserved
         - type: WeatherObserved
         - type: PhreaticObserved
+        - type: Event
+        - type: PointOfInterest

@@ -3,6 +3,7 @@
     "addressCountry": "addressCountry",
     "addressLocality": "addressLocality",
     "district": "district",
+    "postalCode": "postalCode",
     "streetAddress": "streetAddress"
   },
   "areaServed": "areaServed",
@@ -18,9 +19,7 @@
     ],
     "type": "Point"
   },
-  "name": {
-    "en": "name"
-  },
+  "name": "name",
   "no": 0.0,
   "no2": 0.0,
   "nox": 0.0,
