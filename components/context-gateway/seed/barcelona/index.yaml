@@ -20,3 +20,15 @@ barcelona.v1.md: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.md
 barcelona-endpoint.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona.yaml
 barcelona-policy-pipelines-write.yaml: projects/barcelona/spaces/barcelona/policies/pipelines-write.yaml
 barcelona-policy-public-read.yaml: projects/barcelona/spaces/barcelona/policies/public-read.yaml
+# Transport (T-5262): the traffic state of each street section every five minutes, and the
+# regulated surface parking sections of B:SM once a day, each its own public catalogue dataset.
+barcelona-datasource-traffic-state.yaml: projects/barcelona/datasources/bcn-traffic-state.yaml
+barcelona-pipeline-traffic-state.yaml: projects/barcelona/pipelines/traffic-state/pipeline.yaml
+barcelona-pipeline-traffic-state-bento.yaml: projects/barcelona/pipelines/traffic-state/bento.yaml
+barcelona-endpoint-traffic.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-traffic.yaml
+barcelona-policy-public-traffic.yaml: projects/barcelona/spaces/barcelona/policies/public-traffic.yaml
+barcelona-datasource-parking-sections.yaml: projects/barcelona/datasources/bcn-parking-sections.yaml
+barcelona-pipeline-parking-sections.yaml: projects/barcelona/pipelines/parking-sections/pipeline.yaml
+barcelona-pipeline-parking-sections-bento.yaml: projects/barcelona/pipelines/parking-sections/bento.yaml
+barcelona-endpoint-parking.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-parking.yaml
+barcelona-policy-public-parking.yaml: projects/barcelona/spaces/barcelona/policies/public-parking.yaml

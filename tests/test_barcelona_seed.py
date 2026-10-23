@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved"}
+TYPES = {"AirQualityObserved", "TrafficFlowObserved", "OnStreetParking"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -138,7 +138,7 @@ def test_the_public_reads_and_never_writes():
 
 
 def test_the_one_door_is_public_cc_by_and_credits_the_ajuntament():
-    (endpoint,) = by_name("Endpoint").values()
+    endpoint = by_name("Endpoint")["barcelona"]
     spec = endpoint["spec"]
     assert spec["contextSpaceRef"] == "barcelona" and spec["audience"] == "public"
     assert len(spec["slug"]) == 32
