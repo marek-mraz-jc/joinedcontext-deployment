@@ -186,6 +186,8 @@ def test_the_cc_by_and_the_golemio_places_are_separate_datasets():
     ipr = f"urn:ngsi-ld:PointOfInterest:praha.eu:{SPACE}:ipr-0b1c2d3e-0000-4000-8000-000000000000"
     assert re.fullmatch(sluzby_selector["idPattern"], golemio) and not re.fullmatch(sluzby_selector["idPattern"], ipr)
     assert re.fullmatch(mista_selector["idPattern"], ipr) and not re.fullmatch(mista_selector["idPattern"], golemio)
+    # The ticket-points mapping keeps a PID id of [0-9A-Za-z_-]+, lowercased: an underscore stays in mista.
+    assert re.fullmatch(mista_selector["idPattern"], f"urn:ngsi-ld:PointOfInterest:praha.eu:{SPACE}:pid-dp_12")
     endpoint = yaml.safe_load((PRAHA / "praha-endpoint-sluzby.yaml").read_text())
     assert endpoint["spec"]["policyRef"].endswith(":public-sluzby")
     assert "license" not in endpoint["spec"]["catalog"]

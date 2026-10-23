@@ -45,7 +45,7 @@ OFFICE = re.compile(r"(?i)(obecn|mestsk|miestn)\w* úrad|^obec\b|^mesto\b|^úrad
 #: "Exercičný dom", Špania Dolina's "Diecézne centrum mládeže", Nimnica's "Kursalon").
 HALL = re.compile(r"(?i)^(kult[uú]rny dom|spolo[cč]ensk[ýy] dom|dom kult[uú]ry|(mestsk|miestn)\w* kult[uú]rn\w* stredisko|ms?ks|mskc)\b(?P<rest>.*)$")
 #: How a calendar names the culture house; matched only when the municipality has exactly one.
-HALL_TEXTS = ("kultúrny dom", "kultúrny dom {town}", "kultúrny dom v {town}", "obecný kultúrny dom", "kd",
+HALL_TEXTS = ("kultúrny dom", "kultúrny dom {town}", "kultúrny dom v {town}", "obecný kultúrny dom",
               "dom kultúry", "spoločenský dom", "sála kultúrneho domu", "kultúrne stredisko", "miestne kultúrne stredisko")
 
 

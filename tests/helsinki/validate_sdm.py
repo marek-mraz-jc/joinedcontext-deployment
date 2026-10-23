@@ -52,6 +52,7 @@ MODELS = {
     "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
     "CityWork": ("dataModel.Transportation", "CityWork"),
     "PublicTransportRoute": ("dataModel.UrbanMobility", "PublicTransportRoute"),
+    "TrafficFlowObserved": ("dataModel.Transportation", "TrafficFlowObserved"),
     # The platform's extensions of an official model (T-4336, T-4338), read from the vendored copy.
     "Article": ("extension", "Article"),
     "AdministrativeArea": ("extension", "AdministrativeArea"),

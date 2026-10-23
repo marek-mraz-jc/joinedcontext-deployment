@@ -27,4 +27,4 @@ spec:
   information:
     - entities:
         - type: PointOfInterest
-          idPattern: ^urn:ngsi-ld:PointOfInterest:[a-z0-9.-]+:praha-mesto:(ipr|pid)-[a-z0-9-]+$
+          idPattern: ^urn:ngsi-ld:PointOfInterest:[a-z0-9.-]+:praha-mesto:(ipr|pid)-[a-z0-9_-]+$
