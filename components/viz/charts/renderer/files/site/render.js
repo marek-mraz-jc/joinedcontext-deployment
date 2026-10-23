@@ -46,6 +46,12 @@
     var copy = Object.assign({}, spec);
     if (/vega-lite/.test(spec.$schema)) {
       copy.datasets = Object.assign({}, spec.datasets, { source: rows });
+      // T-5415: on a phone the legend goes under the chart in two columns with whole labels; at
+      // the right it took half the width and cut "Praha 2-Legerova" to "Praha 2-Legero".
+      if (window.innerWidth < 480) {
+        var config = spec.config || {};
+        copy.config = Object.assign({}, config, { legend: Object.assign({}, config.legend, { orient: "bottom", columns: 2, labelLimit: 0 }) });
+      }
     } else if (Array.isArray(spec.data)) {
       copy.data = spec.data.map(function (entry) {
         return entry.name === "source" ? Object.assign({}, entry, { values: rows }) : entry;
