@@ -1,9 +1,10 @@
 name: pin-images
-# ADR-N-056 §2.4, OPS-57: pin the images of the head of platform and Portal `main` once their
-# ci is green, cosign verifies the signature of their own image.yml on main, and the dev render
-# passes; Argo CD takes the pin commit from here. Antares stays a hand pin (its pins carry
-# migration notes). The repositories are public: the workflow's own token is enough. A push made
-# with that token starts no ci run, so the dev render below is the pin commit's gate.
+# ADR-N-056 §2.4, OPS-57: pin the images of the newest commit platform and Portal `main` built
+# (image.yml runs once an hour, T-4696) once their ci is green, cosign verifies the signature of
+# their own image.yml on main, and the dev render passes; Argo CD takes the pin commit from here.
+# Antares stays a hand pin (its pins carry migration notes). The repositories are public: the
+# workflow's own token is enough. A push made with that token starts no ci run, so the dev render
+# below is the pin commit's gate.
 on:
   schedule:
     - cron: "*/10 * * * *"

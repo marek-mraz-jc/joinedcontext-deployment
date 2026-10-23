@@ -85,9 +85,33 @@ spec:
       attributes:
         dateObserved: { record: never }
     - entityType: WasteContainer
-      history: 'off'
+      # The sensors' fill level is a measurement series (T-5270): a week of it, one row per new
+      # reading and one a week otherwise. ~7,400 containers that read a few times a day: about
+      # 0.3 million rows, at most 1.2 million if every container changed every hourly run.
+      history: P7D
+      attributes:
+        containerCode: { record: onChange, heartbeat: P7D }
+        dataProvider: { record: onChange, heartbeat: P7D }
+        dateModified: { record: onChange, heartbeat: P7D }
+        fillingLevel: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        refWasteContainerIsle: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        wasteKind: { record: onChange, heartbeat: P7D }
     - entityType: WasteContainerIsle
-      history: 'off'
+      # A week too, only because the Endpoint praha-trideny-odpad serves it beside the containers
+      # and its one Policy grants the history of all its types or none (T-4372, T-5270). A point
+      # never changes: one row each and one a week.
+      history: P7D
+      attributes:
+        accessRestriction: { record: onChange, heartbeat: P7D }
+        dataProvider: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        refDistrict: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        stationCode: { record: onChange, heartbeat: P7D }
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # Prague with a margin; a BikeHireDockingStation outside it is flagged, never refused (DM-87).
   quality:

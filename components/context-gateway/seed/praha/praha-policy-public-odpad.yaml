@@ -22,6 +22,10 @@ spec:
     - retrieveSubscription
     - updateSubscription
     - deleteSubscription
+    - queryTemporal
+    - retrieveTemporal
+  # The fill levels keep a week of history: anyone reads it, as far back as the space keeps it (T-5270).
+  temporalQ: timerel=after;timeAt=P-7D
   information:
     - entities:
         - type: WasteContainerIsle
