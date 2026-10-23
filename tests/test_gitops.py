@@ -509,3 +509,49 @@ def test_the_pin_bot_checks_the_docs_pin_before_it_commits():
     # not list the gateway's new variables; deployment main went red on its next commit.
     step = (ROOT / ".github/workflows/pin-images.yml").read_text()
     assert step.index("scripts/check-docs-pin.sh") < step.index('git commit -q -m "$message"')
+
+
+def _portal_ui_pin(tmp_path, published: bool, compare: dict | None):
+    """scripts/portal-ui-pin.sh with docker answering `published` and the compare API `compare`."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    digest = "sha256:" + "f" * 64
+    (bin_dir / "docker").write_text(
+        f'#!/bin/sh\necho "Digest:    {digest}"\nexit 0\n' if published else "#!/bin/sh\nexit 1\n")
+    (bin_dir / "curl").write_text(
+        f"#!/bin/sh\ncat <<'J'\n{json.dumps(compare)}\nJ\n" if compare is not None else "#!/bin/sh\nexit 22\n")
+    for stub in ("docker", "curl"):
+        (bin_dir / stub).chmod(0o755)
+    env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", GITHUB_TOKEN="")
+    return subprocess.run([str(ROOT / "scripts/portal-ui-pin.sh"), "c" * 40], env=env, capture_output=True, text=True)
+
+
+def test_a_portal_commit_with_its_own_ui_bundle_pins_that_bundle(tmp_path):
+    """T-5297: image.yml built portal-ui for the commit, so the pin is that bundle."""
+    result = _portal_ui_pin(tmp_path, published=True, compare=None)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["c" * 40, "sha256:" + "f" * 64]
+
+
+def test_a_portal_commit_without_ui_changes_keeps_the_pinned_bundle(tmp_path):
+    """Most commits publish no bundle: the pinned one stays when ui/ and sdk/ did not change."""
+    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["ui"]
+    result = _portal_ui_pin(tmp_path, published=False,
+                            compare={"status": "ahead", "files": [{"filename": "src/api/health.rs"}]})
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == [pinned["commit"], pinned["digest"]]
+
+
+@pytest.mark.parametrize("compare, reason", [
+    ({"status": "ahead", "files": [{"filename": "src/main.rs"}, {"filename": "ui/src/App.tsx"}]},
+     "changed ui/src/App.tsx since the pinned portal-ui"),
+    ({"status": "ahead", "files": [{"filename": "sdk/src/index.ts"}]}, "changed sdk/src/index.ts"),
+    ({"status": "diverged", "files": []}, "does not descend from the pinned portal-ui"),
+    ({"status": "ahead", "files": [{"filename": f"src/f{n}.rs"} for n in range(300)]}, "300 files or more"),
+    (None, "did not answer; nothing decided"),
+])
+def test_a_bundle_built_from_other_ui_files_is_refused_in_words(tmp_path, compare, reason):
+    """A bundle of other ui/ or sdk/ files would call routes the binary may not have (T-5297)."""
+    result = _portal_ui_pin(tmp_path, published=False, compare=compare)
+    assert result.returncode != 0 and result.stdout == ""
+    assert reason in result.stderr, result.stderr

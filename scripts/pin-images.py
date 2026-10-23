@@ -36,7 +36,7 @@ ISSUER = "https://token.actions.githubusercontent.com"
 SOURCES = {
     "platform": ("joinedcontext-platform", ["joinedcontext-platform", "joinedcontext-platform/checkouts",
                                             "joinedcontext-platform/model-tools"]),
-    "portal": ("joinedcontext-portal", ["joinedcontext-portal", "joinedcontext-app-builder",
+    "portal": ("joinedcontext-portal", ["joinedcontext-portal", "joinedcontext-portal-ui", "joinedcontext-app-builder",
                                         "joinedcontext-app-builder-rust"]),
 }
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")

@@ -260,6 +260,15 @@ portal:
     # The platform commit the pinned Portal's jc-core is built from: portal a1dd3d8 pins 0069530
     # (T-4365, on top of T-4343's 9fdbd9b); 5e5355d moved the digest and left this at 4a27848.
     platform: '0069530d691bd35438d6eac0c3367e8adb2c0a8c'
+  # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
+  # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, so `commit` is the
+  # newest such commit at or before portal.commit; scripts/pin-portal.sh moves both together and
+  # refuses a bundle whose files differ from that commit's (T-5297).
+  ui:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
+    tag: 'main'
+    digest: 'sha256:416d23db85c9ab194a38ed1f0ea3c530295e2ec50d09c0d950ecf4a36571ce39'
+    commit: 'fca645d400b780b6635a3428bc366eba3a77fce1'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:

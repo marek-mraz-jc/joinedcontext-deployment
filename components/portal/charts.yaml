@@ -2,6 +2,8 @@
 portal:
   portal:
     chart: ../../charts/workload
+  ui:
+    chart: ../../charts/workload
   namespaces:
     chart: charts/namespaces
   # An in-cluster mail catcher for App mail on an installation without a relay (T-3583).
