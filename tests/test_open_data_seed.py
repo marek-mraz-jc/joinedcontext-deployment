@@ -145,7 +145,8 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert "sta" in generate.REPRESENTATIONS and not {"xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
+    # No `sta` (T-5299): the models declare no unit, so a Datastream would have no unitOfMeasurement.
+    assert not {"sta", "xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
@@ -158,12 +159,11 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
-    # T-4288: SensorThings is listed for the datasets whose numbers carry an instant, and only those.
+    # T-4288: SensorThings would be listed for the datasets whose numbers carry an instant; with no
+    # `sta` served (T-5299) the catalogue lists it for none, so no dataset page links a refused door.
     series = {name for name, row in rows.items() if row.get("series")}
-    assert any(s.startswith("bbsk-pohyb-obyvatelstva-v-okresoch") for s in series), sorted(series)
-    assert not any(s.startswith(("bb-adresy", "bbsk-zoznam-lekarni")) for s in series)
-    assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
-        e["dataset"].rsplit("/", 1)[1] for e in SEEDED if not generate.series(e)}
+    assert series == set(), sorted(series)
+    assert any(generate.series(e) for e in SEEDED), "the series rule still finds the dated datasets"
     # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
     # its whole type, since those rows name no catalogue dataset; unless two datasets share that
     # door and type, which the seed then tells apart by `isPartOf` (bbsk obce and okresy, T-4523).
@@ -993,8 +993,8 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5255 the Helsinki street cleaning air pilot.
-        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 2, "praha": 7, "slovensko": 3 + 45, "zilina": 5 + 4}
+        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot.
+        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 1 + 2 + 1, "praha": 7, "slovensko": 3 + 45, "zilina": 5 + 4}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

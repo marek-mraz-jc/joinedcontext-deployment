@@ -7,7 +7,7 @@ metadata:
 spec:
   contextSpaceRef: helsinki
   linkml: ./helsinki.linkml.yaml
-  version: 1.8.0
+  version: 1.9.0
   lifecycle: published
   classes:
     - Event
@@ -29,6 +29,7 @@ spec:
     - GtfsRoute
     - GtfsShape
     - OffStreetParking
+    - TrafficFlowObserved
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json
     context: ./helsinki.v1.context.jsonld
