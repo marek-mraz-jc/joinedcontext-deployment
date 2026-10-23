@@ -54,7 +54,8 @@ pipeline:
       format: json_array
   - mapping: |
       map key {
-        root = this.lowercase().re_replace_all("\\([^)]*\\)", " ").re_replace_all("[,;]", " ").re_replace_all("\\s+", " ").trim()
+        # generate.py ABBREVIATIONS: a hall's or an office's short name spelled out (T-5240).
+        root = (" " + this.lowercase().re_replace_all("\\([^)]*\\)", " ").re_replace_all("[,;]", " ").re_replace_all("\\s+", " ").trim() + " ").replace_all(" kd ", " kultúrny dom ").replace_all(" dk ", " dom kultúry ").replace_all(" msks ", " mestské kultúrne stredisko ").replace_all(" ocú ", " obecný úrad ").replace_all(" oú ", " obecný úrad ").replace_all(" msú ", " mestský úrad ").replace_all(" mú ", " mestský úrad ").trim()
       }
       map text {
         root = if this == null { null } else { this.string().strip_html().unescape_html().re_replace_all("\\s+", " ").trim().(t -> if t == "" { null } else { t }) }
@@ -62,7 +63,7 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"match":"aa vmk","town":"kolarovo","venue":"Kultúrny dom (Városi Művelődési Központ)","streetAddress":"Kostolné námestie 860/4","addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"obecný úrad kolárovo","town":"kolarovo","venue":"Obecný úrad kolárovo","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9179266,"lon":17.9966716},{"match":"kultúrny dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"kultúrny dom kolárovo","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"kultúrny dom v kolárovo","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"obecný kultúrny dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"kd","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"dom kultúry","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"spoločenský dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"sála kultúrneho domu","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"kultúrne stredisko","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"match":"miestne kultúrne stredisko","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644}]
+      let venues = [{"poi":"osm-node-2096774698","match":"aa vmk","town":"kolarovo","venue":"Kultúrny dom (Városi Művelődési Központ)","streetAddress":"Kostolné námestie 860/4","addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-1304548498","match":"obecný úrad kolárovo","town":"kolarovo","venue":"Obecný úrad kolárovo","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9179266,"lon":17.9966716},{"poi":"osm-node-2096774698","match":"kultúrny dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"kultúrny dom kolárovo","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"kultúrny dom v kolárovo","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"obecný kultúrny dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"dom kultúry","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"spoločenský dom","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"sála kultúrneho domu","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"kultúrne stredisko","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644},{"poi":"osm-node-2096774698","match":"miestne kultúrne stredisko","town":"kolarovo","venue":"Kultúrny dom","streetAddress":null,"addressLocality":"Kolárovo","lat":47.9172502,"lon":17.9948644}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
@@ -71,21 +72,37 @@ pipeline:
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
       let home = if $place == null && ($venue_key == "" || ["adamis anna városi művelődési központ", "kolárovo"].contains($venue_key)) { null } else { null }
       let known = $place.or($home)
-      # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
-      # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
-      let lat = this.lat.number().catch($known.lat.or(null))
-      let lon = this.lon.number().catch($known.lon.or(null))
+      # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
+      let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
+      let locality = $feed_locality.or($known.addressLocality.or("Kolárovo"))
+      # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
+      let hit = if $locality != null { [["Devičany","devicany",48.32407,18.70643,"office"],["Dlhá nad Váhom","dlha-nad-vahom",48.17028,17.86052,"office"],["Hostie","hostie",48.45394,18.43752,"office"],["Jedľové Kostoľany","jedlove-kostolany",48.47134,18.49746,"office"],["Jelenec","jelenec",48.37934,18.22201,"office"],["Kamenica nad Hronom","kamenica-nad-hronom",47.83136,18.7255,"centre"],["Kolárovo","kolarovo",47.91793,17.99667,"office"],["Kravany nad Dunajom","kravany-nad-dunajom",47.76201,18.48282,"centre"],["Lehota","lehota",48.31258,17.99389,"office"],["Levice","levice",48.21632,18.60009,"centre"],["Lula","lula",48.17833,18.36122,"office"],["Lužany","luzany",48.51525,18.01222,"office"],["Plavé Vozokany","plave-vozokany",48.07048,18.46439,"office"],["Plášťovce","plastovce",48.15919,18.97874,"office"],["Svätý Peter","svaty-peter",47.84638,18.26323,"centre"],["Tekovské Nemce","tekovske-nemce",48.35594,18.52918,"office"],["Tešedíkovo","tesedikovo",48.10144,17.85124,"centre"],["Veľké Ludince","velke-ludince",47.9637,18.50992,"centre"],["Veľké Zálužie","velke-zaluzie",48.30811,17.94079,"office"],["Veľký Cetín","velky-cetin",48.21725,18.18717,"office"],["Výčapy-Opatovce","vycapy-opatovce",48.41118,18.08324,"office"],["Štitáre","stitare",48.3502,18.15915,"office"],["Žikava","zikava",48.44459,18.38217,"office"],["Žirany","zirany",48.37812,18.17524,"office"],["Žitavany","zitavany",48.39992,18.41886,"centre"],["Bánov","banov",48.04885,18.19223,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+      let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
+      # The municipality by its official name, on every event (DM-136): the town table's, the venue's, else the feed's.
+      let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
+      # GPS from the feed, else from the venue table, else from the organizer's address, else from the town; the
+      # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
+      let feed_lat = this.lat.number().catch(null)
+      let feed_lon = this.lon.number().catch(null)
+      let pick = if $feed_lat != null && $feed_lon != null { { "lat": $feed_lat, "lon": $feed_lon, "precision": "source" } } else if $place != null { $place.merge({ "precision": "building" }) } else if $home != null { $home.merge({ "precision": "office" }) } else { $area }
+      let lat = $pick.lat.or(null)
+      let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
-      let locality = this.locality.apply("text").or($known.addressLocality.or("Kolárovo"))
-      let town = $known.town.or("kolarovo")
+      let town = $known.town.or($area.town.or("kolarovo"))
       # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
       # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
       # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
       let start_key = if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15Z", "UTC") }
       let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+      # A street with the postcode glued on ("Bečov 96/6976 63" is 96/6 and 976 63) or written after it, or a postcode
+      # alone ("976 63 Predajná"): the postcode moves to its own field and the country is dropped (T-5240).
+      let street_text = this.streetAddress.apply("text").(s -> if s != null { s.re_replace_all("(?i)[,\\s]*(slovensko|slovakia|slovenská republika)$", "") } else { null })
+      let glued = if $street_text != null { $street_text.re_find_object("^(?P<street>.*?\\d[a-zA-Z]?)[,\\s]*(?P<zip>\\d{3} \\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
+      let zip_only = if $street_text != null { $street_text.re_find_object("^(?P<zip>\\d{3} ?\\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
+      let street = if $zip_only.zip != null { null } else { $glued.street.or($street_text) }
       let address = {
-        "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
-        "postalCode": this.postalCode.apply("text"),
+        "streetAddress": $street.or($known.streetAddress.or(null)),
+        "postalCode": this.postalCode.apply("text").or($zip_only.zip.or($glued.zip.or(null))),
         "addressLocality": $locality,
         "addressRegion": "Nitriansky kraj",
         "addressCountry": "SK"
@@ -117,7 +134,11 @@ pipeline:
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
+        "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
+        # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-136).
+        "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
+        "areaServed": $municipality.apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back

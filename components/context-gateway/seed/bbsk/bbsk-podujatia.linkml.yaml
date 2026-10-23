@@ -7,9 +7,9 @@ description: >-
   schema.org's Event under the names Smart Data Models and schema.org use, so the space's
   iCalendar surface (RFC 5545, EP-125) reads it as published: `id` the UID, `name` the SUMMARY,
   `startDate` and `endDate` DTSTART and DTEND, `description`, `address`, `location` and `url`
-  DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start, a
-  point in Slovakia, an organizer or a link is refused by the pipeline and never reaches the space
-  (owner 2026-10-20, 2026-10-21). One event announced
+  DESCRIPTION, LOCATION, GEO and URL, `organizer` ORGANIZER. An event without a name, a start or
+  a link is refused by the pipeline and never reaches the space (owner 2026-10-20, 2026-10-22); its
+  point and organizer are kept where known. One event announced
   by two sources is one entity: its id is
   `urn:ngsi-ld:Event:bbsk-podujatia:` followed by the first 16 hex digits of the SHA-256 of
   `name | start | lower(addressLocality)` (the name in lower case with only its letters and digits,
@@ -242,6 +242,56 @@ slots:
           de: Anbieter
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
+  locationPrecision:
+    slot_uri: jc:locationPrecision
+    description: >-
+      How close `location` is to the venue: `source` the publisher's own point, `building` the venue's building
+      (the address register or a venue checked against OpenStreetMap), `office` the organizer's or the town's
+      office standing in for a venue nobody placed, `centre` the town's centre. A map draws `office` and `centre`
+      as approximate.
+    range: LocationPrecision
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Presnosť polohy
+          cs: Přesnost polohy
+          en: Location precision
+          de: Genauigkeit des Orts
+      ngsi_ld_kind: Property
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: >-
+      The municipality the event or the venue belongs to, by its official name (`Detva`, `Košice`): the key a count or
+      a filter per town reads, on every event (DM-136).
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Municipality
+          de: Gemeinde
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  refPointOfInterest:
+    slot_uri: sdm:refPointOfInterest
+    description: >-
+      The venue as a PointOfInterest of this space, when the venue table placed the event; every event held
+      there links the same one (DM-136).
+    range: PointOfInterest
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   dateModified:
     slot_uri: sdm:dateModified
     description: When the source last changed the record.
@@ -287,7 +337,10 @@ classes:
       - startDate
       - endDate
       - location
+      - locationPrecision
       - venue
+      - refPointOfInterest
+      - areaServed
       - address
       - eventCategory
       - description
@@ -310,8 +363,9 @@ classes:
       location:
         description: >-
           Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8
-          to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand;
-          never a town's centre.
+          to 22.6, latitude 47.7 to 49.7): the source's own point, the venue's building, else the
+          organizer's or the town's office or the town's centre, as `locationPrecision` says (owner 2026-10-21:
+          at least 90 % of events with a point).
         rank: 4
       venue:
         rank: 5
@@ -324,6 +378,31 @@ classes:
         rank: 8
         annotations: { summary: true }
       url: { required: true, rank: 9 }
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One venue of the venue table (seeds/bbsk-events/venues.csv): a hall, a square, a museum where events take
+      place, one entity per real place (table rows of one name within 50 m are one venue), its id the OpenStreetMap
+      object of its building or a hash of its town, name and point (DM-136).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      view_columns: name,areaServed,address
+      label:
+        tag: label
+        value:
+          sk: Miesto konania
+          cs: Místo konání
+          en: Venue
+          de: Veranstaltungsort
+    slots: [name, location, address, areaServed, source, dataProvider]
+    slot_usage:
+      name:
+        required: true
+        description: The venue's name (`Dom kultúry A. Sládkoviča`).
+      location:
+        required: true
+        description: The venue's building as a GeoJSON Point in WGS 84 inside Slovakia.
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.
@@ -338,3 +417,48 @@ classes:
         description: The organizer's name as the source writes it (`Stredoslovenské múzeum`).
       url:
         description: The organizer's own web site, when the source names it.
+
+enums:
+  LocationPrecision:
+    description: How close an event's point is to its venue; office and centre are approximate.
+    permissible_values:
+      source:
+        description: The point the publisher gives.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Podľa zdroja
+              cs: Podle zdroje
+              en: From the source
+              de: Laut Quelle
+      building:
+        description: The venue's building.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Budova
+              cs: Budova
+              en: Building
+              de: Gebäude
+      office:
+        description: The organizer's or the town's office, approximate.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Približne, úrad
+              cs: Přibližně, úřad
+              en: Approximate, office
+              de: Ungefähr, Amt
+      centre:
+        description: The town's centre, approximate.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Približne, stred obce
+              cs: Přibližně, střed obce
+              en: Approximate, town centre
+              de: Ungefähr, Ortsmitte

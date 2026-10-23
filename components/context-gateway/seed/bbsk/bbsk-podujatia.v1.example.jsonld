@@ -6,6 +6,7 @@
     "postalCode": "postalCode",
     "streetAddress": "streetAddress"
   },
+  "areaServed": "areaServed",
   "dataProvider": "dataProvider",
   "dateModified": "2026-01-01T00:00:00Z",
   "description": "description",
@@ -19,12 +20,14 @@
     ],
     "type": "Point"
   },
+  "locationPrecision": "source",
   "name": "name",
   "observedAt": "2026-01-01T00:00:00Z",
   "organizer": {
     "name": "name",
     "url": "url"
   },
+  "refPointOfInterest": "urn:ngsi-ld:PointOfInterest:joinedcontext.com:example:1",
   "source": "source",
   "sourceId": "sourceId",
   "startDate": "2026-11-14T19:00:00+01:00",

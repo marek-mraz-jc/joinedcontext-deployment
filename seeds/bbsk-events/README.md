@@ -219,10 +219,15 @@ muzeumkremnica.sk (no JSON-LD, dates in free text) and the WEBY `kalendar-poduja
 parser and none reaches five sources of one CMS.
 
 `geocode-venues.py` fills `venues.csv` at inventory time, never from a pipeline: give it `town,place` rows (a run
-report's refused events, or the venue texts read while probing a source). It asks Nominatim one request a second with
-the inventory User-Agent, first for the whole text, then for each part holding a house number, then for the first
-part, each with the town. A hit counts only when it is a building, an amenity or an address in that town; a town, a
-district, a street or a hit in another town gives no row. Its rows say `nominatim` in `checked_by`; the rows checked
+report's refused events, or the venue texts read while probing a source). It asks Register adries
+(ra.synchronix.sk, the official address register) first for each part holding a street and a number, then
+Nominatim for the whole text, each part holding a house number and the first part, each with the town, one request a
+second per host with the inventory User-Agent. A register hit counts in the same municipality or one of its boroughs,
+on the same street and with the same orientačné number (the súpisné number where the address has none); its rows say
+`register-adries` and name the register's address id in `osm` (`ra/<id>`). A Nominatim hit counts only when it is a
+building, an amenity or an address in that town, and is written only when its `town,match,osm` line is in
+`reviewed.csv`, the list of name matches a person opened on OpenStreetMap and accepted (T-5240: a third of the
+pilot's name matches were another building). Every other hit is printed as a line to review. The rows checked
 against OpenStreetMap by a person say `hand`. On 2026-10-21 it placed 21 of the 39 venue texts that UMB, FPVaMV and
 TUZVO used in Banská Bystrica and Zvolen. The rest were online events, a room without an address ("TUZVO B8") or a
 building OSM does not name; two of those (Aula Beliana, Aula FPVaMV UMB) were added by hand from the address the
@@ -310,3 +315,29 @@ python3 seeds/bbsk-events/generate.py
 
 `report.py` follows the API's `Link: rel="next"` with a parser that keeps the commas inside its target
 (`attrs=source,location,venue`); it stopped after the first page before.
+
+## Every event a point, labelled by precision (T-5240)
+
+The owner holds the share of upcoming events with GPS at >= 90 % (2026-10-21). The common tail takes an event's point
+from, in order: the feed (`locationPrecision` `source`), a venues.csv row (`building`), the organizer's address of
+homes.csv for an event naming no place (`office`), then the event's own town in `towns.csv` (`office` or `centre`).
+An event whose town the table does not know keeps no point. A map draws `office` and `centre` as approximate.
+Decided (supervisor, owner may override): office and centre points are written and labelled approximate.
+
+`towns.csv` holds one row per municipality the events name: its `amenity=townhall` (`office`) or, where OpenStreetMap
+maps none, its own `place` node (`centre`). `towns.py` builds it with one Overpass query per kraj; a name two
+municipalities of a kraj share counts only for the source whose web site names one (`unique` n). Košice and
+Bratislava are pinned by hand to Stará radnica (Hlavná 59) and the Primaciálny palác magistrát: the townhall rule
+picked a borough office in Košice for every venue of the geocode pilot. A municipality's calendar falls back to its
+own town only; a museum, a theatre or a tourism body to every town of its region the table names once.
+
+The common tail also spells out the calendars' abbreviations in the match key (KD, DK, MsKS, OcÚ, OÚ, MsÚ, MÚ:
+generate.py `ABBREVIATIONS`), reads a locality naming a district or a kraj ("okres Myjava") as the source's town, and
+moves a postcode glued to the house number ("Bečov 96/6976 63") or written after it to `postalCode`.
+
+```sh
+python3 seeds/bbsk-events/report.py --url <store>/ngsi-ld/v1 --places places.csv --localities localities.csv
+python3 seeds/bbsk-events/geocode-venues.py places.csv      # register rows; review the printed name hits
+python3 seeds/bbsk-events/towns.py --localities localities.csv   # read each printed name, then --write
+python3 seeds/bbsk-events/generate.py
+```

@@ -26,7 +26,7 @@ spec:
     # Public events of public bodies: a record names an event and its place, never a person.
     personalData: does-not-contain
     license: CC_BY_4_0
-    attribution: { sk: "Zdroj: webové stránky miest, obcí a inštitúcií, ktoré podujatie zverejnili (atribút source)", en: "Source: the web sites of the towns, municipalities and bodies that announced each event (attribute source)" }
+    attribution: { sk: "Zdroj: webové stránky miest, obcí a inštitúcií, ktoré podujatie zverejnili (atribút source); polohy miest konania © prispievatelia OpenStreetMap, ODbL 1.0", en: "Source: the web sites of the towns, municipalities and bodies that announced each event (attribute source); venue points © OpenStreetMap contributors, ODbL 1.0" }
     themes: [EDUC, SOCI]
     keywords:
       sk: ["podujatia", "kultúra", "kalendár"]
@@ -1083,7 +1083,7 @@ spec:
           sk: "Podujatia zo stránky https://www.harmanec.sk/udalosti-v-obci/kam-za-kulturou/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.harmanec.sk/udalosti-v-obci/kam-za-kulturou/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.kosicesever.sk/mestska-cast/podujatia/"
-        title: { sk: "Sever, kosicesever.sk", en: "Sever, kosicesever.sk" }
+        title: { sk: "Košice, kosicesever.sk", en: "Košice, kosicesever.sk" }
         description:
           sk: "Podujatia zo stránky https://www.kosicesever.sk/mestska-cast/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.kosicesever.sk/mestska-cast/podujatia/; no licence stated, facts only (name, time, place, link)."
@@ -1098,7 +1098,7 @@ spec:
           sk: "Podujatia zo stránky https://www.dolnakrupa.sk/volny-cas/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.dolnakrupa.sk/volny-cas/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.myjava.sk/volny-cas/podujatia/"
-        title: { sk: "okres Myjava, myjava.sk", en: "okres Myjava, myjava.sk" }
+        title: { sk: "Myjava, myjava.sk", en: "Myjava, myjava.sk" }
         description:
           sk: "Podujatia zo stránky https://www.myjava.sk/volny-cas/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.myjava.sk/volny-cas/podujatia/; no licence stated, facts only (name, time, place, link)."

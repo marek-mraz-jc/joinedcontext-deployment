@@ -384,9 +384,10 @@ def test_weby_feeds_read_each_event_page_and_place_it_by_the_venue_table():
         apollo["venue"]["value"] == "Kino Apollo"
         and apollo["scope"] == "/SK/BB/lucenec"
     )
-    # A venue nobody checked by hand gives no point, never the town's centre; the event is kept (owner 2026-10-22).
+    # A venue nobody placed takes the town's office, labelled approximate (owner 2026-10-21, T-5240).
     arena = lucenec["Futsalová Liga majstrov"]
-    assert "location" not in arena and VALID.is_valid(key_values(arena))
+    assert arena["location"]["value"]["coordinates"] == town_point("lucenec") and VALID.is_valid(key_values(arena))
+    assert arena["locationPrecision"]["value"] == "office" and apollo["locationPrecision"]["value"] == "building"
     zvolen = {
         e["name"]["value"]: e
         for e in pipeline("zvolen", "zvolen-rss1.xml", "weby.json")
@@ -571,16 +572,18 @@ def test_a_source_outside_the_region_lands_in_its_own_region_at_its_venue():
                      (FIXTURES / "piestany-tribe.json").read_text(), "slovensko-podujatia")
     }
     assert len(out) == 5
-    placed = [e for e in out.values() if "location" in e]
+    placed = [e for e in out.values() if e["locationPrecision"]["value"] == "building"]
     assert len(placed) == 4
+    # The one with no venue takes Piešťany's office (T-5240).
+    (other,) = [e for e in out.values() if e not in placed]
+    assert other["location"]["value"]["coordinates"] == town_point("piestany") and other["locationPrecision"]["value"] == "office"
     for e in placed:
         assert e["scope"] == "/SK/TT/piestany"
         assert e["location"]["value"]["coordinates"] == [17.8400391, 48.5923954]
         assert e["address"]["value"]["addressRegion"] == "Trnavský kraj"
         assert "description" not in e  # no licence stated: facts only
         assert VALID.is_valid(key_values(e)), e["name"]
-    (unplaced,) = [e for e in out.values() if "location" not in e]
-    assert VALID.is_valid(key_values(unplaced))
+    assert VALID.is_valid(key_values(other))
 
 
 # --- the national store's adapters (T-5047) -----------------------------------------------------------------
@@ -838,9 +841,10 @@ def test_tuzvo_events_come_from_this_and_the_next_months_list_without_the_person
     assert fair["organizer"]["value"]["name"] and fair["url"]["value"].startswith("https://www.tuzvo.sk/sk/")
     assert fair["location"]["value"]["coordinates"] == [19.1165987, 48.5729663]
     assert "Test Osoba" not in json.dumps(out, ensure_ascii=False)
-    # A venue nobody geocoded (ÚTVŠ) gives no point; the event is kept without one, never put at Zvolen's centre.
+    # A venue nobody geocoded (ÚTVŠ) takes Zvolen's office, labelled approximate (T-5240).
     sport = out["Súčasné trendy v športe, pohybových aktivitách a životnom štýle"]
-    assert "location" not in sport and VALID.is_valid(key_values(sport))
+    assert sport["location"]["value"]["coordinates"] == town_point("zvolen") and VALID.is_valid(key_values(sport))
+    assert sport["locationPrecision"]["value"] == "office"
 
 
 def test_the_next_month_is_read_from_the_same_list_page_10_seconds_later():
@@ -873,7 +877,9 @@ def test_an_event_naming_no_place_or_only_the_town_takes_its_organizers_address(
     assert out["Koncert 1"]["address"]["value"]["streetAddress"] == "Lazovná 240/9"
     assert out["Koncert 2"]["location"]["value"]["coordinates"] == library
     assert out["Koncert 2"]["venue"]["value"] == "Banská Bystrica", "the venue stays as the source wrote it"
-    assert "location" not in out["Koncert 3"], "a place nobody placed gets no point, never the organizer's"
+    # A place nobody placed takes the town's point, never the organizer's (T-5240).
+    assert out["Koncert 3"]["location"]["value"]["coordinates"] == town_point("banska-bystrica")
+    assert out["Koncert 3"]["locationPrecision"]["value"] == "centre" and out["Koncert 1"]["locationPrecision"]["value"] == "office"
     assert out["Koncert 4"]["location"]["value"]["coordinates"] == [19.1423, 48.7336]
     assert all(VALID.is_valid(key_values(e)) for e in out.values())
 
@@ -965,3 +971,98 @@ def test_one_event_written_by_two_sources_with_other_punctuation_or_a_minute_apa
     assert one("Kintsugi – japonské umenie", "2027-11-19T16:30:00+01:00") == one("Kintsugi: japonské umenie", "2027-11-19T16:30:00+01:00")
     assert one("Čarovný kľúčik", "2027-11-18T16:35:00+01:00") == one("Čarovný kľúčik", "2027-11-18T16:36:00+01:00")
     assert one("Korčuľovanie", "2027-10-29T10:30:00+01:00") != one("Korčuľovanie", "2027-10-29T15:00:00+01:00")
+
+
+# --- where an event's point comes from, and how precise it is (T-5240) ---------------------------------------
+
+
+def records(monkeypatch, items: list[dict], town: str = "Cífer", org_type: str = "municipality") -> dict:
+    """The common tail alone over plain records, for a made-up source of `town` (no homes.csv row)."""
+    monkeypatch.setitem(generate.TEMPLATES, "records", ())
+    day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
+    payload = [{"name": f"Akcia {i}", "start": day.strftime("%Y-%m-%dT18:00:00+02:00"), "url": f"https://obec.example.sk/{i}",
+                "sourceId": str(i), **item} for i, item in enumerate(items)]
+    steps = offline(template("records", "obec.example.sk", region="TT", town=town, org_type=org_type), {})
+    return {e["sourceId"]["value"]: e for e in run(steps, json.dumps(payload, ensure_ascii=False), "slovensko-podujatia")}
+
+
+def town_point(town: str) -> list[float]:
+    (row,) = [t for t in csv.DictReader((EVENTS / "towns.csv").open(encoding="utf-8")) if t["town"] == town]
+    return [round(float(row["lon"]), 5), round(float(row["lat"]), 5)]
+
+
+@requires_docker
+def test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns_office(monkeypatch):
+    """DM-136: the fill order source > venue table > office > centre, the venue link and the municipality."""
+    out = records(monkeypatch, [
+        {"venue": "Futbalové ihrisko"},                        # nobody placed it: the town's office
+        {"venue": "Futbalové ihrisko", "lat": 48.31, "lon": 17.49},  # the publisher's own point
+        {"venue": "KD"},                                       # the calendar's short name for the culture house
+        {"venue": "Ihrisko", "locality": "Brno"},              # a town the table does not know: no point at all
+    ])
+    assert out["0"]["location"]["value"]["coordinates"] == town_point("cifer")
+    assert out["0"]["locationPrecision"]["value"] == "office" and out["0"]["venue"]["value"] == "Futbalové ihrisko"
+    assert (out["1"]["location"]["value"]["coordinates"], out["1"]["locationPrecision"]["value"]) == ([17.49, 48.31], "source")
+    assert out["2"]["locationPrecision"]["value"] == "building" and out["2"]["venue"]["value"] == "Kultúrny dom"
+    assert out["2"]["location"]["value"]["coordinates"] == [17.5184876, 48.3025638]
+    assert "location" not in out["3"] and "locationPrecision" not in out["3"]
+    # Only the venue table's place links its PointOfInterest; every event names its municipality (DM-136).
+    kd = [v for v in generate.venues_for("cifer") if v["venue"] == "Kultúrny dom"][0]
+    assert out["2"]["refPointOfInterest"] == {"type": "Relationship",
+                                              "object": f"urn:ngsi-ld:PointOfInterest:slovensko-podujatia:{kd['poi']}"}
+    assert [k for k, e in out.items() if "refPointOfInterest" in e] == ["2"]
+    assert [out[k]["areaServed"]["value"] for k in "0123"] == ["Cífer", "Cífer", "Cífer", "Brno"]
+    for e in out.values():
+        assert VALID.is_valid(key_values(e)), e
+
+
+@requires_docker
+def test_a_district_or_region_as_the_town_and_a_glued_postcode_are_read_as_meant(monkeypatch):
+    out = records(monkeypatch, [
+        {"venue": "Hostinec pod Bradlom", "locality": "okres Myjava"},
+        {"venue": "Sála", "locality": "Trnavský kraj", "streetAddress": "Bečov 96/6976 63"},
+        {"streetAddress": "Bíňovce 134, 919 07, Slovensko", "locality": "Cífer"},
+        {"streetAddress": "976 63 Predajná", "locality": "Cífer", "postalCode": "976 99"},
+    ])
+    # The geocode pilot of 2026-10-22: "okres Myjava" as the town, "Bečov 96/6976 63" for 96/6 and 976 63.
+    assert out["0"]["address"]["value"]["addressLocality"] == "Cífer"
+    assert out["0"]["locationPrecision"]["value"] == "office"
+    assert out["1"]["address"]["value"] == {"streetAddress": "Bečov 96/6", "postalCode": "976 63", "addressLocality": "Cífer",
+                                           "addressRegion": "Trnavský kraj", "addressCountry": "SK"}
+    assert (out["2"]["address"]["value"]["streetAddress"], out["2"]["address"]["value"]["postalCode"]) == ("Bíňovce 134", "919 07")
+    # A postcode alone is no street; the feed's own postcode field wins.
+    assert "streetAddress" not in out["3"]["address"]["value"] and out["3"]["address"]["value"]["postalCode"] == "976 99"
+
+
+@requires_docker
+def test_a_tourism_body_places_an_event_in_the_town_it_names_within_its_region(monkeypatch):
+    out = records(monkeypatch, [{"venue": "Námestie", "locality": "Bíňovce"}, {"venue": "Námestie"}],
+                  org_type="tourism organisation (OOCR Test)")
+    assert out["0"]["location"]["value"]["coordinates"] == town_point("binovce") and out["0"]["scope"] == "/SK/TT/binovce"
+    assert out["1"]["location"]["value"]["coordinates"] == town_point("cifer")
+    # A municipality's calendar keeps to its own town: another village it names gets no point from the table.
+    out = records(monkeypatch, [{"venue": "Námestie", "locality": "Bíňovce"}])
+    assert "location" not in out["0"]
+
+
+POI = jsonschema.Draft7Validator({**copy.deepcopy(SCHEMA), "$ref": "#/definitions/PointOfInterest"})
+
+
+@requires_docker
+def test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest():
+    """DM-136: one PointOfInterest per venue, valid against the store's model."""
+    for ns, space in (("bbsk", "bbsk-podujatia"), ("slovensko", "slovensko-podujatia")):
+        steps = yaml.safe_load((ROOT / "components/context-gateway/seed" / ns / f"{ns}-pipeline-miesta-podujati-bento.yaml").read_text())
+        out = run(steps["pipeline"]["processors"], "tick", space)
+        ids = [e["id"] for e in out]
+        assert len(ids) == len(set(ids)) == len(generate.store_venues(generate.store_rows(next(s for s in generate.STORES if s["ns"] == ns))))
+        for e in out:
+            assert e["id"].startswith(f"urn:ngsi-ld:PointOfInterest:{space}:") and SCOPE.fullmatch(e["scope"]), e
+            assert POI.is_valid(key_values(e)), (e, [x.message for x in POI.iter_errors(key_values(e))])
+        (detva,) = [e for e in out if e["id"].endswith(":osm-way-292648504")]
+        assert key_values(detva) == {
+            "id": f"urn:ngsi-ld:PointOfInterest:{space}:osm-way-292648504", "type": "PointOfInterest",
+            "name": "Dom kultúry A. Sládkoviča", "location": {"type": "Point", "coordinates": [19.4074269, 48.5419222]},
+            "address": {"streetAddress": "Obrancov mieru 871/1", "addressLocality": "Detva", "addressCountry": "SK"},
+            "areaServed": "Detva", "source": "https://www.openstreetmap.org/way/292648504",
+            "dataProvider": "© OpenStreetMap contributors, ODbL 1.0"}
