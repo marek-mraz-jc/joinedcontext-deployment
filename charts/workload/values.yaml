@@ -10,6 +10,8 @@ replicaCount: 1
 # and is not a value: a workload that may go below its replica count during a rollout is not
 # highly available, whatever the number says.
 maxSurge: 25%
+# Recreate only for a workload that must never run twice at once (T-5311).
+updateStrategy: RollingUpdate
 
 image:
   repository: ''
