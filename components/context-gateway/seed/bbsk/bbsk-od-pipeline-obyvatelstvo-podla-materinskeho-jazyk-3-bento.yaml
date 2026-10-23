@@ -7,6 +7,48 @@ pipeline:
     # where it can be seen rather than writing nothing.
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
+    # every further page of them is read (T-5288). One run holds every page, so a layer past
+    # 10000 rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    - branch:
+        request_map: |
+          root = if this.properties.exceededTransferLimit.or(false) { "" } else { deleted() }
+        processors:
+          - http:
+              url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk/FeatureServer/0/query?where=1%3D1&returnCountOnly=true&f=json"
+              verb: GET
+              headers:
+                Accept: application/json
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.rowCount = this.count.or(this.error.message.or("no count"))
+    - mapping: |
+        let rows = this.rowCount.or(null)
+        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if $rows > 10000 { [{ "problem": "the layer holds %v rows, more than the 10000 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.offset.or(null) != null
+          processors:
+            - mapping: |
+                meta offset = this.offset
+                meta rows = this.rowCount
+                root = ""
+            - http:
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN4,NM4,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,LAU2,LAU2_CODE,K%C3%B3d,%C3%9Azemn%C3%A1_jednotka,Spolu,slovensk%C3%BD__abs__,slovensk%C3%BD____,ma%C4%8Farsk%C3%BD__abs__,ma%C4%8Farsk%C3%BD____,r%C3%B3msky__abs__,r%C3%B3msky____,rus%C3%ADnsky__abs__,rus%C3%ADnsky____,%C4%8Desk%C3%BD__abs__,%C4%8Desk%C3%BD____,ukrajinsk%C3%BD__abs__,ukrajinsk%C3%BD____,nemeck%C3%BD__abs__,nemeck%C3%BD____,po%C4%BEsk%C3%BD__abs__,po%C4%BEsk%C3%BD____,rusk%C3%BD__abs__,rusk%C3%BD____,vietnamsk%C3%BD__abs__,vietnamsk%C3%BD____,anglick%C3%BD__abs__,anglick%C3%BD____,chorv%C3%A1tsky__abs__,chorv%C3%A1tsky____,srbsk%C3%BD__abs__,srbsk%C3%BD____,taliansky__abs__,taliansky____,jidi%C5%A1_alebo_hebrejsk%C3%BD__abs__,jidi%C5%A1_alebo_hebrejsk%C3%BD____,arabsk%C3%BD__abs__,arabsk%C3%BD____,franc%C3%BAzsky__abs__,franc%C3%BAzsky____,rumunsk%C3%BD__abs__,rumunsk%C3%BD____,alb%C3%A1nsky__abs__,alb%C3%A1nsky____,%C5%A1panielsky__abs__,%C5%A1panielsky____,slovensk%C3%BD_posunkov%C3%BD_jazyk__abs_,slovensk%C3%BD_posunkov%C3%BD_jazyk____,%C4%8D%C3%ADnsky__abs__,%C4%8D%C3%ADnsky____,bulharsk%C3%BD__abs__,bulharsk%C3%BD____,k%C3%B3rejsk%C3%BD__abs__,k%C3%B3rejsk%C3%BD____,tureck%C3%BD__abs__,tureck%C3%BD____,perzsk%C3%BD__abs__,perzsk%C3%BD____,in%C3%BD__abs__,in%C3%BD____,nezisten%C3%BD__abs__,nezisten%C3%BD____&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else if this.features.or(null) == null { { "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) } } else if this.features.length() < [1000, @rows - @offset].min() { { "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [1000, @rows - @offset].min()) } } else { this }
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null { throw(this.problem) } else { this }
     - mapping: |
         root = this.features.or([])
     - unarchive:
