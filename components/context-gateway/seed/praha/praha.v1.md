@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet or a public transport ticket point.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground or a waste collection yard.
 
 IRI: `sdm:PointOfInterest`
 
@@ -78,6 +78,7 @@ Specialises `Entity`.
 | `pupilCount` | Property | `integer` |  |  | `jc:pupilCount` | How many pupils the school has, a count the register publishes and never a name. |
 | `openingHours` | LanguageProperty | `string` |  |  | `schema:openingHours` | The opening hours, per language, one line per group of days. |
 | `wheelchairAccessible` | Property | `boolean` |  |  | `jc:wheelchairAccessible` | Whether the publisher states the place is reachable in a wheelchair; absent when it does not say. |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -299,6 +300,12 @@ IRI: `ngsi-ld:Entity`
 | `culture` | A theatre, a museum, a gallery or another cultural venue. |
 | `publicToilet` | A public toilet. |
 | `ticketSale` | A place that sells public transport tickets. |
+| `library` | A branch of the Municipal Library of Prague. |
+| `municipalAuthority` | The office of a city district or of the city (úřad městské části). |
+| `police` | A station or desk of the Municipal Police of Prague (Městská policie). |
+| `garden` | A public garden or park of the city. |
+| `playground` | A public children's playground. |
+| `wasteCollectionYard` | A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste. |
 
 ### WasteAccess
 
