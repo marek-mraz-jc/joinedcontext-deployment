@@ -423,4 +423,14 @@ alertGroups:
           severity: warning
         annotations:
           summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} has written nothing newer than its freshness target allows: check its runs and its source'
+      # T-5291: a running pipeline that loses records is neither stale nor missing. The Portal's
+      # hourly health read sets the ratio of failed and rejected records over the last hour of runs;
+      # past 5 % it also marks the pipeline failing and tells its followers.
+      - alert: PipelineErrorRatio
+        expr: max by (project, pipeline) (jc_pipeline_error_ratio) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Pipeline {{`{{ $labels.pipeline }}`}} in {{`{{ $labels.project }}`}} lost {{`{{ $value | humanizePercentage }}`}} of the last hour''s records: open its Source health and log'
   {{- end }}
