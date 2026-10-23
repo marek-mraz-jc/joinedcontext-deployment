@@ -86,6 +86,13 @@ spec:
     - entityType: OnStreetParking
       current: P30D
       history: 'off'
+    # Reference layers each run rewrites: the current state only (T-5264).
+    - entityType: AdministrativeArea
+      history: 'off'
+    - entityType: CityWork
+      history: 'off'
+    - entityType: PedestrianCrossing
+      history: 'off'
     # An activity is a record, not a measurement: its current state only (T-5265).
     - entityType: Event
       history: 'off'
@@ -121,6 +128,21 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: in-area-groundwater
       entityType: PhreaticObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: AdministrativeArea
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: CityWork
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: PedestrianCrossing
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
