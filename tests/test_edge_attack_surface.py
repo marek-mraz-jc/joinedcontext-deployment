@@ -102,6 +102,14 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "a public named MCP server's setup page (T-4169): the same bundle for everyone, holding no data; it asks the server's own address for its tools without credentials",
     },
+    "portal-public-glossary": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the glossary (T-3236, T-5293): the same words for everyone, holding no data; every word's hint links here, the catalogue's included",
+    },
+    "portal-public-accessibility": {
+        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the accessibility statement (T-5108, Decree 78/2020): a public body links it from every page, a visitor included; the same text for everyone, holding no data",
+    },
     "portal-api": {
         "reach": EDGE_SESSION, "cacheable": False, "framing": "DENY",
         "why": "CLIs and service accounts present a bearer the Portal verifies (OPS-33)",

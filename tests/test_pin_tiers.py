@@ -15,7 +15,7 @@ def pin(monkeypatch):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     written = []
-    monkeypatch.setattr(module, "head", lambda repository: "c" * 40)
+    monkeypatch.setattr(module, "built", lambda repository: "c" * 40)
     monkeypatch.setattr(module, "green", lambda repository, workflow, commit: True)
     monkeypatch.setattr(module, "published", lambda image, commit: DIGEST)
     monkeypatch.setattr(module, "signed", lambda repository, image, digest: True)
