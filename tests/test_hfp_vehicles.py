@@ -74,6 +74,16 @@ def test_a_report_without_a_gps_fix_is_dropped_and_a_missing_speed_is_left_out()
     assert whole["speed"]["value"] == 8.5 and whole["heading"]["value"] == 90
 
 
+def short_caches() -> list[dict]:
+    """The runner's caches under the names the mapping writes: the Portal renders a step's `gtfs`
+    as the project's `helsinki__gtfs` (T-5337), and the mapping runs here as written."""
+    caches = yaml.safe_load(RESOURCES.read_text())["cache_resources"]
+    assert all(cache["label"].startswith("helsinki__") for cache in caches), caches
+    for cache in caches:
+        cache["label"] = cache["label"].removeprefix("helsinki__")
+    return caches
+
+
 def run(frames: list[str], known: tuple[str, ...] = (), then: tuple[dict, ...] = (),
         limit: int | None = None, **extra) -> tuple[list[dict], list[dict]]:
     """The mapping over `frames` in batches of up to 1,000 or a second, as the reconciler renders an
@@ -81,6 +91,7 @@ def run(frames: list[str], known: tuple[str, ...] = (), then: tuple[dict, ...] =
     leaves them; `limit` sets the reports admitted a second. Returns
     what was written and Bento's counters."""
     runner = yaml.safe_load(RESOURCES.read_text())
+    runner["cache_resources"] = short_caches()
     for cache in runner["cache_resources"]:
         if cache["label"] == "gtfs":
             cache["memory"]["init_values"] = {urn: "1" for urn in known}
@@ -142,7 +153,7 @@ def test_each_batch_writes_the_vehicle_again():
         "input": {"broker": {"inputs": [{"stdin": {"scanner": {"lines": {}}}}],
                              "batching": {"count": 1000, "period": "200ms"}}},
         "pipeline": pipeline(),
-        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        "cache_resources": short_caches(),
         "rate_limit_resources": yaml.safe_load(RESOURCES.read_text())["rate_limit_resources"],
         "output": {"stdout": {"codec": "lines"}},
         "logger": {"level": "error"},

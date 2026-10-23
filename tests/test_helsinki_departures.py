@@ -54,6 +54,9 @@ def docker(config: dict, document: bytes, codec: str = "lines") -> bytes:
 def caches(ttl: str = "5m") -> list[dict]:
     resources = yaml.safe_load((STREAMS / "resources.yaml").read_text())["cache_resources"]
     for cache in resources:
+        # The Portal renders the step's `departures` as the project's `helsinki__departures`
+        # (T-5337); the mapping runs here as written, so the label is read back to its short name.
+        cache["label"] = cache["label"].removeprefix("helsinki__")
         if cache["label"] == "departures":
             cache["memory"] = {"default_ttl": ttl, "compaction_interval": "1s"}
     return resources
@@ -218,7 +221,8 @@ def test_the_seed_reads_the_feed_every_30_s_into_gtfsstop_through_the_city_endpo
     assert step["import_paths"] == ["/proto"] and (STREAMS / "gtfs-realtime.proto").is_file()
     values = (ROOT / "components/pipeline-runner/values/runner/development-values.yaml.gotmpl").read_text()
     assert 'readFile "../../streams/gtfs-realtime.proto"' in values
-    assert "departures" in {c["label"] for c in caches()}
+    labels = yaml.safe_load((STREAMS / "resources.yaml").read_text())["cache_resources"]
+    assert "helsinki__departures" in {c["label"] for c in labels}
     model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
     assert "departures" in model["classes"]["GtfsStop"]["slots"]
     assert model["slots"]["departures"]["annotations"]["ngsi_ld_kind"] == "JsonProperty"
