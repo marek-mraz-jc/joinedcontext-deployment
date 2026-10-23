@@ -25,6 +25,14 @@ slots:
     slot_uri: schema:name
     description: The name as the city publishes it, in Catalan.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   dateObserved:
@@ -35,6 +43,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed at
+          de: Messzeitpunkt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm10:
@@ -44,6 +60,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM10
+          cs: PM10
+          en: PM10
+          de: PM10
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm25:
@@ -53,6 +77,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM2,5
+          cs: PM2,5
+          en: PM2.5
+          de: PM2,5
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   no2:
@@ -62,6 +94,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: NO₂
+          cs: NO₂
+          en: NO₂
+          de: NO₂
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   o3:
@@ -71,6 +111,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: O₃
+          cs: O₃
+          en: O₃
+          de: O₃
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   so2:
@@ -80,6 +128,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: SO₂
+          cs: SO₂
+          en: SO₂
+          de: SO₂
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   co:
@@ -89,6 +145,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: mg/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: CO
+          cs: CO
+          en: CO
+          de: CO
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   'no':
@@ -98,6 +162,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: 'NO'
+          cs: 'NO'
+          en: 'NO'
+          de: 'NO'
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   nox:
@@ -107,6 +179,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: NOₓ
+          cs: NOₓ
+          en: NOₓ
+          de: NOₓ
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   blackCarbon:
@@ -118,7 +198,16 @@ slots:
     range: float
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Čierny uhlík
+          cs: Černý uhlík
+          en: Black carbon
+          de: Ruß
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   temperature:
     slot_uri: sdm:temperature
     description: The day's mean air temperature at the station.
@@ -127,6 +216,14 @@ slots:
     maximum_value: 50
     unit: { ucum_code: Cel }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Teplota
+          cs: Teplota
+          en: Temperature
+          de: Temperatur
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   maxTemperature:
@@ -138,7 +235,16 @@ slots:
     minimum_value: -40
     maximum_value: 50
     unit: { ucum_code: Cel }
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Najvyššia teplota
+          cs: Nejvyšší teplota
+          en: Highest temperature
+          de: Höchsttemperatur
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   minTemperature:
     slot_uri: jc:minTemperature
     description: >-
@@ -148,7 +254,16 @@ slots:
     minimum_value: -40
     maximum_value: 50
     unit: { ucum_code: Cel }
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Najnižšia teplota
+          cs: Nejnižší teplota
+          en: Lowest temperature
+          de: Tiefsttemperatur
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   relativeHumidity:
     slot_uri: sdm:relativeHumidity
     description: The day's mean relative humidity, as a fraction (0.57 is 57 %).
@@ -157,6 +272,14 @@ slots:
     maximum_value: 1
     unit: { ucum_code: '1' }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Relatívna vlhkosť
+          cs: Relativní vlhkost
+          en: Relative humidity
+          de: Relative Luftfeuchtigkeit
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   atmosphericPressure:
@@ -166,6 +289,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: hPa }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Tlak vzduchu
+          cs: Tlak vzduchu
+          en: Air pressure
+          de: Luftdruck
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   precipitation:
@@ -175,6 +306,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: mm }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zrážky
+          cs: Srážky
+          en: Precipitation
+          de: Niederschlag
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   windSpeed:
@@ -184,6 +323,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: m/s }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Rýchlosť vetra
+          cs: Rychlost větru
+          en: Wind speed
+          de: Windgeschwindigkeit
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   windDirection:
@@ -194,6 +341,14 @@ slots:
     maximum_value: 360
     unit: { ucum_code: deg }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Smer vetra
+          cs: Směr větru
+          en: Wind direction
+          de: Windrichtung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   gustSpeed:
@@ -203,6 +358,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: m/s }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Nárazy vetra
+          cs: Nárazy větru
+          en: Gust speed
+          de: Böengeschwindigkeit
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   solarRadiation:
@@ -214,6 +377,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: W/m2 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Slnečné žiarenie
+          cs: Sluneční záření
+          en: Solar radiation
+          de: Sonneneinstrahlung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   altitude:
@@ -223,7 +394,16 @@ slots:
       property of the station, written without a unit code so its rows are never read as a
       measurement stamped on receipt.
     range: float
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Nadmorská výška
+          cs: Nadmořská výška
+          en: Altitude
+          de: Höhe über dem Meer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   waterTable:
     slot_uri: sdm:waterTable
     description: The depth from the surface to the water in the well at the newest reading.
@@ -231,6 +411,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: m }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Hĺbka hladiny vody
+          cs: Hloubka hladiny vody
+          en: Water table depth
+          de: Grundwasserflurabstand
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   investigationDepth:
@@ -241,6 +429,14 @@ slots:
     range: float
     minimum_value: 0
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Hĺbka vrtu
+          cs: Hloubka vrtu
+          en: Well depth
+          de: Brunnentiefe
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   piezometricLevel:
@@ -250,17 +446,43 @@ slots:
       the aquifer down). A property of this model: PhreaticObserved has only the depth.
     range: float
     unit: { ucum_code: m }
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Piezometrická hladina
+          cs: Piezometrická hladina
+          en: Piezometric level
+          de: Piezometerhöhe
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   aquifer:
     slot_uri: jc:aquifer
     description: The groundwater body (massa d'aigua) the well reaches, as the water agency names it.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Útvar podzemných vôd
+          cs: Útvar podzemních vod
+          en: Groundwater body
+          de: Grundwasserkörper
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   measurementType:
     slot_uri: sdm:measurementType
     description: What the well's readings measure; `depth` for each of the city's wells.
     multivalued: true
     range: MeasurementType
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh merania
+          cs: Druh měření
+          en: Measurement type
+          de: Messart
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   stationCode:
@@ -274,7 +496,16 @@ slots:
       - value: '8019043'
       - value: D5
       - value: 08019-0148
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód stanice
+          cs: Kód stanice
+          en: Station code
+          de: Stationscode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   startDate:
     slot_uri: schema:startDate
     description: >-
@@ -283,6 +514,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum začiatku
+          cs: Datum začátku
+          en: Start date
+          de: Beginndatum
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   endDate:
@@ -290,6 +529,14 @@ slots:
     description: The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum konca
+          cs: Datum konce
+          en: End date
+          de: Enddatum
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   category:
@@ -307,6 +554,14 @@ slots:
       Catalan (Biblioteques, Poliesportius).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   subCategory:
@@ -314,6 +569,14 @@ slots:
     description: The Smart Data Models sub-category where the name says it (music, theater).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Podkategória
+          cs: Podkategorie
+          en: Subcategory
+          de: Unterkategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   address:
@@ -324,32 +587,80 @@ slots:
     range: PostalAddress
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
     slot_uri: schema:streetAddress
     description: The street and the house number, or for a station its square, park or street corner.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Ulica a číslo
+          cs: Ulice a číslo
+          en: Street and number
+          de: Straße und Hausnummer
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/streetAddress
   postalCode:
     slot_uri: schema:postalCode
     description: The postal code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PSČ
+          cs: PSČ
+          en: Postal code
+          de: Postleitzahl
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
     description: The town or the municipality.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Town
+          de: Ort
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressLocality
   addressCountry:
     slot_uri: schema:addressCountry
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Krajina
+          cs: Země
+          en: Country
+          de: Land
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressCountry
   areaServed:
     slot_uri: sdm:areaServed
     description: The neighbourhood (barri) the station or well is in, as the city names it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Štvrť
+          cs: Čtvrť
+          en: Neighbourhood
+          de: Stadtviertel
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   dataProvider:
@@ -357,12 +668,28 @@ slots:
     description: >-
       Who publishes the data the entity was read from, with the credit its licence asks for.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ údajov
+          cs: Poskytovatel dat
+          en: Data provider
+          de: Datenanbieter
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   district:
     slot_uri: sdm:district
     description: The city district (districte) the address lies in.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Mestská časť
+          cs: Městská část
+          en: District
+          de: Stadtbezirk
+        annotations: { generated: sk cs en de }
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   contactPoint:
     slot_uri: schema:contactPoint
@@ -370,18 +697,42 @@ slots:
     range: ContactPoint
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kontakt
+          cs: Kontakt
+          en: Contact
+          de: Kontakt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   telephone:
     slot_uri: schema:telephone
     description: A telephone number as the agenda writes it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Telefón
+          cs: Telefon
+          en: Telephone
+          de: Telefon
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/telephone
   source:
     slot_uri: sdm:source
     description: The open-data file or the Open Data BCN dataset the entity was read from.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
