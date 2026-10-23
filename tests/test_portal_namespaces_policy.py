@@ -249,7 +249,8 @@ def secret(name: str, ns: str = "dev", kind: str = "Opaque") -> dict:
 # refused, no route or limit change reaches APISIX, prod 2026-10-20 07:30Z).
 @pytest.mark.parametrize(
     "name",
-    ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store", "apisix-standalone-config"],
+    ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store", "apisix-standalone-config",
+     "personal-data-keys"],
 )
 @pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
 def test_the_portal_may_write_the_secrets_it_hands_over(secrets_policy, tmp_path, name, operation):
