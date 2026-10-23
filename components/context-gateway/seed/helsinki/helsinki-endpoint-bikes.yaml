@@ -5,8 +5,8 @@ metadata:
   namespace: helsinki
   title: { en: Helsinki city bike stations }
   description:
-    fi: 'Helsingin kaupunkipyöräasemat: sijainti, kapasiteetti sekä juuri nyt vapaat pyörät ja telineet. Lähde: operaattorin GBFS-syöte, ODbL 1.0.'
-    en: "Helsinki's city bike stations: location, capacity and the bikes and docks free right now. Source: the operator's GBFS feed, ODbL 1.0."
+    fi: 'Helsingin ja Espoon kaupunkipyöräasemat: sijainti, kapasiteetti sekä juuri nyt vapaat pyörät ja telineet (operaattorin GBFS-syöte, ODbL 1.0); Vantaan kaupunkipyöräasemat: sijainti, osoite ja telineiden määrä ilman reaaliaikaista tilaa (HSL, CC BY 4.0).'
+    en: "Helsinki's and Espoo's city bike stations: location, capacity and the bikes and docks free right now (the operator's GBFS feed, ODbL 1.0); Vantaa's city bike stations: location, address and number of docks, without a live count (HSL, CC BY 4.0)."
 spec:
   contextSpaceRef: helsinki
   slug: scsd2eehkx42n53z2zyd6vshfh7s7irf
@@ -31,9 +31,9 @@ spec:
       uri: https://www.hel.fi/
     license: ODC_ODBL
     attribution:
-      fi: Sisältää Kaupunkipyörät-syötteen dataa (Inurba), ODbL 1.0
-      sv: Innehåller data från stadscykelflödet (Inurba), ODbL 1.0
-      en: Contains data from the City Bikes feed (Inurba), ODbL 1.0
+      fi: Sisältää Kaupunkipyörät-syötteen dataa (Inurba), ODbL 1.0, ja Vantaan kaupunkipyöräasemat (HSL), CC BY 4.0
+      sv: Innehåller data från stadscykelflödet (Inurba), ODbL 1.0, och Vandas stadscykelstationer (HRT), CC BY 4.0
+      en: Contains data from the City Bikes feed (Inurba), ODbL 1.0, and City Bike Vantaa's stations (HSL), CC BY 4.0
     themes: [TRAN]
     keywords:
       fi: [kaupunkipyörät, pyöräasemat, liikkuminen]
@@ -51,4 +51,9 @@ spec:
         description:
           fi: Operaattorin avoin GBFS 2.2 -syöte asemista ja niiden tilasta, ODbL 1.0.
           en: The operator's open GBFS 2.2 feed of stations and their status, ODbL 1.0.
+      - url: https://hri.fi/data/en_GB/dataset/vantaan-kaupunkipyoraasemat
+        title: { fi: Vantaan kaupunkipyöräasemat, en: City bicycle stations of Vantaa }
+        description:
+          fi: HSL:n rekisteri Vantaan asemista, GeoJSON (WGS84), CC BY 4.0. Luetaan päivittäin (putki vantaa-bikes).
+          en: HSL's register of Vantaa's stations, as GeoJSON (WGS84), CC BY 4.0. Read daily (pipeline vantaa-bikes).
     pipelineRef: { kind: Pipeline, name: citybikes-gbfs }

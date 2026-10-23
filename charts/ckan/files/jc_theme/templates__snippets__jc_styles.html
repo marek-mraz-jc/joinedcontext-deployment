@@ -4,7 +4,7 @@ derives the whole look from them (T-3009). Included by base.html and by the tabl
 own template empties the block base.html fills.
 #}
 {% set brand = h.jc_branding() %}
-<style>
+<style nonce="{{ h.jc_csp_nonce() }}">
   :root {
     --jc-primary: {{ brand.colours.primary }};
     --jc-primary-fg: {{ brand.primaryForeground }};
