@@ -63,8 +63,9 @@ configMap:
     {{- $thisRunner.streams | default dict | toYaml | nindent 4 }}
 
 # The files volume a `csv`, `file`, `file_tail` or `parquet` DataSource reads from (PL-50,
-# Architecture/08 §6): a manifest names paths under /data/, a file gets there with
-# `kubectl cp <file> -n <ns> <runner pod>:/data/` today, the Portal's upload later.
+# Architecture/08 §6): a manifest names paths under its project's folder /data/<project>/
+# (PL-50, T-5337), a file gets there with
+# `kubectl cp <file> -n <ns> <runner pod>:/data/<project>/` today, the Portal's upload later.
 persistence:
   enabled: true
   size: 1Gi
