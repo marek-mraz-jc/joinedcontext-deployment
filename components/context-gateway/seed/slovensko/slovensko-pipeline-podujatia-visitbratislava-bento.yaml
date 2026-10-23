@@ -121,7 +121,7 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"match":"divadlo gunagu","town":"bratislava","venue":"Divadlo GUnaGU","streetAddress":"Františkánske námestie 7","addressLocality":"Bratislava","lat":48.1441205,"lon":17.1078533},{"match":"múzeum jána cikkera","town":"bratislava","venue":"Múzeum Jána Cikkera","streetAddress":"Fialkové údolie 1864/2","addressLocality":"Bratislava","lat":48.145023,"lon":17.093056}]
+      let venues = [{"poi":"osm-node-1470667811","match":"divadlo gunagu","town":"bratislava","venue":"Divadlo GUnaGU","streetAddress":"Františkánske námestie 7","addressLocality":"Bratislava","lat":48.1441205,"lon":17.1078533},{"poi":"osm-ra-5988763","match":"múzeum jána cikkera","town":"bratislava","venue":"Múzeum Jána Cikkera","streetAddress":"Fialkové údolie 1864/2","addressLocality":"Bratislava","lat":48.145023,"lon":17.093056}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
@@ -134,7 +134,10 @@ pipeline:
       let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
       let locality = $feed_locality.or($known.addressLocality.or("Bratislava"))
       # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
-      let area = if $known == null && $locality != null { [["Dubnica nad Váhom","dubnica-nad-vahom",48.95758,18.16566,"office"],["Jablonec","jablonec",48.33242,17.4481,"office"],["Kostolná pri Dunaji","kostolna-pri-dunaji",48.18472,17.43602,"office"],["Kuchyňa","kuchyna",48.40734,17.15973,"office"],["Malinovo","malinovo",48.15655,17.29792,"office"],["Marianka","marianka",48.2495,17.05765,"office"],["Nitra","nitra",48.30563,18.08377,"office"],["Pernek","pernek",48.36778,17.14382,"office"],["Prešov","presov",49.00001,21.23921,"centre"],["Reca","reca",48.2301,17.45832,"office"],["Tomášov","tomasov",48.14252,17.3366,"office"],["Trenčín","trencin",48.89435,18.04058,"office"],["Tureň","turen",48.19197,17.38952,"office"],["Veľký Biel","velky-biel",48.21306,17.3597,"office"],["Vištuk","vistuk",48.33494,17.39631,"office"],["Častá","casta",48.39413,17.35264,"office"],["Čataj","cataj",48.27231,17.47512,"office"],["Bratislava","bratislava",48.14418,17.10942,"office"],["Doľany","dolany",48.416,17.37593,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).map_each(t -> { "town": t.index(1), "lat": t.index(2), "lon": t.index(3), "precision": t.index(4) }).index(0).catch(null) } else { null }
+      let hit = if $locality != null { [["Dubnica nad Váhom","dubnica-nad-vahom",48.95758,18.16566,"office"],["Jablonec","jablonec",48.33242,17.4481,"office"],["Kostolná pri Dunaji","kostolna-pri-dunaji",48.18472,17.43602,"office"],["Kuchyňa","kuchyna",48.40734,17.15973,"office"],["Malinovo","malinovo",48.15655,17.29792,"office"],["Marianka","marianka",48.2495,17.05765,"office"],["Nitra","nitra",48.30563,18.08377,"office"],["Pernek","pernek",48.36778,17.14382,"office"],["Prešov","presov",49.00001,21.23921,"centre"],["Reca","reca",48.2301,17.45832,"office"],["Tomášov","tomasov",48.14252,17.3366,"office"],["Trenčín","trencin",48.89435,18.04058,"office"],["Tureň","turen",48.19197,17.38952,"office"],["Veľký Biel","velky-biel",48.21306,17.3597,"office"],["Vištuk","vistuk",48.33494,17.39631,"office"],["Častá","casta",48.39413,17.35264,"office"],["Čataj","cataj",48.27231,17.47512,"office"],["Bratislava","bratislava",48.14418,17.10942,"office"],["Doľany","dolany",48.416,17.37593,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+      let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
+      # The municipality by its official name, on every event (DM-141): the town table's, the venue's, else the feed's.
+      let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
       # GPS from the feed, else from the venue table, else from the organizer's address, else from the town; the
       # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
       let feed_lat = this.lat.number().catch(null)
@@ -191,6 +194,9 @@ pipeline:
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
         "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
+        # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-141).
+        "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
+        "areaServed": $municipality.apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back

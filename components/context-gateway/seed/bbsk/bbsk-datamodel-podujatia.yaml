@@ -9,7 +9,7 @@ spec:
   linkml: ./bbsk-podujatia.linkml.yaml
   version: 1.0.0
   lifecycle: published
-  classes: [Event]
+  classes: [Event, PointOfInterest]
   artifacts:
     jsonSchema: ./bbsk-podujatia.v1.schema.json
     context: ./bbsk-podujatia.v1.context.jsonld
