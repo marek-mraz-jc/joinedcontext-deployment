@@ -9,7 +9,9 @@ committed folders are checked against TOPICS, the seed index, the pipelines' acc
 
 import importlib.util
 import json
+import os
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -145,7 +147,8 @@ def decode(theme: str, fixture: str, tmp_path: Path, body: bytes | None = None) 
     files, _ = generate(tmp_path)
     steps = yaml.safe_load(files[tmp_path / f"susr-{theme}/pipeline.yaml"])["spec"]["steps"]
     rendered = tmp_path / "steps.yaml"
-    rendered.write_text(yaml.safe_dump({"pipeline": {"processors": [{"mapping": s["bloblang"]} for s in steps]}}))
+    # The datacube step as the Portal's jc-core renders it (datacube.mapping, over the checked copy of its template).
+    rendered.write_text(yaml.safe_dump({"pipeline": {"processors": [{"mapping": datacube.mapping(s["datacube"])} for s in steps]}}))
     body = body if body is not None else (FIXTURES / fixture).read_bytes()
     return open_data.run(rendered, body, f"susr-{theme}", "joinedcontext.com")
 
@@ -199,9 +202,38 @@ def test_the_committed_pipelines_decode_with_the_generators_steps(tmp_path):
             continue
         steps = yaml.safe_load(text)["spec"]["steps"]
         mine = yaml.safe_load((SEED / path.parent.name / "pipeline.yaml").read_text())["spec"]["steps"]
-        # The cube table is the live collection's, the fixture's here; the rest is the decoder.
-        decoder = lambda ss: [re.sub(r"(?m)^let cubes = .*$", "", s["bloblang"]) for s in ss]  # noqa: E731
-        assert decoder(mine) == decoder(steps), path.parent.name
+        # The cube table is the live collection's, the fixture's here; the rest is the step (T-5382).
+        params = lambda ss: [(s["kind"], {k: v for k, v in s["datacube"].items() if k != "cubes"}) for s in ss]  # noqa: E731
+        assert params(mine) == params(steps), path.parent.name
+
+
+def test_every_committed_pipeline_is_one_datacube_step_jc_core_accepts():
+    # jc-core's DatacubeStep::validate, as its regexes read (platform 12d5f50, T-5295): a step it refuses
+    # stops the pipeline on dev, so the seed is held to them here.
+    url = re.compile(r"^https://[!#$&-\[\]-z|~]{1,2000}$")
+    dimension = re.compile(r"^[A-Za-z0-9_]{1,64}$")
+    for topic in committed():
+        [step] = yaml.safe_load((topic / "pipeline.yaml").read_text())["spec"]["steps"]
+        assert step["kind"] == "datacube" and set(step) == {"kind", "datacube"}, topic.name
+        cubes = step["datacube"]["cubes"]
+        assert 1 <= len(cubes) <= 16 and url.match(step["datacube"]["datasetPage"].replace("{cube}", "cube", 1))
+        for code, cube in cubes.items():
+            assert re.fullmatch(r"[a-z]{2}[0-9]{4}[a-z]{2}", code) and url.match(cube["source"]), (topic.name, code)
+            assert set(cube) <= {*datacube.ROLES, "keys"} and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", cube["update"])
+            for name in [cube.get(r) for r in ("period", "area", "indicator", "unit") if cube.get(r)] + cube.get("keys", []):
+                assert dimension.match(name), (topic.name, code, name)
+
+
+def test_the_decoder_copy_is_jc_cores_template_at_the_portal_pin():
+    """scripts/open-data/datacube.blobl renders the Bento cases and the temporal audit: it must be the
+    template the pinned Portal's jc-core renders (portal images.yaml `platform`)."""
+    pin = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["portal"]["platform"]
+    clone = Path(os.environ.get("JC_PLATFORM_DIR", ROOT.parent / "joinedcontext-platform"))
+    shown = subprocess.run(["git", "-C", str(clone), "show", f"{pin}:crates/jc-core/src/datacube.blobl"],
+                           capture_output=True, text=True, check=False)
+    if shown.returncode != 0:
+        pytest.skip(f"no platform clone holding {pin[:7]}")
+    assert datacube.TEMPLATE.read_text() == shown.stdout
 
 
 def committed() -> list[Path]:
@@ -417,13 +449,13 @@ def test_population_change_is_read_by_region_and_district_and_says_so():
     entities get that refArea, and every topic with an area cube names territories in its
     description, so the router knows a region is there to read."""
     folder = SEED / "susr-om-pohyb"
-    cubes = json.loads(re.search(r"let cubes = (\{.*\})\n", (folder / "pipeline.yaml").read_text()).group(1))
-    assert cubes["om7104rr"]["area"] == "om7104rr_vuc"
-    assert "refArea" in (folder / "pipeline.yaml").read_text()
+    def cubes(topic: Path) -> dict:
+        return yaml.safe_load((topic / "pipeline.yaml").read_text())["spec"]["steps"][0]["datacube"]["cubes"]
+    assert cubes(folder)["om7104rr"]["area"] == "om7104rr_vuc"
+    assert "refArea" in datacube.mapping({"wholeArea": "SK0", "datasetPage": "https://x/{cube}", "cubes": cubes(folder)})
     for topic in committed():
-        cubes = json.loads(re.search(r"let cubes = (\{.*\})\n", (topic / "pipeline.yaml").read_text()).group(1))
         en = yaml.safe_load((topic / "endpoint.yaml").read_text())["metadata"]["description"]["en"]
-        regional = any(c["area"] for c in cubes.values())
+        regional = any(c.get("area") for c in cubes(topic).values())
         assert ("its territories" in en) == regional, topic.name
 
 

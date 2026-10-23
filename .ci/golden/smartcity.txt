@@ -475,7 +475,6 @@ v1/ConfigMap smartcity/gitea-seed-s2-barcelona
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--17
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--18
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--19
-v1/ConfigMap smartcity/gitea-seed-s2-slovensko--26
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--2
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--3

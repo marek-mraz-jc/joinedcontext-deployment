@@ -29,3 +29,5 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: WeatherObserved
+        - type: PhreaticObserved

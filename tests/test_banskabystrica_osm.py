@@ -79,7 +79,10 @@ def osm(primary=None, mirror=(503, b""), held=()) -> subprocess.CompletedProcess
         text = MAPPING.read_text().replace(PRIMARY, here + "/primary").replace(MIRROR, here + "/mirror")
         config = {
             "input": {"generate": {"mapping": 'root = ""', "count": 1, "interval": ""}},
-            "pipeline": yaml.safe_load(text)["pipeline"],
+            # The runner writes no message Bento flagged errored: the last step turns the flag
+            # into the output, so written() refuses it the way the run does.
+            "pipeline": {"processors": [*yaml.safe_load(text)["pipeline"]["processors"],
+                                        {"mapping": 'root = if errored() { {"errored": error()} } else { this }'}]},
             "rate_limit_resources": [{"label": "pipeline_egress", "local": {"count": 100, "interval": "1s"}}],
             "output": {"stdout": {"codec": "all-bytes"}},
             "logger": {"level": "error"},
@@ -97,6 +100,14 @@ def osm(primary=None, mirror=(503, b""), held=()) -> subprocess.CompletedProcess
         server.shutdown()
 
 
+def written(result: subprocess.CompletedProcess) -> list[dict]:
+    """The entities a run hands to the writer; a message Bento flagged errored is never written."""
+    assert result.returncode == 0, result.stderr.decode()
+    out = json.loads(result.stdout)
+    assert isinstance(out, list), out
+    return out
+
+
 def calls(suffix: str) -> list[bytes]:
     return [body for path, body in Stand.seen if path.split("?")[0].endswith(suffix)]
 
@@ -105,9 +116,7 @@ def calls(suffix: str) -> list[bytes]:
 def entities():
     if shutil.which("docker") is None:
         pytest.skip("no container runtime")
-    result = osm()
-    assert result.returncode == 0, result.stderr.decode()
-    return {e["id"]: e for e in json.loads(result.stdout)}
+    return {e["id"]: e for e in written(osm())}
 
 
 @requires_docker
@@ -179,8 +188,7 @@ def test_an_object_gone_from_the_map_is_deleted_and_the_rest_kept():
     gone = urn("PointOfInterest", "osm-node-1")
     kept = urn("PointOfInterest", "osm-node-562621210")
     result = osm(held=[{"id": gone, "type": "PointOfInterest"}, {"id": kept, "type": "PointOfInterest"}])
-    assert result.returncode == 0, result.stderr.decode()
-    assert len(json.loads(result.stdout)) == 59
+    assert len(written(result)) == 59
     (query,) = calls("/entityOperations/query")
     patterns = {e["type"]: e["idPattern"] for e in json.loads(query)["entities"]}
     assert patterns == {t: rf"^urn:ngsi-ld:{t}:banskabystrica\.sk:{SPACE}:osm-" for t in ("PointOfInterest", "EVChargingStation")}
@@ -190,7 +198,18 @@ def test_an_object_gone_from_the_map_is_deleted_and_the_rest_kept():
 @requires_docker
 def test_nothing_gone_deletes_nothing():
     result = osm(held=[{"id": urn("PointOfInterest", "osm-node-562621210"), "type": "PointOfInterest"}])
-    assert result.returncode == 0, result.stderr.decode()
+    assert len(written(result)) == 59
+    assert calls("/entityOperations/query") and not calls("/entityOperations/delete")
+
+
+@requires_docker
+def test_the_first_run_into_an_empty_space_writes_every_object():
+    # T-5320: prod's run failed 59 times with "child processors resulted in zero messages":
+    # an empty removal step flagged every entity errored and the space stayed empty.
+    result = osm(held=[])
+    entities = written(result)
+    assert len(entities) == 59
+    assert [e["type"] for e in entities].count("EVChargingStation") == 22
     assert calls("/entityOperations/query") and not calls("/entityOperations/delete")
 
 
@@ -198,21 +217,20 @@ def test_nothing_gone_deletes_nothing():
 def test_a_full_page_of_held_entities_is_not_judged_from_one_page():
     held = [{"id": urn("PointOfInterest", f"osm-node-{n}"), "type": "PointOfInterest"} for n in range(1000)]
     result = osm(held=held)
-    assert result.returncode == 0, result.stderr.decode()
+    assert len(written(result)) == 59
     assert not calls("/entityOperations/delete")
 
 
 @requires_docker
 def test_the_mirror_answers_when_the_main_server_fails():
     result = osm(primary=(504, b"<html>Gateway Timeout</html>"), mirror=(200, saved()))
-    assert result.returncode == 0, result.stderr.decode()
-    assert len(json.loads(result.stdout)) == 59
+    assert len(written(result)) == 59
     assert calls("/primary/api/interpreter") and calls("/mirror/api/interpreter")
 
 
 @requires_docker
 def test_the_mirror_is_not_asked_when_the_main_server_answers():
-    assert osm().returncode == 0
+    assert len(written(osm())) == 59
     assert calls("/primary/api/interpreter") and not calls("/mirror/api/interpreter")
 
 
@@ -224,7 +242,7 @@ def test_the_mirror_is_not_asked_when_the_main_server_answers():
 def test_a_short_answer_fails_the_run_and_deletes_nothing(answer, said):
     held = [{"id": urn("PointOfInterest", "osm-node-1"), "type": "PointOfInterest"}]
     result = osm(primary=(200, json.dumps(answer).encode()), held=held)
-    assert result.returncode != 0 or result.stdout.strip() in (b"", b"[]", b"{}")
+    assert result.returncode != 0 or result.stdout.strip() in (b"", b"[]", b"{}") or b'"errored"' in result.stdout
     assert said in result.stderr + result.stdout
     assert not calls("/entityOperations/query") and not calls("/entityOperations/delete")
 
