@@ -128,7 +128,12 @@ def test_the_gateway_and_the_portal_address_the_port_the_service_serves(dev):
 def test_only_the_gateway_and_the_portal_reach_the_broker(dev):
     policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
     (container,) = pod_of(dev)["containers"]
-    (inbound,) = policy["ingress"]
+    # With metrics on (dev since T-5154) a second rule admits Prometheus to the metrics port only.
+    inbound, *scrape = policy["ingress"]
+    for rule in scrape:
+        assert [f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in rule["from"]] == ["prometheus"]
+        assert [p["port"] for p in rule["ports"]] == [9464]
+    assert len(scrape) <= 1
     peers = sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in inbound["from"])
     assert peers == ["context-gateway-gateway", "portal-portal"]
     assert [p["port"] for p in inbound["ports"]] == [container["ports"][0]["containerPort"]]

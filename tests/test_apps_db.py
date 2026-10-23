@@ -66,8 +66,15 @@ def test_only_the_portal_the_shards_the_operator_and_its_own_instances_reach_it(
         if d.get("kind") == "NetworkPolicy" and d["spec"].get("podSelector", {}).get("matchLabels") == {"cnpg.io/cluster": "apps-db"}
         and "Egress" in d["spec"]["policyTypes"]
     )
-    sources = [peer.get("podSelector", {}).get("matchLabels", {}) for rule in policy["spec"]["ingress"] for peer in rule["from"]]
-    names = {labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole") for labels in sources}
+    def name(peer):
+        labels = peer.get("podSelector", {}).get("matchLabels", {})
+        return labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole")
+
+    rules = policy["spec"]["ingress"]
+    # With metrics on (dev since T-5154) Prometheus scrapes the exporter port, nothing else.
+    scrape = [rule for rule in rules if [name(peer) for peer in rule["from"]] == ["prometheus"]]
+    assert all([p["port"] for p in rule["ports"]] == [9187] for rule in scrape), scrape
+    names = {name(peer) for rule in rules if rule not in scrape for peer in rule["from"]}
     assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard"}, names
 
 

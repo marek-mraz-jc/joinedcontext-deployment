@@ -275,12 +275,12 @@ v1/ConfigMap local/gitea-seed-s4-bbsk--4
 v1/ConfigMap local/gitea-seed-s4-bbsk--5
 v1/ConfigMap local/gitea-seed-s4-bbsk--6
 v1/ConfigMap local/gitea-seed-s4-bbsk--7
-v1/ConfigMap local/gitea-seed-s4-slovensko--26
+v1/ConfigMap local/gitea-seed-s4-zilina
 v1/ConfigMap local/gitea-seed-s5-bbsk--10
 v1/ConfigMap local/gitea-seed-s5-bbsk--11
 v1/ConfigMap local/gitea-seed-s5-bbsk--8
 v1/ConfigMap local/gitea-seed-s5-bbsk--9
-v1/ConfigMap local/gitea-seed-s5-zilina
+v1/ConfigMap local/gitea-seed-s5-slovensko--26
 v1/ConfigMap local/gitea-seed-s6-bbsk--12
 v1/ConfigMap local/gitea-seed-s6-bbsk--13
 v1/ConfigMap local/gitea-seed-s6-bbsk--14
