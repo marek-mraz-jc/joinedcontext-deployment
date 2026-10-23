@@ -11,7 +11,7 @@ description: >-
   the traffic state of each street section and each route of sections the city reports every
   five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading
   and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona
-  network with its live socket states. Urbanism (T-5264): the districts and barris as
+  network with its live socket states. Urbanism: the districts and barris as
   AdministrativeArea, the works on the public space as CityWork and the street inventory's
   crossings as PedestrianCrossing.
 license: https://joinedcontext.com/licenses/cc-by-4.0

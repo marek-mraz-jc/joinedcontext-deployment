@@ -131,27 +131,27 @@ spec:
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
-    - name: in-area
+    - name: in-area-areas
       entityType: AdministrativeArea
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
-    - name: in-area
+    - name: in-area-city-works
       entityType: CityWork
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
-    - name: in-area
+    - name: in-area-pedestrian-crossings
       entityType: PedestrianCrossing
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
-    - name: in-area
+    - name: in-area-events
       entityType: Event
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
-    - name: in-area
+    - name: in-area-places
       entityType: PointOfInterest
       kind: area
       attribute: location
