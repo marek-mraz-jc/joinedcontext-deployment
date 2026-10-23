@@ -121,6 +121,28 @@ portal-public-connect:
   priority: 5
   pluginConfig: portal-public
 
+# The glossary (T-3236) and the accessibility statement (T-5108): the two pages every public page's
+# footer links and every word's hint in the catalogue opens, the same text for everyone and no
+# data. Exact paths, so nothing else of the Portal UI loses its login (T-5293). The plugin config
+# is portal-public's: a session is read when there is one and nobody is redirected.
+portal-public-glossary:
+  name: portal-public-glossary
+  description: The glossary page, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/glossary'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
+portal-public-accessibility:
+  name: portal-public-accessibility
+  description: The accessibility statement, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/accessibility'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The bundle the catalogue page (and every Portal page) runs on: the same files for everyone,
 # holding no data. The plugin config is portal-public's.
 portal-public-assets:
