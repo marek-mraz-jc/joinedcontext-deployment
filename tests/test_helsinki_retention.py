@@ -69,7 +69,10 @@ def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
 def test_no_other_type_loses_its_current_state():
     losing = [(name, rule["entityType"]) for name, space in spaces().items()
               for rule in space["spec"].get("retention", []) if "current" in rule]
+    # Barcelona's sections and charging points leave 30 days after the source drops them (T-5262 review).
     assert sorted(losing) == [
+        ("barcelona/barcelona", "EVChargingStation"), ("barcelona/barcelona", "OnStreetParking"),
+        ("barcelona/barcelona", "TrafficFlowObserved"),
         ("helsinki/helsinki", "Alert"), ("helsinki/helsinki", "Event"),
         ("helsinki/helsinki", "PointOfInterest"), ("helsinki/helsinki", "ServiceRequest"),
         ("helsinki/helsinki", "Vehicle")]
