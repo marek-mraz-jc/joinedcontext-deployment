@@ -39,6 +39,15 @@ portal:
       ports:
         - protocol: TCP
           port: 5432
+    # The UI bundle it reads every page from (T-2485, T-5297).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-ui
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8080
     # The mail catcher of an installation without a relay (T-3583); a named relay outside the
     # cluster takes an egress rule of the environment's own.
     - to:
@@ -197,3 +206,34 @@ mail-catcher:
       ports:
         - protocol: TCP
           port: 1025
+
+# The UI bundle answers the Portal alone (T-2485, T-5297): the edge never reaches it, the Portal
+# reads its files and serves them with its own headers. It dials nothing but CoreDNS.
+portal-ui:
+  podSelector:
+    app.kubernetes.io/name: portal-ui
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

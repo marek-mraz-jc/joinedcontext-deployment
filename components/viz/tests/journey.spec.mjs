@@ -17,7 +17,7 @@ const vendor = path.join(here, "../../../images/viz/vendor");
 const DOMAIN = "dev.joinedcontext.com";
 const VIZ = `viz.${DOMAIN}`;
 const SLUG = "3iasem46w7d7pxxypwdfdzheyaodv3qn";
-const OURS = new Set([VIZ, `api.${DOMAIN}`, `data.${DOMAIN}`, `tiles.${DOMAIN}`, `assistant.${DOMAIN}`]);
+const OURS = new Set([VIZ, `api.${DOMAIN}`, `data.${DOMAIN}`, `opendata.${DOMAIN}`, `tiles.${DOMAIN}`, `assistant.${DOMAIN}`]);
 
 // The CSP of each page, read from nginx.conf as the chart renders it.
 const conf = readFileSync(path.join(chart, "files/nginx.conf"), "utf8").replaceAll("__HOST__", VIZ).replaceAll("__DOMAIN__", DOMAIN);
@@ -83,6 +83,19 @@ const SPECS = {
       }
     ]
   }],
+  // A type whose history the Endpoint's Policy does not open: its temporal read answers 404 (T-5421).
+  closed: [{ ...temporal, type: "Vehicle" }, { $schema: VL, data: { name: "source" }, mark: "line",
+    encoding: { x: { field: "observedAt", type: "temporal" }, y: { field: "temperature", type: "quantitative" } } }],
+  // T-5414: seven days of hourly NO2, more than one temporal window (206) of the broker holds.
+  paged: [{ source: "temporal", type: "AirQualityObserved", attrs: ["no2"], last: "P7D" }, {
+    $schema: VL, data: { name: "source" }, mark: "line",
+    encoding: { x: { field: "observedAt", type: "temporal", title: null }, y: { field: "no2", type: "quantitative", title: "NO₂ µg/m³" },
+      color: { field: "name", type: "nominal", title: null } }
+  }],
+  partial: [{ source: "temporal", type: "AirQualityObserved", attrs: ["pm10"], last: "P7D" }, {
+    $schema: VL, data: { name: "source" }, mark: "line",
+    encoding: { x: { field: "observedAt", type: "temporal", title: null }, y: { field: "pm10", type: "quantitative", title: "PM10 µg/m³" } }
+  }],
   dataUrl: [odata, { $schema: VL, data: { url: "https://evil.example/rows.csv" }, mark: "bar" }],
   javascriptHref: [odata, { $schema: VL, data: { name: "source" }, mark: "bar", encoding: { href: { value: "javascript:alert(1)" } } }],
   windowExpr: [odata, { $schema: VL, data: { name: "source" }, transform: [{ calculate: "window.location.href", as: "x" }], mark: "bar" }]
@@ -121,7 +134,8 @@ export async function serve(context, { trustless = false } = {}) {
         return route.fulfill({ status: 404, body: "" });
       }
     }
-    if (url.hostname === `data.${DOMAIN}` && url.pathname === "/api/3/action/resource_view_show") {
+    // host.js reads the catalogue on opendata.{domain} (hosts()).
+    if (url.hostname === `opendata.${DOMAIN}` && url.pathname === "/api/3/action/resource_view_show") {
       const key = Object.keys(ids).find((k) => ids[k] === url.searchParams.get("id"));
       return key ? json({ success: true, result: view(key) }) : route.fulfill({ status: 404, body: "{}" });
     }
@@ -158,6 +172,10 @@ export async function serve(context, { trustless = false } = {}) {
     }
     if (url.hostname === `api.${DOMAIN}`) {
       const base = `/api/endpoint/${SLUG}/`;
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "Vehicle") {
+        return route.fulfill({ status: 404, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` }, body: "{}" });
+      }
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "AirQualityObserved") return route.fulfill(windowed(url));
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
       if (url.pathname === `${base}ngsi-ld/v1/entities`) return json(NAMES);
       if (url.pathname === `${base}odata/v4/WeatherObserved`) return json(ODATA);
@@ -166,6 +184,25 @@ export async function serve(context, { trustless = false } = {}) {
     return route.abort();
   });
   return requests;
+}
+
+// A temporal answer cut as Antares cuts it (T-5414): 100 instances per attribute, 206, the next
+// window in Link rel="intervalafter" and the headers the edge exposes to viz (apisix-plugins.yaml).
+// pm10 never ends: its Link names the same window again.
+const AIR = { "urn:ngsi-ld:AirQualityObserved:praha:chmi-alib": "Praha 4-Libuš", "urn:ngsi-ld:AirQualityObserved:praha:chmi-akal": "Praha 8-Karlín" };
+function windowed(url) {
+  const attr = url.searchParams.get("attrs");
+  const second = url.searchParams.has("offsetN");
+  const start = Date.parse("2026-10-16T06:00:00Z") + (second ? 100 : 0) * 3600e3;
+  const count = attr === "pm10" ? 100 : second ? 69 : 100;
+  const body = Object.keys(AIR).map((id, n) => ({ id, type: "AirQualityObserved",
+    [attr]: { type: "Property", values: Array.from({ length: count }, (_, i) => [Math.round(20 + 12 * Math.sin((i + (second ? 100 : 0)) / 6) + n * 6), new Date(start + i * 3600e3).toISOString().replace(".000", "")]) } }));
+  const next = attr === "pm10" ? url.pathname + url.search : `${url.pathname}?${url.searchParams}&offsetN=100`;
+  return {
+    status: second ? 200 : 206, contentType: "application/json", body: JSON.stringify(body),
+    headers: { "Access-Control-Allow-Origin": `https://${VIZ}`, "Access-Control-Expose-Headers": "NGSILD-Results-Count,Content-Range,Link",
+      ...(second ? {} : { "Content-Range": "date-time 2026-10-16T05:34:10Z-2026-10-20T09:00:00Z/*", Link: `<${next}>; rel="intervalafter";type="application/json"` }) }
+  };
 }
 
 // What the assistant's widget hands the host page in `#show` (ADR-N-053 §2.9).
@@ -226,6 +263,13 @@ test("the renderer frame reads no cookie and calls no host", async ({ page, cont
   expect(await frame.evaluate(() => origin)).toBe("null");
   expect(await frame.evaluate(() => { try { return document.cookie; } catch (e) { return e.name; } })).toBe("SecurityError");
   expect(await frame.evaluate(() => fetch(`https://api.${location.hostname.slice(4)}/`).then(() => "fetched", () => "refused"))).toBe("refused");
+});
+
+test("closed: a refused read tells the reader in Slovak and keeps the status (T-5421)", async ({ page, context }) => {
+  await serve(context);
+  await page.goto(`https://data.${DOMAIN}/dataset/closed`);
+  await expect(host(page).locator("#status")).toHaveText("Údaje tohto grafu teraz nie sú dostupné. (HTTP 404)", { timeout: 15000 });
+  await expect(renderer(page).locator("svg")).toHaveCount(0);
 });
 
 for (const key of ["dataUrl", "javascriptHref", "windowExpr"]) {
@@ -324,3 +368,27 @@ test("show: a page on another site gets nothing drawn, and a map linking out is 
   await expect(page.frameLocator("#viz").locator("#status")).toContainText("/link", { timeout: 10000 });
   await expect(page.frameLocator("#viz").locator("#map")).toHaveCount(0);
 });
+
+// T-5414: a temporal chart reads every window of its period, and says so when a limit cuts it.
+const SHOTS = process.env.SHOTS_DIR;
+for (const [name, width] of [["desktop", 1440], ["phone", 400]]) {
+  test(`paged: a 206 temporal answer is read to the end of its window (${name})`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 700 });
+    const requests = await serve(context);
+    await page.goto(`https://data.${DOMAIN}/dataset/paged`);
+    await expect(renderer(page).locator("svg .mark-line").first()).toBeAttached({ timeout: 15000 });
+    const windows = requests.filter((u) => u.pathname.endsWith("/temporal/entities")).map((u) => u.searchParams.get("offsetN"));
+    expect(windows).toEqual([null, "100"]);
+    await expect(host(page).locator("#status")).toBeHidden();
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/paged-${width}.png`, fullPage: true });
+  });
+  test(`partial: a window that never ends draws what it read with a note (${name})`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await serve(context);
+    await page.goto(`https://data.${DOMAIN}/dataset/partial`);
+    await expect(host(page).locator("#status")).toHaveText("Graf je neúplný: zobrazuje údaje do 2026-10-20 09:00 UTC, zvyšok presahuje limity stránky.", { timeout: 15000 });
+    await expect(host(page).locator("#status")).toHaveAttribute("role", "status");
+    await expect(renderer(page).locator("svg .mark-line").first()).toBeAttached({ timeout: 15000 });
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/partial-${width}.png`, fullPage: true });
+  });
+}

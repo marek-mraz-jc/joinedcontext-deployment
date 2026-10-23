@@ -794,6 +794,35 @@ def inventory(client: Client, domain: str) -> tuple[list, set]:
     return datasets, public
 
 
+# The search's Format filter names what a reader can do, and its Topic filter the EU themes
+# (T-5294): the CKAN theme indexes both, and drops a value every dataset shares.
+USES = {"table", "map", "live", "api"}
+
+
+def filters(client: Client, domain: str) -> str:
+    """The catalogue's search filters, in one package_search: a Format filter that narrows the
+    search (a use, never a file format, and no value on every dataset) and a Topic filter."""
+    query = urllib.parse.urlencode({"rows": 0, "facet.field": json.dumps(["vocab_jc_use", "vocab_jc_topic"])})
+    answer = client.fetch(f"https://opendata.{domain}/api/3/action/package_search?{query}")
+    result = (answer.json() or {}).get("result") if answer.status == 200 else None
+    if not isinstance(result, dict):
+        return ko(f"package_search with the filters answered {answer.why()}")
+    facets = result.get("search_facets") or {}
+    uses = {i.get("name"): i.get("count") for i in (facets.get("vocab_jc_use") or {}).get("items") or []}
+    topics = (facets.get("vocab_jc_topic") or {}).get("items") or []
+    if not result.get("count"):
+        return skip("no dataset")
+    if not uses:
+        return ko("the Format filter offers no choice")
+    if set(uses) - USES:
+        return ko("the Format filter names " + ", ".join(sorted(set(uses) - USES)))
+    if result["count"] in uses.values():
+        return ko("a Format value is on every dataset")
+    if not topics:
+        return ko("the Topic filter is missing")
+    return ok(f"{len(uses)} formats, {len(topics)} topics")
+
+
 def previous_table(out: Path, env: str) -> tuple[dict, str]:
     tables = sorted(out.glob(f"smoke-catalogue-{env}-*.tsv"))
     if not tables:
@@ -809,6 +838,8 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
     previous, previous_at = previous_table(out, env)
     datasets, public = inventory(client, domain)
     rows = Run(client, domain, previous, previous_at, now).table(datasets, public)
+    rows.append({"dataset": "(catalogue)", "endpoint": "-", "inventory": filters(client, domain),
+                 **{c: "-" for c in COLUMNS[1:]}})
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"smoke-catalogue-{env}-{now}.tsv"
     with path.open("w", newline="") as handle:
@@ -825,11 +856,11 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
         warns = [f"{c} {row[c][6:]}" for c in COLUMNS if verdict(row[c]) == "warn"]
         if warns:
             print(f"  warn  catalogue {row['dataset']} ({row['endpoint']}): {'; '.join(warns)}")
-    named = [r for r in rows if r["dataset"] != "(no dataset)"]
+    named = [r for r in rows if not r["dataset"].startswith("(")]
     complete = sum(all(verdict(r[c]) != "ko" for c in COLUMNS) for r in named)
     seconds = client.elapsed()
     summary = (f"catalogue: {len(named)} datasets, {complete} complete, {len(named) - complete} ko, "
-               f"{len(rows) - len(named)} public Endpoints without a dataset; "
+               f"{sum(r['dataset'] == '(no dataset)' for r in rows)} public Endpoints without a dataset; "
                f"{client.count} requests in {int(seconds // 60)} min {int(seconds % 60)} s; {path}")
     print(f"  {'FAIL' if bad else 'ok  '}  {summary}")
     return 1 if bad else 0

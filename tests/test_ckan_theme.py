@@ -499,7 +499,7 @@ def test_the_page_language_picks_the_words_and_an_unknown_one_reads_english(them
 def test_every_word_of_the_theme_is_in_every_language(theme):
     """T-5115: the CI check that fails on a missing key, empty text or an untranslated placeholder."""
     tables = {"STRINGS": theme.STRINGS, "FORMATS": theme.FORMATS, "MODEL_FILES": theme.MODEL_FILES,
-              "EXTRA_LABELS": theme.EXTRA_LABELS, "NUTS_NAMES": theme.NUTS_NAMES,
+              "EXTRA_LABELS": theme.EXTRA_LABELS, "NUTS_NAMES": theme.NUTS_NAMES, "TOPICS": theme.TOPICS,
               "FREQUENCIES": {key: words for key, (words, _) in theme.FREQUENCIES.items()}}
     for name, table in tables.items():
         for key, words in table.items():
@@ -543,7 +543,131 @@ def test_hungarian_is_offered_where_bbsk_s_catalogue_runs():
 def test_the_search_filters_are_named_in_plain_words(theme):
     facets = {"organization": "Organizations", "groups": "Groups", "tags": "Tags", "res_format": "Formats", "license_id": "Licenses"}
     renamed = theme.JcThemePlugin().dataset_facets(dict(facets), "dataset")
-    assert renamed == {"organization": "Publisher", "groups": "Topic", "tags": "Keywords", "res_format": "Format", "license_id": "Licence"}
+    # T-5294: Topic is the EU theme and Format the use, in the places CKAN's groups and file formats held.
+    assert list(renamed.items()) == [("organization", "Publisher"), ("vocab_jc_topic", "Topic"), ("tags", "Keywords"),
+                                     ("vocab_jc_use", "Format"), ("license_id", "Licence")]
+
+
+THEMES = "http://publications.europa.eu/resource/authority/data-theme/"
+GEO_FIELDS = [{"id": "_id"}, {"id": "location.value.type"}, {"id": "location.value.coordinates[0]"},
+              {"id": "location.value.coordinates[1]"}, {"id": "location.geojson"}]
+
+
+def _fields(by_table):
+    def answer(data_dict):
+        return {"fields": by_table[data_dict["resource_id"]]}
+    return answer
+
+
+def test_a_dataset_is_indexed_by_what_a_reader_can_do_and_never_by_its_model_files(theme):
+    """T-5294: dev's Format filter listed eleven formats, each on 107 of 107 datasets."""
+    theme.page.actions["datastore_search"] = _fields({"r-table": GEO_FIELDS})
+    assert theme.jc_uses({"resources": PUBLISHED_RESOURCES}) == ["table", "map", "api"]
+    live = PUBLISHED_RESOURCES + [{"id": "r-ws", "format": "WebSocket", "url": ENDPOINT + "ws"}]
+    assert theme.jc_uses({"resources": live}) == ["table", "map", "live", "api"]
+    # The data model's files alone offer nothing a reader uses.
+    model = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-index", "r-shacl", "r-ctx")]
+    assert theme.jc_uses({"resources": model}) == [] and theme.jc_uses({}) == []
+    # A harvested GeoJSON file off the platform is a map by its format.
+    assert theme.jc_uses({"resources": [{"format": "GeoJSON", "url": "https://other.example/a.geojson"}]}) == ["map"]
+
+
+@pytest.mark.parametrize("fields, has_map", [
+    (GEO_FIELDS, True),
+    ([{"id": "location.value.type"}, {"id": "location.value.coordinates"}], True),
+    ([{"id": "area.geojson"}], True),
+    # A type without coordinates is no geometry; statistics without a location draw no map.
+    ([{"id": "address.value.type"}], False),
+    ([{"id": "_id"}, {"id": "value.value"}], False),
+])
+def test_only_a_table_with_a_geometry_makes_a_map(theme, fields, has_map):
+    theme.page.actions["datastore_search"] = _fields({"t": fields})
+    table = {"id": "t", "datastore_active": True, "last_modified": repr(fields)}
+    assert ("map" in theme.jc_uses({"resources": [table]})) is has_map
+
+
+def test_a_table_the_datastore_cannot_read_draws_no_map(theme):
+    theme.page.actions["datastore_search"] = theme.toolkit.ObjectNotFound()
+    assert theme.jc_uses({"resources": [{"id": "gone", "datastore_active": True}]}) == ["table"]
+
+
+def test_the_themes_are_indexed_by_eu_code_and_an_unknown_one_is_left_out(theme):
+    pkg = {"extras": [{"key": "theme", "value": json.dumps([THEMES + "ENVI", THEMES + "HEAL", THEMES + "ENVI",
+                                                           THEMES + "OP_DATPRO", "https://other.example/x"])}]}
+    assert theme.jc_topics(pkg) == ["ENVI", "HEAL"]
+    assert theme.jc_topics({"extras": [{"key": "theme", "value": "not json"}]}) == []
+    assert theme.jc_topics({"extras": [{"key": "theme", "value": '{"a": 1}'}]}) == []
+    assert theme.jc_topics({}) == []
+
+
+def test_the_index_carries_the_uses_and_the_topics_of_the_stored_dataset(theme):
+    theme.page.actions["datastore_search"] = _fields({"r-table": GEO_FIELDS})
+    stored = {"resources": PUBLISHED_RESOURCES, "extras": [{"key": "theme", "value": json.dumps([THEMES + "TRAN"])}]}
+    indexed = theme.JcThemePlugin().before_dataset_index({"id": "d", "data_dict": json.dumps(stored)})
+    assert indexed["vocab_jc_use"] == ["table", "map", "api"] and indexed["vocab_jc_topic"] == ["TRAN"]
+    assert theme.JcThemePlugin().before_dataset_index({"id": "e"})["vocab_jc_use"] == []
+
+
+def _results(count, **facets):
+    return {"count": count, "results": [], "search_facets": {
+        field: {"title": field, "items": [{"name": n, "display_name": n, "count": c} for n, c in items]}
+        for field, items in facets.items()}}
+
+
+def test_the_filters_read_in_the_page_language_without_a_value_every_result_shares(theme):
+    theme.page.lang = "sk"
+    results = _results(107, vocab_jc_use=[("table", 107), ("map", 98), ("live", 62), ("api", 107)],
+                       vocab_jc_topic=[("ECON", 21), ("TRAN", 21)], tags=[("Praha", 107)])
+    out = theme.JcThemePlugin().after_dataset_search(results, {"fq": ""})["search_facets"]
+    assert [(i["name"], i["display_name"]) for i in out["vocab_jc_use"]["items"]] == [("map", "Mapa"), ("live", "Živé údaje")]
+    assert [i["display_name"] for i in out["vocab_jc_topic"]["items"]] == ["Hospodárstvo a financie", "Doprava"]
+    # Keywords are CKAN's own and stay as they are.
+    assert out["tags"]["items"] == [{"name": "Praha", "display_name": "Praha", "count": 107}]
+
+
+def test_a_value_the_search_filters_by_stays_so_it_can_be_taken_off(theme):
+    results = _results(98, vocab_jc_use=[("table", 98), ("map", 98), ("live", 50)])
+    out = theme.JcThemePlugin().after_dataset_search(results, {"fq": 'vocab_jc_use:"map" +capacity:public'})
+    assert [i["name"] for i in out["search_facets"]["vocab_jc_use"]["items"]] == ["map", "live"]
+    # CKAN 2.11's query hands the hook `fq` as a list of clauses (lib/search/query.py), and fq_list beside it.
+    for params in ({"fq": ['+capacity:public vocab_jc_use:"map"', "+site_id:x"]},
+                   {"fq": ["+site_id:x"], "fq_list": ['vocab_jc_use:"map"']}):
+        results = _results(98, vocab_jc_use=[("table", 98), ("map", 98), ("live", 50)])
+        out = theme.JcThemePlugin().after_dataset_search(results, params)
+        assert [i["name"] for i in out["search_facets"]["vocab_jc_use"]["items"]] == ["map", "live"], params
+
+
+def test_the_home_page_tiles_name_each_theme_with_its_count_and_search(theme, monkeypatch):
+    search_module = types.ModuleType("ckan.lib.search")
+    search_module.SearchError = type("SearchError", (Exception,), {})
+    monkeypatch.setitem(sys.modules, "ckan.lib", types.ModuleType("ckan.lib"))
+    monkeypatch.setitem(sys.modules, "ckan.lib.search", search_module)
+    asked = []
+
+    def search(data_dict):
+        asked.append(data_dict)
+        return {"facets": {"vocab_jc_topic": {"TRAN": 18, "ECON": 21, "SOCI": 0, "XXXX": 3}}}
+    theme.page.actions["package_search"] = search
+    monkeypatch.setattr(theme.toolkit, "url_for", lambda route, **kw: "/dataset/?vocab_jc_topic=" + kw["vocab_jc_topic"],
+                        raising=False)
+    tiles = theme.jc_topic_tiles()
+    assert [(t["code"], t["label"], t["count"], t["url"]) for t in tiles] == [
+        ("ECON", "Economy and finance", 21, "/dataset/?vocab_jc_topic=ECON"),
+        ("TRAN", "Transport", 18, "/dataset/?vocab_jc_topic=TRAN")]
+    assert asked[0]["rows"] == 0 and asked[0]["fq"] == 'capacity:"public"'
+    assert theme.jc_rows(1, "datasets_n") == "1 dataset" and theme.jc_rows(21, "datasets_n") == "21 datasets"
+    theme.page.lang = "sk"
+    assert theme.jc_rows(3, "datasets_n") == "3 datasety" and theme.jc_rows(5, "datasets_n") == "5 datasetov"
+    theme.page.actions["package_search"] = lambda data_dict: {"facets": {}}
+    assert theme.jc_topic_tiles() == []
+    theme.page.actions["package_search"] = search_module.SearchError("solr down")
+    assert theme.jc_topic_tiles() == []
+
+
+def test_a_search_result_and_a_home_card_show_the_uses_and_no_file_format():
+    for name in ("templates__snippets__package_item.html", "templates__home__index.html"):
+        text = (THEME / name).read_text()
+        assert "h.jc_use_chips(" in text and "h.jc_formats(" not in text, name
 
 
 def test_the_portal_link_is_on_the_installation_s_domain(theme):
