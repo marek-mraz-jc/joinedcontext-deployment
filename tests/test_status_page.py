@@ -412,3 +412,42 @@ def test_rendered_status_page_policies_admit_the_edge_and_reach_only_the_probe(d
     probe_policy = one(dev, "NetworkPolicy", "probe")["spec"]
     peers = [t["podSelector"]["matchLabels"] for r in probe_policy["ingress"] for t in r["from"] if "podSelector" in t]
     assert {"app.kubernetes.io/name": "probes-status"} in peers
+
+
+# ---- backup and restore drill age (T-5289)
+
+
+def test_backups_are_fresh_until_26_hours_and_the_drill_until_35_days_and_only_when_passed():
+    fresh = status.backup_cells({"backupAt": NOW - 25 * 3600, "drillAt": NOW - 34 * 86400, "drillResult": "passed"}, NOW)
+    assert fresh["backup"]["state"] == "fresh" and fresh["drill"]["state"] == "fresh"
+    old = status.backup_cells({"backupAt": NOW - 27 * 3600, "drillAt": NOW - 36 * 86400, "drillResult": "passed"}, NOW)
+    assert old["backup"]["state"] == "stale" and old["drill"]["state"] == "stale"
+    failed = status.backup_cells({"backupAt": NOW - 3600, "drillAt": NOW - 86400, "drillResult": "failed"}, NOW)
+    assert failed["drill"]["state"] == "stale"
+    never = status.backup_cells({"backupAt": None, "drillAt": None, "drillResult": None}, NOW)
+    assert never["backup"] == {"at": None, "state": "stale", "result": None}
+    assert status.backup_cells(None, NOW) is None
+
+
+def test_the_page_and_status_json_show_backup_and_drill_age_from_the_probe(tmp_path):
+    answers = {"results": healthy(), "backups": {"backupAt": NOW - 5 * 3600, "drillAt": NOW - 12 * 86400,
+                                                 "drillResult": "passed"}}
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=Clock(NOW),
+                     get=lambda: answers)
+    en = pg.answer("/en/", None)[2].decode()
+    assert "Database backups" in en and "5 h ago" in en and "12 days ago" in en
+    assert "restore and row counts passed" in en
+    sk = pg.answer("/sk/", None)[2].decode()
+    assert "Zálohy databázy" in sk and "pred 12 dňami" in sk
+    doc = json.loads(pg.answer("/status.json", None)[2])
+    assert doc["backups"]["backup"] == {"at": "2026-10-21T15:30:00Z", "state": "fresh"}
+    assert doc["backups"]["drill"]["result"] == "passed"
+    # Backups never change the interfaces' banner.
+    assert doc["status"] == "all_up"
+
+
+def test_a_probe_without_backups_shows_no_backup_section(tmp_path):
+    pg = status.Page("dev", "dev.joinedcontext.com", "http://probe.test/results.json", [], str(tmp_path), clock=Clock(NOW),
+                     get=lambda: {"results": healthy()})
+    assert "Database backups" not in pg.answer("/en/", None)[2].decode()
+    assert json.loads(pg.answer("/status.json", None)[2])["backups"] is None

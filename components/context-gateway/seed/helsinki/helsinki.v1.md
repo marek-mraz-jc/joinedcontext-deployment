@@ -25,7 +25,7 @@ Specialises `Entity`.
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `startDate` | Property | `datetime` |  |  | `schema:startDate` | When the event starts, ISO 8601 with a time zone. |
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends; absent while the register does not say. |
-| `eventStatus` | Property | `string` |  |  | `schema:eventStatus` | The register's status of the event, EventScheduled, EventCancelled or EventPostponed. |
+| `eventStatus` | Property | [`EventStatus`](#eventstatus) |  |  | `schema:eventStatus` | The register's status of the event, one of schema.org's EventStatusType values. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `thematic` | Property | `string` (list) |  |  | `sdm:thematic` | The event's keywords from the register's YSO terms, in English where the term has an English name and in Finnish otherwise (Smart Data Models Event `thematic`). |
 | `isAccessibleForFree` | Property | `boolean` |  |  | `schema:isAccessibleForFree` | True when every offer of the event is free of charge, as the register marks it. |
@@ -631,3 +631,15 @@ The direction a city counter names, in English.
 | `west` | Länteen. |
 | `inbound` | IN, towards the centre. |
 | `outbound` | OUT, away from the centre. |
+
+### EventStatus
+
+Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.
+
+| Value | Meaning |
+|---|---|
+| `EventScheduled` | Takes place as planned. |
+| `EventCancelled` | Called off; it does not take place. |
+| `EventPostponed` | Moved to a date not yet known. |
+| `EventRescheduled` | Moved to the new date the event now gives. |
+| `EventMovedOnline` | Held online instead of at its place. |

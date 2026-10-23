@@ -58,7 +58,8 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
   eventStatus:
     slot_uri: schema:eventStatus
-    description: The register's status of the event, EventScheduled, EventCancelled or EventPostponed.
+    description: The register's status of the event, one of schema.org's EventStatusType values.
+    range: EventStatus
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/eventStatus
@@ -1750,3 +1751,61 @@ enums:
         description: IN, towards the centre.
       outbound:
         description: OUT, away from the centre.
+  EventStatus:
+    description: Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.
+    permissible_values:
+      EventScheduled:
+        description: Takes place as planned.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Naplánované
+              cs: Naplánováno
+              fi: Aikataulussa
+              en: Scheduled
+              de: Geplant
+      EventCancelled:
+        description: Called off; it does not take place.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zrušené
+              cs: Zrušeno
+              fi: Peruttu
+              en: Cancelled
+              de: Abgesagt
+      EventPostponed:
+        description: Moved to a date not yet known.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Odložené
+              cs: Odloženo
+              fi: Siirretty
+              en: Postponed
+              de: Verschoben
+      EventRescheduled:
+        description: Moved to the new date the event now gives.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Presunuté
+              cs: Přesunuto
+              fi: Uusi ajankohta
+              en: Rescheduled
+              de: Neu angesetzt
+      EventMovedOnline:
+        description: Held online instead of at its place.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Presunuté online
+              cs: Přesunuto online
+              fi: Siirretty verkkoon
+              en: Moved online
+              de: Online verlegt
