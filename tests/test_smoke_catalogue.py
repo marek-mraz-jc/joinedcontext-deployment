@@ -59,9 +59,17 @@ def model(typ, *attrs, required=()):
                                   **({"required": list(required)} if required else {})}}}
 
 
+FILTERS = f"{CKAN}/api/3/action/package_search?" + urllib.parse.urlencode(
+    {"rows": 0, "facet.field": json.dumps(["vocab_jc_use", "vocab_jc_topic"])})
+
+
 def world(packages, public, rows=10, datastore_total=10, overrides=None):
     """The answers of a healthy installation for these datasets, with `overrides` by URL."""
     answers = {
+        FILTERS: answer(body={"result": {"count": len(packages), "search_facets": {
+            # A use some datasets lack: one on every dataset is left out of the filter.
+            "vocab_jc_use": {"items": [{"name": "live", "count": len(packages) - 1}]},
+            "vocab_jc_topic": {"items": [{"name": "ENVI", "count": 1}]}}}}),
         f"{CKAN}/api/3/action/package_search?rows=1000&start=0":
             answer(body={"result": {"count": len(packages), "results": packages}}),
         f"https://api.{DOMAIN}/catalog.jsonld":
@@ -732,3 +740,36 @@ def test_a_holder_whose_type_only_its_endpoint_names_is_asked_whatever_the_check
                      f"{API}/p1/ngsi-ld/v1/entities?{query}": answer(body=[{"id": poi}])})
     assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
     assert rows["places"]["type"] == "PointOfInterest"
+
+
+def _filters(count, uses, topics=(("TRAN", 3),), status=200):
+    facets = {"vocab_jc_use": {"items": [{"name": n, "count": c} for n, c in uses]},
+              "vocab_jc_topic": {"items": [{"name": n, "count": c} for n, c in topics]}}
+    fake = Fake({FILTERS: answer(status, {"result": {"count": count, "search_facets": facets}})})
+    return smoke.filters(fake.client(), DOMAIN)
+
+
+@pytest.mark.parametrize("uses, topics, cell", [
+    ([("map", 98), ("live", 62)], [("TRAN", 18)], "ok: 2 formats, 1 topics"),
+    # T-5294 on dev: every format on 107 of 107 datasets, the data model's files among them.
+    ([("CSV", 107), ("OWL", 107)], [("TRAN", 18)], "ko: the Format filter names CSV, OWL"),
+    ([("map", 107)], [("TRAN", 18)], "ko: a Format value is on every dataset"),
+    ([], [("TRAN", 18)], "ko: the Format filter offers no choice"),
+    ([("map", 98)], [], "ko: the Topic filter is missing"),
+])
+def test_the_search_filters_narrow_the_catalogue(uses, topics, cell):
+    assert _filters(107, uses, topics) == cell
+
+
+def test_an_empty_catalogue_skips_the_filters_and_an_error_is_a_ko():
+    assert _filters(0, []) == "skip: no dataset"
+    assert _filters(107, [], status=500).startswith("ko: package_search with the filters answered")
+
+
+def test_a_run_writes_the_filters_as_a_row_of_their_own(tmp_path, capsys):
+    answers = world([package("air", "a1", "AirQualityObserved")], ["a1"])
+    answers[FILTERS] = answer(body={"result": {"count": 1, "search_facets": {}}})
+    assert smoke.run(DOMAIN, "prod", tmp_path, Fake(answers).client(), "20261019T060000Z") == 1
+    out = capsys.readouterr().out
+    assert "  FAIL  catalogue (catalogue) (-): inventory the Format filter offers no choice" in out
+    assert "1 datasets, 1 complete, 0 ko, 0 public Endpoints without a dataset" in out
