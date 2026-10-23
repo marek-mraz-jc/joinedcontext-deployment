@@ -24,7 +24,7 @@ def test_the_geocoded_share_counts_each_points_origin_per_source():
     events = [
         {"source": "a", "location": point(19.1462, 48.7363)},
         {"source": "a", "location": point(float(hand["lon"]), float(hand["lat"]))},
-        {"source": "a", "venue": "Neznáma sála"},
+        {"source": "a", "venue": "Neznáma sála", "areaServed": "Zvolen", "refPointOfInterest": "urn:ngsi-ld:PointOfInterest:x:osm-way-1"},
         {"source": "b", "location": point(float(home["lon"]), float(home["lat"]))},
         {"source": "b", "location": point(float(nominatim["lon"]), float(nominatim["lat"]))},
         {"source": "b"},
@@ -35,6 +35,7 @@ def test_the_geocoded_share_counts_each_points_origin_per_source():
     assert (b["events"], b["gps"], b["home"], b["nominatim"]) == (3, 2, 1, 1)
     assert (out["total"], out["gps"], round(out["share"], 3)) == (6, 4, 0.667)
     assert dict(out["unplaced"]) == {("a", "Neznáma sála"): 1}, "an event without a venue gives nothing to geocode"
+    assert (out["municipality"], out["venue_link"]) == (1, 1)  # DM-141
 
 
 def test_the_report_prints_the_share_and_writes_the_unplaced_venues_for_geocoding(tmp_path, capsys):

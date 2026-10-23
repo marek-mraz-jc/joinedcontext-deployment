@@ -14,3 +14,4 @@ spec:
   information:
     - entities:
         - type: Event
+        - type: PointOfInterest

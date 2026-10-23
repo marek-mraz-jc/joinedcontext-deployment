@@ -36,6 +36,8 @@ GENERATED = {
     "seeds/bbsk-events/generate.py": [
         "*/*-datasource-podujatia-*",
         "*/*-pipeline-podujatia-*",
+        "*/*-datasource-miesta-podujati*",
+        "*/*-pipeline-miesta-podujati*",
         # A hand-written Endpoint whose `source:` list the generator writes between its markers.
         "*/*-endpoint-podujatia*",
     ],

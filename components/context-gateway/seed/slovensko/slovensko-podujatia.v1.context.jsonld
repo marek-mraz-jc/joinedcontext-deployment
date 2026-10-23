@@ -10,6 +10,9 @@
     "Organizer": {
       "@id": "schema:Organization"
     },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
@@ -24,6 +27,9 @@
     },
     "addressRegion": {
       "@id": "schema:addressRegion"
+    },
+    "areaServed": {
+      "@id": "sdm:areaServed"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -69,6 +75,10 @@
     },
     "postalCode": {
       "@id": "schema:postalCode"
+    },
+    "refPointOfInterest": {
+      "@id": "sdm:refPointOfInterest",
+      "@type": "@id"
     },
     "schema": "https://schema.org/",
     "sdm": "https://smartdatamodels.org/",
