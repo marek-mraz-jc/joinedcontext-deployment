@@ -1043,10 +1043,10 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5258 the five Helsinki statistics themes; T-5278 the heat vulnerability index and the service property energy use; T-5268 PID vehicles and T-5276 Golemio city services in praha; T-5257 Helsinki's feedback reports.
+        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5258 the eight Helsinki statistics themes; T-5278 the heat vulnerability index and the service property energy use; T-5268 PID vehicles and T-5276 Golemio city services in praha; T-5257 Helsinki's feedback reports.
         # T-5263 added Barcelona's air quality, weather and groundwater; T-5265 its activity agenda and its
         # facilities; T-5262 its traffic, parking and EV charging.
-        "banskabystrica": 13 + 7, "barcelona": 3 + 2 + 3, "bbsk": 88 + 6, "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 2, "praha": 8 + 1, "slovensko": 3 + 45, "zilina": 5 + 4}
+        "banskabystrica": 13 + 7, "barcelona": 3 + 2 + 3, "bbsk": 88 + 6, "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2, "praha": 8 + 1, "slovensko": 3 + 45, "zilina": 5 + 4}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

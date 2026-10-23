@@ -67,9 +67,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # steward's import of journey 41's test places (T-4867), and the steward's add and delete of
     # the data workspace journey's test alerts (T-5092), and the public read of the street cleaning
     # air pilot (T-5255), and one public read per area statistics theme (T-5258), and the public read
-    # of air quality (T-5259), and the public reads of the heat vulnerability index and the service
+    # of air quality (T-5259), and the service usage counters (T-5258), and the public reads of the heat vulnerability index and the service
     # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257).
-    assert len(policies) == 37
+    assert len(policies) == 40
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

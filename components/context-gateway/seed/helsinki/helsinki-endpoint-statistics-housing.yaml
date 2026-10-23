@@ -66,4 +66,94 @@ spec:
         description:
           fi: Helsingin asuntotuotanto neljännesvuosittain - Valmistuneet rakennushankkeet
           en: Housing production in Helsinki by quarter - Completed construction projects 2015Q1-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__asas/alu_asas_005d.px/
+        title: { fi: Aluesarjat alu_asas_005d, en: Area statistics table alu_asas_005d }
+        description:
+          fi: Pääkaupunkiseudun asuntokunnat
+          en: Dwelling households in Helsinki, Espoo, Vantaa and Kauniainen by number of occupants 31.12
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__asas/alu_asas_005e.px/
+        title: { fi: Aluesarjat alu_asas_005e, en: Area statistics table alu_asas_005e }
+        description:
+          fi: Uudenmaan asuntokunnat
+          en: Household-dwelling units in Uusimaa by number of persons and oldest age 31.12.1994-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__asas/alu_asas_005f.px/
+        title: { fi: Aluesarjat alu_asas_005f, en: Area statistics table alu_asas_005f }
+        description:
+          fi: Helsingin seudun asuntokunnat
+          en: Number of households in the Helsinki region by number of dwellers and type of building
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__asas/alu_asas_005g.px/
+        title: { fi: Aluesarjat alu_asas_005g, en: Area statistics table alu_asas_005g }
+        description:
+          fi: Helsingin seudun asuntokuntien keskikoko
+          en: Average size of households in the Helsinki region
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__asas/alu_asas_005h.px/
+        title: { fi: Aluesarjat alu_asas_005h, en: Area statistics table alu_asas_005h }
+        description:
+          fi: Helsingin seudun asuntokunnat
+          en: Households in the Helsinki region by surface area, number of dwellers and dwelling density
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__askan/alu_askan_005k.px/
+        title: { fi: Aluesarjat alu_askan_005k, en: Area statistics table alu_askan_005k }
+        description:
+          fi: Uudenmaan asunnot
+          en: Dwellings in Uusimaa by type of building and year of completion 31.12.2003-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__askan/alu_askan_005l.px/
+        title: { fi: Aluesarjat alu_askan_005l, en: Area statistics table alu_askan_005l }
+        description:
+          fi: Pääkaupunkiseudun asunnot
+          en: Dwellings in Helsinki, Espoo, Vantaa and Kauniainen by type of building and year of comple
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__askan/alu_askan_005q.px/
+        title: { fi: Aluesarjat alu_askan_005q, en: Area statistics table alu_askan_005q }
+        description:
+          fi: Pääkaupunkiseudun asunnot
+          en: Dwellings in Helsinki, Espoo, Vantaa and Kauniainen by building type and tenure status 201
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__askan/alu_askan_005s.px/
+        title: { fi: Aluesarjat alu_askan_005s, en: Area statistics table alu_askan_005s }
+        description:
+          fi: Uudenmaan asunnot
+          en: Dwellings in Uusimaa by tenure status and type of dwelling 31.12.2003-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__astuo/alu_astuo_039h.px/
+        title: { fi: Aluesarjat alu_astuo_039h, en: Area statistics table alu_astuo_039h }
+        description:
+          fi: Helsingin asuntotuotanto neljännesvuosittain - Keskeneräiset rakennushankkeet
+          en: Housing production in Helsinki by quarter - Construction projects in progress 2015Q1-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__astuo/alu_astuo_039j.px/
+        title: { fi: Aluesarjat alu_astuo_039j, en: Area statistics table alu_astuo_039j }
+        description:
+          fi: Helsingin asuntotuotanto neljännesvuosittain - Valmistuneet rakennushankkeet (ml. rahoitus, hallintaperuste ja rakennuttaja)
+          en: Housing production in Helsinki by quarter - Completed construction projects (incl. financi
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__rakan/alu_rakan_005v.px/
+        title: { fi: Aluesarjat alu_rakan_005v, en: Area statistics table alu_rakan_005v }
+        description:
+          fi: Uudenmaan rakennukset
+          en: Buildings in Uusimaa by intended use, year of construction and floor area 31.12.
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__rakan/alu_rakan_005w.px/
+        title: { fi: Aluesarjat alu_rakan_005w, en: Area statistics table alu_rakan_005w }
+        description:
+          fi: Uudenmaan rakennukset
+          en: Buildings in Uusimaa by purpose of use, heating method, heating material and floor area 31
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__asu__rakan/alu_rakan_005x.px/
+        title: { fi: Aluesarjat alu_rakan_005x, en: Area statistics table alu_rakan_005x }
+        description:
+          fi: Pääkaupunkiseudun rakennukset
+          en: Buildings in Helsinki, Espoo, Vantaa and Kauniainen 31.12.2010-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__ratuo/alu_ratuo_039k.px/
+        title: { fi: Aluesarjat alu_ratuo_039k, en: Area statistics table alu_ratuo_039k }
+        description:
+          fi: Helsingin rakennustuotanto neljännesvuosittain - Myönnetyt rakennusluvat
+          en: Building production in Helsinki by quarter - Building permits granted 2015Q1-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__ratuo/alu_ratuo_039l.px/
+        title: { fi: Aluesarjat alu_ratuo_039l, en: Area statistics table alu_ratuo_039l }
+        description:
+          fi: Helsingin rakennustuotanto neljännesvuosittain - Aloitetut rakennushankkeet
+          en: Building production in Helsinki by quarter - Started construction projects 2015Q1-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__ratuo/alu_ratuo_039m.px/
+        title: { fi: Aluesarjat alu_ratuo_039m, en: Area statistics table alu_ratuo_039m }
+        description:
+          fi: Helsingin rakennustuotanto neljännesvuosittain - Keskeneräiset rakennushankkeet
+          en: Building production in Helsinki by quarter - Construction projects in progress 2015Q1-
+      - url: https://stat.hel.fi/pxweb/fi/Aluesarjat/Aluesarjat__rak__ratuo/alu_ratuo_039n.px/
+        title: { fi: Aluesarjat alu_ratuo_039n, en: Area statistics table alu_ratuo_039n }
+        description:
+          fi: Helsingin rakennustuotanto neljännesvuosittain - Valmistuneet rakennushankkeet
+          en: Building production in Helsinki by quarter - Completed construction projects 2015Q1-
     pipelineRef: { kind: Pipeline, name: statistics }

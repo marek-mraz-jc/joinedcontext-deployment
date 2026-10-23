@@ -113,10 +113,12 @@ TEMPORAL = {"queryTemporal", "retrieveTemporal"}
 # cannot grant the history of some types and not of others, so it serves no history (T-4372).
 # The space's other public Endpoints serve that history.
 MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
-# Public reads of series with at most one row per month and entity, whose whole kept history is
-# cheaper to read than a month of a sensor's: they read all of it (T-5258).
+# Public reads of series with at most one row per month and entity (the service usage theme adds
+# one daily series, the zoo's visitors), whose whole kept history is cheaper to read than a month
+# of a sensor's: they read all of it (T-5258).
 WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
-                 ("population", "housing", "employment", "income", "education")}
+                 ("population", "housing", "employment", "income", "education", "services",
+                  "welfare", "environment")}
 # The heat vulnerability index (one period) and the monthly energy use of the service properties
 # are such series too (T-5278).
 WHOLE_HISTORY |= {"helsinki/public-heat-vulnerability", "helsinki/public-service-property-energy"}
