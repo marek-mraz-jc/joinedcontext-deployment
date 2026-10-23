@@ -160,4 +160,7 @@ def test_one_place_within_20_m_is_one_event_and_each_event_expires_by_itself():
         expires = datetime.strptime(event["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         assert now < expires <= now + timedelta(days=3, minutes=1), event
     midnight = datetime.combine(today + timedelta(days=1), datetime.min.time(), ZoneInfo("Europe/Madrid"))
-    assert by_id["14"]["expiresAt"] == midnight.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Within the last hour before midnight the one-hour floor wins over the end of the day.
+    floor = max(midnight, now + timedelta(hours=1)).astimezone(timezone.utc).replace(microsecond=0)
+    expires = datetime.strptime(by_id["14"]["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    assert floor <= expires <= max(midnight, floor + timedelta(minutes=1)), (expires, midnight, now)

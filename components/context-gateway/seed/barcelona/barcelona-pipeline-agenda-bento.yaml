@@ -117,8 +117,13 @@ pipeline:
         # or three daily runs after the newest run that listed it, whichever comes first; an hour
         # at least, so a write never carries a past expiry.
         let now = timestamp_unix()
-        let ends_at = if $end_offset == null { null } else {
-          (this.ends + "T00:00:00" + $end_offset).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() + 86400
+        # The last day ends at the next local midnight, with the next day's own offset (a summer
+        # time change makes that day 23 or 25 hours long).
+        let next_day = if $end_offset == null { null } else {
+          ((this.ends + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() + 86400).ts_format("2006-01-02", "UTC")
+        }
+        let ends_at = if $next_day == null { null } else {
+          ($next_day + "T00:00:00" + ($next_day + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix()
         }
         let lease = $now + 259200
         let expires = [if $ends_at == null { $lease } else { [$ends_at, $lease].min() }, $now + 3600].max()
