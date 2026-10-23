@@ -38,7 +38,7 @@ parts:
     needs:
       - gitea.sample-apps-6
   # The projects' seed out of the bootstrap's release for the same reason (T-3998), packed by
-  # size into these nine (values/seed-layout.tpl, T-4431; the ninth for T-5363's event categories).
+  # size into these eight (values/seed-layout.tpl, T-4431).
   - name: seed
   - name: seed-2
     valuesFrom: seed
