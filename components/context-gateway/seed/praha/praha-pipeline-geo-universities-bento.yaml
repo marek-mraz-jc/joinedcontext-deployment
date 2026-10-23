@@ -5,7 +5,7 @@
 # Ids: urn:ngsi-ld:PointOfInterest:{org}:{space}:geo-{layer}-{globalid}. The geo- prefix keeps them apart from the
 # ipr- places of praha-mista and the golemio- places of praha-sluzby; the Policy public-vybavenost names them.
 #
-# Read: the name (nazev_zar or nazev), the address (adresa_zar, adresa up to its first comma, or ulice with
+# Read: the name (nazev_zar, nazev or nazev_zast), the address (adresa_zar, adresa up to its first comma, or ulice with
 # the house numbers), the point (without a third, height coordinate), the web page (left out unless it
 # is an http(s) URL of printable ASCII, which the model's uri format asks for), a type the layer writes
 # as text (typ_kkc_txt, retezec, typ) and the operating season (provoz_spec). Numeric codes whose list
@@ -43,7 +43,7 @@ pipeline:
                 "c": f.geometry.coordinates.catch(null).apply("point"),
                 "p": f.properties.catch({}),
                 "key": f.properties.globalid.catch("").string().re_replace_all("[{}]", "").lowercase(),
-                "name": [f.properties.nazev_zar.catch(null), f.properties.nazev.catch(null)].map_each(n -> n.apply("words")).filter(n -> n != "").append("").index(0)
+                "name": [f.properties.nazev_zar.catch(null), f.properties.nazev.catch(null), f.properties.nazev_zast.catch(null)].map_each(n -> n.apply("words")).filter(n -> n != "").append("").index(0)
               }) }
             }
         - mapping: |

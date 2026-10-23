@@ -494,7 +494,8 @@ classes:
       transport ticket point, a library, a municipal office or police station, a garden, a
       playground, a waste collection yard, or one of the city's amenities the IPR geoportal
       maps: a health centre, a university, a place of worship, a community centre, an
-      accommodation, a grocery store, a cool spot, an animal corner or a landmark.
+      accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous
+      or bio-waste collection point or a nature trail stop.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -680,6 +681,9 @@ enums:
       animalCorner:
         description: A petting zoo, farm, terrarium or animal rescue station.
       landmark: { description: A notable building or place of the city. }
+      wasteCollectionPoint:
+        description: A collection point for hazardous waste or bio-waste that is not a collection yard.
+      trailStop: { description: A stop of a nature trail. }
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

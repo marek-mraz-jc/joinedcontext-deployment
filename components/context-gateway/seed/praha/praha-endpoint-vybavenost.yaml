@@ -1,6 +1,7 @@
 # The city amenities of the IPR Praha geoportal (T-5269): health centres, universities, places of
 # worship, community centres, accommodation, grocery stores, cool spots (drinking fountains,
-# fountains, springs, pumps, mist showers, places to swim), animal corners and landmarks,
+# fountains, springs, pumps, mist showers, places to swim), animal corners, landmarks, hazardous and
+# bio-waste collection points and nature trail stops,
 # PointOfInterest of the space praha-mesto read through its own Policy, which narrows the public
 # read to the geo- ids.
 apiVersion: joinedcontext.com/v1alpha1
@@ -12,8 +13,8 @@ metadata:
     cs: Občanská vybavenost a oázy chladu — Praha
     en: City amenities and cool spots — Prague
   description:
-    cs: 'Polikliniky, vysoké školy, sakrální objekty, kulturně komunitní centra, ubytování, prodejny potravin, pítka, fontány, studánky, pumpy, mlžítka, místa ke koupání, zookoutky a významné stavby: poloha, adresa a web. Zdroj: IPR Praha, CC BY 4.0.'
-    en: 'Polyclinics, universities, places of worship, community centres, accommodation, grocery stores, drinking fountains, fountains, springs, pumps, mist showers, places to swim, animal corners and notable buildings: location, address and web page. Source: IPR Praha, CC BY 4.0.'
+    cs: 'Polikliniky, vysoké školy, sakrální objekty, kulturně komunitní centra, ubytování, prodejny potravin, pítka, fontány, studánky, pumpy, mlžítka, místa ke koupání, zookoutky, významné stavby, sběrná místa nebezpečných a bioodpadů a zastávky naučných stezek: poloha, adresa a web. Zdroj: IPR Praha, CC BY 4.0.'
+    en: 'Polyclinics, universities, places of worship, community centres, accommodation, grocery stores, drinking fountains, fountains, springs, pumps, mist showers, places to swim, animal corners, notable buildings, hazardous and bio-waste collection points and nature trail stops: location, address and web page. Source: IPR Praha, CC BY 4.0.'
 spec:
   contextSpaceRef: praha-mesto
   slug: clzdywmfngd752m3hgg33aufkgfvqvj7
@@ -151,3 +152,15 @@ spec:
         description:
           cs: Významné stavby a místa z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Notable buildings and places from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/176f314a9ded40ef88ce55a2ed401c2e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title:
+          cs: Shromažďovací místa nebezpečných a bioodpadů (IPR Praha)
+          en: Hazardous and bio-waste collection points (IPR Praha)
+        description:
+          cs: Odpadní zařízení pro občany z geoportálu IPR Praha bez sběrných dvorů, CC BY 4.0, datový podklad © IPR Praha.
+          en: Waste facilities for residents from the IPR Praha geoportal without the collection yards, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/bed7894d358a4d08b640c972e844d7f3_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Naučné stezky – zastávky (IPR Praha), en: Nature trail stops (IPR Praha) }
+        description:
+          cs: Zastávky naučných stezek odboru ochrany prostředí MHMP z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Stops of the City of Prague's nature trails from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

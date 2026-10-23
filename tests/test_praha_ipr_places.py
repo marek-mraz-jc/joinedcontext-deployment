@@ -42,7 +42,14 @@ LAYERS = {
     "bathing-places": ("8d435d33cd5d431cbaeda5837b3d3a77", "bathingPlace"),
     "animal-corners": ("e332ec5438b645b6a08a54a0da1accd6", "animalCorner"),
     "landmarks": ("fb6ab7891a7244f39a3a380027af2981", "landmark"),
+    "waste-points": ("176f314a9ded40ef88ce55a2ed401c2e", "wasteCollectionPoint"),
+    "trail-stops": ("bed7894d358a4d08b640c972e844d7f3", "trailStop"),
 }
+
+
+def yard(feature: dict) -> bool:
+    """A collection yard of the waste facilities layer, which golemio-yards writes from Golemio."""
+    return feature["properties"].get("typobjektu", "").startswith("SD")
 
 
 def outcome(name: str, document: dict) -> tuple[list[dict], list[str]]:
@@ -85,7 +92,7 @@ def written():
 @requires_docker
 def test_every_record_is_one_point_of_interest_the_gateway_and_the_sdm_accept(written):
     for name, (item, category) in LAYERS.items():
-        assert sorted(written[name]) == sorted(guid(f) for f in RECORDED[name]["features"]), name
+        assert sorted(written[name]) == sorted(guid(f) for f in RECORDED[name]["features"] if not yard(f)), name
         for entity in written[name].values():
             assert entity["id"].startswith(f"urn:ngsi-ld:PointOfInterest:praha.eu:{SPACE}:geo-{name}-")
             assert entity["serviceCategory"]["value"] == category
@@ -111,6 +118,10 @@ def test_name_address_type_web_and_season_come_from_the_layer_fields(written):
     # ulice with the house numbers when the layer has no address text.
     assert store["address"]["value"]["streetAddress"] == "Prosecká 824/82"
     assert store["facilityType"]["value"] == "Penny Market"
+    stop = written["trail-stops"][guid(RECORDED["trail-stops"]["features"][0])]
+    assert stop["name"]["languageMap"] == {"cs": "Roztocký háj"}
+    point = written["waste-points"][guid(RECORDED["waste-points"]["features"][0])]
+    assert point["address"]["value"]["streetAddress"] == "Bartoškova 1/a"
     shower = written["mist-showers"][guid(RECORDED["mist-showers"]["features"][0])]
     assert shower["openingHours"]["languageMap"] == {"cs": "květen - září"}
 
@@ -152,6 +163,20 @@ def test_a_duplicate_within_15_m_and_an_unnamed_record_are_dropped():
     springs = run("springs", edited("springs", edit))
     # Five read, the twin of the first (about 4 m east) and the unnamed record dropped.
     assert sorted(springs) == sorted(guid(f) for f in RECORDED["springs"]["features"])
+
+
+@requires_docker
+def test_the_collection_yards_golemio_yards_writes_are_left_out_and_do_not_count_as_failures():
+    """One yard is one entity: the yards (SDHMP, SDMC, SDMC_SSNO) come from golemio-yards. Three
+    yards beside three collection points are not "fewer than half" of the layer."""
+    def edit(features):
+        extra = copy.deepcopy(next(f for f in features if yard(f)))
+        extra["properties"]["globalid"] = "{00000000-0000-4000-8000-000000000004}"
+        extra["properties"]["typobjektu"] = "SDMC_SSNO"
+        features.append(extra)
+    points = run("waste-points", edited("waste-points", edit))
+    assert sorted(points) == sorted(guid(f) for f in RECORDED["waste-points"]["features"] if not yard(f))
+    assert len(points) == 3 and sum(map(yard, RECORDED["waste-points"]["features"])) == 2
 
 
 @requires_docker

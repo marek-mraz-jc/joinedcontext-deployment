@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner or a landmark.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.
 
 IRI: `sdm:PointOfInterest`
 
@@ -320,6 +320,8 @@ IRI: `ngsi-ld:Entity`
 | `bathingPlace` | A swimming pool, natural pool or other place to swim. |
 | `animalCorner` | A petting zoo, farm, terrarium or animal rescue station. |
 | `landmark` | A notable building or place of the city. |
+| `wasteCollectionPoint` | A collection point for hazardous waste or bio-waste that is not a collection yard. |
+| `trailStop` | A stop of a nature trail. |
 
 ### WasteAccess
 

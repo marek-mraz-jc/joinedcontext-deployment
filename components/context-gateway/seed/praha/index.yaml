@@ -47,6 +47,8 @@ praha-datasource-geo-grocery-stores.yaml: projects/praha/datasources/ipr-geo-gro
 praha-datasource-geo-drinking-fountains.yaml: projects/praha/datasources/ipr-geo-drinking-fountains.yaml
 praha-datasource-geo-fountains.yaml: projects/praha/datasources/ipr-geo-fountains.yaml
 praha-datasource-geo-springs.yaml: projects/praha/datasources/ipr-geo-springs.yaml
+praha-datasource-geo-trail-stops.yaml: projects/praha/datasources/ipr-geo-trail-stops.yaml
+praha-datasource-geo-waste-points.yaml: projects/praha/datasources/ipr-geo-waste-points.yaml
 praha-datasource-geo-water-pumps.yaml: projects/praha/datasources/ipr-geo-water-pumps.yaml
 praha-datasource-geo-mist-showers.yaml: projects/praha/datasources/ipr-geo-mist-showers.yaml
 praha-datasource-geo-bathing-places.yaml: projects/praha/datasources/ipr-geo-bathing-places.yaml
@@ -93,6 +95,8 @@ praha-pipeline-geo-grocery-stores.yaml: projects/praha/pipelines/geo-grocery-sto
 praha-pipeline-geo-drinking-fountains.yaml: projects/praha/pipelines/geo-drinking-fountains/pipeline.yaml
 praha-pipeline-geo-fountains.yaml: projects/praha/pipelines/geo-fountains/pipeline.yaml
 praha-pipeline-geo-springs.yaml: projects/praha/pipelines/geo-springs/pipeline.yaml
+praha-pipeline-geo-trail-stops.yaml: projects/praha/pipelines/geo-trail-stops/pipeline.yaml
+praha-pipeline-geo-waste-points.yaml: projects/praha/pipelines/geo-waste-points/pipeline.yaml
 praha-pipeline-geo-water-pumps.yaml: projects/praha/pipelines/geo-water-pumps/pipeline.yaml
 praha-pipeline-geo-mist-showers.yaml: projects/praha/pipelines/geo-mist-showers/pipeline.yaml
 praha-pipeline-geo-bathing-places.yaml: projects/praha/pipelines/geo-bathing-places/pipeline.yaml
@@ -114,6 +118,8 @@ praha-pipeline-geo-grocery-stores-bento.yaml: projects/praha/pipelines/geo-groce
 praha-pipeline-geo-drinking-fountains-bento.yaml: projects/praha/pipelines/geo-drinking-fountains/bento.yaml
 praha-pipeline-geo-fountains-bento.yaml: projects/praha/pipelines/geo-fountains/bento.yaml
 praha-pipeline-geo-springs-bento.yaml: projects/praha/pipelines/geo-springs/bento.yaml
+praha-pipeline-geo-trail-stops-bento.yaml: projects/praha/pipelines/geo-trail-stops/bento.yaml
+praha-pipeline-geo-waste-points-bento.yaml: projects/praha/pipelines/geo-waste-points/bento.yaml
 praha-pipeline-geo-water-pumps-bento.yaml: projects/praha/pipelines/geo-water-pumps/bento.yaml
 praha-pipeline-geo-mist-showers-bento.yaml: projects/praha/pipelines/geo-mist-showers/bento.yaml
 praha-pipeline-geo-bathing-places-bento.yaml: projects/praha/pipelines/geo-bathing-places/bento.yaml

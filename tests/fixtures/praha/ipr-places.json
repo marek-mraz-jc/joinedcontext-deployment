@@ -1117,5 +1117,349 @@
     }
    }
   ]
+ },
+ "waste-points": {
+  "type": "FeatureCollection",
+  "name": "zpk_cur_zpk_o_sberodpadu_b_zpk_cur_zpk_o_sberodpadu_",
+  "crs": {
+   "type": "name",
+   "properties": {
+    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+   }
+  },
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 9097,
+     "typobjektu": "SSNO",
+     "nazev": "Shromažďovací místo nebezpečných odpadů -Výkup druhotných surovin",
+     "name": "Stationary collecting point for hazardous waste  - Výkup druhotných surovin",
+     "provozovatel": "Tomáš Klíma",
+     "operator": "Tomáš Klíma",
+     "adresa": "Bartoškova 1/a, Praha 4 - Nusle",
+     "kontakt": "603562308",
+     "contact": "603562308",
+     "provoznidoba": "Po–Pá: 8:00 – 17:00, So: 9:00 – 12:00 ",
+     "operatinghour": "Mondays through Fridays from 8.00 to 17.00,  Saturdays from 9.00 to 12.00",
+     "odpadprijem": null,
+     "wasteaccept": null,
+     "odpadomezeni": null,
+     "wasterestriction": null,
+     "nebezpodpadprijem": "rozpouštědla, kyseliny, zásady, fotochemikálie, pesticidy, zářivky a jiný odp. s obsahem rtuti, olej a tuk kromě jedlého,barvy, lepidla, pryskyřice, detergenty obsahující nebezp.látky (čist.prostředky), nepoužitelná léčiva, baterie, akumulátory",
+     "dangwasteaccept": "batteries and accumulators, containers for aerosols (sprays), chemical preparations for gardening, lubricating oils and greases, solvents, thinners and paints, adhesives, glues and resins, drugs, acids and hydroxides, photochemicals ,incandescent, fluorescent lamps",
+     "zpetnyodber": null,
+     "retaking": null,
+     "platbaodpad": null,
+     "paymentwaste": null,
+     "platbanebezpodpad": "zdarma pro občany s trvalým pobytem na území hl.m. Prahy; vždy je nutno se prokázat platným občanským průkazem",
+     "paymentdangwaste": "free of charge for the Prague citizens; it is always necessary the person identifies themselves by a valid identity card",
+     "poznamka": null,
+     "note": null,
+     "platnost": 0,
+     "mc": "Praha 4",
+     "id_poskyt": 17,
+     "poskyt": "MHMP-OCP",
+     "oznameni": null,
+     "announcement": null,
+     "globalid": "{F211FA00-4D7C-4342-9060-874B051C0677}",
+     "reuse": 0,
+     "reuse_prijem": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_provozdoba": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_info": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_accept": "There is no Re-use point at this collection yard",
+     "reuse_operatinghour": "There is no Re-use point at this collection yard",
+     "reuse_info_eng": "There is no Re-use point at this collection yard",
+     "icz": null
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.446681229000035,
+      50.063979138000036
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 9098,
+     "typobjektu": "SSNO",
+     "nazev": "Shromažďovací místo nebezpečných odpadů - Areál společnosti Pražské služby, a.s.",
+     "name": "Stationary collecting point for hazardous waste - Premises of Pražské služby, a.s.",
+     "provozovatel": "Pražské služby, a.s.",
+     "operator": "Pražské služby, a.s.",
+     "adresa": "Ke Kotlářce 4, Praha 5",
+     "kontakt": "284098476",
+     "contact": "284098476",
+     "provoznidoba": "Po,út,čt,pá: 6:00 – 14:00 hod., St: 6:00 – 17:00 hod.",
+     "operatinghour": "Mondays, Tuesdays, Thursdays, Fridays from 6.00 to 14.00, Wednesdays from 6.00 to 17.00.",
+     "odpadprijem": null,
+     "wasteaccept": null,
+     "odpadomezeni": null,
+     "wasterestriction": null,
+     "nebezpodpadprijem": "rozpouštědla, kyseliny, zásady, fotochemikálie, pesticidy, zářivky a jiný odp. s obsahem rtuti,olej a tuk kromě jedlého, barvy, lepidla, pryskyřice, detergenty obsahující nebezp.látky (čist.prostředky), nepoužitelná léčiva, baterie, akumulátory",
+     "dangwasteaccept": "batteries and accumulators, containers for aerosols (sprays), chemical preparations for gardening, lubricating oils and greases, solvents, thinners and paints, glues and resins, drugs, acids and hydroxides, photochemicals, incandescent, fluorescent lamps",
+     "zpetnyodber": null,
+     "retaking": null,
+     "platbaodpad": null,
+     "paymentwaste": null,
+     "platbanebezpodpad": "zdarma pro občany s trvalým pobytem na území hl.m. Prahy; vždy je nutno se prokázat platným občanským průkazem",
+     "paymentdangwaste": "free of charge for the Prague citizens; it is always necessary the person identifies themselves by a valid identity card",
+     "poznamka": null,
+     "note": null,
+     "platnost": 0,
+     "mc": "Praha 5",
+     "id_poskyt": 17,
+     "poskyt": "MHMP-OCP",
+     "oznameni": null,
+     "announcement": null,
+     "globalid": "{62E9CE57-BE11-4E8B-A11B-BBB6322367C9}",
+     "reuse": 0,
+     "reuse_prijem": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_provozdoba": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_info": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_accept": "There is no Re-use point at this collection yard",
+     "reuse_operatinghour": "There is no Re-use point at this collection yard",
+     "reuse_info_eng": "There is no Re-use point at this collection yard",
+     "icz": null
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.360223498000039,
+      50.07021866200006
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 9128,
+     "typobjektu": "SSMBIO",
+     "nazev": "Stabilní sběrné místo pro sběr bioodpadu v Praze 10 - Malešice",
+     "name": "Stationary collecting point for collection of biological waste in Prague",
+     "provozovatel": "Ing. Jan Švejkovský – JENA – firma služeb",
+     "operator": "Ing. Jan Švejkovský – JENA – firma služeb",
+     "adresa": "Dřevčická 803/25 Praha 10 - Malešice",
+     "kontakt": "274772694",
+     "contact": "274772694",
+     "provoznidoba": "Po - Pá 7:00 - 18:00 ( v době zimního času do 17 hod.), So 7:00 - 15:00",
+     "operatinghour": "Mondays through Fridays from 7:00 to 18:00 ( in winter time till 17:00), Saturdays from 7:00 to 15:00",
+     "odpadprijem": "Na sběrné místo je možno uložit bioodpad rostlinného původu - z údržby veřejné zeleně a ze zahrad, odpad z lesnictví, odpadní kůru a korek.",
+     "wasteaccept": "Stationary collection point receives all biological wastes of plant origin i.e. waste from greenery maintenance and gardening, forestry waste, waste bark and cork.",
+     "odpadomezeni": "Doprava bioodpadu občany na zařízení je povolena pouze motorovými vozidly o hmotnosti do 3,5 t (s přívěs. vozíky).",
+     "wasterestriction": "For the Prague Citizen - delivery–entry allowed just for vehicles up to 3.5 tonnes as maximum.",
+     "nebezpodpadprijem": null,
+     "dangwasteaccept": null,
+     "zpetnyodber": null,
+     "retaking": null,
+     "platbaodpad": "zdarma pro občany hl.m. Prahy do množství 250 kg/měs (nad limit za úhradu); vždy je nutno se prokázat platným občanským průkazem. Ukládání fyz. a práv. osobami oprávněnými k podnik. za úhradu.",
+     "paymentwaste": "For the Prague Citizen - the amount up to 250 kg per person and month free of charge; it is always necessary the person identifies themselves by a valid identity card. Legal entities and natural entities with trade licence have this service for fee.",
+     "platbanebezpodpad": null,
+     "paymentdangwaste": null,
+     "poznamka": null,
+     "note": null,
+     "platnost": 1,
+     "mc": "Praha 10",
+     "id_poskyt": 17,
+     "poskyt": "MHMP-OCP",
+     "oznameni": null,
+     "announcement": null,
+     "globalid": "{A58E848B-E522-4D5F-AE41-94472F893188}",
+     "reuse": 0,
+     "reuse_prijem": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_provozdoba": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_info": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_accept": "There is no Re-use point at this collection yard",
+     "reuse_operatinghour": "There is no Re-use point at this collection yard",
+     "reuse_info_eng": "There is no Re-use point at this collection yard",
+     "icz": "CZA00553"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.51285083700003,
+      50.07859401600007
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 9093,
+     "typobjektu": "SDHMP",
+     "nazev": "Sběrný dvůr hlavního města Prahy Generála Šišky",
+     "name": "Collecting yard of the City of Prague Generála Šišky",
+     "provozovatel": "Pražské služby, a.s.",
+     "operator": "Pražské služby, a.s.",
+     "adresa": "Generála Šišky, Praha 12 - Modřany",
+     "kontakt": "731 685 002",
+     "contact": "731 685 002",
+     "provoznidoba": "Po - So 8:30 - 18:00 hod. (8:30 - 17:00 hod. v zimním období), občané mají přednostní právo odevzdat odpady před právnickými subjekty",
+     "operatinghour": "Mondays through Saturdays from 8:30 to 18:00 (in winter time to 17:00). Citizens have a preferential right to dispose of waste over legal entities.",
+     "odpadprijem": "objemný odpad (nábytek, zařízení domácnosti), kovy, dřevo, odpad z údržby zeleně, suť z bytových úprav, papír, sklo, plasty, nápojové kartony, nebezpečné odpady, pneumatiky, použitý textil, obuv a oděvy, jedlé oleje a tuky (v uzavřených pet lahvích)",
+     "wasteaccept": "Bulky waste (furniture, house equipment), scrap metal, waste wood, waste from greenery management, rubble from apartments, paper, glass, plastics, beverage cartons, hazardous components of municipal waste, tyres",
+     "odpadomezeni": "Omezení u jednorázového návozu – možný vjezd vozidel max.do 3,5 t; suť z bytových úprav do 4 m3/os/rok (při jedné návštěvě max. 2 m3/osoba); u objemného odpadu max. 750 kg/os/rok.",
+     "wasterestriction": "There is an acceptance limit to single delivery–entry allowed for vehicles up to 3.5 tonnes as maximum. Rubble from apartments - 4m3/year/person free of charge (max. 2 m3/person per visit), for bulky waste - max. 750 kg/person/year.",
+     "nebezpodpadprijem": "rozpouštědla, kyseliny, zásady ,fotochemikálie ,pesticidy, odpad s obsahem rtuti, olej a tuk kromě jedlého, barvy, lepidla, pryskyřice, detergenty obsahující nebezp.látky (čist.prostředky), nepoužitelná léčiva",
+     "dangwasteaccept": "batteries and accumulators, containers for aerosols (sprays), chemical preparations for gardening, lubricating oils and greases, solvents, thinners and paints, adhesives, glues and resins, drugs, acids and hydroxides, photochemicals ,incandescent, fluorescent lamps",
+     "zpetnyodber": "elektrická a elektronická zařízení, např. lednice, pračky, sporáky, malé spotřebiče, TV, PC, monitory, rádia, zářivky, výbojky, nástroje, hračky, baterie, tiskárny, tonery.",
+     "retaking": "electric appliances and electronic equipment, for example refrigerators, washing machines, electric cookers, small electrical appliances, TV sets, radio sets, PCs, monitors, printers, toners, fluorescent lamps and incandescent, tooling, toys, batteries.",
+     "platbaodpad": "zdarma pro občany s trvalým pobytem na území hl.m. Prahy; vždy je nutno se prokázat platným občanským průkazem - odpady lze odevzdávat pouze na občanské průkazy přítomných osob starších 15 let.",
+     "paymentwaste": "Free of charge for the Prague citizens; it is always necessary the person identifies themselves by a valid identity card - waste can only be handed over on the identity cards of persons over 15 years of age present.",
+     "platbanebezpodpad": "zdarma pro občany s trvalým pobytem na území hl.m. Prahy; vždy je nutno se prokázat platným občanským průkazem",
+     "paymentdangwaste": "free of charge for the Prague citizens; it is always necessary the person identifies themselves by a valid identity card",
+     "poznamka": "ve stabilních sběrnách nebezpečných odpadů zřízených v rámci Sběrných dvorů hl. m. Prahy jsou zářivky a výbojky odebírány v rámci zpětného odběru",
+     "note": "The stationary collecting points for hazardous waste, which are established inside the collecting yards of the City of Prague, accept incadescent and fluorescent lamps within the taking back procedure of eletronic and electric equipment",
+     "platnost": 1,
+     "mc": "Praha 12",
+     "id_poskyt": 17,
+     "poskyt": "MHMP-OCP",
+     "oznameni": null,
+     "announcement": null,
+     "globalid": "{9093F257-BEDD-4823-BB8E-435874D24CDA}",
+     "reuse": 1,
+     "reuse_prijem": "Přijímány jsou předměty ve skvělém stavu, které dále využije někdo jiný, typově předměty z domácnosti, drobnější nábytek, knihy, hračky, sportovní vybavení atp.",
+     "reuse_provozdoba": "Provozní doba Re-use pointů se shoduje s provozní dobou sběrného dvora, na níž je point umístěn.",
+     "reuse_info": "Předměty z Re-use pointů lze vyzvednout pouze po rezervaci v aplikaci nevyhazujto.cz",
+     "reuse_accept": "We accept items in excellent condition that can be used by someone else, typically household items, small items of furniture, books, toys, sports equipment, etc.",
+     "reuse_operatinghour": "The opening hours of re-use points are the same as that of the collection yard at which they are located.",
+     "reuse_info_eng": "Items from re-use points can only be picked up following reservation in the nevyhazujto.cz app.",
+     "icz": "CZA00230"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.436798900000042,
+      50.004504902000065
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 9103,
+     "typobjektu": "SDMC",
+     "nazev": "Sběrný dvůr Nad lávkou (areál SK Aritma)",
+     "name": null,
+     "provozovatel": "MI.KA.PA. plus",
+     "operator": "MI.KA.PA. plus",
+     "adresa": "Nad lávkou 5, Praha 6 - Vokovice",
+     "kontakt": "pro bližší informace kontaktujte ÚPraha 6, tel. 220189902",
+     "contact": "for detailed information please contact District Authority Prague 6, tel. 220189902 ",
+     "provoznidoba": "Po, St 8:30 - 16:00 hod., Út, Čt 8:30 - 18:00 hod. (8:30 - 16:00 hod. zimní období), Pá, So 8:30 - 12:30 hod.",
+     "operatinghour": "Mondays, Wednesdays from 8:30 to 16:00, Tuesdays, Thursdays from 8:30 to 18:00 (in winter time from 8:30 to 16:00), Fridays, Saturdays from 8:30 to 12:30",
+     "odpadprijem": "objemný odpad, odpad ze dřeva, odpad ze zeleně, kovový odpad, papír, sklo, plasty",
+     "wasteaccept": "Bulky waste, waste wood, waste from greenery, scrap metal, paper, glass, plastics.",
+     "odpadomezeni": "příjem odpadu v omezeném množství do 2m3 na osobu a týden!",
+     "wasterestriction": "The waste acceptance is limited to the amount up to 2 m3 per person and week!",
+     "nebezpodpadprijem": null,
+     "dangwasteaccept": null,
+     "zpetnyodber": null,
+     "retaking": null,
+     "platbaodpad": "zdarma pro občany Praha 6 (Břevnov, Bubeneč, Dejvice, Hradčany, Liboc, Ruzyně, Střešovice, Veleslavín, Vokovice); vždy je nutno se prokázat platným občanským průkazem",
+     "paymentwaste": "free of charge for the citizens of the City District Prague 6 (Břevnov, Bubeneč, Dejvice, Hradčany, Liboc, Ruzyně, Střešovice, Veleslavín, Vokovice); it is always necessary the person identifies themselves by a valid identity card",
+     "platbanebezpodpad": null,
+     "paymentdangwaste": null,
+     "poznamka": null,
+     "note": null,
+     "platnost": 0,
+     "mc": "Praha 6",
+     "id_poskyt": 17,
+     "poskyt": "MHMP-OCP",
+     "oznameni": null,
+     "announcement": null,
+     "globalid": "{4B7040E3-FA7D-4F1D-A4C3-BA88B2671A43}",
+     "reuse": 0,
+     "reuse_prijem": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_provozdoba": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_info": "V tomto sběrném dvoře není Re-use point zřízen.",
+     "reuse_accept": "There is no Re-use point at this collection yard",
+     "reuse_operatinghour": "There is no Re-use point at this collection yard",
+     "reuse_info_eng": "There is no Re-use point at this collection yard",
+     "icz": null
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.33984797100004,
+      50.09752023500005
+     ]
+    }
+   }
+  ]
+ },
+ "trail-stops": {
+  "type": "FeatureCollection",
+  "name": "zpa_cur_zpa_ns_zastavky_b_zpa_cur_zpa_ns_zastavky_b",
+  "crs": {
+   "type": "name",
+   "properties": {
+    "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+   }
+  },
+  "features": [
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 1,
+     "id": 12,
+     "trasa": "Roztocký háj - Tiché údolí",
+     "cislo_zast": 3,
+     "nazev_zast": "Roztocký háj",
+     "poskyt": "MHMP_OCP",
+     "id_poskyt": 17,
+     "globalid": "{01DD3D94-6421-4C23-AB52-772BD8D17E91}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.395302776000051,
+      50.15165230500003
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 2,
+     "id": 12,
+     "trasa": "Roztocký háj - Tiché údolí",
+     "cislo_zast": 4,
+     "nazev_zast": "Obec Roztoky",
+     "poskyt": "MHMP_OCP",
+     "id_poskyt": 17,
+     "globalid": "{20669194-73A6-4FEB-8739-1EBCEF408FE9}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.395441792000042,
+      50.154774736000036
+     ]
+    }
+   },
+   {
+    "type": "Feature",
+    "properties": {
+     "objectid": 3,
+     "id": 12,
+     "trasa": "Roztocký háj - Tiché údolí",
+     "cislo_zast": 5,
+     "nazev_zast": "Maxmiliánka",
+     "poskyt": "MHMP_OCP",
+     "id_poskyt": 17,
+     "globalid": "{6604DD12-CDE6-40E8-A364-0630D07557CF}"
+    },
+    "geometry": {
+     "type": "Point",
+     "coordinates": [
+      14.385422836000032,
+      50.15242714500005
+     ]
+    }
+   }
+  ]
  }
 }

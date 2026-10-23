@@ -266,3 +266,15 @@ spec:
         description:
           cs: Významné stavby a místa z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Notable buildings and places from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/176f314a9ded40ef88ce55a2ed401c2e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title:
+          cs: Shromažďovací místa nebezpečných a bioodpadů (IPR Praha)
+          en: Hazardous and bio-waste collection points (IPR Praha)
+        description:
+          cs: Odpadní zařízení pro občany z geoportálu IPR Praha bez sběrných dvorů, CC BY 4.0, datový podklad © IPR Praha.
+          en: Waste facilities for residents from the IPR Praha geoportal without the collection yards, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/bed7894d358a4d08b640c972e844d7f3_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Naučné stezky – zastávky (IPR Praha), en: Nature trail stops (IPR Praha) }
+        description:
+          cs: Zastávky naučných stezek odboru ochrany prostředí MHMP z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Stops of the City of Prague's nature trails from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
