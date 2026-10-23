@@ -168,5 +168,10 @@ context-broker:
     # per drain; same FEATURES). Migration 0021 adds generated entities.name_key and rewrites entities under ACCESS
     # EXCLUSIVE: the broker stalls during the apply. No new runtime key. Rollback: dev-46 (0021 rollback = compatible). Signed by
     # ship.yml on dev at c0643c9.
-    tag: 'dev-47'
-    digest: 'sha256:afd4b88e579f360cbd18614ff6cd7bd624ba0fec9fb18ac207e0967248f0dc90'
+    # Antares dev cc87f2e (dev-49, over c0643c9: T-5243 iri_no PL/pgSQL, T-5249 short history unlogged, T-5208, T-5304,
+    # T-5443, T-5245/T-3700 ws test fixes, c148135 feed surface built in). Migration 0022 replaces iri_no (compatible);
+    # 0023 (breaking) turns attr_rows into a LIST(short) parent over attr_rows_long and the UNLOGGED attr_rows_short: on dev
+    # attr_rows holds one child of 16 kB (2026-10-23T15:18Z), so it runs in moments; Recreate (2a531a7) stops the old
+    # release first. No new runtime key. Rollback: dev-47 plus a restore (0023 is breaking). Signed by ship.yml on dev at cc87f2e.
+    tag: 'dev-49'
+    digest: 'sha256:fe24b892c525d1db66992e8d6f630396b5cff660db531a89a9a761cc5628c2f9'
