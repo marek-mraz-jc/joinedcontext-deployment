@@ -54,6 +54,11 @@ spec:
     - entityType: OnStreetParking
       current: P30D
       history: 'off'
+    # An activity is a record, not a measurement: its current state only (T-5265).
+    - entityType: Event
+      history: 'off'
+    - entityType: PointOfInterest
+      history: 'off'
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:
@@ -74,6 +79,16 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: charging-in-area
       entityType: EVChargingStation
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: Event
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: PointOfInterest
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

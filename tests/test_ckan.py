@@ -451,6 +451,30 @@ def test_the_cookie_script_stops_the_pod_when_the_ini_cannot_be_written(tmp_path
     assert "could not mark the session cookies Secure" in result.stderr
 
 
+@pytest.mark.parametrize("exit_code, said", [(0, "search index refreshed"), (3, "search index refresh failed")])
+def test_the_search_index_is_refreshed_beside_uwsgi_and_never_cleared(tmp_path, exit_code, said):
+    """T-5294: the theme's Format and Topic filters reach Solr only when a dataset is indexed
+    again; the refresh runs in the background, keeps the old index answering, and a failure
+    is logged without stopping the catalogue."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls = tmp_path / "calls"
+    (bin_dir / "ckan").write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" >> {calls}\nsleep 1\nexit {exit_code}\n')
+    (bin_dir / "ckan").chmod(0o755)
+    script = CHART / "files/startup/03-search-index.sh"
+    result = subprocess.run(
+        ["sh", "-c", f'. "{script}"; echo sourced-to-the-end; wait'],
+        env={"PATH": f"{bin_dir}:/usr/bin:/bin", "CKAN_INI": "/tmp/ckan.ini"},
+        capture_output=True, text=True, check=False, timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.index("sourced-to-the-end") == 0, "the refresh ran before uWSGI could start"
+    assert said in result.stdout + result.stderr
+    args = calls.read_text().split()
+    assert args == ["-c", "/tmp/ckan.ini", "search-index", "rebuild", "--force", "--quiet"]
+    assert "--clear" not in args and "-c" not in args[2:]
+
+
 @requires_helmfile
 def test_the_api_token_job_writes_one_secret_and_reaches_two_things(rendered):
     """T-0493: the token is minted at run time, so a Job writes it; its Role names the one Secret

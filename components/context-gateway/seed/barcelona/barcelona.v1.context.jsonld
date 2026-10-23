@@ -4,14 +4,23 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "ContactPoint": {
+      "@id": "schema:ContactPoint"
+    },
     "EVChargingStation": {
       "@id": "sdm:EVChargingStation"
     },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "Event": {
+      "@id": "sdm:Event"
+    },
     "OnStreetParking": {
       "@id": "sdm:OnStreetParking"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
@@ -40,19 +49,24 @@
       "@type": "xsd:integer"
     },
     "category": {
-      "@context": {
-        "description": "skos:prefLabel",
-        "meaning": "@id",
-        "text": "skos:notation"
-      },
       "@id": "sdm:category"
     },
     "congested": {
       "@id": "sdm:congested",
       "@type": "xsd:boolean"
     },
+    "contactPoint": {
+      "@id": "schema:contactPoint"
+    },
     "dateObserved": {
       "@id": "sdm:dateObserved",
+      "@type": "xsd:dateTime"
+    },
+    "district": {
+      "@id": "sdm:district"
+    },
+    "endDate": {
+      "@id": "schema:endDate",
       "@type": "xsd:dateTime"
     },
     "geojson": "https://purl.org/geojson/vocab#",
@@ -118,6 +132,10 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "startDate": {
+      "@id": "schema:startDate",
+      "@type": "xsd:dateTime"
+    },
     "status": {
       "@context": {
         "description": "skos:prefLabel",
@@ -129,8 +147,14 @@
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
+    "subCategory": {
+      "@id": "sdm:subCategory"
+    },
     "tariffCode": {
       "@id": "jc:tariffCode"
+    },
+    "telephone": {
+      "@id": "schema:telephone"
     },
     "totalSpotNumber": {
       "@id": "sdm:totalSpotNumber",

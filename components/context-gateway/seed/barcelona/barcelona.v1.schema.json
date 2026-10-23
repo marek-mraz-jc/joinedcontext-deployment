@@ -47,7 +47,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
           "type": [
             "string",
             "null"
@@ -140,6 +140,22 @@
         "working": "At least one port AVAILABLE."
       }
     },
+    "ContactPoint": {
+      "additionalProperties": false,
+      "description": "The value of `contactPoint`: how to reach the organizer, never an entity of its own.",
+      "properties": {
+        "telephone": {
+          "description": "A telephone number as the agenda writes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "title": "ContactPoint",
+      "type": "object"
+    },
     "EVChargingStation": {
       "additionalProperties": false,
       "description": "One public charging point of the Endolla Barcelona network run by B:SM, its ports, socket kinds and how many are free now, every five minutes (Open Data BCN informacio-punts-recarrega-electric, which carries the port states of estat-ports-recarrega-electric too).",
@@ -153,7 +169,7 @@
               "type": "null"
             }
           ],
-          "description": "The postal address the city publishes for the charging point, field by field.",
+          "description": "The postal address as the agenda, the facility register or the charging point list publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
           "x-ngsi-ld-kind": "Property"
         },
         "allowedVehicleType": {
@@ -225,7 +241,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
           "type": [
             "string",
             "null"
@@ -379,6 +395,144 @@
       "title": "Entity",
       "type": "object"
     },
+    "Event": {
+      "additionalProperties": false,
+      "description": "One activity of the Ajuntament's agendas (agenda di\u00e0ria, agenda cultural, agenda d'activitats esportives), the day it starts and ends, where it happens and its category.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the agenda, the facility register or the charging point list publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "contactPoint": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContactPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The public telephone line the agenda or the facility register lists.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "endDate": {
+          "description": "The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "startDate": {
+          "description": "The first day of the event, local midnight in Europe/Madrid; the agenda publishes the day, its hours sit in a free-text timetable.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "subCategory": {
+          "description": "The Smart Data Models sub-category where the name says it (music, theater).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "startDate",
+        "id",
+        "type"
+      ],
+      "title": "Event",
+      "type": "object"
+    },
     "OnStreetParking": {
       "additionalProperties": false,
       "description": "One regulated surface parking section of B:SM (blue, green, residents, loading or coach zone), its curb lines, its places and its rate and timetable codes (Open Data BCN trams-aparcament-superficie).",
@@ -395,7 +549,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "The kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).",
+          "description": "An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).",
           "items": {
             "$ref": "#/definitions/StreetParkingCategory"
           },
@@ -439,7 +593,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
           "type": [
             "string",
             "null"
@@ -502,9 +656,120 @@
       "title": "OnStreetParking",
       "type": "object"
     },
+    "PointOfInterest": {
+      "additionalProperties": false,
+      "description": "One facility of the city's register (Guia BCN equipaments): a library, a sports hall, a school, a market, a social services centre; its family, where it is and its telephone.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the agenda, the facility register or the charging point list publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "An Event's main category first, one of the platform's fifteen event codes (music, theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature, education-talk, children-family, hobby-workshop, food-market, history-heritage, faith-tradition, health-wellness, community-civic), then the Smart Data Models category it falls under where one fits, read from the first words of the Catalan name and absent when no rule matches. A PointOfInterest's family in the city's facility register first (culture-leisure, sports, education, social-services, public-administration, markets-shopping, information-centres, religious-services, environment, animals-plants, cemeteries, media, utility-companies, restaurants), then the register's own kind in Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "contactPoint": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ContactPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The public telephone line the agenda or the facility register lists.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PointOfInterest",
+      "type": "object"
+    },
     "PostalAddress": {
       "additionalProperties": false,
-      "description": "The value of `address`, never an entity of its own (Smart Data Models' common schema).",
+      "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
       "properties": {
         "addressCountry": {
           "description": "The country, as an ISO 3166-1 alpha-2 code.",
@@ -515,7 +780,15 @@
           "x-ngsi-ld-kind": "Property"
         },
         "addressLocality": {
-          "description": "The municipality.",
+          "description": "The town or the municipality.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "district": {
+          "description": "The city district (districte) the address lies in.",
           "type": [
             "string",
             "null"
@@ -632,7 +905,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).",
           "type": [
             "string",
             "null"

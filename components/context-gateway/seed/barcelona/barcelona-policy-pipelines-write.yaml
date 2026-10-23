@@ -21,3 +21,5 @@ spec:
         - type: TrafficFlowObserved
         - type: OnStreetParking
         - type: EVChargingStation
+        - type: Event
+        - type: PointOfInterest

@@ -6,10 +6,12 @@ description: >-
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
-  own classes. Transport: TrafficFlowObserved, the traffic state of each street
-  section and each route of sections the city reports every five minutes, OnStreetParking, each
-  regulated surface parking section (blue, green, loading and bus zones), and EVChargingStation,
-  each public charging point of the Endolla Barcelona network with its live socket states.
+  agendas (cultural, daily and sports); PointOfInterest the city's register of facilities
+  (equipaments); each Open Data BCN batch adds its own classes. Transport: TrafficFlowObserved,
+  the traffic state of each street section and each route of sections the city reports every
+  five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading
+  and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona
+  network with its live socket states.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -25,7 +27,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).
+    description: The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
@@ -115,14 +117,6 @@ slots:
     minimum_value: 0
     unit: { ucum_code: s }
     annotations: { ngsi_ld_kind: Property }
-  category:
-    slot_uri: sdm:category
-    description: The kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
-    multivalued: true
-    range: StreetParkingCategory
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: https://github.com/smart-data-models/dataModel.Parking
   allowedVehicleType:
     slot_uri: sdm:allowedVehicleType
     description: >-
@@ -152,9 +146,54 @@ slots:
       rate/timetable, kept as published (custom; Open Data BCN tarifes- and
       horaris-aparcament-superficie).
     annotations: { ngsi_ld_kind: Property }
+  startDate:
+    slot_uri: schema:startDate
+    description: >-
+      The first day of the event, local midnight in Europe/Madrid; the agenda publishes the
+      day, its hours sit in a free-text timetable.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  endDate:
+    slot_uri: schema:endDate
+    description: The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  category:
+    slot_uri: sdm:category
+    description: >-
+      An Event's main category first, one of the platform's fifteen event codes (music,
+      theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature,
+      education-talk, children-family, hobby-workshop, food-market, history-heritage,
+      faith-tradition, health-wellness, community-civic), then the Smart Data Models category it
+      falls under where one fits, read from the first words of the Catalan name and absent when
+      no rule matches. A PointOfInterest's family in the city's facility register first
+      (culture-leisure, sports, education, social-services, public-administration,
+      markets-shopping, information-centres, religious-services, environment, animals-plants,
+      cemeteries, media, utility-companies, restaurants), then the register's own kind in
+      Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from
+      the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  subCategory:
+    slot_uri: sdm:subCategory
+    description: The Smart Data Models sub-category where the name says it (music, theater).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   address:
     slot_uri: schema:address
-    description: The postal address the city publishes for the charging point, field by field.
+    description: >-
+      The postal address as the agenda, the facility register or the charging point list
+      publishes it, field by field (Smart Data Models' common PostalAddress); a field the source
+      leaves out is absent.
     range: PostalAddress
     inlined: true
     annotations:
@@ -172,7 +211,7 @@ slots:
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
-    description: The municipality.
+    description: The town or the municipality.
     annotations:
       upstream_source: https://schema.org/addressLocality
   addressCountry:
@@ -242,6 +281,24 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/openingHours
+  district:
+    slot_uri: sdm:district
+    description: The city district (districte) the address lies in.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  contactPoint:
+    slot_uri: schema:contactPoint
+    description: The public telephone line the agenda or the facility register lists.
+    range: ContactPoint
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  telephone:
+    slot_uri: schema:telephone
+    description: A telephone number as the agenda writes it.
+    annotations:
+      upstream_source: https://schema.org/telephone
   source:
     slot_uri: sdm:source
     description: The Open Data BCN dataset the entity was read from.
@@ -286,6 +343,8 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
     slots: [name, category, allowedVehicleType, totalSpotNumber, zoneCode, tariffCode, source]
+    slot_usage:
+      category: { range: StreetParkingCategory }
   EVChargingStation:
     class_uri: sdm:EVChargingStation
     description: >-
@@ -310,13 +369,36 @@ classes:
       - operator
       - openingHours
       - source
+  Event:
+    class_uri: sdm:Event
+    description: >-
+      One activity of the Ajuntament's agendas (agenda diària, agenda cultural, agenda
+      d'activitats esportives), the day it starts and ends, where it happens and its category.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+    slots: [name, startDate, endDate, category, subCategory, address, contactPoint, source]
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One facility of the city's register (Guia BCN equipaments): a library, a sports hall, a
+      school, a market, a social services centre; its family, where it is and its telephone.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+    slots: [name, category, address, contactPoint, source]
   PostalAddress:
     class_uri: schema:PostalAddress
-    description: The value of `address`, never an entity of its own (Smart Data Models' common schema).
+    description: "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema)."
     annotations:
       upstream_source: https://schema.org/PostalAddress
-    slots: [streetAddress, postalCode, addressLocality, addressCountry]
-
+    slots: [streetAddress, postalCode, addressLocality, district, addressCountry]
+  ContactPoint:
+    class_uri: schema:ContactPoint
+    description: 'The value of `contactPoint`: how to reach the organizer, never an entity of its own.'
+    annotations:
+      upstream_source: https://schema.org/ContactPoint
+    slots: [telephone]
 enums:
   TrafficState:
     description: Open Data BCN's traffic state codes 0 to 6, named in English, the Catalan name in each description.
