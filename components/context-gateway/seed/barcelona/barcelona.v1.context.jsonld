@@ -10,11 +10,32 @@
     "CityWork": {
       "@id": "sdm:CityWork"
     },
+    "ContactPoint": {
+      "@id": "schema:ContactPoint"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "Event": {
+      "@id": "sdm:Event"
+    },
     "PedestrianCrossing": {
       "@id": "jc:PedestrianCrossing"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "areaServed": {
       "@id": "sdm:areaServed"
@@ -23,9 +44,15 @@
       "@id": "jc:awardAmount",
       "@type": "xsd:float"
     },
+    "category": {
+      "@id": "sdm:category"
+    },
     "cityWorks": {
       "@id": "jc:cityWorks",
       "@type": "@id"
+    },
+    "contactPoint": {
+      "@id": "schema:contactPoint"
     },
     "contractingAuthority": {
       "@id": "sdm:contractingAuthority"
@@ -51,6 +78,9 @@
     "description": {
       "@id": "schema:description"
     },
+    "district": {
+      "@id": "sdm:district"
+    },
     "districtCode": {
       "@id": "jc:districtCode"
     },
@@ -63,7 +93,7 @@
       "@id": "jc:divisionLevel"
     },
     "endDate": {
-      "@id": "sdm:endDate",
+      "@id": "schema:endDate",
       "@type": "xsd:dateTime"
     },
     "geojson": "https://purl.org/geojson/vocab#",
@@ -109,6 +139,9 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "postalCode": {
+      "@id": "schema:postalCode"
+    },
     "refDistrict": {
       "@id": "jc:refDistrict",
       "@type": "@id"
@@ -134,8 +167,17 @@
       "@type": "xsd:anyURI"
     },
     "startDate": {
-      "@id": "sdm:startDate",
+      "@id": "schema:startDate",
       "@type": "xsd:dateTime"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
+    },
+    "subCategory": {
+      "@id": "sdm:subCategory"
+    },
+    "telephone": {
+      "@id": "schema:telephone"
     },
     "tenderAmount": {
       "@id": "jc:tenderAmount",

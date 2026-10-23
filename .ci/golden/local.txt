@@ -30,6 +30,7 @@ apps/v1/Deployment local/model-tools
 apps/v1/Deployment local/observability-collector
 apps/v1/Deployment local/pipeline-runner
 apps/v1/Deployment local/portal
+apps/v1/Deployment local/portal-ui
 apps/v1/Deployment local/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet local/artifact-store
 apps/v1/StatefulSet local/keycloak-app-keycloakx
@@ -161,6 +162,9 @@ networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy local/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy local/portal-to-mqtt-brokers-linkerd
+networking.k8s.io/v1/NetworkPolicy local/portal-ui
+networking.k8s.io/v1/NetworkPolicy local/portal-ui-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy local/portal-ui-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/postgres
 networking.k8s.io/v1/NetworkPolicy local/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy local/postgres-drill
@@ -182,12 +186,15 @@ networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy local/sandbox-reaper-linkerd-control-plane
 policy.linkerd.io/v1alpha1/AuthorizationPolicy local/context-broker-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy local/pipeline-runner-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy local/portal-ui-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication local/context-broker-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication local/pipeline-runner-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication local/portal-ui-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server local/context-broker-api
 policy.linkerd.io/v1beta3/Server local/pipeline-runner-api
+policy.linkerd.io/v1beta3/Server local/portal-ui-api
 postgresql.cnpg.io/v1/Cluster local/postgres-cluster
 postgresql.cnpg.io/v1/Database local/antares
 postgresql.cnpg.io/v1/Database local/gitea
@@ -251,7 +258,7 @@ v1/ConfigMap local/gitea-seed-s1-banskabystrica
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--3
 v1/ConfigMap local/gitea-seed-s1-slovensko--19
-v1/ConfigMap local/gitea-seed-s1-slovensko--24
+v1/ConfigMap local/gitea-seed-s1-slovensko--23
 v1/ConfigMap local/gitea-seed-s10-sharing
 v1/ConfigMap local/gitea-seed-s10-slovensko--10
 v1/ConfigMap local/gitea-seed-s10-slovensko--11
@@ -266,7 +273,7 @@ v1/ConfigMap local/gitea-seed-s2-barcelona
 v1/ConfigMap local/gitea-seed-s2-slovensko--13
 v1/ConfigMap local/gitea-seed-s2-slovensko--14
 v1/ConfigMap local/gitea-seed-s2-slovensko--15
-v1/ConfigMap local/gitea-seed-s2-slovensko--23
+v1/ConfigMap local/gitea-seed-s2-slovensko--24
 v1/ConfigMap local/gitea-seed-s3-bbsk
 v1/ConfigMap local/gitea-seed-s3-bbsk--2
 v1/ConfigMap local/gitea-seed-s3-bbsk--3
@@ -371,6 +378,7 @@ v1/Service local/pipeline-runner
 v1/Service local/pipeline-runner-pods
 v1/Service local/portal
 v1/Service local/portal-pods
+v1/Service local/portal-ui
 v1/ServiceAccount local/apisix
 v1/ServiceAccount local/artifact-store
 v1/ServiceAccount local/context-broker
@@ -385,6 +393,7 @@ v1/ServiceAccount local/observability-collector
 v1/ServiceAccount local/pipeline-runner
 v1/ServiceAccount local/portal
 v1/ServiceAccount local/portal-reconciler
+v1/ServiceAccount local/portal-ui
 v1/ServiceAccount local/postgres-cluster-dr-drill
 v1/ServiceAccount local/postgres-operator-cloudnative-pg
 v1/ServiceAccount local/sandbox-reaper-reaper

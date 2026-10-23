@@ -5,10 +5,11 @@ description: >-
   What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
-  network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
-  own classes. Batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the
+  network with the hourly mean of each pollutant it measures; Event holds the city's activity
+  agendas (cultural, daily and sports); PointOfInterest the city's register of facilities
+  (equipaments); batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the
   works on the public space as CityWork and the street inventory's crossings as
-  PedestrianCrossing.
+  PedestrianCrossing; each Open Data BCN batch adds its own classes.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -24,7 +25,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name as the city publishes it, in Catalan (a station, a district or barri, a work).
+    description: The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
@@ -72,6 +73,104 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  startDate:
+    slot_uri: schema:startDate
+    description: >-
+      The first day, local midnight in Europe/Madrid: of an event (the agenda publishes the
+      day, its hours sit in a free-text timetable) or of a work on the public space.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  endDate:
+    slot_uri: schema:endDate
+    description: >-
+      The last day, local midnight in Europe/Madrid: of an event (absent when the agenda gives
+      none) or the planned last day of a work on the public space.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  category:
+    slot_uri: sdm:category
+    description: >-
+      An Event's main category first, one of the platform's fifteen event codes (music,
+      theatre-dance, film, exhibition-museum, festival-fair, sport, outdoor-nature,
+      education-talk, children-family, hobby-workshop, food-market, history-heritage,
+      faith-tradition, health-wellness, community-civic), then the Smart Data Models category it
+      falls under where one fits, read from the first words of the Catalan name and absent when
+      no rule matches. A PointOfInterest's family in the city's facility register first
+      (culture-leisure, sports, education, social-services, public-administration,
+      markets-shopping, information-centres, religious-services, environment, animals-plants,
+      cemeteries, media, utility-companies, restaurants), then the register's own kind in
+      Catalan (Biblioteques, Poliesportius).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  subCategory:
+    slot_uri: sdm:subCategory
+    description: The Smart Data Models sub-category where the name says it (music, theater).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  address:
+    slot_uri: schema:address
+    description: >-
+      The postal address as the agenda or the facility register publishes it, field by field
+      (Smart Data Models' common PostalAddress); a field the source leaves out is absent.
+    range: PostalAddress
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  streetAddress:
+    slot_uri: schema:streetAddress
+    description: The street and the house number.
+    annotations:
+      upstream_source: https://schema.org/streetAddress
+  postalCode:
+    slot_uri: schema:postalCode
+    description: The postal code.
+    annotations:
+      upstream_source: https://schema.org/postalCode
+  addressLocality:
+    slot_uri: schema:addressLocality
+    description: The town or the municipality.
+    annotations:
+      upstream_source: https://schema.org/addressLocality
+  addressCountry:
+    slot_uri: schema:addressCountry
+    description: The country, as an ISO 3166-1 alpha-2 code.
+    annotations:
+      upstream_source: https://schema.org/addressCountry
+  district:
+    slot_uri: sdm:district
+    description: The city district (districte) the address lies in.
+    annotations:
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  contactPoint:
+    slot_uri: schema:contactPoint
+    description: The public telephone line the agenda or the facility register lists.
+    range: ContactPoint
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
+  telephone:
+    slot_uri: schema:telephone
+    description: A telephone number as the agenda writes it.
+    annotations:
+      upstream_source: https://schema.org/telephone
+  source:
+    slot_uri: sdm:source
+    description: The Open Data BCN dataset the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
 
   districtCode:
     slot_uri: jc:districtCode
@@ -156,13 +255,6 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
-  source:
-    slot_uri: sdm:source
-    description: The Open Data BCN dataset the entity was read from.
-    range: uri
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: https://github.com/smart-data-models/data-models
   description:
     slot_uri: schema:description
     description: The work's description as the city publishes it, in Catalan.
@@ -193,22 +285,6 @@ slots:
     slot_uri: jc:workCategory
     description: The city's kind of work, in Catalan (Urbanització, Serveis, Clavegueram...).
     annotations: { ngsi_ld_kind: Property }
-  startDate:
-    slot_uri: sdm:startDate
-    description: The first day of the work, local midnight as UTC.
-    range: datetime
-    required: true
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
-  endDate:
-    slot_uri: sdm:endDate
-    description: The planned last day of the work, local midnight as UTC.
-    range: datetime
-    required: true
-    annotations:
-      ngsi_ld_kind: Property
-      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   contractingAuthority:
     slot_uri: sdm:contractingAuthority
     description: >-
@@ -300,6 +376,8 @@ classes:
       - seeAlso
       - dataProvider
       - source
+    slot_usage:
+      endDate: { required: true }
   PedestrianCrossing:
     class_uri: jc:PedestrianCrossing
     description: >-
@@ -309,6 +387,37 @@ classes:
       dataProvider, source).
     is_a: Entity
     slots: [crossingType, crossingTypeLabel, markedArea, refNeighbourhood, dataProvider, source]
+
+  Event:
+    class_uri: sdm:Event
+    description: >-
+      One activity of the Ajuntament's agendas (agenda diària, agenda cultural, agenda
+      d'activitats esportives), the day it starts and ends, where it happens and its category.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+    slots: [name, startDate, endDate, category, subCategory, address, contactPoint, source]
+  PointOfInterest:
+    class_uri: sdm:PointOfInterest
+    description: >-
+      One facility of the city's register (Guia BCN equipaments): a library, a sports hall, a
+      school, a market, a social services centre; its family, where it is and its telephone.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+    slots: [name, category, address, contactPoint, source]
+  PostalAddress:
+    class_uri: schema:PostalAddress
+    description: "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema)."
+    annotations:
+      upstream_source: https://schema.org/PostalAddress
+    slots: [streetAddress, postalCode, addressLocality, district, addressCountry]
+  ContactPoint:
+    class_uri: schema:ContactPoint
+    description: 'The value of `contactPoint`: how to reach the organizer, never an entity of its own.'
+    annotations:
+      upstream_source: https://schema.org/ContactPoint
+    slots: [telephone]
 
 enums:
   DivisionLevel:
