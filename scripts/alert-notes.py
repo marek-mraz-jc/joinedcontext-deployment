@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Alertmanager's alerts as one note line each, for the deployer (T-5104).
 
-Reads `GET /api/v2/alerts` of Alertmanager on stdin (the cluster-watch host job fetches it with
-`kubectl get --raw /api/v1/namespaces/<ns>/services/alertmanager-operated:9093/proxy/api/v2/alerts`)
+Reads `GET /api/v2/alerts` of Alertmanager on stdin (scripts/alert-watch.sh fetches it through a
+`kubectl port-forward` to `alertmanager-operated:9093`)
 and the state file of the previous run, prints one line per alert that started or resolved since,
 and rewrites the state file. The job sends each line through `tasks/note "@deployer ..."`.
 

@@ -45,12 +45,14 @@ and `DomainExpiresSoon` (under 30 days) from the probe; `NodeDiskAlmostFull`, `V
 (over 85 %) and `NodeMemoryHigh` (over 90 %) from node-exporter and the kubelet; and
 `PostgresBackupStale` when the newest local dump (`<cluster>-local-backup` CronJob, through
 kube-state-metrics) or CNPG backup is older than 26 hours. These read the series the Prometheus
-Operator's own stack (kube-prometheus-stack) scrapes; this component does not deploy it.
+Operator's own stack (kube-prometheus-stack) scrapes, which the `prometheus` component deploys
+(T-5154).
 
 `tests/promtool/alerts.test.yaml` injects a fault for every alert and sees it fire and resolve;
 `tests/test_alert_rules.py` runs it with `promtool test rules` from the pinned Prometheus image.
 
 Delivery: `scripts/alert-notes.py` turns Alertmanager's `/api/v2/alerts` into one line per alert
 that started or resolved, with only allow-listed labels (hosts, surfaces, Endpoints, projects,
-volumes), for the cluster-watch host job to post as `tasks/note "@deployer ..."`. E-mail follows
+volumes), for the cluster-watch host job to post as `tasks/note "@deployer ..."` through
+`scripts/alert-watch.sh` (T-5154). E-mail follows
 when the platform has SMTP (T-2767).

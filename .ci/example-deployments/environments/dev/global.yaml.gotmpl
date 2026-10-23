@@ -16,6 +16,10 @@ components:
   - secrets
   - networkpolicies
   - runtime-policies
+  # The Prometheus Operator, Prometheus (31 days), Alertmanager, kube-state-metrics and
+  # node-exporter (T-5154). Before every component whose chart renders a ServiceMonitor or
+  # PodMonitor once metrics are on (postgres, keycloak, apisix): its release installs the CRDs.
+  - prometheus
   - postgres
   # The server WASM Apps' database (ADR-N-044, AP-149): one schema and role per App, a login
   # per shard, the Portal's login that makes them (T-3344).
@@ -71,11 +75,18 @@ components:
   - ai
   # Synthetic probes of every public surface through the public hosts, every minute (T-5103).
   - probes
+  # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
+  # last: it renders its monitors into the namespaces of the components before it.
+  - monitoring
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
 
   instanceSlug: dev
+
+  # Scraped by the prometheus component's own Prometheus, alerts through Alertmanager (T-5154).
+  metrics:
+    enabled: true
 
   # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
   # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
