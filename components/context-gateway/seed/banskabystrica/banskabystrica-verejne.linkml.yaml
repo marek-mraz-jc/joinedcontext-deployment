@@ -423,6 +423,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
     slots:
       - name
       - startDate
@@ -536,6 +543,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Organization
+      label:
+        tag: label
+        value:
+          sk: Organizácia
+          cs: Organizace
+          en: Organization
+          de: Organisation
     slots:
       - name
       - schoolCode
@@ -563,6 +577,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, stationCode, dateObserved, pm10, pm25, no2, o3, dataProvider, source]
     slot_usage:
       name:
@@ -653,6 +674,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
+      label:
+        tag: label
+        value:
+          sk: Meranie počasia
+          cs: Měření počasí
+          en: Weather reading
+          de: Wetterbeobachtung
     slots:
       - name
       - dateObserved
@@ -774,6 +802,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots: [name, category, openingHours, address, dataProvider, source]
   EVChargingStation:
     class_uri: sdm:EVChargingStation
@@ -783,6 +818,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Nabíjacia stanica
+          cs: Nabíjecí stanice
+          en: EV charging station
+          de: Ladestation
     slots:
       - name
       - socketType
@@ -806,6 +848,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+      label:
+        tag: label
+        value:
+          sk: Katastrálna parcela
+          cs: Katastrální parcela
+          en: Cadastral parcel
+          de: Flurstück
     slots:
       - name
       - parcelNumber

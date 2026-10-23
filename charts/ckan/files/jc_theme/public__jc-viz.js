@@ -35,10 +35,11 @@ function jcVizSoon() {
 window.addEventListener("scroll", jcVizSoon, { passive: true, capture: true });
 window.addEventListener("resize", jcVizSoon);
 window.addEventListener("message", function (event) { if ((event.data || {}).type === "jc-viz-height") jcVizSoon(); });
-// T-5192: while the live data widget is in view, the assistant's corner shrinks to its icon.
+// T-5192, T-5415: while the live data widget or a chart is in view, the assistant's corner shrinks
+// to its icon at the screen's edge.
 if (typeof IntersectionObserver === "function") {
   document.addEventListener("DOMContentLoaded", function () {
-    var frames = document.querySelectorAll("iframe.jc-explorer-frame");
+    var frames = document.querySelectorAll("iframe.jc-viz-frame");
     if (!frames.length) return;
     var seen = new Set();
     var watch = new IntersectionObserver(function (entries) {
