@@ -13,6 +13,7 @@ prefixes:
   linkml: https://w3id.org/linkml/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
+  jc: https://joinedcontext.com/models/
 default_prefix: sdm
 default_range: string
 imports:
@@ -28,7 +29,9 @@ slots:
       upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
-    description: The end of the hour the entity's readings cover, UTC.
+    description: >-
+      The end of the period the entity's newest readings cover, UTC: the hour of an air-quality
+      mean, the local day of a weather station's values, the day of a well's reading.
     range: datetime
     required: true
     annotations:
@@ -70,6 +73,208 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  so2:
+    slot_uri: sdm:so2
+    description: Sulphur dioxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  co:
+    slot_uri: sdm:co
+    description: Carbon monoxide, the hour's mean at the station, in mg/m³ as the city measures it.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: mg/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  'no':
+    slot_uri: sdm:no
+    description: Nitrogen monoxide, the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  nox:
+    slot_uri: sdm:nox
+    description: Nitrogen oxides (NO + NO2 as NO2), the hour's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  blackCarbon:
+    slot_uri: jc:blackCarbon
+    description: >-
+      Black carbon, the hour's mean at the station. A property of this model: the Smart Data Model
+      AirQualityObserved names no black carbon attribute. The city's file gives it in ng/m³ under a
+      µg/m³ label; the pipeline divides by 1000.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations: { ngsi_ld_kind: Property }
+  temperature:
+    slot_uri: sdm:temperature
+    description: The day's mean air temperature at the station.
+    range: float
+    minimum_value: -40
+    maximum_value: 50
+    unit: { ucum_code: Cel }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  maxTemperature:
+    slot_uri: jc:maxTemperature
+    description: >-
+      The day's highest air temperature at the station. A property of this model: the Smart Data
+      Model WeatherObserved names only the mean.
+    range: float
+    minimum_value: -40
+    maximum_value: 50
+    unit: { ucum_code: Cel }
+    annotations: { ngsi_ld_kind: Property }
+  minTemperature:
+    slot_uri: jc:minTemperature
+    description: >-
+      The day's lowest air temperature at the station. A property of this model: the Smart Data
+      Model WeatherObserved names only the mean.
+    range: float
+    minimum_value: -40
+    maximum_value: 50
+    unit: { ucum_code: Cel }
+    annotations: { ngsi_ld_kind: Property }
+  relativeHumidity:
+    slot_uri: sdm:relativeHumidity
+    description: The day's mean relative humidity, as a fraction (0.57 is 57 %).
+    range: float
+    minimum_value: 0
+    maximum_value: 1
+    unit: { ucum_code: '1' }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  atmosphericPressure:
+    slot_uri: sdm:atmosphericPressure
+    description: The day's mean air pressure at the station's height (not reduced to sea level).
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: hPa }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  precipitation:
+    slot_uri: sdm:precipitation
+    description: The day's precipitation, in millimetres (litres per square metre).
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: mm }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windSpeed:
+    slot_uri: sdm:windSpeed
+    description: The day's mean wind speed at 10 m.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m/s }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  windDirection:
+    slot_uri: sdm:windDirection
+    description: The day's mean wind direction at 10 m, in degrees from north.
+    range: float
+    minimum_value: 0
+    maximum_value: 360
+    unit: { ucum_code: deg }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  gustSpeed:
+    slot_uri: sdm:gustSpeed
+    description: The day's strongest gust at 10 m.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m/s }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  solarRadiation:
+    slot_uri: sdm:solarRadiation
+    description: >-
+      The day's mean global solar irradiance: the day's irradiation the city gives in MJ/m², times
+      10^6 / 86400.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: W/m2 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  altitude:
+    slot_uri: jc:altitude
+    description: >-
+      The station's height above sea level in metres, as the weather service lists it. A fixed
+      property of the station, written without a unit code so its rows are never read as a
+      measurement stamped on receipt.
+    range: float
+    annotations: { ngsi_ld_kind: Property }
+  waterTable:
+    slot_uri: sdm:waterTable
+    description: The depth from the surface to the water in the well at the newest reading.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  investigationDepth:
+    slot_uri: sdm:investigationDepth
+    description: >-
+      The depth of the well or piezometer in metres. A fixed property of the well, written without
+      a unit code so its rows are never read as a measurement stamped on receipt.
+    range: float
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  piezometricLevel:
+    slot_uri: jc:piezometricLevel
+    description: >-
+      The height of the water above sea level at the newest reading (below 0 where the sea draws
+      the aquifer down). A property of this model: PhreaticObserved has only the depth.
+    range: float
+    unit: { ucum_code: m }
+    annotations: { ngsi_ld_kind: Property }
+  aquifer:
+    slot_uri: jc:aquifer
+    description: The groundwater body (massa d'aigua) the well reaches, as the water agency names it.
+    annotations: { ngsi_ld_kind: Property }
+  measurementType:
+    slot_uri: sdm:measurementType
+    description: What the well's readings measure; `depth` for each of the city's wells.
+    multivalued: true
+    range: MeasurementType
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  stationCode:
+    slot_uri: jc:stationCode
+    description: >-
+      The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the
+      city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the
+      Catalan water agency's well register (ACA, such as `08019-0148`).
+    pattern: ^[0-9A-Z][0-9A-Z-]{1,15}$
+    examples:
+      - value: '8019043'
+      - value: D5
+      - value: 08019-0148
+    annotations: { ngsi_ld_kind: Property }
   startDate:
     slot_uri: schema:startDate
     description: >-
@@ -114,8 +319,8 @@ slots:
   address:
     slot_uri: schema:address
     description: >-
-      The postal address as the agenda or the facility register publishes it, field by field
-      (Smart Data Models' common PostalAddress); a field the source leaves out is absent.
+      Where the station, the well, the event or the facility is, as the city publishes it, field
+      by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.
     range: PostalAddress
     inlined: true
     annotations:
@@ -123,7 +328,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
     slot_uri: schema:streetAddress
-    description: The street and the house number.
+    description: The street and the house number, or for a station its square, park or street corner.
     annotations:
       upstream_source: https://schema.org/streetAddress
   postalCode:
@@ -141,6 +346,19 @@ slots:
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
       upstream_source: https://schema.org/addressCountry
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: The neighbourhood (barri) the station or well is in, as the city names it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  dataProvider:
+    slot_uri: sdm:dataProvider
+    description: >-
+      Who publishes the data the entity was read from, with the credit its licence asks for.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
   district:
     slot_uri: sdm:district
     description: The city district (districte) the address lies in.
@@ -161,11 +379,20 @@ slots:
       upstream_source: https://schema.org/telephone
   source:
     slot_uri: sdm:source
-    description: The Open Data BCN dataset the entity was read from.
+    description: The open-data file or the Open Data BCN dataset the entity was read from.
     range: uri
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
+
+enums:
+  MeasurementType:
+    description: What a PhreaticObserved measures (Smart Data Models' enum).
+    permissible_values:
+      depth: {}
+      volume: {}
+      quality: {}
+      other: {}
 
 classes:
   AirQualityObserved:
@@ -181,7 +408,67 @@ classes:
           cs: Měření kvality ovzduší
           en: Air quality reading
           de: Luftqualitätsmessung
-    slots: [name, dateObserved, pm10, pm25, no2, o3]
+    slots:
+      - name
+      - dateObserved
+      - pm10
+      - pm25
+      - no2
+      - o3
+      - so2
+      - co
+      - 'no'
+      - nox
+      - blackCarbon
+      - stationCode
+      - address
+      - areaServed
+      - dataProvider
+      - source
+  WeatherObserved:
+    class_uri: sdm:WeatherObserved
+    description: One Meteocat weather station in Barcelona and its newest day's values.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots:
+      - name
+      - dateObserved
+      - temperature
+      - maxTemperature
+      - minTemperature
+      - relativeHumidity
+      - atmosphericPressure
+      - precipitation
+      - windSpeed
+      - windDirection
+      - gustSpeed
+      - solarRadiation
+      - stationCode
+      - altitude
+      - address
+      - areaServed
+      - dataProvider
+      - source
+  PhreaticObserved:
+    class_uri: sdm:PhreaticObserved
+    description: One piezometer or well of Barcelona and its newest groundwater reading.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+    slots:
+      - name
+      - dateObserved
+      - measurementType
+      - waterTable
+      - piezometricLevel
+      - investigationDepth
+      - aquifer
+      - stationCode
+      - address
+      - areaServed
+      - dataProvider
+      - source
   Event:
     class_uri: sdm:Event
     description: >-
