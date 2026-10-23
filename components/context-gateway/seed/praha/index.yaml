@@ -31,6 +31,7 @@ praha-datasource-ticket-points.yaml: projects/praha/datasources/pid-ticket-point
 praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
 praha-datasource-park-and-ride-occupancy.yaml: projects/praha/datasources/golemio-park-and-ride.yaml
 praha-datasource-waste-fill.yaml: projects/praha/datasources/golemio-waste-containers.yaml
+praha-datasource-pid-vehicles.yaml: projects/praha/datasources/golemio-pid-vehicles.yaml
 praha-pipeline-bike-stations.yaml: projects/praha/pipelines/bike-stations/pipeline.yaml
 praha-pipeline-bike-availability.yaml: projects/praha/pipelines/bike-availability/pipeline.yaml
 praha-pipeline-air-quality.yaml: projects/praha/pipelines/air-quality/pipeline.yaml
@@ -56,8 +57,10 @@ praha-pipeline-park-and-ride-bento.yaml: projects/praha/pipelines/park-and-ride/
 praha-pipeline-ticket-points-bento.yaml: projects/praha/pipelines/ticket-points/bento.yaml
 praha-pipeline-budget-bento.yaml: projects/praha/pipelines/budget/bento.yaml
 praha-pipeline-park-and-ride-occupancy-bento.yaml: projects/praha/pipelines/park-and-ride-occupancy/bento.yaml
+praha-pipeline-pid-vehicles.yaml: projects/praha/pipelines/pid-vehicles/pipeline.yaml
+praha-pipeline-pid-vehicles-bento.yaml: projects/praha/pipelines/pid-vehicles/bento.yaml
 praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.yaml
-# The Golemio key of the two datasources above, SOPS-encrypted to the dev age recipient
+# The Golemio key of the three Golemio datasources above, SOPS-encrypted to the dev age recipient
 # (age1dwqmmfzz…3mwj55, the public half of portal-age-identity); the reconciler decrypts it at
 # apply time (CC-06, Architecture/06 §1.4). Never a plaintext value here.
 praha-secrets-golemio.enc.yaml: projects/praha/secrets/golemio.enc.yaml
@@ -102,3 +105,5 @@ praha-endpoint-mista.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mis
 praha-policy-public-mista.yaml: projects/praha/spaces/praha-mesto/policies/public-mista.yaml
 praha-endpoint-mestske-casti.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mestske-casti.yaml
 praha-policy-public-mestske-casti.yaml: projects/praha/spaces/praha-mesto/policies/public-mestske-casti.yaml
+praha-endpoint-vozidla.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vozidla-pid.yaml
+praha-policy-public-vozidla.yaml: projects/praha/spaces/praha-mesto/policies/public-vozidla-pid.yaml

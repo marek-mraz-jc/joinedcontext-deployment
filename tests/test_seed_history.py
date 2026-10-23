@@ -69,6 +69,8 @@ CHOSEN = {
     # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
     ("zilina/zilina-doprava", "Vehicle"): "PT1H",
     ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
+    # Prague's PID vehicles keep an hour of track, as Žilina's (T-4624, T-5268).
+    ("praha/praha-mesto", "Vehicle"): "PT1H",
 }
 
 
