@@ -88,6 +88,10 @@
       "@id": "jc:start",
       "@type": "xsd:dateTime"
     },
+    "title": {
+      "@container": "@language",
+      "@id": "jc:title"
+    },
     "transportMode": {
       "@context": {
         "description": "skos:prefLabel",

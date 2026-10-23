@@ -14,6 +14,7 @@ drafts write exactly this set.
 | `location` | GeoProperty | GeoJSON geometry | | `geojson:geometry` |
 | `observedAt` | Property | datetime | | `ngsi-ld:observedAt` |
 | `name` | Property | string | | `jc:name` |
+| `title` | LanguageProperty | string per language | | `jc:title` |
 | `currentValue` | Property | number or string | on the Property as `unitCode` | `jc:currentValue` |
 | `calculationPeriod` | Property | `{ start, end }` | RFC 3339 instants | `jc:calculationPeriod` |
 | `calculationFormula` | Property | string | | `jc:calculationFormula` |
@@ -21,7 +22,7 @@ drafts write exactly this set.
 | `computedBy` | Property | uri | | `jc:computedBy` |
 | `updatedAt` | Property | datetime | | `jc:updatedAt` |
 
-All seven own attributes are required, as are `id` and `type`.
+Seven own attributes are required, as are `id` and `type`; `title`, the human name per language, is optional.
 
 `state` and `threshold` are absent by decision. A threshold is the judgement of whoever reads the
 number: it changes without the number changing, and two departments may hold different ones for

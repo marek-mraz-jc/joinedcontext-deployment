@@ -123,6 +123,8 @@ AIR = [
 
 REQUIRED = {"id", "type", "name", "currentValue", "calculationPeriod", "calculationFormula",
             "derivedFrom", "computedBy", "updatedAt"}
+# The human name per language a table labels the row with, since `name` is the slug (T-5330).
+OPTIONAL = {"title"}
 
 
 @pytest.fixture(scope="module")
@@ -334,7 +336,25 @@ def test_no_indicator_carries_an_attribute_the_platform_would_refuse(region, air
     and `threshold` are rejected at the write. The territory is the suffix of the id and the
     threshold is the view's (Development/10 §4)."""
     for entity in region + air + city:
-        assert set(entity) <= REQUIRED | {"@context"}, set(entity) - REQUIRED
+        assert set(entity) <= REQUIRED | OPTIONAL | {"@context"}, set(entity) - REQUIRED - OPTIONAL
+
+
+@requires_docker
+def test_every_indicator_has_a_title_in_slovak_and_english(region, air, city):
+    """T-5330: `name` is the slug by contract, so each indicator carries its Slovak and English
+    names of Development/11 as a `title` LanguageProperty, and a regional one names its territory."""
+    for entity in region + air + city:
+        title = entity["title"]
+        assert title["type"] == "LanguageProperty", entity["id"]
+        assert set(title["languageMap"]) == {"sk", "en"}, entity["id"]
+        assert all(text.strip() and "-" not in text[:1] for text in title["languageMap"].values()), title
+    brezno = next(e for e in region if e["name"]["value"] == "obyvatelstvo-stav-okres-brezno")
+    assert brezno["title"]["languageMap"] == {
+        "sk": "Stav trvale bývajúceho obyvateľstva na konci obdobia, okres Brezno",
+        "en": "Resident population at the end of the period, Brezno district",
+    }
+    # Fourteen territories, fourteen titles: none repeats another's.
+    assert len({e["title"]["languageMap"]["sk"] for e in region}) == len(region)
 
 
 def indicator(spec: dict) -> bool:
