@@ -30,6 +30,7 @@ apps/v1/Deployment jc/model-tools
 apps/v1/Deployment jc/observability-collector
 apps/v1/Deployment jc/pipeline-runner
 apps/v1/Deployment jc/portal
+apps/v1/Deployment jc/portal-ui
 apps/v1/Deployment jc/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet jc/artifact-store
 apps/v1/StatefulSet jc/keycloak-app-keycloakx
@@ -174,6 +175,9 @@ networking.k8s.io/v1/NetworkPolicy jc/portal-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy jc/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy jc/portal-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy jc/portal-to-mqtt-brokers-linkerd
+networking.k8s.io/v1/NetworkPolicy jc/portal-ui
+networking.k8s.io/v1/NetworkPolicy jc/portal-ui-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy jc/portal-ui-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy jc/postgres
 networking.k8s.io/v1/NetworkPolicy jc/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy jc/postgres-drill
@@ -195,18 +199,22 @@ networking.k8s.io/v1/NetworkPolicy jc/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy jc/sandbox-reaper-linkerd-control-plane
 policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/context-broker-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/pipeline-runner-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/portal-ui-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/context-broker-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/pipeline-runner-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/portal-ui-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server jc/context-broker-api
 policy.linkerd.io/v1beta3/Server jc/pipeline-runner-api
+policy.linkerd.io/v1beta3/Server jc/portal-ui-api
 policy/v1/PodDisruptionBudget jc/apisix
 policy/v1/PodDisruptionBudget jc/context-gateway
 policy/v1/PodDisruptionBudget jc/keycloak-app-keycloakx
 policy/v1/PodDisruptionBudget jc/model-tools
 policy/v1/PodDisruptionBudget jc/observability-collector
 policy/v1/PodDisruptionBudget jc/portal
+policy/v1/PodDisruptionBudget jc/portal-ui
 postgresql.cnpg.io/v1/Cluster jc/postgres-cluster
 postgresql.cnpg.io/v1/Database jc/antares
 postgresql.cnpg.io/v1/Database jc/gitea
@@ -302,6 +310,7 @@ v1/Service jc/pipeline-runner
 v1/Service jc/pipeline-runner-pods
 v1/Service jc/portal
 v1/Service jc/portal-pods
+v1/Service jc/portal-ui
 v1/ServiceAccount jc/apisix
 v1/ServiceAccount jc/artifact-store
 v1/ServiceAccount jc/context-broker
@@ -316,6 +325,7 @@ v1/ServiceAccount jc/observability-collector
 v1/ServiceAccount jc/pipeline-runner
 v1/ServiceAccount jc/portal
 v1/ServiceAccount jc/portal-reconciler
+v1/ServiceAccount jc/portal-ui
 v1/ServiceAccount jc/postgres-cluster-dr-drill
 v1/ServiceAccount jc/postgres-operator-cloudnative-pg
 v1/ServiceAccount jc/sandbox-reaper-reaper

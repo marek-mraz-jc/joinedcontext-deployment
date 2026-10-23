@@ -43,11 +43,14 @@ fi
 pass=0
 fail=0
 skipped=0
+warned=0
 
 ok() { printf '  ok    %s\n' "$1"; pass=$((pass + 1)); }
 ko() { printf '  FAIL  %s\n' "$1"; fail=$((fail + 1)); }
 # A check whose subject is not deployed in this instance. Not a pass: it never ran.
 skip() { printf '  skip  %s\n' "$1"; skipped=$((skipped + 1)); }
+# A finding that does not fail the run: the platform serves, something is not as built.
+warn() { printf '  warn  %s\n' "$1"; warned=$((warned + 1)); }
 
 # The pipeline runner carries every project's streams in one process, so an OOMKill during the
 # run is every pipeline stopped at once (T-3537). Its restart count is read now and again at
@@ -374,6 +377,16 @@ if has_route portal-api; then
 	# through untouched (`unauth_action: pass`, no bearer verification: ES256 vs
 	# lua-resty-openidc, T-0252), so the 401 and the 200 below are the Portal's own answers.
 	status 200 "portal API health is public" "$portal/api/v1/health"
+	# The binary and the UI bundle it serves (T-2485, T-5297): `match` when the bundle was built
+	# against this API. Anything else still serves pages, so it is a warning: a page may call a
+	# route the binary no longer has.
+	version=$(curl -sS --max-time 20 "$portal/api/v1/version" 2>/dev/null || true)
+	contract=$(grep -o '"contract": *"[a-z]*"' <<<"$version" | sed 's/.*"\([a-z]*\)"$/\1/' || true)
+	if [ "$contract" = match ]; then
+		ok "portal UI bundle was built against the binary's API (contract match)"
+	else
+		warn "portal UI bundle contract is ${contract:-unreadable}, not match: ${version:0:200}"
+	fi
 	status 401 "portal API rejects an unauthenticated call" "$portal/api/v1/auth/me"
 	# The Portal's own code flow, the fallback of an installation without the edge, starts
 	# here with a 302 to Keycloak. The redirect_uri it carries must be one the portal-api
@@ -1601,4 +1614,5 @@ else
 fi
 
 printf '\n%s passed, %s failed, %s skipped\n' "$pass" "$fail" "$skipped"
+[ "$warned" -eq 0 ] || printf '%s warnings\n' "$warned"
 [ "$fail" -eq 0 ]

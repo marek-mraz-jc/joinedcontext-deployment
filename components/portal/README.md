@@ -27,6 +27,13 @@ helmfile apply -i --selector component=portal
 `/usr/local/bin/joinedcontext-portal`, listening on 8080 — the component sets no `command`
 and lets the entrypoint run.
 
+The part `ui` runs `ghcr.io/marek-mraz-jc/joinedcontext-portal-ui`, the UI bundle (nginx, uid
+101, Service `portal-ui:8080`). The Portal reads every page from it through `JC_PORTAL_UI_URL`,
+and nothing else may reach it (T-2485, T-5297). `scripts/pin-portal.sh <commit>` pins both
+images together. When a commit built no bundle, the script keeps the pinned one only if ui/ and
+sdk/ did not change since. `GET /api/v1/version` says `contract: match` when the bundle was
+built against the binary's API, and dev-smoke warns otherwise.
+
 ## Each project's apps namespace
 
 A pod-backed App runs in its project's own namespace, `{instanceSlug}-{project}-apps` (AP-116).
