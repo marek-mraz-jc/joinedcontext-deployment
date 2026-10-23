@@ -1,6 +1,6 @@
 # The city's register of facilities (equipaments) as one public dataset (T-5265): libraries, sports
-# halls, schools, markets, social services centres and the rest of fourteen families as Smart Data
-# Models PointOfInterest, refreshed daily from Open Data BCN.
+# halls, schools, markets, social services, transport, pharmacies, hotels and the rest of the
+# register's 23 packages as Smart Data Models PointOfInterest, refreshed daily from Open Data BCN.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -8,9 +8,9 @@ metadata:
   namespace: barcelona
   title: { ca: Equipaments de Barcelona, es: Equipamientos de Barcelona, en: Barcelona facilities }
   description:
-    ca: "Els equipaments de la ciutat de Barcelona: cultura i lleure, esports, educació, serveis socials, administració, mercats, centres d'informació, serveis religiosos, medi ambient, cementiris, mitjans de comunicació, companyies de serveis i restaurants; nom, família, adreça, punt i telèfon. Font: Open Data BCN, CC BY 4.0."
-    es: 'Los equipamientos de la ciudad de Barcelona: cultura y ocio, deportes, educación, servicios sociales, administración, mercados, centros de información, servicios religiosos, medio ambiente, cementerios, medios de comunicación, compañías de servicios y restaurantes; nombre, familia, dirección, punto y teléfono. Fuente: Open Data BCN, CC BY 4.0.'
-    en: 'The facilities of the city of Barcelona: culture and leisure, sports, education, social services, administration, markets, information centres, places of worship, environment, cemeteries, media, utility companies and restaurants; name, family, address, point and telephone. Source: Open Data BCN, CC BY 4.0.'
+    ca: "Els equipaments de la ciutat de Barcelona: cultura i lleure, esports, educació, serveis socials, administració, mercats, centres d'informació, serveis religiosos, medi ambient, cementiris, mitjans de comunicació, companyies de serveis, restaurants, transport, farmàcies, hospitals i atenció primària, hotels, lavabos públics, dutxes de platja, punts d'informació turística i refugis climàtics; nom, família, adreça, punt i telèfon. Font: Open Data BCN, CC BY 4.0."
+    es: 'Los equipamientos de la ciudad de Barcelona: cultura y ocio, deportes, educación, servicios sociales, administración, mercados, centros de información, servicios religiosos, medio ambiente, cementerios, medios de comunicación, compañías de servicios, restaurantes, transporte, farmacias, hospitales y atención primaria, hoteles, lavabos públicos, duchas de playa, puntos de información turística y refugios climáticos; nombre, familia, dirección, punto y teléfono. Fuente: Open Data BCN, CC BY 4.0.'
+    en: 'The facilities of the city of Barcelona: culture and leisure, sports, education, social services, administration, markets, information centres, places of worship, environment, cemeteries, media, utility companies, restaurants, transport, pharmacies, hospitals and primary care, hotels, public toilets, beach showers, tourist information points and climate shelters; name, family, address, point and telephone. Source: Open Data BCN, CC BY 4.0.'
 spec:
   contextSpaceRef: barcelona
   slug: qjos5uyy46rmn7hzxupmldkcwt2wzghd
@@ -44,7 +44,7 @@ spec:
       - https://sws.geonames.org/3128760/
     frequency: DAILY
     source:
-      - url: https://opendata-ajuntament.barcelona.cat/data/ca/dataset?q=name:equipament-*
+      - url: https://opendata-ajuntament.barcelona.cat/data/ca/dataset?q=equipament
         title: { ca: Equipaments de Barcelona, en: Barcelona facilities }
         description:
           ca: El registre d'equipaments de la ciutat (Guia BCN), CC BY 4.0.

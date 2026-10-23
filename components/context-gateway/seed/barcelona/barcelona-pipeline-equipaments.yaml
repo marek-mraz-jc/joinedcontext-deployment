@@ -15,5 +15,5 @@ spec:
   # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
   targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
   output: { type: PointOfInterest, mode: upsert }
-  # Measured: the fourteen families (14,389 rows on 2026-10-22) map inside a 192 MiB container.
-  quotas: { maxMemoryMb: 256, cpuMillicores: 100 }
+  # Measured 2026-10-23: the 23 packages (25,469 rows, 23,337 kept) peak at 392 MiB in one run.
+  quotas: { maxMemoryMb: 448, cpuMillicores: 100 }

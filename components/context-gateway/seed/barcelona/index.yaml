@@ -26,7 +26,7 @@ barcelona-pipeline-agenda.yaml: projects/barcelona/pipelines/agenda/pipeline.yam
 barcelona-pipeline-agenda-bento.yaml: projects/barcelona/pipelines/agenda/bento.yaml
 barcelona-endpoint-events.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-events.yaml
 barcelona-policy-public-events.yaml: projects/barcelona/spaces/barcelona/policies/public-events.yaml
-# The register of facilities, equipaments (T-5265): fourteen families, one daily pipeline, one dataset.
+# The register of facilities, equipaments (T-5265): sixteen families and seven thematic extracts, one daily pipeline, one dataset.
 barcelona-datasource-equipaments.yaml: projects/barcelona/datasources/bcn-equipaments.yaml
 barcelona-pipeline-equipaments.yaml: projects/barcelona/pipelines/equipaments/pipeline.yaml
 barcelona-pipeline-equipaments-bento.yaml: projects/barcelona/pipelines/equipaments/bento.yaml

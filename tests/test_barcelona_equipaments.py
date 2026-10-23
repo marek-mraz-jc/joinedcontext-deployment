@@ -81,7 +81,8 @@ def test_the_recorded_register_maps_to_valid_places_and_each_bad_row_is_dropped_
     assert pool["contactPoint"]["value"] == {"telephone": "934234350"}
     assert pool["source"]["value"] == "https://opendata-ajuntament.barcelona.cat/data/dataset/equipament-esports"
     # The first family that lists a facility names it; the second listing is counted, not written.
-    assert by_id[URN.format("1047164651")]["category"]["value"][0] in {"education", "sports"}
+    # The family list's order decides: sports comes before education.
+    assert by_id[URN.format("1047164651")]["category"]["value"][0] == "sports"
     garden = by_id[URN.format("1003125537")]
     assert garden["category"]["value"] == ["culture-leisure", "Parcs i jardins"]
     assert "contactPoint" not in garden
@@ -107,7 +108,7 @@ def test_a_family_the_portal_refuses_is_logged_and_the_others_still_write():
 
 def test_the_query_takes_only_a_uuid_resource_and_reads_no_association():
     mapping = MAPPING.read_text()
-    assert '"equipament-associacions"' not in mapping.split("let families = {")[1].split("}")[0]
+    assert '"equipament-associacions"' not in mapping.split("let families = [")[1].split("\n        ]")[0]
     assert 're_match("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")' in mapping
     pipeline = yaml.safe_load((BARCELONA / "barcelona-pipeline-equipaments.yaml").read_text())["spec"]
     assert pipeline["output"] == {"type": "PointOfInterest", "mode": "upsert"} and pipeline["period"] == "24h"
@@ -115,3 +116,24 @@ def test_the_query_takes_only_a_uuid_resource_and_reads_no_association():
     assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == ["PointOfInterest"]
     endpoint = yaml.safe_load((BARCELONA / "barcelona-endpoint-places.yaml").read_text())["spec"]
     assert endpoint["policyRef"] == "urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-places"
+
+
+@requires_docker
+def test_an_extract_without_the_kind_column_writes_its_own_category_only():
+    shelters = "7ecae024-6cb2-427d-b2d0-e170500e2a38"
+    answers = families()
+    garden = next(r for r in answers["f3721b17-bf9e-4bdd-853c-cb6200e1b442"]["result"]["records"]
+                  if r["id"] == "1003125537")
+    answers[shelters] = {"success": True, "result": {"records": [
+        dict(garden, id="90000000003", name="Refugi climàtic", kind=None, num="9999"), dict(garden, kind=None)]}}
+    packages = json.loads((FIXTURES / "packages.json").read_text())
+    packages["result"]["results"].append({"name": "xarxa-refugis-climatics", "resources": [
+        {"id": shelters, "format": "CSV", "datastore_active": True}]})
+    places, log = run(answers, packages)
+    by_id = {e["id"]: e for e in places}
+    shelter = by_id[URN.format("90000000003")]
+    assert shelter["category"]["value"] == ["climate-shelters"], log
+    # 9999 is the register's "no street number", never written as one.
+    assert "9999" not in shelter["address"]["value"]["streetAddress"]
+    # A garden that is also a shelter stays the garden: the family comes first in the list.
+    assert by_id[URN.format("1003125537")]["category"]["value"] == ["culture-leisure", "Parcs i jardins"]

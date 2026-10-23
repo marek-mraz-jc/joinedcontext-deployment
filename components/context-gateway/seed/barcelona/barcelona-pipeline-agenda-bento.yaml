@@ -28,8 +28,20 @@ pipeline:
     # it (the agenda carries activities in neighbouring towns, and a few rows at 0,0 where the
     # city's projection had no point); a start day missing (the permanent collections) or before
     # 2000, or an end before the start; one activity listed twice under two ids (same name, same
-    # place within about 10 m, same start day).
+    # place within 20 m, same start day).
     - mapping: |
+        # Two rows are one place when their names match and they lie within 20 m (owner
+        # 2026-10-22T18:10Z): rows sorted by name, each compared with the kept points of its name.
+        map near {
+          let lat = this.value.lat.number()
+          let lon = this.value.lon.number()
+          let pts = if this.tally.name == this.value._key { this.tally.pts } else { [] }
+          # Metres at Barcelona's latitude: 111,320 m a degree north, 83,520 m a degree east.
+          let near = $pts.any(p -> (p.index(0) - $lat) * (p.index(0) - $lat) * 12392142400 + (p.index(1) - $lon) * (p.index(1) - $lon) * 6975590400 <= 400)
+          root = if $near { this.tally.assign({ "dup": this.tally.dup.append(this.value.id) }) } else {
+            { "name": this.value._key, "pts": $pts.append([$lat, $lon]), "dup": this.tally.dup }
+          }
+        }
         map reason {
           let lat = this.lat.or("").number().catch(null)
           let lon = this.lon.or("").number().catch(null)
@@ -44,7 +56,9 @@ pipeline:
         }
         let rows = this.map_each(e -> e.assign({ "_drop": e.apply("reason") }))
         let usable = $rows.filter(e -> e._drop == null).unique(e -> e.id)
-        let kept = $usable.unique(e -> [e.name.trim().lowercase(), (e.lat.number() * 10000).round(), (e.lon.number() * 10000).round(), e.starts].format_json(no_indent: true))
+        let keyed = $usable.map_each(e -> e.assign({ "_key": [e.name.trim().lowercase(), e.starts].format_json(no_indent: true) })).sort_by(e -> e._key)
+        let dup = $keyed.fold({ "name": "", "pts": [], "dup": [] }, item -> item.apply("near")).dup
+        let kept = $usable.filter(e -> !$dup.contains(e.id))
         let tally = $rows.filter(e -> e._drop != null).fold({}, item -> item.tally.assign({ item.value._drop: item.tally.get(item.value._drop).or(0) + 1 }))
         let dups = $rows.filter(e -> e._drop == null).length() - $kept.length()
         meta dropped = (if $dups > 0 { $tally.assign({ "duplicate": $dups }) } else { $tally }).format_json(no_indent: true)
@@ -99,7 +113,17 @@ pipeline:
         let end_offset = if this.ends.or(null) == null { null } else {
           (this.ends + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")
         }
-        let street = [this.street.or("").trim(), this.num.or("").trim()].filter(s -> s != "").join(" ")
+        # The event leaves the space by itself (NGSI-LD 4.22 expiresAt): at the end of its last day,
+        # or three daily runs after the newest run that listed it, whichever comes first; an hour
+        # at least, so a write never carries a past expiry.
+        let now = timestamp_unix()
+        let ends_at = if $end_offset == null { null } else {
+          (this.ends + "T00:00:00" + $end_offset).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() + 86400
+        }
+        let lease = $now + 259200
+        let expires = [if $ends_at == null { $lease } else { [$ends_at, $lease].min() }, $now + 3600].max()
+        # The register writes 9999 for a place with no street number (97 of them on 2026-10-23).
+        let street = [this.street.or("").trim(), this.num.or("").trim()].filter(s -> s != "" && s != "9999").join(" ")
         let town = this.town.or("").trim()
         let phone = this.phone.or("").trim()
         root = {
@@ -130,7 +154,8 @@ pipeline:
           "contactPoint": if $phone == "" || !$phone.re_match("^[0-9 .+()/-]{6,40}$") { null } else {
             { "type": "Property", "value": { "telephone": $phone } }
           },
-          "source": { "type": "Property", "value": "https://opendata-ajuntament.barcelona.cat/data/dataset/" + this.src }
+          "source": { "type": "Property", "value": "https://opendata-ajuntament.barcelona.cat/data/dataset/" + this.src },
+          "expiresAt": $expires.ts_format("2006-01-02T15:04:05Z", "UTC")
         }
         root = root.filter(entry -> entry.value != null)
 

@@ -135,3 +135,29 @@ def test_the_pipeline_runs_daily_through_the_one_door_and_the_endpoint_publishes
     assert policy["assignee"] == {"kind": "role", "id": "public"}
     assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == ["Event"]
     assert not {"upsertBatch", "createBatch", "deleteBatch", "createEntity"} & set(policy["operations"])
+
+
+@requires_docker
+def test_one_place_within_20_m_is_one_event_and_each_event_expires_by_itself():
+    from datetime import timedelta
+    from zoneinfo import ZoneInfo
+    base = answer()["result"]["records"][1]
+    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+
+    def row(rid, lat, name="Mercat de prova", ends="2027-01-04"):
+        return dict(base, id=rid, name=name, lat=str(lat), lon="2.17335", ends=ends)
+    # 41.38004 and 41.38013 lie 10 m apart on either side of a 0.0001-degree grid line; 41.38049
+    # lies 50 m from the first; the last activity ends today.
+    events, log, code = run(answer(records=[
+        row("11", 41.38004), row("12", 41.38013), row("13", 41.38049),
+        dict(row("14", 41.39, name="Taller d'avui", ends=today.isoformat()), starts=today.isoformat())]))
+    assert code == 0, log
+    by_id = {e["id"].rsplit(":", 1)[1]: e for e in events}
+    assert len({"11", "12"} & set(by_id)) == 1 and {"13", "14"} <= set(by_id), sorted(by_id)
+    assert '{\\"duplicate\\":1}' in log, log
+    now = datetime.now(timezone.utc)
+    for event in events:
+        expires = datetime.strptime(event["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        assert now < expires <= now + timedelta(days=3, minutes=1), event
+    midnight = datetime.combine(today + timedelta(days=1), datetime.min.time(), ZoneInfo("Europe/Madrid"))
+    assert by_id["14"]["expiresAt"] == midnight.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
