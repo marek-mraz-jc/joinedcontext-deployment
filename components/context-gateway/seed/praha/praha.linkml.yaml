@@ -6,7 +6,7 @@ description: >-
   and what they hold now, ČHMÚ's hourly air quality at the city's stations, the city districts,
   the schools, cultural venues, public toilets and sorted-waste points of the city's geoportal
   (IPR Praha), the park-and-ride car parks and how full they are now, the monitored sorted-waste
-  containers and their fill level (Golemio), the PID ticket points, and the city budget line by
+  containers and their fill level and the PID vehicles in service (Golemio), the PID ticket points, and the city budget line by
   line. One model, one space, one public endpoint. Where Smart Data Models has the class, its
   IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -93,7 +93,9 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   dateObserved:
     slot_uri: sdm:dateObserved
-    description: The start of the hour the readings average.
+    description: >-
+      When the values were observed: the start of the hour the air quality readings average, or
+      the time of a vehicle's last position report.
     range: datetime
     annotations:
       ngsi_ld_kind: Property
@@ -352,6 +354,116 @@ slots:
     inlined: false
     annotations: { ngsi_ld_kind: Relationship }
 
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: >-
+      The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train,
+      a ferry and the funicular, which transportMode names.
+    range: VehicleKind
+    annotations:
+      label:
+        tag: label
+        value: { cs: Druh vozidla, en: Vehicle type }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  category:
+    slot_uri: sdm:category
+    description: The Smart Data Models vehicle category, public and tracked for a PID vehicle in service.
+    range: VehicleCategory
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  transportMode:
+    slot_uri: jc:transportMode
+    description: What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus).
+    range: TransportMode
+    annotations:
+      label:
+        tag: label
+        value: { cs: Druh dopravy, en: Transport mode }
+      ngsi_ld_kind: Property
+  lineName:
+    slot_uri: jc:lineName
+    description: The PID line the vehicle runs, its short name (17, A, S9, 331).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Linka, en: Line }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  direction:
+    slot_uri: jc:direction
+    description: Where the trip heads, its headsign (Libuš, Dolní Břežany,Zálepy).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Směr, en: Direction }
+      ngsi_ld_kind: Property
+  nextStop:
+    slot_uri: jc:nextStop
+    description: The PID (GTFS) id of the stop the vehicle reaches next (U1509Z1).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Další zastávka, en: Next stop }
+      ngsi_ld_kind: Property
+  delay:
+    slot_uri: jc:delay
+    description: Seconds behind the timetable, negative when ahead (Golemio's delay.actual).
+    range: integer
+    minimum_value: -10800
+    maximum_value: 10800
+    unit: { ucum_code: s }
+    annotations:
+      label:
+        tag: label
+        value: { cs: Zpoždění, en: Delay }
+      ngsi_ld_kind: Property
+  speed:
+    slot_uri: sdm:speed
+    description: Ground speed of the vehicle in km/h, as Smart Data Models states it; absent when the vehicle does not report one.
+    range: float
+    minimum_value: 0
+    maximum_value: 150
+    unit: { ucum_code: km/h }
+    annotations:
+      label:
+        tag: label
+        value: { cs: Rychlost, en: Speed }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  heading:
+    slot_uri: sdm:heading
+    description: Where the vehicle points, degrees clockwise from north (0 to 359).
+    range: integer
+    minimum_value: 0
+    maximum_value: 359
+    unit: { ucum_code: deg }
+    annotations:
+      label:
+        tag: label
+        value: { cs: Směr jízdy, en: Heading }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  fleetVehicleId:
+    slot_uri: sdm:fleetVehicleId
+    description: The operator's fleet number of the vehicle (9099); absent for the metro and trains, which report none.
+    annotations:
+      label:
+        tag: label
+        value: { cs: Evidenční číslo vozu, en: Fleet number }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  operatorName:
+    slot_uri: jc:operatorName
+    description: The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Dopravce, en: Operator }
+      ngsi_ld_kind: Property
+
 classes:
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
@@ -378,8 +490,9 @@ classes:
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-
-      One place a resident goes to: a school, a cultural venue, a public toilet or a public
-      transport ticket point.
+      One place a resident goes to: a school, a cultural venue, a public toilet, a public
+      transport ticket point, a library, a municipal office or police station, a garden, a
+      playground or a waste collection yard.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -393,6 +506,7 @@ classes:
       - pupilCount
       - openingHours
       - wheelchairAccessible
+      - dateModified
       - dataProvider
       - source
   WasteContainerIsle:
@@ -469,6 +583,32 @@ classes:
       - dataProvider
       - source
 
+  Vehicle:
+    class_uri: sdm:Vehicle
+    description: >-
+      One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its
+      line, where it heads, its next stop and how late it runs (Golemio vehicle positions).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - vehicleType
+      - category
+      - transportMode
+      - lineName
+      - direction
+      - nextStop
+      - delay
+      - speed
+      - heading
+      - fleetVehicleId
+      - operatorName
+      - wheelchairAccessible
+      - dateObserved
+      - dataProvider
+      - source
+
   PostalAddress:
     class_uri: schema:PostalAddress
     description: >-
@@ -478,6 +618,26 @@ classes:
       upstream_source: https://schema.org/PostalAddress
     slots: [streetAddress, addressLocality, addressCountry]
 enums:
+  VehicleKind:
+    permissible_values:
+      tram: { description: A tram. }
+      bus: { description: A bus. }
+      trolley: { description: A trolleybus. }
+      other:
+        description: A metro train, a train, a ferry or the funicular.
+  VehicleCategory:
+    permissible_values:
+      public: { description: A public transport vehicle. }
+      tracked: { description: A vehicle whose position its operator tracks. }
+  TransportMode:
+    permissible_values:
+      tram: { description: Tram (GTFS route type 0). }
+      metro: { description: Metro (GTFS route type 1). }
+      train: { description: Train (GTFS route type 2). }
+      bus: { description: Bus (GTFS route type 3). }
+      ferry: { description: Ferry (GTFS route type 4). }
+      funicular: { description: Funicular (GTFS route type 7). }
+      trolleybus: { description: Trolleybus (GTFS route type 11). }
   StationStatus:
     permissible_values:
       working: { description: The station rents bikes and takes them back. }
@@ -489,6 +649,15 @@ enums:
         description: A theatre, a museum, a gallery or another cultural venue.
       publicToilet: { description: A public toilet. }
       ticketSale: { description: A place that sells public transport tickets. }
+      library: { description: A branch of the Municipal Library of Prague. }
+      municipalAuthority:
+        description: The office of a city district or of the city (úřad městské části).
+      police:
+        description: A station or desk of the Municipal Police of Prague (Městská policie).
+      garden: { description: A public garden or park of the city. }
+      playground: { description: A public children's playground. }
+      wasteCollectionYard:
+        description: A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste.
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

@@ -30,6 +30,16 @@ artifact-store:
             matchLabels:
               app.kubernetes.io/component: bucket
           componentNamespace: artifact-store
+        # The Postgres instances archiving base backups and WAL to the backup bucket, and the
+        # restore drill's copy reading them back (T-5289). Their key reaches that bucket only.
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster-drill
+          componentNamespace: postgres
       ports:
         - protocol: TCP
           port: 9000

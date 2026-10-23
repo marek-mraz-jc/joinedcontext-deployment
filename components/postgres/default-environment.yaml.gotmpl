@@ -14,6 +14,11 @@ postgres:
     # ACCESS_SECRET_KEY that the operator provides (SOPS or OpenBao, ADR-N-012).
     backups:
       enabled: false
+      # 'artifact-store' archives to the platform's own artifact store (T-5289) and fills in
+      # endpointURL, destinationPath, existingSecret and encryption below; its bucket and key
+      # are made by that store. Same node as the database: it gives PITR and a tested restore,
+      # not survival of a lost node. '' uses the values below (an external store).
+      target: ''
       provider: 's3'
       endpointURL: ''
       destinationPath: ''
@@ -22,6 +27,10 @@ postgres:
       path: '/'
       existingSecret: 'postgres-backup-s3'
       retentionPolicy: '30d'
+      # Server-side encryption of base backups and WAL in the store. '' for a store without a
+      # KMS: the in-cluster artifact store refuses SSE-S3 ("SSE-S3 requires
+      # RUSTFS_SSE_S3_MASTER_KEY"), so every archived segment would fail.
+      encryption: 'AES256'
       # CNPG cron has six fields (seconds first): daily at 03:00.
       schedule: '0 0 3 * * *'
     # Point-in-time recovery from that archive (OPS-10, OPS-11). `enabled: true` bootstraps

@@ -56,6 +56,15 @@ probe:
           port: 443
         - protocol: TCP
           port: 8443
+    # The API server, for the backup and drill age (T-5289). `kubernetes.default` is a ClusterIP
+    # kube-proxy DNATs to the node's address before this filter sees it, so the rule names the port
+    # the API server listens on (6443 on k3s) and cannot narrow the address.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 6443
     - to:
         - namespaceSelector:
             matchLabels:

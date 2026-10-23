@@ -1,7 +1,7 @@
 ---
 # The files values/bootstrap/development-values.yaml.gotmpl names, read from the same indexes:
 # here the ones under projects/<project>/, there the organization's. Each release gitea-seed ..
-# gitea-seed-9 holds the parts values/seed-layout.tpl packs into it by size (T-4431), so each
+# gitea-seed-10 holds the parts values/seed-layout.tpl packs into it by size (T-4431), so each
 # stays well inside its Secret.
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
@@ -39,7 +39,9 @@
 {{- $parts := splitList "/" $path }}
 {{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
 {{- $project := index $parts 1 }}
-{{- $i := mod (atoi (adler32sum $path)) (index $layout.count $project | default 1) }}
+{{- /* The layout places each file it sized; a file it did not (demo feeds) goes by its path hash. */}}
+{{- $placed := index $layout.files $path | default 0 | int }}
+{{- $i := ternary (sub $placed 1) (mod (atoi (adler32sum $path)) (index $layout.count $project | default 1)) (gt $placed 0) }}
 {{- $part := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
 {{- if eq $shard (index $layout.parts $part | default 1 | int) }}
 {{- $name := printf "s%d-%s" $shard $part }}
