@@ -989,8 +989,17 @@ slots:
       The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the
       city's register holds; a district or the whole city is named by `area` and `districtCode`.
     range: AdministrativeArea
+    inverse: areaIndicators
     inlined: false
     annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
+  areaIndicators:
+    slot_uri: jc:areaIndicators
+    description: The statistics indicators of this sub-district, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
   statisticsTable:
     slot_uri: jc:statisticsTable
     description: The source's own table code, such as alu_vamuu_010h, which `source` links to.
@@ -1734,7 +1743,14 @@ classes:
           cs: Území
           en: Administrative area
           de: Verwaltungsgebiet
-    slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
+    slots:
+      - name
+      - districtCode
+      - divisionLevel
+      - dataProvider
+      - source
+      - publicAreaPermits
+      - areaIndicators
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.

@@ -1922,6 +1922,7 @@
           "x-ngsi-ld-kind": "Relationship",
           "x-ngsi-ld-relationship": {
             "cardinality": "many-to-one",
+            "inverse": "areaIndicators",
             "onDelete": "set-null",
             "target": "AdministrativeArea",
             "unique": false

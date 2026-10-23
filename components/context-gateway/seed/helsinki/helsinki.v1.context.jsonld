@@ -95,6 +95,10 @@
     "area": {
       "@id": "sdm:area"
     },
+    "areaIndicators": {
+      "@id": "jc:areaIndicators",
+      "@type": "@id"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
