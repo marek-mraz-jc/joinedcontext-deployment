@@ -274,6 +274,7 @@ v1/Secret staging/keycloak-client-edge
 v1/Secret staging/keycloak-client-gitea
 v1/Secret staging/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret staging/portal-cookie-key
+v1/Secret staging/postgres-backup-artifact-store
 v1/Service staging/apisix-gateway
 v1/Service staging/artifact-store
 v1/Service staging/cnpg-webhook-service
@@ -288,6 +289,7 @@ v1/Service staging/observability-collector
 v1/Service staging/pipeline-runner
 v1/Service staging/pipeline-runner-pods
 v1/Service staging/portal
+v1/Service staging/portal-pods
 v1/ServiceAccount staging/apisix
 v1/ServiceAccount staging/artifact-store
 v1/ServiceAccount staging/context-broker

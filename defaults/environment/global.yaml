@@ -281,6 +281,13 @@ componentProfileValues:
         rawValues:
           resources:
             requests: {memory: 256Mi}
+    # The development 576Mi is dev's Portal with ~500 pipelines and the runner's metrics to
+    # read (T-5282); without pipelines it held about 300Mi (T-5113).
+    portal:
+      portal:
+        rawValues:
+          resources:
+            requests: {memory: 320Mi}
   # For a 1 GB node: the operator, one database and the broker ask for 512Mi together. 16
   # connections are the broker's pool of 10, CloudNativePG's 3 reserved ones and 3 spare; with
   # 64MB shared buffers and two autovacuum workers the worst case is about 700MiB, under 80 %

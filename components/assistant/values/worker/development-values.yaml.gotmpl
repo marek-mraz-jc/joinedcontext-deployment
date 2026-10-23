@@ -10,7 +10,8 @@ resources:
   # the request says so, so the scheduler does not overbook the node.
   requests:
     cpu: 50m
-    memory: 640Mi
+    # T-5282: 637Mi on dev, 627Mi on prod (2026-10-22 20:40-21:28Z), + 20 %.
+    memory: 768Mi
   limits:
     cpu: '1'
     memory: 1Gi

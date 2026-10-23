@@ -103,12 +103,13 @@ PROJECTS = {
         "spatial": ["SK032"],
     },
 }
-# Every standard the open data is served in (T-4279). `sta` since T-4288: a row with an `observedAt`
-# column stamps its numbers with that instant, one Datastream per number; the catalogue lists it only
-# for those datasets (`series`). No `mqtt` until 8883 opens (T-3996); the WebSocket pushes changes.
+# Every standard the open data is served in (T-4279). No `sta` (T-5299): a SensorThings Datastream
+# needs its unitOfMeasurement (STA 1.1 §9.2.5) and these models declare no `unit`, so the Portal and
+# jcctl validate refuse it (EP-125); `series` lists it again once they do. No `mqtt` until 8883
+# opens (T-3996); the WebSocket pushes changes.
 # One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
 # a map reads GeoJSON from NGSI-LD (Accept: application/geo+json) or OGC API Features.
-REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "sta", "mcp"]
+REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "mcp"]
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
@@ -462,6 +463,19 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
     return url
 
 
+def esri_count(e: dict) -> str:
+    """How many rows the layer's filter holds, asked when page 0 says there is more (T-5288)."""
+    params = {"where": (e.get("rowFilter") or {}).get("where", "1=1"), "returnCountOnly": "true", "f": "json"}
+    return f"{e['source']['url']}/query?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',*')}"
+
+
+def esri_cap(s: dict) -> int:
+    """Rows one run of an Esri layer may read: twice what it held when mapped, at least ten pages.
+    Bento holds every page of a run until its end, so past that the layer is remapped and its
+    pipeline's quota sized for it rather than read into an out-of-memory kill (T-5288)."""
+    return max(2 * s["rows"], 10 * PAGE)
+
+
 def layer_query(layer: dict, offset: str) -> str:
     """One page of one layer of the city's ArcGIS Server (T-4317): its own columns and the object id,
     which the GeoJSON answer then carries as the feature's `id`; in object id order, so the pages
@@ -486,9 +500,9 @@ AGENT = "joinedcontext-platform open-data pipeline (https://opendata.dev.joinedc
 
 def parts(e: dict, slug: str) -> list[tuple[dict, str]]:
     """An `esri-layers` entry as pipelines of about PART_ROWS rows each, with their slugs: every page
-    of every layer up to half again the rows it held when mapped (ponytail: a static page count, as
-    for one Esri layer; past that the newest rows wait until the mapping is regenerated, and a page
-    past the end is empty). Any other entry is itself."""
+    of every layer up to half again the rows it held when mapped (ponytail: a static page count, since
+    each part's pages are fixed to keep it in its memory quota; past that the newest rows wait until
+    the mapping is regenerated, and a page past the end is empty). Any other entry is itself."""
     s = e["source"]
     if s["kind"] != "esri-layers":
         return [(e, slug)]
@@ -529,26 +543,40 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
             "", "pipeline:", "  processors:"]
     steps: list[str] = []
     if s["kind"] == "esri-featureserver":
-        pages = -(-int(s["rows"] * 1.5) // PAGE)
-        steps.append("""\
+        cap = esri_cap(s)
+        steps.append(f"""\
     # A layer that answers an error or no feature list is the service failing, so the run fails
     # where it can be seen rather than writing nothing.
     - mapping: |
-        root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }""")
-        if pages > 1:
-            steps.append(f"""\
-    # Page 0 as it came; when the layer says there is more, every further page up to half again
-    # the {s['rows']} rows it held when mapped (ponytail: a static page count; past that the
-    # newest rows wait until the mapping is regenerated). A page past the end is empty.
+        root = if this.error.or(null) != null || this.features.or(null) == null {{ throw("the layer answered no features: %v".format(this.error.message.or(""))) }} else {{ this }}
+    # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
+    # every further page of them is read (T-5288). One run holds every page, so a layer past
+    # {cap} rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    - branch:
+        request_map: |
+          root = if this.properties.exceededTransferLimit.or(false) {{ "" }} else {{ deleted() }}
+        processors:
+          - http:
+              url: {q(esri_count(e))}
+              verb: GET
+              headers:
+                Accept: application/json
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.rowCount = this.count.or(this.error.message.or("no count"))
     - mapping: |
-        root = if this.properties.exceededTransferLimit.or(false) {{ [this].concat(range(1, {pages}).map_each(p -> {{ "offset": p * {PAGE} }})) }} else {{ [this] }}
+        let rows = this.rowCount.or(null)
+        root = if !this.properties.exceededTransferLimit.or(false) {{ [this] }} else if errored() || $rows.type() != "number" {{ [{{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }}] }} else if $rows > {cap} {{ [{{ "problem": "the layer holds %v rows, more than the {cap} one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }}] }} else if this.features.length() < [{PAGE}, $rows].min() {{ [{{ "problem": "the layer answered %v rows where {PAGE} were asked, so its pages would skip rows".format(this.features.length()) }}] }} else if $rows <= {PAGE} {{ [this] }} else {{ [this].concat(range(1, (($rows + {PAGE - 1}) / {PAGE}).floor()).map_each(p -> {{ "offset": p * {PAGE}, "rowCount": $rows }})) }}
     - unarchive:
         format: json_array
     - switch:
         - check: this.offset.or(null) != null
           processors:
             - mapping: |
-                meta offset = this.offset.string()
+                meta offset = this.offset
+                meta rows = this.rowCount
                 root = ""
             - http:
                 url: {q(esri_query(e, "${! @offset }"))}
@@ -559,8 +587,10 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
                 retries: 2
                 rate_limit: pipeline_egress
             - mapping: |
-                root = if errored() {{ throw("the page at %v did not come: %v".format(@offset, error())) }} else {{ this }}""")
-        steps.append("""\
+                root = if errored() {{ throw("the page at %v did not come: %v".format(@offset, error())) }} else if this.features.or(null) == null {{ {{ "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) }} }} else if this.features.length() < [{PAGE}, @rows - @offset].min() {{ {{ "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [{PAGE}, @rows - @offset].min()) }} }} else {{ this }}
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null {{ throw(this.problem) }} else {{ this }}
     - mapping: |
         root = this.features.or([])""")
     elif s["kind"] == "esri-layers":
@@ -1095,7 +1125,7 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
     for e in mapped:
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
-                                                 "dataset": e["dataset"], "location": located(e), "series": series(e),
+                                                 "dataset": e["dataset"], "location": located(e), "series": "sta" in REPRESENTATIONS and series(e),
                                                  "filtered": True}
     for e in whole:
         slug, kind = existing_door(e)
