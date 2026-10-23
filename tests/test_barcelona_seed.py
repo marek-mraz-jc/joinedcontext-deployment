@@ -107,6 +107,14 @@ def test_the_example_validates_against_its_model():
     assert not sorted(validator.iter_errors(example), key=str)
 
 
+def test_a_scheduled_pipeline_names_no_period():
+    # The runner reads `period` before `schedule` (Portal run_queue Clock::of): a pipeline with
+    # both runs on the period's clock and the schedule's timing after the source's rewrite is lost.
+    for name, pipeline in by_name("Pipeline").items():
+        if pipeline["spec"].get("schedule"):
+            assert "period" not in pipeline["spec"], name
+
+
 def test_the_pipelines_account_writes_the_one_space_and_nothing_else():
     account = by_name("ServiceAccount")["pipelines"]["spec"]
     assert account["roles"] == [{"role": "space-writer", "scope": {"contextSpace": "barcelona"}}], (

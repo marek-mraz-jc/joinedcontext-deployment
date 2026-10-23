@@ -10,7 +10,6 @@ metadata:
 spec:
   class: auto
   # The city rewrites the file every hour; twice an hour catches each new hour within half an hour.
-  period: 30m
   schedule: '20,50 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-air-quality }

@@ -9,8 +9,8 @@ metadata:
     en: Barcelona weather stations, daily
 spec:
   class: auto
-  # The city rewrites the file at about 03:00 UTC; a run at 05:15 and one at 11:15 catch it.
-  period: 6h
+  # The city rewrites the file at about 03:00 UTC; a run at 05:15 and one at 11:15 catch it. No
+  # `period`: the runner reads a period before the schedule and would run at 00, 06, 12, 18 UTC.
   schedule: '15 5,11 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-weather }

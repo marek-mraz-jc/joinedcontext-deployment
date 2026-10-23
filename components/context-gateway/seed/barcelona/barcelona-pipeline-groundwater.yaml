@@ -10,7 +10,6 @@ metadata:
 spec:
   class: auto
   # The city rewrites the file about once a month on no fixed day; once a day finds it.
-  period: 24h
   schedule: '35 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-groundwater }
