@@ -74,12 +74,30 @@ slots:
       The Endpoint the sources were read through, as its URN. The endpoint and not the space:
       what an indicator could see is what that endpoint's policy let it see.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj údajov
+          cs: Zdroj dat
+          en: Derived from
+          de: Abgeleitet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vypočítané procesom
+          cs: Vypočteno procesem
+          en: Computed by
+          de: Berechnet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   updatedAt:
     slot_uri: jc:updatedAt
     description: >-
@@ -94,11 +112,29 @@ slots:
     description: The first instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Začiatok
+          cs: Začátek
+          en: Start
+          de: Beginn
+        annotations: { generated: sk cs en de }
   end:
     slot_uri: jc:end
     description: The last instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Koniec
+          cs: Konec
+          en: End
+          de: Ende
+        annotations: { generated: sk cs en de }
 
 classes:
   KeyPerformanceIndicator:
@@ -125,6 +161,8 @@ classes:
               cs: Název
               fi: Nimi
               en: Name
+              de: Name
+            annotations: { generated: de }
       currentValue:
         rank: 2
         annotations:
@@ -136,6 +174,8 @@ classes:
               cs: Hodnota
               fi: Arvo
               en: Value
+              de: Wert
+            annotations: { generated: de }
       calculationPeriod:
         rank: 3
         annotations:
@@ -147,6 +187,8 @@ classes:
               cs: Období
               fi: Jakso
               en: Period
+              de: Berechnungszeitraum
+            annotations: { generated: de }
       updatedAt:
         rank: 4
         annotations:
@@ -158,6 +200,8 @@ classes:
               cs: Aktualizováno
               fi: Päivitetty
               en: Updated
+              de: Zuletzt berechnet
+            annotations: { generated: de }
       calculationFormula:
         annotations:
           label:
@@ -167,6 +211,8 @@ classes:
               cs: Výpočet
               fi: Laskentakaava
               en: Formula
+              de: Berechnungsmethode
+            annotations: { generated: de }
 
   CalculationPeriod:
     class_uri: jc:CalculationPeriod
