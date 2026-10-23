@@ -35,7 +35,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the city publishes it (Catalan for the stations). |
-| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the hour the entity's readings cover, UTC. |
+| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
 | `pm10` | Property | `float` |  | ug/m3 | `sdm:pm10` | Particulate matter up to 10 µm, the hour's mean at the station. |
 | `pm25` | Property | `float` |  | ug/m3 | `sdm:pm25` | Particulate matter up to 2.5 µm, the hour's mean at the station. |
 | `no2` | Property | `float` |  | ug/m3 | `sdm:no2` | Nitrogen dioxide, the hour's mean at the station. |
@@ -45,9 +45,69 @@ Specialises `Entity`.
 | `no` | Property | `float` |  | ug/m3 | `sdm:no` | Nitrogen monoxide, the hour's mean at the station. |
 | `nox` | Property | `float` |  | ug/m3 | `sdm:nox` | Nitrogen oxides (NO + NO2 as NO2), the hour's mean at the station. |
 | `blackCarbon` | Property | `float` |  | ug/m3 | `jc:blackCarbon` | Black carbon, the hour's mean at the station. A property of this model: the Smart Data Model AirQualityObserved names no black carbon attribute. The city's file gives it in ng/m³ under a µg/m³ label; the pipeline divides by 1000. |
-| `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the Catalan air-quality network (XVPCA, the city's codi_eoi), such as `8019043`. |
+| `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station stands, as the city describes it (Smart Data Models' common PostalAddress). |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station is in, as the city names it. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### WeatherObserved
+
+One Meteocat weather station in Barcelona and its newest day's values.
+
+IRI: `sdm:WeatherObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the city publishes it (Catalan for the stations). |
+| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
+| `temperature` | Property | `float` |  | Cel | `sdm:temperature` | The day's mean air temperature at the station. |
+| `maxTemperature` | Property | `float` |  | Cel | `jc:maxTemperature` | The day's highest air temperature at the station. A property of this model: the Smart Data Model WeatherObserved names only the mean. |
+| `minTemperature` | Property | `float` |  | Cel | `jc:minTemperature` | The day's lowest air temperature at the station. A property of this model: the Smart Data Model WeatherObserved names only the mean. |
+| `relativeHumidity` | Property | `float` |  | 1 | `sdm:relativeHumidity` | The day's mean relative humidity, as a fraction (0.57 is 57 %). |
+| `atmosphericPressure` | Property | `float` |  | hPa | `sdm:atmosphericPressure` | The day's mean air pressure at the station's height (not reduced to sea level). |
+| `precipitation` | Property | `float` |  | mm | `sdm:precipitation` | The day's precipitation, in millimetres (litres per square metre). |
+| `windSpeed` | Property | `float` |  | m/s | `sdm:windSpeed` | The day's mean wind speed at 10 m. |
+| `windDirection` | Property | `float` |  | deg | `sdm:windDirection` | The day's mean wind direction at 10 m, in degrees from north. |
+| `gustSpeed` | Property | `float` |  | m/s | `sdm:gustSpeed` | The day's strongest gust at 10 m. |
+| `solarRadiation` | Property | `float` |  | W/m2 | `sdm:solarRadiation` | The day's mean global solar irradiance: the day's irradiation the city gives in MJ/m², times 10^6 / 86400. |
+| `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
+| `altitude` | Property | `float` |  |  | `jc:altitude` | The station's height above sea level in metres, as the weather service lists it. A fixed property of the station, written without a unit code so its rows are never read as a measurement stamped on receipt. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station stands, as the city describes it (Smart Data Models' common PostalAddress). |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### PhreaticObserved
+
+One piezometer or well of Barcelona and its newest groundwater reading.
+
+IRI: `sdm:PhreaticObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the city publishes it (Catalan for the stations). |
+| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading. |
+| `measurementType` | Property | [`MeasurementType`](#measurementtype) (list) |  |  | `sdm:measurementType` | What the well's readings measure; `depth` for each of the city's wells. |
+| `waterTable` | Property | `float` |  | m | `sdm:waterTable` | The depth from the surface to the water in the well at the newest reading. |
+| `piezometricLevel` | Property | `float` |  | m | `jc:piezometricLevel` | The height of the water above sea level at the newest reading (below 0 where the sea draws the aquifer down). A property of this model: PhreaticObserved has only the depth. |
+| `investigationDepth` | Property | `float` |  |  | `sdm:investigationDepth` | The depth of the well or piezometer in metres. A fixed property of the well, written without a unit code so its rows are never read as a measurement stamped on receipt. |
+| `aquifer` | Property | `string` |  |  | `jc:aquifer` | The groundwater body (massa d'aigua) the well reaches, as the water agency names it. |
+| `stationCode` | Property | `string` |  |  | `jc:stationCode` | The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`). |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station stands, as the city describes it (Smart Data Models' common PostalAddress). |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | The neighbourhood (barri) the station or well is in, as the city names it. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -67,3 +127,16 @@ IRI: `ngsi-ld:Entity`
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+## Enumerations
+
+### MeasurementType
+
+What a PhreaticObserved measures (Smart Data Models' enum).
+
+| Value | Meaning |
+|---|---|
+| `depth` |  |
+| `volume` |  |
+| `quality` |  |
+| `other` |  |

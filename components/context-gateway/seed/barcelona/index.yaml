@@ -20,9 +20,19 @@ barcelona.v1.md: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.md
 barcelona-endpoint.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona.yaml
 barcelona-policy-pipelines-write.yaml: projects/barcelona/spaces/barcelona/policies/pipelines-write.yaml
 barcelona-policy-public-read.yaml: projects/barcelona/spaces/barcelona/policies/public-read.yaml
-# Batch 2, environment (T-5263): the hourly air quality of the city's stations.
+# Batch 2, environment (T-5263): the hourly air quality, the daily weather and the groundwater.
 barcelona-datasource-air-quality.yaml: projects/barcelona/datasources/bcn-air-quality.yaml
 barcelona-pipeline-air-quality.yaml: projects/barcelona/pipelines/air-quality/pipeline.yaml
 barcelona-pipeline-air-quality-bento.yaml: projects/barcelona/pipelines/air-quality/bento.yaml
 barcelona-endpoint-air-quality.yaml: projects/barcelona/spaces/barcelona/endpoints/air-quality.yaml
 barcelona-policy-public-air-quality.yaml: projects/barcelona/spaces/barcelona/policies/public-air-quality.yaml
+barcelona-datasource-weather.yaml: projects/barcelona/datasources/bcn-weather.yaml
+barcelona-pipeline-weather.yaml: projects/barcelona/pipelines/weather/pipeline.yaml
+barcelona-pipeline-weather-bento.yaml: projects/barcelona/pipelines/weather/bento.yaml
+barcelona-endpoint-weather.yaml: projects/barcelona/spaces/barcelona/endpoints/weather.yaml
+barcelona-policy-public-weather.yaml: projects/barcelona/spaces/barcelona/policies/public-weather.yaml
+barcelona-datasource-groundwater.yaml: projects/barcelona/datasources/bcn-groundwater.yaml
+barcelona-pipeline-groundwater.yaml: projects/barcelona/pipelines/groundwater/pipeline.yaml
+barcelona-pipeline-groundwater-bento.yaml: projects/barcelona/pipelines/groundwater/bento.yaml
+barcelona-endpoint-groundwater.yaml: projects/barcelona/spaces/barcelona/endpoints/groundwater.yaml
+barcelona-policy-public-groundwater.yaml: projects/barcelona/spaces/barcelona/policies/public-groundwater.yaml

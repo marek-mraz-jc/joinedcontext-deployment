@@ -21,7 +21,7 @@ spec:
   # Its one model: a write of a type it does not declare is refused (DM-61).
   dataModelRef: { kind: DataModel, name: barcelona }
   defaultLocale: ca
-  # A measurement series: thirty days of history, the seed's default for a measurement, one row
+  # A measurement series: thirty days of history (the daily weather and the monthly wells keep 400), the seed's default for a measurement, one row
   # per change and one a day for what a read repeats (DM-82, DM-108, DM-109).
   retention:
     - entityType: AirQualityObserved
@@ -35,11 +35,48 @@ spec:
         areaServed: { record: onChange, heartbeat: P1D }
         dataProvider: { record: onChange, heartbeat: P1D }
         source: { record: onChange, heartbeat: P1D }
+    - entityType: WeatherObserved
+      history: P400D
+      attributes:
+        dateObserved: { record: onChange, heartbeat: P1D }
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+        stationCode: { record: onChange, heartbeat: P1D }
+        altitude: { record: onChange, heartbeat: P1D }
+        address: { record: onChange, heartbeat: P1D }
+        areaServed: { record: onChange, heartbeat: P1D }
+        dataProvider: { record: onChange, heartbeat: P1D }
+        source: { record: onChange, heartbeat: P1D }
+    # Groundwater is read by hand about once a month: 400 days keep a year's readings.
+    - entityType: PhreaticObserved
+      history: P400D
+      attributes:
+        dateObserved: { record: onChange, heartbeat: P1D }
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+        stationCode: { record: onChange, heartbeat: P1D }
+        measurementType: { record: onChange, heartbeat: P1D }
+        investigationDepth: { record: onChange, heartbeat: P1D }
+        aquifer: { record: onChange, heartbeat: P1D }
+        address: { record: onChange, heartbeat: P1D }
+        areaServed: { record: onChange, heartbeat: P1D }
+        dataProvider: { record: onChange, heartbeat: P1D }
+        source: { record: onChange, heartbeat: P1D }
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:
     - name: in-area
       entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-weather
+      entityType: WeatherObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-groundwater
+      entityType: PhreaticObserved
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

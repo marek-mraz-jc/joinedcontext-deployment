@@ -7,8 +7,14 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "PhreaticObserved": {
+      "@id": "sdm:PhreaticObserved"
+    },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
     },
     "address": {
       "@id": "schema:address"
@@ -19,8 +25,19 @@
     "addressLocality": {
       "@id": "schema:addressLocality"
     },
+    "altitude": {
+      "@id": "jc:altitude",
+      "@type": "xsd:float"
+    },
+    "aquifer": {
+      "@id": "jc:aquifer"
+    },
     "areaServed": {
       "@id": "sdm:areaServed"
+    },
+    "atmosphericPressure": {
+      "@id": "sdm:atmosphericPressure",
+      "@type": "xsd:float"
     },
     "blackCarbon": {
       "@id": "jc:blackCarbon",
@@ -41,11 +58,35 @@
       "@id": "sdm:district"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "gustSpeed": {
+      "@id": "sdm:gustSpeed",
+      "@type": "xsd:float"
+    },
     "id": "@id",
+    "investigationDepth": {
+      "@id": "sdm:investigationDepth",
+      "@type": "xsd:float"
+    },
     "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
+    },
+    "maxTemperature": {
+      "@id": "jc:maxTemperature",
+      "@type": "xsd:float"
+    },
+    "measurementType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:measurementType"
+    },
+    "minTemperature": {
+      "@id": "jc:minTemperature",
+      "@type": "xsd:float"
     },
     "name": {
       "@container": "@language",
@@ -72,6 +113,10 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "piezometricLevel": {
+      "@id": "jc:piezometricLevel",
+      "@type": "xsd:float"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -80,11 +125,24 @@
       "@id": "sdm:pm25",
       "@type": "xsd:float"
     },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
+    },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "so2": {
       "@id": "sdm:so2",
+      "@type": "xsd:float"
+    },
+    "solarRadiation": {
+      "@id": "sdm:solarRadiation",
       "@type": "xsd:float"
     },
     "source": {
@@ -97,7 +155,23 @@
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
+    },
     "type": "@type",
+    "waterTable": {
+      "@id": "sdm:waterTable",
+      "@type": "xsd:float"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "x-generator-version": "linkml-1.12.0"

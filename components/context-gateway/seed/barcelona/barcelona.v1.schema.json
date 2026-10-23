@@ -20,7 +20,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "The neighbourhood (barri) the station is in, as the city names it.",
+          "description": "The neighbourhood (barri) the station or well is in, as the city names it.",
           "type": [
             "string",
             "null"
@@ -60,7 +60,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateObserved": {
-          "description": "The end of the hour the entity's readings cover, UTC.",
+          "description": "The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading.",
           "format": "date-time",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -212,11 +212,13 @@
           "x-ngsi-ld-kind": "Property"
         },
         "stationCode": {
-          "description": "The station's code in the Catalan air-quality network (XVPCA, the city's codi_eoi), such as `8019043`.",
+          "description": "The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`).",
           "examples": [
-            "8019043"
+            "8019043",
+            "D5",
+            "08019-0148"
           ],
-          "pattern": "^80190[0-9]{2}$",
+          "pattern": "^[0-9A-Z][0-9A-Z-]{1,15}$",
           "type": [
             "string",
             "null"
@@ -296,6 +298,196 @@
       "title": "Entity",
       "type": "object"
     },
+    "MeasurementType": {
+      "description": "What a PhreaticObserved measures (Smart Data Models' enum).",
+      "enum": [
+        "depth",
+        "volume",
+        "quality",
+        "other"
+      ],
+      "title": "MeasurementType",
+      "type": "string"
+    },
+    "PhreaticObserved": {
+      "additionalProperties": false,
+      "description": "One piezometer or well of Barcelona and its newest groundwater reading.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "aquifer": {
+          "description": "The groundwater body (massa d'aigua) the well reaches, as the water agency names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "areaServed": {
+          "description": "The neighbourhood (barri) the station or well is in, as the city names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "investigationDepth": {
+          "description": "The depth of the well or piezometer in metres. A fixed property of the well, written without a unit code so its rows are never read as a measurement stamped on receipt.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "measurementType": {
+          "description": "What the well's readings measure; `depth` for each of the city's wells.",
+          "items": {
+            "$ref": "#/definitions/MeasurementType"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "piezometricLevel": {
+          "description": "The height of the water above sea level at the newest reading (below 0 where the sea draws the aquifer down). A property of this model: PhreaticObserved has only the depth.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m"
+          }
+        },
+        "source": {
+          "description": "The open-data file the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stationCode": {
+          "description": "The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`).",
+          "examples": [
+            "8019043",
+            "D5",
+            "08019-0148"
+          ],
+          "pattern": "^[0-9A-Z][0-9A-Z-]{1,15}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "waterTable": {
+          "description": "The depth from the surface to the water in the well at the newest reading.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m"
+          }
+        }
+      },
+      "required": [
+        "dateObserved",
+        "id",
+        "type"
+      ],
+      "title": "PhreaticObserved",
+      "type": "object"
+    },
     "PostalAddress": {
       "additionalProperties": false,
       "description": "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).",
@@ -334,6 +526,267 @@
         }
       },
       "title": "PostalAddress",
+      "type": "object"
+    },
+    "WeatherObserved": {
+      "additionalProperties": false,
+      "description": "One Meteocat weather station in Barcelona and its newest day's values.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station stands, as the city describes it (Smart Data Models' common PostalAddress).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "altitude": {
+          "description": "The station's height above sea level in metres, as the weather service lists it. A fixed property of the station, written without a unit code so its rows are never read as a measurement stamped on receipt.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "areaServed": {
+          "description": "The neighbourhood (barri) the station or well is in, as the city names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "atmosphericPressure": {
+          "description": "The day's mean air pressure at the station's height (not reduced to sea level).",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "hPa"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "The end of the period the entity's newest readings cover, UTC: the hour of an air-quality mean, the local day of a weather station's values, the day of a well's reading.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "gustSpeed": {
+          "description": "The day's strongest gust at 10 m.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m/s"
+          }
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "maxTemperature": {
+          "description": "The day's highest air temperature at the station. A property of this model: the Smart Data Model WeatherObserved names only the mean.",
+          "maximum": 50,
+          "minimum": -40,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
+        },
+        "minTemperature": {
+          "description": "The day's lowest air temperature at the station. A property of this model: the Smart Data Model WeatherObserved names only the mean.",
+          "maximum": 50,
+          "minimum": -40,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the city publishes it (Catalan for the stations).",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "precipitation": {
+          "description": "The day's precipitation, in millimetres (litres per square metre).",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "mm"
+          }
+        },
+        "relativeHumidity": {
+          "description": "The day's mean relative humidity, as a fraction (0.57 is 57 %).",
+          "maximum": 1,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "1"
+          }
+        },
+        "solarRadiation": {
+          "description": "The day's mean global solar irradiance: the day's irradiation the city gives in MJ/m\u00b2, times 10^6 / 86400.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "W/m2"
+          }
+        },
+        "source": {
+          "description": "The open-data file the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stationCode": {
+          "description": "The station's code in the network that runs it: the Catalan air-quality network (XVPCA, the city's codi_eoi, such as `8019043`), the Meteocat weather network (such as `D5`) or the Catalan water agency's well register (ACA, such as `08019-0148`).",
+          "examples": [
+            "8019043",
+            "D5",
+            "08019-0148"
+          ],
+          "pattern": "^[0-9A-Z][0-9A-Z-]{1,15}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "temperature": {
+          "description": "The day's mean air temperature at the station.",
+          "maximum": 50,
+          "minimum": -40,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "windDirection": {
+          "description": "The day's mean wind direction at 10 m, in degrees from north.",
+          "maximum": 360,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "deg"
+          }
+        },
+        "windSpeed": {
+          "description": "The day's mean wind speed at 10 m.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m/s"
+          }
+        }
+      },
+      "required": [
+        "dateObserved",
+        "id",
+        "type"
+      ],
+      "title": "WeatherObserved",
       "type": "object"
     }
   },
