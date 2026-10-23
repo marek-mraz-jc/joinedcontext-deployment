@@ -21,7 +21,6 @@ spec:
   - websocket
   - ogc-features
   - odata
-  - sta
   - mcp
   catalog:
     license: CC_BYSA_4_0

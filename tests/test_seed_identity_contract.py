@@ -65,9 +65,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # read per dataset split out of helsinki-all (T-4344), and the history of helsinki-all's types
     # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823), and the
     # steward's import of journey 41's test places (T-4867), and the steward's add and delete of
-    # the data workspace journey's test alerts (T-5092), and the public read of air quality (T-5259)
-    # and of feedback reports (T-5257).
-    assert len(policies) == 27
+    # the data workspace journey's test alerts (T-5092), and the public read of air quality (T-5259),
+    # and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257).
+    assert len(policies) == 29
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
