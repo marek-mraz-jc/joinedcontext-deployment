@@ -16,6 +16,10 @@ components:
   - secrets
   - networkpolicies
   - runtime-policies
+  # The Prometheus Operator, Prometheus (31 days), Alertmanager, kube-state-metrics and
+  # node-exporter (T-5154). Before every component whose chart renders a ServiceMonitor or
+  # PodMonitor once metrics are on (postgres, keycloak, apisix): its release installs the CRDs.
+  - prometheus
   - postgres
   # The server WASM Apps' database (ADR-N-044, AP-149): one schema and role per App, a login
   # per shard, the Portal's login that makes them (T-3344).
@@ -67,6 +71,9 @@ components:
   - viz
   # Synthetic probes of every public surface through the public hosts, every minute (T-5103).
   - probes
+  # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
+  # last: it renders its monitors into the namespaces of the components before it.
+  - monitoring
   # Argo CD (ADR-N-056, T-4678) goes here, `- gitops`, once its images carry no CRITICAL CVE
   # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
 
@@ -142,10 +149,9 @@ global:
   securityTxt:
     contact: mailto:contact@marek-mraz.com
     expires: "2027-10-18T00:00:00Z"
-  # Off until the monitoring stack exists on this cluster (owner's order of 2026-10-18: platform,
-  # Argo CD, parity, then monitoring and alerts; the cluster has no Prometheus CRDs yet).
+  # Scraped by the prometheus component's own Prometheus, alerts through Alertmanager (T-5154).
   metrics:
-    enabled: false
+    enabled: true
 
   serviceMesh:
     # Traefik is installed by the kit outside the mesh and has no Linkerd identity,

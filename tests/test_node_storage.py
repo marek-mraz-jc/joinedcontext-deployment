@@ -53,10 +53,13 @@ def test_off_outside_dev(rendered):
 def test_nothing_else_lands_in_or_targets_kube_system_on_dev(dev):
     # A part `namespace` of kube-system once rendered default-deny-node-storage there, which would
     # have cut CoreDNS off, and put kube-system in the prepare hook's mesh injection.
+    # node-exporter is the one other node agent there (T-5154, components/prometheus): its
+    # release renders it with namespaceOverride, never a part `namespace`.
+    exporter = "node-exporter"
     placed = [
         f'{d["kind"]}/{d["metadata"]["name"]}'
         for d in dev
-        if d["metadata"].get("namespace") == "kube-system"
+        if d["metadata"].get("namespace") == "kube-system" and d["metadata"]["name"] != exporter
     ]
     assert placed == ["ConfigMap/local-path-config"]
     matched = [
