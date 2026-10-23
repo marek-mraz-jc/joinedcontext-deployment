@@ -228,6 +228,11 @@ helsinki-assistant-knowledge.yaml: projects/helsinki/assistant/deployments/knowl
 # each other, each through its own narrowed Endpoint and Policy (T-4344).
 helsinki-endpoint-water-quality.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-beach-water.yaml
 helsinki-policy-public-water-quality.yaml: projects/helsinki/spaces/helsinki/policies/public-water-quality.yaml
+helsinki-datasource-street-cleaning-air.yaml: projects/helsinki/datasources/fvh-swarco-street-cleaning-air.yaml
+helsinki-pipeline-street-cleaning-air.yaml: projects/helsinki/pipelines/street-cleaning-air/pipeline.yaml
+helsinki-pipeline-street-cleaning-air-bento.yaml: projects/helsinki/pipelines/street-cleaning-air/bento.yaml
+helsinki-endpoint-street-cleaning-air.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-street-cleaning-air.yaml
+helsinki-policy-public-street-cleaning-air.yaml: projects/helsinki/spaces/helsinki/policies/public-street-cleaning-air.yaml
 helsinki-endpoint-parking.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-parking.yaml
 helsinki-policy-public-parking.yaml: projects/helsinki/spaces/helsinki/policies/public-parking.yaml
 helsinki-endpoint-permits.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-public-area-permits.yaml
