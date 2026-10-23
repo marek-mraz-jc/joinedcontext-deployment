@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 import open_data
+from test_helsinki_events import FULL, run as run_events
 from open_data import requires_docker
 
 pytestmark = pytest.mark.xdist_group("docker-helsinki-open-data")
@@ -95,7 +96,9 @@ def test_an_event_address_is_its_places_street_postal_code_and_locality():
     no_street = copy.deepcopy(EVENT)
     no_street["id"] = "helsinki:agtest03"
     del no_street["location"]["street_address"]
-    written = {e["id"].rsplit(":", 1)[1]: e for e in accepted(run("events", {"data": [EVENT, bare, no_street]}))}
+    # The events mapping pages the register itself; its own harness cuts the requests (T-5257).
+    page = json.dumps({"meta": {"count": 3}, "data": [EVENT, bare, no_street]}).encode()
+    written = {e["id"].rsplit(":", 1)[1]: e for e in accepted(run_events(page, FULL)[0])}
     assert address(written["helsinki-agtest01"]) == {
         "streetAddress": "Siltakatu 11", "postalCode": "00580", "addressLocality": "Helsinki", "addressCountry": "FI",
     }
