@@ -100,3 +100,15 @@ def test_the_broker_reaches_only_the_private_peers_it_names(rendered, broker_pod
     for name in hosts:
         assert name.endswith(".svc.cluster.local") and "*" not in name, name
         assert not name.replace(".", "").isdigit() and "localhost" not in name, name
+
+
+def test_the_broker_believes_provenance_from_the_gateway_alone(rendered, broker_pod):
+    """T-5361 (ADR-N-054 2.3): the broker stores a write's channel, actor and request id only from
+    the mesh identity of the gateway's own ServiceAccount; unset, every row said `api` and nobody."""
+    env = {e["name"]: e.get("value") for e in broker_pod["containers"][0].get("env", [])}
+    gateway = next(d for d in rendered("dev") if d.get("kind") == "Deployment"
+                   and d["metadata"]["name"] == "context-gateway")
+    account = gateway["spec"]["template"]["spec"]["serviceAccountName"]
+    namespace = gateway["metadata"]["namespace"]
+    assert env["ANTARES_PROVENANCE_FROM"] == (
+        f"{account}.{namespace}.serviceaccount.identity.linkerd.cluster.local")
