@@ -29,6 +29,18 @@
 
     <div class="container"><div class="jc-home">
       <div class="jc-main">
+      {# The EU themes the datasets carry, each a search (T-5294); left out while none does. #}
+      {% set topics = h.jc_topic_tiles() %}
+      {% if topics %}
+        <section aria-labelledby="jc-topics-title">
+          <h2 id="jc-topics-title">{{ h.jc_t('by_topic') }}</h2>
+          <ul class="jc-topics">
+            {% for topic in topics %}
+              <li><a href="{{ topic.url }}"><span class="jc-topic-name">{{ topic.label }}</span><span class="jc-count">{{ h.jc_rows(topic.count, 'datasets_n') }}</span></a></li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
       <section aria-labelledby="jc-recent-title">
         <div class="jc-home-head">
           <h2 id="jc-recent-title">{{ h.jc_t('recent') }}</h2>
@@ -44,7 +56,7 @@
                 {% set notes = h.markdown_extract(h.get_translated(pkg, 'notes'), extract_length=180) %}
                 {% if notes %}<p class="jc-card-text">{{ notes }}</p>{% endif %}
                 <div class="jc-card-foot">
-                  {% for format in h.jc_formats(pkg)[:4] %}<span class="jc-chip">{{ format }}</span>{% endfor %}
+                  {% for use in h.jc_use_chips(pkg) %}<span class="jc-chip">{{ use }}</span>{% endfor %}
                   {% set updated = h.jc_updated(pkg) %}
                   {% if updated %}
                     <time datetime="{{ updated.isoformat() }}">{{ h.jc_t('updated') }} {{ h.render_datetime(updated) }}</time>

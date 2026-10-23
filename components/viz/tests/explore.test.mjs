@@ -235,3 +235,16 @@ test("a Polygon draws as an area, MultiPoints split into clusterable points, col
   assert.equal(x.countLine(t, { inView: 412, total: 1680, none: 96 }), "Na mape 412 z 1 680 · 96 bez polohy");
   assert.match(x.countLine({ ...x.TEXT.en, locale: "en-GB" }, { inView: 5, total: 50000, none: 0, tiled: true }), /^On the map 5 of 50,000 · 0 without a location · drawn as tiles$/);
 });
+
+test("an organizer {name, url} reads as its name linked to its web site; without a safe url, as text (T-5134)", () => {
+  const org = { name: "Obec Bíňovce", url: "https://www.binovce.sk" };
+  assert.deepEqual(x.cardValue(org, {}, T), { text: "Obec Bíňovce", href: "https://www.binovce.sk" });
+  assert.deepEqual(x.show(org, T), { text: "Obec Bíňovce", href: "https://www.binovce.sk" });
+  assert.deepEqual(x.cardValue({ name: "Obec Bíňovce" }, {}, T), { text: "Obec Bíňovce" });
+  for (const url of ["javascript:alert(1)", "binovce.sk", "https://a b"]) {
+    assert.equal(x.cardValue({ name: "Obec Bíňovce", url }, {}, T).href, undefined, url);
+    assert.equal(x.show({ name: "Obec Bíňovce", url }, T).href, undefined, url);
+  }
+  const card = x.cardOf({ id: "urn:ngsi-ld:Event:1", type: "Event", name: "Trh", organizer: org }, null, T);
+  assert.deepEqual(card.fields, [{ label: "Organizer", text: "Obec Bíňovce", href: "https://www.binovce.sk" }]);
+});
