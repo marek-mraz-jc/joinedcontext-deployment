@@ -110,8 +110,11 @@ def test_every_recorded_stop_lies_in_the_area():
 def test_bike_stations_record_a_change_and_an_hourly_heartbeat_and_no_slot_is_a_count():
     """T-4669 (ADR-N-054 2.2, DM-110): onChange fits levels only, never a quantity per interval."""
     (bikes,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "BikeHireDockingStation"]
-    assert bikes == {"entityType": "BikeHireDockingStation", "history": "P30D", "record": "onChange", "heartbeat": "PT1H"}
+    # T-5058 (DM-132): dateModified is bookkeeping the pipeline stamps on every write, so it keeps no rows.
+    assert bikes == {"entityType": "BikeHireDockingStation", "history": "P30D", "record": "onChange", "heartbeat": "PT1H",
+                     "attributes": {"dateModified": {"record": "never"}}}
     model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
+    assert "dateModified" in model["classes"]["BikeHireDockingStation"]["slots"]
     slots = model["classes"]["BikeHireDockingStation"]["slots"]
     counted = [slot for slot in slots
                if (model.get("slots", {}).get(slot) or {}).get("annotations", {}).get("quantity") == "perInterval"]
