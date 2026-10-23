@@ -82,7 +82,7 @@ pipeline:
       # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
       let hit = if $locality != null { [["Budimír","budimir",48.79711,21.30484,"office"],["Jaklovce","jaklovce",48.87479,20.99664,"office"],["Kokšov-Bakša","koksov-baksa",48.64791,21.32369,"office"],["Mníšek nad Hnilcom","mnisek-nad-hnilcom",48.80611,20.80653,"office"],["Moldava nad Bodvou","moldava-nad-bodvou",48.61312,21.00059,"office"],["Rakovec nad Ondavou","rakovec-nad-ondavou",48.76802,21.78271,"office"],["Spišská Nová Ves","spisska-nova-ves",48.94353,20.56296,"centre"],["Veľké Ozorovce","velke-ozorovce",48.66165,21.61053,"office"],["Veľký Folkmar","velky-folkmar",48.85623,21.01481,"office"],["Čerhov","cerhov",48.464,21.648,"office"],["Ďurkov","durkov",48.70761,21.44303,"office"],["Košice","kosice",48.72169,21.25793,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
       let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
-      # The municipality by its official name, on every event (DM-136): the town table's, the venue's, else the feed's.
+      # The municipality by its official name, on every event (DM-141): the town table's, the venue's, else the feed's.
       let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
       # GPS from the feed, else from the venue table, else from the organizer's address, else from the town; the
       # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
@@ -140,7 +140,7 @@ pipeline:
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
         "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
-        # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-136).
+        # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-141).
         "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
         "areaServed": $municipality.apply("prop"),
         "address": { "type": "Property", "value": $address },
