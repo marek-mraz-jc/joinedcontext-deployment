@@ -30,11 +30,26 @@ spec:
         dateObserved: { record: onChange, heartbeat: P1D }
         location: { record: onChange, heartbeat: P1D }
         name: { record: onChange, heartbeat: P1D }
+    # Reference layers each run rewrites: the current state only (T-5264).
+    - entityType: AdministrativeArea
+      history: 'off'
+    - entityType: CityWork
+      history: 'off'
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:
     - name: in-area
       entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: AdministrativeArea
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area
+      entityType: CityWork
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

@@ -20,3 +20,17 @@ barcelona.v1.md: projects/barcelona/spaces/barcelona/datamodels/barcelona.v1.md
 barcelona-endpoint.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona.yaml
 barcelona-policy-pipelines-write.yaml: projects/barcelona/spaces/barcelona/policies/pipelines-write.yaml
 barcelona-policy-public-read.yaml: projects/barcelona/spaces/barcelona/policies/public-read.yaml
+# Batch 3, urbanism (T-5264): the districts and barris, and the works on the public space.
+barcelona-datasource-districts.yaml: projects/barcelona/datasources/bcn-districts.yaml
+barcelona-datasource-neighbourhoods.yaml: projects/barcelona/datasources/bcn-neighbourhoods.yaml
+barcelona-datasource-city-works.yaml: projects/barcelona/datasources/bcn-city-works.yaml
+barcelona-pipeline-districts.yaml: projects/barcelona/pipelines/districts/pipeline.yaml
+barcelona-pipeline-districts-bento.yaml: projects/barcelona/pipelines/districts/bento.yaml
+barcelona-pipeline-neighbourhoods.yaml: projects/barcelona/pipelines/neighbourhoods/pipeline.yaml
+barcelona-pipeline-neighbourhoods-bento.yaml: projects/barcelona/pipelines/neighbourhoods/bento.yaml
+barcelona-pipeline-city-works.yaml: projects/barcelona/pipelines/city-works/pipeline.yaml
+barcelona-pipeline-city-works-bento.yaml: projects/barcelona/pipelines/city-works/bento.yaml
+barcelona-endpoint-areas.yaml: projects/barcelona/spaces/barcelona/endpoints/areas.yaml
+barcelona-policy-public-areas.yaml: projects/barcelona/spaces/barcelona/policies/public-areas.yaml
+barcelona-endpoint-city-works.yaml: projects/barcelona/spaces/barcelona/endpoints/city-works.yaml
+barcelona-policy-public-city-works.yaml: projects/barcelona/spaces/barcelona/policies/public-city-works.yaml
