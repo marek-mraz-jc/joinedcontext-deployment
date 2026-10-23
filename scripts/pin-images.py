@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Pin the images of the head of a source repository's `main` (ADR-N-056 §2.4, OPS-57).
+"""Pin the images of the newest commit a source repository's `main` built (ADR-N-056 §2.4, OPS-57).
 
     python3 scripts/pin-images.py platform     # or: portal
     python3 scripts/pin-images.py platform --tier production
     PIN_COMMIT=<40 hex> python3 scripts/pin-images.py platform   # a green commit behind the head
 
-For the commit at the head of `main` of the source repository it pins, in every
+For the commit of the newest green `image.yml` run on `main` of the source repository (the lane
+builds once an hour, not per push, so the head of `main` usually has no images yet; T-4696) it pins, in every
 `components/*/images.yaml`, the digest each image of that commit was published under, but only
 when the repository's `ci` and `image.yml` runs on the commit are green and `cosign verify` accepts the signature
 the repository's own `image.yml` made on `main`. It writes the files and prints the commit
@@ -46,11 +47,14 @@ def run(*args, check=True):
     return subprocess.run(args, capture_output=True, text=True, check=check)
 
 
-def head(repository):
-    out = run("git", "ls-remote", f"https://github.com/{OWNER}/{repository}.git", "refs/heads/main").stdout
-    commit = out.split()[0] if out else ""
+def built(repository):
+    """The commit of the newest green image.yml run on main."""
+    out = run("gh", "run", "list", "-R", f"{OWNER}/{repository}", "--workflow", "image.yml", "--branch", "main",
+              "--status", "success", "--json", "headSha", "--limit", "1").stdout
+    runs = json.loads(out or "[]")
+    commit = runs[0].get("headSha", "") if runs else ""
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
-        sys.exit(f"{repository}: no head of main ({out!r})")
+        sys.exit(f"{repository}: no green image.yml run on main ({out!r})")
     return commit
 
 
@@ -113,9 +117,9 @@ def pin_files(pins, commit=None):
 
 def main(source, tier="dev"):
     repository, images = SOURCES[source]
-    # PIN_COMMIT pins a green commit while newer merges keep `main`'s head red or building; the
+    # PIN_COMMIT pins another green commit (one the lane built behind the newest); the
     # signature check below still requires the image.yml of `main` to have signed its images.
-    commit = os.environ.get("PIN_COMMIT") or head(repository)
+    commit = os.environ.get("PIN_COMMIT") or built(repository)
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         sys.exit(f"{source}: PIN_COMMIT must be a full 40-hex commit, not {commit!r}")
     if not green(repository, "ci.yml", commit):

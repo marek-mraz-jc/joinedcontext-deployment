@@ -164,5 +164,9 @@ context-broker:
     # FEATURES). No migration, no new runtime key. Rollback: dev-44. Signed by ship.yml on dev at 18dd4c2.
     # Antares dev 6930e9c (dev-46, over 18dd4c2: T-5362 audit mode for shared spaces, broker half; same FEATURES).
     # No migration, no new runtime key. Rollback: dev-45. Signed by ship.yml on dev at 6930e9c.
-    tag: 'dev-46'
-    digest: 'sha256:d21146da77fcada0d64b1542a8b841a2d812f53281439ade0b03782ab9f399ef'
+    # Antares dev c0643c9 (dev-47, over 6930e9c: T-5349 STA name filter via name_key, T-5159 WS fan-out bookkeeping
+    # per drain; same FEATURES). Migration 0021 adds generated entities.name_key and rewrites entities under ACCESS
+    # EXCLUSIVE: the broker stalls during the apply. No new runtime key. Rollback: dev-46 (0021 rollback = compatible). Signed by
+    # ship.yml on dev at c0643c9.
+    tag: 'dev-47'
+    digest: 'sha256:afd4b88e579f360cbd18614ff6cd7bd624ba0fec9fb18ac207e0967248f0dc90'
