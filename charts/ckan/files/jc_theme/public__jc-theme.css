@@ -281,6 +281,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .jc-facet a { display: flex; justify-content: space-between; gap: 1rem; padding: .625rem 1rem; color: var(--jc-ink); text-decoration: none; font-weight: 500; }
 .jc-facet a:hover, .jc-facet a:focus { background: var(--jc-primary-soft); color: var(--jc-primary-soft-fg); }
 .jc-facet .jc-count { color: var(--jc-muted); font-variant-numeric: tabular-nums; }
+.jc-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr)); gap: .75rem; list-style: none; padding: 0; margin: 0 0 2rem; }
+.jc-topics a { display: flex; flex-direction: column; gap: .25rem; height: 100%; padding: .875rem 1rem; background: var(--jc-surface); border: 1px solid var(--jc-border); border-radius: var(--jc-radius-lg); box-shadow: var(--jc-shadow-1); color: var(--jc-ink); text-decoration: none; }
+.jc-topics a:hover, .jc-topics a:focus-visible { background: var(--jc-primary-soft); color: var(--jc-primary-soft-fg); }
+.jc-topic-name { font-weight: 600; overflow-wrap: anywhere; }
+.jc-topics .jc-count { color: var(--jc-muted); font-size: .875rem; font-variant-numeric: tabular-nums; }
 .jc-tags { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; margin: 0; }
 .jc-tags a { text-decoration: none; }
 @media (max-width: 991.98px) { .jc-home { grid-template-columns: 1fr; } }
