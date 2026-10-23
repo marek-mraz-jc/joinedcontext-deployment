@@ -18,6 +18,13 @@
     fi: "Aineisto ja taulukko avoimen datan luettelossa",
     en: "Data and table in the open-data catalogue"
   };
+  // What a reader is told when the Endpoint refuses a read, in the page's language (T-5421).
+  var UNREADABLE = {
+    sk: "Údaje tohto grafu teraz nie sú dostupné.",
+    cs: "Data tohoto grafu nyní nejsou dostupná.",
+    fi: "Tämän kaavion tiedot eivät ole nyt saatavilla.",
+    en: "The data of this chart is not available now."
+  };
   // T-5414: a temporal chart cut at a limit says so instead of passing for the whole window.
   var PARTIAL = {
     sk: "Graf je neúplný: zobrazuje údaje do {at}, zvyšok presahuje limity stránky.",
@@ -178,7 +185,11 @@
 
   // A JSON or text answer, stopped once the budget's bytes are spent.
   function read(response, budget) {
-    if (!response.ok) throw new Error("the Endpoint answered " + response.status);
+    if (!response.ok) {
+      var refused = new Error("the Endpoint answered " + response.status);
+      refused.status = response.status;
+      throw refused;
+    }
     var length = +response.headers.get("Content-Length") || 0;
     if (length > budget.bytes) throw limit("over 20 MB: aggregate on the server");
     var reader = response.body.getReader();
@@ -204,6 +215,11 @@
     var at = 0;
     chunks.forEach(function (c) { out.set(c, at); at += c.length; });
     return out;
+  }
+
+  // The reader's line for a refused read; the status stays for support.
+  function unreadable(status, lang) {
+    return (UNREADABLE[lang] || UNREADABLE.en) + " (HTTP " + status + ")";
   }
 
   function count(rows, budget) {
@@ -435,6 +451,7 @@
         });
       })
       .catch(function (error) {
+        if (error && error.status) return fail(unreadable(error.status, lang));
         fail(error && error.name === "AbortError" ? "The data took longer than 15 seconds." : String(error.message || error));
       })
       .then(function () { clearTimeout(timer); });
@@ -512,6 +529,7 @@
 
   root.jcHost = {
     ourOrigin: ourOrigin,
+    unreadable: unreadable,
     parseHash: parseHash,
     hosts: hosts,
     duration: duration,

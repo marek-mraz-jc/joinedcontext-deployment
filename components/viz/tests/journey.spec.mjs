@@ -83,6 +83,9 @@ const SPECS = {
       }
     ]
   }],
+  // A type whose history the Endpoint's Policy does not open: its temporal read answers 404 (T-5421).
+  closed: [{ ...temporal, type: "Vehicle" }, { $schema: VL, data: { name: "source" }, mark: "line",
+    encoding: { x: { field: "observedAt", type: "temporal" }, y: { field: "temperature", type: "quantitative" } } }],
   // T-5414: seven days of hourly NO2, more than one temporal window (206) of the broker holds.
   paged: [{ source: "temporal", type: "AirQualityObserved", attrs: ["no2"], last: "P7D" }, {
     $schema: VL, data: { name: "source" }, mark: "line",
@@ -169,6 +172,9 @@ export async function serve(context, { trustless = false } = {}) {
     }
     if (url.hostname === `api.${DOMAIN}`) {
       const base = `/api/endpoint/${SLUG}/`;
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "Vehicle") {
+        return route.fulfill({ status: 404, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` }, body: "{}" });
+      }
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "AirQualityObserved") return route.fulfill(windowed(url));
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
       if (url.pathname === `${base}ngsi-ld/v1/entities`) return json(NAMES);
@@ -257,6 +263,13 @@ test("the renderer frame reads no cookie and calls no host", async ({ page, cont
   expect(await frame.evaluate(() => origin)).toBe("null");
   expect(await frame.evaluate(() => { try { return document.cookie; } catch (e) { return e.name; } })).toBe("SecurityError");
   expect(await frame.evaluate(() => fetch(`https://api.${location.hostname.slice(4)}/`).then(() => "fetched", () => "refused"))).toBe("refused");
+});
+
+test("closed: a refused read tells the reader in Slovak and keeps the status (T-5421)", async ({ page, context }) => {
+  await serve(context);
+  await page.goto(`https://data.${DOMAIN}/dataset/closed`);
+  await expect(host(page).locator("#status")).toHaveText("Údaje tohto grafu teraz nie sú dostupné. (HTTP 404)", { timeout: 15000 });
+  await expect(renderer(page).locator("svg")).toHaveCount(0);
 });
 
 for (const key of ["dataUrl", "javascriptHref", "windowExpr"]) {

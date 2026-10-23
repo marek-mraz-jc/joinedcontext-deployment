@@ -90,6 +90,14 @@ test("a next page off the Endpoint stops the chart, more rows than 50,000 too", 
   await assert.rejects(host.load(view({ source: "csv", type: "W" }), API, "en", huge, NOW), /20 MB/);
   const refused = async () => answer({}, 403);
   await assert.rejects(host.load(view({ source: "csv", type: "W" }), API, "en", refused, NOW), /answered 403/);
+  await assert.rejects(host.load(view({ source: "csv", type: "W" }), API, "en", refused, NOW), (error) => error.status === 403);
+});
+
+test("a refused read tells the reader in the page's language and keeps the status (T-5421)", () => {
+  assert.equal(host.unreadable(404, "sk"), "Údaje tohto grafu teraz nie sú dostupné. (HTTP 404)");
+  assert.equal(host.unreadable(403, "en"), "The data of this chart is not available now. (HTTP 403)");
+  assert.equal(host.unreadable(404, "xx"), host.unreadable(404, "en"));
+  assert.doesNotMatch(host.unreadable(404, "sk"), /answered/);
 });
 
 test("only a page on our own hosts may hand the host page a spec (T-4657)", () => {
