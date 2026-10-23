@@ -31,7 +31,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures/helsinki/statistics"
 BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 PREFIX = "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:helsinki:stat-"
 SDM = "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
-THEMES = ["population", "housing", "employment", "income", "education"]
+THEMES = ["population", "housing", "employment", "income", "education", "welfare", "environment"]
 # Two sub-districts of the register: Kruununhaka and Kluuvi.
 REGISTER = ["0911101010", "0911101020"]
 
@@ -91,11 +91,18 @@ def unemployment(table):
 
 @requires_docker
 def test_the_register_becomes_one_message_per_table_and_an_empty_register_fails_the_run(table):
-    assert len(table) == 16
+    # 16 sub-district series, 46 breakdown or region tables, and 149 tables of the welfare,
+    # environment and sustainable development databases (the rework of the review).
+    assert len(table) == 211
+    assert len({t["id"] for t in table.values()}) == 211
+    assert {t.get("db", "Aluesarjat") for t in table.values()} == {"Aluesarjat", "Hyvinvointitilastot", "Ymparistotilasto", "SDG"}
+    assert {t["depth"] for t in table.values() if "depth" in t} <= {"basicDistrict", "majorDistrict"}
     assert {t["theme"] for t in table.values()} == set(THEMES)
     # Every table names its dimensions and keeps a breakdown the query can send.
     for t in table.values():
         assert t["path"].endswith(f"/{t['id']}.px") and t["every"] in {"yearly", "quarterly", "monthly"}
+        # Only the other databases hold city-wide tables without an area dimension.
+        assert t["area"] is not None or t.get("db") in {"Hyvinvointitilastot", "Ymparistotilasto", "SDG"}, t["id"]
         assert t["keep"], t["id"]
     assert bento(steps()[:1], {"features": []}) == []
     # The recorded register (the subdistricts fixture) yields the codes of its sub-districts only.
@@ -180,6 +187,67 @@ def test_out_of_area_out_of_range_duplicate_and_unknown_sub_district_are_dropped
 
 
 @requires_docker
+def test_a_dotted_code_is_one_category_and_depth_stops_at_the_basic_districts(table):
+    # Building production by quarter: measure codes "1.1" and "1.2" are categories, not paths.
+    out = decode(table["alu_ratuo_039k"], answer("alu_ratuo_039k"))
+    assert table["alu_ratuo_039k"]["depth"] == "basicDistrict"
+    entities = {e["id"]: e for e in out["entities"]}
+    city = entities[PREFIX + "housing-alu_ratuo_039k-1.1-YHT-raklkm-0910000000"]
+    assert city["name"]["languageMap"]["fi"].startswith("Helsingin rakennustuotanto")
+    assert "1.1 Uudet rakennukset" in city["name"]["languageMap"]["fi"]
+    assert city["dimensionKey"]["value"] == "raktoimpide=1.1;rakluokka=YHT;Tiedot=raklkm"
+    # No sub-district: the sub-district totals are the integrated housing tables.
+    assert {e["divisionLevel"]["value"] for e in entities.values()} == {"city", "majorDistrict", "basicDistrict", "cityPart"}
+    assert "sub-district not in the register (written without refArea)" not in out["dropped"]
+    for entity in out["entities"]:
+        assert open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity) == [], entity["id"]
+        assert open_data.sdm_errors(SDM, entity) == [], entity["id"]
+
+
+@requires_docker
+def test_a_net_migration_keeps_its_sign_and_a_region_table_keeps_the_helsinki_row(table):
+    out = decode(table["alu_vamuu_010w"], answer("alu_vamuu_010w"))
+    net = [e for e in out["entities"] if e["dimensionKey"]["value"].endswith("Tiedot=netmuu")]
+    assert net and any(e["kpiValue"]["value"] < 0 for e in net)
+    assert "negative count or amount" not in out["dropped"]
+    assert {e["districtCode"]["value"] for e in out["entities"]} == {"0910000000"}
+    # A gross flow is still a count: a negative one is dropped and counted.
+    edited = copy.deepcopy(answer("alu_vamuu_010w"))
+    edited["value"][0] = -5
+    assert decode(table["alu_vamuu_010w"], edited)["dropped"]["negative count or amount"] == 1
+
+
+@requires_docker
+def test_a_city_wide_table_of_another_database_has_no_area_and_a_running_year_is_never_written(table):
+    request = next(p for p in steps() if "branch" in p)["branch"]["request_map"]
+    sdg = table["sdg_sdg_037b"]
+    out = bento([{"mapping": request + "\nroot.db = @stat_db"}], {"table": sdg, "register": []})
+    # No area clause: the table has none. The two newest years, since the newest is still running.
+    assert out[0]["db"] == "SDG"
+    assert [q["code"] for q in out[0]["query"]] == ["Vuosi", "Tiedot"]
+    assert out[0]["query"][0]["selection"] == {"filter": "top", "values": ["2"]}
+    # A database outside the city's four is refused before any call.
+    assert bento([{"mapping": request}], {"table": dict(sdg, db="Other"), "register": []}) == []
+    decoded = decode(sdg, answer("sdg_sdg_037b"))
+    assert decoded["period"] == "2025"
+    one = decoded["entities"][0]
+    assert one["kpiValue"]["observedAt"] == "2025-12-31T00:00:00Z" and one["divisionLevel"]["value"] == "city"
+    assert one["districtCode"]["value"] == "0910000000" and one["area"]["value"] == "Helsinki"
+    assert one["source"]["value"] == "https://stat.hel.fi/pxweb/fi/SDG/SDG__SDG/sdg_sdg_037b.px/"
+    # Emissions of the environment database: the city as "hki", tonnes and kilotonnes by label.
+    emissions = decode(table["ymp_kaspa_003k"], answer("ymp_kaspa_003k"))
+    assert {e["districtCode"]["value"] for e in emissions["entities"]} == {"0910000000"}
+    assert {e["kpiValue"]["unitCode"] for e in emissions["entities"]} == {"KTN", "TNE"}
+    assert emissions["entities"][0]["calculatedBy"]["value"] == "City of Helsinki, Environmental Services"
+    # The welfare database by basic district, the Aluesarjat area codes.
+    welfare = decode(table["hyv_teel_038k"], answer("hyv_teel_038k"))
+    assert {e["divisionLevel"]["value"] for e in welfare["entities"]} == {"city", "majorDistrict", "basicDistrict"}
+    for entity in decoded["entities"] + emissions["entities"] + welfare["entities"]:
+        assert open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity) == [], entity["id"]
+        assert open_data.sdm_errors(SDM, entity) == [], entity["id"]
+
+
+@requires_docker
 def test_an_empty_or_stale_table_fails_its_message_instead_of_writing(table):
     empty = copy.deepcopy(answer("alu_tyom_040k"))
     empty["value"] = [None] * len(empty["value"])
@@ -213,7 +281,7 @@ def test_each_theme_is_one_public_endpoint_whose_policy_reads_only_its_own_indic
 
 def test_the_pipeline_reads_only_the_city_hosts_and_keeps_ten_years_of_history():
     text = MAPPING.read_text()
-    assert "url: https://stat.hel.fi/api/v1/fi/Aluesarjat/${! @stat_path }" in text
+    assert "url: https://stat.hel.fi/api/v1/fi/${! @stat_db }/${! @stat_path }" in text
     calls = next(p for p in steps() if "branch" in p)["branch"]["processors"]
     assert calls[0]["http"]["timeout"] == "30s" and calls[0]["http"]["rate_limit"] == "hel_stat"
     source = yaml.safe_load((HELSINKI / "helsinki-datasource-statistics.yaml").read_text())

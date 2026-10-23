@@ -222,6 +222,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.visitbratislava.com/event-categories/top-events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.visitbratislava.com/event-categories/top-events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.senec.sk/zivot-v-meste/podujatia-prehlad/"
+        title: { sk: "Senec, senec.sk", en: "Senec, senec.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.senec.sk/zivot-v-meste/podujatia-prehlad/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.senec.sk/zivot-v-meste/podujatia-prehlad/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.casta.sk/"
         title: { sk: "Častá, casta.sk", en: "Častá, casta.sk" }
         description:
@@ -327,6 +332,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://pastinazavada.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://pastinazavada.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ruzomberok.sk/podujatia/"
+        title: { sk: "Ružomberok, ruzomberok.sk", en: "Ružomberok, ruzomberok.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ruzomberok.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ruzomberok.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://sulov-hradna.sk/"
         title: { sk: "Súľov-Hradná, sulov-hradna.sk", en: "Súľov-Hradná, sulov-hradna.sk" }
         description:
@@ -337,6 +347,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.obecvlachy.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.obecvlachy.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://zilina.sk/kultura-a-komunity/podujatia/"
+        title: { sk: "Žilina, zilina.sk", en: "Žilina, zilina.sk" }
+        description:
+          sk: "Podujatia zo stránky https://zilina.sk/kultura-a-komunity/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://zilina.sk/kultura-a-komunity/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://obechertnik.sk/"
         title: { sk: "Hertník, obechertnik.sk", en: "Hertník, obechertnik.sk" }
         description:
@@ -372,6 +387,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://spisskehanusovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://spisskehanusovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://regiontatry.sk/aktivity-a-atrakcie/"
+        title: { sk: "Vysoké Tatry, regiontatry.sk", en: "Vysoké Tatry, regiontatry.sk" }
+        description:
+          sk: "Podujatia zo stránky https://regiontatry.sk/aktivity-a-atrakcie/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://regiontatry.sk/aktivity-a-atrakcie/; no licence stated, facts only (name, time, place, link)."
       - url: "https://sandal.sk/"
         title: { sk: "Šandal, sandal.sk", en: "Šandal, sandal.sk" }
         description:
@@ -392,6 +412,16 @@ spec:
         description:
           sk: "Podujatia zo stránky https://vsg.sk/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://vsg.sk/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.podujatiaksk.sk/"
+        title: { sk: "Košice, podujatiaksk.sk", en: "Košice, podujatiaksk.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.podujatiaksk.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.podujatiaksk.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.upjs.sk/podujatia/"
+        title: { sk: "Košice, upjs.sk", en: "Košice, upjs.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.upjs.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.upjs.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://mnisek.sk/"
         title: { sk: "Mníšek nad Hnilcom, mnisek.sk", en: "Mníšek nad Hnilcom, mnisek.sk" }
         description:
