@@ -397,9 +397,7 @@ classes:
           de: Veranstaltungsort
     slots: [name, location, address, areaServed, source, dataProvider]
     slot_usage:
-      name:
-        required: true
-        description: The venue's name (`Dom kultúry A. Sládkoviča`).
+      name: { required: true, description: The venue's name (`Dom kultúry A. Sládkoviča`). }
       location:
         required: true
         description: The venue's building as a GeoJSON Point in WGS 84 inside Slovakia.
