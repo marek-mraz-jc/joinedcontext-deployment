@@ -3,6 +3,7 @@ policy (T-5318): the Portal's edge wave is judged by the kyverno CLI against sec
 the chart renders it today (6921dc37 added apisix-standalone-config) and as it was before, when the
 Portal's write was refused with 422 on prod (2026-10-20) and every smoke stayed green."""
 
+import base64
 import importlib.util
 import json
 import shutil
@@ -17,6 +18,8 @@ spec = importlib.util.spec_from_file_location("smoke_edge_wave", SCRIPT)
 edge = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(edge)
 
+SERVED = base64.b64encode(b"routes: []").decode()
+
 needs_tools = pytest.mark.skipif(not (shutil.which("kyverno") and shutil.which("helm")), reason="kyverno and helm")
 
 
@@ -26,7 +29,7 @@ class Cluster:
 
     def __init__(self, admits, marked=True):
         annotations = {edge.MARKER: edge.MARKED} if marked else {}
-        self.secret = {"apiVersion": "v1", "kind": "Secret", "type": "Opaque", "data": {"apisix.yaml": "cm91dGVzOiBbXQ=="},
+        self.secret = {"apiVersion": "v1", "kind": "Secret", "type": "Opaque", "data": {"apisix.yaml": SERVED},
                        "metadata": {"name": edge.SECRET, "namespace": "dev", "resourceVersion": "100", "annotations": annotations}}
         self.admits, self.log, self.calls = admits, [], []
 
@@ -101,7 +104,7 @@ def test_the_wave_is_green_under_todays_policy(policies, tmp_path, monkeypatch):
     assert ok, said
     assert cluster.secret["metadata"]["annotations"][edge.MARKER] == edge.MARKED
     assert "resourceVersion 100 -> 102" in said
-    assert cluster.secret["data"] == {"apisix.yaml": "cm91dGVzOiBbXQ=="}
+    assert cluster.secret["data"] == {"apisix.yaml": SERVED}
 
 
 @needs_tools
