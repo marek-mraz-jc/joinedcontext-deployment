@@ -11,8 +11,11 @@ Without a container runtime the Bento cases skip; the seed cases do not.
 
 import copy
 import json
+import os
 import re
 import shutil
+import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -58,11 +61,30 @@ def schema_errors(entity: dict) -> list[str]:
     return open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity)
 
 
+BEACH_UNIT = "urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-{}"
+
+
+def beach_steps() -> list[dict]:
+    return yaml.safe_load((HELSINKI / "helsinki-pipeline-beach-water-bento.yaml").read_text())["pipeline"]["processors"]
+
+
+def beach(document: dict, held: list[str]) -> list[dict]:
+    """The beach-water mapping with its ask of the space answered by `held`, the units it holds
+    (an empty list is also what a failed ask leaves)."""
+    steps = [{"mapping": f"meta held = {json.dumps(' '.join(held))}"} if "branch" in p else p for p in beach_steps()]
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
+        yaml.safe_dump({"pipeline": {"processors": steps}}, mapping)
+        mapping.flush()
+        return open_data.run_all(Path(mapping.name), json.dumps(document).encode(), "helsinki")
+
+
 @pytest.fixture(scope="module")
 def written():
     if shutil.which("docker") is None:
         pytest.skip("no container runtime")
-    return {name: run(name, fixture(recording)) for name, (recording, _, _) in FEEDS.items()}
+    feeds = {name: run(name, fixture(recording)) for name, (recording, _, _) in FEEDS.items() if name != "beach-water"}
+    # The services recording holds units 41960 and 40157; 40356 is a swimming place (service 730) it never writes.
+    return {**feeds, "beach-water": beach(fixture("uiras-beaches.json"), [BEACH_UNIT.format(41960), BEACH_UNIT.format(40157)])}
 
 
 @requires_docker
@@ -195,6 +217,59 @@ def test_a_beach_sensor_without_a_reading_has_no_temperature_and_points_at_its_b
     assert reading["refPointOfInterest"]["object"].startswith("urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-")
 
 
+@requires_docker
+def test_a_beach_sensor_links_only_a_unit_the_space_holds(written):
+    """T-5345: the gateway refuses a link to an entity the space does not hold (DM-70); 12 of 28
+    sensors on prod were lost so. The reading is written without the link instead."""
+    links = {e["id"].rsplit("-", 1)[1]: e.get("refPointOfInterest", {}).get("object") for e in written["beach-water"]}
+    assert links == {"70b3d57050001ab9": BEACH_UNIT.format(41960), "70b3d57050001bbe": BEACH_UNIT.format(40157),
+                     "70b3d5705001148e": None}
+
+
+@requires_docker
+def test_a_failed_ask_writes_every_reading_without_its_link():
+    """The committed branch itself, its gateway refusing the connection."""
+    resources = yaml.safe_load(open_data.RESOURCES.read_text())
+    config = {"input": {"stdin": {"scanner": {"to_the_end": {}}}},
+              "pipeline": {"processors": beach_steps()}, "rate_limit_resources": resources["rate_limit_resources"],
+              "output": {"stdout": {"codec": "lines"}}, "logger": {"level": "none"}}
+    gone = "http://127.0.0.1:9"
+    env = {"JC_ORG_DOMAIN": "hel.fi", "JC_SPACE": "helsinki", "JC_GATEWAY_URL": gone, "JC_CLIENT_ID": "beach",
+           "JC_CLIENT_SECRET": "unused", "JC_TOKEN_URL": f"{gone}/token", "CONFIG": json.dumps(config)}
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", *(a for k in env for a in ("-e", k)), "--entrypoint", "sh", open_data.BENTO,
+         "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input=json.dumps(fixture("uiras-beaches.json")).encode(), env={**os.environ, **env}, capture_output=True, timeout=120, check=False)
+    assert result.returncode == 0, result.stderr.decode()
+    (out,) = [json.loads(line) for line in result.stdout.decode().splitlines() if line.strip()]
+    assert len(out) == 3 and not any("refPointOfInterest" in e for e in out)
+    assert sum("temperature" in e for e in out) == 2
+
+
+@requires_docker
+def test_the_ask_names_each_linked_unit_once_and_a_feed_without_units_asks_nothing():
+    steps = beach_steps()
+    branch = next(p for p in steps if "branch" in p)
+    ask = [*steps[:steps.index(branch)], {"mapping": branch["branch"]["request_map"]}]
+
+    def asked(document: dict) -> list[dict]:
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
+            yaml.safe_dump({"pipeline": {"processors": ask}}, mapping)
+            mapping.flush()
+            return open_data.run_all(Path(mapping.name), json.dumps(document).encode(), "helsinki")
+
+    document = fixture("uiras-beaches.json")
+    twice = copy.deepcopy(document)
+    twice["features"].append({**copy.deepcopy(document["features"][0]), "id": "70B3D57050001AAA"})
+    (query,) = asked(twice)
+    assert query["type"] == "Query"
+    assert sorted(query["entities"], key=lambda e: e["id"]) == [
+        {"id": BEACH_UNIT.format(u), "type": "PointOfInterest"} for u in (40157, 40356, 41960)]
+    for feature in document["features"]:
+        feature["properties"]["servicemap_url"] = ""
+    assert asked(document) == []
+
+
 def public_water_quality() -> dict:
     return yaml.safe_load((HELSINKI / "helsinki-policy-public-water-quality.yaml").read_text())["spec"]
 
@@ -263,7 +338,7 @@ def test_an_empty_answer_writes_nothing():
     for name, (recording, _, _) in FEEDS.items():
         empty = copy.deepcopy(fixture(recording))
         empty["results" if "results" in empty else "features"] = []
-        assert run(name, empty) == [], name
+        assert (beach(empty, []) if name == "beach-water" else run(name, empty)) == [], name
 
 
 def test_a_value_outside_the_model_is_refused_by_the_schema():
