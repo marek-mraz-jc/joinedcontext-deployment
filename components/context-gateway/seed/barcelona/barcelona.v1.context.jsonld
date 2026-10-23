@@ -7,12 +7,34 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
+    },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
+    },
+    "category": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:category"
+    },
+    "congested": {
+      "@id": "sdm:congested",
+      "@type": "xsd:boolean"
+    },
     "dateObserved": {
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -44,8 +66,39 @@
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "tariffCode": {
+      "@id": "jc:tariffCode"
+    },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "trafficState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficState"
+    },
+    "trafficStateForecast": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficStateForecast"
+    },
     "type": "@type",
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "jc:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.12.0"
 }

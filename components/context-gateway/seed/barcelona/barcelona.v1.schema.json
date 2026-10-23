@@ -8,7 +8,7 @@
       "description": "One air-quality station of Barcelona and its hourly means.",
       "properties": {
         "dateObserved": {
-          "description": "The end of the hour the entity's readings cover, UTC.",
+          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).",
           "format": "date-time",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -47,7 +47,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The station's name as the city publishes it.",
+          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
           "type": [
             "string",
             "null"
@@ -183,6 +183,288 @@
       ],
       "title": "Entity",
       "type": "object"
+    },
+    "OnStreetParking": {
+      "additionalProperties": false,
+      "description": "One regulated surface parking section of B:SM (blue, green, residents, loading or coach zone), its curb lines, its places and its rate and timetable codes (Open Data BCN trams-aparcament-superficie).",
+      "properties": {
+        "allowedVehicleType": {
+          "description": "What may park there, the section's own kind first.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "The kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).",
+          "items": {
+            "$ref": "#/definitions/StreetParkingCategory"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "tariffCode": {
+          "description": "The B:SM rate (ID_TARIFA) and timetable (ID_HORARIO) codes of the section, joined as rate/timetable, kept as published (custom; Open Data BCN tarifes- and horaris-aparcament-superficie).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "totalSpotNumber": {
+          "description": "The parking places of the section as B:SM counts them (PLACES).",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zoneCode": {
+          "description": "The section type as B:SM codes it (AZL, VM, VR, DUM, BUS), kept as published (custom).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "OnStreetParking",
+      "type": "object"
+    },
+    "StreetParkingCategory": {
+      "description": "The OnStreetParking `category` values the B:SM section types map to, a subset of the Smart Data Model's enum.",
+      "enum": [
+        "blueZone",
+        "greenZone",
+        "feeCharged",
+        "forResidents",
+        "forLoadUnload",
+        "onlyWithPermit"
+      ],
+      "title": "StreetParkingCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "blueZone": "AZL, the blue zone anyone parks in for a fee.",
+        "feeCharged": "Parking costs by the time parked (AZL, VM, BUS).",
+        "forLoadUnload": "DUM, urban goods distribution.",
+        "forResidents": "VR, residents of the area only.",
+        "greenZone": "VM and VR, the green zone.",
+        "onlyWithPermit": "VR and DUM, a resident permit or the DUM app registration is needed."
+      }
+    },
+    "TrafficFlowObserved": {
+      "additionalProperties": false,
+      "description": "One street section of the city's traffic-state network with its line, its state now and the state forecast for 15 minutes, every five minutes (Open Data BCN trams and transit-relacio-trams).",
+      "properties": {
+        "congested": {
+          "description": "Whether the section is congested now: true for the city's states 4 (very dense) and 5 (congestion), false otherwise, as SDM reads an absent flag (no data and closed included; trafficState tells those apart).",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "trafficState": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrafficState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The city's own traffic state of the section (custom: TrafficFlowObserved has only `congested`), its code 1 to 6 named in English; Open Data BCN dataset trams.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "trafficStateForecast": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrafficState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The state the city forecasts for the section in 15 minutes, same codes as trafficState (custom).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "dateObserved",
+        "id",
+        "type"
+      ],
+      "title": "TrafficFlowObserved",
+      "type": "object"
+    },
+    "TrafficState": {
+      "description": "Open Data BCN's traffic state codes 0 to 6, named in English, the Catalan name in each description.",
+      "enum": [
+        "noData",
+        "veryFluid",
+        "fluid",
+        "dense",
+        "veryDense",
+        "congestion",
+        "closed"
+      ],
+      "title": "TrafficState",
+      "type": "string",
+      "x-enum-descriptions": {
+        "closed": "6 tallat.",
+        "congestion": "5 congesti\u00f3.",
+        "dense": "3 dens.",
+        "fluid": "2 fluid.",
+        "noData": "0 sense dades: no reading this period.",
+        "veryDense": "4 molt dens.",
+        "veryFluid": "1 molt fluid."
+      }
     }
   },
   "metamodel_version": "1.12.0",

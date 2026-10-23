@@ -71,6 +71,8 @@ CHOSEN = {
     ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
     # Prague's PID vehicles keep an hour of track, as Žilina's (T-4624, T-5268).
     ("praha/praha-mesto", "Vehicle"): "PT1H",
+    # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
+    ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
 }
 
 
