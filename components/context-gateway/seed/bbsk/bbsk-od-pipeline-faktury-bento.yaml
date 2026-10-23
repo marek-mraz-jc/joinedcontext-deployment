@@ -140,5 +140,8 @@ pipeline:
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-faktury-422b35" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
+    - split:
+        size: 1000
+        byte_size: 2097152
     - archive:
         format: json_array

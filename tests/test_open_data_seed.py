@@ -451,6 +451,26 @@ def test_a_key_with_its_year_and_a_polygon():
 
 
 @requires_docker
+def test_a_page_of_large_rows_reaches_the_broker_in_requests_under_its_body_limit():
+    # Dev and prod, 2026-10-19: od-vekova-struktura-v-okresoch, od-pohyb-obyvatelstva-v-obciach and
+    # od-vyvoj-emisii-v-bbk wrote nothing, "the upsert answers an unexpected status" (T-5309): a
+    # 1000-row page of ~8 KB polygons went as one ~8 MB request, past Antares' 4 MiB body limit
+    # (ANTARES_MAX_BODY_BYTES). The mapping splits a page into requests under generate.REQUEST_BYTES.
+    page = json.loads((FIXTURES / "pohyb-okresy.json").read_text())
+    row = page["features"][0]
+    page["features"] = [{**row, "properties": {**row["properties"], "IDN3": i}} for i in range(1000)]
+    mapping = SEED / "bbsk" / "bbsk-od-pipeline-pohyb-obyvatelstva-v-okresoch-bento.yaml"
+    out = open_data._bento(mapping, json.dumps(page).encode(), "bbsk-otvorene-data", "bbsk.sk", "lines")
+    requests = [line for line in out.decode().splitlines() if line.strip()]
+    assert len(requests) > 1
+    assert all(len(r.encode()) <= generate.REQUEST_BYTES for r in requests), [len(r) for r in requests]
+    assert generate.REQUEST_BYTES * 2 <= 4 * 1024 * 1024, "a request needs room under the broker's limit"
+    assert sorted(e["id"] for r in requests for e in json.loads(r)) == sorted(
+        f"urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-otvorene-data:pohyb-obyvatelstva-v-okresoch-{i}-{row['properties']['Rok']}"
+        for i in range(1000))
+
+
+@requires_docker
 def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires():
     first = run("bbsk", "nehodovost-v-bbk", "nehodovost-v-bbk")
     rows = json.loads((FIXTURES / "nehodovost-v-bbk.json").read_text())["features"]

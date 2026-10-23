@@ -672,9 +672,17 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     - mapping: |
 {body}
     # One request per run's batch rather than one per row.
+    - split:
+        size: 1000
+        byte_size: {REQUEST_BYTES}
     - archive:
         format: json_array""")
     return "\n".join(head) + "\n" + "\n".join(steps) + "\n"
+
+
+# What one upsert carries at most: half of Antares' 4 MiB request body limit (ANTARES_MAX_BODY_BYTES), so
+# the gateway's re-serialised body fits too; a 1000-row page of polygons was ~8 MB and refused whole (T-5309).
+REQUEST_BYTES = 2 * 1024 * 1024
 
 
 # On since portal 47b900c5 (on dev from apply 90): an http source runs on its pipeline's cron
