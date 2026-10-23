@@ -32,6 +32,15 @@ ckan:
       ports:
         - protocol: TCP
           port: 5000
+    # The Portal's reconciler publishes every Endpoint's dataset on the Service (T-5314).
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 5000
     # The catalogue harvest (T-4151) writes through the Action API with the publisher token.
     - from:
         - podSelector:
