@@ -27,6 +27,8 @@ REFERENCES = {
     "Alert": {"GtfsStop", "GtfsRoute"},
     "OffStreetParking": {"GtfsStation"},
     "WaterQualityObserved": {"PointOfInterest"},
+    # An event names its venue (T-5364, DM-141).
+    "Event": {"PointOfInterest"},
     "CityWork": {"AdministrativeArea"},
     # Citizen participation (T-5065): every record names its process; a Result its parent Result.
     "Proposal": {"ParticipatoryProcess"},

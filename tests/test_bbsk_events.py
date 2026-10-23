@@ -96,7 +96,8 @@ def test_the_space_names_its_one_model_and_keeps_no_history():
     [rule] = space["spec"]["quality"]
     assert (rule["entityType"], rule["attribute"], tuple(rule["bbox"])) == ("Event", "location", SLOVAKIA)
     [model] = of_space("DataModel").values()
-    assert model["spec"]["classes"] == ["Event"] and model["spec"]["lifecycle"] == "published"
+    # The events and the venues they link (T-5364, DM-141).
+    assert model["spec"]["classes"] == ["Event", "PointOfInterest"] and model["spec"]["lifecycle"] == "published"
 
 
 def test_the_event_class_fits_the_ical_surface_and_the_owners_required_fields():
@@ -163,7 +164,7 @@ def test_a_point_outside_slovakia_is_flagged():
     assert not inside_slovakia(event(location={"type": "Point", "coordinates": [48.7363, 19.1462]})), "lat/lon swapped"
 
 
-def test_two_endpoints_serve_the_calendar_and_event_alone():
+def test_two_endpoints_serve_the_calendar_events_and_their_venues():
     # The dashboard's own endpoint is the Portal's to compile (T-4897), tested below; the write
     # door is tested on its own.
     endpoints = {n: e for n, e in of_space("Endpoint").items() if not n.startswith("app-") and n != WRITE}
@@ -176,7 +177,7 @@ def test_two_endpoints_serve_the_calendar_and_event_alone():
         assert spec["policyRef"] == f"urn:ngsi-ld:Policy:bbsk.sk:{SPACE}:{policy}"
         read = policies[policy]["spec"]
         assert read["assignee"] == {"kind": "role", "id": "public"}
-        assert read["information"] == [{"entities": [{"type": "Event"}]}]
+        assert read["information"] == [{"entities": [{"type": "Event"}, {"type": "PointOfInterest"}]}]
         assert not [op for op in read["operations"] if op.endswith(("Batch", "Entity", "Attrs", "Temporal")) or op == "writeOps"]
     assert {e["spec"]["slug"] for e in endpoints.values()}.isdisjoint(
         {d["spec"].get("slug") for _, d in manifests() if d["kind"] == "Endpoint" and space_of(d) != SPACE})
@@ -214,7 +215,7 @@ def test_only_the_pipelines_write_and_never_delete():
     spec = writers["podujatia-pipelines-write"]
     assert spec["assignee"] == {"kind": "serviceAccount", "id": "pipelines"}
     assert set(spec["operations"]) == {"upsertBatch", "createBatch", "queryBatch"}
-    assert spec["information"] == [{"entities": [{"type": "Event"}]}]
+    assert spec["information"] == [{"entities": [{"type": "Event"}, {"type": "PointOfInterest"}]}]
 
 
 def test_every_file_is_placed_by_the_index():

@@ -8,7 +8,7 @@ spec:
   contextSpaceRef: { kind: ContextSpace, name: slovensko-podujatia }
   assigner: did:web:joinedcontext.com
   assignee: { kind: role, id: public }
-  # The reads, the discovery (EP-116) and the subscriptions of the Endpoint slovensko-podujatia, Event alone;
+  # The reads, the discovery (EP-116) and the subscriptions of the Endpoint slovensko-podujatia, events and their venues (DM-141);
   # no entity write for anyone but the pipelines, which write through slovensko-podujatia-zapis (T-5047).
   operations:
     - retrieveOps
@@ -25,3 +25,4 @@ spec:
   information:
     - entities:
         - type: Event
+        - type: PointOfInterest

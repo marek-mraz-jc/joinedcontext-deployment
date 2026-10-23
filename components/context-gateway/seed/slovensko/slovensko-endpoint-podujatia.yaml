@@ -26,7 +26,7 @@ spec:
     # Public events of public bodies: a record names an event and its place, never a person.
     personalData: does-not-contain
     license: CC_BY_4_0
-    attribution: { sk: "Zdroj: webové stránky miest, obcí a inštitúcií, ktoré podujatie zverejnili (atribút source)", en: "Source: the web sites of the towns, municipalities and bodies that announced each event (attribute source)" }
+    attribution: { sk: "Zdroj: webové stránky miest, obcí a inštitúcií, ktoré podujatie zverejnili (atribút source); polohy miest konania © prispievatelia OpenStreetMap, ODbL 1.0", en: "Source: the web sites of the towns, municipalities and bodies that announced each event (attribute source); venue points © OpenStreetMap contributors, ODbL 1.0" }
     themes: [EDUC, SOCI]
     keywords:
       sk: ["podujatia", "kultúra", "kalendár"]
