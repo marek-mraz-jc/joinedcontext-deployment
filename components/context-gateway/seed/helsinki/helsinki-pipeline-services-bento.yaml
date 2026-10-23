@@ -1,13 +1,63 @@
 # The mapping of the services pipeline (PL-03): one PointOfInterest per unit of the city's
-# service register (Service Map) that is a library, a health station, a swimming hall, a beach
-# or a comprehensive school. The DataSource asks for those services only and for the fields
-# kept here, in one page.
+# service register (Service Map) in Helsinki, 12 465 units on 2026-10-22 (T-5257; before it, the
+# 219 libraries, health stations, swimming halls, beaches and schools only). Those five keep their
+# serviceCategory; every other unit is `other`. The DataSource reads the first page of 1 000 units
+# and the fields kept here; this mapping reads the pages after it from the same host. Every unit
+# is a place a Linked Events venue (`tprek:` id) or a beach sensor can name.
 #
 # The register's contact sections (`PHONE_OR_EMAIL`) can name a member of staff, so only the
 # opening hours are read from `connections`, and nothing else from it reaches the space.
 
 pipeline:
   processors:
+    # A register that lists no unit is broken, not empty: the run fails instead of writing nothing.
+    - mapping: |
+        root = if content().length() > 16777216 {
+          throw("the Service Map page is %d bytes, more than the 16 MiB read".format(content().length()))
+        } else if this.count.or(0) == 0 {
+          throw("the Service Map lists no unit in Helsinki: nothing is written")
+        } else { this }
+
+    # One message per page: the first carries its units, the others the page number that reads
+    # them. 30 pages (30 000 units) is more than twice today's register and the most one run reads.
+    - mapping: |
+        let pages = [((this.count + 999) / 1000).floor().int64(), 30].min()
+        let rest = if $pages > 1 { range(2, $pages + 1).map_each(p -> { "page": p.string() }) } else { [] }
+        root = [{ "results": this.results.or([]) }].concat($rest)
+    - unarchive: { format: json_array }
+    - split: { size: 1 }
+    - branch:
+        request_map: |
+          meta page = this.page.or("")
+          root = if this.page.or(null) == null { deleted() } else { "" }
+        processors:
+          - sleep: { duration: '500ms' }
+          - http:
+              url: https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&only=id,name,location,street_address,address_zip,services,www,last_modified_time,connections&format=json&page=${! @page }
+              verb: GET
+              headers:
+                Accept: application/json
+                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public services)
+              timeout: 60s
+              retries: 2
+        result_map: |
+          root.results = if content().length() > 16777216 { throw("a Service Map page over 16 MiB") } else { this.results.or([]) }
+
+    # Plausibility (owner 2026-10-22T18:10Z): a point outside Helsinki and 1 km around it (also 0,0
+    # or a swapped longitude and latitude) is left out and the unit kept, as is a unit with no
+    # point; a unit listed twice is written once. Each is counted in the run's log.
+    - mapping: |
+        let units = this.results.unique(u -> u.id.string())
+        let checked = $units.map_each(u -> u.assign({ "_where": if u.location.coordinates.or([]).length() != 2 { "no position" }
+          else if u.location.coordinates.index(0) < 24.76 || u.location.coordinates.index(0) > 25.29 || u.location.coordinates.index(1) < 59.91 || u.location.coordinates.index(1) > 60.31 { "outside Helsinki" }
+          else { null } }))
+        let tally = $checked.filter(u -> u._where != null).fold({}, item -> item.tally.assign({ item.value._where + " (kept without a point)": item.tally.get(item.value._where + " (kept without a point)").or(0) + 1 }))
+        let dups = this.results.length() - $units.length()
+        meta counted = (if $dups > 0 { $tally.assign({ "duplicate": $dups }) } else { $tally }).format_json(no_indent: true)
+        meta kept = $units.length().string()
+        root = { "results": $checked.map_each(u -> if u._where == null { u.without("_where") } else { u.without("_where", "location") }) }
+    - log: { level: INFO, message: 'services: ${! @kept } units, by reason ${! @counted }' }
+
     - mapping: |
         # One category per unit, the first that matches: a school that also runs a library is a
         # school's building to a parent and a library's to a reader, and the register lists the
@@ -19,7 +69,7 @@ pipeline:
             this.contains(729) => "swimmingHall",
             this.contains(731) => "beach",
             [661, 662, 601, 602, 149, 150].any(code -> this.contains(code)) => "school",
-            _ => null,
+            _ => "other",
           }
         }
         # A language map without the languages the register left empty.
@@ -33,7 +83,7 @@ pipeline:
           "hours": unit.connections.or([]).filter(c -> c.section_type == "OPENING_HOURS").index(0).or({}).name.apply("texts"),
           "street": unit.street_address.or({}).fi.or(null),
           "www": [unit.www.or({}).fi.or(null), unit.www.or({}).en.or(null), unit.www.or({}).sv.or(null)].filter(u -> u != null && u.has_prefix("http")).index(0).or(null)
-        }).filter(u -> u.category != null && u.names.length() > 0).map_each(u -> {
+        }).filter(u -> u.names.length() > 0).map_each(u -> {
           "id": "urn:ngsi-ld:%v:%v:%v:servicemap-%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), u.unit.id),
           "type": "PointOfInterest",
           "name": { "type": "LanguageProperty", "languageMap": u.names },

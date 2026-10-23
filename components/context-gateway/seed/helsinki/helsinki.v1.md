@@ -27,8 +27,14 @@ Specialises `Entity`.
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends; absent while the register does not say. |
 | `eventStatus` | Property | [`EventStatus`](#eventstatus) |  |  | `schema:eventStatus` | The register's status of the event, one of schema.org's EventStatusType values. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
+| `thematic` | Property | `string` (list) |  |  | `sdm:thematic` | The event's keywords from the register's YSO terms, in English where the term has an English name and in Finnish otherwise (Smart Data Models Event `thematic`). |
+| `isAccessibleForFree` | Property | `boolean` |  |  | `schema:isAccessibleForFree` | True when every offer of the event is free of charge, as the register marks it. |
+| `webSite` | Property | `uri` |  |  | `sdm:webSite` | The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish. |
+| `superEvent` | Relationship | [`Event`](#event) |  |  | `sdm:superEvent` | The recurring or umbrella event this event is one date or part of. |
+| `subEvent` | Relationship | [`Event`](#event) (list) |  |  | `sdm:subEvent` | The dates and parts of this event, computed from their superEvent and never stored. |
 | `contactPoint` | Property | `string` |  |  | `schema:contactPoint` | The organizer's contact line as the register carries it, often a named person with a phone number. The space keeps it for the city's own coordination; no public endpoint serves it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `refPointOfInterest` | Relationship | `string` |  |  | `sdm:refPointOfInterest` | The venue as the city's service register knows it: a Linked Events `tprek:` place is the Service Map unit of that number, written by the services pipeline. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -182,7 +188,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place of the city's service register a resident goes to: a library, a health station, a swimming hall, a beach or a school. The register's contact lines are left out, because they can name a person.
+One place of the city's service register a resident goes to: a library, a health station, a swimming hall, a beach, a school, or any other unit of the register (`other`). The register's contact lines are left out, because they can name a person.
 
 IRI: `sdm:PointOfInterest`
 
@@ -461,6 +467,33 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### ServiceRequest
+
+One report of the City of Helsinki's feedback system (Open311 GeoReport v2, the Issue Reporting API) that the city published. Smart Data Models names the type service_requests; the space names it ServiceRequest like its other types, with the model's attribute names. The reporter's name, e-mail, phone and photos are never read.
+
+IRI: `sdm:service_requests`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `service_request_id` | Property | `string` | yes |  | `sdm:service_request_id` | The number the city's feedback system gives the report (Open311 `service_request_id`). |
+| `status` | Property | [`ServiceRequestStatus`](#servicerequeststatus) | yes |  | `sdm:status` | open while the city handles the report (PROCESSING), closed once it has answered (READY). |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | The report as the reporter wrote it, in the language they wrote it in (`@none`). |
+| `service_code` | Property | `string` |  |  | `sdm:service_code` | The feedback system's code of the sector the report is filed under, for example 2809. |
+| `service_name` | Property | `string` |  |  | `sdm:service_name` | The sector's name in English, read from the feedback system's services list, for example City environment. |
+| `status_notes` | Property | `string` |  |  | `sdm:status_notes` | The city's answer or note on the report, as published. |
+| `agency_responsible` | Property | `string` |  |  | `sdm:agency_responsible` | The city unit handling the report, when the feedback system names one. |
+| `requested_datetime` | Property | `datetime` | yes |  | `sdm:requested_datetime` | When the report was filed, ISO 8601 in UTC. |
+| `updated_datetime` | Property | `datetime` |  |  | `sdm:updated_datetime` | When the report last changed, ISO 8601 in UTC. |
+| `expected_datetime` | Property | `datetime` |  |  | `sdm:expected_datetime` | When the city expects to have handled the report, if it says. |
+| `address_string` | Property | `string` |  |  | `sdm:address_string` | The street or place the reporter named, as written, for example Malminkatu. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### TrafficFlowObserved
 
 One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter station counted, or the motor vehicles and their mean speed at one of the city's induction loop (LAM) stations, from the city's traffic measurement API. The counter's name and place ride on the observation; the history of the days is the entity's temporal history.
@@ -523,6 +556,16 @@ IRI: `ngsi-ld:Entity`
 | `swimmingHall` | An indoor swimming hall. |
 | `beach` | A public beach. |
 | `school` | A comprehensive school. |
+| `other` | Any other unit of the service register, such as a youth centre, a playground or a city office. |
+
+### ServiceRequestStatus
+
+Open311's two report states, as Smart Data Models' service_requests names them.
+
+| Value | Meaning |
+|---|---|
+| `open` | The city is handling the report (the feedback system's PROCESSING). |
+| `closed` | The city has answered the report (READY). |
 
 ### StreetParkingCategory
 

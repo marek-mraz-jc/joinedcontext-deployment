@@ -201,10 +201,35 @@ def test_a_unit_writes_its_opening_hours_and_never_its_contact_person():
 
 
 @requires_docker
-def test_a_unit_of_no_service_this_space_keeps_is_not_written():
+def test_a_unit_of_any_other_service_is_written_as_other():
+    """T-5257: every unit of the register, so each Linked Events venue names a PointOfInterest."""
     recording = fixture("servicemap-units.json")
     recording["results"][0]["services"] = [9999]
-    assert len(run("services", recording)) == 4
+    written = run("services", recording)
+    assert len(written) == 5
+    other = next(e for e in written if e["id"].endswith(f"servicemap-{recording['results'][0]['id']}"))
+    assert other["serviceCategory"]["value"] == "other" and not schema_errors(other)
+
+
+@requires_docker
+def test_a_unit_point_outside_helsinki_is_left_out_and_a_twice_listed_unit_written_once():
+    recording = fixture("servicemap-units.json")
+    first, second = recording["results"][0], recording["results"][1]
+    first["location"] = {"type": "Point", "coordinates": [60.17, 24.94]}  # swapped
+    recording["results"].append(json.loads(json.dumps(second)))
+    written = {e["id"]: e for e in run("services", recording)}
+    assert len(written) == 5
+    assert "location" not in written[f"urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-{first['id']}"]
+
+
+@requires_docker
+def test_an_empty_register_fails_the_run_and_the_pages_after_the_first_are_asked_for():
+    steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-services-bento.yaml").read_text())["pipeline"]["processors"]
+    http = next(s for s in steps if "branch" in s)["branch"]["processors"][-1]["http"]
+    assert http["url"].startswith("https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&")
+    assert http["url"].endswith("&page=${! @page }")
+    # The thrown mapping error flags the message and nothing reaches the endpoint.
+    assert run("services", {"count": 0, "results": []}) == []
 
 
 @requires_docker
