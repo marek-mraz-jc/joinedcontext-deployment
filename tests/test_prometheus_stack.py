@@ -136,3 +136,11 @@ def test_the_api_token_is_mounted_only_with_a_reason(env):
         if spec.get("automountServiceAccountToken", True) and not name.endswith("node-exporter"):
             owner = next(d for d in env if d.get("kind") in ("Deployment", "DaemonSet") and d["metadata"]["name"] == name)
             assert (owner["spec"]["template"]["metadata"].get("annotations") or {}).get(reason), f"{name} mounts a token without a reason"
+
+
+def test_kube_state_metrics_lists_no_configmap_or_secret(env):
+    """It caches every object of a kind it lists; dev's seeds and Helm releases OOMKilled it (T-5434)."""
+    roles = [d for d in of_kind(env, "ClusterRole") if "kube-state-metrics" in d["metadata"]["name"]]
+    assert roles
+    resources = {r for role in roles for rule in role.get("rules", []) for r in rule.get("resources", [])}
+    assert not resources & {"configmaps", "secrets"}, resources
