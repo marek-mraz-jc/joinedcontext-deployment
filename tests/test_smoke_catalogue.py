@@ -773,3 +773,12 @@ def test_a_run_writes_the_filters_as_a_row_of_their_own(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "  FAIL  catalogue (catalogue) (-): inventory the Format filter offers no choice" in out
     assert "1 datasets, 1 complete, 0 ko, 0 public Endpoints without a dataset" in out
+
+
+def test_a_spent_budget_still_writes_the_filters_row(tmp_path, capsys):
+    # The rotating checks spend the budget; the filters run first, so a full budget never crashes the run.
+    packages = [package(f"d{i}", f"e{i}", "Thing") for i in range(5)]
+    answers = world(packages, [f"e{i}" for i in range(5)])
+    answers[FILTERS] = answer(body={"result": {"count": 5, "search_facets": {}}})
+    smoke.run(DOMAIN, "dev", tmp_path, Fake(answers).client(budget=12), "20261023T090000Z")
+    assert "catalogue (catalogue) (-): inventory the Format filter offers no choice" in capsys.readouterr().out

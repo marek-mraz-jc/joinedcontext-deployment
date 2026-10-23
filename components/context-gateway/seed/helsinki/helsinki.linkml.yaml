@@ -956,6 +956,219 @@ slots:
           de: Wasserqualitätsmessungen
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
+  thematic:
+    slot_uri: sdm:thematic
+    description: >-
+      The event's keywords from the register's YSO terms, in English where the term has an English
+      name and in Finnish otherwise (Smart Data Models Event `thematic`).
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kľúčové slová
+          cs: Klíčová slova
+          en: Keywords
+          de: Schlagwörter
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  isAccessibleForFree:
+    slot_uri: schema:isAccessibleForFree
+    description: True when every offer of the event is free of charge, as the register marks it.
+    range: boolean
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vstup zdarma
+          cs: Vstup zdarma
+          en: Free of charge
+          de: Eintritt frei
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/isAccessibleForFree
+  webSite:
+    slot_uri: sdm:webSite
+    description: The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish.
+    range: uri
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          en: Website
+          de: Webseite
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  superEvent:
+    slot_uri: sdm:superEvent
+    description: The recurring or umbrella event this event is one date or part of.
+    range: Event
+    inverse: subEvent
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Nadradené podujatie
+          cs: Nadřazená akce
+          en: Parent event
+          de: Übergeordnete Veranstaltung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  subEvent:
+    slot_uri: sdm:subEvent
+    description: The dates and parts of this event, computed from their superEvent and never stored.
+    range: Event
+    multivalued: true
+    inverse: superEvent
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Termíny a časti podujatia
+          cs: Termíny a části akce
+          en: Dates and parts of the event
+          de: Termine und Teile der Veranstaltung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  service_request_id:
+    slot_uri: sdm:service_request_id
+    description: The number the city's feedback system gives the report (Open311 `service_request_id`).
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo podnetu
+          cs: Číslo podnětu
+          en: Report number
+          de: Meldungsnummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  service_code:
+    slot_uri: sdm:service_code
+    description: The feedback system's code of the sector the report is filed under, for example 2809.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód oblasti
+          cs: Kód oblasti
+          en: Sector code
+          de: Bereichscode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  service_name:
+    slot_uri: sdm:service_name
+    description: The sector's name in English, read from the feedback system's services list, for example City environment.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Oblasť
+          cs: Oblast
+          en: Sector
+          de: Bereich
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  status_notes:
+    slot_uri: sdm:status_notes
+    description: The city's answer or note on the report, as published.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Odpoveď mesta
+          cs: Odpověď města
+          en: City reply
+          de: Antwort der Stadt
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  agency_responsible:
+    slot_uri: sdm:agency_responsible
+    description: The city unit handling the report, when the feedback system names one.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zodpovedný útvar
+          cs: Odpovědný útvar
+          en: Responsible unit
+          de: Zuständige Stelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  requested_datetime:
+    slot_uri: sdm:requested_datetime
+    description: When the report was filed, ISO 8601 in UTC.
+    range: datetime
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Podané
+          cs: Podáno
+          en: Filed at
+          de: Eingereicht am
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  updated_datetime:
+    slot_uri: sdm:updated_datetime
+    description: When the report last changed, ISO 8601 in UTC.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Naposledy zmenené
+          cs: Naposledy změněno
+          en: Last changed
+          de: Zuletzt geändert
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  expected_datetime:
+    slot_uri: sdm:expected_datetime
+    description: When the city expects to have handled the report, if it says.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Očakávané vybavenie
+          cs: Očekávané vyřízení
+          en: Expected resolution
+          de: Voraussichtliche Erledigung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  address_string:
+    slot_uri: sdm:address_string
+    description: The street or place the reporter named, as written, for example Malminkatu.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   publicAreaPermits:
     slot_uri: jc:publicAreaPermits
     description: The public-area permits that lie in this district, computed from their refDistrict and never stored.
@@ -1484,7 +1697,33 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
-    slots: [name, description, startDate, endDate, eventStatus, address, contactPoint, source]
+    slots:
+      - name
+      - description
+      - startDate
+      - endDate
+      - eventStatus
+      - address
+      - thematic
+      - isAccessibleForFree
+      - webSite
+      - superEvent
+      - subEvent
+      - contactPoint
+      - source
+    attributes:
+      # Its own slot, because the shared refPointOfInterest is already WaterQualityObserved's end of
+      # another relationship; the attribute name and IRI are Smart Data Models' all the same. No
+      # range: an event can name a unit the Service Map read does not hold (a venue outside
+      # Helsinki), so it is an external reference (DM-69), not a relationship the broker checks.
+      refPointOfInterest:
+        slot_uri: sdm:refPointOfInterest
+        description: >-
+          The venue as the city's service register knows it: a Linked Events `tprek:` place is the
+          Service Map unit of that number, written by the services pipeline.
+        annotations:
+          ngsi_ld_kind: Relationship
+          upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
     slot_usage:
       name:
         rank: 1
@@ -1952,7 +2191,7 @@ classes:
     class_uri: sdm:PointOfInterest
     description: >-
       One place of the city's service register a resident goes to: a library, a health station,
-      a swimming hall, a beach or a school. The register's contact lines are left out, because
+      a swimming hall, a beach, a school, or any other unit of the register (`other`). The register's contact lines are left out, because
       they can name a person.
     is_a: Entity
     annotations:
@@ -2132,6 +2371,37 @@ classes:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
     slots: [name, distanceTravelled, dataProvider, source]
 
+  ServiceRequest:
+    class_uri: sdm:service_requests
+    description: >-
+      One report of the City of Helsinki's feedback system (Open311 GeoReport v2, the Issue
+      Reporting API) that the city published. Smart Data Models names the type service_requests;
+      the space names it ServiceRequest like its other types, with the model's attribute names.
+      The reporter's name, e-mail, phone and photos are never read.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+    slots:
+      - service_request_id
+      - status
+      - description
+      - service_code
+      - service_name
+      - status_notes
+      - agency_responsible
+      - requested_datetime
+      - updated_datetime
+      - expected_datetime
+      - address_string
+      - source
+    slot_usage:
+      status:
+        range: ServiceRequestStatus
+        description: open while the city handles the report (PROCESSING), closed once it has answered (READY).
+        required: true
+      description:
+        description: The report as the reporter wrote it, in the language they wrote it in (`@none`).
+
   TrafficFlowObserved:
     class_uri: sdm:TrafficFlowObserved
     description: >-
@@ -2180,6 +2450,13 @@ enums:
       swimmingHall: { description: An indoor swimming hall. }
       beach: { description: A public beach. }
       school: { description: A comprehensive school. }
+      other:
+        description: Any other unit of the service register, such as a youth centre, a playground or a city office.
+  ServiceRequestStatus:
+    description: Open311's two report states, as Smart Data Models' service_requests names them.
+    permissible_values:
+      open: { description: The city is handling the report (the feedback system's PROCESSING). }
+      closed: { description: The city has answered the report (READY). }
   StreetParkingCategory:
     description: The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
     permissible_values:
