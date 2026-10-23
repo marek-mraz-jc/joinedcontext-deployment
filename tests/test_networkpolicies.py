@@ -186,6 +186,8 @@ def test_every_workload_under_an_egress_policy_can_still_resolve_dns(rendered, e
     for selector, rules in egress_rules_by_selector(rendered(env)).items():
         if not selector:
             continue  # the default-deny itself
+        if not rules:
+            continue  # a workload that calls nothing (node-exporter, T-5154): no DNS to keep
         resolves = any(
             peer.get("podSelector", {}).get("matchLabels", {}).get("k8s-app") == "kube-dns"
             and any(p["port"] == 53 for p in (rule.get("ports") or []))
@@ -638,7 +640,8 @@ def test_prometheus_is_admitted_to_the_scraped_workloads_from_its_own_namespace_
     assert ("postgres", (9187,)) in ports, ports  # the CloudNativePG exporter (T-5125)
 
 
-@pytest.mark.parametrize("env", ("local", "dev"))
+# dev deploys the prometheus component since T-5154 (tests/test_prometheus_stack.py holds its rules).
+@pytest.mark.parametrize("env", ("local",))
 def test_without_a_prometheus_namespace_no_rule_admits_prometheus(rendered, env):
     """An empty monitoring.prometheusNamespace renders no peer and no rule, never one that
     falls back to the policy's own namespace or to every namespace."""
