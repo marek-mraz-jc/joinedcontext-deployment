@@ -66,8 +66,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823), and the
     # steward's import of journey 41's test places (T-4867), and the steward's add and delete of
     # the data workspace journey's test alerts (T-5092), and the public read of air quality (T-5259),
-    # and the public reads of the cycle and traffic counts (T-5253).
-    assert len(policies) == 28
+    # the public reads of the cycle and traffic counts (T-5253)
+    # and the public read of the street cleaning air pilot (T-5255).
+    assert len(policies) == 29
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

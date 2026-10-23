@@ -39,7 +39,9 @@
 {{- $parts := splitList "/" $path }}
 {{- if and (eq (index $parts 0) "projects") (gt (len $parts) 2) }}
 {{- $project := index $parts 1 }}
-{{- $i := mod (atoi (adler32sum $path)) (index $layout.count $project | default 1) }}
+{{- /* The layout places each file it sized; a file it did not (demo feeds) goes by its path hash. */}}
+{{- $placed := index $layout.files $path | default 0 | int }}
+{{- $i := ternary (sub $placed 1) (mod (atoi (adler32sum $path)) (index $layout.count $project | default 1)) (gt $placed 0) }}
 {{- $part := ternary $project (printf "%s--%d" $project (add1 $i)) (eq $i 0) }}
 {{- if eq $shard (index $layout.parts $part | default 1 | int) }}
 {{- $name := printf "s%d-%s" $shard $part }}

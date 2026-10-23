@@ -7,6 +7,48 @@ pipeline:
     # where it can be seen rather than writing nothing.
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
+    # every further page of them is read (T-5288). One run holds every page, so a layer past
+    # 10000 rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    - branch:
+        request_map: |
+          root = if this.properties.exceededTransferLimit.or(false) { "" } else { deleted() }
+        processors:
+          - http:
+              url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer/0/query?where=1%3D1&returnCountOnly=true&f=json"
+              verb: GET
+              headers:
+                Accept: application/json
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.rowCount = this.count.or(this.error.message.or("no count"))
+    - mapping: |
+        let rows = this.rowCount.or(null)
+        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if $rows > 10000 { [{ "problem": "the layer holds %v rows, more than the 10000 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.offset.or(null) != null
+          processors:
+            - mapping: |
+                meta offset = this.offset
+                meta rows = this.rowCount
+                root = ""
+            - http:
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN4,NM4,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,LAU2,LAU2_CODE,Obec,Okres,K%C3%B3d_obce,K%C3%B3d_okresu,K%C3%B3d_kraja,Kraj,Trvalo_b%C3%BDvaj%C3%BAce_obyvate%C4%BEstvo_sp,R%C3%ADmskokatol%C3%ADcka_cirkev,Gr%C3%A9ckokatol%C3%ADcka_cirkev,Pravosl%C3%A1vna_cirkev,Evanjelick%C3%A1_cirkev_augsbursk%C3%A9ho,Reformovan%C3%A1_kres%C5%A5ansk%C3%A1_cirkev,N%C3%A1bo%C5%BEensk%C3%A1_spolo%C4%8Dnos%C5%A5_Jehovovi_,Evanjelick%C3%A1_cirkev_metodistick%C3%A1,Kres%C5%A5ansk%C3%A9_zbory,Apo%C5%A1tolsk%C3%A1_cirkev,Bratsk%C3%A1_jednota_baptistov,Cirkev_adventistov_siedmeho_d%C5%88a,Cirkev_bratsk%C3%A1,%C3%9Astredn%C3%BD_zv%C3%A4z_%C5%BEidovsk%C3%BDch_n%C3%A1bo%C5%BEe,Starokatol%C3%ADcka_cirkev,Cirkev_%C4%8Deskoslovensk%C3%A1_husitsk%C3%A1,Novoapo%C5%A1tolsk%C3%A1_cirkev,Bah%C3%A1jske_spolo%C4%8Denstvo,Cirkev_Je%C5%BEi%C5%A1a_Krista_sv%C3%A4t%C3%BDch_ne,in%C3%A9,bez_vyznania,nezisten%C3%A9&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else if this.features.or(null) == null { { "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) } } else if this.features.length() < [1000, @rows - @offset].min() { { "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [1000, @rows - @offset].min()) } } else { this }
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null { throw(this.problem) } else { this }
     - mapping: |
         root = this.features.or([])
     - unarchive:
