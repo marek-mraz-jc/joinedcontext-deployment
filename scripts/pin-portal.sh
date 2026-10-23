@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Pin the portal and both app-builder images to one portal commit (T-2633, AP-82, AP-106).
+# Pin the portal, its UI bundle and both app-builder images to one portal commit (T-2633, AP-82,
+# AP-106, T-5297).
 #
 # usage: scripts/pin-portal.sh <portal commit, 40 hex>
 #
@@ -40,16 +41,21 @@ docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" 
 docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" /usr/local/bin/build-app >"$work/build-app"
 python3 scripts/check-builder-contract.py "$work/lane.mjs" "$work/build-app" components/gitea/apps/*/.gitea/workflows/build.yml
 
+# The UI bundle of the same files (T-5297): this commit's, or the pinned one when ui/ and sdk/ did
+# not change since.
+read -r ui_commit ui < <(scripts/portal-ui-pin.sh "$commit") || true
+[[ "$ui_commit" =~ ^[0-9a-f]{40}$ && "$ui" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "no portal-ui bundle matches $commit" >&2; exit 1; }
+
 # The docs commit the image's /docs pages are, beside the digest (T-4483).
 docs=$(curl -fsSL "https://raw.githubusercontent.com/marek-mraz-jc/joinedcontext-portal/$commit/public-docs/COMMIT")
 [[ "$docs" =~ ^[0-9a-f]{40}$ ]] || { echo "portal $commit names no docs commit in public-docs/COMMIT" >&2; exit 1; }
 
 short=${commit:0:7}
-python3 - "$short" "$portal" "$builder" "$rust" "$commit" "$docs" <<'EOF'
+python3 - "$short" "$portal" "$builder" "$rust" "$commit" "$docs" "$ui" "$ui_commit" <<'EOF'
 import re
 import sys
 
-short, portal, builder, rust, commit, docs = sys.argv[1:]
+short, portal, builder, rust, commit, docs, ui, ui_commit = sys.argv[1:]
 
 def pin(path, pins):
     text = open(path).read()
@@ -61,12 +67,15 @@ def pin(path, pins):
             sys.exit(f"{path}: no single pin for {repository}")
     open(path, "w").write(text)
 
-pin("components/portal/images.yaml", [("joinedcontext-portal", portal)])
+pin("components/portal/images.yaml", [("joinedcontext-portal", portal), ("joinedcontext-portal-ui", ui)])
 text = open("components/portal/images.yaml").read()
 for key, value in (("commit", commit), ("docs", docs)):
     text, n = re.subn(rf"(\n    {key}: )'[0-9a-f]{{40}}'", rf"\g<1>'{value}'", text, count=1)
     if n != 1:
         sys.exit(f"components/portal/images.yaml: no {key} pin")
+text, n = re.subn(r"(\n  ui:\n(?:    .*\n)*?    commit: )'[0-9a-f]{40}'", rf"\g<1>'{ui_commit}'", text)
+if n != 1:
+    sys.exit("components/portal/images.yaml: no ui commit pin")
 open("components/portal/images.yaml", "w").write(text)
 before = open("components/gitea-runner/images.yaml").read()
 pin("components/gitea-runner/images.yaml",
@@ -76,5 +85,5 @@ text = open("components/gitea-runner/images.yaml").read()
 if text != before:
     open("components/gitea-runner/images.yaml", "w").write(re.sub(r"Pinned to portal [0-9a-f]{7}", f"Pinned to portal {short}", text))
 EOF
-echo "pinned portal $short: portal $portal, docs ${docs:0:7}, builder $builder, rust $rust"
+echo "pinned portal $short: portal $portal, ui ${ui_commit:0:7} $ui, docs ${docs:0:7}, builder $builder, rust $rust"
 scripts/check-docs-pin.sh
