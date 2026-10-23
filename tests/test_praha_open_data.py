@@ -370,6 +370,9 @@ PARTS = {
     "praha-ovzdusi": "CC_BY_4_0", "praha-sdilena-kola": "CC0", "praha-parkoviste-pr": "CC_BY_4_0",
     "praha-trideny-odpad": "CC_BY_4_0", "praha-rozpocet": "CC0", "praha-mista": "CC_BY_4_0",
     "praha-mestske-casti": "CC_BY_4_0",
+    # Golemio's terms allow republishing but grant no sublicence: no licence of our own is claimed
+    # (owner 2026-10-22T18:40Z, T-5268).
+    "praha-vozidla-pid": None,
 }
 
 
@@ -385,7 +388,7 @@ def test_the_space_is_public_and_published_one_model_per_dataset_with_its_source
     # The whole space stays one Endpoint for the Apps, off the catalogue (T-4344).
     assert "publish" not in endpoint["spec"]
     parts = _parts()
-    assert {n: d["spec"]["catalog"]["license"] for n, d in parts.items()} == PARTS
+    assert {n: d["spec"]["catalog"].get("license") for n, d in parts.items()} == PARTS
     for name, part in parts.items():
         assert part["spec"]["audience"] == "public", name
         assert part["spec"]["publish"]["ckan"]["instanceRef"]["name"] == "praha", name
