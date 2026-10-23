@@ -17,7 +17,7 @@ const vendor = path.join(here, "../../../images/viz/vendor");
 const DOMAIN = "dev.joinedcontext.com";
 const VIZ = `viz.${DOMAIN}`;
 const SLUG = "3iasem46w7d7pxxypwdfdzheyaodv3qn";
-const OURS = new Set([VIZ, `api.${DOMAIN}`, `data.${DOMAIN}`, `tiles.${DOMAIN}`, `assistant.${DOMAIN}`]);
+const OURS = new Set([VIZ, `api.${DOMAIN}`, `opendata.${DOMAIN}`, `tiles.${DOMAIN}`, `assistant.${DOMAIN}`]);
 
 // The CSP of each page, read from nginx.conf as the chart renders it.
 const conf = readFileSync(path.join(chart, "files/nginx.conf"), "utf8").replaceAll("__HOST__", VIZ).replaceAll("__DOMAIN__", DOMAIN);
@@ -83,6 +83,9 @@ const SPECS = {
       }
     ]
   }],
+  // A type whose history the Endpoint's Policy does not open: its temporal read answers 404 (T-5421).
+  closed: [{ ...temporal, type: "Vehicle" }, { $schema: VL, data: { name: "source" }, mark: "line",
+    encoding: { x: { field: "observedAt", type: "temporal" }, y: { field: "temperature", type: "quantitative" } } }],
   dataUrl: [odata, { $schema: VL, data: { url: "https://evil.example/rows.csv" }, mark: "bar" }],
   javascriptHref: [odata, { $schema: VL, data: { name: "source" }, mark: "bar", encoding: { href: { value: "javascript:alert(1)" } } }],
   windowExpr: [odata, { $schema: VL, data: { name: "source" }, transform: [{ calculate: "window.location.href", as: "x" }], mark: "bar" }]
@@ -121,11 +124,11 @@ export async function serve(context, { trustless = false } = {}) {
         return route.fulfill({ status: 404, body: "" });
       }
     }
-    if (url.hostname === `data.${DOMAIN}` && url.pathname === "/api/3/action/resource_view_show") {
+    if (url.hostname === `opendata.${DOMAIN}` && url.pathname === "/api/3/action/resource_view_show") {
       const key = Object.keys(ids).find((k) => ids[k] === url.searchParams.get("id"));
       return key ? json({ success: true, result: view(key) }) : route.fulfill({ status: 404, body: "{}" });
     }
-    if (url.hostname === `data.${DOMAIN}`) {
+    if (url.hostname === `opendata.${DOMAIN}`) {
       // The catalogue's dataset page, as jc/visualization.html renders it.
       const key = url.pathname.split("/").pop();
       return route.fulfill({
@@ -158,6 +161,9 @@ export async function serve(context, { trustless = false } = {}) {
     }
     if (url.hostname === `api.${DOMAIN}`) {
       const base = `/api/endpoint/${SLUG}/`;
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "Vehicle") {
+        return route.fulfill({ status: 404, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` }, body: "{}" });
+      }
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
       if (url.pathname === `${base}ngsi-ld/v1/entities`) return json(NAMES);
       if (url.pathname === `${base}odata/v4/WeatherObserved`) return json(ODATA);
@@ -174,7 +180,7 @@ const MAP_SPEC = {
   popup: [{ field: "no2", label: "NO₂", unit: "µg/m³" }, { field: "pm10", label: "PM10", unit: "µg/m³" }],
   data: { type: "FeatureCollection", features: [{ type: "Feature", geometry: { type: "Point", coordinates: [19.1462, 48.7363] },
     properties: { name: "SK0214A <img src=x onerror=alert(1)>", no2: 14.2, pm10: 21.5, observedAt: "2026-10-18T15:00:00Z" } }] },
-  link: `https://data.${DOMAIN}/dataset/ovzdusie`
+  link: `https://opendata.${DOMAIN}/dataset/ovzdusie`
 };
 const SHOWN = {
   map: { type: "jc-viz-show", spec: MAP_SPEC, lang: "sk" },
@@ -193,7 +199,7 @@ for (const key of ["line", "bar", "brush"]) {
     const errors = [];
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     const requests = await serve(context);
-    await page.goto(`https://data.${DOMAIN}/dataset/${key}`);
+    await page.goto(`https://opendata.${DOMAIN}/dataset/${key}`);
     await expect(renderer(page).locator("svg .mark-symbol, svg .mark-line, svg .mark-rect").first()).toBeAttached({ timeout: 15000 });
     expect(foreign(requests)).toEqual([]);
     expect(errors).toEqual([]);
@@ -220,7 +226,7 @@ for (const key of ["line", "bar", "brush"]) {
 
 test("the renderer frame reads no cookie and calls no host", async ({ page, context }) => {
   await serve(context);
-  await page.goto(`https://data.${DOMAIN}/dataset/line`);
+  await page.goto(`https://opendata.${DOMAIN}/dataset/line`);
   const frame = page.frames().find((f) => f.url().endsWith("/render.html")) ||
     (await expect.poll(() => page.frames().some((f) => f.url().endsWith("/render.html"))).toBe(true), page.frames().find((f) => f.url().endsWith("/render.html")));
   expect(await frame.evaluate(() => origin)).toBe("null");
@@ -228,10 +234,17 @@ test("the renderer frame reads no cookie and calls no host", async ({ page, cont
   expect(await frame.evaluate(() => fetch(`https://api.${location.hostname.slice(4)}/`).then(() => "fetched", () => "refused"))).toBe("refused");
 });
 
+test("closed: a refused read tells the reader in Slovak and keeps the status (T-5421)", async ({ page, context }) => {
+  await serve(context);
+  await page.goto(`https://opendata.${DOMAIN}/dataset/closed`);
+  await expect(host(page).locator("#status")).toHaveText("Údaje tohto grafu teraz nie sú dostupné. (HTTP 404)", { timeout: 15000 });
+  await expect(renderer(page).locator("svg")).toHaveCount(0);
+});
+
 for (const key of ["dataUrl", "javascriptHref", "windowExpr"]) {
   test(`${key}: refused, drawn as a message, no outside request`, async ({ page, context }) => {
     const requests = await serve(context);
-    await page.goto(`https://data.${DOMAIN}/dataset/${key}`);
+    await page.goto(`https://opendata.${DOMAIN}/dataset/${key}`);
     await expect(host(page).locator("#status")).toBeVisible({ timeout: 15000 });
     await expect(host(page).locator("#status")).toContainText(/refused|window/i);
     expect(foreign(requests)).toEqual([]);
@@ -240,7 +253,7 @@ for (const key of ["dataUrl", "javascriptHref", "windowExpr"]) {
 
   test(`${key}: with the refusal list off, the renderer still draws nothing from elsewhere`, async ({ page, context }) => {
     const requests = await serve(context, { trustless: true });
-    await page.goto(`https://data.${DOMAIN}/dataset/${key}`);
+    await page.goto(`https://opendata.${DOMAIN}/dataset/${key}`);
     await page.waitForTimeout(3000);
     expect(foreign(requests)).toEqual([]);
     // No navigation to a javascript: URL and no alert from it.
@@ -271,7 +284,7 @@ test("show: a map spec draws on our basemap, and a click opens the popup as text
   await expect(pop).toBeVisible();
   await expect(pop.locator("strong")).toHaveText("SK0214A <img src=x onerror=alert(1)>");
   await expect(pop.locator("dd").nth(1)).toHaveText("21,5 µg/m³");
-  await expect(pop.locator("a")).toHaveAttribute("href", `https://data.${DOMAIN}/dataset/ovzdusie`);
+  await expect(pop.locator("a")).toHaveAttribute("href", `https://opendata.${DOMAIN}/dataset/ovzdusie`);
   expect(await pop.locator("img").count()).toBe(0);
   expect(dialog).toBe(false);
   // Enter on the map opens the same popup from the keyboard.
