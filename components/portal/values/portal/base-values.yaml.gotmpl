@@ -175,6 +175,11 @@ envSecret:
 # Kubernetes expands $(VAR) references in container env definitions when the referenced variable appears earlier in the list.
 env:
   JC_PORTAL_BIND: "0.0.0.0:8080"
+  {{- if dig "portal" "ui" "enabled" false .Values }}
+  # Every page and asset is read from the `portal-ui` bundle (T-2485, T-5297); GET /api/v1/version
+  # says whether it was built against this binary's API.
+  JC_PORTAL_UI_URL: "http://portal-ui:8080"
+  {{- end }}
   # How often the reconciler runs without a push (whole seconds). A merge still syncs at once
   # through the forge's webhook. Each run republishes the open-data catalogue through the
   # public edge, so a short period on a large catalogue is a bot of our own (T-4717).

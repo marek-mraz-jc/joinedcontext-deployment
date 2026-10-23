@@ -22,6 +22,7 @@ apiextensions.k8s.io/v1/CustomResourceDefinition -/subscriptions.postgresql.cnpg
 apps/v1/Deployment minimal/apisix
 apps/v1/Deployment minimal/context-broker
 apps/v1/Deployment minimal/portal
+apps/v1/Deployment minimal/portal-ui
 apps/v1/Deployment minimal/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet minimal/keycloak-app-keycloakx
 batch/v1/CronJob minimal/postgres-cluster-dr-drill
@@ -78,6 +79,9 @@ networking.k8s.io/v1/NetworkPolicy minimal/mail-catcher
 networking.k8s.io/v1/NetworkPolicy minimal/portal
 networking.k8s.io/v1/NetworkPolicy minimal/portal-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/portal-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy minimal/portal-ui
+networking.k8s.io/v1/NetworkPolicy minimal/portal-ui-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy minimal/portal-ui-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy minimal/postgres
 networking.k8s.io/v1/NetworkPolicy minimal/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/postgres-drill
@@ -92,10 +96,13 @@ networking.k8s.io/v1/NetworkPolicy minimal/postgres-operator-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/postgres-operator-webhook
 networking.k8s.io/v1/NetworkPolicy minimal/role-setup-linkerd
 policy.linkerd.io/v1alpha1/AuthorizationPolicy minimal/context-broker-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy minimal/portal-ui-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication minimal/context-broker-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication minimal/portal-ui-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server minimal/context-broker-api
+policy.linkerd.io/v1beta3/Server minimal/portal-ui-api
 postgresql.cnpg.io/v1/Cluster minimal/postgres-cluster
 postgresql.cnpg.io/v1/Database minimal/antares
 postgresql.cnpg.io/v1/Database minimal/keycloak
@@ -162,11 +169,13 @@ v1/Service minimal/keycloak-app-keycloakx-headless
 v1/Service minimal/keycloak-app-keycloakx-http
 v1/Service minimal/portal
 v1/Service minimal/portal-pods
+v1/Service minimal/portal-ui
 v1/ServiceAccount minimal/apisix
 v1/ServiceAccount minimal/context-broker
 v1/ServiceAccount minimal/jc-drift-reader
 v1/ServiceAccount minimal/keycloak-app-keycloakx
 v1/ServiceAccount minimal/portal
 v1/ServiceAccount minimal/portal-reconciler
+v1/ServiceAccount minimal/portal-ui
 v1/ServiceAccount minimal/postgres-cluster-dr-drill
 v1/ServiceAccount minimal/postgres-operator-cloudnative-pg

@@ -116,6 +116,43 @@ for (const width of [1440, 400]) {
   });
 }
 
+// T-5134: in the row's card the organizer reads as its name linked to its web site (new tab, no opener), and
+// as plain text when it names none. The table cell's link is the Portal SDK grid's (sdk/tests/grid_cells), which
+// reaches this page with the next explorer bundle built from a Portal commit that holds it.
+for (const width of [1440, 400]) {
+  test(`events ${width}: the card links the organizer to its web site, or names it when it has none`, async ({ page, context }) => {
+    await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/events?lang=sk`);
+    const f = frame(page);
+    await expect(f.getByRole("grid").locator("tbody tr")).toHaveCount(20);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-table.png`), fullPage: true });
+    // Podujatie 4 (i = 3) names the organizer's web site, Podujatie 2 (i = 1) does not (explore-hosts.mjs).
+    const open = f.getByRole("button", { name: /^Otvoriť: Podujatie 4$/ });
+    await open.scrollIntoViewIfNeeded();
+    await open.click();
+    const dialog = f.locator("dialog[open]");
+    await expect(dialog).toBeVisible();
+    const link = dialog.getByRole("link", { name: "Mestské kultúrne stredisko" });
+    await expect(link).toHaveAttribute("href", "https://www.mksbb.sk/");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(dialog.getByText(/name: |url: /)).toHaveCount(0);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-card.png`) });
+    await page.keyboard.press("Escape");
+    await expect(f.locator("dialog[open]")).toHaveCount(0);
+    const plain = f.getByRole("button", { name: /^Otvoriť: Podujatie 2$/ });
+    await plain.scrollIntoViewIfNeeded();
+    await plain.click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("Mestské kultúrne stredisko", { exact: true })).toBeVisible();
+    await expect(dialog.getByRole("link", { name: "Mestské kultúrne stredisko" })).toHaveCount(0);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(shots, `organizer-${width}-card-no-url.png`) });
+  });
+}
+
 // T-5196, DM-134: a model's default filter opens as filled inputs the reader can clear, with its page
 // length and a numbered pager; nothing in the widget names the type.
 for (const width of [1440, 400]) {

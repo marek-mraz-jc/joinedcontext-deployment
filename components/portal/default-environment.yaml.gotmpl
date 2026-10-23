@@ -42,6 +42,11 @@ portal:
     #   volumes: [{ name: postgres, gigabytes: 300, monthlyPerGigabyte: 0.044 }]
     #   fixed: [{ name: primary IPv4, monthly: 0.50 }]
     costPrices: {}
+  # The `portal-ui` bundle (T-2485, T-5297): the Portal reads every page and asset from it through
+  # JC_PORTAL_UI_URL. Off means the Portal serves the copy its binary embeds, as long as it has one.
+  ui:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}
   # Mailpit, where App mail lands on an installation whose relay is not named yet (T-3583): the
   # Portal sends to it in the clear inside the namespace, it keeps the messages in memory and
   # reaches nothing. Off here; an environment turns it on, or names a relay instead in the Secret
