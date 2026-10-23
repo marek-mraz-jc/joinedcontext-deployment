@@ -553,18 +553,13 @@ def test_a_catalogue_table_reads_its_records_as_addresses():
     assert valid("banskabystrica", entities)
 
 
-def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None],
-            count: int | None = None) -> subprocess.CompletedProcess:
+def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None]) -> subprocess.CompletedProcess:
     """The mapping over `document`, its further pages answered on this machine by `resultOffset`:
-    `pages[offset]` is the answer, None a 500, and an offset it does not name an empty page. The
-    layer's row count answers `count`, a 500 when None."""
+    `pages[offset]` is the answer, None a 500, and an offset it does not name an empty page."""
     class Layer(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
-            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-            if query.get("returnCountOnly") == ["true"]:
-                body = None if count is None else json.dumps({"count": count}).encode()
-            else:
-                body = pages.get(int(query["resultOffset"][0]), b'{"type": "FeatureCollection", "features": []}')
+            offset = int(urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)["resultOffset"][0])
+            body = pages.get(offset, b'{"type": "FeatureCollection", "features": []}')
             self.send_response(500 if body is None else 200)
             self.end_headers()
             self.wfile.write(body or b"")
@@ -604,59 +599,17 @@ def written(result: subprocess.CompletedProcess) -> list[dict]:
     return out
 
 
-def supplier_pages(rows: int) -> list[dict]:
-    """`rows` suppliers of the dodavatelia layer, each its own IČO, as the pages ArcGIS answers:
-    every page but the last says the layer holds more."""
-    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
-    row = page0["features"][0]
-    features = [{**row, "properties": {**row["properties"], "ICO": f"{50000000 + i}"}} for i in range(rows)]
-    chunks = [features[o:o + generate.PAGE] for o in range(0, rows, generate.PAGE)]
-    return [{**page0, "features": c, **({"properties": {"exceededTransferLimit": True}} if i < len(chunks) - 1 else {})}
-            for i, c in enumerate(chunks)]
-
-
-def as_pages(pages: list[dict]) -> dict[int, bytes]:
-    return {i * generate.PAGE: json.dumps(p).encode() for i, p in enumerate(pages) if i}
-
-
 @requires_docker
-def test_a_layer_over_one_page_is_read_page_by_page_until_its_count_with_its_filter():
-    pages = supplier_pages(2 * generate.PAGE + 500)
-    entities = written(offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(), as_pages(pages), count=2500))
-    assert len({e["id"] for e in entities}) == 2500, "page 0, page 1000 and the 500 rows of page 2000"
-    assert valid("bbsk", entities[:3])
-    # Without the flag the layer said it was whole: neither its count nor a further page is asked for.
+def test_a_layer_over_one_page_is_read_page_by_page_with_its_filter():
     page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
-    assert len(written(offline("bbsk", "dodavatelia", json.dumps(page0).encode(), {1000: None}, count=None))) == 3
-
-
-@requires_docker
-def test_a_layer_past_its_cap_or_short_of_its_pages_fails_the_run_with_the_count():
-    e = next(x for x in SEEDED if x["name"] == "bbsk-dodavatelia-825cd0")
-    cap = generate.esri_cap(e["source"])
-    pages = supplier_pages(2 * generate.PAGE + 500)
-    first = json.dumps(pages[0]).encode()
-    over = offline("bbsk", "dodavatelia", first, as_pages(pages), count=cap + 1)
-    assert f"the layer holds {cap + 1} rows, more than the {cap} one run reads".encode() in over.stdout + over.stderr
-    assert over.stdout.strip() == b"", "nothing of a layer over its cap is written"
-    # A server answering fewer rows a page than asked would skip the rest of each page.
-    short = offline("bbsk", "dodavatelia", first, {**as_pages(pages), 1000: json.dumps(pages[2]).encode()}, count=2500)
-    assert b"the page at 1000 answered 500 rows where 1000 were due" in short.stdout + short.stderr
-    small = offline("bbsk", "dodavatelia", json.dumps({**pages[2], "properties": {"exceededTransferLimit": True}}).encode(), {}, count=2500)
-    assert b"the layer answered 500 rows where 1000 were asked" in small.stdout + small.stderr
-    uncounted = offline("bbsk", "dodavatelia", first, as_pages(pages), count=None)
-    assert b"the layer did not say how many rows it holds" in uncounted.stdout + uncounted.stderr
-
-
-def test_every_esri_layer_counts_its_rows_with_its_filter_and_caps_a_run():
-    layers = [x for x in SEEDED if x["source"]["kind"] == "esri-featureserver"]
-    assert layers
-    for e in layers:
-        slug, project = SLUGS[e["name"]], e["org"]
-        bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
-        assert "range(1, 5)" not in bento and "returnCountOnly=true" in bento, e["name"]
-        assert f"$rows > {generate.esri_cap(e['source'])}" in bento, e["name"]
-        assert generate.esri_cap(e["source"]) >= 2 * e["source"]["rows"]
+    rows = page0["features"]
+    first = {**page0, "features": rows[:2], "properties": {"exceededTransferLimit": True}}
+    second = json.dumps({**page0, "features": rows[2:]}).encode()
+    entities = written(offline("bbsk", "dodavatelia", json.dumps(first).encode(), {1000: second}))
+    assert len({e["id"] for e in entities}) == 3, "both rows of page 0 and the row of page 1000"
+    assert valid("bbsk", entities)
+    # Without the flag the layer said it was whole: nothing else is asked for.
+    assert len(written(offline("bbsk", "dodavatelia", json.dumps({**page0, "features": rows[:2]}).encode(), {1000: None}))) == 2
 
 
 @requires_docker
@@ -664,12 +617,9 @@ def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_show
     assert written(offline("bbsk", "dodavatelia", b'{"type": "FeatureCollection", "features": []}', {})) == []
     error = offline("bbsk", "dodavatelia", b'{"error": {"code": 400, "message": "Invalid query"}}', {})
     assert b"the layer answered no features: Invalid query" in error.stdout + error.stderr
-    pages = supplier_pages(2 * generate.PAGE + 500)
-    missing = offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(), {**as_pages(pages), 2000: None}, count=2500)
+    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
+    missing = offline("bbsk", "dodavatelia", json.dumps({**page0, "properties": {"exceededTransferLimit": True}}).encode(), {2000: None})
     assert b"the page at 2000 did not come" in missing.stdout + missing.stderr
-    refused = offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(),
-                      {**as_pages(pages), 1000: b'{"error": {"code": 498, "message": "Invalid token"}}'}, count=2500)
-    assert b"the page at 1000 answered no features: Invalid token" in refused.stdout + refused.stderr
     table = offline("banskabystrica", "adresy", b'{"success": false}', {})
     assert b"the catalogue answered no table" in table.stdout + table.stderr
 
@@ -1043,8 +993,8 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5268 PID vehicles and T-5276 Golemio city services in praha.
-        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 1 + 2 + 1, "praha": 8 + 1, "slovensko": 3 + 45, "zilina": 5 + 4}
+        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5255 the Helsinki street cleaning air pilot; T-5258 the five Helsinki statistics themes; T-5259 Helsinki air quality; T-5278 the heat vulnerability index and the service property energy use; T-5253 Helsinki's cycle and traffic counts; T-5268 PID vehicles and T-5276 Golemio city services in praha.
+        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 9 + 2, "praha": 8 + 1, "slovensko": 3 + 45, "zilina": 5 + 4}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

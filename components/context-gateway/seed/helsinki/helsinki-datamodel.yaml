@@ -29,6 +29,7 @@ spec:
     - GtfsRoute
     - GtfsShape
     - OffStreetParking
+    - KeyPerformanceIndicator
     - TrafficFlowObserved
   artifacts:
     jsonSchema: ./helsinki.v1.schema.json
