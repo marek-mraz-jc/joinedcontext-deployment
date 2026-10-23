@@ -837,8 +837,10 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
     now = now or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     previous, previous_at = previous_table(out, env)
     datasets, public = inventory(client, domain)
+    # Before the rotating checks: they spend the request budget, and the filters run every time.
+    catalogue = filters(client, domain)
     rows = Run(client, domain, previous, previous_at, now).table(datasets, public)
-    rows.append({"dataset": "(catalogue)", "endpoint": "-", "inventory": filters(client, domain),
+    rows.append({"dataset": "(catalogue)", "endpoint": "-", "inventory": catalogue,
                  **{c: "-" for c in COLUMNS[1:]}})
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"smoke-catalogue-{env}-{now}.tsv"
