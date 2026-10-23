@@ -38,6 +38,7 @@ apps/v1/Deployment smartcity/model-tools
 apps/v1/Deployment smartcity/pipeline-runner
 apps/v1/Deployment smartcity/pipeline-tokens
 apps/v1/Deployment smartcity/portal
+apps/v1/Deployment smartcity/portal-ui
 apps/v1/Deployment smartcity/postgres-operator-cloudnative-pg
 apps/v1/Deployment smartcity/probe
 apps/v1/Deployment smartcity/prometheus-operator
@@ -297,6 +298,9 @@ networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-functions
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-to-mqtt-brokers-linkerd
+networking.k8s.io/v1/NetworkPolicy smartcity/portal-ui
+networking.k8s.io/v1/NetworkPolicy smartcity/portal-ui-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy smartcity/portal-ui-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-drill
@@ -344,12 +348,14 @@ policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/jc-wasm-host-0-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/jc-wasm-host-1-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/pipeline-runner-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/pipeline-tokens-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/portal-ui-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy smartcity/wasm-host-tokens-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/context-broker-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/jc-wasm-host-0-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/jc-wasm-host-1-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/pipeline-runner-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/pipeline-tokens-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/portal-ui-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication smartcity/wasm-host-tokens-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
@@ -358,6 +364,7 @@ policy.linkerd.io/v1beta3/Server smartcity/jc-wasm-host-0-api
 policy.linkerd.io/v1beta3/Server smartcity/jc-wasm-host-1-api
 policy.linkerd.io/v1beta3/Server smartcity/pipeline-runner-api
 policy.linkerd.io/v1beta3/Server smartcity/pipeline-tokens-api
+policy.linkerd.io/v1beta3/Server smartcity/portal-ui-api
 policy.linkerd.io/v1beta3/Server smartcity/wasm-host-tokens-api
 postgresql.cnpg.io/v1/Cluster smartcity/apps-db
 postgresql.cnpg.io/v1/Cluster smartcity/postgres-cluster
@@ -451,7 +458,7 @@ v1/ConfigMap smartcity/gitea-sample-apps-transit-reach
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap smartcity/gitea-seed-s1-banskabystrica--3
-v1/ConfigMap smartcity/gitea-seed-s1-slovensko--20
+v1/ConfigMap smartcity/gitea-seed-s1-slovensko--19
 v1/ConfigMap smartcity/gitea-seed-s1-slovensko--24
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--2
@@ -465,11 +472,11 @@ v1/ConfigMap smartcity/gitea-seed-s2-barcelona
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--13
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--14
 v1/ConfigMap smartcity/gitea-seed-s2-slovensko--15
-v1/ConfigMap smartcity/gitea-seed-s2-slovensko--16
+v1/ConfigMap smartcity/gitea-seed-s2-slovensko--22
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--2
 v1/ConfigMap smartcity/gitea-seed-s3-bbsk--3
-v1/ConfigMap smartcity/gitea-seed-s3-slovensko--21
+v1/ConfigMap smartcity/gitea-seed-s3-slovensko--20
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--4
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--5
 v1/ConfigMap smartcity/gitea-seed-s4-bbsk--6
@@ -486,7 +493,7 @@ v1/ConfigMap smartcity/gitea-seed-s6-bbsk--14
 v1/ConfigMap smartcity/gitea-seed-s6-bbsk--15
 v1/ConfigMap smartcity/gitea-seed-s6-slovensko--26
 v1/ConfigMap smartcity/gitea-seed-s7-helsinki
-v1/ConfigMap smartcity/gitea-seed-s7-slovensko--19
+v1/ConfigMap smartcity/gitea-seed-s7-slovensko--18
 v1/ConfigMap smartcity/gitea-seed-s7-slovensko--23
 v1/ConfigMap smartcity/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap smartcity/gitea-seed-s8-slovensko--10
@@ -494,9 +501,9 @@ v1/ConfigMap smartcity/gitea-seed-s8-slovensko--11
 v1/ConfigMap smartcity/gitea-seed-s8-slovensko--12
 v1/ConfigMap smartcity/gitea-seed-s8-slovensko--9
 v1/ConfigMap smartcity/gitea-seed-s9-praha
+v1/ConfigMap smartcity/gitea-seed-s9-slovensko--16
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--17
-v1/ConfigMap smartcity/gitea-seed-s9-slovensko--18
-v1/ConfigMap smartcity/gitea-seed-s9-slovensko--22
+v1/ConfigMap smartcity/gitea-seed-s9-slovensko--21
 v1/ConfigMap smartcity/keycloak-admin-permissions
 v1/ConfigMap smartcity/keycloak-theme
 v1/ConfigMap smartcity/pipeline-runner-helsinki-streams
@@ -544,6 +551,7 @@ v1/Secret smartcity/gitea-inline-config
 v1/Secret smartcity/keycloak-admin-user
 v1/Secret smartcity/keycloak-client-apisix-gateway
 v1/Secret smartcity/keycloak-client-banskabystrica-pipelines
+v1/Secret smartcity/keycloak-client-barcelona-pipelines
 v1/Secret smartcity/keycloak-client-bbsk-pipelines
 v1/Secret smartcity/keycloak-client-ckan
 v1/Secret smartcity/keycloak-client-edge
@@ -584,6 +592,7 @@ v1/Service smartcity/pipeline-runner-pods
 v1/Service smartcity/pipeline-tokens
 v1/Service smartcity/portal
 v1/Service smartcity/portal-pods
+v1/Service smartcity/portal-ui
 v1/Service smartcity/probe
 v1/Service smartcity/prometheus-alertmanager
 v1/Service smartcity/prometheus-operator
@@ -614,6 +623,7 @@ v1/ServiceAccount smartcity/pipeline-runner
 v1/ServiceAccount smartcity/pipeline-tokens
 v1/ServiceAccount smartcity/portal
 v1/ServiceAccount smartcity/portal-reconciler
+v1/ServiceAccount smartcity/portal-ui
 v1/ServiceAccount smartcity/postgres-cluster-dr-drill
 v1/ServiceAccount smartcity/postgres-operator-cloudnative-pg
 v1/ServiceAccount smartcity/probe
