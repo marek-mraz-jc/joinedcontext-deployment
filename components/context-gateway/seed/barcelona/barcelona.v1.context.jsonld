@@ -13,11 +13,17 @@
     "Event": {
       "@id": "sdm:Event"
     },
+    "PhreaticObserved": {
+      "@id": "sdm:PhreaticObserved"
+    },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
     },
     "address": {
       "@id": "schema:address"
@@ -28,11 +34,36 @@
     "addressLocality": {
       "@id": "schema:addressLocality"
     },
+    "altitude": {
+      "@id": "jc:altitude",
+      "@type": "xsd:float"
+    },
+    "aquifer": {
+      "@id": "jc:aquifer"
+    },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
+    "atmosphericPressure": {
+      "@id": "sdm:atmosphericPressure",
+      "@type": "xsd:float"
+    },
+    "blackCarbon": {
+      "@id": "jc:blackCarbon",
+      "@type": "xsd:float"
+    },
     "category": {
       "@id": "sdm:category"
     },
+    "co": {
+      "@id": "sdm:co",
+      "@type": "xsd:float"
+    },
     "contactPoint": {
       "@id": "schema:contactPoint"
+    },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
     },
     "dateObserved": {
       "@id": "sdm:dateObserved",
@@ -46,17 +77,50 @@
       "@type": "xsd:dateTime"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "gustSpeed": {
+      "@id": "sdm:gustSpeed",
+      "@type": "xsd:float"
+    },
     "id": "@id",
+    "investigationDepth": {
+      "@id": "sdm:investigationDepth",
+      "@type": "xsd:float"
+    },
+    "jc": "https://joinedcontext.com/models/",
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
+    },
+    "maxTemperature": {
+      "@id": "jc:maxTemperature",
+      "@type": "xsd:float"
+    },
+    "measurementType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:measurementType"
+    },
+    "minTemperature": {
+      "@id": "jc:minTemperature",
+      "@type": "xsd:float"
     },
     "name": {
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "no": {
+      "@id": "sdm:no",
+      "@type": "xsd:float"
+    },
     "no2": {
       "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
+    "nox": {
+      "@id": "sdm:nox",
       "@type": "xsd:float"
     },
     "o3": {
@@ -66,6 +130,10 @@
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "piezometricLevel": {
+      "@id": "jc:piezometricLevel",
+      "@type": "xsd:float"
     },
     "pm10": {
       "@id": "sdm:pm10",
@@ -78,9 +146,26 @@
     "postalCode": {
       "@id": "schema:postalCode"
     },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
+    },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "so2": {
+      "@id": "sdm:so2",
+      "@type": "xsd:float"
+    },
+    "solarRadiation": {
+      "@id": "sdm:solarRadiation",
+      "@type": "xsd:float"
+    },
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
@@ -88,6 +173,9 @@
     "startDate": {
       "@id": "schema:startDate",
       "@type": "xsd:dateTime"
+    },
+    "stationCode": {
+      "@id": "jc:stationCode"
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
@@ -98,7 +186,23 @@
     "telephone": {
       "@id": "schema:telephone"
     },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
+    },
     "type": "@type",
+    "waterTable": {
+      "@id": "sdm:waterTable",
+      "@type": "xsd:float"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
+    },
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "x-generator-version": "linkml-1.12.0"
