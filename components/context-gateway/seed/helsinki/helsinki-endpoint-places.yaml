@@ -7,8 +7,8 @@ metadata:
   namespace: helsinki
   title: { fi: Kaupungin palvelut — Helsinki, en: City services — Helsinki }
   description:
-    fi: 'Kirjastot, terveysasemat, uimahallit, uimarannat ja koulut Palvelukartasta. Lähde: Helsingin kaupunki, CC BY 4.0.'
-    en: 'Libraries, health stations, swimming halls, beaches and schools from the Service Map. Source: City of Helsinki, CC BY 4.0.'
+    fi: 'Palvelukartan kaikki Helsingin toimipisteet: kirjastot, terveysasemat, uimahallit, uimarannat, koulut ja muut (other). Lähde: Helsingin kaupunki, CC BY 4.0.'
+    en: 'Every unit of the Service Map in Helsinki: libraries, health stations, swimming halls, beaches, schools and the rest (other). Source: City of Helsinki, CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
   slug: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
@@ -42,7 +42,7 @@ spec:
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
     frequency: WEEKLY
     source:
-      - url: https://api.hel.fi/servicemap/v2/unit/?service=813,703,729,731,661,662,601,602,149,150&municipality=helsinki&page_size=1000&format=json
+      - url: https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&format=json
         title: { fi: Kaupungin palvelut (Palvelukartta), en: City services (Service Map) }
         description:
           fi: 'Palvelukartan rajapinta: kaupungin toimipisteet sijainteineen.'
