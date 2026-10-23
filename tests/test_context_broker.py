@@ -126,12 +126,20 @@ def test_the_gateway_and_the_portal_address_the_port_the_service_serves(dev):
 
 @requires_helmfile
 def test_only_the_gateway_and_the_portal_reach_the_broker(dev):
-    policy = one(dev, "NetworkPolicy", "context-broker")["spec"]
+    rendered_policy = one(dev, "NetworkPolicy", "context-broker")
+    policy = rendered_policy["spec"]
     (container,) = pod_of(dev)["containers"]
-    (inbound,) = policy["ingress"]
+    # dev runs the Prometheus stack (T-5154): its scrape is the second rule, metrics port only, from
+    # the prometheus component's namespace (dev puts every component in one).
+    inbound, scrape = policy["ingress"]
     peers = sorted(f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in inbound["from"])
     assert peers == ["context-gateway-gateway", "portal-portal"]
     assert [p["port"] for p in inbound["ports"]] == [container["ports"][0]["containerPort"]]
+    (prometheus,) = scrape["from"]
+    assert prometheus["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "prometheus"}
+    assert prometheus["namespaceSelector"]["matchLabels"] == {"kubernetes.io/metadata.name": rendered_policy["metadata"]["namespace"]}
+    (metrics,) = [p for p in container["ports"] if p["name"] != "http"]
+    assert [p["port"] for p in scrape["ports"]] == [metrics["containerPort"]]
 
 
 @requires_helmfile

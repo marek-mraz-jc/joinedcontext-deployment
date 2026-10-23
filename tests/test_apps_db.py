@@ -68,7 +68,8 @@ def test_only_the_portal_the_shards_the_operator_and_its_own_instances_reach_it(
     )
     sources = [peer.get("podSelector", {}).get("matchLabels", {}) for rule in policy["spec"]["ingress"] for peer in rule["from"]]
     names = {labels.get("app.kubernetes.io/name") or labels.get("cnpg.io/cluster") or labels.get("cnpg.io/jobRole") for labels in sources}
-    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard"}, names
+    # "prometheus": the Prometheus stack's scrape of the metrics port (T-5154), from its own namespace.
+    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard", "prometheus"}, names
 
 
 PORTAL_SUPERUSER_SQL = (
