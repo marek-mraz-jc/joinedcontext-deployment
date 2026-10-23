@@ -49,12 +49,10 @@ pipeline:
     - switch:
         - check: this.dropped.keys().length() > 0
           processors:
-            - log:
-                level: WARN
-                message: 'cycle counters left out: ${! json("dropped") }'
+            - log: { level: WARN, message: 'cycle counters left out: ${! json("dropped") }' }
 
     # A thrown message keeps its content: [] first, so nothing goes on to the stations.
-    - mapping: 'root = this.counters'
+    - mapping: root = this.counters
     - mapping: |
         root = if this.length() == 0 { throw("no Eco-Counter station of the answer lies in Helsinki") } else { this }
     - unarchive: { format: json_array }
@@ -63,7 +61,7 @@ pipeline:
         root = this
 
     - branch:
-        request_map: 'root = ""'
+        request_map: root = ""
         processors:
           - try:
               - http:
@@ -102,7 +100,7 @@ pipeline:
         root = this
 
     - branch:
-        request_map: 'root = if this.failed || this.stale { deleted() } else { "" }'
+        request_map: root = if this.failed || this.stale { deleted() } else { "" }
         processors:
           - try:
               - http:
@@ -158,12 +156,10 @@ pipeline:
     - switch:
         - check: '@dropped != ""'
           processors:
-            - log:
-                level: WARN
-                message: 'cycle counter ${! @counter }: left out ${! @dropped }'
+            - log: { level: WARN, message: 'cycle counter ${! @counter }: left out ${! @dropped }' }
 
     - archive: { format: json_array }
-    - mapping: 'root = this.flatten()'
+    - mapping: root = this.flatten()
     - mapping: |
         root = if this.length() == 0 { throw("no Eco-Counter station wrote a count for the closed day") } else { this }
     - unarchive: { format: json_array }

@@ -50,7 +50,9 @@ spec:
     frequency: DAILY
     source:
       - url: https://lidotiku.api.hel.fi/api/counters/?source=EcoCounter
-        title: { fi: Helsingin liikennemittausten tilastorajapinta, en: Statistical API for traffic measurement data }
+        title:
+          fi: Helsingin liikennemittausten tilastorajapinta
+          en: Statistical API for traffic measurement data
         description:
           fi: Kaupungin Eco-Counter-laskentapisteet ja niiden havainnot, CC BY 4.0.
           en: The city's Eco-Counter stations and their observations, CC BY 4.0.

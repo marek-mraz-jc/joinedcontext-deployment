@@ -390,7 +390,7 @@ v1/ConfigMap smartcity/gitea-seed-s1-slovensko--13
 v1/ConfigMap smartcity/gitea-seed-s1-slovensko--20
 v1/ConfigMap smartcity/gitea-seed-s10-praha
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--15
-v1/ConfigMap smartcity/gitea-seed-s10-slovensko--27
+v1/ConfigMap smartcity/gitea-seed-s10-slovensko--28
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--8
 v1/ConfigMap smartcity/gitea-seed-s10-slovensko--9
 v1/ConfigMap smartcity/gitea-seed-s2-barcelona
@@ -431,7 +431,7 @@ v1/ConfigMap smartcity/gitea-seed-s9-helsinki-mobility
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--19
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--2
-v1/ConfigMap smartcity/gitea-seed-s9-slovensko--28
+v1/ConfigMap smartcity/gitea-seed-s9-slovensko--27
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--3
 v1/ConfigMap smartcity/gitea-seed-s9-slovensko--4
 v1/ConfigMap smartcity/keycloak-admin-permissions
