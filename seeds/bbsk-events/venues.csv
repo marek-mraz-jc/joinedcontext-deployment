@@ -616,3 +616,18 @@ katlovce,telocvičňa,n,Telocvičňa,Kátlovce 332,Kátlovce,48.5268600,17.60859
 katlovce,športový areál tj fc kátlovce,n,Športový areál TJ FC Kátlovce,Kátlovce 200,Kátlovce,48.5275500,17.6073670,ra/31314448,2026-10-22,register-adries
 kosice,kc ponq,n,KC Ponq,Hrnčiarska 952/21,Košice,48.7239900,21.2592430,ra/13498804,2026-10-22,register-adries
 kosice,kasárne kulturpark,n,Kasárne Kulturpark (Košice),Kukučínova 81/2,Košice,48.7146450,21.2563440,ra/13382809,2026-10-22,register-adries
+brezno,mestská veža námestie m. r. štefánika 977 01 brezno,n,Mestská veža,Námestie gen. M. R. Štefánika 48/56,Brezno,48.8061178,19.6437512,way/58958241,2026-10-23,nominatim
+brezno,mestský dom kultúry švermova 1027/ 7 977 01 brezno,n,Mestský dom kultúry,Švermova 1027/7,Brezno,48.8027460,19.6392100,ra/34031954,2026-10-23,register-adries
+brezno,mestský dom kultúry švermova 7 brezno,n,Mestský dom kultúry,Švermova 1027/7,Brezno,48.8027460,19.6392100,ra/34031954,2026-10-23,register-adries
+brezno,švermova 1027/7 977 01 brezno kino mostár,n,Kino Mostár,Švermova 1027/7,Brezno,48.8027460,19.6392100,ra/34031954,2026-10-23,register-adries
+brezno,meštiansky dom 13 nám gen. m. r. štefánika 9 977 01 brezno,n,Meštiansky dom,Námestie gen. M.R.Štefánika 7/9,Brezno,48.8073430,19.6427100,ra/34021779,2026-10-23,register-adries
+brezno,synagóga štúrova 888 977 01 brezno,n,Synagóga,Štúrova 888/11,Brezno,48.8049450,19.6460612,way/58958199,2026-10-23,nominatim
+brezno,mestská knižnica brezno,n,Mestská knižnica,Rázusova 926/2,Brezno,48.8052112,19.6436529,way/58952226,2026-10-23,nominatim
+brezno,legia fitness brezno,n,Legia fitness,Československej armády,Brezno,48.8071445,19.6298876,node/9119669701,2026-10-23,nominatim
+banska-stiavnica,kultúrne centrum banská štiavnica,n,Kultúrne centrum,Kammerhofská 177/1,Banská Štiavnica,48.4581200,18.8962700,ra/333046A,2026-10-23,register-adries
+banska-stiavnica,kino,n,Kino Akademik,Námestie sv. Trojice 5/1,Banská Štiavnica,48.4592320,18.8925460,ra/3327269,2026-10-23,register-adries
+tornala,mestské kultúrne stredisko,n,Mestské kultúrne stredisko,Hlavné Námestie 505/6,Tornaľa,48.4218370,20.3246770,ra/2650185A,2026-10-23,register-adries
+krupina,sládkovičova 9 krupina,n,"Sládkovičova 9, Krupina",Sládkovičova 40/9,Krupina,48.3528370,19.0655360,ra/33497992,2026-10-23,register-adries
+brezno,mestský úrad brezno,n,Mestský úrad,,Brezno,48.8066549,19.6422964,node/4439437403,2026-10-23,overpass
+krupina,mestský úrad krupina,n,Mestský úrad Krupina,,Krupina,48.3540220,19.0663084,node/12598664308,2026-10-23,overpass
+sliac,mestský úrad sliač,n,Mestský úrad,Letecká 232/1,Sliač,48.6164528,19.1357664,way/302640073,2026-10-23,overpass

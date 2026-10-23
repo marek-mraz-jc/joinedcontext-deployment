@@ -26,8 +26,7 @@ this file; the rest of Slovakia is T-4899.
 
 | decision | rows | meaning |
 |---|---|---|
-| `pipeline` | 16 | machine-readable feed (REST JSON, iCal, RSS/Atom) lists the events |
-| `pipeline-html` | 8 | no feed exists; one HTML template per CMS, fragile, built after the feed rows |
+| `pipeline` | 34 | a feed (REST JSON, iCal, RSS/Atom) or a CMS's HTML calendar (one template per CMS, T-5047 and T-5354) lists the events |
 | `skip` | 11 | no events calendar, robots.txt refuses it, broken TLS, or a catalogue only (reason in the row) |
 
 20 of the 24 towns have at least one source (feed or HTML); Kremnica's is a WEBY feed that was
@@ -44,7 +43,7 @@ Hronom's own calendar is closed by robots.txt and its culture centre's calendar 
 | `tribe-rest` / `ical` | 2 | The Events Calendar: visitbanskabystrica.sk (REST), centralslovakia.eu (iCal; its robots.txt disallows /wp-json/) | no (venue has no geo_lat) |
 | `ticketware-html` | 2 | Ticketware culture centres: Banská Štiavnica, Tornaľa | no |
 | `wp-rest-sc` | 1 | Banská Bystrica (WP REST `/wp/v2/events`, also on data.gov.sk, CC-BY-4.0) | **yes**, 58 of 58 upcoming |
-| `wp-rss` | 1 | Sliač, same smart-city theme as Banská Bystrica but REST closed (401): RSS `?post_type=event` + detail page | yes, in the page (static-map lat/lon) |
+| `sc-rss` | 1 | Sliač, same smart-city theme as Banská Bystrica but REST closed (401): RSS `?post_type=event` + detail page | no: the page's static-map point is the town's default (2026-10-23) |
 | `mec-rest` | 1 | Modern Events Calendar: banskastiavnica.travel (REST list + schema.org Event JSON-LD per page) | no (address only) |
 | `krupina-html` | 1 | Krupina (ID-SK template) | no |
 
@@ -124,7 +123,8 @@ one entity; writes `expiresAt` at the event's end (start + 1 day without an end)
   Banská Bystrica's feed is CC BY 4.0 and keeps the text, without organiser e-mail or phone.
 - Each run is daily, staggered 00:00-02:34 UTC (01:00-05:00 in Bratislava, winter and summer); the Portal's
   run-now button starts one source.
-- Not built yet: `wp-rss` (Sliač writes its dates only in free text) and every `pipeline-html` row (one parser per CMS).
+- The HTML sources (T-5354) read machine-readable marks where the page has them (Sliač's microdata `<time datetime>`)
+  and the printed date otherwise; a Ticketware date has no year and is the next one on or after yesterday.
 
 ## The national store (T-5047)
 
@@ -150,6 +150,10 @@ One template per source kind, a source is one DataSource + one Pipeline naming i
 | `wp-rss-jsonld` | `rss-list` + `jsonld-pages` | RSS/Atom of event posts, each post's JSON-LD |
 | `jsonld` | `page-jsonld` | the events page's own JSON-LD; a page without any JSON-LD fails the run |
 | `tribe-rest`, `ical`, `weby-feed`, `wp-rest-sc` | as above (T-4896) | |
+| `sc-rss` | `rss-list` + `sc-event-page` | smart-city theme (Sliač): RSS of post_type=event, each page's microdata start and end; its static-map point only beside a place other than the town |
+| `ticketware-html` | `ticketware-html` | Ticketware culture centre home page's `/event/<id>/` links, each page's shows (one record per show, date without a year) and hall address |
+| `eventphp-html` | `eventphp-html` | event.php calendar's map array of page links (its points are the CMS default, never read), each page's dates with place and time |
+| `krupina-html` | `krupina-html` | Krupina's ID-SK list `/podujatia/<id>`, each page's summary list (Kedy as printed, a range included; Kde as "[place, ]town"; Organizátor) |
 
 The 182 rows marked `found by T-5047 from Wikidata P856` come from probing the website of every Slovak
 municipality on Wikidata (2,859 sites, `P782` LAU code, region from its NUTS 3 prefix) and 254 museums,

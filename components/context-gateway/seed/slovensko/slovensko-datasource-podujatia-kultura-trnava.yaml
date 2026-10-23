@@ -3,7 +3,7 @@
 apiVersion: joinedcontext.com/v1alpha1
 kind: DataSource
 metadata:
-  name: podujatia-kultura
+  name: podujatia-kultura-trnava
   namespace: slovensko
   title:
     sk: 'Podujatia: Trnava (jsonld)'
