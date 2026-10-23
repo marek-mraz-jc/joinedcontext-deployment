@@ -48,6 +48,7 @@ MODELS = {
     "GtfsAgency": ("dataModel.UrbanMobility", "GtfsAgency"),
     "GtfsShape": ("dataModel.UrbanMobility", "GtfsShape"),
     "Event": ("dataModel.TourismDestinations", "Event"),
+    "ServiceRequest": ("dataModel.IssueTracking", "service_requests"),
     "OffStreetParking": ("dataModel.Parking", "OffStreetParking"),
     "OnStreetParking": ("dataModel.Parking", "OnStreetParking"),
     "CityWork": ("dataModel.Transportation", "CityWork"),
@@ -70,6 +71,10 @@ EXCEPTIONS = {
 ACCEPTED = {
     ("Event", "eventStatus"): "one schema.org status as the Helsinki class declares it and the event apps read it; "
                               "SDM's only Event (dataModel.TourismDestinations) makes it a list",
+    ("Event", "refPointOfInterest"): "one venue per event, the Linked Events place as its Service Map unit; "
+                                     "SDM makes it a list (T-5257)",
+    ("ServiceRequest", "type"): "SDM names the type service_requests; the space types it ServiceRequest like its other "
+                                "types and keeps the model's attribute names (T-5257)",
     ("OffStreetParking", "status"): "one value, as the space's one status slot holds it for bike stations too "
                                     "(BikeHireDockingStation's SDM status is a single value); SDM makes it a list",
     ("GtfsStation", "hasStop"): "the inverse of each platform's hasParentStation, which the Helsinki model "
