@@ -5,10 +5,12 @@ kind: Endpoint
 metadata:
   name: helsinki-districts
   namespace: helsinki
-  title: { fi: Kaupunginosat — Helsinki, en: City districts — Helsinki }
+  title:
+    fi: Kaupunginosat ja HSL-vyöhykkeet — Helsinki
+    en: City districts and HSL fare zones — Helsinki
   description:
-    fi: 'Kaupunginosat ja osa-alueet rajoineen. Lähde: Helsingin kaupunki, CC BY 4.0.'
-    en: 'The city districts and sub-districts with their boundaries. Source: City of Helsinki, CC BY 4.0.'
+    fi: 'Kaupunginosat ja osa-alueet rajoineen sekä HSL:n taksavyöhykkeet A–D (divisionLevel fareZone, kirjain kentässä fareZone). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
+    en: "The city districts and sub-districts with their boundaries, and HSL's fare zones A to D (divisionLevel fareZone, the letter in fareZone). Sources: City of Helsinki and HSL, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: s3luopgog5nkxcpykwxdvhw22iis5n7e
@@ -29,14 +31,14 @@ spec:
       uri: https://www.hel.fi/
     license: CC_BY_4_0
     attribution:
-      fi: 'Lähde: Helsingin kaupunki, CC BY 4.0'
-      sv: 'Källa: Helsingfors stad, CC BY 4.0'
-      en: 'Source: City of Helsinki, CC BY 4.0'
-    themes: [REGI]
+      fi: 'Lähteet: Helsingin kaupunki ja Helsingin seudun liikenne (HSL), CC BY 4.0'
+      sv: 'Källor: Helsingfors stad och Helsingforsregionens trafik (HRT), CC BY 4.0'
+      en: 'Sources: City of Helsinki and Helsinki Region Transport (HSL), CC BY 4.0'
+    themes: [REGI, TRAN]
     keywords:
-      fi: [kaupunginosat, osa-alueet]
-      sv: [stadsdelar, delområden]
-      en: [districts, sub-districts]
+      fi: [kaupunginosat, osa-alueet, taksavyöhykkeet]
+      sv: [stadsdelar, delområden, taxezoner]
+      en: [districts, sub-districts, fare zones]
     spatial:
       - FI1B1
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
@@ -54,3 +56,10 @@ spec:
         description:
           fi: Helsingin karttapalvelun WFS-taso, GeoJSON.
           en: A WFS layer of the city's map service, as GeoJSON.
+      - url: https://hri.fi/data/en_GB/dataset/hsl-n-taksavyohykkeet
+        title:
+          fi: HSL:n taksavyöhykkeet
+          en: HSL fare zones
+        description:
+          fi: HSL:n avoimen datan palvelun taso, GeoJSON (WGS84), CC BY 4.0. Luetaan päivittäin (putki fare-zones).
+          en: A layer of HSL's open data hub, as GeoJSON (WGS84), CC BY 4.0. Read daily (pipeline fare-zones).

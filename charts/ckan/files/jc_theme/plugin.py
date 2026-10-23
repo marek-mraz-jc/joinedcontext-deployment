@@ -12,6 +12,7 @@ import html
 import json
 import os
 import re
+import secrets
 from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 import ckan
@@ -1596,7 +1597,6 @@ def _viz_slug(value):
 # production use, and every visitor's address would reach them.
 PMTILES = "/pmtiles-4.5.0.js"
 MAPLIBRE = "/maplibre-gl-6.14.0/"
-MAP_CSP = "frame-ancestors *; object-src 'none'; base-uri 'self'"
 VENDOR = "/srv/app/vendor"
 
 
@@ -1727,8 +1727,8 @@ def jc_map(pkg, resource_id=None):
 
 def jc_map_page(id, resource_id=None):
     """The map of one dataset as a page of its own, for a site to frame (T-4639): no header,
-    no footer, no form. The page names its own policy, any ancestor, as the upstream owns its
-    CSP (OPS-34); the edge strips the cookie."""
+    no footer, no form. The page names its own policy, the catalogue's with any ancestor, as the
+    upstream owns its CSP (OPS-34); the edge strips the cookie."""
     try:
         pkg = toolkit.get_action("package_show")({}, {"id": id})
     except (toolkit.ObjectNotFound, toolkit.NotAuthorized):
@@ -1737,7 +1737,46 @@ def jc_map_page(id, resource_id=None):
     if not config:
         return toolkit.abort(404)
     page = toolkit.render("jc/map.html", {"pkg": pkg, "jc_map_config": config})
-    return page, 200, {"Content-Security-Policy": MAP_CSP}
+    return page, 200, {"Content-Security-Policy": _csp(jc_csp_nonce(), "*")}
+
+
+# The catalogue's own Content Security Policy (T-5147, OPS-34): scripts and styles from this host
+# and those carrying the request's nonce, nothing inline else; frames, fetches and images from this
+# installation's own hosts ({domain} and its subdomains: the Endpoints, tiles, viz and assistant).
+# The edge's frame-ancestors-only baseline stays for the answers that carry none (static files).
+def _csp(nonce, ancestors="'self'"):
+    domain = BRANDING.get("domain")
+    own = " https://%s https://*.%s" % (domain, domain) if isinstance(domain, str) and re.fullmatch(r"[a-z0-9.-]+", domain) else ""
+    return "; ".join((
+        "default-src 'self'",
+        "script-src 'self' 'nonce-%s'" % nonce,
+        "style-src 'self' 'nonce-%s'" % nonce,
+        "img-src 'self' data:" + own,
+        "connect-src 'self'" + own,
+        "frame-src 'self'" + own,
+        "font-src 'self'",
+        "worker-src 'self'",
+        "manifest-src 'self'",
+        "form-action 'self'",
+        "frame-ancestors " + ancestors,
+        "object-src 'none'",
+        "base-uri 'self'",
+    ))
+
+
+def jc_csp_nonce():
+    """This request's nonce, for a template's inline <script> or <style> (T-5147)."""
+    nonce = getattr(toolkit.g, "jc_csp_nonce", None)
+    if not nonce:
+        nonce = toolkit.g.jc_csp_nonce = secrets.token_urlsafe(18)
+    return nonce
+
+
+def jc_csp_header(response):
+    """Every HTML answer that names no policy of its own gets the catalogue's (T-5147)."""
+    if response.mimetype == "text/html" and "Content-Security-Policy" not in response.headers:
+        response.headers["Content-Security-Policy"] = _csp(jc_csp_nonce())
+    return response
 
 
 def _site_url():
@@ -2967,6 +3006,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_site_tagline": jc_site_tagline,
             "jc_site_logo": jc_site_logo,
             "jc_assistant_widget": jc_assistant_widget,
+            "jc_csp_nonce": jc_csp_nonce,
             "jc_about_site": jc_about_site,
             "humanize_entity_type": humanize_entity_type,
             "jc_has_topics": jc_has_topics,
@@ -3004,6 +3044,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
         from flask import Blueprint
 
         blueprint = Blueprint("jc_pages", self.__module__)
+        blueprint.after_app_request(jc_csp_header)
         for name in PAGES:
             blueprint.add_url_rule("/" + name, name, lambda name=name: toolkit.render("jc/page.html", {"jc_name": name}))
         blueprint.add_url_rule("/assistants", "assistants", lambda: toolkit.render("jc/assistants.html", {}))

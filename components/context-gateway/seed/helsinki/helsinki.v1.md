@@ -315,7 +315,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `districtCode` | Property | `string` | yes |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. |
+| `districtCode` | Property | `string` | no |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its `fareZone`. |
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -656,6 +656,7 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 | `cityPart` | The inner city (kantakaupunki) or the suburbs (esikaupungit) (statistics only). |
 | `district` | A district (kaupunginosa), 60 of them. |
 | `subDistrict` | A sub-district (osa-alue), the unit the city's statistics use. |
+| `fareZone` | An HSL fare zone (A, B, C or D), the area a ticket is valid in. |
 
 ### TransportMode
 

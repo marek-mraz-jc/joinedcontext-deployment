@@ -15,7 +15,16 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved", "WeatherObserved", "PhreaticObserved", "Event", "PointOfInterest"}
+TYPES = {
+    "AirQualityObserved",
+    "WeatherObserved",
+    "PhreaticObserved",
+    "TrafficFlowObserved",
+    "OnStreetParking",
+    "EVChargingStation",
+    "Event",
+    "PointOfInterest",
+}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
