@@ -7,6 +7,48 @@ pipeline:
     # where it can be seen rather than writing nothing.
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
+    # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
+    # every further page of them is read (T-5288). One run holds every page, so a layer past
+    # 10000 rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    - branch:
+        request_map: |
+          root = if this.properties.exceededTransferLimit.or(false) { "" } else { deleted() }
+        processors:
+          - http:
+              url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer/0/query?where=1%3D1&returnCountOnly=true&f=json"
+              verb: GET
+              headers:
+                Accept: application/json
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.rowCount = this.count.or(this.error.message.or("no count"))
+    - mapping: |
+        let rows = this.rowCount.or(null)
+        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if $rows > 10000 { [{ "problem": "the layer holds %v rows, more than the 10000 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.offset.or(null) != null
+          processors:
+            - mapping: |
+                meta offset = this.offset
+                meta rows = this.rowCount
+                root = ""
+            - http:
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer/0/query?where=1%3D1&outFields=ID,Typ,In%C5%A1tit%C3%BAcia,I%C4%8CO,DI%C4%8C,Adresa,web_str%C3%A1nka,Riadite%C4%BE,Riadite%C4%BE___email,Riadite%C4%BE___mobiln%C3%BD_telef%C3%B3n,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Latitude,Longitude,Obrazok_odkaz,Riadite%C4%BE___pevn%C3%A1_linka&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                verb: GET
+                headers:
+                  Accept: application/geo+json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else if this.features.or(null) == null { { "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) } } else if this.features.length() < [1000, @rows - @offset].min() { { "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [1000, @rows - @offset].min()) } } else { this }
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null { throw(this.problem) } else { this }
     - mapping: |
         root = this.features.or([])
     - unarchive:
