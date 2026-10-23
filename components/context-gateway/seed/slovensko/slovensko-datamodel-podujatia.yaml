@@ -9,7 +9,7 @@ spec:
   linkml: ./slovensko-podujatia.linkml.yaml
   version: 1.0.0
   lifecycle: published
-  classes: [Event]
+  classes: [Event, PointOfInterest]
   artifacts:
     jsonSchema: ./slovensko-podujatia.v1.schema.json
     context: ./slovensko-podujatia.v1.context.jsonld
