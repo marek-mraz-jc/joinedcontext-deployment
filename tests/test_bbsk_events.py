@@ -92,7 +92,8 @@ def test_the_space_names_its_one_model_and_keeps_no_history():
     space = of_space("ContextSpace").get(SPACE) or next(
         d for _, d in manifests() if d["kind"] == "ContextSpace" and d["metadata"]["name"] == SPACE)
     assert space["spec"]["dataModelRef"] == {"kind": "DataModel", "name": SPACE}
-    assert space["spec"]["retention"] == [{"entityType": "Event", "history": "off"}]
+    assert space["spec"]["retention"] == [
+        {"entityType": "Event", "history": "off"}, {"entityType": "PointOfInterest", "history": "off"}]
     [rule] = space["spec"]["quality"]
     assert (rule["entityType"], rule["attribute"], tuple(rule["bbox"])) == ("Event", "location", SLOVAKIA)
     [model] = of_space("DataModel").values()
