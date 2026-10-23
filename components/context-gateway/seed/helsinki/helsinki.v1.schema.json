@@ -973,11 +973,8 @@
           "x-ngsi-ld-kind": "Property"
         },
         "eventStatus": {
-          "description": "The register's status of the event, EventScheduled, EventCancelled or EventPostponed.",
-          "type": [
-            "string",
-            "null"
-          ],
+          "$ref": "#/definitions/EventStatus",
+          "description": "The register's status of the event, one of schema.org's EventStatusType values.",
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
@@ -1063,6 +1060,25 @@
       ],
       "title": "Event",
       "type": "object"
+    },
+    "EventStatus": {
+      "description": "Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.",
+      "enum": [
+        "EventScheduled",
+        "EventCancelled",
+        "EventPostponed",
+        "EventRescheduled",
+        "EventMovedOnline"
+      ],
+      "title": "EventStatus",
+      "type": "string",
+      "x-enum-descriptions": {
+        "EventCancelled": "Called off; it does not take place.",
+        "EventMovedOnline": "Held online instead of at its place.",
+        "EventPostponed": "Moved to a date not yet known.",
+        "EventRescheduled": "Moved to the new date the event now gives.",
+        "EventScheduled": "Takes place as planned."
+      }
     },
     "GtfsAgency": {
       "additionalProperties": false,

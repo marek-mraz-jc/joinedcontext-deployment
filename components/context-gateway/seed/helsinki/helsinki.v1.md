@@ -25,7 +25,7 @@ Specialises `Entity`.
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `startDate` | Property | `datetime` |  |  | `schema:startDate` | When the event starts, ISO 8601 with a time zone. |
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends; absent while the register does not say. |
-| `eventStatus` | Property | `string` |  |  | `schema:eventStatus` | The register's status of the event, EventScheduled, EventCancelled or EventPostponed. |
+| `eventStatus` | Property | [`EventStatus`](#eventstatus) |  |  | `schema:eventStatus` | The register's status of the event, one of schema.org's EventStatusType values. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `contactPoint` | Property | `string` |  |  | `schema:contactPoint` | The organizer's contact line as the register carries it, often a named person with a phone number. The space keeps it for the city's own coordination; no public endpoint serves it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -542,3 +542,15 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 | `metro` | The metro. |
 | `train` | A commuter train. |
 | `ferry` | A ferry. |
+
+### EventStatus
+
+Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.
+
+| Value | Meaning |
+|---|---|
+| `EventScheduled` | Takes place as planned. |
+| `EventCancelled` | Called off; it does not take place. |
+| `EventPostponed` | Moved to a date not yet known. |
+| `EventRescheduled` | Moved to the new date the event now gives. |
+| `EventMovedOnline` | Held online instead of at its place. |
