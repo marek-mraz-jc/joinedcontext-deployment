@@ -25,6 +25,9 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
+    "Vehicle": {
+      "@id": "sdm:Vehicle"
+    },
     "WasteContainer": {
       "@id": "sdm:WasteContainer"
     },
@@ -80,6 +83,14 @@
       "@id": "jc:capacity",
       "@type": "xsd:integer"
     },
+    "category": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:category"
+    },
     "co": {
       "@id": "sdm:co",
       "@type": "xsd:float"
@@ -98,6 +109,13 @@
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "delay": {
+      "@id": "jc:delay",
+      "@type": "xsd:integer"
+    },
+    "direction": {
+      "@id": "jc:direction"
+    },
     "districtCode": {
       "@id": "jc:districtCode"
     },
@@ -112,16 +130,26 @@
       "@id": "jc:fiscalYear",
       "@type": "xsd:integer"
     },
+    "fleetVehicleId": {
+      "@id": "sdm:fleetVehicleId"
+    },
     "freeSlotNumber": {
       "@id": "sdm:freeSlotNumber",
       "@type": "xsd:integer"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "heading": {
+      "@id": "sdm:heading",
+      "@type": "xsd:integer"
+    },
     "id": "@id",
     "identifier": {
       "@id": "sdm:dataModel.CPSV-AP/identifier"
     },
     "jc": "https://joinedcontext.com/models/",
+    "lineName": {
+      "@id": "jc:lineName"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -129,6 +157,9 @@
     "name": {
       "@container": "@language",
       "@id": "schema:name"
+    },
+    "nextStop": {
+      "@id": "jc:nextStop"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no2": {
@@ -150,6 +181,9 @@
     "openingHours": {
       "@container": "@language",
       "@id": "schema:openingHours"
+    },
+    "operatorName": {
+      "@id": "jc:operatorName"
     },
     "pm10": {
       "@id": "sdm:pm10",
@@ -191,6 +225,10 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "speed": {
+      "@id": "sdm:speed",
+      "@type": "xsd:float"
+    },
     "stationCode": {
       "@id": "jc:stationCode"
     },
@@ -213,10 +251,26 @@
       "@id": "sdm:totalSpotNumber",
       "@type": "xsd:integer"
     },
+    "transportMode": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:transportMode"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "vehicleType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:vehicleType"
     },
     "wasteContainerIsles": {
       "@id": "jc:wasteContainerIsles",

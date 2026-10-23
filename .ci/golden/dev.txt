@@ -432,10 +432,10 @@ v1/ConfigMap dev/gitea-seed-s5-bbsk--11
 v1/ConfigMap dev/gitea-seed-s5-bbsk--12
 v1/ConfigMap dev/gitea-seed-s5-bbsk--13
 v1/ConfigMap dev/gitea-seed-s5-bbsk--9
-v1/ConfigMap dev/gitea-seed-s5-slovensko--22
+v1/ConfigMap dev/gitea-seed-s5-slovensko--21
 v1/ConfigMap dev/gitea-seed-s6-bbsk--14
 v1/ConfigMap dev/gitea-seed-s6-slovensko--16
-v1/ConfigMap dev/gitea-seed-s6-slovensko--21
+v1/ConfigMap dev/gitea-seed-s6-slovensko--20
 v1/ConfigMap dev/gitea-seed-s7-helsinki
 v1/ConfigMap dev/gitea-seed-s7-slovensko--14
 v1/ConfigMap dev/gitea-seed-s7-slovensko--15
@@ -450,7 +450,7 @@ v1/ConfigMap dev/gitea-seed-s9-praha
 v1/ConfigMap dev/gitea-seed-s9-slovensko--11
 v1/ConfigMap dev/gitea-seed-s9-slovensko--12
 v1/ConfigMap dev/gitea-seed-s9-slovensko--13
-v1/ConfigMap dev/gitea-seed-s9-slovensko--20
+v1/ConfigMap dev/gitea-seed-s9-slovensko--22
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
 v1/ConfigMap dev/pipeline-runner-helsinki-streams

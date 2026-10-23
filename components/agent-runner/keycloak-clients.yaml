@@ -196,6 +196,24 @@ helsinki-agent-proxy:
           included.custom.audience: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # Daily traffic and cycle counts (seed/helsinki/helsinki-endpoint-traffic-counts.yaml,
+      # helsinki-endpoint-cycle-counts.yaml, T-5253).
+      - name: helsinki-traffic-counts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: l4zysz2peezgtp7uycaqvyxwx2ad2nep
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-cycle-counts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kvhnixtbe5dex2wt2kx3i37dzw6yzsxt
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # The Helsinki Apps' public Endpoints (seed/helsinki/helsinki-app-kartta-endpoint.yaml,
       # helsinki-app-data-endpoint.yaml, T-2788): a run that builds against one reads it as the
       # public role, as every visitor of the App does.
