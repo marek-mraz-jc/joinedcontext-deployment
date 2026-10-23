@@ -335,6 +335,7 @@ rbac.authorization.k8s.io/v1/Role smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role smartcity/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role smartcity/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/Role smartcity/probe
 rbac.authorization.k8s.io/v1/RoleBinding smartcity-app-identities/portal-app-job-accounts
 rbac.authorization.k8s.io/v1/RoleBinding smartcity-app-identities/wasm-host-tokens
 rbac.authorization.k8s.io/v1/RoleBinding smartcity-app-tests/app-test-runner
@@ -350,6 +351,7 @@ rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/RoleBinding smartcity/probe
 traefik.io/v1alpha1/TLSOption smartcity/bsi-tr-02102
 v1/ConfigMap kube-system/local-path-config
 v1/ConfigMap smartcity/apisix
@@ -490,6 +492,7 @@ v1/Secret smartcity/keycloak-client-zilina-pipelines
 v1/Secret smartcity/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret smartcity/keycloak-user-initial
 v1/Secret smartcity/portal-cookie-key
+v1/Secret smartcity/postgres-backup-artifact-store
 v1/Service smartcity/agent-proxy
 v1/Service smartcity/apisix-gateway
 v1/Service smartcity/artifact-store

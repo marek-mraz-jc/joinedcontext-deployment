@@ -7,6 +7,7 @@ are the failures a visitor meets: an error status, an empty page, a body of anot
 
 import importlib.util
 import json
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -289,7 +290,8 @@ def test_rendered_probe_is_anonymous_pinned_and_probes_both_environments(dev):
 def test_rendered_probe_egress_is_https_and_dns_only(dev):
     policy = next(d for d in dev if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "probe")
     ports = {(p["protocol"], p["port"]) for rule in policy["spec"]["egress"] for p in rule.get("ports", [])}
-    assert ports <= {("TCP", 443), ("TCP", 8443), ("UDP", 53), ("TCP", 53)}
+    # 6443: the API server, for the backup and drill age (T-5289).
+    assert ports <= {("TCP", 443), ("TCP", 8443), ("UDP", 53), ("TCP", 53), ("TCP", 6443)}
     public = next(r for r in policy["spec"]["egress"] if any("ipBlock" in t for t in r["to"]))
     assert "10.0.0.0/8" in public["to"][0]["ipBlock"]["except"]
 
@@ -348,3 +350,78 @@ def test_domain_expiry_reads_the_rdap_expiration_event_from_the_bootstrapped_htt
     assert probe.domain_not_after("example.org", get) is None
     assert probe.domain_not_after("joinedcontext.com", lambda *a, **k: (200, JSON, b"{}", 0.1)) is None
     assert probe.domain_not_after("joinedcontext.com", lambda *a, **k: (0, {}, b"refused", 0.1)) is None
+
+
+# ---- backup and restore drill age (T-5289)
+
+BACKUPS = {"namespace": "dev", "cluster": "postgres-cluster", "localBackup": True}
+
+
+def stamp(text):
+    return datetime.fromisoformat(text).timestamp()
+
+
+def kube(answers):
+    asked = []
+
+    def get(path):
+        asked.append(path)
+        return answers.get(path)
+
+    return get, asked
+
+
+def test_backup_state_reads_the_newest_backup_and_the_drill_from_three_named_objects():
+    get, asked = kube({
+        "/apis/postgresql.cnpg.io/v1/namespaces/dev/clusters/postgres-cluster":
+            {"status": {"lastSuccessfulBackup": "2026-10-22T03:00:41Z"}},
+        "/apis/batch/v1/namespaces/dev/cronjobs/postgres-cluster-local-backup":
+            {"status": {"lastSuccessfulTime": "2026-10-22T02:31:09Z"}},
+        "/api/v1/namespaces/dev/configmaps/postgres-cluster-dr-drill":
+            {"data": {"result": "passed", "at": "2026-10-01T04:41:00Z", "detail": "kept off the page"}},
+    })
+    state = probe.backup_state(BACKUPS, get)
+    assert state == {"backupAt": stamp("2026-10-22T03:00:41Z"), "drillAt": stamp("2026-10-01T04:41:00Z"),
+                     "drillResult": "passed"}
+    assert len(asked) == 3
+
+
+def test_backup_state_without_answers_is_unknown_and_a_strange_result_is_dropped():
+    get, _ = kube({"/api/v1/namespaces/dev/configmaps/postgres-cluster-dr-drill":
+                   {"data": {"result": "<script>", "at": "not a time"}}})
+    assert probe.backup_state(BACKUPS, get) == {"backupAt": None, "drillAt": None, "drillResult": None}
+    # Without the local dump only the Cluster and the drill are read.
+    get, asked = kube({})
+    probe.backup_state({**BACKUPS, "localBackup": False}, get)
+    assert not any("cronjobs" in p for p in asked)
+
+
+@pytest.mark.parametrize("text", ['{"namespace": "dev"}', '{"namespace": "../x", "cluster": "c"}',
+                                  '{"namespace": "dev", "cluster": "a/b"}'])
+def test_backup_config_refuses_a_path_outside_the_named_objects(text):
+    with pytest.raises(ValueError):
+        probe.load_backups(text)
+
+
+def test_backup_ages_are_metrics_and_results_json_carries_them():
+    prober = probe.Prober([TARGET], 30, 900, backups=BACKUPS)
+    prober.backups = {"backupAt": 1761102041.0, "drillAt": 1759293660.0, "drillResult": "failed"}
+    text = prober.metrics()
+    assert "jc_probe_backup_timestamp_seconds 1761102041" in text
+    assert "jc_probe_restore_drill_timestamp_seconds 1759293660" in text
+    assert "jc_probe_restore_drill_passed 0" in text
+    assert prober.backup_snapshot()["drillResult"] == "failed"
+
+
+def test_rendered_probe_may_get_three_named_postgres_objects_and_nothing_else(dev):
+    deployment = next(d for d in dev if d.get("kind") == "Deployment" and d["metadata"]["name"] == "probe")
+    pod = deployment["spec"]["template"]
+    env = {e["name"]: e.get("value") for e in pod["spec"]["containers"][0].get("env", [])}
+    assert probe.load_backups(env["PROBE_BACKUPS"])["cluster"] == "postgres-cluster"
+    assert pod["metadata"]["annotations"]["security.joinedcontext.com/api-access-reason"]
+    role = next(d for d in dev if d.get("kind") == "Role" and d["metadata"]["name"] == "probe")
+    assert {(r["resources"][0], tuple(r["resourceNames"]), tuple(r["verbs"])) for r in role["rules"]} == {
+        ("clusters", ("postgres-cluster",), ("get",)),
+        ("cronjobs", ("postgres-cluster-local-backup",), ("get",)),
+        ("configmaps", ("postgres-cluster-dr-drill",), ("get",)),
+    }
