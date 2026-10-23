@@ -38,7 +38,7 @@ parts:
     needs:
       - gitea.sample-apps-6
   # The projects' seed out of the bootstrap's release for the same reason (T-3998), packed by
-  # size into these eight (values/seed-layout.tpl, T-4431).
+  # size into these nine (values/seed-layout.tpl, T-4431).
   - name: seed
   - name: seed-2
     valuesFrom: seed
@@ -53,6 +53,8 @@ parts:
   - name: seed-7
     valuesFrom: seed
   - name: seed-8
+    valuesFrom: seed
+  - name: seed-9
     valuesFrom: seed
   # Its post-upgrade Job pushes six projects' seeds and the sample apps: 6 min 45 s on
   # 2026-10-07, past Helm's 300 s default, which failed an apply whose Job then succeeded (T-3207).
@@ -75,3 +77,4 @@ parts:
       - gitea.seed-6
       - gitea.seed-7
       - gitea.seed-8
+      - gitea.seed-9
