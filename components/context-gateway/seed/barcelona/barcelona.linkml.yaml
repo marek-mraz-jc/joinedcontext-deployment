@@ -1030,34 +1030,82 @@ slots:
       number 01..73, which runs across the whole city.
     pattern: ^[0-9]{2}$
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód územia
+          cs: Kód území
+          en: Area code
+          de: Gebietscode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   divisionLevel:
     slot_uri: jc:divisionLevel
     description: Which of the city's two divisions the area belongs to.
     range: DivisionLevel
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Úroveň členenia
+          cs: Úroveň členění
+          en: Division level
+          de: Gliederungsebene
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   refParentDistrict:
     slot_uri: jc:refParentDistrict
     description: The district a barri belongs to.
     range: AdministrativeArea
     inverse: neighbourhoods
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Nadradený obvod
+          cs: Nadřazený obvod
+          en: Parent district
+          de: Übergeordneter Bezirk
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
   refDistrict:
     slot_uri: jc:refDistrict
     description: The district the work lies in, when it lies in one district only.
     range: AdministrativeArea
     inverse: cityWorks
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obvod
+          cs: Obvod
+          en: District
+          de: Bezirk
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
   refNeighbourhood:
     slot_uri: jc:refNeighbourhood
     description: The barri the crossing lies in; none for a crossing on the city's edge.
     range: AdministrativeArea
     inverse: pedestrianCrossings
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Štvrť
+          cs: Čtvrť
+          en: Neighbourhood
+          de: Stadtviertel
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
   pedestrianCrossings:
     slot_uri: jc:pedestrianCrossings
     description: The crossings in this barri, computed from their refNeighbourhood and never stored.
@@ -1065,17 +1113,44 @@ slots:
     multivalued: true
     inverse: refNeighbourhood
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Priechody pre chodcov
+          cs: Přechody pro chodce
+          en: Pedestrian crossings
+          de: Fußgängerüberwege
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   crossingType:
     slot_uri: jc:crossingType
     description: How the crossing is marked, from the city's typology (infraestructures-tipologia-pas-vianants).
     range: CrossingType
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ priechodu
+          cs: Typ přechodu
+          en: Crossing type
+          de: Überwegtyp
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   crossingTypeLabel:
     slot_uri: jc:crossingTypeLabel
     description: The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ priechodu (text mesta)
+          cs: Typ přechodu (text města)
+          en: Crossing type (city wording)
+          de: Überwegtyp (Wortlaut der Stadt)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   markedArea:
     slot_uri: jc:markedArea
     description: The painted area of the crossing in square metres (unitCode MTK).
@@ -1083,7 +1158,16 @@ slots:
     minimum_value: 0
     maximum_value: 500
     unit: { ucum_code: m2 }
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vyznačená plocha (m²)
+          cs: Vyznačená plocha (m²)
+          en: Marked area (m²)
+          de: Markierte Fläche (m²)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   neighbourhoods:
     slot_uri: jc:neighbourhoods
     description: The barris of this district, computed from their refParentDistrict and never stored.
@@ -1091,7 +1175,16 @@ slots:
     multivalued: true
     inverse: refParentDistrict
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Štvrte
+          cs: Čtvrti
+          en: Neighbourhoods
+          de: Stadtviertel
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   cityWorks:
     slot_uri: jc:cityWorks
     description: The works that lie in this district only, computed from their refDistrict and never stored.
@@ -1099,11 +1192,28 @@ slots:
     multivalued: true
     inverse: refDistrict
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Stavebné práce
+          cs: Stavební práce
+          en: City works
+          de: Bauarbeiten
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   description:
     slot_uri: schema:description
     description: The work's description as the city publishes it, in Catalan.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/description
   workNumber:
@@ -1112,6 +1222,14 @@ slots:
     pattern: ^[0-9]{2}-[0-9]{4}[A-Z][0-9]{4}$
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo stavby
+          cs: Číslo stavby
+          en: Work number
+          de: Baunummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   workState:
@@ -1120,21 +1238,55 @@ slots:
     range: WorkState
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Stav stavby
+          cs: Stav stavby
+          en: Work state
+          de: Baustatus
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   workStateLabel:
     slot_uri: jc:workStateLabel
     description: The work's state as the city writes it, in Catalan (En execució, Aturada, Finalitzada).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Stav stavby (text mesta)
+          cs: Stav stavby (text města)
+          en: Work state (city wording)
+          de: Baustatus (Wortlaut der Stadt)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   workCategory:
     slot_uri: jc:workCategory
     description: The city's kind of work, in Catalan (Urbanització, Serveis, Clavegueram...).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh stavby
+          cs: Druh stavby
+          en: Work category
+          de: Bauart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   contractingAuthority:
     slot_uri: sdm:contractingAuthority
     description: >-
       The work's promoter, a public body, utility or company; left out when it may name a person.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Investor
+          cs: Investor
+          en: Contracting authority
+          de: Auftraggeber
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   tenderAmount:
@@ -1142,17 +1294,43 @@ slots:
     description: The budget the work was put out to tender with, in euros.
     range: float
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Súťažná suma (EUR)
+          cs: Soutěžní částka (EUR)
+          en: Tender amount (EUR)
+          de: Ausschreibungsbetrag (EUR)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   awardAmount:
     slot_uri: jc:awardAmount
     description: The budget the work was awarded for, in euros.
     range: float
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zmluvná suma (EUR)
+          cs: Smluvní částka (EUR)
+          en: Award amount (EUR)
+          de: Zuschlagsbetrag (EUR)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   territorialArea:
     slot_uri: sdm:territorialArea
     description: Every district the work touches, by name, separated by "; ".
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dotknuté obvody
+          cs: Dotčené obvody
+          en: Districts touched
+          de: Betroffene Bezirke
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   seeAlso:
@@ -1160,6 +1338,14 @@ slots:
     description: The work's page on the city's works site.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Viac informácií
+          cs: Více informací
+          en: See also
+          de: Siehe auch
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
