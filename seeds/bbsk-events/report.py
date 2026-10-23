@@ -90,7 +90,10 @@ def summarise(events: list[dict], known: dict[tuple[float, float], str]) -> dict
     total = sum(c["events"] for c in per.values())
     gps = sum(c["gps"] for c in per.values())
     return {"sources": per, "total": total, "gps": gps, "share": gps / total if total else 0.0, "unplaced": unplaced,
-            "precision": precision, "streets": streets}
+            "precision": precision, "streets": streets,
+            # DM-141: every event names its municipality; one the venue table placed links its PointOfInterest.
+            "municipality": sum(1 for e in events if e.get("areaServed")),
+            "venue_link": sum(1 for e in events if e.get("refPointOfInterest"))}
 
 
 def localities(events: list[dict]) -> set[tuple[str, str]]:
@@ -146,6 +149,8 @@ def main(argv: list[str]) -> int:
     print("source\tevents\tgps\t" + "\t".join(ORIGINS))
     for source, c in sorted(report["sources"].items(), key=lambda kv: -kv[1]["events"]):
         print(f"{source}\t{c['events']}\t{c['gps']}\t" + "\t".join(str(c[o]) for o in ORIGINS))
+    print(f"municipality {report['municipality']} ({report['municipality'] / max(report['total'], 1):.0%}), "
+          f"venue link {report['venue_link']} ({report['venue_link'] / max(report['total'], 1):.0%})")
     print(f"{len(report['sources'])} sources, {report['total']} events, {report['gps']} with GPS ({report['share']:.0%})")
     total = report["total"] or 1
     print("precision: " + ", ".join(f"{p} {report['precision'][p]} ({report['precision'][p] / total:.0%})"

@@ -125,14 +125,16 @@ def stamp(value: Any) -> datetime | None:
     return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
 
 
-def check(kind: str, entities: list[dict[str, Any]], known: dict[str, set[str]], now: datetime) -> Counter:
+def check(kind: str, entities: list[dict[str, Any]], known: dict[str, set[str]], now: datetime,
+          box: tuple[float, float, float, float] = REGION, identity: dict[str, tuple[str, ...]] = IDENTITY) -> Counter:
     """(check, detail) -> how many entities of one type fail it. `known` maps each type read to its
-    ids, so a reference into a type nobody read is not counted as dangling."""
+    ids, so a reference into a type nobody read is not counted as dangling; `box` and `identity` are
+    another city's area and same-object fields (tests/praha/plausible.py)."""
     found: Counter = Counter()
     named: dict[tuple, list[tuple[float, float]]] = {}
     for entity in entities:
         for lon, lat in points(entity.get("location")):
-            reason = place(lon, lat)
+            reason = place(lon, lat, box)
             if reason:
                 found[("location", reason)] += 1
                 break
@@ -160,18 +162,18 @@ def check(kind: str, entities: list[dict[str, Any]], known: dict[str, set[str]],
         name = entity.get("name")
         first = next(points(entity.get("location")), None)
         if isinstance(name, str) and first and (entity.get("location") or {}).get("type") == "Point":
-            key = (name, *(json.dumps(entity.get(a), sort_keys=True) for a in IDENTITY.get(kind, ())))
+            key = (name, *(json.dumps(entity.get(a), sort_keys=True) for a in identity.get(kind, ())))
             if any(metres(first, other) <= 20 for other in named.get(key, [])):
                 found[("duplicate", "same name within 20 m")] += 1
             named.setdefault(key, []).append(first)
     return found
 
 
-def read_all(endpoint: str, kind: str, cap: int) -> list[dict[str, Any]]:
+def read_all(endpoint: str, kind: str, cap: int, lang: str = "fi") -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     while len(out) < cap:
         query = urllib.parse.urlencode(
-            {"type": kind, "limit": 1000, "offset": len(out), "options": "keyValues,sysAttrs", "lang": "fi"})
+            {"type": kind, "limit": 1000, "offset": len(out), "options": "keyValues,sysAttrs", "lang": lang})
         page = fetch(f"{endpoint.rstrip('/')}/ngsi-ld/v1/entities?{query}")
         out += page
         if len(page) < 1000:
