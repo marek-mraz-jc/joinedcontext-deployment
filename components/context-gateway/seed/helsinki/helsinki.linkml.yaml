@@ -1573,7 +1573,8 @@ enums:
   CountedVehicleType:
     description: The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.
     permissible_values:
-      bicycle: { description: "A bicycle, as an Eco-Counter station counts it." }
+      bicycle:
+        description: A bicycle, as an Eco-Counter station counts it.
   TrafficDirection:
     description: The direction a city counter names, in English.
     permissible_values:
@@ -1581,8 +1582,10 @@ enums:
       south: { description: Etelään. }
       east: { description: Itään. }
       west: { description: Länteen. }
-      inbound: { description: "IN, towards the centre." }
-      outbound: { description: "OUT, away from the centre." }
+      inbound:
+        description: IN, towards the centre.
+      outbound:
+        description: OUT, away from the centre.
   EventStatus:
     description: Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.
     permissible_values:
