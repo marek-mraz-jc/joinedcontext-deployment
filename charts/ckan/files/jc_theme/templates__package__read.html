@@ -34,7 +34,7 @@
           </summary>
           {% if preview.view %}
             {# A short table gets a short frame: 20 rows a page at most (T-4333). #}
-            <iframe class="jc-grid" loading="lazy" style="--jc-rows: {{ [preview.total or 20, 20]|min }}"
+            <iframe class="jc-grid" loading="lazy" data-jc-rows="{{ [preview.total or 20, 20]|min }}"
                     title="{{ h.jc_t('table_title') }}: {{ name }}"
                     src="{{ h.url_for(pkg.type ~ '_resource.view', id=pkg.name, resource_id=res.id, view_id=preview.view.id) }}"></iframe>
           {% else %}

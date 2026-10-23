@@ -177,3 +177,29 @@ the sites the space holds; a counter more than a day behind the newest row is le
 Measured 2026-10-12 with Bento 1.22.0 over the recorded 1.0 MB answer, the station ask stubbed:
 peak resident memory 169 MB against Bento's baseline of 130 MB, about 39 MB once a day; the
 utilisations are 6 kB.
+
+## HSL network registers (T-5254)
+
+Four HSL registers from HSL's open data hub (`hub.arcgis.com` GeoJSON downloads, WGS84, CC BY 4.0), each read
+daily. Each mapping checks plausibility before it writes (owner 2026-10-22): a record without a position,
+outside its area, with a value out of range, with an unknown code or a duplicate is dropped and counted by reason
+in one WARN line of the run, and an answer with no record fails the run (one `try` around the steps), so the stored
+entities stay. Measured 2026-10-22 with Bento 1.22.0 over the whole answer:
+
+| Pipeline | Source | Records | Entities | Dropped | Area checked | Schedule |
+|---|---|---|---|---|---|---|
+| `fare-zones` | `hsl-fare-zones` | 4 | 4 AdministrativeArea (`divisionLevel` fareZone) | 0 | HSL area, 23.9..25.75 E, 59.85..60.65 N | daily 04:30 |
+| `sales-points` | `hsl-sales-points` | 855 | 853 PointOfInterest (`serviceCategory` ticket…) | 2 out of use | Finland (24 kiosks sell beyond HSL's area) | daily 04:35 |
+| `vantaa-bikes` | `hsl-vantaa-bikes` | 120 | 120 BikeHireDockingStation | 0 | Vantaa plus 1 km | daily 04:40 |
+| `stop-boardings` | `hsl-stop-boardings` | 6 708 | 6 708 KeyPerformanceIndicator in `helsinki-kpi` | 0 | HSL area | daily 04:45 |
+
+Each run took under 3 s. `tests/test_helsinki_hsl_network.py` runs the mappings over recorded records plus the bad
+ones the rule names and checks every entity against the space schema and the pinned Smart Data Model.
+
+Not integrated, with the reason (T-5252 matrix): HSL stations, stations by line and lines (the same stops, routes and
+shapes the GTFS seeds already write, `transit-stops`, `transit-routes`, `gtfs-shapes`); terminals (118 records whose
+`TERMINAALI` is the GTFS `stop_id` of a GtfsStation `transit-stops` writes, Kamppi 1000001); knots and shift frequencies
+(16 724 nodes and 8 067 links of HSL's planning network model with departure counts, no passenger-facing object);
+Stara Snowplow API (`dev.hel.fi/aura` refuses connections); Stara maintenance fleet movements (a closed archive of
+January 2021, no current position); the prioritised winter maintenance network (`kartta.hel.fi` did not answer from the
+build host on 2026-10-22, so no fixture could be recorded; it needs `RoadSegment` vendored).
