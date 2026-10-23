@@ -435,14 +435,14 @@ v1/ConfigMap dev/gitea-seed-s5-bbsk--11
 v1/ConfigMap dev/gitea-seed-s5-bbsk--12
 v1/ConfigMap dev/gitea-seed-s5-bbsk--13
 v1/ConfigMap dev/gitea-seed-s5-bbsk--9
-v1/ConfigMap dev/gitea-seed-s5-slovensko--18
+v1/ConfigMap dev/gitea-seed-s5-slovensko--17
 v1/ConfigMap dev/gitea-seed-s6-bbsk--14
 v1/ConfigMap dev/gitea-seed-s6-slovensko--15
 v1/ConfigMap dev/gitea-seed-s6-slovensko--21
 v1/ConfigMap dev/gitea-seed-s7-helsinki
 v1/ConfigMap dev/gitea-seed-s7-slovensko--13
 v1/ConfigMap dev/gitea-seed-s7-slovensko--14
-v1/ConfigMap dev/gitea-seed-s7-slovensko--17
+v1/ConfigMap dev/gitea-seed-s7-slovensko--18
 v1/ConfigMap dev/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap dev/gitea-seed-s8-sharing-other
 v1/ConfigMap dev/gitea-seed-s8-slovensko
