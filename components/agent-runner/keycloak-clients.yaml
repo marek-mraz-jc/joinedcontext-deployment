@@ -250,6 +250,14 @@ helsinki-agent-proxy:
           included.custom.audience: p2qfrq3sxuoif6okjzhrp4jwul3eeowd
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-feedback-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: gv24bicwway4foznuszsagmzydzk3e2z
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # The hub (seed/helsinki/helsinki-endpoint-hub.yaml, T-1209): one door over the live
       # context and the indicators beside it, which is the endpoint a run picks when the
       # question spans both (EP-70).

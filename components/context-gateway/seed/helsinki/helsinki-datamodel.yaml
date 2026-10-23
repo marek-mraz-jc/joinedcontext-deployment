@@ -29,6 +29,7 @@ spec:
     - GtfsRoute
     - GtfsShape
     - OffStreetParking
+    - ServiceRequest
     - TrafficFlowObserved
     - KeyPerformanceIndicator
   artifacts:

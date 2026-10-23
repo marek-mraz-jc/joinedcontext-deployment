@@ -401,6 +401,7 @@ rbac.authorization.k8s.io/v1/Role smartcity/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role smartcity/portal
 rbac.authorization.k8s.io/v1/Role smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/Role smartcity/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role smartcity/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role smartcity/postgres-cluster-dr-drill
@@ -417,6 +418,7 @@ rbac.authorization.k8s.io/v1/RoleBinding smartcity/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-cluster-dr-drill
@@ -495,6 +497,7 @@ v1/ConfigMap smartcity/gitea-seed-s6-bbsk--15
 v1/ConfigMap smartcity/gitea-seed-s7-helsinki
 v1/ConfigMap smartcity/gitea-seed-s7-helsinki--2
 v1/ConfigMap smartcity/gitea-seed-s7-helsinki--3
+v1/ConfigMap smartcity/gitea-seed-s7-helsinki--4
 v1/ConfigMap smartcity/gitea-seed-s7-slovensko--23
 v1/ConfigMap smartcity/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap smartcity/gitea-seed-s8-slovensko--13

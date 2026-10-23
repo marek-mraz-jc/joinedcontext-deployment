@@ -217,6 +217,7 @@ rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/portal-build-pods
 rbac.authorization.k8s.io/v1/Role local/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role local/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role local/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
@@ -226,6 +227,7 @@ rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding local/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
@@ -296,6 +298,7 @@ v1/ConfigMap local/gitea-seed-s6-bbsk--15
 v1/ConfigMap local/gitea-seed-s7-helsinki
 v1/ConfigMap local/gitea-seed-s7-helsinki--2
 v1/ConfigMap local/gitea-seed-s7-helsinki--3
+v1/ConfigMap local/gitea-seed-s7-helsinki--4
 v1/ConfigMap local/gitea-seed-s7-slovensko--23
 v1/ConfigMap local/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap local/gitea-seed-s8-slovensko--10
