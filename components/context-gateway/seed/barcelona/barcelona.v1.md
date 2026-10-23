@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; Event holds the city's activity agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the works on the public space as CityWork and the street inventory's crossings as PedestrianCrossing; each Open Data BCN batch adds its own classes.
+What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; Event holds the city's activity agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); the urbanism batch adds the districts and barris as AdministrativeArea, the works on the public space as CityWork and the street inventory's crossings as PedestrianCrossing; the statistics batch adds the city's statistics per barri, district and city as KeyPerformanceIndicator; each Open Data BCN batch adds its own classes.
 
 - Namespace: `https://joinedcontext.com/models/barcelona/barcelona`
 - Rendered by: `linkml-1.12.0`
@@ -44,11 +44,12 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
 | `districtCode` | Property | `string` | yes |  | `jc:districtCode` | The city's own two-digit code of the area: the district number 01..10, or for a barri its number 01..73, which runs across the whole city. |
-| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to; for a statistics indicator also the whole city. |
 | `refParentDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refParentDistrict` | The district a barri belongs to. |
 | `neighbourhoods` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:neighbourhoods` | The barris of this district, computed from their refParentDistrict and never stored. |
 | `cityWorks` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:cityWorks` | The works that lie in this district only, computed from their refDistrict and never stored. |
 | `pedestrianCrossings` | Relationship | [`PedestrianCrossing`](#pedestriancrossing) (list) |  |  | `jc:pedestrianCrossings` | The crossings in this barri, computed from their refNeighbourhood and never stored. |
+| `indicators` | Relationship | [`KeyPerformanceIndicator`](#keyperformanceindicator) (list) |  |  | `jc:indicators` | The statistics indicators of this district or barri, computed from their refArea and never stored. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -67,7 +68,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
-| `description` | Property | `string` |  |  | `schema:description` | The work's description as the city publishes it, in Catalan. |
+| `description` | Property | `string` |  |  | `schema:description` | The description as the city publishes it, in Catalan (a work, a statistics dataset). |
 | `workNumber` | Property | `string` | yes |  | `sdm:workNumber` | The city's code of the work, such as 05-2025G0074 (district, year, number). |
 | `workState` | Property | [`WorkState`](#workstate) | yes |  | `sdm:workState` | Where the work stands, in the Smart Data Model's terms. |
 | `workStateLabel` | Property | `string` |  |  | `jc:workStateLabel` | The work's state as the city writes it, in Catalan (En execució, Aturada, Finalitzada). |
@@ -152,6 +153,48 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### KeyPerformanceIndicator
+
+One indicator of the city's statistics (Departament d'Estadística, Open Data BCN) for one barri, district or the whole city: the newest period's value, its history one row per period. Read daily from Open Data BCN.
+
+IRI: `sdm:KeyPerformanceIndicator`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a district or barri, a work). |
+| `description` | Property | `string` |  |  | `schema:description` | The description as the city publishes it, in Catalan (a work, a statistics dataset). |
+| `kpiValue` | Property | `float` | yes |  | `sdm:kpiValue` | The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count, EUR euros, MTK square metres) and the period's last day as `observedAt`, so the history holds one value per period. |
+| `calculationPeriod` | Property | [`KpiPeriod`](#kpiperiod) | yes |  | `sdm:calculationPeriod` | The period the value covers, its first and last day. |
+| `calculationFrequency` | Property | [`CalculationFrequency`](#calculationfrequency) |  |  | `sdm:calculationFrequency` | How often the source publishes a new period. |
+| `area` | Property | `string` |  |  | `sdm:area` | The name of the area the value describes, a barri, a district or the whole city. |
+| `districtCode` | Property | `string` |  |  | `jc:districtCode` | The city's own two-digit code of the area: the district number 01..10, or for a barri its number 01..73, which runs across the whole city. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to; for a statistics indicator also the whole city. |
+| `refArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refArea` | The district or barri (AdministrativeArea) the value describes; none for the whole city. |
+| `process` | Property | `string` |  |  | `sdm:process` | The statistics dataset the value comes from, its Open Data BCN title in Catalan. |
+| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The Open Data BCN dataset the value comes from, such as pad_mdbas, which `source` links to. |
+| `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | Which breakdown of the dataset the value is: each kept column and its value as the source writes it, such as SEXE=2; total when the dataset has no breakdown. |
+| `calculatedBy` | Property | `string` |  |  | `sdm:calculatedBy` | The organization that computes the value. |
+| `organization` | Property | `string` |  |  | `sdm:organization` | The organization the indicator describes. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### KpiPeriod
+
+The value of `calculationPeriod`, never an entity of its own.
+
+IRI: `jc:KpiPeriod`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `from` | Property | `date` | yes |  | `sdm:from` | The first day of the period. |
+| `to` | Property | `date` | yes |  | `sdm:to` | The last day of the period. |
+
 ### PostalAddress
 
 The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
@@ -191,10 +234,18 @@ IRI: `ngsi-ld:Entity`
 
 ## Enumerations
 
+### CalculationFrequency
+
+| Value | Meaning |
+|---|---|
+| `monthly` | A new value every month. |
+| `yearly` | A new value every year. |
+
 ### DivisionLevel
 
 | Value | Meaning |
 |---|---|
+| `city` | The whole city (statistics only). |
 | `district` | A district (districte), 10 of them. |
 | `neighbourhood` | A barri, 73 of them, each inside one district. |
 

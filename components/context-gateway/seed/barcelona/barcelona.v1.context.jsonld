@@ -19,6 +19,12 @@
     "Event": {
       "@id": "sdm:Event"
     },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "KpiPeriod": {
+      "@id": "jc:KpiPeriod"
+    },
     "PedestrianCrossing": {
       "@id": "jc:PedestrianCrossing"
     },
@@ -37,12 +43,29 @@
     "addressLocality": {
       "@id": "schema:addressLocality"
     },
+    "area": {
+      "@id": "sdm:area"
+    },
     "areaServed": {
       "@id": "sdm:areaServed"
     },
     "awardAmount": {
       "@id": "jc:awardAmount",
       "@type": "xsd:float"
+    },
+    "calculatedBy": {
+      "@id": "sdm:calculatedBy"
+    },
+    "calculationFrequency": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:calculationFrequency"
+    },
+    "calculationPeriod": {
+      "@id": "sdm:calculationPeriod"
     },
     "category": {
       "@id": "sdm:category"
@@ -78,6 +101,9 @@
     "description": {
       "@id": "schema:description"
     },
+    "dimensionKey": {
+      "@id": "jc:dimensionKey"
+    },
     "district": {
       "@id": "sdm:district"
     },
@@ -96,9 +122,21 @@
       "@id": "schema:endDate",
       "@type": "xsd:dateTime"
     },
+    "from": {
+      "@id": "sdm:from",
+      "@type": "xsd:date"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
+    "indicators": {
+      "@id": "jc:indicators",
+      "@type": "@id"
+    },
     "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -127,6 +165,9 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "organization": {
+      "@id": "sdm:organization"
+    },
     "pedestrianCrossings": {
       "@id": "jc:pedestrianCrossings",
       "@type": "@id"
@@ -141,6 +182,13 @@
     },
     "postalCode": {
       "@id": "schema:postalCode"
+    },
+    "process": {
+      "@id": "sdm:process"
+    },
+    "refArea": {
+      "@id": "jc:refArea",
+      "@type": "@id"
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
@@ -170,6 +218,9 @@
       "@id": "schema:startDate",
       "@type": "xsd:dateTime"
     },
+    "statisticsTable": {
+      "@id": "jc:statisticsTable"
+    },
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
@@ -185,6 +236,10 @@
     },
     "territorialArea": {
       "@id": "sdm:territorialArea"
+    },
+    "to": {
+      "@id": "sdm:to",
+      "@type": "xsd:date"
     },
     "type": "@type",
     "workCategory": {

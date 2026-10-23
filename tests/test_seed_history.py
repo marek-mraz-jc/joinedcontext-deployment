@@ -75,6 +75,9 @@ CHOSEN = {
     # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
     ("praha/praha-mesto", "WasteContainer"): "P7D",
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
+    # Barcelona's statistics keep ten years, the longest a space keeps (DM-82): one row per
+    # published year or month (T-5266).
+    ("barcelona/barcelona", "KeyPerformanceIndicator"): "P3650D",
 }
 
 
@@ -103,6 +106,9 @@ TEMPORAL = {"queryTemporal", "retrieveTemporal"}
 # cannot grant the history of some types and not of others, so it serves no history (T-4372).
 # The space's other public Endpoints serve that history.
 MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
+# Public reads of series with at most one row per month and entity, whose whole kept history is
+# cheaper to read than a month of a sensor's: they read all of it (T-5266).
+WHOLE_HISTORY = {f"barcelona/public-statistics-{theme}" for theme in ("population", "housing", "vehicles")}
 
 
 def public_policies():
@@ -138,7 +144,8 @@ def test_a_public_temporal_grant_names_only_history_and_is_capped_to_it():
         days = kept(space)
         types = entries(spec)
         assert types and set(types) <= set(days), f"{name}: history off for {sorted(set(types) - set(days))}"
-        assert spec.get("temporalQ") == f"timerel=after;timeAt=P-{min(max(days[t] for t in types), 30)}D", name
+        window = max(days[t] for t in types) if name in WHOLE_HISTORY else min(max(days[t] for t in types), 30)
+        assert spec.get("temporalQ") == f"timerel=after;timeAt=P-{window}D", name
     assert granting >= 15
 
 

@@ -52,3 +52,14 @@ barcelona-pipeline-equipaments.yaml: projects/barcelona/pipelines/equipaments/pi
 barcelona-pipeline-equipaments-bento.yaml: projects/barcelona/pipelines/equipaments/bento.yaml
 barcelona-endpoint-places.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-places.yaml
 barcelona-policy-public-places.yaml: projects/barcelona/spaces/barcelona/policies/public-places.yaml
+# The city's statistics (T-5266): one pipeline over the Padró, cadastre, notaries' and vehicle
+# tables of Open Data BCN, three public datasets by theme.
+barcelona-datasource-statistics.yaml: projects/barcelona/datasources/bcn-statistics-dimensions.yaml
+barcelona-pipeline-statistics.yaml: projects/barcelona/pipelines/statistics/pipeline.yaml
+barcelona-pipeline-statistics-bento.yaml: projects/barcelona/pipelines/statistics/bento.yaml
+barcelona-endpoint-statistics-population.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-population.yaml
+barcelona-endpoint-statistics-housing.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-housing.yaml
+barcelona-endpoint-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-vehicles.yaml
+barcelona-policy-public-statistics-population.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-population.yaml
+barcelona-policy-public-statistics-housing.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-housing.yaml
+barcelona-policy-public-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-vehicles.yaml
