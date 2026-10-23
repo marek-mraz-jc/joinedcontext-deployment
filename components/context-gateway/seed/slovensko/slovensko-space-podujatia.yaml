@@ -29,6 +29,9 @@ spec:
   retention:
     - entityType: Event
       history: 'off'
+    # Venues change rarely; the daily miesta-podujati upsert would write one history row per attribute per day.
+    - entityType: PointOfInterest
+      history: 'off'
   # Slovakia with a margin: a point outside it is flagged (DM-87); the pipelines refuse it first.
   quality:
     - name: in-slovakia

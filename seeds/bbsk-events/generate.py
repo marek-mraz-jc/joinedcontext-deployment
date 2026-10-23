@@ -14,7 +14,9 @@ Run: python3 seeds/bbsk-events/generate.py [--check]
 """
 
 import csv
+import hashlib
 import json
+import math
 import re
 import sys
 import unicodedata
@@ -161,8 +163,66 @@ def kept_sources() -> list[dict]:
     return kept
 
 
+#: Two venues.csv rows of one name closer than this are one venue (DM-141).
+SAME_VENUE_M = 50
+
+
+def metres(a: dict, b: dict) -> float:
+    """The distance of two rows' points, equirectangular: exact to a centimetre over 50 m."""
+    la1, lo1, la2, lo2 = map(math.radians, (float(a["lat"]), float(a["lon"]), float(b["lat"]), float(b["lon"])))
+    return 6371000 * math.hypot((lo2 - lo1) * math.cos((la1 + la2) / 2), la2 - la1)
+
+
+def venue_groups(rows: list[dict]) -> list[list[dict]]:
+    """The rows grouped by real venue (DM-141): one OpenStreetMap object, or one name in one town within
+    SAME_VENUE_M, is one venue, in table order."""
+    parent = list(range(len(rows)))
+
+    def root(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i, a in enumerate(rows):
+        for j in range(i):
+            b = rows[j]
+            same_osm = a["osm"] and a["osm"] == b["osm"]
+            same_name = (a["town"], key(a["venue"])) == (b["town"], key(b["venue"])) and metres(a, b) < SAME_VENUE_M
+            if same_osm or same_name:
+                parent[root(i)] = root(j)
+    groups: dict[int, list[dict]] = {}
+    for i, row in enumerate(rows):
+        groups.setdefault(root(i), []).append(row)
+    return list(groups.values())
+
+
+def poi_id(group: list[dict]) -> str:
+    """A venue's PointOfInterest id after urn:ngsi-ld:PointOfInterest:{space}: its first row's OpenStreetMap
+    object (`osm-way-292648504`), else a hash of its town, name and point."""
+    first = group[0]
+    if first["osm"]:
+        return "osm-" + first["osm"].replace("/", "-")
+    text = f"{first['town']}|{key(first['venue'])}|{float(first['lat']):.5f}|{float(first['lon']):.5f}"
+    return "h-" + hashlib.sha256(text.encode()).hexdigest()[:16]
+
+
+_POI_IDS: dict[tuple[str, str], str] = {}
+
+
+def poi_ids() -> dict[tuple[str, str], str]:
+    """(town, match) of every venues.csv row -> its venue's PointOfInterest id."""
+    if not _POI_IDS:
+        rows = list(csv.DictReader((HERE / "venues.csv").open(encoding="utf-8")))
+        for group in venue_groups(rows):
+            for row in group:
+                _POI_IDS[(row["town"], row["match"])] = poi_id(group)
+    return _POI_IDS
+
+
 def venue(v: dict) -> dict:
     return {
+        "poi": poi_ids()[(v["town"], v["match"])],
         "match": v["match"],
         "town": v["town"],
         "venue": v["venue"],
@@ -388,6 +448,92 @@ def documents(minute: int, row: dict, store: dict) -> dict[str, str]:
     }
 
 
+VENUES = "miesta-podujati"
+
+
+def store_venues(rows: list[dict]) -> list[list]:
+    """The PointOfInterest of each venue a store's events can link (DM-141), one per venue_groups() group:
+    [id, name, streetAddress, addressLocality, lat, lon, scope, areaServed]."""
+    linked = {(v["town"], v["match"]) for r in rows for v in venues_for(r["town_slug"])}
+    towns = {t["town"]: t for t in csv.DictReader((HERE / "towns.csv").open(encoding="utf-8"))}
+    out = []
+    for group in venue_groups(list(csv.DictReader((HERE / "venues.csv").open(encoding="utf-8")))):
+        if not any((v["town"], v["match"]) in linked for v in group):
+            continue
+        first = group[0]
+        town = towns[first["town"]]
+        out.append([
+            poi_id(group),
+            min((v["venue"] for v in group), key=len),
+            next((v["streetAddress"] for v in group if v["streetAddress"]), None),
+            first["addressLocality"],
+            float(first["lat"]),
+            float(first["lon"]),
+            "/SK/" + REGIONS[town["region"]][0] + "/" + first["town"].replace("-", "_"),
+            town["name"],
+        ])
+    return out
+
+
+#: The mapping of a store's venue pipeline: each table row one PointOfInterest (DM-141).
+VENUE_MAPPING = """root = {
+  "id": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), this.index(0)),
+  "type": "PointOfInterest",
+  "scope": this.index(6),
+  "name": { "type": "Property", "value": this.index(1) },
+  "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [this.index(5), this.index(4)] } },
+  "address": { "type": "Property", "value": { "streetAddress": this.index(2), "addressLocality": this.index(3), "addressCountry": "SK" }.filter(kv -> kv.value != null) },
+  "areaServed": { "type": "Property", "value": this.index(7) },
+  "source": { "type": "Property", "value": if this.index(0).has_prefix("osm-") { "https://www.openstreetmap.org/" + this.index(0).trim_prefix("osm-").replace("-", "/") } else { "https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/seeds/bbsk-events/venues.csv" } },
+  "dataProvider": { "type": "Property", "value": "© OpenStreetMap contributors, ODbL 1.0" }
+}
+"""
+
+
+def venue_documents(store: dict, rows: list[dict]) -> dict[str, str]:
+    """The DataSource, Pipeline and mapping that write a store's venues as PointOfInterest entities, once a day
+    at 03:30 UTC, after the night's event runs (DM-141). The table rides in the mapping: no outbound call."""
+    ns = store["ns"]
+    title = {"sk": "Miesta konania podujatí", "en": "Event venues"}
+    datasource = {
+        "apiVersion": "joinedcontext.com/v1alpha1",
+        "kind": "DataSource",
+        "metadata": {"name": VENUES, "namespace": ns, "title": title},
+        "spec": {"type": "generate", "input": {"mapping": 'root = ""', "count": 1, "interval": ""}},
+    }
+    pipeline = {
+        "apiVersion": "joinedcontext.com/v1alpha1",
+        "kind": "Pipeline",
+        "metadata": {"name": VENUES, "namespace": ns, "title": title},
+        "spec": {
+            "class": "auto",
+            "period": "24h",
+            "schedule": "30 3 * * *",
+            "source": {"dataSourceRef": {"kind": "DataSource", "name": VENUES}},
+            "targetEndpoint": store["target"],
+            "output": {"type": "PointOfInterest", "mode": "upsert"},
+            "quotas": {"maxMemoryMb": 128, "cpuMillicores": 100},
+        },
+    }
+    table = json.dumps(store_venues(rows), ensure_ascii=False, separators=(",", ":"))
+    bento = {"pipeline": {"processors": [
+        {"mapping": f"root = {table}\n"},
+        {"unarchive": {"format": "json_array"}},
+        {"mapping": VENUE_MAPPING},
+        {"archive": {"format": "json_array"}},
+    ]}}
+    head = (
+        "# Generated by seeds/bbsk-events/generate.py from venues.csv and towns.csv (T-5364, DM-141): one\n"
+        "# PointOfInterest per venue the events link. Do not edit: change the CSV.\n"
+    )
+    dump = lambda d: yaml.dump(d, Dumper=Dumper, allow_unicode=True, sort_keys=False, width=120)
+    return {
+        f"{ns}-datasource-{VENUES}.yaml": head + dump(datasource),
+        f"{ns}-pipeline-{VENUES}.yaml": head + dump(pipeline),
+        f"{ns}-pipeline-{VENUES}-bento.yaml": head + dump(bento),
+    }
+
+
 def accept(kind: str) -> str:
     return {
         "ical": "text/calendar",
@@ -402,7 +548,7 @@ def accept(kind: str) -> str:
 
 def index_lines(rows: list[dict], ns: str) -> list[str]:
     lines = [INDEX_BEGIN]
-    for row in rows:
+    for row in [*rows, {"name": VENUES}]:
         lines += [
             f"{ns}-datasource-{row['name']}.yaml: projects/{ns}/datasources/{row['name']}.yaml",
             f"{ns}-pipeline-{row['name']}.yaml: projects/{ns}/pipelines/{row['name']}/pipeline.yaml",
@@ -470,6 +616,8 @@ def wanted_files() -> tuple[dict[Path, str], list[Path]]:
             for i, row in enumerate(mine):
                 for file, text in documents(i * plan["window"] // len(mine), row, store).items():
                     wanted[seed / file] = text
+        for file, text in venue_documents(store, rows).items():
+            wanted[seed / file] = text
         for file in store["endpoints"]:
             path = seed / file
             block = "\n".join(catalogue_sources(rows)) + "\n"

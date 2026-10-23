@@ -290,6 +290,16 @@ def test_a_monitored_container_points_at_the_collection_point_the_ipr_feed_write
 
 
 @requires_docker
+def test_a_container_expires_a_week_after_its_last_write_so_one_golemio_stops_monitoring_leaves(written):
+    # T-5270: 199 containers absent from Golemio's answer kept a fill level from up to four weeks back.
+    from datetime import UTC, datetime, timedelta
+    now = datetime.now(UTC)
+    for container in written["waste-fill"]:
+        expires = datetime.fromisoformat(container["expiresAt"])
+        assert now + timedelta(days=6, hours=23) <= expires <= now + timedelta(days=7, minutes=5), container["expiresAt"]
+
+
+@requires_docker
 def test_an_unmonitored_or_unknown_container_is_not_written_and_a_missing_reading_writes_no_level():
     def edit(d):
         monitored = [c for c in d["features"][0]["properties"]["containers"] if c["is_monitored"]]
