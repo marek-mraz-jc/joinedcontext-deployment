@@ -78,6 +78,37 @@
           "description": "The postal address of the venue, field by field (Smart Data Models' common PostalAddress); `addressLocality` is the town a calendar filters on. A field the source leaves out is absent, never guessed.",
           "x-ngsi-ld-kind": "Property"
         },
+        "audience": {
+          "description": "Who the event is for, in Smart Data Models' Event codes; set with the category `children-family`, `children` when the source or the name says children, else `family`.",
+          "items": {
+            "$ref": "#/definitions/EventAudience"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "category": {
+          "description": "The event's main category, one code of the platform's list of 15 (docs API/12-event-categories.md), picked by the rule table seeds/event-categories.json from the source's own word, the name or the kind of body that announced it (`music`, `sport`). A list of one, as Smart Data Models' Event writes `category`; absent when no rule names the event.",
+          "items": {
+            "$ref": "#/definitions/EventCategory"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "categorySource": {
+          "description": "How `category` was picked; `rule` is the rule table, the only way today.",
+          "pattern": "^rule$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dataProvider": {
           "description": "Who announced the event (the town, the region, the cultural body), as the credit names it.",
           "type": [
@@ -113,7 +144,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "eventCategory": {
-          "description": "The kind of event in the source's own words (`koncert`, `výstava`, `šport`).",
+          "description": "The kind of event in the source's own words (`koncert`, `výstava`, `šport`), kept so `category` can be traced back to it.",
           "type": [
             "string",
             "null"
@@ -236,6 +267,49 @@
       ],
       "title": "Event",
       "type": "object"
+    },
+    "EventAudience": {
+      "description": "The Smart Data Models Event audience codes the pipelines write.",
+      "enum": [
+        "children",
+        "family"
+      ],
+      "title": "EventAudience",
+      "type": "string"
+    },
+    "EventCategory": {
+      "description": "The main event categories of the platform, with labels in sk, cs, en and de.",
+      "enum": [
+        "sport",
+        "outdoor-nature",
+        "film",
+        "theatre-dance",
+        "music",
+        "festival-fair",
+        "food-market",
+        "exhibition-museum",
+        "history-heritage",
+        "faith-tradition",
+        "education-talk",
+        "children-family",
+        "hobby-workshop",
+        "health-wellness",
+        "community-civic"
+      ],
+      "title": "EventCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "exhibition-museum": "Smart Data Models category museum.",
+        "faith-tradition": "Smart Data Models category religiousWorship.",
+        "festival-fair": "Smart Data Models category spectacle.",
+        "film": "Smart Data Models category spectacle.",
+        "food-market": "Smart Data Models category gastronomy, shopping.",
+        "health-wellness": "Smart Data Models category wellness.",
+        "history-heritage": "Smart Data Models category history.",
+        "music": "Smart Data Models category spectacle.",
+        "outdoor-nature": "Smart Data Models category outdoorActivities, excursion.",
+        "theatre-dance": "Smart Data Models category spectacle."
+      }
     },
     "LocationPrecision": {
       "description": "How close an event's point is to its venue; office and centre are approximate.",

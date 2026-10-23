@@ -25,6 +25,15 @@
     "addressRegion": {
       "@id": "schema:addressRegion"
     },
+    "audience": {
+      "@id": "sdm:audience"
+    },
+    "category": {
+      "@id": "sdm:category"
+    },
+    "categorySource": {
+      "@id": "jc:categorySource"
+    },
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },

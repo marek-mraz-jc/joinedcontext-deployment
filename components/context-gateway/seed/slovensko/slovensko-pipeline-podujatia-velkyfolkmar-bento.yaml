@@ -49,7 +49,7 @@ pipeline:
       let now = timestamp_unix()
       # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
       # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
-      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej|nádob)|^zberný dvor|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
       let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
@@ -128,6 +128,15 @@ pipeline:
       let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { {"name": "Obec Veľký Folkmar", "url": "https://www.velkyfolkmar.sk"} }
       # The event's own page, else the organizer's page listing its events: every event carries a link a person opens.
       let link = this.url.apply("link").or("https://www.velkyfolkmar.sk/aktuality/kalendar-akcii/")
+      # The main category (T-5363, docs API/12-event-categories.md): the first rule of seeds/event-categories.json
+      # matching the source's own word without its audience and catch-all parts, else the name, else the whole word
+      # ("akcie pre deti"), else the kind of body whose calendar it is (a theatre). No match: no category.
+      let rules = [["sport", "šport|sport|futbal|hokej|volejbal|nohejbal|basketbal|hádzan|tenis|kolky|karate|\\bbeh|maratón|turnaj|zápas|pohár|cyklo|korčuľ|plávan|lyžov|šach|atletik|fitnes|zumba|bowling|biliard|súťaž|hasič|krampuslauf|\\brun\\b"], ["outdoor-nature", "turistik|túra|výstup|výlet|príro|vychádzk|pochod|hike|nature|outdoor|jaskyň|splav|rastlín|stromy|záhrad"], ["film", "kino|film|premietan|projekci|cinema|movie"], ["theatre-dance", "divad|činohr|opera|balet|tanec|muzikál|predstaven|inscenác|bábk|repríza|premiér|kabaret|stand-?up|komédi|kúzel|zájazd|theat|dance|sľuk|lúčnic|színház"], ["music", "hudb|hudob|koncert|music|spev|zbor|orchest|kapel|\\bband\\b|trio\\b|kvartet|recitál|jazz|rock|disco|disko|párty|party|karaoke|\\bdj\\b|heligón|dychov|cimbal|organ|folklór|zábava|veselic|tančiare|\\bples|\\bbál\\b|vivaldi|zenekar"], ["festival-fair", "festival|\\bfest\\b|jarmo|\\bhody|hodov|dni obce|dni mesta|slávnos|oslav|karneval|maškar|fašiang|majáles|dožink|vinobran|ohňostroj|vatr|silvest|lampión|halloween|strašidel|tekvič|mikuláš"], ["food-market", "gastro|\\btrh|jedl|ochutnávk|degust|\\bvín|vinár|pivo|guláš|kapustnic|zabíjač|varen|pečen|burz|bazár|punč|kuchár|kuchyn|palacink|coffee|kávy|food|market|swap"], ["exhibition-museum", "výstav|vernisáž|finisáž|kurátor|galéri|múze|muze|expozíc|exhibit|museum|gallery|maľb|insit|sochár|ateliér|salón"], ["history-heritage", "histor|pamiatk|hrad|kaštie|zámo|dejin|výroči|spomienk|piet|vencov|vojn|veterán|\\bsnp\\b|remesl|kódex|prehliadk|baníc|patrón|minulos|dedičstv"], ["faith-tradition", "cirkev|omš|bohoslužb|kostol|púť|svät|modlitb|duchovn|poklon|pobožn|evanjel|reformač|farsk|farnos|biblick|advent|vianoc|vianoč|veľkonoč|dušičk|svetlono|koled|koľad|tradíci"], ["education-talk", "prednášk|seminár|konferenc|besed|workshop|kurz|vzdeláv|diskus|čítan|autorsk|knih|kniž|literár|poézi|poeti|básn|vedeck|\\bved|webinár|info dni|študent|talk|lecture|\\bai\\b|haiku|poviedk|recenzi|kvíz"], ["children-family", "deti|detsk|pre najmenš|rozprávk|rodin|rodič|škôlk|mamičk|story time|kids|children|family"], ["hobby-workshop", "tvoriv|tvoren|tvoríme|dielni|ručné práce|ručných prác|háčkov|pleten|plsten|modrotlač|ikeban|vyrezáv|spoločensk[ýé]ch hier|stolov[áé] hr|chovateľ|fotograf|hobby|craft"], ["health-wellness", "zdrav|wellness|cvičen|pohyb|kvapka krvi|darovanie krvi|meditác|relax|somatick|masáž|medicín|jóg|joga|parkinson|ženské kruhy|open class"], ["community-civic", "komunit|stretnut|posedeni|zhromažd|fórum|forum|občian|dobrovoľn|brigád|spolok|\\bklub|schôdz|ocenen|uvítan|jubil|prípitok|charit|zbierk|slobod|seniorov|susedia"]]
+      let word = this.category.apply("text").or("").lowercase()
+      let specific = $word.re_replace_all("trhy, výstavy, veľtrhy \\(ostatné\\)", "trh").re_replace_all("trhy, výstavy, veľtrhy|akcie pre [^,)]*", "")
+      let title = $name.or("").lowercase()
+      let category = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(null).filter(c -> c != null).index(0).catch(null)
+      let audience = if $category != "children-family" { null } else if ($word + " " + $title).re_match("deti|detsk|najmenš|škôlk") { ["children"] } else { ["family"] }
       let now = timestamp_unix()
       let lease = 187200
       let ends = if this._end == null { null } else { this._end + 86400 }
@@ -146,6 +155,9 @@ pipeline:
         "venue": $place.venue.or($venue_text).apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
+        "category": if $category != null { { "type": "Property", "value": [$category] } } else { null },
+        "categorySource": if $category != null { { "type": "Property", "value": "rule" } } else { null },
+        "audience": $audience.apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back
         # (integrator 2026-10-20, T-4894); its text stays on its own page.
         # Contact e-mails and phone numbers stay on the source's page: they may name a person.
