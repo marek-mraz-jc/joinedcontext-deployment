@@ -15,7 +15,16 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved", "TrafficFlowObserved", "OnStreetParking", "EVChargingStation", "Event", "PointOfInterest"}
+TYPES = {
+    "AirQualityObserved",
+    "WeatherObserved",
+    "PhreaticObserved",
+    "TrafficFlowObserved",
+    "OnStreetParking",
+    "EVChargingStation",
+    "Event",
+    "PointOfInterest",
+}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -103,8 +112,16 @@ def test_the_example_validates_against_its_model():
     schema = json.loads((BARCELONA / "barcelona.v1.schema.json").read_text())
     example = json.loads((BARCELONA / "barcelona.v1.example.jsonld").read_text())
     example.pop("@context", None)
-    validator = jsonschema.Draft7Validator(schema["definitions"][example["type"]])
+    validator = jsonschema.Draft7Validator({**schema["definitions"][example["type"]], "definitions": schema["definitions"]})
     assert not sorted(validator.iter_errors(example), key=str)
+
+
+def test_a_scheduled_pipeline_names_no_period():
+    # The runner reads `period` before `schedule` (Portal run_queue Clock::of): a pipeline with
+    # both runs on the period's clock and the schedule's timing after the source's rewrite is lost.
+    for name, pipeline in by_name("Pipeline").items():
+        if pipeline["spec"].get("schedule"):
+            assert "period" not in pipeline["spec"], name
 
 
 def test_the_pipelines_account_writes_the_one_space_and_nothing_else():

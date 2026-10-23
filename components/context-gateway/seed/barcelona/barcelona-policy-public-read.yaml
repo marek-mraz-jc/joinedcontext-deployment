@@ -30,5 +30,7 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: WeatherObserved
+        - type: PhreaticObserved
         - type: TrafficFlowObserved
         - type: EVChargingStation

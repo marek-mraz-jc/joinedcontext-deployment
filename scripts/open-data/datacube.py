@@ -341,47 +341,43 @@ def slug_for(path: Path) -> str:
     return base64.b32encode(secrets.token_bytes(20)).decode().lower().rstrip("=")
 
 
-def decoder(ds: list[dict]) -> str:
-    """The bloblang of a topic's pipeline: the JSON-stat 2.0 decoder of the zilina cube streams
-    (zilina-pipeline-obyvatelstvo-bento.yaml), over a table of the topic's cubes and their roles."""
-    table = {d["code"]: {"update": d["update"], **roles(d["dimensions"]), "source": dataset_url(d)} for d in ds}
-    return f"""# The cubes of this topic and the role of their dimensions, read from DATAcube's collection.
-let cubes = {json.dumps(table, ensure_ascii=False, sort_keys=True)}
-# The cube a message is, from the address the answer names itself by.
-let cube = this.href.or("").re_find_object("/(?P<code>[a-z]{{2}}[0-9]{{4}}[a-z]{{2}})/").code.catch(null)
-let roles = $cubes.get($cube.or("")).catch(null)
-root = if $roles == null {{ throw("no cube of this topic answered: %v".format(this.href.or("no href"))) }} else if this.value.or([]).length() == 0 {{ throw("cube %v answered no cell".format($cube)) }} else {{ this }}
-let ds = this
-let ids = this.id
-let sizes = this.size
-let n = $sizes.length()
-# JSON-stat 2.0 is decoded by the index and never by the order: the period comes newest first.
-let codes = $ids.map_each(d -> $ds.dimension.get(d).category.index.key_values().sort_by(kv -> kv.value).map_each(kv -> kv.key))
-let labels = $ids.map_each(d -> $ds.dimension.get(d).category.label.or({{}}))
-let strides = range(0, $n, 1).map_each(k -> if k + 1 >= $n {{ 1 }} else {{ $sizes.slice(k + 1, $n).fold(1, t -> t.tally * t.value) }})
-let at_index = range(0, $n, 1).map_each(k -> {{ $ids.index(k): k }}).squash()
-# A dimension DATAcube adds to the answer only (`*_data`, one value) names nothing.
-let named = [$roles.period, $roles.area, $roles.indicator, $roles.unit].concat($roles.keys)
-let keys = $roles.keys.concat($ids.filter(d -> !$named.contains(d) && $sizes.index($at_index.get(d)) > 1))
-let updated = ($ds.update.or($roles.update)).ts_parse("2006-01-02").ts_format("2006-01-02T15:04:05Z07:00", "UTC").catch(null)
-let cells = if $ds.value.type() == "object" {{ $ds.value.key_values().map_each(kv -> {{ "p": kv.key.number().int64(), "v": kv.value }}) }} else {{ range(0, $ds.value.length(), 1).map_each(p -> {{ "p": p, "v": $ds.value.index(p) }}) }}
-# One entity per cell that carries a number; a cell the publisher left empty is not a zero.
-root = $cells.filter(c -> c.v != null && c.v.type() == "number").map_each(c -> range(0, $n, 1).map_each(k -> {{ $ids.index(k): $codes.index(k).index(((c.p / $strides.index(k)).floor().int64()) % $sizes.index(k)) }}).squash().merge({{ "_v": c.v }})).map_each(at -> {{
-  "id": "urn:ngsi-ld:%v:%v:%v:%v".format("{TYPE}", env("JC_ORG_DOMAIN"), env("JC_SPACE"), [$cube, if $roles.area == null {{ "SK0" }} else {{ at.get($roles.area) }}, at.get($roles.period), if $roles.indicator == null {{ $cube }} else {{ at.get($roles.indicator) }}].concat($keys.map_each(d -> at.get(d))).concat(if $roles.unit == null {{ [] }} else {{ [at.get($roles.unit)] }}).join("-").re_replace_all("[^A-Za-z0-9._~-]", "_")),
-  "type": "{TYPE}",
-  "dataSet": {{ "type": "Property", "value": $cube }},
-  "indicator": {{ "type": "Property", "value": if $roles.indicator == null {{ $cube }} else {{ at.get($roles.indicator) }} }},
-  "name": (if $roles.indicator == null {{ null }} else {{ $labels.index($at_index.get($roles.indicator)).get(at.get($roles.indicator)) }}).or($ds.label).(n -> if n == null {{ null }} else {{ {{ "type": "Property", "value": n }} }}),
-  "refArea": {{ "type": "Property", "value": if $roles.area == null {{ "SK0" }} else {{ at.get($roles.area) }} }},
-  "refPeriod": {{ "type": "Property", "value": at.get($roles.period) }},
-  "dimensionKey": if $keys.length() == 0 {{ null }} else {{ {{ "type": "Property", "value": $keys.map_each(d -> at.get(d)).join("-") }} }},
-  "kpiValue": {{ "type": "Property", "value": at._v, "observedAt": $updated }}.filter(e -> e.value != null),
-  "unitText": if $roles.unit == null {{ null }} else {{ {{ "type": "Property", "value": $labels.index($at_index.get($roles.unit)).get(at.get($roles.unit)).or(at.get($roles.unit)) }} }},
-  "source": {{ "type": "Property", "value": $roles.source }},
-  "isPartOf": {{ "type": "Property", "value": "{CKAN}/dataset/susr-%v".format($cube) }},
-  "dateObserved": if $updated == null {{ null }} else {{ {{ "type": "Property", "value": $updated }} }}
-}}.filter(e -> e.value != null))
-"""
+ROLES = ("source", "update", "period", "area", "indicator", "unit")
+
+
+def step(table: dict) -> str:
+    """A topic's `datacube` step (PL-112, T-5382): its cubes and the role of their dimensions, as YAML
+    lines at the step's own indent. The Portal's jc-core renders the decoder from it."""
+    lines = ["- kind: datacube", "  datacube:", "    wholeArea: SK0",
+             f"    datasetPage: {q(CKAN + '/dataset/susr-{cube}')}", "    cubes:"]
+    for code, r in sorted(table.items()):
+        lines.append(f"      {code}:")
+        lines += [f"        {k}: {q(r[k]) if k in ('source', 'update') else r[k]}" for k in ROLES if r.get(k) is not None]
+        if r.get("keys"):
+            lines.append(f"        keys: [{', '.join(r['keys'])}]")
+    return "\n".join(lines) + "\n"
+
+
+def cubes(ds: list[dict]) -> dict:
+    """The cubes of a topic's step: each one's roles, release date and whole-cube address."""
+    return {d["code"]: {"update": d["update"], **roles(d["dimensions"]), "source": dataset_url(d)} for d in ds}
+
+
+# A copy of jc-core's crates/jc-core/src/datacube.blobl at the pinned Portal's platform commit;
+# tests/test_datacube_generator.py holds it to that file.
+TEMPLATE = Path(__file__).with_name("datacube.blobl")
+
+
+def mapping(datacube: dict) -> str:
+    """The Bloblang jc-core renders from a step's `datacube` parameters (datacube::bloblang), for the
+    Bento decode tests and the temporal audit: the same placeholders, the cube table spaced as serde writes it."""
+    table = {code: {k: c.get(k) for k in ("area", "indicator", "keys", "period", "source", "unit", "update")}
+             for code, c in datacube["cubes"].items()}
+    for c in table.values():
+        c["keys"] = c["keys"] or []
+    return (TEMPLATE.read_text()
+            .replace("{whole_area}", json.dumps(datacube["wholeArea"]))
+            .replace("{dataset_page}", json.dumps(datacube["datasetPage"].replace("{cube}", "%v")))
+            .replace("{cubes}", json.dumps(table, ensure_ascii=False, sort_keys=True)))
 
 
 def memory(cells: int) -> int:
@@ -560,7 +556,7 @@ spec:
 """,
     }
     sources = "\n".join(f"    - dataSourceRef: {{ kind: DataSource, name: {n} }}" for d in ds for n in source_names(d, parts))
-    steps = "\n".join("        " + line if line else "" for line in decoder(ds).splitlines())
+    steps = "".join("    " + line + "\n" for line in step(cubes(ds)).splitlines())
     files["pipeline.yaml"] = f"""{BEGIN}
 # DATAcube {tables}, {'in slices' if any(len(parts[d['code']]) > 1 for d in ds) else 'whole'}, into {space}: one KeyPerformanceIndicator per published cell,
 # as ŠÚ SR published it; nothing is renamed or recomputed. A daily read keeps every table within
@@ -578,10 +574,7 @@ spec:
   sources:
 {sources}
   steps:
-    - kind: bloblang
-      bloblang: |
-{steps}
-  outputs:
+{steps}  outputs:
     - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}
       type: {TYPE}
       mode: upsert

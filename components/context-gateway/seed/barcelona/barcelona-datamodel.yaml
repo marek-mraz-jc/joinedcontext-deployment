@@ -14,6 +14,8 @@ spec:
   lifecycle: published
   classes:
     - AirQualityObserved
+    - WeatherObserved
+    - PhreaticObserved
     - TrafficFlowObserved
     - OnStreetParking
     - EVChargingStation

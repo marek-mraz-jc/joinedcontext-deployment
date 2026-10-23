@@ -125,7 +125,7 @@ def test_the_datasource_reads_the_three_agendas_in_one_query_from_open_data_bcn(
 
 def test_the_pipeline_runs_daily_through_the_one_door_and_the_endpoint_publishes_events_only():
     pipeline = yaml.safe_load((BARCELONA / "barcelona-pipeline-agenda.yaml").read_text())["spec"]
-    assert pipeline["period"] == "24h" and pipeline["output"] == {"type": "Event", "mode": "upsert"}
+    assert pipeline["schedule"] == "17 6 * * *" and pipeline["output"] == {"type": "Event", "mode": "upsert"}
     assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
     endpoint = yaml.safe_load((BARCELONA / "barcelona-endpoint-events.yaml").read_text())["spec"]
     assert endpoint["policyRef"] == "urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-events"

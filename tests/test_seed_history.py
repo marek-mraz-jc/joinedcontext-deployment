@@ -75,6 +75,9 @@ CHOSEN = {
     # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
     ("praha/praha-mesto", "WasteContainer"): "P7D",
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
+    # Barcelona's wells are read by hand about once a month and published months late: 400 days keep
+    # a year of readings (T-5263, worker decision, owner may override); the public reads the last 30.
+    ("barcelona/barcelona", "PhreaticObserved"): "P400D",
     # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
     ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
     # Barcelona's charging points keep a month of free ports (T-5262).
