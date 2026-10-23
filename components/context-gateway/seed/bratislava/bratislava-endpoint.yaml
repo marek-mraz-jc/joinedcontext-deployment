@@ -1,0 +1,30 @@
+# The one door of the space bratislava, which its pipelines write through, public like the data
+# (CC BY 4.0) but not harvested into the catalogue: each kind of thing becomes its own public
+# dataset with its own narrowed Endpoint and Policy as the batches add them (T-4344).
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bratislava
+  namespace: bratislava
+  title:
+    sk: Bratislava — otvorené údaje
+    en: Bratislava, open data
+spec:
+  contextSpaceRef: bratislava
+  slug: rbamgl4sqke6y5gws3mdgj3qe2zhw7ev
+  audience: public
+  enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]
+  catalog:
+    harvest: false
+    publisher:
+      name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
+      uri: https://data.gov.sk/id/legal-subject/00603481
+    # The hub's terms: each dataset on data.bratislava.sk is CC BY 4.0, credited to the capital.
+    license: CC_BY_4_0
+    attribution:
+      sk: 'Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0'
+      en: 'Source: City of Bratislava (Hlavné mesto SR Bratislava), data.bratislava.sk, CC BY 4.0'
+    themes: [ENVI]
+    spatial:
+      - SK010
+      - https://sws.geonames.org/3060972/

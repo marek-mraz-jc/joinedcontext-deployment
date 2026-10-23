@@ -1,0 +1,53 @@
+id: https://joinedcontext.com/models/bratislava/bratislava
+name: bratislava
+title: Bratislava, open data
+description: >-
+  What the space bratislava carries (DM-01, DM-61): the open data of the City of Bratislava
+  (data.bratislava.sk) as Smart Data Models types, their IRIs cited rather than minted (DM-04,
+  DM-16). The first type is AirQualityObserved, one entity per air-quality station in the city
+  with the PM10 concentration the city publishes for it; each batch of the ranked matrix adds its
+  own classes.
+license: https://joinedcontext.com/licenses/cc-by-4.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  sdm: https://smartdatamodels.org/
+  ngsi-ld: https://uri.etsi.org/ngsi-ld/
+default_prefix: sdm
+default_range: string
+imports:
+  - linkml:types
+  - ngsi-ld-core
+
+slots:
+  name:
+    slot_uri: schema:name
+    description: The station's name as the city publishes it.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/name
+  dateObserved:
+    slot_uri: sdm:dateObserved
+    description: The end of the period the entity's reading covers, UTC.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  pm10:
+    slot_uri: sdm:pm10
+    description: Particulate matter up to 10 µm, the period's mean at the station.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: ug/m3 }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+
+classes:
+  AirQualityObserved:
+    class_uri: sdm:AirQualityObserved
+    description: One air-quality station of Bratislava and its PM10 mean.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Environment
+    slots: [name, dateObserved, pm10]
