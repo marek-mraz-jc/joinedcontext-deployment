@@ -34,13 +34,26 @@ def test_every_space_pins_the_segment_its_ids_carry_today():
 
 
 def test_no_mapping_types_its_space_or_project_in():
-    segments = {doc["spec"]["urnSegment"] for _, doc in manifests("ContextSpace")}
-    projects = {doc["metadata"]["name"] for _, doc in manifests("Project")}
-    literal = re.compile(r'"(%s)"' % "|".join(map(re.escape, sorted(segments | projects))))
+    # Each mapping against the spaces and the name of the projects its seed folder's manifests
+    # live in: a Slovak events mapping that names the town "bratislava" is not typing the space
+    # bratislava in (T-5271).
+    names: dict[str, set] = {}
+    for _, doc in manifests("Project"):
+        names.setdefault(doc["metadata"]["name"], set()).add(doc["metadata"]["name"])
+    for _, doc in manifests("ContextSpace"):
+        names[doc["metadata"]["namespace"]].add(doc["spec"]["urnSegment"])
+    folders: dict[str, set] = {}
+    for path in sorted(SEED.glob("*/*.yaml")):
+        if not path.name.endswith("-bento.yaml") and path.name != "index.yaml":
+            for doc in documents(path):
+                if doc.get("metadata", {}).get("namespace") in names:
+                    folders.setdefault(path.parent.name, set()).update(names[doc["metadata"]["namespace"]])
     bentos = sorted(SEED.glob("*/*-bento.yaml"))
     assert bentos, "the seed holds mappings"
+    assert {p.parent.name for p in bentos} <= set(folders), "every mapping's folder names its project"
     minted = 0
     for path in bentos:
+        literal = re.compile(r'"(%s)"' % "|".join(map(re.escape, sorted(folders[path.parent.name]))))
         for number, line in enumerate(path.read_text().splitlines(), 1):
             stripped = line.lstrip()
             # `let source_url` is the publisher's own address, and one of them lives under
