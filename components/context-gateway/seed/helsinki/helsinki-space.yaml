@@ -51,6 +51,10 @@ spec:
       # interval, so none records every.
       record: onChange
       heartbeat: PT1H
+      # dateModified is bookkeeping: the pipeline stamps it on every write, so it keeps no
+      # history of its own (DM-132, T-5058).
+      attributes:
+        dateModified: { record: never }
     - entityType: CityWork
       history: 'off'
     - entityType: Event
@@ -85,6 +89,20 @@ spec:
       history: 'off'
     - entityType: PublicTransportRoute
       history: 'off'
+    - entityType: TrafficFlowObserved
+      history: P30D
+      # One write a day, its intensity observed at the day's end; the station's name and place
+      # repeat it: one row per change and one a week (T-5253, DM-108).
+      attributes:
+        dataProvider: { record: onChange, heartbeat: P7D }
+        dateObserved: { record: onChange, heartbeat: P7D }
+        dateObservedFrom: { record: onChange, heartbeat: P7D }
+        dateObservedTo: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        trafficDirection: { record: onChange, heartbeat: P7D }
+        vehicleType: { record: onChange, heartbeat: P7D }
     - entityType: Vehicle
       current: PT5M
       # Five minutes of track (owner, T-5046); the broker's minute sweep deletes the older rows.
@@ -155,3 +173,28 @@ spec:
       kind: area
       attribute: location
       bbox: [23.9, 59.85, 25.6, 60.8]
+    # The city's traffic and cycle counters (T-5253): Helsinki and a kilometre around it, at most
+    # 300000 passings a day in one direction, a mean speed up to 150 km/h, and no day ahead of
+    # the clock. The mappings judge the same before they write.
+    - name: counter-in-helsinki
+      entityType: TrafficFlowObserved
+      kind: area
+      attribute: location
+      bbox: [24.76, 59.91, 25.29, 60.31]
+    - name: counter-intensity
+      entityType: TrafficFlowObserved
+      kind: range
+      attribute: intensity
+      min: 0
+      max: 300000
+    - name: counter-speed
+      entityType: TrafficFlowObserved
+      kind: range
+      attribute: averageVehicleSpeed
+      min: 0
+      max: 150
+    - name: counter-day-not-ahead
+      entityType: TrafficFlowObserved
+      kind: freshness
+      attribute: intensity
+      maxAhead: PT5M

@@ -192,3 +192,86 @@ test("past 1000 in view the map draws the type's vector tiles; a point opens its
     await context.unrouteAll({ behavior: "ignoreErrors" });
   }
 });
+
+// DM-135 (T-5231): a row or a point opens one citizen card, centred in the slice of the frame the
+// reader sees after scrolling the page, keyboard-trapped, closed by Esc or the backdrop.
+for (const [width, height] of [[1440, 900], [400, 800]]) {
+  for (const theme of ["light", "dark"]) {
+    test(`${width} ${theme}: a row opens the card in the middle of what the reader sees, after a 1,500 px scroll`, async ({ page, context }) => {
+      await serve(context);
+      await open(page, "point", { width, theme });
+      await page.setViewportSize({ width, height });
+      const f = frame(page);
+      await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
+      // A long page around the frame, as a CMS article with the widget in its middle.
+      await page.evaluate(() => {
+        const frameEl = document.getElementById("explore");
+        frameEl.insertAdjacentHTML("beforebegin", '<div style="height:1600px">Article</div>');
+        frameEl.insertAdjacentHTML("afterend", '<div style="height:3000px">More</div>');
+        window.scrollTo(0, 1500);
+      });
+      await page.waitForTimeout(400);
+      const opener = f.getByRole("button", { name: /^Open.*: Station 1$/ }).first();
+      await opener.focus();
+      await opener.press("Enter");
+      const card = f.locator("#detail");
+      await expect(card).toBeVisible();
+      await expect(f.locator("#detail-title")).toHaveText("Station 1");
+      await expect(f.locator("#detail-type")).not.toHaveText("");
+      await expect(f.locator("#detail-list")).not.toContainText("urn:ngsi-ld");
+      await expect(f.locator("#detail-list")).not.toContainText("https://");
+      await expect(f.locator("#detail-dev")).not.toHaveAttribute("open", "");
+      await expect(f.locator("#detail-source")).toContainText("hsl.fi");
+      await expect(f.locator("#detail-map")).toBeVisible();
+      const where = await page.evaluate(() => {
+        const fr = document.getElementById("explore").getBoundingClientRect();
+        const top = Math.max(0, fr.top), bottom = Math.min(window.innerHeight, fr.bottom);
+        return { frameTop: fr.top, frameLeft: fr.left, frameWidth: fr.width, slice: (top + bottom) / 2, inner: window.innerHeight };
+      });
+      const box = await card.boundingBox(); // page coordinates: Playwright adds the frame's offset
+      expect(Math.abs(box.y + box.height / 2 - where.slice)).toBeLessThanOrEqual(24);
+      expect(Math.abs(box.x + box.width / 2 - (where.frameLeft + where.frameWidth / 2))).toBeLessThanOrEqual(24);
+      const close = await f.locator("#detail-close").boundingBox();
+      expect(close.y).toBeGreaterThanOrEqual(0);
+      expect(close.y + close.height).toBeLessThanOrEqual(where.inner);
+      expect(close.height).toBeGreaterThanOrEqual(44);
+      if (width === 400) expect(Math.round(box.width)).toBe(width - 32);
+      await page.screenshot({ path: path.join(shots, `card-row-${width}-${theme}.png`) });
+      // Tab stays inside the card.
+      for (let i = 0; i < 8; i++) {
+        await page.keyboard.press("Tab");
+        expect(await f.locator("#detail").evaluate((d) => (d.contains(document.activeElement) ? "in" : document.activeElement.outerHTML.slice(0, 120)))).toBe("in");
+      }
+      await page.keyboard.press("Escape");
+      await expect(card).toBeHidden();
+      await expect(opener).toBeFocused();
+    });
+  }
+}
+
+test("a point opens the same card; the fold holds the id and the API links; the backdrop closes it", async ({ page, context }) => {
+  await serve(context);
+  await open(page, "point", { lang: "sk" });
+  const f = frame(page);
+  await expect(f.locator("#map-section")).toBeVisible({ timeout: 20000 });
+  const inner = page.frame({ url: /explore\.html/ });
+  await expect.poll(() => inner.evaluate(() => (self.jcExploreMap && self.jcExploreMap.getLayer("jc-point") ? self.jcExploreMap.queryRenderedFeatures({ layers: ["jc-point"] }).length : 0)), { timeout: 20000 }).toBeGreaterThan(0);
+  const at = await inner.evaluate(() => {
+    const m = self.jcExploreMap;
+    const q = m.project(m.queryRenderedFeatures({ layers: ["jc-point"] })[0].geometry.coordinates);
+    return { x: Math.round(q.x), y: Math.round(q.y) };
+  });
+  await f.locator("#map canvas").click({ position: at });
+  await expect(f.locator("#detail-title")).toHaveText(/^Stanica \d$/);
+  await expect(f.locator("#detail-onmap")).toHaveText("Zobraziť na mape");
+  await f.locator("#detail-dev summary").click();
+  await expect(f.locator("#detail-dev-list")).toContainText("urn:ngsi-ld:BikeHireDockingStation");
+  await expect(f.locator("#detail-links a")).toHaveCount(6);
+  for (const a of await f.locator("#detail-dev a, #detail-source a").all()) {
+    expect(await a.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(await a.getAttribute("href")).toMatch(/^https:\/\//);
+  }
+  await page.screenshot({ path: path.join(shots, "card-point-1440-sk-dev.png") });
+  await page.mouse.click(5, 5); // the backdrop, outside the card
+  await expect(f.locator("#detail")).toBeHidden();
+});

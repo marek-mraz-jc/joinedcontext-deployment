@@ -33,3 +33,4 @@ spec:
         - type: OffStreetParking
         - type: AdministrativeArea
         - type: BudgetLine
+        - type: Vehicle

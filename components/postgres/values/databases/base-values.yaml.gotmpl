@@ -29,7 +29,20 @@ statStatements:
 localBackup:
   {{- $this.localBackup | toYaml | nindent 2 }}
 
-{{- $backups := .Values.postgres.cluster.backups | default dict }}
+{{- $backups := deepCopy (.Values.postgres.cluster.backups | default dict) }}
+{{- /* `target: artifact-store` archives to the platform's own store (T-5289): its address, the
+backup bucket (unless destinationPath names a path in it) and the key the store's bucket Job makes for that bucket alone, with no SSE (the
+store has no KMS). Keep in step with the other postgres values file. */}}
+{{- if eq ($backups.target | default "") "artifact-store" }}
+{{- if not (has "artifact-store" .Values.components) }}
+{{- fail "postgres.cluster.backups.target is 'artifact-store' but the environment does not deploy the artifact-store component: add it to components, or set target '' and name an external store" }}
+{{- end }}
+{{- $store := index .Values "artifact-store" "store" }}
+{{- $_ := set $backups "endpointURL" (printf "http://artifact-store.%s.svc.cluster.local:9000" $store.namespace) }}
+{{- $_ := set $backups "destinationPath" ($backups.destinationPath | default (printf "s3://%s/" ($store.backupBucket | default dict).name)) }}
+{{- $_ := set $backups "existingSecret" "postgres-backup-artifact-store" }}
+{{- $_ := set $backups "encryption" "" }}
+{{- end }}
 drDrill:
   {{- $this.drDrill | toYaml | nindent 2 }}
   image: {{ index $images "drDrill" "repository" }}@{{ index $images "drDrill" "digest" }}

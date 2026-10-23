@@ -138,3 +138,67 @@ for (const width of [1440, 400]) {
     await page.screenshot({ path: path.join(shots, `presented-${width}-reset.png`), fullPage: true });
   });
 }
+
+// API/11 EP-164 (T-5197): the Endpoint's table start (filter, page length, columns) wins over the
+// model's, member by member; reset clears it as it clears the model's.
+for (const width of [1440, 400]) {
+  test(`publishedtable ${width}: the Endpoint's table start wins over the model's`, async ({ page, context }) => {
+    const requests = await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/publishedtable?lang=sk`);
+    const f = frame(page);
+    const grid = f.getByRole("grid");
+    await expect(grid).toBeVisible({ timeout: 20000 });
+    await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("20");
+    const now = new Date();
+    const week = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+    const day = `${week.getFullYear()}-${String(week.getMonth() + 1).padStart(2, "0")}-${String(week.getDate()).padStart(2, "0")}`;
+    await expect.poll(() => requests.some((r) => r.url.searchParams.get("q") === `startDate>=${day}` && r.url.searchParams.get("limit") === "20")).toBe(true);
+    const heads = (await grid.locator("thead tr").first().locator("th").allInnerTexts()).map((t) => t.replace(/[⋮↑↓]/g, "").trim());
+    expect(heads).toEqual(["Názov", "Začiatok"]);
+    await page.screenshot({ path: path.join(shots, `publishedtable-${width}-default.png`), fullPage: true });
+    const before = requests.length;
+    await f.getByRole("button", { name: "Zrušiť filtre" }).click();
+    await expect.poll(() => requests.slice(before).some((r) => r.url.pathname.endsWith("/ngsi-ld/v1/entities") && !r.url.searchParams.get("q"))).toBe(true);
+    await page.screenshot({ path: path.join(shots, `publishedtable-${width}-reset.png`), fullPage: true });
+  });
+}
+
+// DM-135 (T-5231): the default filter is a chip the reader removes; the choice rides in the address,
+// so a reload or a shared link opens without it, and "Obnoviť predvolené" brings it back.
+for (const width of [1440, 400]) {
+  test(`presented ${width}: the default-filter chip removes, survives a reload and restores`, async ({ page, context }) => {
+    const requests = await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/presented?lang=sk`);
+    const f = frame(page);
+    await expect(f.getByRole("grid").locator("tbody tr")).toHaveCount(10, { timeout: 20000 });
+    await expect(f.getByText("Predvolený filter: Začiatok ≥ dnes")).toBeVisible();
+    const remove = f.getByRole("button", { name: "Odstrániť predvolený filter Začiatok ≥ dnes" });
+    const box = await remove.boundingBox();
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    await page.screenshot({ path: path.join(shots, `chip-${width}-default.png`), fullPage: true });
+    const csv = f.getByRole("link", { name: /CSV/ });
+    await expect(csv).toHaveAttribute("href", /q=startDate/);
+    const before = requests.length;
+    await remove.focus();
+    await page.keyboard.press("Enter");
+    await expect(remove).toHaveCount(0);
+    await expect.poll(() => requests.slice(before).some((r) => r.url.pathname.endsWith("/ngsi-ld/v1/entities") && !r.url.searchParams.get("q"))).toBe(true);
+    await expect(csv).not.toHaveAttribute("href", /q=/);
+    const inner = page.frame({ url: /explore\.html/ });
+    await expect.poll(() => inner.evaluate(() => location.hash)).toMatch(/&all(&|$)/);
+    await page.screenshot({ path: path.join(shots, `chip-${width}-removed.png`), fullPage: true });
+    // A reload of the same address keeps the reader's choice.
+    const hash = await inner.evaluate(() => location.hash);
+    const after = requests.length;
+    await inner.evaluate((h) => { location.hash = h; location.reload(); }, hash);
+    await expect(frame(page).getByRole("button", { name: "Obnoviť predvolené" })).toBeVisible({ timeout: 20000 });
+    await expect(frame(page).getByText("Predvolený filter: Začiatok ≥ dnes")).toHaveCount(0);
+    expect(requests.slice(after).filter((r) => r.url.pathname.endsWith("/ngsi-ld/v1/entities") && r.headers.accept !== "application/geo+json").every((r) => !r.url.searchParams.get("q"))).toBe(true);
+    await frame(page).getByRole("button", { name: "Obnoviť predvolené" }).click();
+    await expect(frame(page).getByText("Predvolený filter: Začiatok ≥ dnes")).toBeVisible();
+    await expect.poll(() => page.frame({ url: /explore\.html/ }).evaluate(() => location.hash)).not.toMatch(/&all(&|$)/);
+  });
+}

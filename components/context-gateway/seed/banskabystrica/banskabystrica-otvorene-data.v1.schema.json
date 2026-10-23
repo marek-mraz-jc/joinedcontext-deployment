@@ -1,7 +1,7 @@
 {
   "$id": "https://joinedcontext.com/models/banskabystrica/banskabystrica-otvorene-data",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "definitions": {
     "Address": {
       "additionalProperties": false,
@@ -18,10 +18,26 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "cASTOBCE": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "cOID": {
           "description": "The source column `CO_ID`.",
           "type": [
             "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "castObce": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -36,6 +52,14 @@
         },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -116,6 +140,14 @@
           ],
           "x-ngsi-ld-kind": "GeoProperty"
         },
+        "oBEC": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "oBECID": {
           "description": "The source column `OBEC_ID`.",
           "type": [
@@ -164,6 +196,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "obec": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
           "format": "date-time",
@@ -175,6 +215,14 @@
         },
         "orientC": {
           "description": "The source column `Orient._\u010d.`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pSC": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -260,10 +308,26 @@
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
+        "uLICA": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "uLICAID": {
           "description": "The source column `ULICA_ID`.",
           "type": [
             "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "ulica": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -312,6 +376,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dateGmt": {
           "description": "The source column `date_gmt`.",
           "format": "date-time",
@@ -337,6 +409,14 @@
         "isPartOf": {
           "description": "The catalogue dataset the row belongs to, where its licence and its other rows are.",
           "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "link": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -406,6 +486,22 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "sourceId": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "title": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
@@ -440,8 +536,24 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "centralneCisloZmluvy": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -629,6 +741,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "datumZasadnutia": {
           "description": "The source column `D\u00e1tum_zasadnutia`.",
           "type": [
@@ -805,6 +925,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "datumplatnosti": {
           "description": "The source column `datumplatnosti`.",
           "format": "date-time",
@@ -967,6 +1095,14 @@
         },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -1140,6 +1276,14 @@
       "properties": {
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -1431,6 +1575,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "datumplatnosti": {
           "description": "The source column `datumplatnosti`.",
           "format": "date-time",
@@ -1591,8 +1743,24 @@
       "additionalProperties": false,
       "description": "One row of Objedn\u00e1vky BB.",
       "properties": {
+        "cisloObjednavky": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataset": {
+          "description": "An attribute an earlier version of the mapping wrote; the next run removes it.",
           "type": [
             "string",
             "null"
@@ -1745,9 +1913,9 @@
       "type": "object"
     }
   },
-  "metamodel_version": "1.11.0",
+  "metamodel_version": "1.12.0",
   "title": "banskabystrica-otvorene-data",
   "type": "object",
   "version": null,
-  "x-generator-version": "linkml-1.11.1"
+  "x-generator-version": "linkml-1.12.0"
 }

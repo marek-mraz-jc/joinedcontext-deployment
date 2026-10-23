@@ -148,5 +148,21 @@ context-broker:
     # Antares dev 2acd15b (dev-37, over 4e68f99: T-5136 typed location paths under RLS). Migration 0018 adds two
     # btree indexes on entities without CONCURRENTLY (591 074 rows, 1.7 GB on dev: seconds of write lock); pooled sessions
     # set max_parallel_workers_per_gather=0. Rollback: dev-36 (0018 rollback compatible). Signed by ship.yml on dev at 2acd15b.
-    tag: 'dev-37'
-    digest: 'sha256:6783d98c5a5faebc4214176e620cc494183fac5128b8863c3401f8d833c714a8'
+    # Antares dev 73f3d24 (dev-39, over 2acd15b: T-5207 versioned mapping contracts, T-5202 the feed surface, built with
+    # FEATURES ...,ical,feed so ANTARES_API_SURFACES may name feed; T-5211 T-5198 CI). No migration, no new runtime key.
+    # Rollback: dev-37 (only while ANTARES_API_SURFACES does not name feed). Signed by ship.yml on dev at 73f3d24.
+    # Antares dev 5ed44bf (dev-42, over 73f3d24: T-5234 fat LTO, T-5131 T-5193 history ids and entity indexes, T-5204
+    # HEAD Content-Length, T-5205 STA Thing/properties/type filter, T-5206; same FEATURES ...,ical,feed). Migration 0019
+    # drops the unused GIN i_entities_jsonb (no data). No new runtime key. Rollback: dev-39 (0019 rollback compatible).
+    # Signed by ship.yml on dev at 5ed44bf (dispatched run 39834395804; the train push started no run).
+    # Antares dev f945ccb (dev-43, over 5ed44bf: T-5169 OGC id filters lowered to the id list, T-5333 OData Untyped
+    # Property filterable; same FEATURES). No migration, no new runtime key. Rollback: dev-42. Signed by ship.yml on dev at f945ccb.
+    # Antares dev 4b73e52 (dev-44, over f945ccb: T-5246, T-5157, T-5200, T-5134, T-5279 area_overview; same FEATURES).
+    # Migration 0020 adds empty iri_ids, attr_rows and history_cutover (NULL), rollback compatible. New runtime keys
+    # ANTARES_SUMMARY_CONCURRENCY/_MAX_BYTES keep their defaults (not set here). Rollback: dev-43. Signed by ship.yml on dev at 4b73e52.
+    # Antares dev 18dd4c2 (dev-45, over 4b73e52: T-5361 provenance actor percent-decoded, writtenAt per history row; same
+    # FEATURES). No migration, no new runtime key. Rollback: dev-44. Signed by ship.yml on dev at 18dd4c2.
+    # Antares dev 6930e9c (dev-46, over 18dd4c2: T-5362 audit mode for shared spaces, broker half; same FEATURES).
+    # No migration, no new runtime key. Rollback: dev-45. Signed by ship.yml on dev at 6930e9c.
+    tag: 'dev-46'
+    digest: 'sha256:d21146da77fcada0d64b1542a8b841a2d812f53281439ade0b03782ab9f399ef'

@@ -5,7 +5,7 @@
   "definitions": {
     "AdministrativeArea": {
       "additionalProperties": false,
-      "description": "One of the 57 city districts (m\u011bstsk\u00e9 \u010d\u00e1sti) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
+      "description": "One of the 57 city districts (městské části) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
@@ -16,7 +16,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "districtCode": {
-          "description": "The district's R\u00daIAN code, the key the national registers and the waste register use.",
+          "description": "The district's RÚIAN code, the key the national registers and the waste register use.",
           "pattern": "^[0-9]{6}$",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -87,6 +87,17 @@
           "description": "The entity type, one class of a published data model.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
+        },
+        "wasteContainerIsles": {
+          "description": "The waste-container isles in this city district, computed from their refDistrict and never stored.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
         }
       },
       "required": [
@@ -99,7 +110,7 @@
     },
     "AirQualityObserved": {
       "additionalProperties": false,
-      "description": "One of \u010cHM\u00da's air quality stations in Prague and the hour's means it last published.",
+      "description": "One of ČHMÚ's air quality stations in Prague and the hour's means it last published.",
       "properties": {
         "co": {
           "description": "Carbon monoxide, the hour's mean at the station.",
@@ -122,7 +133,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateObserved": {
-          "description": "The start of the hour the readings average.",
+          "description": "When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report.",
           "format": "date-time",
           "type": [
             "string",
@@ -208,7 +219,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pm10": {
-          "description": "Particulate matter up to 10 \u00b5m, the hour's mean at the station.",
+          "description": "Particulate matter up to 10 µm, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -220,7 +231,7 @@
           }
         },
         "pm25": {
-          "description": "Particulate matter up to 2.5 \u00b5m, the hour's mean at the station.",
+          "description": "Particulate matter up to 2.5 µm, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -395,7 +406,7 @@
     },
     "BudgetLine": {
       "additionalProperties": false,
-      "description": "One line of the city budget of the City of Prague (Magistr\u00e1t hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount, as the Smart Data Model extension BudgetLine (CPSV-AP Cost base).",
+      "description": "One line of the city budget of the City of Prague (Magistrát hl. m. Prahy), in the national budget classification, with the approved and the adjusted amount, as the Smart Data Model extension BudgetLine (CPSV-AP Cost base).",
       "properties": {
         "adjustedAmount": {
           "description": "The amount after the year's budget changes so far, in the same unit as the approved one.",
@@ -408,7 +419,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "budgetArea": {
-          "description": "The city's own area of the line (oblast), its code and name joined, such as 09 \u0160kolstv\u00ed; absent on a correction line the city files under none.",
+          "description": "The city's own area of the line (oblast), its code and name joined, such as 09 Školství; absent on a correction line the city files under none.",
           "type": [
             "string",
             "null"
@@ -421,12 +432,12 @@
           "x-ngsi-ld-kind": "Property"
         },
         "budgetItem": {
-          "description": "The item of the national budget classification (polo\u017eka), code and name. Items 1xxx to 4xxx are revenue, 5xxx and 6xxx expenditure, 8xxx financing.",
+          "description": "The item of the national budget classification (položka), code and name. Items 1xxx to 4xxx are revenue, 5xxx and 6xxx expenditure, 8xxx financing.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "budgetPurpose": {
-          "description": "The earmark of the line (\u00fa\u010delov\u00fd znak), code and name.",
+          "description": "The earmark of the line (účelový znak), code and name.",
           "type": [
             "string",
             "null"
@@ -747,8 +758,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "facilityType": {
-          "description": "The publisher's own word for the kind of place, such as Mate\u0159sk\u00e1 \u0161kola or ticketMachine.",
+          "description": "The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine.",
           "type": [
             "string",
             "null"
@@ -911,16 +931,16 @@
         "school",
         "culture",
         "publicToilet",
-        "ticketSale"
+        "ticketSale",
+        "library",
+        "municipalAuthority",
+        "police",
+        "garden",
+        "playground",
+        "wasteCollectionYard"
       ],
       "title": "ServiceCategory",
-      "type": "string",
-      "x-enum-descriptions": {
-        "culture": "A theatre, a museum, a gallery or another cultural venue.",
-        "publicToilet": "A public toilet.",
-        "school": "A school or a school facility of the city's school register.",
-        "ticketSale": "A place that sells public transport tickets."
-      }
+      "type": "string"
     },
     "StationStatus": {
       "description": "",
@@ -929,11 +949,245 @@
         "outOfService"
       ],
       "title": "StationStatus",
-      "type": "string",
-      "x-enum-descriptions": {
-        "outOfService": "The station neither rents nor takes back bikes right now.",
-        "working": "The station rents bikes and takes them back."
-      }
+      "type": "string"
+    },
+    "TransportMode": {
+      "description": "",
+      "enum": [
+        "tram",
+        "metro",
+        "train",
+        "bus",
+        "ferry",
+        "funicular",
+        "trolleybus"
+      ],
+      "title": "TransportMode",
+      "type": "string"
+    },
+    "Vehicle": {
+      "additionalProperties": false,
+      "description": "One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions).",
+      "properties": {
+        "category": {
+          "description": "The Smart Data Models vehicle category, public and tracked for a PID vehicle in service.",
+          "items": {
+            "$ref": "#/definitions/VehicleCategory"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "delay": {
+          "description": "Seconds behind the timetable, negative when ahead (Golemio's delay.actual).",
+          "maximum": 10800,
+          "minimum": -10800,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "s"
+          }
+        },
+        "direction": {
+          "description": "Where the trip heads, its headsign (Libuš, Dolní Břežany,Zálepy).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fleetVehicleId": {
+          "description": "The operator's fleet number of the vehicle (9099); absent for the metro and trains, which report none.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "heading": {
+          "description": "Where the vehicle points, degrees clockwise from north (0 to 359).",
+          "maximum": 359,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "deg"
+          }
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "lineName": {
+          "description": "The PID line the vehicle runs, its short name (17, A, S9, 331).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "nextStop": {
+          "description": "The PID (GTFS) id of the stop the vehicle reaches next (U1509Z1).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "operatorName": {
+          "description": "The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "speed": {
+          "description": "Ground speed of the vehicle in km/h, as Smart Data Models states it; absent when the vehicle does not report one.",
+          "maximum": 150,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "km/h"
+          }
+        },
+        "transportMode": {
+          "$ref": "#/definitions/TransportMode",
+          "description": "What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vehicleType": {
+          "$ref": "#/definitions/VehicleKind",
+          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "wheelchairAccessible": {
+          "description": "Whether the publisher states the place is reachable in a wheelchair; absent when it does not say.",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Vehicle",
+      "type": "object"
+    },
+    "VehicleCategory": {
+      "description": "",
+      "enum": [
+        "public",
+        "tracked"
+      ],
+      "title": "VehicleCategory",
+      "type": "string"
+    },
+    "VehicleKind": {
+      "description": "",
+      "enum": [
+        "tram",
+        "bus",
+        "trolley",
+        "other"
+      ],
+      "title": "VehicleKind",
+      "type": "string"
     },
     "WasteAccess": {
       "description": "",
@@ -942,11 +1196,7 @@
         "residents"
       ],
       "title": "WasteAccess",
-      "type": "string",
-      "x-enum-descriptions": {
-        "public": "Anyone may use it (voln\u011b).",
-        "residents": "Only the residents of the house may use it (obyvatel\u016fm domu)."
-      }
+      "type": "string"
     },
     "WasteContainer": {
       "additionalProperties": false,
@@ -1039,16 +1289,8 @@
         },
         "refWasteContainerIsle": {
           "description": "The collection point the container stands at.",
-          "pattern": "^urn:ngsi-ld:WasteContainerIsle:",
           "type": "string",
-          "x-ngsi-ld-kind": "Relationship",
-          "x-ngsi-ld-relationship": {
-            "cardinality": "many-to-one",
-            "inverse": "wasteContainers",
-            "onDelete": "restrict",
-            "target": "WasteContainerIsle",
-            "unique": false
-          }
+          "x-ngsi-ld-kind": "Relationship"
         },
         "source": {
           "description": "The open-data service the entity was read from.",
@@ -1152,16 +1394,11 @@
         },
         "refDistrict": {
           "description": "The city district the record lies in.",
-          "pattern": "^urn:ngsi-ld:AdministrativeArea:",
-          "type": "string",
-          "x-ngsi-ld-kind": "Relationship",
-          "x-ngsi-ld-relationship": {
-            "cardinality": "many-to-one",
-            "inverse": "wasteContainerIsles",
-            "onDelete": "restrict",
-            "target": "AdministrativeArea",
-            "unique": false
-          }
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
         },
         "source": {
           "description": "The open-data service the entity was read from.",
@@ -1181,6 +1418,17 @@
           "description": "The entity type, one class of a published data model.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
+        },
+        "wasteContainers": {
+          "description": "The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Relationship"
         }
       },
       "required": [
@@ -1205,18 +1453,7 @@
         "mixedRecyclables"
       ],
       "title": "WasteKind",
-      "type": "string",
-      "x-enum-descriptions": {
-        "beverageCartons": "Beverage cartons (n\u00e1pojov\u00e9 kartony).",
-        "clearGlass": "Clear glass (\u010dir\u00e9 sklo).",
-        "colouredGlass": "Coloured glass (barevn\u00e9 sklo).",
-        "edibleOil": "Edible fats and oils (jedl\u00e9 tuky a oleje).",
-        "electronics": "Small electrical appliances (elektroza\u0159\u00edzen\u00ed).",
-        "metal": "Metal (kovy).",
-        "mixedRecyclables": "Paper, plastic and cartons in one container (multikomoditn\u00ed sb\u011br).",
-        "paper": "Paper (pap\u00edr).",
-        "plastic": "Plastic (plast)."
-      }
+      "type": "string"
     }
   },
   "metamodel_version": "1.11.0",

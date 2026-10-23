@@ -28,20 +28,61 @@
   <div id="app">
     <section id="grid" aria-labelledby="title"></section>
     <section id="map-section" aria-labelledby="map-title" hidden>
-      <h2 id="map-title" data-t="map"></h2>
-      <div id="map" role="region" aria-labelledby="map-title" aria-describedby="map-note"></div>
+      <div class="map-head">
+        <h2 id="map-title" data-t="map"></h2>
+        <button type="button" id="map-panel-open" class="page-button" data-t="panelOpen" aria-expanded="false" aria-controls="map-panel"></button>
+      </div>
+      <div id="map-panel" class="map-panel" role="group" aria-labelledby="map-panel-title" hidden>
+        <h3 id="map-panel-title" data-t="panel"></h3>
+        <p class="field">
+          <label for="map-geo" data-t="geoLabel"></label>
+          <select id="map-geo" aria-describedby="map-geo-hint"></select>
+          <span id="map-geo-hint" class="hint" data-t="geoHint"></span>
+        </p>
+        <p class="field">
+          <label for="map-color" data-t="colorLabel"></label>
+          <select id="map-color" aria-describedby="map-color-hint"></select>
+          <span id="map-color-hint" class="hint" data-t="colorHint"></span>
+        </p>
+        <fieldset class="field wide">
+          <legend data-t="popLabel"></legend>
+          <div id="map-pop-list" class="checks"></div>
+          <span id="map-pop-hint" class="hint" data-t="popHint"></span>
+        </fieldset>
+        <p class="field wide">
+          <label class="check"><input id="map-cluster" type="checkbox" aria-describedby="map-cluster-hint"> <span data-t="clusterLabel"></span></label>
+          <span id="map-cluster-hint" class="hint" data-t="clusterHint"></span>
+        </p>
+      </div>
+      <div class="map-chips"><span id="map-chips"></span><button type="button" id="map-reset" class="page-button" data-t="reset" hidden></button></div>
+      <p id="map-fallback" class="hint map-fallback" role="status" hidden></p>
+      <div class="map-box">
+        <div id="map" role="region" aria-labelledby="map-title" aria-describedby="map-note map-count"></div>
+        <p id="map-count" class="map-count" role="status" aria-live="polite" hidden></p>
+      </div>
+      <ul id="map-legend" class="map-legend" hidden></ul>
       <p id="map-note" class="hint" data-t="mapHint"></p>
     </section>
   </div>
 </main>
 <dialog id="detail" aria-labelledby="detail-title">
   <div class="detail-head">
-    <h2 id="detail-title"></h2>
+    <div>
+      <p id="detail-type" class="card-type" hidden></p>
+      <h2 id="detail-title"></h2>
+    </div>
     <button type="button" id="detail-close" class="page-button" data-t="close"></button>
   </div>
-  <dl id="detail-list"></dl>
-  <h3 data-t="links"></h3>
-  <ul id="detail-links"></ul>
+  <div id="detail-map" class="card-map" role="img" data-t-label="placeMap" hidden></div>
+  <button type="button" id="detail-onmap" class="page-button card-onmap" data-t="onMap" hidden></button>
+  <dl id="detail-list" class="card-list"></dl>
+  <p id="detail-source" class="card-source" hidden></p>
+  <details id="detail-dev" class="card-dev">
+    <summary data-t="dev"></summary>
+    <dl id="detail-dev-list" class="card-list"></dl>
+    <h3 data-t="links"></h3>
+    <ul id="detail-links"></ul>
+  </details>
 </dialog>
 <dialog id="embed" aria-labelledby="embed-title" aria-describedby="embed-lead">
   <div class="detail-head">

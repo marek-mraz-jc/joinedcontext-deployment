@@ -20,6 +20,10 @@ artifact-store:
       # per object on the prefixes that promise immutability; set this only for a store that
       # holds nothing else.
       defaultRetentionDays: 0
+    # The bucket Postgres archives to when `postgres.cluster.backups.target` is 'artifact-store'
+    # (T-5289), with a user of its own that reaches this bucket alone.
+    backupBucket:
+      name: 'postgres-backups'
     fileCache:
       prefix: 'filecache/'
       expiryDays: 1

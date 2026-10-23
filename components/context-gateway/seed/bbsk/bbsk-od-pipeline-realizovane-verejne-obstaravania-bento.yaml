@@ -7,18 +7,34 @@ pipeline:
     # where it can be seen rather than writing nothing.
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
-    # Page 0 as it came; when the layer says there is more, every further page up to half again
-    # the 6829 rows it held when mapped (ponytail: a static page count; past that the
-    # newest rows wait until the mapping is regenerated). A page past the end is empty.
+    # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
+    # every further page of them is read (T-5288). One run holds every page, so a layer past
+    # 13658 rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    - branch:
+        request_map: |
+          root = if this.properties.exceededTransferLimit.or(false) { "" } else { deleted() }
+        processors:
+          - http:
+              url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Realizovan%C3%A9_verejn%C3%A9_obstar%C3%A1vania/FeatureServer/0/query?where=1%3D1&returnCountOnly=true&f=json"
+              verb: GET
+              headers:
+                Accept: application/json
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.rowCount = this.count.or(this.error.message.or("no count"))
     - mapping: |
-        root = if this.properties.exceededTransferLimit.or(false) { [this].concat(range(1, 11).map_each(p -> { "offset": p * 1000 })) } else { [this] }
+        let rows = this.rowCount.or(null)
+        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if $rows > 13658 { [{ "problem": "the layer holds %v rows, more than the 13658 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
     - unarchive:
         format: json_array
     - switch:
         - check: this.offset.or(null) != null
           processors:
             - mapping: |
-                meta offset = this.offset.string()
+                meta offset = this.offset
+                meta rows = this.rowCount
                 root = ""
             - http:
                 url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Realizovan%C3%A9_verejn%C3%A9_obstar%C3%A1vania/FeatureServer/0/query?where=1%3D1&outFields=ID_z%C3%A1kazky,N%C3%A1zov_predmetu,Hlavn%C3%BD_CPV,CPV___n%C3%A1zov,ID_%C4%8Dasti,N%C3%A1zov_%C4%8Dasti,Hlavn%C3%BD_CPV_%C4%8Dasti,CPV_%C4%8Dasti___n%C3%A1zov,Obstar%C3%A1vate%C4%BE,Druh_obstar%C3%A1vania,%C4%8C%C3%ADslo_spisu,Elektronick%C3%A1_aukcia,D%C3%A1tum_spustenia,Lehota_na_predkladanie,D%C3%A1tum_ukon%C4%8Denia,Predpokladan%C3%A1_hodnota,Po%C4%8Det_z%C3%A1ujemcov,Po%C4%8Det_uch%C3%A1dza%C4%8Dov,Zelen%C3%A9_obstar%C3%A1vanie,Soci%C3%A1lne_zodpovedn%C3%A9_obstar%C3%A1vani,Spolo%C4%8Densky_zodpovedn%C3%A9_verejn%C3%A9_,Druh_postupu,Stav,Najv%C3%BDhodnej%C5%A1%C3%AD_uch%C3%A1dza%C4%8D,Adresa_najv%C3%BDhodnej%C5%A1ieho_uch%C3%A1dza,Ponuka_uch%C3%A1dza%C4%8Da,Mena&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
@@ -29,7 +45,10 @@ pipeline:
                 retries: 2
                 rate_limit: pipeline_egress
             - mapping: |
-                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else { this }
+                root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else if this.features.or(null) == null { { "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) } } else if this.features.length() < [1000, @rows - @offset].min() { { "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [1000, @rows - @offset].min()) } } else { this }
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null { throw(this.problem) } else { this }
     - mapping: |
         root = this.features.or([])
     - unarchive:

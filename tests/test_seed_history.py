@@ -15,7 +15,7 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 MEASURED = {
     "AirQualityObserved", "WeatherObserved", "WaterQualityObserved", "KeyPerformanceIndicator",
-    "OffStreetParking", "ParkingArea", "BikeHireDockingStation",
+    "OffStreetParking", "ParkingArea", "BikeHireDockingStation", "TrafficFlowObserved",
 }
 DURATION = re.compile(r"^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$")
 
@@ -66,6 +66,11 @@ CHOSEN = {
     ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
     # A vehicle keeps five minutes of track (T-5046, owner 2026-10-21; an hour before, T-4624).
     ("helsinki/helsinki", "Vehicle"): "PT5M",
+    # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
+    ("zilina/zilina-doprava", "Vehicle"): "PT1H",
+    ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
+    # Prague's PID vehicles keep an hour of track, as Žilina's (T-4624, T-5268).
+    ("praha/praha-mesto", "Vehicle"): "PT1H",
 }
 
 

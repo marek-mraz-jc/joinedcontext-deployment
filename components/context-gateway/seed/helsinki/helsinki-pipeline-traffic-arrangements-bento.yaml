@@ -9,13 +9,16 @@
 # can name a person and are never read. A permit whose status, start or end the register does
 # not state is dropped rather than guessed at.
 #
-# ponytail: a permit that leaves the layer stays in the space with its last state; a reader
-# filters on `permitEnd`. An `expiresAt` from `permitEnd` is the upgrade if stale permits matter.
+# `expiresAt` (NGSI-LD 4.22): a permit leaves every read when its `permitEnd` day ends, or a day
+# after the layer last listed it, whichever comes first. The pipeline reads the layer every six
+# hours, so each run moves the day on for every permit still listed; one the layer drops goes a
+# day later instead of staying with its last state (T-5167). A layer outage over a day empties it.
 
 pipeline:
   processors:
     - mapping: |
         let kind = "trafficArrangement"
+        let lease = now().ts_unix() + 86400
         let start_fields = ["liikennejarjestely_alkaa", "liikennejarjestely_alkaa"]
         let end_fields = ["liikennejarjestely_paattyy", "liikennejarjestely_paattyy"]
         let statuses = { "Tuleva": "upcoming", "Käynnissä": "ongoing", "Rakentaminen käynnissä": "setup", "Purkaminen käynnissä": "teardown" }
@@ -43,6 +46,7 @@ pipeline:
         })).filter(p -> p.status != null && p.start != null && p.end != null).map_each(p -> {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("CityWork", env("JC_ORG_DOMAIN"), env("JC_SPACE"), p.props.hakemustunnus),
           "type": "CityWork",
+          "expiresAt": [(p.end + "T23:59:59Z").ts_unix().catch($lease), $lease].min().ts_format("2006-01-02T15:04:05Z", "UTC"),
           "name": if p.name == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": p.name } } },
           "permitKind": { "type": "Property", "value": $kind },
           "permitNumber": { "type": "Property", "value": p.props.hakemustunnus },

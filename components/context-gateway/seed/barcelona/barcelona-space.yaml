@@ -1,0 +1,40 @@
+# The open data of Barcelona City Council (Open Data BCN, CC BY 4.0) as Smart Data Models, one
+# space the city's pipelines write (T-5260). The first type is AirQualityObserved; each Open Data
+# BCN batch (T-5262..T-5266) adds its types to the model, the Policies and the retention below.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: barcelona
+  namespace: barcelona
+  title:
+    ca: Barcelona — dades obertes
+    es: Barcelona — datos abiertos
+    en: Barcelona, open data
+  description:
+    ca: Les dades obertes de l'Ajuntament de Barcelona (Open Data BCN, CC BY 4.0) com a entitats NGSI-LD dels Smart Data Models.
+    es: Los datos abiertos del Ayuntamiento de Barcelona (Open Data BCN, CC BY 4.0) como entidades NGSI-LD de los Smart Data Models.
+    en: The open data of Barcelona City Council (Open Data BCN, CC BY 4.0) as NGSI-LD entities of the Smart Data Models.
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: barcelona
+  isSandbox: false
+  # Its one model: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: barcelona }
+  defaultLocale: ca
+  # A measurement series: thirty days of history, the seed's default for a measurement, one row
+  # per change and one a day for what a read repeats (DM-82, DM-108, DM-109).
+  retention:
+    - entityType: AirQualityObserved
+      history: P30D
+      attributes:
+        dateObserved: { record: onChange, heartbeat: P1D }
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+  # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
+  # it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]

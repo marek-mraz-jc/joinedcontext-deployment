@@ -5,8 +5,10 @@ viz:
   renderer:
     # Static files only, as uid 101, writing /tmp and its cache. The image is the pinned nginx
     # plus the vendored Vega, MapLibre and PMTiles builds (`images/viz/`, T-4657), built and
-    # cosign-signed by image-viz.yml at deployment d9646520 (T-5082: the catalogue explorer on the Portal's Endpoint data view).
+    # cosign-signed by image-viz.yml at deployment ccff991d (T-5231: centred citizen row card, cancellable default filter;
+    # T-5192/T-5196 at 6f9117b9: model-driven columns, page length, numbered pager;
+    # T-5082 explorer before it, d9646520).
     server:
       repository: 'ghcr.io/marek-mraz-jc/joinedcontext-viz'
       tag: '1.30.4'
-      digest: 'sha256:c32db8fb741e0e7df68a509e6e389615b70247a747dc3392bad4084df149b18c'
+      digest: 'sha256:aa63339150d2072f114e96564b2364d2f1e6450ccea33af83d1cd07ca995746d'

@@ -38,6 +38,15 @@ appsBucket:
   retiredPrefix: apps/retired/
   retiredExpiryDays: 90
 
+# The Postgres backup bucket (OPS-09, OPS-10, T-5289): CNPG's base backups and WAL archive. No
+# object lock and no versioning: barman deletes what falls out of its retention. The Job makes a
+# user of its own for it, holding the key pair of `credentialsSecret`, whose policy reaches this
+# bucket and nothing else, so the database never holds the store's root credential.
+backupBucket:
+  enabled: false
+  name: postgres-backups
+  credentialsSecret: postgres-backup-artifact-store
+
 fileCache:
   # `filecache/` is the gateway's own cache of file downloads: 24 hours, then gone (PF-33).
   prefix: filecache/
