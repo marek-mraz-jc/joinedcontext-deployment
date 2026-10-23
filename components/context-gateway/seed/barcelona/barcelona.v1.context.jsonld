@@ -13,6 +13,9 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "PedestrianCrossing": {
+      "@id": "jc:PedestrianCrossing"
+    },
     "areaServed": {
       "@id": "sdm:areaServed"
     },
@@ -26,6 +29,17 @@
     },
     "contractingAuthority": {
       "@id": "sdm:contractingAuthority"
+    },
+    "crossingType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:crossingType"
+    },
+    "crossingTypeLabel": {
+      "@id": "jc:crossingTypeLabel"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -59,6 +73,10 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "markedArea": {
+      "@id": "jc:markedArea",
+      "@type": "xsd:float"
+    },
     "name": {
       "@id": "schema:name"
     },
@@ -79,6 +97,10 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "pedestrianCrossings": {
+      "@id": "jc:pedestrianCrossings",
+      "@type": "@id"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -89,6 +111,10 @@
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refNeighbourhood": {
+      "@id": "jc:refNeighbourhood",
       "@type": "@id"
     },
     "refParentDistrict": {

@@ -434,6 +434,21 @@
       "title": "CityWork",
       "type": "object"
     },
+    "CrossingType": {
+      "description": "The three kinds of crossing marking the city's typology names.",
+      "enum": [
+        "stripes",
+        "blocks",
+        "cycle"
+      ],
+      "title": "CrossingType",
+      "type": "string",
+      "x-enum-descriptions": {
+        "blocks": "A crossing marked with painted square blocks (Pas de tacs).",
+        "cycle": "A crossing for bicycles (Pas de bicicletes).",
+        "stripes": "Painted bars across the road, the zebra crossing (Pas de pastilles)."
+      }
+    },
     "DivisionLevel": {
       "description": "",
       "enum": [
@@ -504,6 +519,122 @@
         "type"
       ],
       "title": "Entity",
+      "type": "object"
+    },
+    "PedestrianCrossing": {
+      "additionalProperties": false,
+      "description": "One pedestrian or cycle crossing painted on Barcelona's streets, from the city's street inventory, with its kind, its painted area and its barri. Smart Data Models has no crossing model; the class is the project's own, with SDM's common names where they exist (location, dataProvider, source).",
+      "properties": {
+        "crossingType": {
+          "$ref": "#/definitions/CrossingType",
+          "description": "How the crossing is marked, from the city's typology (infraestructures-tipologia-pas-vianants).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "crossingTypeLabel": {
+          "description": "The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "markedArea": {
+          "description": "The painted area of the crossing in square metres (unitCode MTK).",
+          "maximum": 500,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m2"
+          }
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "refNeighbourhood": {
+          "description": "The barri the crossing lies in; none for a crossing on the city's edge.",
+          "pattern": "^urn:ngsi-ld:AdministrativeArea:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "pedestrianCrossings",
+            "onDelete": "restrict",
+            "target": "AdministrativeArea",
+            "unique": false
+          }
+        },
+        "source": {
+          "description": "The Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "crossingType",
+        "id",
+        "type"
+      ],
+      "title": "PedestrianCrossing",
       "type": "object"
     },
     "WorkState": {

@@ -20,3 +20,4 @@ spec:
         - type: AirQualityObserved
         - type: AdministrativeArea
         - type: CityWork
+        - type: PedestrianCrossing

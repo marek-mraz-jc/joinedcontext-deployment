@@ -7,8 +7,9 @@
 # is the whole city). The file writes a missing value as the string "None". The constructor is
 # left out, because it can name a person. The promoter is mostly a public body, a utility or a
 # company, but a private building's promoter can be a person (2 of 295 current works on
-# 2026-10-23): it is kept only as one word (BIMSA, ENDESA) or with an organisation's marker
-# (S.A., S.L., UTE, Fundació, Ajuntament...), and otherwise left out and counted.
+# 2026-10-23): it is kept only when it is one of the city's bodies or utilities the allow-list
+# below names (BIMSA, ENDESA, Ajuntament BCN...) or a company by its legal form (S.A., S.L.,
+# S.L.U., SCCL, SOCIMI, UTE), and otherwise left out and counted.
 #
 # Which works: those in execution or stopped, and the finished ones for 30 days after their end;
 # the older finished works (about 1,600 of 1,900) stay in the source's own archive. `expiresAt`
@@ -34,14 +35,17 @@ pipeline:
         map text {
           root = if this == null || this.string().trim() == "" || this.string().trim() == "None" || this.string().trim() == "-" { null } else { this.string().trim() }
         }
-        # A local "2025-12-17 00:00:00.000" as UTC seconds: read as UTC, then moved by Madrid's offset.
+        # A local "2025-12-17 00:00:00" as UTC seconds: read as UTC, then moved by Madrid's offset. The
+        # file wrote ".000" after the seconds until 2026-10-23 05:31Z and none since; both are read.
         map instant {
-          let naive = this.apply("text").ts_parse("2006-01-02 15:04:05.000").ts_unix().catch(null)
+          let naive = this.apply("text").or("").re_replace_all("\\.[0-9]+$", "").ts_parse("2006-01-02 15:04:05").ts_unix().catch(null)
           root = if $naive == null { null } else { $naive - $naive.ts_format("-07", "Europe/Madrid").number() * 3600 }
         }
         map organisation {
           let name = this.apply("text")
-          root = if $name != null && $name.re_match("(?i)(^\\S+$|\\b(s\\.?a\\.?u?|s\\.?l\\.?u?|ute|sccl|consorci|ajuntament|gerencia|junta|port|fira|club|incasol)\\b|\\bfundaci)") { $name } else { null }
+          let body = "^(BIMSA|AGBAR|BCASA|IMU|IMHAB|IMMB|BSM|BSAV|TMB|AMB|ATM|ATLL|ADIF|FGC|FMB|REE|ENDESA|NEDGIA|DISTRICLIMA|ECOENERGIES|VODAFONE|CATSALUT|INCAS[OÒ]L|TRAM|FIRA (DE )?BARCELONA|PORT DE BARCELONA|FUTBOL CLUB BARCELONA)$|^(AJUNTAMENT (BCN|DE BARCELONA)|INFRAESTRUCTURES\\.CAT|E-DISTRIBUCI[OÓ]N|AIG[UÜ]ES DE BARCELONA|FERROCARRILS DE LA GENERALITAT|CONSORCI |FUNDACI[OÓ] |JUNTA DE COMPENSACI[OÓ] |BARCELONA D'INFRAESTRUCTURES MUNICIPALS|UNIVERSITAT |GERENCIA DE INFRAESTRUCTURAS)"
+          let company = "(^|[ ,])(S\\.? ?A\\.?|S\\.? ?L\\.?|S\\.?A\\.?U\\.?|S\\.?L\\.?U\\.?|SCCL|SOCIMI|UTE)([ ,.]|$)"
+          root = if $name != null && ($name.uppercase().re_match($body) || $name.uppercase().re_match($company)) { $name } else { null }
         }
         map amount {
           let value = this.apply("text").number().catch(null)

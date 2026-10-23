@@ -6,8 +6,9 @@ description: >-
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
-  own classes. Batch 3 (T-5264) adds the districts and barris as AdministrativeArea and the
-  works on the public space as CityWork.
+  own classes. Batch 3 (T-5264) adds the districts and barris as AdministrativeArea, the
+  works on the public space as CityWork and the street inventory's crossings as
+  PedestrianCrossing.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -100,6 +101,39 @@ slots:
     inverse: cityWorks
     inlined: false
     annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+  refNeighbourhood:
+    slot_uri: jc:refNeighbourhood
+    description: The barri the crossing lies in; none for a crossing on the city's edge.
+    range: AdministrativeArea
+    inverse: pedestrianCrossings
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+  pedestrianCrossings:
+    slot_uri: jc:pedestrianCrossings
+    description: The crossings in this barri, computed from their refNeighbourhood and never stored.
+    range: PedestrianCrossing
+    multivalued: true
+    inverse: refNeighbourhood
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
+  crossingType:
+    slot_uri: jc:crossingType
+    description: How the crossing is marked, from the city's typology (infraestructures-tipologia-pas-vianants).
+    range: CrossingType
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  crossingTypeLabel:
+    slot_uri: jc:crossingTypeLabel
+    description: The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes).
+    annotations: { ngsi_ld_kind: Property }
+  markedArea:
+    slot_uri: jc:markedArea
+    description: The painted area of the crossing in square metres (unitCode MTK).
+    range: float
+    minimum_value: 0
+    maximum_value: 500
+    unit: { ucum_code: m2 }
+    annotations: { ngsi_ld_kind: Property }
   neighbourhoods:
     slot_uri: jc:neighbourhoods
     description: The barris of this district, computed from their refParentDistrict and never stored.
@@ -237,6 +271,7 @@ classes:
       - refParentDistrict
       - neighbourhoods
       - cityWorks
+      - pedestrianCrossings
       - dataProvider
       - source
   CityWork:
@@ -265,6 +300,15 @@ classes:
       - seeAlso
       - dataProvider
       - source
+  PedestrianCrossing:
+    class_uri: jc:PedestrianCrossing
+    description: >-
+      One pedestrian or cycle crossing painted on Barcelona's streets, from the city's street
+      inventory, with its kind, its painted area and its barri. Smart Data Models has no crossing
+      model; the class is the project's own, with SDM's common names where they exist (location,
+      dataProvider, source).
+    is_a: Entity
+    slots: [crossingType, crossingTypeLabel, markedArea, refNeighbourhood, dataProvider, source]
 
 enums:
   DivisionLevel:
@@ -279,3 +323,10 @@ enums:
       open: { description: In execution (En execució). }
       other: { description: Stopped (Aturada). }
       completed: { description: Finished (Finalitzada). }
+  CrossingType:
+    description: The three kinds of crossing marking the city's typology names.
+    permissible_values:
+      stripes:
+        description: Painted bars across the road, the zebra crossing (Pas de pastilles).
+      blocks: { description: A crossing marked with painted square blocks (Pas de tacs). }
+      cycle: { description: A crossing for bicycles (Pas de bicicletes). }
