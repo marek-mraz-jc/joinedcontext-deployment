@@ -275,3 +275,52 @@ test("a point opens the same card; the fold holds the id and the API links; the 
   await page.mouse.click(5, 5); // the backdrop, outside the card
   await expect(f.locator("#detail")).toBeHidden();
 });
+
+// T-5415: the owner's phone. At 400 px nothing scrolls the page sideways, the two selects and the
+// Data API / Embed buttons have one width each, the type reads in Slovak from the model's label,
+// the query hint quotes this type's own attribute, the filter row folds under one button and the
+// pager is one line under its count.
+for (const theme of ["light", "dark"]) {
+  test(`400 ${theme} sk: one width per control, Slovak type, own query example, one-line pager (T-5415)`, async ({ page, context }) => {
+    await serve(context);
+    await open(page, "stations", { lang: "sk", theme, width: 400 });
+    const f = frame(page);
+    await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
+    const overflow = (doc) => doc.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(await overflow(page)).toBeLessThanOrEqual(0);
+    expect(await overflow(f.locator("html"))).toBeLessThanOrEqual(0);
+    const selects = f.locator("select[id^='endpoint-data-']");
+    await expect(selects).toHaveCount(2);
+    const [a, b] = [await selects.nth(0).boundingBox(), await selects.nth(1).boundingBox()];
+    expect(Math.abs(a.width - b.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(a.x - b.x)).toBeLessThanOrEqual(1);
+    const buttons = f.locator(".page-head .page-button:visible");
+    const widths = await buttons.evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().width)));
+    expect(new Set(widths).size).toBe(1);
+    await expect(selects.nth(0).locator("option:checked")).toHaveText("Stanica");
+    await expect(f.locator(".jc-grid-query-hint code")).toHaveText('name=="Stanica 1"');
+    await expect(f.locator(".jc-grid-query-value")).toHaveText("všetky záznamy");
+    await expect(f.locator(".jc-grid-filter-row")).toBeHidden();
+    await f.getByRole("button", { name: "Filtre" }).click();
+    await expect(f.locator(".jc-grid-filter-row")).toBeVisible();
+    // The dataset page shrinks the assistant's corner to its icon while the frame is in view (jc-viz.js).
+    await expect(page.locator("body")).toHaveClass(/jc-corner-compact/);
+    await shot(page, `phone-stations-400-${theme}`);
+  });
+}
+
+test("400 sk: the pager of 12345 rows is one line of arrows and pages under its count (T-5415)", async ({ page, context }) => {
+  await serve(context);
+  await open(page, "many", { lang: "sk", width: 400 });
+  const f = frame(page);
+  await expect(rows(f)).toHaveCount(20, { timeout: 20000 });
+  const tops = await f.locator(".jc-grid-pager button").evaluateAll((all) => all.map((one) => one.getBoundingClientRect().top));
+  const middles = await f.locator(".jc-grid-pager button").evaluateAll((all) => all.map((one) => Math.round((one.getBoundingClientRect().top + one.getBoundingClientRect().bottom) / 2)));
+  expect(new Set(middles).size).toBe(1);
+  const total = await f.locator(".jc-grid-pager .jc-grid-total").boundingBox();
+  expect(total.y).toBeLessThan(Math.min(...tops));
+  await expect(f.locator(".jc-grid-pages [aria-current='page']")).toHaveText("1");
+  await expect(f.getByRole("button", { name: "Nasledujúca" })).toBeVisible();
+  await expect(f.locator(".jc-grid-scroll-hint")).toBeVisible();
+  await shot(page, "phone-pager-400");
+});
