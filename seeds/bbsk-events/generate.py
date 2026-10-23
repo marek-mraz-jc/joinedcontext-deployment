@@ -331,7 +331,11 @@ def processors(row: dict, store: dict) -> list:
         "__TOWN__": json.dumps(
             None if row["town_slug"] is None else row["town"], ensure_ascii=False
         ),
-        "__TOWN_SLUG__": json.dumps(row["town_slug"]),
+        # The feed's town as one whole scope literal: a bare slug can equal a project name ("zilina").
+        "__TOWN_SCOPE__": json.dumps(
+            "/SK/" + row["scope"]
+            + ("" if row["town_slug"] is None else "/" + row["town_slug"].replace("-", "_"))
+        ),
         "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
         "__TOWNS__": json.dumps(towns_for(row), ensure_ascii=False, separators=(",", ":")),
         # A place text that is only the town's or the organizer's own name names no place of its own.
