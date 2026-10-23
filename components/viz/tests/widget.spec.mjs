@@ -39,6 +39,8 @@ for (const width of [1440, 400]) {
           await expect(f.getByRole("textbox").filter({ hasText: "" }).first()).toBeVisible();
           if (filter === "open") {
             await f.getByRole("checkbox", { name: lang === "sk" ? "Upraviť ako text" : "Edit as text" }).uncheck();
+            // On a phone the filter row folds under its button (T-5415).
+            if (width === 400) await f.getByRole("button", { name: lang === "sk" ? /^Filtre/ : /^Filters/ }).click();
             const select = grid.locator("thead select").first();
             await select.selectOption({ index: 1 });
             await select.focus();
@@ -127,6 +129,8 @@ for (const width of [1440, 400]) {
     const grid = f.getByRole("grid");
     await expect(grid.locator("tbody tr")).toHaveCount(10, { timeout: 20000 });
     await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("10");
+    // On a phone the filter row folds under its button, which counts the default filter (T-5415).
+    if (width === 400) await f.getByRole("button", { name: "Filtre (1)" }).click();
     const op = f.getByRole("combobox", { name: "Filter: Začiatok" });
     await expect(op).toHaveValue("gte");
     await expect.poll(() => requests.some((r) => /^startDate>=\d{4}-\d{2}-\d{2}$/.test(r.url.searchParams.get("q") ?? ""))).toBe(true);

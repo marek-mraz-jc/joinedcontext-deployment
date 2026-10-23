@@ -172,7 +172,7 @@ export async function serve(context) {
         status: 200, contentType: "text/html",
         body: `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><title>dataset</title>
           <style>body{margin:0;font:15px system-ui;background:${q.get("theme") === "dark" ? "#0b1220" : "#fff"}}</style>
-          <iframe id="explore" data-jc-viz="https://${VIZ}" title="Live data" style="width:100%;height:600px;border:0"
+          <iframe id="explore" class="jc-viz-frame jc-explorer-frame" data-jc-viz="https://${VIZ}" title="Live data" style="width:100%;height:600px;border:0"
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"
             src="https://${VIZ}/explore.html#${SLUGS[name]}&inline&lang=${q.get("lang") || "en"}${q.get("theme") ? "&theme=" + q.get("theme") : ""}${q.get("extra") || ""}"></iframe>
           <script>${readFileSync(path.join(here, "../../../charts/ckan/files/jc_theme/public__jc-viz.js"), "utf8")}</script>`
@@ -288,7 +288,7 @@ export async function catalogue(context) {
     const lang = url.searchParams.get("lang") || "en";
     return route.fulfill({ status: 200, contentType: "text/html", body: `<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><title>dataset</title>
       <style>body{margin:0;font:15px system-ui}</style>
-      <iframe id="explore" data-jc-viz="https://${VIZ}" title="Live data" style="width:100%;height:600px;border:0" allow="clipboard-write"
+      <iframe id="explore" class="jc-viz-frame jc-explorer-frame" data-jc-viz="https://${VIZ}" title="Live data" style="width:100%;height:600px;border:0" allow="clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"
         src="https://${VIZ}/explore.html#${SLUGS.point}&inline&lang=${lang}&dataset=bike-stations${url.searchParams.get("extra") || ""}"></iframe>
       <script>${readFileSync(path.join(here, "../../../charts/ckan/files/jc_theme/public__jc-viz.js"), "utf8")}</script>` });

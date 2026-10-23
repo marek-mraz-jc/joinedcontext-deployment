@@ -736,6 +736,14 @@ body.jc-corner-compact .jc-corner .jc-assistants-link { display: none; }
 body.jc-corner-compact .jc-assistant:not([open]) > summary { block-size: 2.75rem; inline-size: 2.75rem; padding-inline: 0; }
 body.jc-corner-compact .jc-assistant:not([open]) > summary > span { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
 body.jc-corner-compact .jc-assistant:not([open]) > summary > .jc-assistant-icon { display: block; inline-size: 1.375rem; block-size: 1.375rem; transform: skewX(14deg); }
+/* T-5415: on a phone the compact icon sits flush on the screen's right edge, square on that side and
+   unslanted, so it covers the last 44 px of a table row or a chart's edge instead of a row's middle
+   or the legend; the legend now sits under the chart (render.js). */
+@media (max-width: 40rem) {
+  body.jc-corner-compact .jc-corner { inset-inline-end: 0; }
+  body.jc-corner-compact .jc-assistant:not([open]) > summary { margin-inline: 0; transform: none; border-start-end-radius: 0; border-end-end-radius: 0; opacity: .92; }
+  body.jc-corner-compact .jc-assistant:not([open]) > summary > .jc-assistant-icon { transform: none; }
+}
 .jc-about-sources > summary { cursor: pointer; color: var(--jc-primary); min-block-size: 2.75rem; display: flex; align-items: center; }
 .jc-about-sources > summary:focus-visible { outline: 3px solid var(--jc-accent); outline-offset: 2px; }
 .jc-about-sources ul { margin: .25rem 0 0; padding-inline-start: 1.25rem; columns: 2 16rem; }
