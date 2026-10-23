@@ -341,6 +341,7 @@ v1/Secret local/keycloak-client-banskabystrica-conformance
 v1/Secret local/keycloak-client-banskabystrica-pipelines
 v1/Secret local/keycloak-client-barcelona-pipelines
 v1/Secret local/keycloak-client-bbsk-pipelines
+v1/Secret local/keycloak-client-bratislava-pipelines
 v1/Secret local/keycloak-client-edge
 v1/Secret local/keycloak-client-gitea
 v1/Secret local/keycloak-client-helsinki-pipeline-proposer

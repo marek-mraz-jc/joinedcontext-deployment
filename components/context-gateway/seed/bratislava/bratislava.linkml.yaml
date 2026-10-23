@@ -7,7 +7,7 @@ description: >-
   DM-16). The first type is AirQualityObserved, one entity per air-quality station in the city
   with the PM10 concentration the city publishes for it; each batch of the ranked matrix adds its
   own classes: the city districts, places and services, and the hub's district tables as key
-  performance indicators (T-5274).
+  performance indicators.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/

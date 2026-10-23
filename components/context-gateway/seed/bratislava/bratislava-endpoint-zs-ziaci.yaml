@@ -16,7 +16,7 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:bratislava.sk:bratislava:public-zs-ziaci
-  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, odata]
+  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
