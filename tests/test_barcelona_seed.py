@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BARCELONA = SEED / "barcelona"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved"}
+TYPES = {"AirQualityObserved", "Event", "PointOfInterest"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -84,7 +84,8 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     assert model["contextSpaceRef"] == "barcelona" and model["lifecycle"] == "published"
     assert set(model["classes"]) == TYPES
     linkml = yaml.safe_load((BARCELONA / "barcelona.linkml.yaml").read_text())
-    assert set(linkml["classes"]) == TYPES
+    # The entity classes; PostalAddress and ContactPoint are values inside an attribute.
+    assert {n for n, c in linkml["classes"].items() if c.get("is_a") == "Entity"} == TYPES
     for artifact in model["artifacts"].values():
         assert (BARCELONA / artifact.removeprefix("./")).is_file(), artifact
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
@@ -138,8 +139,9 @@ def test_the_public_reads_and_never_writes():
 
 
 def test_the_one_door_is_public_cc_by_and_credits_the_ajuntament():
-    (endpoint,) = by_name("Endpoint").values()
-    spec = endpoint["spec"]
+    # The door the pipelines write through; each dataset's own narrowed Endpoint sits beside it.
+    spec = by_name("Endpoint")["barcelona"]["spec"]
+    assert "policyRef" not in spec
     assert spec["contextSpaceRef"] == "barcelona" and spec["audience"] == "public"
     assert len(spec["slug"]) == 32
     catalog = spec["catalog"]
