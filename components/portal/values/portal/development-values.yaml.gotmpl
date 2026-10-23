@@ -10,8 +10,9 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    # T-5113: kubectl top 2026-10-21 21:55-22:25Z: peak 301Mi on dev, 307Mi on prod.
-    memory: 320Mi
+    # T-5282: 276Mi an hour after a start on dev, 318Mi 15 min later, 474Mi before the
+    # 19:41Z restart (2026-10-22): glibc keeps freed memory (T-5283), + 20 %.
+    memory: 576Mi
   limits:
     cpu: '1'
     # 1Gi: at 512Mi the kernel killed the Portal five times on 2026-09-25 (14:09 to 15:20Z)

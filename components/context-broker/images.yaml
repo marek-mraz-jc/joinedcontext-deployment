@@ -157,5 +157,8 @@ context-broker:
     # Signed by ship.yml on dev at 5ed44bf (dispatched run 39834395804; the train push started no run).
     # Antares dev f945ccb (dev-43, over 5ed44bf: T-5169 OGC id filters lowered to the id list, T-5333 OData Untyped
     # Property filterable; same FEATURES). No migration, no new runtime key. Rollback: dev-42. Signed by ship.yml on dev at f945ccb.
-    tag: 'dev-43'
-    digest: 'sha256:8200cbdcf75bfb291f45ef20d00d241a03953db97a8cc3cc28fea20a8f875fcf'
+    # Antares dev 4b73e52 (dev-44, over f945ccb: T-5246, T-5157, T-5200, T-5134, T-5279 area_overview; same FEATURES).
+    # Migration 0020 adds empty iri_ids, attr_rows and history_cutover (NULL), rollback compatible. New runtime keys
+    # ANTARES_SUMMARY_CONCURRENCY/_MAX_BYTES keep their defaults (not set here). Rollback: dev-43. Signed by ship.yml on dev at 4b73e52.
+    tag: 'dev-44'
+    digest: 'sha256:53cfdb02031864f451cce339b78fb084a1a56d52ffb7fd324035e3b7c62f7a32'

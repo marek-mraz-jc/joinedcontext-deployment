@@ -11,8 +11,9 @@ resources:
   requests:
     cpu: 100m
     # T-5113: kubectl top 2026-10-21 21:55-22:25Z: peak 183Mi on dev, 90Mi on prod, idle
-    # (T-4473 saw 725Mi); the limit leaves a generate run its room.
-    memory: 256Mi
+    # (T-4473 saw 725Mi); the limit leaves a generate run its room. T-5282: 266Mi on dev
+    # 2026-10-22 20:40-21:28Z, + 20 %.
+    memory: 320Mi
   limits:
     cpu: '1'
     memory: 1Gi
