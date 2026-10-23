@@ -12,7 +12,6 @@ metadata:
     en: Surface parking sections, daily
 spec:
   class: auto
-  period: 24h
   schedule: '20 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-parking-sections }
