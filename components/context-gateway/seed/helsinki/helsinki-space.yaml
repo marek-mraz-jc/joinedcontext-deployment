@@ -51,6 +51,10 @@ spec:
       # interval, so none records every.
       record: onChange
       heartbeat: PT1H
+      # dateModified is bookkeeping: the pipeline stamps it on every write, so it keeps no
+      # history of its own (DM-132, T-5058).
+      attributes:
+        dateModified: { record: never }
     - entityType: CityWork
       history: 'off'
     - entityType: Event
