@@ -281,6 +281,7 @@ slots:
       The venue as a PointOfInterest of this space, when the venue table placed the event; every event held
       there links the same one (DM-141).
     range: PointOfInterest
+    inverse: venueEvents
     inlined: false
     annotations:
       label:
@@ -292,6 +293,22 @@ slots:
           de: Ort
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  venueEvents:
+    slot_uri: jc:venueEvents
+    description: The events held at this venue, computed from their refPointOfInterest and never stored.
+    range: Event
+    multivalued: true
+    inverse: refPointOfInterest
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Podujatia
+          cs: Akce
+          en: Events
+          de: Veranstaltungen
+      ngsi_ld_kind: Relationship
   dateModified:
     slot_uri: sdm:dateModified
     description: When the source last changed the record.
@@ -395,7 +412,7 @@ classes:
           cs: Místo konání
           en: Venue
           de: Veranstaltungsort
-    slots: [name, location, address, areaServed, source, dataProvider]
+    slots: [name, location, address, areaServed, source, dataProvider, venueEvents]
     slot_usage:
       name: { required: true, description: The venue's name (`Dom kultúry A. Sládkoviča`). }
       location:

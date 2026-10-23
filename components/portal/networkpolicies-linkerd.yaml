@@ -153,6 +153,15 @@ portal-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # The UI bundle (T-5297), through its inbound proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-ui
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 4143
     # The reconciler's admin calls to the artifact store are meshed too, so the 9000 rule
     # beside this one is not enough: the client proxy dials the store's inbound proxy on 4143
     # and the connection is refused at this pod's own egress without it (T-0933). The bucket
@@ -166,3 +175,44 @@ portal-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+
+# Meshed, the Portal reaches the UI bundle on its inbound proxy (4143), not on 8080; 4190/4191
+# are the proxy's admin and the kubelet's probes through it.
+portal-ui-allow-linkerd:
+  podSelector:
+    app.kubernetes.io/name: portal-ui
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
+          protocol: TCP
+
+# The bundle declares an egress policy, so its proxy needs identity (8080), destination (8086)
+# and policy (8090) named, else the startup probe gets a 403 and the pod stays in Init.
+portal-ui-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: portal-ui
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
