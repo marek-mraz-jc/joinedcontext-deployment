@@ -493,3 +493,24 @@ tests:
   - eval_time: 40m
     alertname: PipelineDataStale
     exp_alerts: []
+- interval: 1m
+  input_series:
+  - series: jc_pipeline_error_ratio{project="city",pipeline="parking"}
+    values: 0.1x30 0x10
+  - series: jc_pipeline_error_ratio{project="city",pipeline="bikes"}
+    values: 0.05x40
+  - series: jc_pipeline_error_ratio{project="city",pipeline="idle"}
+    values: 0x40
+  alert_rule_test:
+  - eval_time: 20m
+    alertname: PipelineErrorRatio
+    exp_alerts:
+    - exp_labels:
+        project: city
+        pipeline: parking
+        severity: warning
+      exp_annotations:
+        summary: "Pipeline parking in city lost 10% of the last hour's records: open its Source health and log"
+  - eval_time: 40m
+    alertname: PipelineErrorRatio
+    exp_alerts: []

@@ -213,6 +213,37 @@ kube-state-metrics:
     tag: {{ $images.kubeStateMetrics.tag | quote }}
     # This chart appends `sha` after the @ as it stands, so it keeps its sha256: prefix.
     sha: {{ $images.kubeStateMetrics.digest | quote }}
+  # The chart's default list minus configmaps and secrets: kube-state-metrics caches every object of
+  # a kind it lists, and dev's ConfigMaps (17 MiB of seeds) plus Secrets (57 MiB of Helm releases)
+  # OOMKilled it at start under 192Mi (T-5434). No rule reads kube_configmap_* or kube_secret_*,
+  # and the chart then grants no read on Secrets at all.
+  collectors:
+    - certificatesigningrequests
+    - cronjobs
+    - daemonsets
+    - deployments
+    - endpointslices
+    - horizontalpodautoscalers
+    - ingresses
+    - jobs
+    - leases
+    - limitranges
+    - mutatingwebhookconfigurations
+    - namespaces
+    - networkpolicies
+    - nodes
+    - persistentvolumeclaims
+    - persistentvolumes
+    - poddisruptionbudgets
+    - pods
+    - replicasets
+    - replicationcontrollers
+    - resourcequotas
+    - services
+    - statefulsets
+    - storageclasses
+    - validatingwebhookconfigurations
+    - volumeattachments
   resources:
     requests:
       cpu: 10m
