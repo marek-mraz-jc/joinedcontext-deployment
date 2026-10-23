@@ -157,7 +157,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "location": {
-          "description": "Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7), from the source or from the venue table checked by hand; never a town's centre.",
+          "description": "Where the event takes place, a GeoJSON Point in WGS 84 inside Slovakia (longitude 16.8 to 22.6, latitude 47.7 to 49.7): the source's own point, the venue's building, else the organizer's or the town's office or the town's centre, as `locationPrecision` says (owner 2026-10-21: at least 90 % of events with a point).",
           "properties": {
             "coordinates": {
               "type": "array"
@@ -183,6 +183,11 @@
             "null"
           ],
           "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "locationPrecision": {
+          "$ref": "#/definitions/LocationPrecision",
+          "description": "How close `location` is to the venue: `source` the publisher's own point, `building` the venue's building (the address register or a venue checked against OpenStreetMap), `office` the organizer's or the town's office standing in for a venue nobody placed, `centre` the town's centre. A map draws `office` and `centre` as approximate.",
+          "x-ngsi-ld-kind": "Property"
         },
         "name": {
           "description": "The title of the event as the source writes it, in Slovak.",
@@ -305,6 +310,17 @@
         "outdoor-nature": "Smart Data Models category outdoorActivities, excursion.",
         "theatre-dance": "Smart Data Models category spectacle."
       }
+    },
+    "LocationPrecision": {
+      "description": "How close an event's point is to its venue; office and centre are approximate.",
+      "enum": [
+        "source",
+        "building",
+        "office",
+        "centre"
+      ],
+      "title": "LocationPrecision",
+      "type": "string"
     },
     "Organizer": {
       "additionalProperties": false,

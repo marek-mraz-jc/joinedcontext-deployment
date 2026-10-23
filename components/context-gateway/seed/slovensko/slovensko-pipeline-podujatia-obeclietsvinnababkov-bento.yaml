@@ -65,7 +65,8 @@ pipeline:
       format: json_array
   - mapping: |
       map key {
-        root = this.lowercase().re_replace_all("\\([^)]*\\)", " ").re_replace_all("[,;]", " ").re_replace_all("\\s+", " ").trim()
+        # generate.py ABBREVIATIONS: a hall's or an office's short name spelled out (T-5240).
+        root = (" " + this.lowercase().re_replace_all("\\([^)]*\\)", " ").re_replace_all("[,;]", " ").re_replace_all("\\s+", " ").trim() + " ").replace_all(" kd ", " kultúrny dom ").replace_all(" dk ", " dom kultúry ").replace_all(" msks ", " mestské kultúrne stredisko ").replace_all(" ocú ", " obecný úrad ").replace_all(" oú ", " obecný úrad ").replace_all(" msú ", " mestský úrad ").replace_all(" mú ", " mestský úrad ").trim()
       }
       map text {
         root = if this == null { null } else { this.string().strip_html().unescape_html().re_replace_all("\\s+", " ").trim().(t -> if t == "" { null } else { t }) }
@@ -82,21 +83,34 @@ pipeline:
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
       let home = if $place == null && ($venue_key == "" || ["celá obec", "lietavská svinná-babkov", "lietavská svinná-babkov - celá obec", "mesto", "mesto lietavská svinná-babkov", "mestský úrad", "mestský úrad lietavská svinná-babkov", "obec", "obec lietavská svinná-babkov", "obecný úrad", "obecný úrad lietavská svinná-babkov", "v obci"].contains($venue_key)) { {"match":"obecný úrad lietavská svinná-babkov","town":"lietavska-svinna-babkov","venue":"Lietavská Svinná-Babkov","streetAddress":null,"addressLocality":"Lietavská Svinná-Babkov","lat":49.1524945,"lon":18.6763072} } else { null }
       let known = $place.or($home)
-      # GPS from the feed, else from the venue table, else from the organizer's address; never a town's centre
-      # (owner 2026-10-20). An event with none is kept without a location and counted (owner 2026-10-22).
-      let lat = this.lat.number().catch($known.lat.or(null))
-      let lon = this.lon.number().catch($known.lon.or(null))
+      # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
+      let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
+      let locality = $feed_locality.or($known.addressLocality.or("Lietavská Svinná-Babkov"))
+      # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
+      let area = if $known == null && $locality != null { [["Lietavská Svinná-Babkov","lietavska-svinna-babkov",49.15249,18.67631,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).map_each(t -> { "town": t.index(1), "lat": t.index(2), "lon": t.index(3), "precision": t.index(4) }).index(0).catch(null) } else { null }
+      # GPS from the feed, else from the venue table, else from the organizer's address, else from the town; the
+      # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
+      let feed_lat = this.lat.number().catch(null)
+      let feed_lon = this.lon.number().catch(null)
+      let pick = if $feed_lat != null && $feed_lon != null { { "lat": $feed_lat, "lon": $feed_lon, "precision": "source" } } else if $place != null { $place.merge({ "precision": "building" }) } else if $home != null { $home.merge({ "precision": "office" }) } else { $area }
+      let lat = $pick.lat.or(null)
+      let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
-      let locality = this.locality.apply("text").or($known.addressLocality.or("Lietavská Svinná-Babkov"))
-      let town = $known.town.or("lietavska-svinna-babkov")
+      let town = $known.town.or($area.town.or("lietavska-svinna-babkov"))
       # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
       # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
       # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
       let start_key = if this.start.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { this.start } else { this._start.ts_format("2006-01-02T15Z", "UTC") }
       let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
+      # A street with the postcode glued on ("Bečov 96/6976 63" is 96/6 and 976 63) or written after it, or a postcode
+      # alone ("976 63 Predajná"): the postcode moves to its own field and the country is dropped (T-5240).
+      let street_text = this.streetAddress.apply("text").(s -> if s != null { s.re_replace_all("(?i)[,\\s]*(slovensko|slovakia|slovenská republika)$", "") } else { null })
+      let glued = if $street_text != null { $street_text.re_find_object("^(?P<street>.*?\\d[a-zA-Z]?)[,\\s]*(?P<zip>\\d{3} \\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
+      let zip_only = if $street_text != null { $street_text.re_find_object("^(?P<zip>\\d{3} ?\\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
+      let street = if $zip_only.zip != null { null } else { $glued.street.or($street_text) }
       let address = {
-        "streetAddress": this.streetAddress.apply("text").or($known.streetAddress.or(null)),
-        "postalCode": this.postalCode.apply("text"),
+        "streetAddress": $street.or($known.streetAddress.or(null)),
+        "postalCode": this.postalCode.apply("text").or($zip_only.zip.or($glued.zip.or(null))),
         "addressLocality": $locality,
         "addressRegion": "Žilinský kraj",
         "addressCountry": "SK"
@@ -137,6 +151,7 @@ pipeline:
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
+        "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),

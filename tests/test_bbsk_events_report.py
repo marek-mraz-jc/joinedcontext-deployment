@@ -44,8 +44,10 @@ def test_the_report_prints_the_share_and_writes_the_unplaced_venues_for_geocodin
         {"source": url, "location": point(19.12, 48.57)},
     ]))
     assert report.main(["--file", str(tmp_path / "e.json"), "--places", str(tmp_path / "p.csv")]) == 0
-    assert capsys.readouterr().out.splitlines()[-1] == "1 sources, 2 events, 1 with GPS (50%)"
-    assert (tmp_path / "p.csv").read_text().splitlines() == ["town,place", "Zvolen,podľa plagátu"]
+    assert capsys.readouterr().out.splitlines()[-2:] == [
+        "1 sources, 2 events, 1 with GPS (50%)",
+        "precision: source 0 (0%), building 0 (0%), office 0 (0%), centre 0 (0%), unlabelled 1 (50%)"]
+    assert (tmp_path / "p.csv").read_text().splitlines() == ["town,place,street", "Zvolen,podľa plagátu,"]
 
 
 def test_only_an_https_store_is_read():
@@ -65,3 +67,16 @@ def test_the_next_page_link_keeps_the_commas_of_its_target():
     ]
     assert report.next_links(headers) == ["/api/endpoint/x/ngsi-ld/v1/entities?attrs=source,location,venue&limit=100&cursor=ab.cd"]
     assert report.next_links([headers[0]]) == []
+
+
+def test_the_report_counts_each_precision_and_writes_the_towns_the_events_name(tmp_path, capsys):
+    # T-5240: the shares per precision go into the task; the towns feed towns.py.
+    url = "https://www.zvolen.sk/aktualne-podujatia.html"
+    events = [{"source": url, "location": point(19.12, 48.57), "locationPrecision": p, "scope": ["/SK/BB/zvolen"],
+               "address": {"addressLocality": t}} for p, t in (("building", "Zvolen"), ("office", "Zvolen"), ("centre", "Sliač"))]
+    events.append({"source": url, "scope": "/SK/KE/kosice", "address": {"addressLocality": "Košice"}})
+    (tmp_path / "e.json").write_text(json.dumps(events))
+    assert report.main(["--file", str(tmp_path / "e.json"), "--localities", str(tmp_path / "l.csv")]) == 0
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        "precision: source 0 (0%), building 1 (25%), office 1 (25%), centre 1 (25%), unlabelled 0 (0%)")
+    assert (tmp_path / "l.csv").read_text().splitlines() == ["town,region", "Košice,KE", "Sliač,BBSK", "Zvolen,BBSK"]

@@ -57,6 +57,14 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "locationPrecision": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:locationPrecision"
+    },
     "name": {
       "@id": "schema:name"
     },
@@ -74,6 +82,7 @@
     "schema": "https://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"

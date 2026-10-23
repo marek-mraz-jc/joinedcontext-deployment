@@ -195,6 +195,19 @@ def home(row: dict) -> dict | None:
     return None
 
 
+def towns_for(row: dict) -> list[list]:
+    """The towns.csv points a source's events may fall back to (T-5240): a municipality's calendar its own town; a
+    museum's, a theatre's or a tourism body's every town of its region named by one municipality alone."""
+    municipal = row["org_type"] in ("town", "municipality", "village")
+    return [
+        # [name, slug, lat, lon, precision], 5 decimals (about a metre): the table rides in every aggregator's
+        # pipeline and the seed releases have a size ceiling (test_sample_apps_seed).
+        [t["name"], t["town"], round(float(t["lat"]), 5), round(float(t["lon"]), 5), t["precision"]]
+        for t in csv.DictReader((HERE / "towns.csv").open(encoding="utf-8"))
+        if t["town"] == row["town_slug"] or (not municipal and t["region"] == row["region"] and t["unique"] == "y")
+    ]
+
+
 #: How a municipality's calendar names the municipality or its office instead of a place (T-5215, dev 2026-10-22:
 #: "Obec" 28 events of Oravská Polhora, "Celá obec" Ďurčiná, "Obecný úrad").
 MUNICIPAL_SELF = ("obec", "mesto", "celá obec", "obecný úrad", "mestský úrad", "obecný úrad {town}",
@@ -209,10 +222,18 @@ def self_names(row: dict) -> set[str]:
     return named
 
 
+#: The abbreviations calendars write for a hall or an office, spelled out in the match key (T-5240), in this order.
+ABBREVIATIONS = (("kd", "kultúrny dom"), ("dk", "dom kultúry"), ("msks", "mestské kultúrne stredisko"),
+                 ("ocú", "obecný úrad"), ("oú", "obecný úrad"), ("msú", "mestský úrad"), ("mú", "mestský úrad"))
+
+
 def key(text: str) -> str:
     """A place text's match key, as pipelines/common.yaml computes it."""
     text = re.sub(r"\([^)]*\)", " ", text.lower())
-    return re.sub(r"\s+", " ", re.sub(r"[,;]", " ", text)).strip()
+    text = " " + re.sub(r"\s+", " ", re.sub(r"[,;]", " ", text)).strip() + " "
+    for short, long in ABBREVIATIONS:
+        text = text.replace(f" {short} ", f" {long} ")
+    return text.strip()
 
 
 def cadence(row: dict, store: dict) -> dict:
@@ -237,6 +258,7 @@ def processors(row: dict, store: dict) -> list:
         ),
         "__TOWN_SLUG__": json.dumps(row["town_slug"]),
         "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
+        "__TOWNS__": json.dumps(towns_for(row), ensure_ascii=False, separators=(",", ":")),
         # A place text that is only the town's or the organizer's own name names no place of its own.
         "__SELF__": json.dumps(sorted(self_names(row)), ensure_ascii=False),
         "__SCOPE__": json.dumps("/SK/" + row["scope"]),
