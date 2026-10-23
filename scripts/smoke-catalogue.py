@@ -449,7 +449,7 @@ class Run:
         self.previous, self.previous_at, self.now = previous, previous_at, now
         self.counts = {}  # dataset -> (platform count, how)
         self.shared = {}  # (slug, type) -> datasets without isPartOf
-        self.holders = {}  # type -> (publisher, slug) of the public Endpoints whose dataset names it
+        self.datasets, self.public, self.typed = [], set(), False
         self.samples = {}  # dataset -> its NGSI-LD rows
         self.schemas = {}  # dataset -> its type's JSON Schema
 
@@ -556,6 +556,17 @@ class Run:
             f"location not checked: no box for {data.region}" if data.region else "location not checked: no region")
         return ok(f"{len(rows)} rows, {where}")
 
+    def holders(self, kind: str) -> list:
+        """(publisher, slug) of the public Endpoints whose dataset is of `kind`. A dataset whose CKAN links
+        name no type is asked its Endpoint's first, so the answer does not hang on the check order
+        (T-5402: helsinki-districts was checked after the permits and their districts dangled)."""
+        if not self.typed:
+            self.typed = True
+            for other in self.datasets:
+                if other.slug in self.public:
+                    self.entity_type(other)
+        return [(d.org, d.slug) for d in self.datasets if d.type == kind and d.slug in self.public]
+
     def dangling(self, data: Dataset, rows: list) -> list:
         """The Relationships of the rows whose object the dataset's Endpoint does not hold."""
         problems = []
@@ -566,7 +577,7 @@ class Run:
             # The dataset's own Endpoint first, then each public one whose dataset is of that type: a
             # register's Endpoint serves its one type, its areas sit behind the areas' (T-4344, T-4745).
             # The same publisher's first: Helsinki's beaches name Helsinki's places, not Prague's.
-            others = [slug for org, slug in sorted(self.holders.get(kind, []), key=lambda h: h[0] != data.org)]
+            others = [slug for org, slug in sorted(self.holders(kind), key=lambda h: h[0] != data.org)]
             missing = dict(targets)
             for slug in list(dict.fromkeys([data.slug, *others]))[:1 + MAX_HOLDERS]:
                 query = {"type": kind, "id": ",".join(sorted(missing)), "limit": min(len(missing), 1000)}
@@ -703,9 +714,7 @@ class Run:
 
     def table(self, datasets: list, public: set) -> list:
         rows = {}
-        for data in datasets:
-            if data.type and data.slug in public:
-                self.holders.setdefault(data.type, []).append((data.org, data.slug))
+        self.datasets, self.public = datasets, public
         for data in datasets:
             row = rows[data.name] = {"dataset": data.name, "endpoint": data.slug}
             if not data.slug:
