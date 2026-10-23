@@ -490,8 +490,9 @@ classes:
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-
-      One place a resident goes to: a school, a cultural venue, a public toilet or a public
-      transport ticket point.
+      One place a resident goes to: a school, a cultural venue, a public toilet, a public
+      transport ticket point, a library, a municipal office or police station, a garden, a
+      playground or a waste collection yard.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -505,6 +506,7 @@ classes:
       - pupilCount
       - openingHours
       - wheelchairAccessible
+      - dateModified
       - dataProvider
       - source
   WasteContainerIsle:
@@ -647,6 +649,15 @@ enums:
         description: A theatre, a museum, a gallery or another cultural venue.
       publicToilet: { description: A public toilet. }
       ticketSale: { description: A place that sells public transport tickets. }
+      library: { description: A branch of the Municipal Library of Prague. }
+      municipalAuthority:
+        description: The office of a city district or of the city (úřad městské části).
+      police:
+        description: A station or desk of the Municipal Police of Prague (Městská policie).
+      garden: { description: A public garden or park of the city. }
+      playground: { description: A public children's playground. }
+      wasteCollectionYard:
+        description: A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste.
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

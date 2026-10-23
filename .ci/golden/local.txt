@@ -251,7 +251,7 @@ v1/ConfigMap local/gitea-seed-s1-banskabystrica
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap local/gitea-seed-s1-banskabystrica--3
 v1/ConfigMap local/gitea-seed-s1-slovensko--17
-v1/ConfigMap local/gitea-seed-s1-slovensko--23
+v1/ConfigMap local/gitea-seed-s1-slovensko--22
 v1/ConfigMap local/gitea-seed-s10-sharing
 v1/ConfigMap local/gitea-seed-s10-slovensko--4
 v1/ConfigMap local/gitea-seed-s10-slovensko--5
@@ -265,7 +265,7 @@ v1/ConfigMap local/gitea-seed-s2-slovensko--8
 v1/ConfigMap local/gitea-seed-s2-slovensko--9
 v1/ConfigMap local/gitea-seed-s3-bbsk
 v1/ConfigMap local/gitea-seed-s3-bbsk--2
-v1/ConfigMap local/gitea-seed-s3-slovensko--25
+v1/ConfigMap local/gitea-seed-s3-slovensko--24
 v1/ConfigMap local/gitea-seed-s4-bbsk--3
 v1/ConfigMap local/gitea-seed-s4-bbsk--4
 v1/ConfigMap local/gitea-seed-s4-bbsk--5
@@ -276,7 +276,7 @@ v1/ConfigMap local/gitea-seed-s5-bbsk--11
 v1/ConfigMap local/gitea-seed-s5-bbsk--12
 v1/ConfigMap local/gitea-seed-s5-bbsk--8
 v1/ConfigMap local/gitea-seed-s5-bbsk--9
-v1/ConfigMap local/gitea-seed-s5-slovensko--24
+v1/ConfigMap local/gitea-seed-s5-slovensko--23
 v1/ConfigMap local/gitea-seed-s6-bbsk--13
 v1/ConfigMap local/gitea-seed-s6-slovensko--14
 v1/ConfigMap local/gitea-seed-s6-slovensko--15
@@ -294,7 +294,7 @@ v1/ConfigMap local/gitea-seed-s9-praha
 v1/ConfigMap local/gitea-seed-s9-slovensko--11
 v1/ConfigMap local/gitea-seed-s9-slovensko--12
 v1/ConfigMap local/gitea-seed-s9-slovensko--13
-v1/ConfigMap local/gitea-seed-s9-slovensko--22
+v1/ConfigMap local/gitea-seed-s9-slovensko--25
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
 v1/ConfigMap local/observability-collector-config
