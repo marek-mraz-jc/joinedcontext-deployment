@@ -117,6 +117,10 @@ spec:
             # `ckanext-envvars` maps this name to that option.
             - name: CKAN__AUTH__PUBLIC_USER_DETAILS
               value: "false"
+            # No Gravatar: a signed-in page would send each account's e-mail hash to gravatar.com,
+            # and the catalogue's CSP allows images from its own hosts only (T-5147).
+            - name: CKAN__GRAVATAR_DEFAULT
+              value: disabled
             # An anonymous action API answer is public for 60 s (T-4717), which is what lets the
             # edge's ckan-action-cache route keep it; a page with a session stays `private`.
             - name: CKAN__CACHE_EXPIRES
