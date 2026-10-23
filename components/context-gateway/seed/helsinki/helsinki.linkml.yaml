@@ -719,6 +719,14 @@ slots:
     inverse: refDistrict
     inlined: false
     annotations: { ngsi_ld_kind: Relationship }
+  areaIndicators:
+    slot_uri: jc:areaIndicators
+    description: The statistics indicators that describe this sub-district, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
   stopCode:
     slot_uri: jc:stopCode
     description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
