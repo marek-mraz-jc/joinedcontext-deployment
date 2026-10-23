@@ -48,7 +48,9 @@ spec:
     frequency: DAILY
     source:
       - url: https://lidotiku.api.hel.fi/api/counters/?source=HEL%20LAM
-        title: { fi: Helsingin liikennemittausten tilastorajapinta, en: Statistical API for traffic measurement data }
+        title:
+          fi: Helsingin liikennemittausten tilastorajapinta
+          en: Statistical API for traffic measurement data
         description:
           fi: Kaupungin LAM-pisteet ja niiden havainnot, CC BY 4.0.
           en: The city's LAM stations and their observations, CC BY 4.0.
