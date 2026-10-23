@@ -590,6 +590,14 @@ slots:
       name and in Finnish otherwise (Smart Data Models Event `thematic`).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Témy
+          cs: Témata
+          fi: Aiheet
+          en: Topics
+          de: Themen
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   isAccessibleForFree:
@@ -597,6 +605,14 @@ slots:
     description: True when every offer of the event is free of charge, as the register marks it.
     range: boolean
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Vstup zdarma
+          cs: Vstup zdarma
+          fi: Maksuton
+          en: Free of charge
+          de: Eintritt frei
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/isAccessibleForFree
   webSite:
@@ -604,6 +620,14 @@ slots:
     description: The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          fi: Verkkosivu
+          en: Website
+          de: Webseite
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   superEvent:
