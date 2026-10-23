@@ -419,6 +419,7 @@ rbac.authorization.k8s.io/v1/Role dev/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role dev/portal
 rbac.authorization.k8s.io/v1/Role dev/portal-build-pods
 rbac.authorization.k8s.io/v1/Role dev/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role dev/postgres-cluster-dr-drill
@@ -435,6 +436,7 @@ rbac.authorization.k8s.io/v1/RoleBinding dev/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-cluster-dr-drill
@@ -498,7 +500,7 @@ v1/ConfigMap dev/gitea-seed-s2-slovensko--24
 v1/ConfigMap dev/gitea-seed-s3-bbsk
 v1/ConfigMap dev/gitea-seed-s3-bbsk--2
 v1/ConfigMap dev/gitea-seed-s3-bbsk--3
-v1/ConfigMap dev/gitea-seed-s3-slovensko--21
+v1/ConfigMap dev/gitea-seed-s3-slovensko--20
 v1/ConfigMap dev/gitea-seed-s4-bbsk--4
 v1/ConfigMap dev/gitea-seed-s4-bbsk--5
 v1/ConfigMap dev/gitea-seed-s4-bbsk--6
@@ -508,15 +510,14 @@ v1/ConfigMap dev/gitea-seed-s5-bbsk--10
 v1/ConfigMap dev/gitea-seed-s5-bbsk--11
 v1/ConfigMap dev/gitea-seed-s5-bbsk--8
 v1/ConfigMap dev/gitea-seed-s5-bbsk--9
-v1/ConfigMap dev/gitea-seed-s5-slovensko--26
+v1/ConfigMap dev/gitea-seed-s5-zilina
 v1/ConfigMap dev/gitea-seed-s6-bbsk--12
 v1/ConfigMap dev/gitea-seed-s6-bbsk--13
 v1/ConfigMap dev/gitea-seed-s6-bbsk--14
 v1/ConfigMap dev/gitea-seed-s6-bbsk--15
-v1/ConfigMap dev/gitea-seed-s6-zilina
 v1/ConfigMap dev/gitea-seed-s7-helsinki
 v1/ConfigMap dev/gitea-seed-s7-slovensko--18
-v1/ConfigMap dev/gitea-seed-s7-slovensko--20
+v1/ConfigMap dev/gitea-seed-s7-slovensko--22
 v1/ConfigMap dev/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap dev/gitea-seed-s8-slovensko--5
 v1/ConfigMap dev/gitea-seed-s8-slovensko--6
@@ -525,7 +526,7 @@ v1/ConfigMap dev/gitea-seed-s8-slovensko--8
 v1/ConfigMap dev/gitea-seed-s9-praha
 v1/ConfigMap dev/gitea-seed-s9-slovensko--16
 v1/ConfigMap dev/gitea-seed-s9-slovensko--17
-v1/ConfigMap dev/gitea-seed-s9-slovensko--22
+v1/ConfigMap dev/gitea-seed-s9-slovensko--21
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
 v1/ConfigMap dev/pipeline-runner-helsinki-streams
