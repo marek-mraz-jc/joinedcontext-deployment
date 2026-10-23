@@ -10,7 +10,6 @@ metadata:
 spec:
   class: auto
   # The city rewrites the file once a day at about 05:30 UTC.
-  period: 24h
   schedule: '40 6 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-city-works }

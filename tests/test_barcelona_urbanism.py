@@ -376,3 +376,11 @@ def test_each_dataset_has_its_pipeline_endpoint_and_a_policy_of_its_own_type():
         assert all(op.startswith(("retrieve", "createSub", "updateSub", "deleteSub")) for op in policy["operations"])
         assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "barcelona"}
         assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(spec["enabledRepresentations"])
+
+
+@pytest.mark.parametrize("name", ["districts", "neighbourhoods", "city-works", "pedestrian-crossings"])
+def test_each_pipeline_runs_by_its_schedule_alone(name):
+    # The runner reads a period before a schedule, so a period beside it would drop the time chosen
+    # after the source's rewrite.
+    spec = yaml.safe_load((CITY / f"barcelona-pipeline-{name}.yaml").read_text())["spec"]
+    assert "period" not in spec and len(spec["schedule"].split()) == 5
