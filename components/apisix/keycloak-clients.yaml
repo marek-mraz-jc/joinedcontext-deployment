@@ -268,6 +268,23 @@ edge:
           included.custom.audience: 4gr7xjetq25axmbpn1obvyspuvlf5kbt
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The heat vulnerability index and the service property energy use (T-5278).
+      - name: helsinki-heat-vulnerability-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: yo2xtons6kf3b6xvzyrursdf6jteaegv
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-service-property-energy-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: vdv6dd5zhwph3ggzjz6xyffu2ikrmvtl
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-parking-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper

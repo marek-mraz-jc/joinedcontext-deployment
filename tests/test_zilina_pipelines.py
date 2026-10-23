@@ -485,6 +485,10 @@ def test_the_six_indicators_are_the_cubes_newest_published_values(cubes):
         assert kpi["id"] == f"urn:ngsi-ld:KeyPerformanceIndicator:{DOMAIN}:zilina-kpi:{kpi['name']['value']}"
         assert kpi["derivedFrom"]["value"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:zilina-mesto:zilina-mesto"
         assert kpi["currentValue"]["observedAt"].endswith("Z")
+        # T-5330: the human name of Development/13 §2 in both languages, `name` being the slug.
+        assert kpi["title"]["type"] == "LanguageProperty"
+        assert set(kpi["title"]["languageMap"]) == {"sk", "en"}, kpi["id"]
+    assert by_name["index-starnutia-mesto"]["title"]["languageMap"]["sk"] == "Index starnutia"
 
 
 @requires_docker

@@ -494,31 +494,6 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### TrafficFlowObserved
-
-One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter station counted, or the motor vehicles and their mean speed at one of the city's induction loop (LAM) stations, from the city's traffic measurement API. The counter's name and place ride on the observation; the history of the days is the entity's temporal history.
-
-IRI: `sdm:TrafficFlowObserved`
-
-Specialises `Entity`.
-
-| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
-|---|---|---|---|---|---|---|
-| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the counted day, the same instant as dateObservedTo. |
-| `dateObservedFrom` | Property | `datetime` |  |  | `sdm:dateObservedFrom` | The start of the period the observation counts, the local midnight that opens the day. |
-| `dateObservedTo` | Property | `datetime` |  |  | `sdm:dateObservedTo` | The end of the period the observation counts, the local midnight that closes the day. |
-| `intensity` | Property | `integer` |  | /d | `sdm:intensity` | How many vehicles, or bicycles, the counter detected in the day, in one direction. |
-| `averageVehicleSpeed` | Property | `float` |  | km/h | `sdm:averageVehicleSpeed` | The mean speed of the vehicles the counter measured in the period, in km/h. |
-| `vehicleType` | Property | [`CountedVehicleType`](#countedvehicletype) |  |  | `sdm:vehicleType` | The one kind of vehicle the observation counts, in the Smart Data Model's words; absent when the counter sums every class of motor vehicle. |
-| `trafficDirection` | Property | [`TrafficDirection`](#trafficdirection) |  |  | `jc:trafficDirection` | The compass direction, or into and out of the centre, the counted traffic travels, as the city's counter names it (Pohjoiseen is north). Smart Data Models' laneDirection needs a road segment to mean anything, which the counters do not name. Absent when the counter sums both directions. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
-| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
-| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
-| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
-| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
-
 ### KeyPerformanceIndicator
 
 One indicator of the city's area statistics (Aluesarjat) for one area: the newest period's value, its history one row per period. Read daily from stat.hel.fi.
@@ -561,6 +536,31 @@ IRI: `jc:KpiPeriod`
 |---|---|---|---|---|---|---|
 | `from` | Property | `date` | yes |  | `sdm:from` | The first day of the period. |
 | `to` | Property | `date` | yes |  | `sdm:to` | The last day of the period. |
+
+### TrafficFlowObserved
+
+One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter station counted, or the motor vehicles and their mean speed at one of the city's induction loop (LAM) stations, from the city's traffic measurement API. The counter's name and place ride on the observation; the history of the days is the entity's temporal history.
+
+IRI: `sdm:TrafficFlowObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `dateObserved` | Property | `datetime` | yes |  | `sdm:dateObserved` | The end of the counted day, the same instant as dateObservedTo. |
+| `dateObservedFrom` | Property | `datetime` |  |  | `sdm:dateObservedFrom` | The start of the period the observation counts, the local midnight that opens the day. |
+| `dateObservedTo` | Property | `datetime` |  |  | `sdm:dateObservedTo` | The end of the period the observation counts, the local midnight that closes the day. |
+| `intensity` | Property | `integer` |  | /d | `sdm:intensity` | How many vehicles, or bicycles, the counter detected in the day, in one direction. |
+| `averageVehicleSpeed` | Property | `float` |  | km/h | `sdm:averageVehicleSpeed` | The mean speed of the vehicles the counter measured in the period, in km/h. |
+| `vehicleType` | Property | [`CountedVehicleType`](#countedvehicletype) |  |  | `sdm:vehicleType` | The one kind of vehicle the observation counts, in the Smart Data Model's words; absent when the counter sums every class of motor vehicle. |
+| `trafficDirection` | Property | [`TrafficDirection`](#trafficdirection) |  |  | `jc:trafficDirection` | The compass direction, or into and out of the centre, the counted traffic travels, as the city's counter names it (Pohjoiseen is north). Smart Data Models' laneDirection needs a road segment to mean anything, which the counters do not name. Absent when the counter sums both directions. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
 ### PostalAddress
 

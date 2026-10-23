@@ -12,9 +12,9 @@ robots.txt read first per host and at most one request per second per host.
 
 | | organisations | `pipeline` | `later` | `skip` |
 |---|---|---|---|---|
-| BBSK (`sources.csv`, T-4894) | 35 | 16 (+ 8 `pipeline-html`) | 0 | 11 |
+| BBSK (`sources.csv`, T-4894, T-5081, T-5354) | 45 | 34 | 0 | 11 |
 | rest of Slovakia (`sources-sk.csv`) | 109 | 86 | 20 | 3 |
-| **Slovakia** | **144** | **102** | **20** | **14** |
+| **Slovakia** | **154** | **120** | **20** | **14** |
 
 102 organisations have a working standard feed with dated events and the decision `pipeline`.
 The 20 `later` rows also have a working feed: 10 parse but listed no upcoming event on the read

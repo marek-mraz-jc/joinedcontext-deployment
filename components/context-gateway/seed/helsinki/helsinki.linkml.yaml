@@ -1898,44 +1898,6 @@ classes:
       description:
         description: The report as the reporter wrote it, in the language they wrote it in (`@none`).
 
-  TrafficFlowObserved:
-    class_uri: sdm:TrafficFlowObserved
-    description: >-
-      One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter
-      station counted, or the motor vehicles and their mean speed at one of the city's induction
-      loop (LAM) stations, from the city's traffic measurement API. The counter's name and place
-      ride on the observation; the history of the days is the entity's temporal history.
-    is_a: Entity
-    annotations:
-      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
-      label:
-        tag: label
-        value:
-          sk: Sčítanie dopravy
-          cs: Sčítání dopravy
-          en: Traffic count
-          de: Verkehrszählung
-    slots:
-      - name
-      - dateObserved
-      - dateObservedFrom
-      - dateObservedTo
-      - intensity
-      - averageVehicleSpeed
-      - vehicleType
-      - trafficDirection
-      - dataProvider
-      - source
-    slot_usage:
-      dateObserved:
-        description: The end of the counted day, the same instant as dateObservedTo.
-        required: true
-      vehicleType:
-        description: >-
-          The one kind of vehicle the observation counts, in the Smart Data Model's words; absent
-          when the counter sums every class of motor vehicle.
-        range: CountedVehicleType
-
   KeyPerformanceIndicator:
     class_uri: sdm:KeyPerformanceIndicator
     description: >-
@@ -1978,6 +1940,43 @@ classes:
     class_uri: jc:KpiPeriod
     description: The value of `calculationPeriod`, never an entity of its own.
     slots: [from, to]
+  TrafficFlowObserved:
+    class_uri: sdm:TrafficFlowObserved
+    description: >-
+      One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter
+      station counted, or the motor vehicles and their mean speed at one of the city's induction
+      loop (LAM) stations, from the city's traffic measurement API. The counter's name and place
+      ride on the observation; the history of the days is the entity's temporal history.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie dopravy
+          cs: Sčítání dopravy
+          en: Traffic count
+          de: Verkehrszählung
+    slots:
+      - name
+      - dateObserved
+      - dateObservedFrom
+      - dateObservedTo
+      - intensity
+      - averageVehicleSpeed
+      - vehicleType
+      - trafficDirection
+      - dataProvider
+      - source
+    slot_usage:
+      dateObserved:
+        description: The end of the counted day, the same instant as dateObservedTo.
+        required: true
+      vehicleType:
+        description: >-
+          The one kind of vehicle the observation counts, in the Smart Data Model's words; absent
+          when the counter sums every class of motor vehicle.
+        range: CountedVehicleType
 
   PostalAddress:
     class_uri: schema:PostalAddress

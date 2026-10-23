@@ -8,7 +8,7 @@ metadata:
     en: HSL route shapes from GTFS, daily
 spec:
   class: auto
-  # Running since T-5259: the runner inflates shapes.txt bounded on its output (T-3953, inflate.wasm),
+  # Running since T-5259: the runner inflates shapes.txt bounded on its output (T-4752, unarchive zip),
   # +73 MB peak RSS for the few seconds of the run (T-3953 measurement).
   # Apart from transit-routes (Tuesdays 04:40), the other large mapping on the runner.
   period: 24h
