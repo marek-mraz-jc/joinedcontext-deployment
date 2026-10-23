@@ -34,7 +34,11 @@ IMAGE = f"{IMAGE_SPEC['repository']}:{IMAGE_SPEC['tag']}@{IMAGE_SPEC['digest']}"
 # What OPS-48 forbids, spelled out as attributes an emitter might plausibly attach to the same
 # record: a request body, a bearer token, and a pod name that says nothing about the event.
 FORBIDDEN = {"http.request.body", "authorization", "k8s.pod.name"}
-ALLOWED = {"project", "space", "kind", "source", "summary", "severity", "correlationId", "details"}
+ALLOWED = {
+    "project", "space", "kind", "source", "summary", "severity", "correlationId", "details",
+    # The gateway's mcp.tool record (T-5322).
+    "endpoint", "tool", "outcome", "count",
+}
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 

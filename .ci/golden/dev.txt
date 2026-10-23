@@ -39,6 +39,7 @@ apps/v1/Deployment dev/jc-wasm-host-0
 apps/v1/Deployment dev/jc-wasm-host-1
 apps/v1/Deployment dev/mail-catcher
 apps/v1/Deployment dev/model-tools
+apps/v1/Deployment dev/observability-collector
 apps/v1/Deployment dev/pipeline-runner
 apps/v1/Deployment dev/pipeline-tokens
 apps/v1/Deployment dev/portal
@@ -115,6 +116,7 @@ monitoring.coreos.com/v1/ServiceMonitor dev/apisix
 monitoring.coreos.com/v1/ServiceMonitor dev/context-broker
 monitoring.coreos.com/v1/ServiceMonitor dev/context-gateway
 monitoring.coreos.com/v1/ServiceMonitor dev/keycloak-app-keycloakx-keycloakx
+monitoring.coreos.com/v1/ServiceMonitor dev/observability-collector
 monitoring.coreos.com/v1/ServiceMonitor dev/pipeline-runner
 monitoring.coreos.com/v1/ServiceMonitor dev/portal
 monitoring.coreos.com/v1/ServiceMonitor dev/probe
@@ -213,6 +215,7 @@ networking.k8s.io/v1/NetworkPolicy dev/default-deny-model-tools
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-monitoring
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-networkpolicies
+networking.k8s.io/v1/NetworkPolicy dev/default-deny-observability
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-portal
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-postgres
@@ -266,11 +269,13 @@ networking.k8s.io/v1/NetworkPolicy dev/keycloak-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-from-assistant
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-from-functions
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-from-lane-token
+networking.k8s.io/v1/NetworkPolicy dev/keycloak-from-observability
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-assistant
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-functions
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-lane-token
+networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy dev/kube-state-metrics
 networking.k8s.io/v1/NetworkPolicy dev/kube-state-metrics-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy dev/lane-token-linkerd-control-plane
@@ -280,6 +285,9 @@ networking.k8s.io/v1/NetworkPolicy dev/model-tools-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/model-tools-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy dev/mqtt-brokers-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/observability
+networking.k8s.io/v1/NetworkPolicy dev/observability-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/observability-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/pipeline-runner-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/pipeline-runner-linkerd-control-plane
@@ -298,6 +306,7 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-functions
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-gitea
 networking.k8s.io/v1/NetworkPolicy dev/portal-from-gitea
+networking.k8s.io/v1/NetworkPolicy dev/portal-from-observability
 networking.k8s.io/v1/NetworkPolicy dev/portal-ingress-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy dev/portal-internal-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/portal-internal-from-context-gateway
@@ -308,6 +317,7 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-context-gateway
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-gitea-runner
+networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-observability
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-assistant
@@ -528,6 +538,7 @@ v1/ConfigMap dev/gitea-seed-s9-slovensko--17
 v1/ConfigMap dev/gitea-seed-s9-slovensko--22
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
+v1/ConfigMap dev/observability-collector-config
 v1/ConfigMap dev/pipeline-runner-helsinki-streams
 v1/ConfigMap dev/portal-branding
 v1/ConfigMap dev/postgres-cluster-dr-drill
@@ -571,6 +582,7 @@ v1/Secret dev/gitea-admin-credentials
 v1/Secret dev/gitea-init
 v1/Secret dev/gitea-inline-config
 v1/Secret dev/keycloak-admin-user
+v1/Secret dev/keycloak-client-activity-ingest
 v1/Secret dev/keycloak-client-apisix-gateway
 v1/Secret dev/keycloak-client-banskabystrica-conformance
 v1/Secret dev/keycloak-client-banskabystrica-pipelines
@@ -624,6 +636,7 @@ v1/Service dev/keycloak-app-keycloakx-headless
 v1/Service dev/keycloak-app-keycloakx-http
 v1/Service dev/mail-catcher
 v1/Service dev/model-tools
+v1/Service dev/observability-collector
 v1/Service dev/pipeline-runner
 v1/Service dev/pipeline-runner-pods
 v1/Service dev/pipeline-tokens
@@ -659,6 +672,7 @@ v1/ServiceAccount dev/jc-wasm-host-0
 v1/ServiceAccount dev/jc-wasm-host-1
 v1/ServiceAccount dev/keycloak-app-keycloakx
 v1/ServiceAccount dev/mail-catcher
+v1/ServiceAccount dev/observability-collector
 v1/ServiceAccount dev/pipeline-runner
 v1/ServiceAccount dev/pipeline-tokens
 v1/ServiceAccount dev/portal

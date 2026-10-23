@@ -96,6 +96,15 @@ context-gateway-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # MCP tool calls to the Activity collector, meshed (T-5322).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: observability-collector
+          componentNamespace: observability
+      ports:
+        - protocol: TCP
+          port: 4143
     # git-sync fetches the configuration repository through the mesh (T-0278).
     - to:
         - podSelector:

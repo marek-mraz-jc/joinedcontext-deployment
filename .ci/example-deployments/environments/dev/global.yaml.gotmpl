@@ -58,6 +58,10 @@ components:
   # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
   - ckan
   - portal
+  # The OpenTelemetry Collector of the Activity stream (Deployment/05 section 5): after the
+  # Portal it posts to. 128 MiB requested; the gateway's MCP tool calls reach a steward's
+  # Activity through it (T-5322).
+  - observability
   # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): AFTER the
   # Portal, whose reconciler writes each shard's placement ConfigMap and store-key Secret, which a
   # shard mounts and waits for (AP-157, AP-158); synced before it, a fresh cluster's shards waited

@@ -131,7 +131,9 @@ configMap:
             - context: log
               statements:
                 - set(body, "")
-                - keep_keys(attributes, ["project", "space", "kind", "source", "summary", "severity", "correlationId", "details"])
+                # endpoint, tool, outcome, count: the gateway's mcp.tool record (T-5322), slugs,
+                # names and numbers only.
+                - keep_keys(attributes, ["project", "space", "kind", "source", "summary", "severity", "correlationId", "details", "endpoint", "tool", "outcome", "count"])
 
         batch:
           timeout: 5s
