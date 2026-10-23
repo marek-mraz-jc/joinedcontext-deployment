@@ -54,6 +54,13 @@ EXPECTED_ROUTES = {
     "portal-public-connect": {
         "uri": "/connect/*", "priority": 5, "upstream_id": "portal-public-connect", "host": PORTAL_HOST,
     },
+    # T-5293: the glossary and the accessibility statement, exact paths, edge session optional.
+    "portal-public-glossary": {
+        "uri": "/glossary", "priority": 5, "upstream_id": "portal-public-glossary", "host": PORTAL_HOST,
+    },
+    "portal-public-accessibility": {
+        "uri": "/accessibility", "priority": 5, "upstream_id": "portal-public-accessibility", "host": PORTAL_HOST,
+    },
     # T-4063: the API and User Guide pages, edge session optional.
     "portal-public-guide": {"uri": "/docs/*", "priority": 5, "upstream_id": "portal-public-guide", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
@@ -201,6 +208,37 @@ def test_the_edge_login_sits_on_the_portal_and_apps_routes_only(apisix_config):
         assert oidc["set_id_token_header"] is False and oidc["set_refresh_token_header"] is False, config_id
         assert oidc["session"]["secret"] == "${{OIDC_SESSION_SECRET}}", config_id
         assert oidc["session"]["cookie_path"] == expected["cookie_path"], config_id
+
+
+def unauth_action_on_portal_host(parsed, path):
+    """What the edge does with a visitor without a session on `portal.{host}{path}`: the
+    highest-priority route matching the path (an exact `uri`, or a prefix before `*`)."""
+    plugins = {pc["id"]: pc.get("plugins", {}) for pc in parsed["plugin_configs"]}
+    matching = [
+        route for route in parsed["routes"]
+        if PORTAL_HOST in hosts_of(route) and not route.get("vars") and (
+            path.startswith(route["uri"][:-1]) if route["uri"].endswith("*") else path == route["uri"]
+        )
+    ]
+    route = max(matching, key=lambda r: r["priority"])
+    return route["id"], plugins[route["plugin_config_id"]]["openid-connect"]["unauth_action"]
+
+
+@requires_helmfile
+@pytest.mark.parametrize("path", ["/glossary", "/accessibility", "/catalogue", "/catalogue/air-quality"])
+def test_the_public_pages_pass_a_visitor_without_a_session(apisix_config, path):
+    """T-5293: every Term's link and the public footer open /glossary and /accessibility, which the
+    Portal draws for a visitor; the edge must not send that visitor to Keycloak first."""
+    _, parsed = apisix_config
+    assert unauth_action_on_portal_host(parsed, path)[1] == "pass", path
+
+
+@requires_helmfile
+@pytest.mark.parametrize("path", ["/", "/projects/demo/home", "/glossary/x", "/glossaryx", "/accessibility-admin"])
+def test_every_other_portal_page_keeps_the_login(apisix_config, path):
+    """T-5293: the public pages are exact paths; a private page beside them still logs in first."""
+    _, parsed = apisix_config
+    assert unauth_action_on_portal_host(parsed, path) == ("portal-ui", "auth"), path
 
 
 @requires_helmfile

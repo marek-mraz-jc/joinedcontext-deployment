@@ -71,6 +71,10 @@ CHOSEN = {
     ("zilina/zilina-doprava", "TrafficFlowObserved"): "P30D",
     # Prague's PID vehicles keep an hour of track, as Žilina's (T-4624, T-5268).
     ("praha/praha-mesto", "Vehicle"): "PT1H",
+    # Prague's container fill levels keep a week, and the collection points beside them on the one
+    # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
+    ("praha/praha-mesto", "WasteContainer"): "P7D",
+    ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
 }
 
 
