@@ -15,7 +15,7 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 MEASURED = {
     "AirQualityObserved", "WeatherObserved", "WaterQualityObserved", "KeyPerformanceIndicator",
-    "OffStreetParking", "ParkingArea", "BikeHireDockingStation",
+    "OffStreetParking", "ParkingArea", "BikeHireDockingStation", "TrafficFlowObserved",
 }
 DURATION = re.compile(r"^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)?(\d+S)?)?$")
 
