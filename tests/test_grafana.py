@@ -290,7 +290,7 @@ def test_the_component_refuses_to_render_without_a_prometheus(tmp_path):
     environment = tmp_path / "deployment/environments/addons/global.yaml.gotmpl"
     text = environment.read_text()
     assert "prometheusUrl: 'http" in text, "fixture moved"
-    environment.write_text(text.replace("prometheusUrl: 'http://prometheus-operated.monitoring.svc.cluster.local:9090'",
+    environment.write_text(text.replace("prometheusUrl: 'http://prometheus-operated.addons.svc.cluster.local:9090'",
                                         "prometheusUrl: ''"))
 
     result = subprocess.run(
