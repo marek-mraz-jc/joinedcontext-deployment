@@ -257,9 +257,9 @@ portal:
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
-    # The platform commit the pinned Portal's jc-core is built from: portal a1dd3d8 pins 0069530
-    # (T-4365, on top of T-4343's 9fdbd9b); 5e5355d moved the digest and left this at 4a27848.
-    platform: '0069530d691bd35438d6eac0c3367e8adb2c0a8c'
+    # The platform commit the pinned Portal's jc-core is built from: portal 833233a's Cargo.toml rev,
+    # 03908e3 (on top of 9358512, T-5295's datacube step, which the susr-* pipelines use since T-5382).
+    platform: '03908e39168930aba28761035681b8250405f450'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
