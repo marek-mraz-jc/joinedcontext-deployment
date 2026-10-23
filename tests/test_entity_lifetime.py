@@ -3,9 +3,9 @@ their own `expiresAt` (NGSI-LD 4.22), which the broker hides from every read onc
 then deletes. Two reaper pipelines did this before by reading the space back and batch-deleting
 what they judged stale; they are gone, and so is the delete grant they needed beyond the one the
 service-alerts withdrawal keeps (Alerts only). A vehicle's end is its pipeline's `spec.lifetime`
-(PL-80): the reconciler renders it into a step after the mapping, so that mapping writes no
-`expiresAt` itself (PL-83 refuses both together). The Fintraffic Alert keeps its mapping-written
-end, an hour lease capped at validTo, because a PL-80 `from` gives no end when validTo is absent.
+(PL-80), and so is a Fintraffic Alert's (`from: validTo, notAfter: PT1H`: its validTo, at most an
+hour after the write, an hour after it without one, PL-82): the reconciler renders each into a
+step after the mapping, so neither mapping writes `expiresAt` itself (PL-83 refuses both together).
 
 Bento runs the committed mappings followed by the step the platform renders for the seeded
 lifetime (tests/fixtures/lifetime); without a container runtime those cases skip, the seed cases
@@ -35,12 +35,11 @@ def manifest(name: str) -> dict:
     return yaml.safe_load((HELSINKI / f"helsinki-pipeline-{name}.yaml").read_text())
 
 
-def test_the_vehicles_end_by_their_pipelines_lifetime():
+def test_the_vehicles_and_alerts_end_by_their_pipelines_lifetime():
     assert manifest("hfp")["spec"]["lifetime"] == [
         {"type": "Vehicle", "entity": {"from": "observedAt", "plus": "PT5M"}}]
-    # The Alert keeps its mapping-written end: PL-80 `from` gives no end when validTo is absent,
-    # and an Alert without one keeps its hour today (T-4843 review).
-    assert "lifetime" not in manifest("traffic-messages")["spec"]
+    assert manifest("traffic-messages")["spec"]["lifetime"] == [
+        {"type": "Alert", "entity": {"from": "validTo", "notAfter": "PT1H"}}]
 
 
 def test_no_mapping_of_a_pipeline_with_a_lifetime_writes_expires_at_itself():
@@ -50,7 +49,7 @@ def test_no_mapping_of_a_pipeline_with_a_lifetime_writes_expires_at_itself():
     index = yaml.safe_load((HELSINKI / "index.yaml").read_text())
     with_lifetime = [name for name in index if name.startswith("helsinki-pipeline-") and not name.endswith("-bento.yaml")
                      and (yaml.safe_load((HELSINKI / name).read_text()).get("spec") or {}).get("lifetime")]
-    assert "helsinki-pipeline-hfp.yaml" in with_lifetime
+    assert {"helsinki-pipeline-hfp.yaml", "helsinki-pipeline-traffic-messages.yaml"} <= set(with_lifetime)
     for name in with_lifetime:
         mapping = HELSINKI / name.replace(".yaml", "-bento.yaml")
         code = "\n".join(line for line in mapping.read_text().splitlines() if not line.lstrip().startswith("#"))
@@ -98,11 +97,12 @@ def situation(n: int, ends: str | None) -> dict:
 @requires_docker
 def test_an_alert_expires_at_its_validto_or_an_hour_after_the_feed_last_listed_it():
     mapping = HELSINKI / "helsinki-pipeline-traffic-messages-bento.yaml"
+    then = (lifetime_step("traffic-messages"),)
     before = datetime.now(UTC).replace(microsecond=0)
     soon = (before + timedelta(minutes=20)).strftime("%Y-%m-%dT%H:%M:%S+03:00")
     later = (before + timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
     document = {"features": [situation(1, soon), situation(2, later), situation(3, None), situation(4, "2026-01-01T00:00:00Z")]}
-    written = {e["id"][-1]: e for e in run_all(mapping, json.dumps(document).encode(), "helsinki")}
+    written = {e["id"][-1]: e for e in run_all(mapping, json.dumps(document).encode(), "helsinki", then=then)}
     after = datetime.now(UTC)
     # Ending within the hour: its own end, in UTC (the feed's offset is read, not dropped).
     assert stamp(written["1"]["expiresAt"]) == before + timedelta(minutes=20) - timedelta(hours=3)
