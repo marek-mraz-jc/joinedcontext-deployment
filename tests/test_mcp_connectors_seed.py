@@ -52,6 +52,9 @@ def test_each_publisher_has_one_public_connector_selecting_its_own_public_endpoi
     assert indexed(path) == f"projects/{project}/mcp/{PUBLISHERS[project]}.yaml"
     for language in ("en",):
         assert "list_endpoints" in server["metadata"]["description"][language]
+    # the title is the serverInfo name an AI client shows (EP-92): a name, the description holds the rest
+    for language, title in server["metadata"]["title"].items():
+        assert len(title) <= 60, (language, title)
 
 
 def test_bystricas_connector_keeps_the_test_written_air_space_out():
