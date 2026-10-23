@@ -16,7 +16,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "districtCode": {
-          "description": "The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it.",
+          "description": "The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its `fareZone`. The districts and sub-districts mappings write no area without it.",
           "pattern": "^[0-9]{1,10}$",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -24,6 +24,15 @@
         "divisionLevel": {
           "$ref": "#/definitions/DivisionLevel",
           "description": "Which of the city's two divisions the area belongs to.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fareZone": {
+          "description": "The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.",
+          "pattern": "^[A-Z]$",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
@@ -95,7 +104,6 @@
         }
       },
       "required": [
-        "districtCode",
         "divisionLevel",
         "id",
         "type"
@@ -180,7 +188,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pm10": {
-          "description": "Particulate matter up to 10 \u00b5m, the hour's mean at the station.",
+          "description": "Particulate matter up to 10 µm, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -192,7 +200,7 @@
           }
         },
         "pm25": {
-          "description": "Particulate matter up to 2.5 \u00b5m, the hour's mean at the station.",
+          "description": "Particulate matter up to 2.5 µm, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -581,11 +589,31 @@
       "additionalProperties": false,
       "description": "One HSL city bike station, its position and what it holds right now.",
       "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text.",
+          "x-ngsi-ld-kind": "Property"
+        },
         "availableBikeNumber": {
           "description": "Bikes ready to rent at the station right now.",
           "minimum": 0,
           "type": [
             "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -871,12 +899,14 @@
       "description": "",
       "enum": [
         "district",
-        "subDistrict"
+        "subDistrict",
+        "fareZone"
       ],
       "title": "DivisionLevel",
       "type": "string",
       "x-enum-descriptions": {
         "district": "A district (kaupunginosa), 60 of them.",
+        "fareZone": "An HSL fare zone (A, B, C or D), the area a ticket is valid in.",
         "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use."
       }
     },
@@ -1450,7 +1480,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "fareZone": {
-          "description": "The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.",
+          "description": "The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.",
           "pattern": "^[A-Z]$",
           "type": [
             "string",
@@ -1584,7 +1614,7 @@
           "x-ngsi-ld-kind": "LanguageProperty"
         },
         "fareZone": {
-          "description": "The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.",
+          "description": "The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.",
           "pattern": "^[A-Z]$",
           "type": [
             "string",
@@ -2050,6 +2080,26 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "fareZone": {
+          "description": "The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.",
+          "pattern": "^[A-Z]$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
@@ -2343,7 +2393,11 @@
         "healthStation",
         "swimmingHall",
         "beach",
-        "school"
+        "school",
+        "ticketSalesPoint",
+        "ticketServicePoint",
+        "ticketMachine",
+        "ticketParkingMeter"
       ],
       "title": "ServiceCategory",
       "type": "string",
@@ -2352,7 +2406,11 @@
         "healthStation": "A health station.",
         "library": "A public library.",
         "school": "A comprehensive school.",
-        "swimmingHall": "An indoor swimming hall."
+        "swimmingHall": "An indoor swimming hall.",
+        "ticketMachine": "An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).",
+        "ticketParkingMeter": "A parking meter that also sells HSL tickets (Pysäköintiautomaatti).",
+        "ticketSalesPoint": "An HSL ticket sales point in a shop or kiosk (Myyntipiste).",
+        "ticketServicePoint": "An HSL customer service point (Palvelupiste)."
       }
     },
     "StreetParkingCategory": {
