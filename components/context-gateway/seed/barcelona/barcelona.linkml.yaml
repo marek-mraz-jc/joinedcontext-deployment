@@ -24,6 +24,14 @@ slots:
     slot_uri: schema:name
     description: The name as the city publishes it, in Catalan.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   dateObserved:
@@ -32,6 +40,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed at
+          de: Messzeitpunkt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm10:
@@ -41,6 +57,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM10
+          cs: PM10
+          en: PM10
+          de: PM10
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm25:
@@ -50,6 +74,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM2,5
+          cs: PM2,5
+          en: PM2.5
+          de: PM2,5
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   no2:
@@ -59,6 +91,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: NO₂
+          cs: NO₂
+          en: NO₂
+          de: NO₂
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   o3:
@@ -68,6 +108,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: O₃
+          cs: O₃
+          en: O₃
+          de: O₃
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   startDate:
@@ -78,6 +126,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum začiatku
+          cs: Datum začátku
+          en: Start date
+          de: Beginndatum
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   endDate:
@@ -85,6 +141,14 @@ slots:
     description: The last day of the event, local midnight in Europe/Madrid; absent when the agenda gives none.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum konca
+          cs: Datum konce
+          en: End date
+          de: Enddatum
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   category:
@@ -102,6 +166,14 @@ slots:
       Catalan (Biblioteques, Poliesportius).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   subCategory:
@@ -109,6 +181,14 @@ slots:
     description: The Smart Data Models sub-category where the name says it (music, theater).
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Podkategória
+          cs: Podkategorie
+          en: Subcategory
+          de: Unterkategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   address:
@@ -119,32 +199,80 @@ slots:
     range: PostalAddress
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
     slot_uri: schema:streetAddress
     description: The street and the house number.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Ulica a číslo
+          cs: Ulice a číslo
+          en: Street and number
+          de: Straße und Hausnummer
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/streetAddress
   postalCode:
     slot_uri: schema:postalCode
     description: The postal code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PSČ
+          cs: PSČ
+          en: Postal code
+          de: Postleitzahl
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
     description: The town or the municipality.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Town
+          de: Ort
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressLocality
   addressCountry:
     slot_uri: schema:addressCountry
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Krajina
+          cs: Země
+          en: Country
+          de: Land
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressCountry
   district:
     slot_uri: sdm:district
     description: The city district (districte) the address lies in.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Mestská časť
+          cs: Městská část
+          en: District
+          de: Stadtbezirk
+        annotations: { generated: sk cs en de }
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   contactPoint:
     slot_uri: schema:contactPoint
@@ -152,18 +280,42 @@ slots:
     range: ContactPoint
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kontakt
+          cs: Kontakt
+          en: Contact
+          de: Kontakt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   telephone:
     slot_uri: schema:telephone
     description: A telephone number as the agenda writes it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Telefón
+          cs: Telefon
+          en: Telephone
+          de: Telefon
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/telephone
   source:
     slot_uri: sdm:source
     description: The Open Data BCN dataset the entity was read from.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 

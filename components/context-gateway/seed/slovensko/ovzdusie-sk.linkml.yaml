@@ -22,6 +22,14 @@ slots:
     slot_uri: schema:name
     description: The station's name in Slovak, its municipality, code, area and type.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   dateObserved:
@@ -30,6 +38,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed at
+          de: Messzeitpunkt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm10:
@@ -39,6 +55,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM10
+          cs: PM10
+          en: PM10
+          de: PM10
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   pm25:
@@ -48,6 +72,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PM2,5
+          cs: PM2,5
+          en: PM2.5
+          de: PM2,5
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   no2:
@@ -57,6 +89,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: NO₂
+          cs: NO₂
+          en: NO₂
+          de: NO₂
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
   o3:
@@ -66,6 +106,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: ug/m3 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: O₃
+          cs: O₃
+          en: O₃
+          de: O₃
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
 
