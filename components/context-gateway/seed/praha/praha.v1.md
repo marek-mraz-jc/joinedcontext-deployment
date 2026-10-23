@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground or a waste collection yard.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.
 
 IRI: `sdm:PointOfInterest`
 
@@ -306,6 +306,22 @@ IRI: `ngsi-ld:Entity`
 | `garden` | A public garden or park of the city. |
 | `playground` | A public children's playground. |
 | `wasteCollectionYard` | A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste. |
+| `healthCentre` | A polyclinic or health centre. |
+| `university` | A university, faculty or university workplace. |
+| `placeOfWorship` | A church, chapel, prayer room or other place of worship. |
+| `communityCentre` | A cultural or community centre, a local library, a youth or senior club. |
+| `accommodation` | A hotel, guest house, hostel, campsite or other accommodation. |
+| `groceryStore` | A full-range grocery store or supermarket. |
+| `drinkingFountain` | A public drinking fountain. |
+| `fountain` | A fountain or ornamental pool. |
+| `spring` | A well or spring. |
+| `waterPump` | A public water pump. |
+| `mistShower` | A mist shower that cools passers-by in summer. |
+| `bathingPlace` | A swimming pool, natural pool or other place to swim. |
+| `animalCorner` | A petting zoo, farm, terrarium or animal rescue station. |
+| `landmark` | A notable building or place of the city. |
+| `wasteCollectionPoint` | A collection point for hazardous waste or bio-waste that is not a collection yard. |
+| `trailStop` | A stop of a nature trail. |
 
 ### WasteAccess
 
