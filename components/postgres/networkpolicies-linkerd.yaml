@@ -75,6 +75,15 @@ postgres-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # The in-cluster artifact store, where an environment archives to it (T-5289): its inbound proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 4143
 
 postgres-operator-linkerd:
   deployLayer: operators
@@ -161,6 +170,15 @@ postgres-drill-linkerd:
           port: 8086
         - protocol: TCP
           port: 8090
+    # The archive in the in-cluster artifact store (T-5289): its inbound proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 4143
   ingress:
     - from:
         - podSelector:

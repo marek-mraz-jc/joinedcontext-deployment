@@ -328,6 +328,7 @@ postgresql.cnpg.io/v1/Database dev/ckan-datastore
 postgresql.cnpg.io/v1/Database dev/gitea
 postgresql.cnpg.io/v1/Database dev/keycloak
 postgresql.cnpg.io/v1/Database dev/portal
+postgresql.cnpg.io/v1/ScheduledBackup dev/postgres-cluster-daily-backup
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-apps
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRole -/jc-drift-reader
@@ -352,6 +353,7 @@ rbac.authorization.k8s.io/v1/Role dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role dev/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role dev/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/Role dev/probe
 rbac.authorization.k8s.io/v1/RoleBinding dev-app-identities/portal-app-job-accounts
 rbac.authorization.k8s.io/v1/RoleBinding dev-app-identities/wasm-host-tokens
 rbac.authorization.k8s.io/v1/RoleBinding dev-app-tests/app-test-runner
@@ -367,6 +369,7 @@ rbac.authorization.k8s.io/v1/RoleBinding dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-operator-cloudnative-pg
+rbac.authorization.k8s.io/v1/RoleBinding dev/probe
 traefik.io/v1alpha1/TLSOption dev/bsi-tr-02102
 v1/ConfigMap dev/ai-app
 v1/ConfigMap dev/ai-app-site
@@ -523,6 +526,7 @@ v1/Secret dev/keycloak-user-demo-steward
 v1/Secret dev/keycloak-user-demo-viewer
 v1/Secret dev/keycloak-user-demo-zilina
 v1/Secret dev/portal-cookie-key
+v1/Secret dev/postgres-backup-artifact-store
 v1/Service dev/agent-proxy
 v1/Service dev/ai-app
 v1/Service dev/apisix-gateway

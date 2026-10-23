@@ -83,6 +83,34 @@ spec:
                 --lifecycle-configuration '{"Rules":[{"ID":"retired-apps","Status":"Enabled","Filter":{"Prefix":"{{ .Values.appsBucket.retiredPrefix }}"},"Expiration":{"Days":{{ int .Values.appsBucket.retiredExpiryDays }}}}]}'
               echo "lifecycle: {{ .Values.appsBucket.retiredPrefix }} in $apps expires after {{ int .Values.appsBucket.retiredExpiryDays }} day(s)"
               {{- end }}
+              {{- if .Values.backupBucket.enabled }}
+              # The Postgres backup bucket and its own user (OPS-09, T-5289). No object lock:
+              # barman deletes base backups and WAL past their retention.
+              backups={{ .Values.backupBucket.name | quote }}
+              if aws --endpoint-url "$endpoint" s3api head-bucket --bucket "$backups" 2>/dev/null; then
+                echo "bucket $backups is already there"
+              else
+                aws --endpoint-url "$endpoint" s3api create-bucket --bucket "$backups"
+                echo "created bucket $backups"
+              fi
+              # Signed admin calls with plain JSON bodies, as the Portal makes them
+              # (src/artifact_store.rs). Keys and bodies go through files, never argv.
+              umask 077
+              printf 'user = "%s:%s"\n' "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" > /tmp/root.curl
+              admin() {
+                curl -fsS -K /tmp/root.curl --aws-sigv4 "aws:amz:${AWS_DEFAULT_REGION}:s3" \
+                  -X PUT --data-binary "@$2" "$endpoint/rustfs/admin/v3/$1" >/dev/null
+              }
+              printf '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation"],"Resource":["arn:aws:s3:::%s"]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:AbortMultipartUpload","s3:ListMultipartUploadParts"],"Resource":["arn:aws:s3:::%s/*"]}]}' \
+                "$backups" "$backups" > /tmp/policy.json
+              printf '{"secretKey":"%s","status":"enabled"}' "$BACKUP_SECRET_ACCESS_KEY" > /tmp/user.json
+              : > /tmp/empty
+              admin "add-canned-policy?name=postgres-backups" /tmp/policy.json
+              admin "add-user?accessKey=$BACKUP_ACCESS_KEY_ID" /tmp/user.json
+              admin "set-user-or-group-policy?policyName=postgres-backups&userOrGroup=$BACKUP_ACCESS_KEY_ID&isGroup=false" /tmp/empty
+              rm -f /tmp/root.curl /tmp/user.json
+              echo "user for $backups: read, write and delete in $backups only"
+              {{- end }}
           env:
             - name: ENDPOINT
               value: {{ include "rustfs.endpoint" . | quote }}
@@ -107,6 +135,18 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.credentialsSecret | quote }}
                   key: {{ .Values.secretAccessKeyKey | quote }}
+            {{- if .Values.backupBucket.enabled }}
+            - name: BACKUP_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backupBucket.credentialsSecret | quote }}
+                  key: {{ .Values.accessKeyIdKey | quote }}
+            - name: BACKUP_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backupBucket.credentialsSecret | quote }}
+                  key: {{ .Values.secretAccessKeyKey | quote }}
+            {{- end }}
           resources:
             requests:
               cpu: 50m

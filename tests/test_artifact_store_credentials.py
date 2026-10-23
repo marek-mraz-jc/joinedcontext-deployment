@@ -148,10 +148,20 @@ def test_an_environment_without_the_store_wires_none_of_it(rendered_variant):
     def without_store(tree):
         drop_component(tree, "dev", "artifact-store")
         drop_component(tree, "dev", "wasm-host")
+        # dev archives Postgres to the store (T-5289); without it, the backups go too.
+        pg = tree / "deployment/environments/dev/postgres.yaml.gotmpl"
+        pg.write_text(pg.read_text().replace("target: 'artifact-store'", "target: ''").replace("enabled: true", "enabled: false"))
 
     docs = rendered_variant("dev", without_store)
     assert [e["name"] for e in portal_container(docs)["env"] if "ARTIFACT_STORE" in e["name"]] == []
     assert secret_readers(docs, ROOT_SECRET) == []
+
+
+@requires_helmfile
+def test_backups_to_a_store_the_environment_lacks_refuse_to_render(rendered_variant):
+    """T-5289: a backup target that is not deployed would archive nowhere and say nothing."""
+    with pytest.raises(AssertionError, match="does not deploy the artifact-store component"):
+        rendered_variant("dev", lambda tree: [drop_component(tree, "dev", c) for c in ("artifact-store", "wasm-host")])
 
 
 @requires_helmfile

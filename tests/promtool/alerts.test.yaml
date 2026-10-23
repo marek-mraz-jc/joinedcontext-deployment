@@ -283,6 +283,38 @@ tests:
     exp_alerts: []
 - interval: 1m
   input_series:
+  # promtool's clock starts at 0: a drill 36 days before it.
+  - series: jc_probe_restore_drill_timestamp_seconds{namespace="jc"}
+    values: -3110400x100
+  - series: jc_probe_restore_drill_passed{namespace="jc"}
+    values: 1x100
+  alert_rule_test:
+  - eval_time: 60m
+    alertname: PostgresRestoreDrillStale
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        summary: 'The newest Postgres restore drill is older than 35 days or did not pass: start it with kubectl create job --from=cronjob/postgres-cluster-dr-drill and read configmap/postgres-cluster-dr-drill'
+- interval: 1m
+  input_series:
+  - series: jc_probe_restore_drill_timestamp_seconds{namespace="jc"}
+    values: 0+60x100
+  - series: jc_probe_restore_drill_passed{namespace="jc"}
+    values: 1x50 0x50
+  alert_rule_test:
+  - eval_time: 40m
+    alertname: PostgresRestoreDrillStale
+    exp_alerts: []
+  - eval_time: 90m
+    alertname: PostgresRestoreDrillStale
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        summary: 'The newest Postgres restore drill is older than 35 days or did not pass: start it with kubectl create job --from=cronjob/postgres-cluster-dr-drill and read configmap/postgres-cluster-dr-drill'
+- interval: 1m
+  input_series:
   - series: jc_gateway_ws_refused_total{reason="fan-out-full"}
     values: 0x5 1x20
   alert_rule_test:

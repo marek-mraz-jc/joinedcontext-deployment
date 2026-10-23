@@ -82,6 +82,23 @@
         }
       }
     },
+    "backupBucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+        },
+        "credentialsSecret": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "fileCache": {
       "type": "object",
       "additionalProperties": false,
