@@ -120,6 +120,14 @@ helsinki-agent-proxy:
           included.custom.audience: 6wrymzu5x2uwjo2xqei66ppw53mafvbu
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-air-quality-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jtjnhkaau64zmzz5csmcwem52icvufy2
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-alerts-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
@@ -210,6 +218,14 @@ helsinki-agent-proxy:
           included.custom.audience: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-street-cleaning-air-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: p2qfrq3sxuoif6okjzhrp4jwul3eeowd
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       # The hub (seed/helsinki/helsinki-endpoint-hub.yaml, T-1209): one door over the live
       # context and the indicators beside it, which is the endpoint a run picks when the
       # question spans both (EP-70).
@@ -219,6 +235,24 @@ helsinki-agent-proxy:
         consentRequired: false
         config:
           included.custom.audience: hub7kq3zr5mx2vwt6nbc4pjd7fgs3a2y
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # Daily traffic and cycle counts (seed/helsinki/helsinki-endpoint-traffic-counts.yaml,
+      # helsinki-endpoint-cycle-counts.yaml, T-5253).
+      - name: helsinki-traffic-counts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: l4zysz2peezgtp7uycaqvyxwx2ad2nep
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-cycle-counts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kvhnixtbe5dex2wt2kx3i37dzw6yzsxt
           access.token.claim: 'true'
           id.token.claim: 'false'
       # The Helsinki Apps' public Endpoints (seed/helsinki/helsinki-app-kartta-endpoint.yaml,

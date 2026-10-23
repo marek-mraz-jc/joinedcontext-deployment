@@ -139,6 +139,31 @@ for (const width of [1440, 400]) {
   });
 }
 
+// API/11 EP-164 (T-5197): the Endpoint's table start (filter, page length, columns) wins over the
+// model's, member by member; reset clears it as it clears the model's.
+for (const width of [1440, 400]) {
+  test(`publishedtable ${width}: the Endpoint's table start wins over the model's`, async ({ page, context }) => {
+    const requests = await serve(context);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`https://${CATALOGUE}/dataset/publishedtable?lang=sk`);
+    const f = frame(page);
+    const grid = f.getByRole("grid");
+    await expect(grid).toBeVisible({ timeout: 20000 });
+    await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("20");
+    const now = new Date();
+    const week = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+    const day = `${week.getFullYear()}-${String(week.getMonth() + 1).padStart(2, "0")}-${String(week.getDate()).padStart(2, "0")}`;
+    await expect.poll(() => requests.some((r) => r.url.searchParams.get("q") === `startDate>=${day}` && r.url.searchParams.get("limit") === "20")).toBe(true);
+    const heads = (await grid.locator("thead tr").first().locator("th").allInnerTexts()).map((t) => t.replace(/[⋮↑↓]/g, "").trim());
+    expect(heads).toEqual(["Názov", "Začiatok"]);
+    await page.screenshot({ path: path.join(shots, `publishedtable-${width}-default.png`), fullPage: true });
+    const before = requests.length;
+    await f.getByRole("button", { name: "Zrušiť filtre" }).click();
+    await expect.poll(() => requests.slice(before).some((r) => r.url.pathname.endsWith("/ngsi-ld/v1/entities") && !r.url.searchParams.get("q"))).toBe(true);
+    await page.screenshot({ path: path.join(shots, `publishedtable-${width}-reset.png`), fullPage: true });
+  });
+}
+
 // DM-135 (T-5231): the default filter is a chip the reader removes; the choice rides in the address,
 // so a reload or a shared link opens without it, and "Obnoviť predvolené" brings it back.
 for (const width of [1440, 400]) {

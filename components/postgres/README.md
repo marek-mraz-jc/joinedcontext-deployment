@@ -88,6 +88,25 @@ Turn `recovery.enabled` back to `false` once the data is verified, keeping the n
 `Cluster` object is recreated. The procedure around all of this — stopping the writers,
 deleting the damaged cluster, watching the replay — is Runbook 6 in the operations guide.
 
+## Backups in the artifact store (dev)
+
+`postgres.cluster.backups.target: 'artifact-store'` archives to the platform's own artifact store
+instead of an external bucket (T-5289); dev runs so. The store's bucket Job creates the bucket
+`postgres-backups` and a RustFS user whose policy reaches that bucket alone; its key is the
+generated Secret `postgres-backup-artifact-store` in both namespaces, so the database never holds
+the store's root key. The values fill in `endpointURL`, `destinationPath` (a path you set inside the
+bucket wins, for a restore), `existingSecret` and `encryption: ''`: the store has no KMS and
+refuses SSE-S3 ("SSE-S3 requires RUSTFS_SSE_S3_MASTER_KEY"), which would fail every WAL segment.
+
+The store sits on the same node and volume class as the database. That buys point-in-time
+recovery, a restore drill with real data and `upgrade.py`'s pre-upgrade backup; it does not survive
+the loss of the node. dev keeps 7 days (`retentionPolicy: '7d'`): the store's 10Gi volume holds
+the artifacts too. Watch `kubectl exec -n <ns> artifact-store-0 -- df -h /data` after the first week.
+
+The probe reads the newest backup (CNPG `lastSuccessfulBackup`, or the local dump's last success)
+and the drill's ConfigMap every five minutes; the status page shows both ages, stale after 26 hours
+and 35 days, and `PostgresBackupStale` / `PostgresRestoreDrillStale` alert on the same limits.
+
 ## Restore drill
 
 A CronJob (`postgres-cluster-dr-drill`, 04:00 UTC on the 1st, `postgres.databases.drDrill`)

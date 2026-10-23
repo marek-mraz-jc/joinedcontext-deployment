@@ -67,6 +67,26 @@ banskabystrica-conformance:
           included.custom.audience: mluyob4nz52lok3ssk7pgn5vwt
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The WebSocket isolation run (T-4909, conformance e2e/journeys/48) proposes two sandbox
+      # Endpoints under these slugs for its own run and deletes them after it; nothing else
+      # holds them. The token reaches them only while they exist, and the run's own Policies
+      # decide what it reads and writes there.
+      - name: ws-isolation-endpoint-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: hcwfp3wxr45cjxjwqsfcyxgv4klxb2ob
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: ws-isolation-other-space-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: mieqdukdwfv24izi5qxkia3e3qolhbvp
+          access.token.claim: 'true'
+          id.token.claim: 'false'
 
 # A workload on the Portal's side (T-2245, PF-45, PF-49): the account `pipeline-proposer` of
 # project `helsinki` in the development seed. Its token's audience is the Portal's API client and

@@ -866,6 +866,17 @@
       "title": "CityWork",
       "type": "object"
     },
+    "CountedVehicleType": {
+      "description": "The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.",
+      "enum": [
+        "bicycle"
+      ],
+      "title": "CountedVehicleType",
+      "type": "string",
+      "x-enum-descriptions": {
+        "bicycle": "A bicycle, as an Eco-Counter station counts it."
+      }
+    },
     "DivisionLevel": {
       "description": "",
       "enum": [
@@ -983,11 +994,8 @@
           "x-ngsi-ld-kind": "Property"
         },
         "eventStatus": {
-          "description": "The register's status of the event, EventScheduled, EventCancelled or EventPostponed.",
-          "type": [
-            "string",
-            "null"
-          ],
+          "$ref": "#/definitions/EventStatus",
+          "description": "The register's status of the event, one of schema.org's EventStatusType values.",
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
@@ -1073,6 +1081,25 @@
       ],
       "title": "Event",
       "type": "object"
+    },
+    "EventStatus": {
+      "description": "Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.",
+      "enum": [
+        "EventScheduled",
+        "EventCancelled",
+        "EventPostponed",
+        "EventRescheduled",
+        "EventMovedOnline"
+      ],
+      "title": "EventStatus",
+      "type": "string",
+      "x-enum-descriptions": {
+        "EventCancelled": "Called off; it does not take place.",
+        "EventMovedOnline": "Held online instead of at its place.",
+        "EventPostponed": "Moved to a date not yet known.",
+        "EventRescheduled": "Moved to the new date the event now gives.",
+        "EventScheduled": "Takes place as planned."
+      }
     },
     "GtfsAgency": {
       "additionalProperties": false,
@@ -2575,6 +2602,188 @@
         "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
         "public": "A parking area of the parking guide, open to anyone."
       }
+    },
+    "TrafficDirection": {
+      "description": "The direction a city counter names, in English.",
+      "enum": [
+        "north",
+        "south",
+        "east",
+        "west",
+        "inbound",
+        "outbound"
+      ],
+      "title": "TrafficDirection",
+      "type": "string",
+      "x-enum-descriptions": {
+        "east": "It\u00e4\u00e4n.",
+        "inbound": "IN, towards the centre.",
+        "north": "Pohjoiseen.",
+        "outbound": "OUT, away from the centre.",
+        "south": "Etel\u00e4\u00e4n.",
+        "west": "L\u00e4nteen."
+      }
+    },
+    "TrafficFlowObserved": {
+      "additionalProperties": false,
+      "description": "One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter station counted, or the motor vehicles and their mean speed at one of the city's induction loop (LAM) stations, from the city's traffic measurement API. The counter's name and place ride on the observation; the history of the days is the entity's temporal history.",
+      "properties": {
+        "averageVehicleSpeed": {
+          "description": "The mean speed of the vehicles the counter measured in the period, in km/h.",
+          "maximum": 150,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "km/h"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "The end of the counted day, the same instant as dateObservedTo.",
+          "format": "date-time",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObservedFrom": {
+          "description": "The start of the period the observation counts, the local midnight that opens the day.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObservedTo": {
+          "description": "The end of the period the observation counts, the local midnight that closes the day.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "intensity": {
+          "description": "How many vehicles, or bicycles, the counter detected in the day, in one direction.",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "/d"
+          }
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "trafficDirection": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrafficDirection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The compass direction, or into and out of the centre, the counted traffic travels, as the city's counter names it (Pohjoiseen is north). Smart Data Models' laneDirection needs a road segment to mean anything, which the counters do not name. Absent when the counter sums both directions.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vehicleType": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CountedVehicleType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The one kind of vehicle the observation counts, in the Smart Data Model's words; absent when the counter sums every class of motor vehicle.",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "dateObserved",
+        "id",
+        "type"
+      ],
+      "title": "TrafficFlowObserved",
+      "type": "object"
     },
     "TransportMode": {
       "description": "",

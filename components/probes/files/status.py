@@ -42,6 +42,10 @@ DAYS = 90
 STALE_SECONDS = 600
 AUTO_OPEN_MINUTES = 3
 AUTO_CLOSE_MINUTES = 10
+# A daily backup that missed a night, and a monthly restore drill that missed a month (T-5289).
+BACKUP_STALE_SECONDS = 26 * 3600
+DRILL_STALE_SECONDS = 35 * 86400
+DRILL_RESULTS = ("passed", "failed", "skipped", "no-backup")
 RESULTS_CAP = 4 * 1024 * 1024
 SLUG = re.compile(r"^[a-z0-9]{1,64}$")
 INCIDENT_ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
@@ -80,6 +84,14 @@ TEXT = {
         "since": "od {start} UTC", "between": "{start} – {end} UTC", "affects": "Týka sa: {names}",
         "legend": "Farba dňa: zelená bez výpadku, žltá dostupnosť aspoň 99 %, červená menej ako 99 %, sivá bez meraní.",
         "other": "English", "machine": "Strojovo čitateľné: status.json",
+        "backups": "Zálohy databázy",
+        "backups_lede": "Databáza sa zálohuje každú noc a raz za mesiac skúšame zálohu obnoviť a porovnať.",
+        "backup": "Posledná záloha", "drill": "Posledná skúška obnovy",
+        "fresh": "Aktuálna", "stale": "Zastaraná",
+        "age_hours": "pred {n} h", "age_days": "pred {n} dňami",
+        "never": "Zatiaľ žiadna",
+        "result_passed": "obnova a porovnanie riadkov prešli", "result_failed": "obnova zlyhala",
+        "result_skipped": "preskočená pre nedostatok pamäte", "result_no-backup": "nebolo čo obnoviť",
     },
     "en": {
         "title": "Platform status",
@@ -100,6 +112,14 @@ TEXT = {
         "since": "since {start} UTC", "between": "{start} – {end} UTC", "affects": "Affects: {names}",
         "legend": "Day colour: green no outage, yellow at least 99 % uptime, red below 99 %, grey no measurements.",
         "other": "Slovensky", "machine": "Machine readable: status.json",
+        "backups": "Database backups",
+        "backups_lede": "The database is backed up every night, and once a month we restore a backup and compare it.",
+        "backup": "Last backup", "drill": "Last restore drill",
+        "fresh": "Current", "stale": "Stale",
+        "age_hours": "{n} h ago", "age_days": "{n} days ago",
+        "never": "None yet",
+        "result_passed": "restore and row counts passed", "result_failed": "the restore failed",
+        "result_skipped": "skipped, the node was short of memory", "result_no-backup": "there was nothing to restore",
     },
 }
 # The automatic incidents' only public text (T-5184): no host, address, reason or person.
@@ -142,6 +162,30 @@ def current(results, target, now):
         if cell["total"]:
             cell["state"] = "up" if cell["ok"] == cell["total"] else "degraded" if cell["ok"] else "down"
     return out
+
+
+def backup_cells(backups, now):
+    """The backup and drill rows (T-5289), or None when the probe reads no cluster's backups.
+
+    Each is fresh while younger than its limit (26 h, 35 days), and a drill only when it passed."""
+    if not isinstance(backups, dict):
+        return None
+    cells = {}
+    for key, limit in (("backup", BACKUP_STALE_SECONDS), ("drill", DRILL_STALE_SECONDS)):
+        at = backups.get(f"{key}At")
+        at = at if isinstance(at, (int, float)) and not isinstance(at, bool) else None
+        fresh = at is not None and now - at <= limit
+        result = None
+        if key == "drill":
+            result = backups.get("drillResult") if backups.get("drillResult") in DRILL_RESULTS else None
+            fresh = fresh and result == "passed"
+        cells[key] = {"at": at, "state": "fresh" if fresh else "stale", "result": result}
+    return cells
+
+
+def age_text(lang, seconds):
+    hours = max(0, int(seconds // 3600))
+    return TEXT[lang]["age_hours"].format(n=hours) if hours < 48 else TEXT[lang]["age_days"].format(n=hours // 24)
 
 
 def overall(states):
@@ -383,7 +427,7 @@ def _day_class(counts):
     return "up" if counts[2] == 0 else "degraded" if value >= 99 else "down"
 
 
-def render(lang, domain, states, history, incidents, now):
+def render(lang, domain, states, history, incidents, now, backups=None):
     t, e = TEXT[lang], html.escape
     other = "en" if lang == "sk" else "sk"
     head = overall(states)
@@ -440,6 +484,21 @@ def render(lang, domain, states, history, incidents, now):
         out.append(f'</div><div class="axis" aria-hidden="true"><span>{e(t["days_ago"].format(days=DAYS))}</span>'
                    f'<span>{e(t["today"])}</span></div></li>')
     out.append(f'</ul><p class="legend">{e(t["legend"])}</p></section>')
+    cells = backup_cells(backups, now)
+    if cells:
+        out.append(f'<section aria-labelledby="backups"><h2 id="backups">{e(t["backups"])}</h2>'
+                   f'<p class="lede">{e(t["backups_lede"])}</p><ul class="surfaces">')
+        for key, cell in cells.items():
+            css = "up" if cell["state"] == "fresh" else "down"
+            when = t["never"] if cell["at"] is None else age_text(lang, now - cell["at"])
+            stamp = "" if cell["at"] is None else f' datetime="{dt.datetime.fromtimestamp(cell["at"], dt.UTC).isoformat()}"'
+            out.append(f'<li class="surface"><div class="row"><h3>{e(t[key])}</h3>'
+                       f'<span class="state {css}"><span class="dot" aria-hidden="true"></span>{e(t[cell["state"]])}</span></div>'
+                       f'<p class="detail"><time{stamp}>{e(when)}</time></p>')
+            if cell["result"]:
+                out.append(f'<p class="detail">{e(t["result_" + cell["result"]])}</p>')
+            out.append("</li>")
+        out.append("</ul></section>")
     out.append(f'<section aria-labelledby="past"><h2 id="past">{e(t["past"].format(days=DAYS))}</h2>')
     if past:
         out += [_incident(i, lang, ongoing=False) for i in past]
@@ -461,7 +520,7 @@ def _incident(incident, lang, ongoing):
             f'{e(when)}</time></p><p>{e(incident["note"][lang])}</p><p class="affects">{e(t["affects"].format(names=names))}</p></article>')
 
 
-def machine(states, history, incidents, now):
+def machine(states, history, incidents, now, backups=None):
     def iso(ts):
         return None if ts is None else dt.datetime.fromtimestamp(ts, dt.UTC).isoformat().replace("+00:00", "Z")
 
@@ -473,6 +532,9 @@ def machine(states, history, incidents, now):
         "incidents": [{"id": i["id"], "start": iso(i["start"]), "end": iso(i["end"]), "surfaces": i["surfaces"],
                        "title": i["title"], "note": i["note"], "automatic": i.get("automatic", False)}
                       for i in incidents if now - (i["end"] or now) <= DAYS * 86400],
+        "backups": None if (cells := backup_cells(backups, now)) is None else {
+            key: {"at": iso(c["at"]), "state": c["state"], **({"result": c["result"]} if key == "drill" else {})}
+            for key, c in cells.items()},
     }
 
 
@@ -538,11 +600,12 @@ class Page:
     def tick(self, count=True):
         now = self.clock()
         try:
-            results = (self.get() or {}).get("results")
+            answer = self.get() or {}
+            results, backups = answer.get("results"), answer.get("backups")
         except (OSError, ValueError, AttributeError) as err:
             # The probe is unreachable: the surfaces' state is unknown, never "up".
             print(json.dumps({"error": "probe results unavailable", "kind": type(err).__name__}), file=sys.stderr, flush=True)
-            results = []
+            results, backups = [], None
         states = current(results, self.target, now)
         if count:
             add_minute(self.history, states, now)
@@ -551,10 +614,10 @@ class Page:
             self._save("watch.json", self.watch)
         incidents = incidents_shown(self.incidents, self.watch)
         files = {
-            "/sk/": (render("sk", self.domain, states, self.history, incidents, now).encode(), "text/html; charset=utf-8"),
-            "/en/": (render("en", self.domain, states, self.history, incidents, now).encode(), "text/html; charset=utf-8"),
+            "/sk/": (render("sk", self.domain, states, self.history, incidents, now, backups).encode(), "text/html; charset=utf-8"),
+            "/en/": (render("en", self.domain, states, self.history, incidents, now, backups).encode(), "text/html; charset=utf-8"),
             "/status.css": (CSS.encode(), "text/css; charset=utf-8"),
-            "/status.json": (json.dumps(machine(states, self.history, incidents, now)).encode(), "application/json"),
+            "/status.json": (json.dumps(machine(states, self.history, incidents, now, backups)).encode(), "application/json"),
         }
         with self.lock:
             self.files, self.rendered_at = files, now

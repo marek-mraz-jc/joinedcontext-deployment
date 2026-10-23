@@ -58,7 +58,8 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
   eventStatus:
     slot_uri: schema:eventStatus
-    description: The register's status of the event, EventScheduled, EventCancelled or EventPostponed.
+    description: The register's status of the event, one of schema.org's EventStatusType values.
+    range: EventStatus
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/eventStatus
@@ -884,6 +885,49 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
 
+  dateObservedFrom:
+    slot_uri: sdm:dateObservedFrom
+    description: The start of the period the observation counts, the local midnight that opens the day.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedTo:
+    slot_uri: sdm:dateObservedTo
+    description: The end of the period the observation counts, the local midnight that closes the day.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  intensity:
+    slot_uri: sdm:intensity
+    description: How many vehicles, or bicycles, the counter detected in the day, in one direction.
+    range: integer
+    minimum_value: 0
+    unit: { ucum_code: /d }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  averageVehicleSpeed:
+    slot_uri: sdm:averageVehicleSpeed
+    description: The mean speed of the vehicles the counter measured in the period, in km/h.
+    range: float
+    minimum_value: 0
+    maximum_value: 150
+    unit: { ucum_code: km/h }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  trafficDirection:
+    slot_uri: jc:trafficDirection
+    description: >-
+      The compass direction, or into and out of the centre, the counted traffic travels, as the
+      city's counter names it (Pohjoiseen is north). Smart Data Models' laneDirection needs a road
+      segment to mean anything, which the counters do not name. Absent when the counter sums both
+      directions.
+    range: TrafficDirection
+    annotations: { ngsi_ld_kind: Property }
+
 classes:
   Event:
     class_uri: sdm:Event
@@ -1539,6 +1583,37 @@ classes:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
     slots: [name, distanceTravelled, dataProvider, source]
 
+  TrafficFlowObserved:
+    class_uri: sdm:TrafficFlowObserved
+    description: >-
+      One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter
+      station counted, or the motor vehicles and their mean speed at one of the city's induction
+      loop (LAM) stations, from the city's traffic measurement API. The counter's name and place
+      ride on the observation; the history of the days is the entity's temporal history.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - name
+      - dateObserved
+      - dateObservedFrom
+      - dateObservedTo
+      - intensity
+      - averageVehicleSpeed
+      - vehicleType
+      - trafficDirection
+      - dataProvider
+      - source
+    slot_usage:
+      dateObserved:
+        description: The end of the counted day, the same instant as dateObservedTo.
+        required: true
+      vehicleType:
+        description: >-
+          The one kind of vehicle the observation counts, in the Smart Data Model's words; absent
+          when the counter sums every class of motor vehicle.
+        range: CountedVehicleType
+
   KeyPerformanceIndicator:
     class_uri: sdm:KeyPerformanceIndicator
     description: >-
@@ -1569,6 +1644,7 @@ classes:
     class_uri: jc:KpiPeriod
     description: The value of `calculationPeriod`, never an entity of its own.
     slots: [from, to]
+
   PostalAddress:
     class_uri: schema:PostalAddress
     description: >-
@@ -1632,3 +1708,77 @@ enums:
       metro: { description: The metro. }
       train: { description: A commuter train. }
       ferry: { description: A ferry. }
+  CountedVehicleType:
+    description: The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.
+    permissible_values:
+      bicycle:
+        description: A bicycle, as an Eco-Counter station counts it.
+  TrafficDirection:
+    description: The direction a city counter names, in English.
+    permissible_values:
+      north: { description: Pohjoiseen. }
+      south: { description: Etelään. }
+      east: { description: Itään. }
+      west: { description: Länteen. }
+      inbound:
+        description: IN, towards the centre.
+      outbound:
+        description: OUT, away from the centre.
+  EventStatus:
+    description: Where an event stands, schema.org's EventStatusType values as Linked Events publishes them.
+    permissible_values:
+      EventScheduled:
+        description: Takes place as planned.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Naplánované
+              cs: Naplánováno
+              fi: Aikataulussa
+              en: Scheduled
+              de: Geplant
+      EventCancelled:
+        description: Called off; it does not take place.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zrušené
+              cs: Zrušeno
+              fi: Peruttu
+              en: Cancelled
+              de: Abgesagt
+      EventPostponed:
+        description: Moved to a date not yet known.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Odložené
+              cs: Odloženo
+              fi: Siirretty
+              en: Postponed
+              de: Verschoben
+      EventRescheduled:
+        description: Moved to the new date the event now gives.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Presunuté
+              cs: Přesunuto
+              fi: Uusi ajankohta
+              en: Rescheduled
+              de: Neu angesetzt
+      EventMovedOnline:
+        description: Held online instead of at its place.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Presunuté online
+              cs: Přesunuto online
+              fi: Siirretty verkkoon
+              en: Moved online
+              de: Online verlegt

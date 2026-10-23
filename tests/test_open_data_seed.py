@@ -145,7 +145,8 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
 def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_each_converted_dataset():
     """T-4279: one list of representations for both spaces, and the harvests' mapping names every
     converted dataset once, with the Endpoint of its own project."""
-    assert "sta" in generate.REPRESENTATIONS and not {"xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
+    # No `sta` (T-5299): the models declare no unit, so a Datastream would have no unitOfMeasurement.
+    assert not {"sta", "xlsx", "parquet", "json", "zip", "geojson"} & set(generate.REPRESENTATIONS)
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
@@ -158,12 +159,11 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     for e in SEEDED:
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
-    # T-4288: SensorThings is listed for the datasets whose numbers carry an instant, and only those.
+    # T-4288: SensorThings would be listed for the datasets whose numbers carry an instant; with no
+    # `sta` served (T-5299) the catalogue lists it for none, so no dataset page links a refused door.
     series = {name for name, row in rows.items() if row.get("series")}
-    assert any(s.startswith("bbsk-pohyb-obyvatelstva-v-okresoch") for s in series), sorted(series)
-    assert not any(s.startswith(("bb-adresy", "bbsk-zoznam-lekarni")) for s in series)
-    assert series == {e["dataset"].rsplit("/", 1)[1] for e in SEEDED if e.get("observedAt")} - {
-        e["dataset"].rsplit("/", 1)[1] for e in SEEDED if not generate.series(e)}
+    assert series == set(), sorted(series)
+    assert any(generate.series(e) for e in SEEDED), "the series rule still finds the dated datasets"
     # T-4291: a dataset another seed reads whole is listed through that seed's public Endpoint, over
     # its whole type, since those rows name no catalogue dataset; unless two datasets share that
     # door and type, which the seed then tells apart by `isPartOf` (bbsk obce and okresy, T-4523).
@@ -553,13 +553,18 @@ def test_a_catalogue_table_reads_its_records_as_addresses():
     assert valid("banskabystrica", entities)
 
 
-def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None]) -> subprocess.CompletedProcess:
+def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None],
+            count: int | None = None) -> subprocess.CompletedProcess:
     """The mapping over `document`, its further pages answered on this machine by `resultOffset`:
-    `pages[offset]` is the answer, None a 500, and an offset it does not name an empty page."""
+    `pages[offset]` is the answer, None a 500, and an offset it does not name an empty page. The
+    layer's row count answers `count`, a 500 when None."""
     class Layer(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
-            offset = int(urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)["resultOffset"][0])
-            body = pages.get(offset, b'{"type": "FeatureCollection", "features": []}')
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            if query.get("returnCountOnly") == ["true"]:
+                body = None if count is None else json.dumps({"count": count}).encode()
+            else:
+                body = pages.get(int(query["resultOffset"][0]), b'{"type": "FeatureCollection", "features": []}')
             self.send_response(500 if body is None else 200)
             self.end_headers()
             self.wfile.write(body or b"")
@@ -599,17 +604,59 @@ def written(result: subprocess.CompletedProcess) -> list[dict]:
     return out
 
 
-@requires_docker
-def test_a_layer_over_one_page_is_read_page_by_page_with_its_filter():
+def supplier_pages(rows: int) -> list[dict]:
+    """`rows` suppliers of the dodavatelia layer, each its own IČO, as the pages ArcGIS answers:
+    every page but the last says the layer holds more."""
     page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
-    rows = page0["features"]
-    first = {**page0, "features": rows[:2], "properties": {"exceededTransferLimit": True}}
-    second = json.dumps({**page0, "features": rows[2:]}).encode()
-    entities = written(offline("bbsk", "dodavatelia", json.dumps(first).encode(), {1000: second}))
-    assert len({e["id"] for e in entities}) == 3, "both rows of page 0 and the row of page 1000"
-    assert valid("bbsk", entities)
-    # Without the flag the layer said it was whole: nothing else is asked for.
-    assert len(written(offline("bbsk", "dodavatelia", json.dumps({**page0, "features": rows[:2]}).encode(), {1000: None}))) == 2
+    row = page0["features"][0]
+    features = [{**row, "properties": {**row["properties"], "ICO": f"{50000000 + i}"}} for i in range(rows)]
+    chunks = [features[o:o + generate.PAGE] for o in range(0, rows, generate.PAGE)]
+    return [{**page0, "features": c, **({"properties": {"exceededTransferLimit": True}} if i < len(chunks) - 1 else {})}
+            for i, c in enumerate(chunks)]
+
+
+def as_pages(pages: list[dict]) -> dict[int, bytes]:
+    return {i * generate.PAGE: json.dumps(p).encode() for i, p in enumerate(pages) if i}
+
+
+@requires_docker
+def test_a_layer_over_one_page_is_read_page_by_page_until_its_count_with_its_filter():
+    pages = supplier_pages(2 * generate.PAGE + 500)
+    entities = written(offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(), as_pages(pages), count=2500))
+    assert len({e["id"] for e in entities}) == 2500, "page 0, page 1000 and the 500 rows of page 2000"
+    assert valid("bbsk", entities[:3])
+    # Without the flag the layer said it was whole: neither its count nor a further page is asked for.
+    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
+    assert len(written(offline("bbsk", "dodavatelia", json.dumps(page0).encode(), {1000: None}, count=None))) == 3
+
+
+@requires_docker
+def test_a_layer_past_its_cap_or_short_of_its_pages_fails_the_run_with_the_count():
+    e = next(x for x in SEEDED if x["name"] == "bbsk-dodavatelia-825cd0")
+    cap = generate.esri_cap(e["source"])
+    pages = supplier_pages(2 * generate.PAGE + 500)
+    first = json.dumps(pages[0]).encode()
+    over = offline("bbsk", "dodavatelia", first, as_pages(pages), count=cap + 1)
+    assert f"the layer holds {cap + 1} rows, more than the {cap} one run reads".encode() in over.stdout + over.stderr
+    assert over.stdout.strip() == b"", "nothing of a layer over its cap is written"
+    # A server answering fewer rows a page than asked would skip the rest of each page.
+    short = offline("bbsk", "dodavatelia", first, {**as_pages(pages), 1000: json.dumps(pages[2]).encode()}, count=2500)
+    assert b"the page at 1000 answered 500 rows where 1000 were due" in short.stdout + short.stderr
+    small = offline("bbsk", "dodavatelia", json.dumps({**pages[2], "properties": {"exceededTransferLimit": True}}).encode(), {}, count=2500)
+    assert b"the layer answered 500 rows where 1000 were asked" in small.stdout + small.stderr
+    uncounted = offline("bbsk", "dodavatelia", first, as_pages(pages), count=None)
+    assert b"the layer did not say how many rows it holds" in uncounted.stdout + uncounted.stderr
+
+
+def test_every_esri_layer_counts_its_rows_with_its_filter_and_caps_a_run():
+    layers = [x for x in SEEDED if x["source"]["kind"] == "esri-featureserver"]
+    assert layers
+    for e in layers:
+        slug, project = SLUGS[e["name"]], e["org"]
+        bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
+        assert "range(1, 5)" not in bento and "returnCountOnly=true" in bento, e["name"]
+        assert f"$rows > {generate.esri_cap(e['source'])}" in bento, e["name"]
+        assert generate.esri_cap(e["source"]) >= 2 * e["source"]["rows"]
 
 
 @requires_docker
@@ -617,9 +664,12 @@ def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_show
     assert written(offline("bbsk", "dodavatelia", b'{"type": "FeatureCollection", "features": []}', {})) == []
     error = offline("bbsk", "dodavatelia", b'{"error": {"code": 400, "message": "Invalid query"}}', {})
     assert b"the layer answered no features: Invalid query" in error.stdout + error.stderr
-    page0 = json.loads((FIXTURES / "dodavatelia.json").read_text())
-    missing = offline("bbsk", "dodavatelia", json.dumps({**page0, "properties": {"exceededTransferLimit": True}}).encode(), {2000: None})
+    pages = supplier_pages(2 * generate.PAGE + 500)
+    missing = offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(), {**as_pages(pages), 2000: None}, count=2500)
     assert b"the page at 2000 did not come" in missing.stdout + missing.stderr
+    refused = offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(),
+                      {**as_pages(pages), 1000: b'{"error": {"code": 498, "message": "Invalid token"}}'}, count=2500)
+    assert b"the page at 1000 answered no features: Invalid token" in refused.stdout + refused.stderr
     table = offline("banskabystrica", "adresy", b'{"success": false}', {})
     assert b"the catalogue answered no table" in table.stdout + table.stderr
 
@@ -993,8 +1043,8 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5258 the five Helsinki statistics themes.
-        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 5, "praha": 7, "slovensko": 3 + 45, "zilina": 5 + 4}
+        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5268 PID vehicles and T-5276 Golemio city services in praha; T-5258 the five Helsinki statistics themes.
+        "banskabystrica": 13 + 7, "bbsk": 88 + 6, "hel-fi": 11 + 1 + 2 + 1 + 5, "praha": 8 + 1, "slovensko": 3 + 45, "zilina": 5 + 4}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

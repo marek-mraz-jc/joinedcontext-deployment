@@ -75,6 +75,9 @@ env:
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
   JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
+  # The Portal's headless Service: a capture broker admits its tokenless subscriber only from
+  # its pods (ADR-N-048 §2.10, T-4880).
+  JC_GATEWAY_MQTT_PORTAL_HOST: "portal-pods.{{ .Values.portal.portal.namespace }}.svc.cluster.local"
   # The anonymous OAuth server redirects to Google's relay alone: OAuth is for Gemini only, Claude,
   # ChatGPT and Grok read the open data without a token (owner 2026-10-18, ADR-N-052 §2.3, T-4630).
   JC_GATEWAY_OAUTH_REDIRECT_HOSTS: oauth-redirect.googleusercontent.com

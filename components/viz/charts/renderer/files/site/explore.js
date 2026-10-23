@@ -316,8 +316,9 @@
   }
 
   // What a reader may pick on a type's map, from the model's slots alone, and the default the map
-  // starts from: the first geometry, a colour per type, the card's roles (time, place, link) in the
-  // bubble, clusters on.
+  // starts from: the publisher's (`card.map`, API/11 EP-163) for each member the model offers, else
+  // the built-in one: the first geometry, a colour per type, the card's roles (time, place, link) in
+  // the bubble, clusters above 200 in view.
   function mapOptions(geos, card) {
     var fields = ((card && card.fields) || []).filter(function (f) {
       return f && NAME.test(f.name || "") && !SYSTEM[f.name] && !f.hidden && geos.indexOf(f.name) < 0 && f.name !== (card.title || "name");
@@ -328,13 +329,19 @@
       named(function (f) { return PLACE.indexOf(f.name) >= 0; }),
       named(function (f) { return f.kind === "uri" || f.name === "url"; })
     ].filter(Boolean);
-    return {
+    var o = {
       geos: geos,
       colors: ["none", "type"].concat(fields.filter(function (f) { return f.titles || f.kind === "boolean"; }).map(function (f) { return f.name; })),
       pops: fields.map(function (f) { return f.name; }),
       labels: ((card && card.fields) || []).reduce(function (m, f) { if (f && f.name) m[f.name] = f.label || humanise(f.name); return m; }, {}),
       defaults: { geo: geos[0] || null, color: "type", pop: pop, cluster: true }
     };
+    var p = (card && card.map) || {}, d = o.defaults;
+    if (typeof p.geometry === "string" && geos.indexOf(p.geometry) >= 0) d.geo = p.geometry;
+    if (typeof p.colour === "string" && p.colour !== "none" && p.colour !== "type" && o.colors.indexOf(p.colour) >= 0) d.color = p.colour;
+    if (Array.isArray(p.popup) && p.popup.length && p.popup.length <= 10 && p.popup.every(function (n) { return o.pops.indexOf(n) >= 0; })) d.pop = p.popup.slice();
+    if (typeof p.cluster === "boolean") d.cluster = p.cluster;
+    return o;
   }
 
   // The reader's choice from the address, each value kept only when the type's model offers it;

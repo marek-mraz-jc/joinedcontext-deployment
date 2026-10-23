@@ -710,3 +710,25 @@ def test_a_count_without_a_time_is_no_series():
     assert not smoke.series({"properties": {"pupils": {"type": "integer", "x-ngsi-ld-kind": "Property"}}})
     flag = {"type": "boolean", "x-ngsi-ld-kind": "Property"}
     assert not smoke.series({"properties": {**beach["properties"], "temperature": flag}})
+
+
+def test_a_holder_whose_type_only_its_endpoint_names_is_asked_whatever_the_check_order():
+    # T-5402: helsinki-districts names its type only on /types; the permits checked first saw no holder.
+    poi = "urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-41960"
+    p = package("schools", "o1", "Organization", org="helsinki")
+    places = package("places", "p1", "PointOfInterest", ogc=False, org="helsinki")
+    places["resources"] = [dict(r, url=r["url"].rsplit("/odata/v4/", 1)[0] + "/odata/v4/" if "odata" in r["url"] else r["url"],
+                                name="") for r in places["resources"]]
+    data = smoke.describe(p, DOMAIN)
+    sample = f"{API}/o1/ngsi-ld/v1/entities?" + urllib.parse.urlencode(smoke.sample_query(data))
+    query = urllib.parse.urlencode({"type": "PointOfInterest", "id": poi, "limit": 1})
+    healthy = world([p, package("places", "p1", "PointOfInterest", ogc=False, org="helsinki")], ["o1", "p1"])
+    search = {f"{CKAN}/api/3/action/package_search?rows=1000&start=0":
+              answer(body={"result": {"count": 2, "results": [p, places]}})}
+    rows, _ = table({**healthy, **search,
+                     sample: answer(body=[row("Organization", 1, refPointOfInterest={"type": "Relationship", "object": poi})]),
+                     f"{API}/o1/schema/v1/model.schema.json": answer(body=model("Organization", "refPointOfInterest")),
+                     f"{API}/o1/ngsi-ld/v1/entities?{query}": answer(body=[]),
+                     f"{API}/p1/ngsi-ld/v1/entities?{query}": answer(body=[{"id": poi}])})
+    assert rows["schools"]["data"] == "ok: 1 rows, inside SK032"
+    assert rows["places"]["type"] == "PointOfInterest"

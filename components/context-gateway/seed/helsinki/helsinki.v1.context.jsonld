@@ -511,6 +511,33 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "jc:zoneCode"
+    },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
+    },
+    "averageVehicleSpeed": {
+      "@id": "sdm:averageVehicleSpeed",
+      "@type": "xsd:float"
+    },
+    "dateObservedFrom": {
+      "@id": "sdm:dateObservedFrom",
+      "@type": "xsd:dateTime"
+    },
+    "dateObservedTo": {
+      "@id": "sdm:dateObservedTo",
+      "@type": "xsd:dateTime"
+    },
+    "intensity": {
+      "@id": "sdm:intensity",
+      "@type": "xsd:integer"
+    },
+    "trafficDirection": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficDirection"
     }
   },
   "x-generator-version": "linkml-1.11.1"

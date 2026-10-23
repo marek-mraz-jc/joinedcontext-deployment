@@ -30,13 +30,14 @@
         root = if $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") || $v.re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?([.][0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$") { $v } else if $local != null { $local + ":00" + ($local + ":00Z").ts_format("-07:00", "Europe/Bratislava") } else { null }
       }
       # A Slovak date as a page prints it, "28. augusta 2026" or "28. 8. 2026", as YYYY-MM-DD.
+      # number() before int64(): int64() reads "08" and "09" as octal and fails the whole event.
       map day {
         let months = {"januára": 1, "január": 1, "februára": 2, "február": 2, "marca": 3, "marec": 3, "apríla": 4, "apríl": 4, "mája": 5, "máj": 5, "júna": 6, "jún": 6, "júla": 7, "júl": 7, "augusta": 8, "august": 8, "septembra": 9, "september": 9, "októbra": 10, "október": 10, "novembra": 11, "november": 11, "decembra": 12, "december": 12}
         let n = this.re_find_object("(?P<d>[0-9]{1,2})\\.\\s*(?P<m>[0-9]{1,2})\\.\\s*(?P<y>[0-9]{4})").catch({})
         let w = this.re_find_object("(?P<d>[0-9]{1,2})\\.\\s*(?P<m>\\p{L}+)\\s+(?P<y>[0-9]{4})").catch({})
         let p = if $n.d.or(null) != null { $n } else { $w }
-        let month = if $n.d.or(null) != null { $n.m.int64() } else { $months.get($w.m.or("").lowercase()).or(null) }
-        root = if $p.d.or(null) == null || $month == null || $month < 1 || $month > 12 { null } else { "%04d-%02d-%02d".format($p.y.int64(), $month, $p.d.int64()) }
+        let month = if $n.d.or(null) != null { $n.m.number().int64() } else { $months.get($w.m.or("").lowercase()).or(null) }
+        root = if $p.d.or(null) == null || $month == null || $month < 1 || $month > 12 { null } else { "%04d-%02d-%02d".format($p.y.number().int64(), $month, $p.d.number().int64()) }
       }
       # Every HH:MM of a text, the hour in two digits.
       map clock {
