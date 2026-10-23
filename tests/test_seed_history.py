@@ -75,6 +75,8 @@ CHOSEN = {
     # Endpoint praha-trideny-odpad, whose one Policy grants all its types' history or none (T-5270).
     ("praha/praha-mesto", "WasteContainer"): "P7D",
     ("praha/praha-mesto", "WasteContainerIsle"): "P7D",
+    # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
+    ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
 }
 
 

@@ -6,12 +6,15 @@ description: >-
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
   network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
-  own classes.
+  own classes. Transport: TrafficFlowObserved, the traffic state of each street
+  section the city reports every five minutes, and OnStreetParking, each regulated surface
+  parking section (blue, green, loading and bus zones).
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
   sdm: https://smartdatamodels.org/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
+  jc: https://joinedcontext.com/models/
 default_prefix: sdm
 default_range: string
 imports:
@@ -21,13 +24,13 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The station's name as the city publishes it.
+    description: The name the city publishes, in Catalan (a station, a street section and its stretch, a street address).
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/name
   dateObserved:
     slot_uri: sdm:dateObserved
-    description: The end of the hour the entity's readings cover, UTC.
+    description: The time the entity's readings refer to, UTC (an air-quality hour's end, a traffic state's report).
     range: datetime
     required: true
     annotations:
@@ -69,6 +72,69 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+  congested:
+    slot_uri: sdm:congested
+    description: >-
+      Whether the section is congested now: true for the city's states 4 (very dense) and 5
+      (congestion), false otherwise, as SDM reads an absent flag (no data and closed included;
+      trafficState tells those apart).
+    range: boolean
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  trafficState:
+    slot_uri: jc:trafficState
+    description: >-
+      The city's own traffic state of the section (custom: TrafficFlowObserved has only
+      `congested`), its code 1 to 6 named in English; Open Data BCN dataset trams.
+    range: TrafficState
+    annotations: { ngsi_ld_kind: Property }
+  trafficStateForecast:
+    slot_uri: jc:trafficStateForecast
+    description: The state the city forecasts for the section in 15 minutes, same codes as trafficState (custom).
+    range: TrafficState
+    annotations: { ngsi_ld_kind: Property }
+  category:
+    slot_uri: sdm:category
+    description: The kind of regulated parking, from the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
+    multivalued: true
+    range: StreetParkingCategory
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  allowedVehicleType:
+    slot_uri: sdm:allowedVehicleType
+    description: What may park there, the section's own kind first.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  totalSpotNumber:
+    slot_uri: sdm:totalSpotNumber
+    description: The parking places of the section as B:SM counts them (PLACES).
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  zoneCode:
+    slot_uri: jc:zoneCode
+    description: The section type as B:SM codes it (AZL, VM, VR, DUM, BUS), kept as published (custom).
+    annotations: { ngsi_ld_kind: Property }
+  tariffCode:
+    slot_uri: jc:tariffCode
+    description: >-
+      The B:SM rate (ID_TARIFA) and timetable (ID_HORARIO) codes of the section, joined as
+      rate/timetable, kept as published (custom; Open Data BCN tarifes- and
+      horaris-aparcament-superficie).
+    annotations: { ngsi_ld_kind: Property }
+  source:
+    slot_uri: sdm:source
+    description: The Open Data BCN dataset the entity was read from.
+    range: uri
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
 
 classes:
   AirQualityObserved:
@@ -78,3 +144,50 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
     slots: [name, dateObserved, pm10, pm25, no2, o3]
+  TrafficFlowObserved:
+    class_uri: sdm:TrafficFlowObserved
+    description: >-
+      One street section of the city's traffic-state network with its line, its state now and
+      the state forecast for 15 minutes, every five minutes (Open Data BCN trams and
+      transit-relacio-trams).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots: [name, dateObserved, congested, trafficState, trafficStateForecast, source]
+  OnStreetParking:
+    class_uri: sdm:OnStreetParking
+    description: >-
+      One regulated surface parking section of B:SM (blue, green, residents, loading or coach
+      zone), its curb lines, its places and its rate and timetable codes (Open Data BCN
+      trams-aparcament-superficie).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+    slots: [name, category, allowedVehicleType, totalSpotNumber, zoneCode, tariffCode, source]
+
+enums:
+  TrafficState:
+    description: Open Data BCN's traffic state codes 0 to 6, named in English, the Catalan name in each description.
+    permissible_values:
+      noData: { description: '0 sense dades: no reading this period.' }
+      veryFluid: { description: '1 molt fluid.' }
+      fluid: { description: '2 fluid.' }
+      dense: { description: '3 dens.' }
+      veryDense: { description: '4 molt dens.' }
+      congestion: { description: '5 congestió.' }
+      closed: { description: '6 tallat.' }
+  StreetParkingCategory:
+    description: The OnStreetParking `category` values the B:SM section types map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      blueZone:
+        description: AZL, the blue zone anyone parks in for a fee.
+      greenZone:
+        description: VM and VR, the green zone.
+      feeCharged:
+        description: Parking costs by the time parked (AZL, VM, BUS).
+      forResidents:
+        description: VR, residents of the area only.
+      forLoadUnload:
+        description: DUM, urban goods distribution.
+      onlyWithPermit:
+        description: VR and DUM, a resident permit or the DUM app registration is needed.
