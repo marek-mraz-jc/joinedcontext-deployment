@@ -42,6 +42,7 @@ apps/v1/Deployment dev/model-tools
 apps/v1/Deployment dev/pipeline-runner
 apps/v1/Deployment dev/pipeline-tokens
 apps/v1/Deployment dev/portal
+apps/v1/Deployment dev/portal-ui
 apps/v1/Deployment dev/postgres-operator-cloudnative-pg
 apps/v1/Deployment dev/probe
 apps/v1/Deployment dev/prometheus-operator
@@ -313,6 +314,9 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-assistant
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-functions
 networking.k8s.io/v1/NetworkPolicy dev/portal-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy dev/portal-to-mqtt-brokers-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/portal-ui
+networking.k8s.io/v1/NetworkPolicy dev/portal-ui-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/portal-ui-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/postgres
 networking.k8s.io/v1/NetworkPolicy dev/postgres-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/postgres-drill
@@ -361,12 +365,14 @@ policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/jc-wasm-host-0-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/jc-wasm-host-1-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/pipeline-runner-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/pipeline-tokens-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/portal-ui-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/wasm-host-tokens-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/context-broker-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/jc-wasm-host-0-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/jc-wasm-host-1-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/pipeline-runner-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/pipeline-tokens-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/portal-ui-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/wasm-host-tokens-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
@@ -375,6 +381,7 @@ policy.linkerd.io/v1beta3/Server dev/jc-wasm-host-0-api
 policy.linkerd.io/v1beta3/Server dev/jc-wasm-host-1-api
 policy.linkerd.io/v1beta3/Server dev/pipeline-runner-api
 policy.linkerd.io/v1beta3/Server dev/pipeline-tokens-api
+policy.linkerd.io/v1beta3/Server dev/portal-ui-api
 policy.linkerd.io/v1beta3/Server dev/wasm-host-tokens-api
 postgresql.cnpg.io/v1/Cluster dev/apps-db
 postgresql.cnpg.io/v1/Cluster dev/postgres-cluster
@@ -471,7 +478,7 @@ v1/ConfigMap dev/gitea-sample-apps-transit-reach
 v1/ConfigMap dev/gitea-seed-s1-banskabystrica
 v1/ConfigMap dev/gitea-seed-s1-banskabystrica--2
 v1/ConfigMap dev/gitea-seed-s1-banskabystrica--3
-v1/ConfigMap dev/gitea-seed-s1-slovensko--20
+v1/ConfigMap dev/gitea-seed-s1-slovensko--19
 v1/ConfigMap dev/gitea-seed-s1-slovensko--23
 v1/ConfigMap dev/gitea-seed-s10-sharing
 v1/ConfigMap dev/gitea-seed-s10-slovensko--10
@@ -487,11 +494,11 @@ v1/ConfigMap dev/gitea-seed-s2-barcelona
 v1/ConfigMap dev/gitea-seed-s2-slovensko--13
 v1/ConfigMap dev/gitea-seed-s2-slovensko--14
 v1/ConfigMap dev/gitea-seed-s2-slovensko--15
-v1/ConfigMap dev/gitea-seed-s2-slovensko--16
+v1/ConfigMap dev/gitea-seed-s2-slovensko--22
 v1/ConfigMap dev/gitea-seed-s3-bbsk
 v1/ConfigMap dev/gitea-seed-s3-bbsk--2
 v1/ConfigMap dev/gitea-seed-s3-bbsk--3
-v1/ConfigMap dev/gitea-seed-s3-slovensko--22
+v1/ConfigMap dev/gitea-seed-s3-slovensko--21
 v1/ConfigMap dev/gitea-seed-s4-bbsk--4
 v1/ConfigMap dev/gitea-seed-s4-bbsk--5
 v1/ConfigMap dev/gitea-seed-s4-bbsk--6
@@ -508,16 +515,16 @@ v1/ConfigMap dev/gitea-seed-s6-bbsk--14
 v1/ConfigMap dev/gitea-seed-s6-bbsk--15
 v1/ConfigMap dev/gitea-seed-s6-slovensko--26
 v1/ConfigMap dev/gitea-seed-s7-helsinki
-v1/ConfigMap dev/gitea-seed-s7-slovensko--19
-v1/ConfigMap dev/gitea-seed-s7-slovensko--21
+v1/ConfigMap dev/gitea-seed-s7-slovensko--18
+v1/ConfigMap dev/gitea-seed-s7-slovensko--20
 v1/ConfigMap dev/gitea-seed-s8-helsinki-mobility
 v1/ConfigMap dev/gitea-seed-s8-slovensko--5
 v1/ConfigMap dev/gitea-seed-s8-slovensko--6
 v1/ConfigMap dev/gitea-seed-s8-slovensko--7
 v1/ConfigMap dev/gitea-seed-s8-slovensko--8
 v1/ConfigMap dev/gitea-seed-s9-praha
+v1/ConfigMap dev/gitea-seed-s9-slovensko--16
 v1/ConfigMap dev/gitea-seed-s9-slovensko--17
-v1/ConfigMap dev/gitea-seed-s9-slovensko--18
 v1/ConfigMap dev/gitea-seed-s9-zilina
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
@@ -567,6 +574,7 @@ v1/Secret dev/keycloak-admin-user
 v1/Secret dev/keycloak-client-apisix-gateway
 v1/Secret dev/keycloak-client-banskabystrica-conformance
 v1/Secret dev/keycloak-client-banskabystrica-pipelines
+v1/Secret dev/keycloak-client-barcelona-pipelines
 v1/Secret dev/keycloak-client-bbsk-pipelines
 v1/Secret dev/keycloak-client-ckan
 v1/Secret dev/keycloak-client-edge
@@ -621,6 +629,7 @@ v1/Service dev/pipeline-runner-pods
 v1/Service dev/pipeline-tokens
 v1/Service dev/portal
 v1/Service dev/portal-pods
+v1/Service dev/portal-ui
 v1/Service dev/probe
 v1/Service dev/prometheus-alertmanager
 v1/Service dev/prometheus-operator
@@ -654,6 +663,7 @@ v1/ServiceAccount dev/pipeline-runner
 v1/ServiceAccount dev/pipeline-tokens
 v1/ServiceAccount dev/portal
 v1/ServiceAccount dev/portal-reconciler
+v1/ServiceAccount dev/portal-ui
 v1/ServiceAccount dev/postgres-cluster-dr-drill
 v1/ServiceAccount dev/postgres-operator-cloudnative-pg
 v1/ServiceAccount dev/probe

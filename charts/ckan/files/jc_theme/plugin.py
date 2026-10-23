@@ -7,6 +7,7 @@ without branding should look like.
 
 import base64
 import datetime
+import functools
 import html
 import json
 import os
@@ -223,6 +224,14 @@ STRINGS = {
     "topic": {"en": "Topic", "sk": "Téma", "cs": "Téma", "de": "Thema", "hu": "Téma"},
     "keywords": {"en": "Keywords", "sk": "Kľúčové slová", "cs": "Klíčová slova", "de": "Schlagwörter", "hu": "Kulcsszavak"},
     "format": {"en": "Format", "sk": "Formát", "cs": "Formát", "de": "Format", "hu": "Formátum"},
+    "use_table": {"en": "Table", "sk": "Tabuľka", "cs": "Tabulka", "de": "Tabelle", "hu": "Táblázat"},
+    "use_map": {"en": "Map", "sk": "Mapa", "cs": "Mapa", "de": "Karte", "hu": "Térkép"},
+    "use_live": {"en": "Live feed", "sk": "Živé údaje", "cs": "Živá data", "de": "Live-Daten", "hu": "Élő adatok"},
+    "use_api": {"en": "API", "sk": "API", "cs": "API", "de": "API", "hu": "API"},
+    "by_topic": {"en": "Browse by topic", "sk": "Podľa témy", "cs": "Podle tématu", "de": "Nach Thema", "hu": "Témák szerint"},
+    "datasets_n": {"en": ("dataset", "datasets", "datasets"), "sk": ("dataset", "datasety", "datasetov"),
+                   "cs": ("datová sada", "datové sady", "datových sad"), "de": ("Datensatz", "Datensätze", "Datensätze"),
+                   "hu": ("adatkészlet", "adatkészlet", "adatkészlet")},
     "frequency": {"en": "Updated", "sk": "Aktualizácia", "cs": "Aktualizace", "de": "Aktualisierung", "hu": "Frissítés"},
     "last_update": {"en": "Last update", "sk": "Posledná aktualizácia", "cs": "Poslední aktualizace", "de": "Letzte Aktualisierung", "hu": "Utolsó frissítés"},
     "next_update": {"en": "Next update expected", "sk": "Ďalšia aktualizácia", "cs": "Další aktualizace", "de": "Nächste Aktualisierung", "hu": "Következő várható frissítés"},
@@ -1872,6 +1881,137 @@ def jc_formats(pkg):
     return out
 
 
+# What a reader can do with a dataset (T-5294): the search's Format filter and a result's chips.
+# Every dataset of the platform carries the same eleven formats, model files included, so a filter
+# by format filtered nothing; a filter by use does. Indexed as `vocab_jc_use` (CKAN's Solr schema
+# keeps any `vocab_*` as a multi-valued string), in this order.
+USES = ("table", "map", "live", "api")
+_TABLE_KINDS = {"CSV", "XLSX", "PARQUET", "ODATA"}
+_API_KINDS = {"NGSI-LD", "ODATA", "OGCFEAT", "STA", "MCP"}
+# The EU data themes (publications.europa.eu/resource/authority/data-theme) the DCAT profile writes
+# into the `theme` extra, as the search's Topic filter and the home page's tiles (T-5294), named the
+# way the EU vocabulary names them in each language. Indexed as `vocab_jc_topic`, by code.
+THEME_URI = "http://publications.europa.eu/resource/authority/data-theme/"
+TOPICS = {
+    "AGRI": {"en": "Agriculture, fisheries, forestry and food", "sk": "Poľnohospodárstvo, rybné hospodárstvo, lesníctvo a potraviny", "cs": "Zemědělství, rybolov, lesnictví a výživa", "de": "Landwirtschaft, Fischerei, Forstwirtschaft und Nahrungsmittel", "hu": "Mezőgazdaság, halászat, erdészet és élelmiszer"},
+    "ECON": {"en": "Economy and finance", "sk": "Hospodárstvo a financie", "cs": "Hospodářství a finance", "de": "Wirtschaft und Finanzen", "hu": "Gazdaság és pénzügy"},
+    "EDUC": {"en": "Education, culture and sport", "sk": "Vzdelávanie, kultúra a šport", "cs": "Vzdělávání, kultura a sport", "de": "Bildung, Kultur und Sport", "hu": "Oktatás, kultúra és sport"},
+    "ENER": {"en": "Energy", "sk": "Energetika", "cs": "Energie", "de": "Energie", "hu": "Energia"},
+    "ENVI": {"en": "Environment", "sk": "Životné prostredie", "cs": "Životní prostředí", "de": "Umwelt", "hu": "Környezet"},
+    "GOVE": {"en": "Government and public sector", "sk": "Vláda a verejný sektor", "cs": "Vláda a veřejný sektor", "de": "Regierung und öffentlicher Sektor", "hu": "Kormányzat és közszféra"},
+    "HEAL": {"en": "Health", "sk": "Zdravie", "cs": "Zdraví", "de": "Gesundheit", "hu": "Egészségügy"},
+    "INTR": {"en": "International issues", "sk": "Medzinárodné otázky", "cs": "Mezinárodní otázky", "de": "Internationale Themen", "hu": "Nemzetközi ügyek"},
+    "JUST": {"en": "Justice, legal system and public safety", "sk": "Spravodlivosť, právny systém a verejná bezpečnosť", "cs": "Spravedlnost, právní systém a veřejná bezpečnost", "de": "Justiz, Rechtssystem und öffentliche Sicherheit", "hu": "Igazságügy, jogrendszer és közbiztonság"},
+    "REGI": {"en": "Regions and cities", "sk": "Regióny a mestá", "cs": "Regiony a města", "de": "Regionen und Städte", "hu": "Régiók és városok"},
+    "SOCI": {"en": "Population and society", "sk": "Obyvateľstvo a spoločnosť", "cs": "Populace a společnost", "de": "Bevölkerung und Gesellschaft", "hu": "Népesség és társadalom"},
+    "TECH": {"en": "Science and technology", "sk": "Veda a technika", "cs": "Věda a technika", "de": "Wissenschaft und Technologie", "hu": "Tudomány és technológia"},
+    "TRAN": {"en": "Transport", "sk": "Doprava", "cs": "Doprava", "de": "Verkehr", "hu": "Közlekedés"},
+}
+FACET_LABELS = {"vocab_jc_use": lambda name: jc_t("use_" + name) if name in USES else name,
+                "vocab_jc_topic": lambda name: _words(TOPICS.get(name)) or name}
+
+
+def _words(words):
+    return (words or {}).get(_language()) or (words or {}).get("en") or ""
+
+
+@functools.lru_cache(maxsize=4096)
+def _has_geometry(resource_id, modified):
+    """Whether a DataStore table holds a geometry: a `{attribute}.geojson` column, or the
+    `{attribute}.value.type` and `{attribute}.value.coordinates` columns `jcctl` derives it from
+    (publish_ckan.rs). `modified` only keys the cache, so a rewritten table is asked again."""
+    try:
+        fields = toolkit.get_action("datastore_search")(
+            {"ignore_auth": True}, {"resource_id": resource_id, "limit": 0}).get("fields") or []
+    except (KeyError, toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
+        return False
+    names = [str(field.get("id") or "") for field in fields]
+    return any(name.endswith(".geojson") or (
+        name.endswith(".value.type") and any(n.startswith(name[:-len("type")] + "coordinates") for n in names))
+        for name in names)
+
+
+def jc_uses(pkg):
+    """What a reader can do with the dataset, in USES order: read a table (a DataStore table,
+    a CSV, Excel or Parquet file, OData), see it on a map (a GeoJSON file or a table with a
+    geometry), follow a live feed (WebSocket) or query an API. The data model's files offer none."""
+    resources = (pkg or {}).get("resources") or []
+    kinds = {jc_kind(r) or (r.get("format") or "").strip().upper() for r in resources}
+    tables = [r for r in resources if r.get("datastore_active") and r.get("id")]
+    found = {
+        "table": bool(tables) or bool(kinds & _TABLE_KINDS),
+        "map": "GEOJSON" in kinds or any(
+            _has_geometry(r["id"], r.get("last_modified") or r.get("metadata_modified") or "") for r in tables),
+        "live": "WEBSOCKET" in kinds,
+        "api": bool(kinds & _API_KINDS),
+    }
+    return [use for use in USES if found[use]]
+
+
+def jc_topics(pkg):
+    """The dataset's EU data themes by code, from the `theme` extra (a JSON list of their URIs);
+    a theme outside the EU vocabulary and a broken extra are left out."""
+    extras = (pkg or {}).get("extras") or []
+    raw = next((e.get("value") for e in extras if isinstance(e, dict) and e.get("key") == "theme"), None)
+    if raw is None:
+        raw = (pkg or {}).get("theme")
+    try:
+        uris = json.loads(raw) if isinstance(raw, str) else raw
+    except ValueError:
+        return []
+    if not isinstance(uris, list):
+        return []
+    codes = [uri[len(THEME_URI):] for uri in uris if isinstance(uri, str) and uri.startswith(THEME_URI)]
+    return [code for code in dict.fromkeys(codes) if code in TOPICS]
+
+
+def jc_use_chips(pkg):
+    """A search result's chips: the uses in the page's language."""
+    return [jc_t("use_" + use) for use in jc_uses(pkg)]
+
+
+def jc_facet_labels(search_results, search_params):
+    """The Format and Topic filters in the page's language, without a value every result shares:
+    that one narrows nothing (T-5294). A value the search already filters by stays, so it can be
+    taken off again."""
+    facets = search_results.get("search_facets") or {}
+    total = search_results.get("count") or 0
+    # CKAN's query turns `fq` into a list of clauses before this hook sees it.
+    fq = search_params.get("fq") or ""
+    fq = " ".join(map(str, fq)) if isinstance(fq, list) else str(fq)
+    fq += " " + " ".join(map(str, search_params.get("fq_list") or []))
+    for field, label in FACET_LABELS.items():
+        facet = facets.get(field)
+        if not isinstance(facet, dict):
+            continue
+        items = []
+        for item in facet.get("items") or []:
+            name = item.get("name") or ""
+            if item.get("count") == total and '%s:"%s"' % (field, name) not in fq:
+                continue
+            item["display_name"] = label(name)
+            items.append(item)
+        facet["items"] = items
+    return search_results
+
+
+def jc_topic_tiles():
+    """The home page's topics: each EU data theme the public datasets carry, with its count and its
+    search, the most used first. Empty when no dataset names a theme."""
+    from ckan.lib.search import SearchError
+
+    try:
+        found = toolkit.get_action("package_search")(
+            {}, {"rows": 0, "fq": 'capacity:"public"', "facet.field": ["vocab_jc_topic"], "facet.limit": len(TOPICS)})
+    except SearchError:
+        return []
+    counts = (found.get("facets") or {}).get("vocab_jc_topic") or {}
+    tiles = [{"code": code, "label": _words(TOPICS[code]), "count": count,
+              "url": toolkit.url_for("dataset.search", vocab_jc_topic=code)}
+             for code, count in counts.items() if code in TOPICS and count]
+    return sorted(tiles, key=lambda tile: (-tile["count"], tile["label"]))
+
+
 def jc_number(value):
     """A count with thin-space thousands, the way every language of the Portal reads it."""
     try:
@@ -1880,13 +2020,14 @@ def jc_number(value):
         return ""
 
 
-def jc_rows(value):
-    """A row count with its word in the page's language: "1 row", "3 riadky", "5 řádků"."""
+def jc_rows(value, key="rows"):
+    """A row count with its word in the page's language: "1 row", "3 riadky", "5 řádků"; `key`
+    names another counted word, such as "datasets_n"."""
     number = jc_number(value)
     if not number:
         return ""
     count = abs(int(value))
-    words = STRINGS["rows"].get(_language()) or STRINGS["rows"]["en"]
+    words = STRINGS[key].get(_language()) or STRINGS[key]["en"]
     form = 0 if count == 1 else 1 if 2 <= count <= 4 else 2
     return "%s %s" % (number, words[form])
 
@@ -2814,6 +2955,8 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_number": jc_number,
             "jc_rows": jc_rows,
             "jc_formats": jc_formats,
+            "jc_use_chips": jc_use_chips,
+            "jc_topic_tiles": jc_topic_tiles,
             "jc_schema_org": jc_schema_org,
             "jc_recent": jc_recent,
             "jc_portal_url": jc_portal_url,
@@ -2893,13 +3036,28 @@ class JcThemePlugin(plugins.SingletonPlugin):
     def after_dataset_search(self, search_results, search_params):
         for pkg in search_results.get("results") or []:
             jc_clean_dataset(pkg)
-        return search_results
+        return jc_facet_labels(search_results, search_params)
+
+    def before_dataset_index(self, pkg_dict):
+        """The uses and the EU themes as filters of their own (T-5294). `data_dict` is the
+        dataset as CKAN stored it, the index fields beside it are flattened."""
+        try:
+            stored = json.loads(pkg_dict.get("data_dict") or "{}")
+        except ValueError:
+            stored = {}
+        pkg_dict["vocab_jc_use"] = jc_uses(stored)
+        pkg_dict["vocab_jc_topic"] = jc_topics(stored)
+        return pkg_dict
 
     def dataset_facets(self, facets_dict, package_type):
-        """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence."""
-        names = {"organization": "publisher", "groups": "topic", "tags": "keywords",
-                 "res_format": "format", "license_id": "licence"}
-        for field, key in names.items():
-            if field in facets_dict:
-                facets_dict[field] = jc_t(key)
-        return facets_dict
+        """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence. Topic
+        is the EU theme and Format what a reader can do with the data (T-5294): CKAN's groups stay
+        empty here and its file formats are the same on every dataset."""
+        names = {"organization": "publisher", "vocab_jc_topic": "topic", "tags": "keywords",
+                 "vocab_jc_use": "format", "license_id": "licence"}
+        swap = {"groups": "vocab_jc_topic", "res_format": "vocab_jc_use"}
+        renamed = type(facets_dict)()
+        for field in facets_dict:
+            field = swap.get(field, field)
+            renamed[field] = jc_t(names[field]) if field in names else facets_dict.get(field)
+        return renamed
