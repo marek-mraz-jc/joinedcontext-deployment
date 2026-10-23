@@ -244,6 +244,14 @@ edge:
           included.custom.audience: cparzbvehzoznbb2nuiyzkeudohmdhsq
           access.token.claim: 'true'
           id.token.claim: 'false'
+      - name: helsinki-statistics-services-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 7qsdid06pjaxmzd44rheqngd7o6cvj8h
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-parking-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper

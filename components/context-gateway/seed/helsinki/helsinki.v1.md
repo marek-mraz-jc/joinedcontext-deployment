@@ -506,7 +506,7 @@ Specialises `Entity`.
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) |  |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `refArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refArea` | The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the city's register holds; a district or the whole city is named by `area` and `districtCode`. |
 | `process` | Property | `string` |  |  | `sdm:process` | The statistics table the value comes from, in the source's words. |
-| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, which `source` links to. |
+| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it. |
 | `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | Which cell of the table the value is: each kept dimension and its code, such as Sukupuoli=ALL;Tiedot=tyottomyysaste. |
 | `calculatedBy` | Property | `string` |  |  | `sdm:calculatedBy` | The organization that computes the value. |
 | `organization` | Property | `string` |  |  | `sdm:organization` | The organization the indicator describes. |
@@ -561,6 +561,7 @@ IRI: `ngsi-ld:Entity`
 
 | Value | Meaning |
 |---|---|
+| `daily` | A new value every day. |
 | `monthly` | A new value every month. |
 | `quarterly` | A new value every quarter. |
 | `yearly` | A new value every year. |

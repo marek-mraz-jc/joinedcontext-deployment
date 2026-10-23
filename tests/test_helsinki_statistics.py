@@ -91,7 +91,10 @@ def unemployment(table):
 
 @requires_docker
 def test_the_register_becomes_one_message_per_table_and_an_empty_register_fails_the_run(table):
-    assert len(table) == 16
+    # 16 sub-district series and 46 breakdown or region tables (the rework of the review).
+    assert len(table) == 62
+    assert len({t["id"] for t in table.values()}) == 62
+    assert {t["depth"] for t in table.values() if "depth" in t} <= {"basicDistrict", "majorDistrict"}
     assert {t["theme"] for t in table.values()} == set(THEMES)
     # Every table names its dimensions and keeps a breakdown the query can send.
     for t in table.values():
@@ -177,6 +180,37 @@ def test_out_of_area_out_of_range_duplicate_and_unknown_sub_district_are_dropped
     assert [e["districtCode"]["value"] for e in linked] == ["0911101080"]
     assert dropped["sub-district not in the register (written without refArea)"] > 0
     assert len(out["entities"]) == len({e["id"] for e in out["entities"]})
+
+
+@requires_docker
+def test_a_dotted_code_is_one_category_and_depth_stops_at_the_basic_districts(table):
+    # Building production by quarter: measure codes "1.1" and "1.2" are categories, not paths.
+    out = decode(table["alu_ratuo_039k"], answer("alu_ratuo_039k"))
+    assert table["alu_ratuo_039k"]["depth"] == "basicDistrict"
+    entities = {e["id"]: e for e in out["entities"]}
+    city = entities[PREFIX + "housing-alu_ratuo_039k-1.1-YHT-raklkm-0910000000"]
+    assert city["name"]["languageMap"]["fi"].startswith("Helsingin rakennustuotanto")
+    assert "1.1 Uudet rakennukset" in city["name"]["languageMap"]["fi"]
+    assert city["dimensionKey"]["value"] == "raktoimpide=1.1;rakluokka=YHT;Tiedot=raklkm"
+    # No sub-district: the sub-district totals are the integrated housing tables.
+    assert {e["divisionLevel"]["value"] for e in entities.values()} == {"city", "majorDistrict", "basicDistrict", "cityPart"}
+    assert "sub-district not in the register (written without refArea)" not in out["dropped"]
+    for entity in out["entities"]:
+        assert open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity) == [], entity["id"]
+        assert open_data.sdm_errors(SDM, entity) == [], entity["id"]
+
+
+@requires_docker
+def test_a_net_migration_keeps_its_sign_and_a_region_table_keeps_the_helsinki_row(table):
+    out = decode(table["alu_vamuu_010w"], answer("alu_vamuu_010w"))
+    net = [e for e in out["entities"] if e["dimensionKey"]["value"].endswith("Tiedot=netmuu")]
+    assert net and any(e["kpiValue"]["value"] < 0 for e in net)
+    assert "negative count or amount" not in out["dropped"]
+    assert {e["districtCode"]["value"] for e in out["entities"]} == {"0910000000"}
+    # A gross flow is still a count: a negative one is dropped and counted.
+    edited = copy.deepcopy(answer("alu_vamuu_010w"))
+    edited["value"][0] = -5
+    assert decode(table["alu_vamuu_010w"], edited)["dropped"]["negative count or amount"] == 1
 
 
 @requires_docker

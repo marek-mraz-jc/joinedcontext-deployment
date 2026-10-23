@@ -1,0 +1,116 @@
+# The mapping of the service-usage pipeline (T-5258): two daily usage counters of city services as
+# Smart Data Model KeyPerformanceIndicator series, city-wide, beside the area statistics.
+#
+# The DataSource's answer is Korkeasaari zoo's visitor API for the current year (months count from
+# 0, days from 1, per the HRI package). Each run writes the newest day that ended before today
+# (Europe/Helsinki) and the newest month that ended; the day still running is never written, so
+# a partial count never becomes history. On 1 January the answer holds no ended day: the zoo part
+# then writes nothing and says so in the log line.
+#
+# The second read is the city's web analytics export (Matomo, datastore.hri.fi), one file per
+# month published on the 1st: the month before the current one, visits and page views per site.
+# Both reads are open (CC BY 4.0), 30 s and 4 MiB each; a failed read fails the run, nothing is
+# deleted (output upsert).
+#
+# Ids: urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:{space}:stat-services-{series}-{key}-0910000000;
+# the theme segment `services` is what the theme's Endpoint Policy selects by idPattern. kpiValue
+# carries the period's last day as observedAt, so the space records one history row per period
+# (record: observed, DM-132).
+#
+# Plausibility: a count that is not a number or is negative is dropped and counted; a zoo day
+# above 30,000 visitors (the zoo's busiest days are about 10,000) is dropped and counted; a site
+# listed twice keeps its first row and counts the duplicate.
+
+pipeline:
+  processors:
+    - try:
+        - mapping: |
+            root = if content().length() > 4194304 { throw("the zoo API answered %v bytes; more than 4194304 is not one year".format(content().length())) } else { { "zoo": this } }
+        - branch:
+            request_map: |
+              # The month before this one, as the export names it (2026-9): the last day of the
+              # previous month is today minus today's day of the month.
+              meta month = (now().ts_unix() - now().ts_format("02", "Europe/Helsinki").number().int64() * 86400).ts_format("2006-1", "Europe/Helsinki")
+              root = ""
+            processors:
+              - http:
+                  url: https://datastore.hri.fi/Helsinki/kanslia/kavijaanalytiikka/matomo-export-${! @month }-sites.json
+                  verb: GET
+                  headers:
+                    Accept: application/json
+                    User-Agent: joinedcontext-helsinki/1.0 (+https://dev.joinedcontext.com)
+                  timeout: 30s
+                  retries: 1
+              - mapping: |
+                  root = if content().length() > 4194304 { throw("datastore.hri.fi answered %v bytes; more than 4194304 is not one month of site analytics".format(content().length())) } else { { "month": @month, "sites": this } }
+            result_map: root.web = this
+        - mapping: |
+            let today = now().ts_format("2006-01-02", "Europe/Helsinki")
+            let this_month = now().ts_format("2006-01", "Europe/Helsinki")
+            let zoo = this.zoo
+            let year = $zoo.year.or(0).number().int64().catch(0)
+            # Every day of the answer as a dated row; a month's own total is the zoo's sum.
+            let days = $zoo.months.or([]).map_each(m -> m.days.or([]).map_each(d -> {
+              "date": "%04d-%02d-%02d".format($year, m.month.number().int64() + 1, d.day.number().int64()),
+              "value": d.total
+            })).flatten().filter(d -> d.date < $today)
+            let months = $zoo.months.or([]).map_each(m -> {
+              "month": "%04d-%02d".format($year, m.month.number().int64() + 1),
+              "value": m.total
+            }).filter(m -> m.month < $this_month)
+            let day = if $days.length() == 0 { null } else { $days.sort_by(d -> d.date).index(-1) }
+            let month = if $months.length() == 0 { null } else { $months.sort_by(m -> m.month).index(-1) }
+            let month_end = if $month == null { "" } else { ((("%v-01".format($month.month).ts_parse("2006-01-02").ts_unix() + 32 * 86400).ts_format("2006-01", "UTC") + "-01").ts_parse("2006-01-02").ts_unix() - 86400).ts_format("2006-01-02", "UTC") }
+            let zoo_rows = [
+              if $day == null { null } else { { "series": "zoo-visitors-day", "key": "total", "value": $day.value, "from": $day.date, "to": $day.date, "every": "daily", "max": 30000,
+                "name": "Korkeasaaren eläintarhan kävijät päivässä", "source": "https://korkeasaarenkavijat.onrender.com/api/data/year", "by": "Korkeasaari Zoo" } },
+              if $month == null { null } else { { "series": "zoo-visitors-month", "key": "total", "value": $month.value, "from": "%v-01".format($month.month), "to": $month_end, "every": "monthly", "max": 900000,
+                "name": "Korkeasaaren eläintarhan kävijät kuukaudessa", "source": "https://korkeasaarenkavijat.onrender.com/api/data/year", "by": "Korkeasaari Zoo" } }
+            ].filter(r -> r != null)
+            let web = this.web
+            let web_from = "%v-01".format($web.month.ts_parse("2006-1").ts_format("2006-01"))
+            let web_to = ((($web_from.ts_parse("2006-01-02").ts_unix() + 32 * 86400).ts_format("2006-01", "UTC") + "-01").ts_parse("2006-01-02").ts_unix() - 86400).ts_format("2006-01-02", "UTC")
+            let sites = $web.sites.or([]).filter(s -> s.idsite != null)
+            let web_rows = $sites.map_each(s -> [
+              { "series": "web-visits", "key": s.idsite.string(), "value": s.nb_visits, "from": $web_from, "to": $web_to, "every": "monthly", "max": null,
+                "name": "%v: käynnit kuukaudessa".format(s.label.or(s.idsite.string())), "site": s.main_url.or(""), "source": "https://hri.fi/data/fi/dataset/helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka", "by": "City of Helsinki, Digitalisation unit" },
+              { "series": "web-pageviews", "key": s.idsite.string(), "value": s.nb_pageviews, "from": $web_from, "to": $web_to, "every": "monthly", "max": null,
+                "name": "%v: sivunäytöt kuukaudessa".format(s.label.or(s.idsite.string())), "site": s.main_url.or(""), "source": "https://hri.fi/data/fi/dataset/helsingin-kaupungin-verkkosivustojen-kavijaanalytiikka", "by": "City of Helsinki, Digitalisation unit" }
+            ]).flatten()
+            let rows = ($zoo_rows.concat($web_rows)).map_each(r -> r.merge({
+              "id": "urn:ngsi-ld:%v:%v:%v:stat-services-%v-%v-0910000000".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.series, r.key.re_replace_all("[^A-Za-z0-9._]", "_")),
+              "reason": if r.value == null { "no value" } else if r.value.type() != "number" { "not a number" } else if r.value < 0 { "negative count" } else if r.max != null && r.value > r.max { "more than %v a period".format(r.max) } else { "" }
+            }))
+            let kept = $rows.filter(r -> r.reason == "")
+            let unique = $kept.unique(r -> r.id)
+            let reasons = $rows.filter(r -> r.reason != "").map_each(r -> r.reason)
+            let dropped = $reasons.unique().map_each(x -> { x: $reasons.filter(y -> y == x).length() }).squash()
+            let dropped = if $kept.length() > $unique.length() { $dropped.merge({ "duplicate id": $kept.length() - $unique.length() }) } else { $dropped }
+            let dropped = if $day == null { $dropped.merge({ "zoo: no ended day in the answer": 1 }) } else { $dropped }
+            root = if $sites.length() == 0 { throw("the web analytics export of %v lists no site".format($web.month)) } else if $year == 0 { throw("the zoo API answered no year") } else { {
+              "period": { "zoo": if $day == null { "" } else { $day.date }, "web": $web.month },
+              "dropped": $dropped,
+              "entities": $unique.map_each(r -> {
+                "id": r.id,
+                "type": "KeyPerformanceIndicator",
+                "name": { "type": "LanguageProperty", "languageMap": { "fi": r.name } },
+                "description": { "type": "LanguageProperty", "languageMap": { "fi": if r.series.has_prefix("zoo") { "Korkeasaaren eläintarhan kävijämäärät" } else { "Helsingin kaupungin verkkosivustojen kävijäanalytiikka" } } },
+                "kpiValue": { "type": "Property", "value": r.value, "unitCode": "C62", "observedAt": "%vT00:00:00Z".format(r.to) },
+                "calculationPeriod": { "type": "Property", "value": { "from": r.from, "to": r.to } },
+                "calculationFrequency": { "type": "Property", "value": r.every },
+                "calculatedBy": { "type": "Property", "value": r.by },
+                "organization": { "type": "Property", "value": "City of Helsinki" },
+                "process": { "type": "Property", "value": if r.series.has_prefix("zoo") { "Korkeasaari visitor count" } else { "Matomo web analytics, %v".format(r.site) } },
+                "area": { "type": "Property", "value": "Helsinki" },
+                "districtCode": { "type": "Property", "value": "0910000000" },
+                "divisionLevel": { "type": "Property", "value": "city" },
+                "statisticsTable": { "type": "Property", "value": r.series },
+                "dimensionKey": { "type": "Property", "value": "%v=%v".format(if r.series.has_prefix("zoo") { "count" } else { "idsite" }, r.key) },
+                "dataProvider": { "type": "Property", "value": "%v, CC BY 4.0".format(r.by) },
+                "source": { "type": "Property", "value": r.source }
+              })
+            } }
+        - log:
+            level: INFO
+            message: 'service usage zoo ${! this.period.zoo } web ${! this.period.web }: ${! this.entities.length() } written, dropped ${! this.dropped.format_json(no_indent: true) }'
+        - mapping: root = this.entities

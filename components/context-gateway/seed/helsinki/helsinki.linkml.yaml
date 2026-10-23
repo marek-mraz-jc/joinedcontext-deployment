@@ -868,8 +868,8 @@ slots:
     annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
   statisticsTable:
     slot_uri: jc:statisticsTable
-    description: The source's own table code, such as alu_vamuu_010h, which `source` links to.
-    pattern: ^[a-z]+_[a-z]+_[0-9]{3}[a-z]$
+    description: The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it.
+    pattern: ^([a-z]+_[a-z]+_[0-9]{3}[a-z]|[a-z]+(-[a-z]+)+)$
     annotations: { ngsi_ld_kind: Property }
   dimensionKey:
     slot_uri: jc:dimensionKey
@@ -1669,6 +1669,7 @@ classes:
 enums:
   CalculationFrequency:
     permissible_values:
+      daily: { description: A new value every day. }
       monthly: { description: A new value every month. }
       quarterly: { description: A new value every quarter. }
       yearly: { description: A new value every year. }

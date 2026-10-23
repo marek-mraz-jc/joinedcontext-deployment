@@ -16,7 +16,7 @@
 #
 # Plausibility (owner 2026-10-22): a cell is dropped and counted by reason when it is empty, of an
 # area outside Helsinki or the source's "unknown area", a percentage outside 0..100, a negative
-# count or amount, or a second cell with the same id; a sub-district the register lacks is written
+# count or amount (a net migration, surplus or correction may be negative), or a second cell with the same id; a sub-district the register lacks is written
 # without refArea and counted. A table whose newest period is older than its maxAgeDays, that
 # answers nothing, or that answers no usable cell fails its message (the run is failed, nothing
 # is deleted); the counts go to the runner log, one line per table.
@@ -28,6 +28,9 @@ pipeline:
             let register = this.features.or([]).map_each(f -> f.properties.kokotunnus.or("").string()).filter(c -> c.re_match("^091[1-8][0-9]{6}$"))
             # Keep codes: "*" for every value of the dimension, else the listed codes. The area and
             # time dimensions are named apart; the query asks every 091* area and the newest period.
+            # The first 16 tables are the sub-district series; the rest add one breakdown to a theme
+            # or are the Helsinki row of a region table, and "depth" stops a by-area breakdown at the
+            # basic or major districts.
             let tables = [
               {"id": "alu_vaerak_004r", "theme": "population", "path": "vrm/vaerak/alu_vaerak_004r.px", "area": "Osa-alue", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["ALL"], "Tiedot": ["*"]}},
               {"id": "alu_vaerak_004p", "theme": "population", "path": "vrm/vaerak/alu_vaerak_004p.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Äidinkieli": ["1", "2", "3"], "Ikä": ["ALL"], "Tiedot": ["*"]}},
@@ -45,7 +48,53 @@ pipeline:
               {"id": "alu_tyov_004d", "theme": "employment", "path": "tyo/tyov/alu_tyov_004d.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
               {"id": "alu_astul_006f", "theme": "income", "path": "tul/astul/alu_astul_006f.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Elinvaihe": ["ALL"], "Tiedot": ["Sum_lkm", "Mean_svatv", "Median_svatv", "Median_kturaha", "Median_ktukyk", "K_sum_lkm"]}},
               {"id": "alu_vatul_011r", "theme": "income", "path": "tul/vatul/alu_vatul_011r.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Tiedot": ["valtve_ka"]}},
-              {"id": "alu_kou_005n", "theme": "education", "path": "kou/alu_kou_005n.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Koulutusaste": ["*"], "Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}}
+              {"id": "alu_kou_005n", "theme": "education", "path": "kou/alu_kou_005n.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Koulutusaste": ["*"], "Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_ennak_006r", "theme": "population", "path": "vrm/ennak/alu_ennak_006r.px", "area": "Alue", "areas": ["91"], "time": "Vuosineljännes", "every": "quarterly", "keep": {"Tiedot": ["*"]}},
+              {"id": "alu_ennak_006u", "theme": "population", "path": "vrm/ennak/alu_ennak_006u.px", "area": "Alue", "time": "Vuosineljännes", "every": "quarterly", "keep": {"Muuttosuunta": ["*"], "Kansalaisuus": ["Y"], "Lähtö- tai kohdealue": ["YHT"], "Tiedot": ["*"]}},
+              {"id": "alu_mutau_009o", "theme": "population", "path": "vrm/mutau/alu_mutau_009o.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Sukupuoli": ["*"], "Koulutusaste": ["all"], "Tiedot": ["*"]}},
+              {"id": "alu_mutau_009p", "theme": "population", "path": "vrm/mutau/alu_mutau_009p.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Sukupuoli": ["*"], "Koulutusaste": ["all"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_005y", "theme": "population", "path": "vrm/perh/alu_perh_005y.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Perhetyyppi": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_007h", "theme": "population", "path": "vrm/perh/alu_perh_007h.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Lasten lukumäärä": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_009k", "theme": "population", "path": "vrm/perh/alu_perh_009k.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Lasten määrä perheessä": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_009x", "theme": "population", "path": "vrm/perh/alu_perh_009x.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Perhetyyppi": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_009z", "theme": "population", "path": "vrm/perh/alu_perh_009z.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Lapsen ikä": ["*"], "Perhetyyppi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_perh_010a", "theme": "population", "path": "vrm/perh/alu_perh_010a.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Tiedot": ["*"]}},
+              {"id": "alu_vaerak_004q", "theme": "population", "path": "vrm/vaerak/alu_vaerak_004q.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Äidinkieli": ["ALL"], "Sukupuoli": ["*"], "Ikä": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_vaerak_004s", "theme": "population", "path": "vrm/vaerak/alu_vaerak_004s.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Äidinkieli": ["*"], "Sukupuoli": ["ALL"], "Ikä": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_vaerak_004t", "theme": "population", "path": "vrm/vaerak/alu_vaerak_004t.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010g", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010g.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "majorDistrict", "keep": {"Ikä": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010r", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010r.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Lähtö- tai kohdealue": ["ALL"], "Ikä": ["*"], "Äidinkieli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010t", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010t.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Äidin ikä": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010u", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010u.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Sukupuoli": ["*"], "Ikä": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010v", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010v.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010w", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010w.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Lähtö- tai kohdealue": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010x", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010x.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["99V"], "Tiedot": ["*"]}},
+              {"id": "alu_vamuu_010z", "theme": "population", "path": "vrm/vamuu/alu_vamuu_010z.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["*"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_asas_005d", "theme": "housing", "path": "asu/asas/alu_asas_005d.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Asuntokunnan koko": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_asas_005e", "theme": "housing", "path": "asu/asas/alu_asas_005e.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Asuntokunnan vanhimman ikä": ["*"], "Henkilöluku": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_asas_005f", "theme": "housing", "path": "asu/asas/alu_asas_005f.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Asuntokunnan koko": ["*"], "Talotyyppi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_asas_005g", "theme": "housing", "path": "asu/asas/alu_asas_005g.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Tiedot": ["*"]}},
+              {"id": "alu_asas_005h", "theme": "housing", "path": "asu/asas/alu_asas_005h.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Henkilöluku": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_askan_005k", "theme": "housing", "path": "asu/askan/alu_askan_005k.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Talotyyppi": ["*"], "Valmistumisvuosi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_askan_005l", "theme": "housing", "path": "asu/askan/alu_askan_005l.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Talotyyppi": ["*"], "Valmistumisvuosi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_askan_005q", "theme": "housing", "path": "asu/askan/alu_askan_005q.px", "area": "Osa-alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Käytössäolotilanne": ["*"], "Talotyyppi": ["ALL"], "Hallintaperuste": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_askan_005s", "theme": "housing", "path": "asu/askan/alu_askan_005s.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Hallintaperuste": ["*"], "Huoneistotyyppi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_astuo_039h", "theme": "housing", "path": "rak/astuo/alu_astuo_039h.px", "area": "alue", "time": "vuonel", "every": "quarterly", "depth": "majorDistrict", "keep": {"raktoimpide": ["*"], "rakluokka": ["0000"], "huonlkm": ["0"], "Tiedot": ["*"]}},
+              {"id": "alu_astuo_039j", "theme": "housing", "path": "rak/astuo/alu_astuo_039j.px", "area": "Alue", "time": "Vuosineljännes", "every": "quarterly", "depth": "basicDistrict", "keep": {"Rakennustoimenpide": ["*"], "Rakennusluokka": ["0000"], "Huoneiden lukumäärä": ["0"], "Rahoitus ja hallintaperuste": ["10yhteen"], "Rakennuttaja": ["0"], "Tiedot": ["*"]}},
+              {"id": "alu_rakan_005v", "theme": "housing", "path": "asu/rakan/alu_rakan_005v.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Rakennuksen käyttötarkoitus": ["*"], "Valmistumisvuosi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_rakan_005w", "theme": "housing", "path": "asu/rakan/alu_rakan_005w.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Rakennuksen käyttötarkoitus": ["*"], "Rakennuksen lämmitystapa": ["ALL"], "Rakennuksen lämmitysaine": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_rakan_005x", "theme": "housing", "path": "asu/rakan/alu_rakan_005x.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Rakennuksen käyttötarkoitus": ["ALL"], "Valmistumisvuosi": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_ratuo_039k", "theme": "housing", "path": "rak/ratuo/alu_ratuo_039k.px", "area": "alue", "time": "vuonel", "every": "quarterly", "depth": "basicDistrict", "keep": {"raktoimpide": ["*"], "rakluokka": ["YHT"], "Tiedot": ["*"]}},
+              {"id": "alu_ratuo_039l", "theme": "housing", "path": "rak/ratuo/alu_ratuo_039l.px", "area": "alue", "time": "vuonel", "every": "quarterly", "depth": "basicDistrict", "keep": {"raktoimpide": ["*"], "rakluokka": ["YHT"], "Tiedot": ["*"]}},
+              {"id": "alu_ratuo_039m", "theme": "housing", "path": "rak/ratuo/alu_ratuo_039m.px", "area": "alue", "time": "vuonel", "every": "quarterly", "depth": "basicDistrict", "keep": {"raktoimpide": ["*"], "rakluokka": ["YHT"], "Tiedot": ["*"]}},
+              {"id": "alu_ratuo_039n", "theme": "housing", "path": "rak/ratuo/alu_ratuo_039n.px", "area": "alue", "time": "vuonel", "every": "quarterly", "depth": "basicDistrict", "keep": {"raktoimpide": ["*"], "rakluokka": ["YHT"], "Tiedot": ["*"]}},
+              {"id": "alu_tyom_003s", "theme": "employment", "path": "tyo/tyom/alu_tyom_003s.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "basicDistrict", "keep": {"Pääasiallinen toiminta": ["*"], "Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_tyom_003v", "theme": "employment", "path": "tyo/tyom/alu_tyom_003v.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Pääasiallinen toiminta": ["*"], "Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_tyom_003x", "theme": "employment", "path": "tyo/tyom/alu_tyom_003x.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Pääasiallinen toiminta": ["*"], "Koulutusaste": ["ALL"], "Kieli": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_tyop_004a", "theme": "employment", "path": "tyo/tyop/alu_tyop_004a.px", "area": "Työpaikan alue", "time": "Vuosi", "every": "yearly", "keep": {"Toimiala": ["*"], "Tiedot": ["*"]}},
+              {"id": "alu_tyov_004f", "theme": "employment", "path": "tyo/tyov/alu_tyov_004f.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Ikä": ["*"], "Sukupuoli": ["ALL"], "Pääasiallinen toiminta": ["lkm_tytyov"]}},
+              {"id": "alu_tyov_004g", "theme": "employment", "path": "tyo/tyov/alu_tyov_004g.px", "area": "Kunta", "time": "Vuosi", "every": "yearly", "keep": {"Toimiala": ["*"], "Ikä": ["ALL"], "Sukupuoli": ["ALL"], "Tiedot": ["*"]}},
+              {"id": "alu_astul_011y", "theme": "income", "path": "tul/astul/alu_astul_011y.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "depth": "majorDistrict", "keep": {"Kvintiilien määrittelyperuste": ["*"], "Tuloluokka": ["ALL"], "Tiedot": ["*"]}}
             ]
             root = if $register.length() == 0 { throw("the sub-district register (Piirijako_osaalue) listed no sub-district") } else { $tables.map_each(t -> { "table": t, "register": $register }) }
         - unarchive: { format: json_array }
@@ -74,11 +123,19 @@ pipeline:
                   root = if content().length() > 4194304 { throw("stat.hel.fi answered %v bytes; more than 4194304 is not one period of one table".format(content().length())) } else { this }
             result_map: root.answer = this
         - mapping: |
-            # The level of a Helsinki area code: 091 or 0910000000 the city, 091{s}000000 a major
+            # The level of a Helsinki area code: 091, 91 or 0910000000 the city, 091{s}000000 a major
             # district, 091{s}{ppp}000 a basic district, 091{s}{ppp}{ooo} a sub-district, 09199{x}0000
             # the inner city or the suburbs; anything else (another town, 0919999999 "Muut") none.
+            # A code or dimension name as one path segment: get() reads "1.1" (a building measure) or
+            # "(0-17 v.)" as a path, so "~" and "." are escaped as ~0 and ~1.
+            map key {
+              root = this.string().replace_all("~", "~0").replace_all(".", "~1")
+            }
+            map depth_rank {
+              root = if this == "subDistrict" { 3 } else if this == "basicDistrict" { 2 } else if this == "majorDistrict" || this == "cityPart" { 1 } else { 0 }
+            }
             map area_level {
-              root = if this == "091" || this == "0910000000" { "city" } else if this.re_match("^091[1-8]000000$") { "majorDistrict" } else if this.re_match("^091[1-8][0-9]{3}000$") { "basicDistrict" } else if this.re_match("^091[1-8][0-9]{6}$") { "subDistrict" } else if this.re_match("^09199[0-8]0000$") { "cityPart" } else { "" }
+              root = if this == "091" || this == "91" || this == "0910000000" { "city" } else if this.re_match("^091[1-8]000000$") { "majorDistrict" } else if this.re_match("^091[1-8][0-9]{3}000$") { "basicDistrict" } else if this.re_match("^091[1-8][0-9]{6}$") { "subDistrict" } else if this.re_match("^09199[0-8]0000$") { "cityPart" } else { "" }
             }
             let t = this.table
             let ds = this.answer
@@ -88,12 +145,12 @@ pipeline:
             let n = $ids.length()
             # JSON-stat 2.0 by the index and never by the order (T-2304): the position of a code is
             # dimension.{id}.category.index, and `value` is row-major over `size`.
-            let codes = $ids.map_each(d -> $ds.dimension.get(d).category.index.key_values().sort_by(kv -> kv.value).map_each(kv -> kv.key))
+            let codes = $ids.map_each(d -> $ds.dimension.get(d.apply("key")).category.index.key_values().sort_by(kv -> kv.value).map_each(kv -> kv.key))
             let strides = range(0, $n, 1).map_each(k -> if k + 1 >= $n { 1 } else { $sizes.slice(k + 1, $n).fold(1, x -> x.tally * x.value) })
             let breakdown = $ids.filter(d -> d != $t.area && d != $t.time)
-            let named = $breakdown.filter(d -> d == "Tiedot" || $ds.dimension.get(d).category.index.keys().length() > 1)
+            let named = $breakdown.filter(d -> d == "Tiedot" || $ds.dimension.get(d.apply("key")).category.index.keys().length() > 1)
             let cells = range(0, $ds.value.or([]).length(), 1).map_each(p -> { "at": range(0, $n, 1).map_each(k -> { $ids.index(k): $codes.index(k).index(((p / $strides.index(k)).floor().int64()) % $sizes.index(k)) }).squash(), "value": $ds.value.index(p) })
-            let period = if $cells.length() == 0 { "" } else { $cells.index(0).at.get($t.time).string() }
+            let period = if $cells.length() == 0 { "" } else { $cells.index(0).at.get($t.time.apply("key")).string() }
             # The period's first and last day: a year (2025), a quarter (2026Q3) or a month (2026M08).
             let y = $period.slice(0, 4).number().int64().catch(0)
             let q = if $period.re_match("^[0-9]{4}Q[1-4]$") { $period.slice(5).number().int64() } else { 0 }
@@ -108,18 +165,22 @@ pipeline:
             let max_age = $t.maxAgeDays.or(if $t.every == "monthly" { 92 } else if $t.every == "quarterly" { 276 } else { 1096 })
             let updated = $ds.updated.or("").ts_parse("2006-01-02T15:04:05Z07:00").ts_format("2006-01-02T15:04:05Z", "UTC").catch(null)
             let rows = $cells.map_each(c -> c.merge({
-              "areaCode": c.at.get($t.area).string(),
-              "level": c.at.get($t.area).string().apply("area_level"),
-              "measure": $breakdown.map_each(d -> $ds.dimension.get(d).category.label.get(c.at.get(d))).join(", "),
+              "areaCode": c.at.get($t.area.apply("key")).string(),
+              "level": c.at.get($t.area.apply("key")).string().apply("area_level"),
+              "measure": $breakdown.map_each(d -> $ds.dimension.get(d.apply("key")).category.label.get(c.at.get(d.apply("key")).apply("key"))).join(", "),
               # The name leaves out a breakdown of one value (a total such as Yhteensä) but the measure.
-              "label": $named.map_each(d -> $ds.dimension.get(d).category.label.get(c.at.get(d))).join(", "),
-              "key": $breakdown.map_each(d -> c.at.get(d).string().re_replace_all("[^A-Za-z0-9._]", "_")).join("-")
+              "label": $named.map_each(d -> $ds.dimension.get(d.apply("key")).category.label.get(c.at.get(d.apply("key")).apply("key"))).join(", "),
+              "key": $breakdown.map_each(d -> c.at.get(d.apply("key")).string().re_replace_all("[^A-Za-z0-9._]", "_")).join("-")
             })).map_each(c -> c.merge({
               "unit": if c.measure.contains("%") { "P1" } else if c.measure.contains("euroa") { "EUR" } else if c.measure.contains("m2") { "MTK" } else { "C62" },
               "id": "urn:ngsi-ld:%v:%v:%v:stat-%v-%v-%v-%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), $t.theme, $t.id, c.key, c.areaCode)
             })).map_each(c -> c.merge({
-              "reason": if c.value == null { "no value" } else if c.level == "" { "not a Helsinki area" } else if c.value.type() != "number" { "not a number" } else if c.unit == "P1" && (c.value < 0 || c.value > 100) { "percentage outside 0..100" } else if c.value < 0 { "negative count or amount" } else { "" }
+              "reason": if c.value == null { "no value" } else if c.level == "" { "not a Helsinki area" } else if c.value.type() != "number" { "not a number" } else if c.unit == "P1" && (c.value < 0 || c.value > 100) { "percentage outside 0..100" } else if c.value < 0 && !c.measure.lowercase().re_match("netto|korjaus|enemmyys|lisäys") { "negative count or amount" } else { "" }
             }))
+            # A breakdown table may stop at a coarser level ("depth": majorDistrict or basicDistrict):
+            # its sub-district totals are the integrated tables, and its breakdown by every sub-district
+            # would multiply the indicators by about 150. Cells below the depth are out of scope, not dropped.
+            let rows = if $t.depth == null { $rows } else { $rows.filter(c -> c.level.apply("depth_rank") <= $t.depth.apply("depth_rank")) }
             let kept = $rows.filter(c -> c.reason == "")
             let unique = $kept.unique(c -> c.id)
             let reasons = $rows.filter(c -> c.reason != "").map_each(c -> c.reason)
@@ -136,7 +197,7 @@ pipeline:
               "entities": $unique.map_each(c -> {
                 "id": c.id,
                 "type": "KeyPerformanceIndicator",
-                "name": { "type": "LanguageProperty", "languageMap": { "fi": "%v: %v – %v".format($title, c.label, $ds.dimension.get($t.area).category.label.get(c.areaCode).or(c.areaCode).re_replace_all("^091( [0-9]+)? ", "")) } },
+                "name": { "type": "LanguageProperty", "languageMap": { "fi": "%v: %v – %v".format($title, c.label, $ds.dimension.get($t.area.apply("key")).category.label.get(c.areaCode.apply("key")).or(c.areaCode).re_replace_all("^091( [0-9]+)? ", "")) } },
                 "description": { "type": "LanguageProperty", "languageMap": { "fi": $ds.label.or($t.id).string() } },
                 "kpiValue": { "type": "Property", "value": c.value, "unitCode": c.unit, "observedAt": $observed },
                 "calculationPeriod": { "type": "Property", "value": { "from": $from, "to": $to } },
@@ -144,12 +205,12 @@ pipeline:
                 "calculatedBy": { "type": "Property", "value": "City of Helsinki, Urban Research and Statistics" },
                 "organization": { "type": "Property", "value": "City of Helsinki" },
                 "process": { "type": "Property", "value": $ds.label.or($t.id).string() },
-                "area": { "type": "Property", "value": $ds.dimension.get($t.area).category.label.get(c.areaCode).or(c.areaCode).re_replace_all("^091( [0-9]+)? ", "") },
-                "districtCode": { "type": "Property", "value": if c.areaCode == "091" { "0910000000" } else { c.areaCode } },
+                "area": { "type": "Property", "value": $ds.dimension.get($t.area.apply("key")).category.label.get(c.areaCode.apply("key")).or(c.areaCode).re_replace_all("^091( [0-9]+)? ", "") },
+                "districtCode": { "type": "Property", "value": if c.areaCode == "091" || c.areaCode == "91" { "0910000000" } else { c.areaCode } },
                 "divisionLevel": { "type": "Property", "value": c.level },
                 "refArea": if c.level == "subDistrict" && $register.contains(c.areaCode) { { "type": "Relationship", "object": "urn:ngsi-ld:%v:%v:%v:subdistrict-%v".format("AdministrativeArea", env("JC_ORG_DOMAIN"), env("JC_SPACE"), c.areaCode) } } else { null },
                 "statisticsTable": { "type": "Property", "value": $t.id },
-                "dimensionKey": { "type": "Property", "value": $breakdown.map_each(d -> "%v=%v".format(d, c.at.get(d))).join(";") },
+                "dimensionKey": { "type": "Property", "value": $breakdown.map_each(d -> "%v=%v".format(d, c.at.get(d.apply("key")))).join(";") },
                 "updatedAt": if $updated == null { null } else { { "type": "Property", "value": $updated } },
                 "dataProvider": { "type": "Property", "value": "City of Helsinki, Urban Research and Statistics (Aluesarjat), CC BY 4.0" },
                 "source": { "type": "Property", "value": $source }
