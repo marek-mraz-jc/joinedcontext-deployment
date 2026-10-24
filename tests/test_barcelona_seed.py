@@ -18,6 +18,7 @@ BARCELONA = SEED / "barcelona"
 TYPES = {
     "AirQualityObserved",
     "WeatherObserved",
+    "WeatherForecast",
     "PhreaticObserved",
     "TrafficFlowObserved",
     "OnStreetParking",
@@ -27,6 +28,8 @@ TYPES = {
     "AdministrativeArea",
     "CityWork",
     "PedestrianCrossing",
+    "BikeLane",
+    "RoadAccident",
 }
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 

@@ -25,5 +25,17 @@ of the three stations in the city (`WeatherObserved`, Endpoint `weather`), the p
 `groundwater` the city's well readings (`PhreaticObserved`, one per well read in the last five
 years, Endpoint `groundwater`).
 
+T-5413 adds the pipeline `dog-areas`: the city's fenced dog areas (Open Data BCN
+arees-esbarjo-gossos-bcn, about twice a year), read weekly as `PointOfInterest` with the category
+`animals-plants, dog-area` and the id prefix `dog-area-`, published as the Endpoint `dog-areas`,
+whose Policy reads them by that prefix. The pipeline `local-trees` reads the 208 trees of local interest
+(arbres-interes-local) from the DataStore of the register the same way, with the category
+`environment, local-interest-tree` and the prefix `local-tree-` (Endpoint `local-trees`).
+
+The pipeline `weather-forecast` reads Meteocat's forecast for the comarca of Barcelonès from Open
+Data BCN's XML file (prediccio-meteorologica-del-barcelones) every half hour, one `WeatherForecast`
+per day ahead (`barcelones-day-1`, `-day-2`) with its issue time, validity, extremes and sky,
+replacing the type's entities on each good run (Endpoint `weather-forecast`).
+
 Regenerate the model's artifacts after editing its LinkML as `../zilina/README.md` shows, with
 `m=barcelona`.
