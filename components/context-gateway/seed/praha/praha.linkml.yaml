@@ -1230,7 +1230,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Druh zeleně, en: Kind of green area }
+        value:
+          sk: Druh zelene
+          cs: Druh zeleně
+          en: Kind of green area
+          de: Art der Grünfläche
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
   vegetationType:
     slot_uri: jc:vegetationType
@@ -1238,7 +1243,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Vegetační prvek, en: Vegetation element }
+        value:
+          sk: Vegetačný prvok
+          cs: Vegetační prvek
+          en: Vegetation element
+          de: Vegetationselement
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
   treeCategory:
     slot_uri: jc:treeCategory
@@ -1246,7 +1256,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Kategorie dřeviny, en: Tree category }
+        value:
+          sk: Kategória dreviny
+          cs: Kategorie dřeviny
+          en: Tree category
+          de: Gehölzkategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
   careRegime:
     slot_uri: jc:careRegime
@@ -1254,7 +1269,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Režim péče, en: Care regime }
+        value:
+          sk: Režim starostlivosti
+          cs: Režim péče
+          en: Care regime
+          de: Pflegeregime
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
   areaServed:
     slot_uri: sdm:areaServed
@@ -1264,7 +1284,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Správce, en: Manager }
+        value:
+          sk: Správca
+          cs: Správce
+          en: Manager
+          de: Verwalter
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
 
