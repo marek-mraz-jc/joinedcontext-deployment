@@ -20,7 +20,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Názov, en: Name }
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: cs de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   dataProvider:
@@ -29,7 +34,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Poskytovateľ údajov, en: Data provider }
+        value:
+          sk: Poskytovateľ údajov
+          cs: Poskytovatel dat
+          en: Data provider
+          de: Datenanbieter
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   source:
@@ -39,7 +49,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Zdroj, en: Source }
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   availableSpotNumber:
@@ -50,7 +65,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Voľné miesta, en: Free spaces }
+        value:
+          sk: Voľné miesta
+          cs: Volná místa
+          en: Free spaces
+          de: Freie Stellplätze
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   totalSpotNumber:
@@ -61,7 +81,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Miesta spolu, en: Spaces in total }
+        value:
+          sk: Miesta spolu
+          cs: Počet míst
+          en: Spaces in total
+          de: Stellplätze gesamt
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   occupiedSpotNumber:
@@ -72,7 +97,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Obsadené miesta, en: Taken spaces }
+        value:
+          sk: Obsadené miesta
+          cs: Obsazená místa
+          en: Taken spaces
+          de: Belegte Stellplätze
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   vehicleType:
@@ -81,7 +111,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Druh vozidla, en: Vehicle type }
+        value:
+          sk: Druh vozidla
+          cs: Typ vozidla
+          en: Vehicle type
+          de: Fahrzeugtyp
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   lineName:
@@ -90,7 +125,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Linka, en: Line }
+        value:
+          sk: Linka
+          cs: Linka
+          en: Line
+          de: Linie
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   direction:
@@ -99,7 +139,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Smer, en: Direction }
+        value:
+          sk: Smer
+          cs: Směr
+          en: Direction
+          de: Richtung
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   nextStop:
@@ -108,7 +153,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Nasledujúca zastávka, en: Next stop }
+        value:
+          sk: Nasledujúca zastávka
+          cs: Následující zastávka
+          en: Next stop
+          de: Nächste Haltestelle
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   delay:
@@ -119,7 +169,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Meškanie, en: Delay }
+        value:
+          sk: Meškanie
+          cs: Zpoždění (s)
+          en: Delay
+          de: Verspätung (s)
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   heading:
@@ -132,7 +187,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Smer jazdy, en: Heading }
+        value:
+          sk: Smer jazdy
+          cs: Směr jízdy (°)
+          en: Heading
+          de: Fahrtrichtung (°)
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   occupancy:
@@ -145,7 +205,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Obsadenosť, en: Occupancy }
+        value:
+          sk: Obsadenosť
+          cs: Obsazenost (%)
+          en: Occupancy
+          de: Auslastung (%)
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   dateObserved:
@@ -155,7 +220,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Čas merania, en: Observed }
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed
+          de: Messzeitpunkt
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   intensity:
@@ -167,7 +237,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Počet vozidiel, en: Vehicles }
+        value:
+          sk: Počet vozidiel
+          cs: Intenzita (počet za den)
+          en: Vehicles
+          de: Verkehrsstärke (pro Tag)
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   averageVehicleSpeed:
@@ -179,7 +254,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Priemerná rýchlosť, en: Mean speed }
+        value:
+          sk: Priemerná rýchlosť
+          cs: Průměrná rychlost
+          en: Mean speed
+          de: Durchschnittsgeschwindigkeit
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   dateObservedFrom:
@@ -189,7 +269,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Od, en: From }
+        value:
+          sk: Od
+          cs: Období od
+          en: From
+          de: Zeitraum ab
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   dateObservedTo:
@@ -199,7 +284,12 @@ slots:
     annotations:
       label:
         tag: label
-        value: { sk: Do, en: To }
+        value:
+          sk: Do
+          cs: Období do
+          en: To
+          de: Zeitraum bis
+        annotations: { generated: cs de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
 classes:

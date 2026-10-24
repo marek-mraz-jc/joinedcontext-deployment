@@ -25,41 +25,101 @@ slots:
     description: The work's handle in the repository (`hdluniza/936`), the identifier the Article extension requires.
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Identifikátor
+          cs: Identifikátor
+          en: Identifier
+          de: Kennung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   name:
     slot_uri: schema:name
     description: The work's title, per language, as the repository records it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   workType:
     slot_uri: jc:workType
     description: What the work is, in the repository's words (Article, Conference paper, Thesis, …).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh práce
+          cs: Druh práce
+          en: Type of work
+          de: Art der Arbeit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   yearPublished:
     slot_uri: jc:yearPublished
     description: The year the work was issued.
     range: integer
     minimum_value: 1900
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Rok vydania
+          cs: Rok vydání
+          en: Year published
+          de: Erscheinungsjahr
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   isPartOf:
     slot_uri: schema:isPartOf
     description: >-
       The address of the repository collection the work was deposited in
       (`https://dspace.uniza.sk/handle/hdluniza/556`).
     range: uri
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dataset
+          cs: Datová sada
+          en: Dataset
+          de: Datensatz
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   collectionName:
     slot_uri: jc:collectionName
     description: >-
       The repository collection the work was deposited in, as DREPO names it: a journal issue,
       a proceedings volume or a series (`Krízový manažment - Ročník 24.; Číslo 2/2025`).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kolekcia
+          cs: Kolekce
+          en: Collection
+          de: Sammlung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   publisher:
     slot_uri: schema:publisher
     description: Who issued the work, as the repository records it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Vydavateľ
+          cs: Vydavatel
+          en: Publisher
+          de: Herausgeber
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/publisher
   license:
@@ -69,6 +129,14 @@ slots:
     range: uri
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Licencia
+          cs: Licence
+          en: Licence
+          de: Lizenz
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/license
   url:
@@ -76,12 +144,28 @@ slots:
     description: The work's persistent handle in the repository.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          en: Web page
+          de: Webseite
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
   dataProvider:
     slot_uri: sdm:dataProvider
     description: Who publishes the record, with the credit its licence asks for.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Poskytovateľ údajov
+          cs: Poskytovatel dat
+          en: Data provider
+          de: Datenanbieter
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   source:
@@ -89,6 +173,14 @@ slots:
     description: The repository service the entity was read from.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 

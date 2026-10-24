@@ -49,6 +49,10 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 MAPPING = Path(__file__).resolve().parent / "bb-bbsk-ngsi-ld-mapping.yaml"
 # The Smart Data Models every mapped type is one of, vendored at the commits pins.json names (T-4319).
 SDM = Path(__file__).resolve().parent / "sdm"
+# A slot's label in each language the widget speaks, where the source column is no heading of its own:
+# translated once, reviewed as code, and marked `generated` in the model so the Portal shows it (T-5332).
+LABELS = Path(__file__).resolve().parent / "labels.tsv"
+LANGS = ("sk", "cs", "en", "de")
 EXTENSIONS = SDM / "extensions"
 # Where an extension and the source's own columns name their terms (T-4328's jc:).
 JC = "https://joinedcontext.com/models/"
@@ -731,10 +735,29 @@ def sdm_iris(entries: list[dict]) -> dict[str, tuple[str, str]]:
     return iris
 
 
-def label(texts: dict) -> dict:
+def label(texts: dict, generated: list[str] | None = None) -> dict:
     """A slot's label in each language as a LinkML annotation: an explicit tag and value, since LinkML
-    reads a bare `{sk: ...}` map as the annotation's own fields and refuses the model (T-5167)."""
-    return {"tag": "label", "value": texts}
+    reads a bare `{sk: ...}` map as the annotation's own fields and refuses the model (T-5167). The
+    languages a machine wrote are named in the label's own `generated` annotation (T-5332)."""
+    return {"tag": "label", "value": texts, **({"annotations": {"generated": " ".join(generated)}} if generated else {})}
+
+
+def labels() -> dict[str, dict[str, str]]:
+    """labels.tsv: slot -> its generated text per language; an empty cell keeps the model's own."""
+    rows = (line.split("\t") for line in LABELS.read_text(encoding="utf-8").splitlines() if line and not line.startswith("#"))
+    return {name: {lang: text for lang, text in zip(LANGS, texts) if text} for name, *texts in rows}
+
+
+def labelled(slots: dict[str, dict], table: dict[str, dict[str, str]]) -> None:
+    """Completes each slot's label from the table: a table cell wins over a column heading (headings are
+    cut at 31 characters) and is marked generated; a slot neither names keeps what it has."""
+    for name, slot in slots.items():
+        more = table.get(name, {})
+        if not more:
+            continue
+        own = (slot["annotations"].get("label") or {}).get("value", {})
+        texts = {lang: more.get(lang) or own[lang] for lang in LANGS if more.get(lang) or own.get(lang)}
+        slot["annotations"]["label"] = label(texts, [lang for lang in LANGS if lang in more])
 
 
 def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str, str]) -> str:
@@ -785,6 +808,7 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
                                  "deprecated": "No mapping writes it any more; kept so a replace may remove it.",
                                  "annotations": {"ngsi_ld_kind": "Property"}})
             c["slots"].append(a)
+    labelled(slots, labels())
     for c in classes.values():
         titles = c.pop("titles")
         c["description"] = "One row of " + "; ".join(sorted(set(titles)))[:400] + "."
