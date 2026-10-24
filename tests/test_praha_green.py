@@ -1,6 +1,6 @@
 """Prague's parks, green areas and trees from the IPR Praha geoportal (T-5425, PL-03): the parks and
 nature parks, the basic green areas, trees and tree rows of the shared green register and the tree-row
-layer, one Garden or Tree each, published as the dataset praha-zelen.
+layer, one Garden or Tree each, published as the datasets praha-zelen (Garden) and praha-stromy (Tree).
 
 Each pipeline reads its layer's description from IPR's ArcGIS server, counts the layer, then reads it
 in pages of 2000 records. Here a server on this machine answers those three requests from real
@@ -323,12 +323,14 @@ def test_every_layer_is_seeded_as_a_datasource_a_pipeline_and_a_mapping_on_iprs_
         assert "16777216" in mapping and "1048576" in mapping
 
 
-def test_the_public_read_of_the_dataset_is_narrowed_to_the_green_ids():
-    policy = yaml.safe_load((PRAHA / "praha-policy-public-zelen.yaml").read_text())
-    (information,) = policy["spec"]["information"]
-    patterns = {e["type"]: re.compile(e["idPattern"]) for e in information["entities"]}
-    assert set(patterns) == {"Garden", "Tree"}
+def test_the_public_read_of_each_dataset_is_one_type_narrowed_to_the_green_ids():
+    patterns = {}
+    for name, kind in (("zelen", "Garden"), ("stromy", "Tree")):
+        policy = yaml.safe_load((PRAHA / f"praha-policy-public-{name}.yaml").read_text())
+        (information,) = policy["spec"]["information"]
+        assert [e["type"] for e in information["entities"]] == [kind]
+        patterns[kind] = re.compile(information["entities"][0]["idPattern"])
+        endpoint = yaml.safe_load((PRAHA / f"praha-endpoint-{name}.yaml").read_text())
+        assert endpoint["spec"]["policyRef"] == f"urn:ngsi-ld:Policy:praha.eu:{SPACE}:public-{name}"
     assert patterns["Tree"].match(f"urn:ngsi-ld:Tree:praha.eu:{SPACE}:green-trees-20c64a6b-6c3d-4348-a89f-77e985f95c05")
     assert not patterns["Garden"].match(f"urn:ngsi-ld:Garden:praha.eu:{SPACE}:golemio-gardens-1")
-    endpoint = yaml.safe_load((PRAHA / "praha-endpoint-zelen.yaml").read_text())
-    assert endpoint["spec"]["policyRef"] == f"urn:ngsi-ld:Policy:praha.eu:{SPACE}:public-zelen"

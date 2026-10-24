@@ -386,6 +386,7 @@ PARTS = {
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
     "praha-zelen": "CC_BY_4_0",
+    "praha-stromy": "CC_BY_4_0",
 }
 
 

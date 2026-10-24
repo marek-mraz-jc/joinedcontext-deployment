@@ -3,7 +3,7 @@ kind: Policy
 metadata:
   name: public-zelen
   namespace: praha
-  title: { cs: 'Veřejné čtení: parky, zeleň a stromy z geoportálu IPR' }
+  title: { cs: 'Veřejné čtení: parky a plochy zeleně z geoportálu IPR' }
 spec:
   contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
   assigner: did:web:praha.eu
@@ -26,5 +26,3 @@ spec:
     - entities:
         - type: Garden
           idPattern: ^urn:ngsi-ld:Garden:[a-z0-9.-]+:praha-mesto:green-[a-z-]+-[0-9a-f-]{36}$
-        - type: Tree
-          idPattern: ^urn:ngsi-ld:Tree:[a-z0-9.-]+:praha-mesto:green-[a-z-]+-[0-9a-f-]{36}$
