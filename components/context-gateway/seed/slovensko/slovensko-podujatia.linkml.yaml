@@ -196,8 +196,29 @@ slots:
       upstream_source: https://schema.org/addressCountry
   eventCategory:
     slot_uri: jc:eventCategory
-    description: The kind of event in the source's own words (`koncert`, `výstava`, `šport`).
+    description: >-
+      The kind of event in the source's own words (`koncert`, `výstava`, `šport`), kept so `category` can be
+      traced back to it.
     range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória u zdroja
+          cs: Kategorie u zdroje
+          en: Category at the source
+          de: Kategorie der Quelle
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/eventType
+  category:
+    slot_uri: sdm:category
+    description: >-
+      The event's main category, one code of the platform's list of 15 (docs API/12-event-categories.md),
+      picked by the rule table seeds/event-categories.json from the source's own word, the name or the kind of
+      body that announced it (`music`, `sport`). A list of one, as Smart Data Models' Event writes `category`;
+      absent when no rule names the event.
+    range: EventCategory
+    multivalued: true
     annotations:
       label:
         tag: label
@@ -207,7 +228,38 @@ slots:
           en: Category
           de: Kategorie
       ngsi_ld_kind: Property
-      upstream_source: https://schema.org/eventType
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations/blob/master/Event/schema.json
+  categorySource:
+    slot_uri: jc:categorySource
+    description: How `category` was picked; `rule` is the rule table, the only way today.
+    range: string
+    pattern: ^rule$
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Pôvod kategórie
+          cs: Původ kategorie
+          en: Category picked by
+          de: Kategorie bestimmt durch
+      ngsi_ld_kind: Property
+  audience:
+    slot_uri: sdm:audience
+    description: >-
+      Who the event is for, in Smart Data Models' Event codes; set with the category `children-family`,
+      `children` when the source or the name says children, else `family`.
+    range: EventAudience
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Pre koho
+          cs: Pro koho
+          en: Audience
+          de: Zielgruppe
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations/blob/master/Event/schema.json
   url:
     slot_uri: schema:url
     description: >-
@@ -399,7 +451,10 @@ classes:
       - refPointOfInterest
       - areaServed
       - address
+      - category
       - eventCategory
+      - audience
+      - categorySource
       - description
       - organizer
       - url
@@ -439,9 +494,12 @@ classes:
         rank: 5
         annotations: { summary: true }
       address: { rank: 6 }
-      eventCategory:
+      category:
         rank: 7
         annotations: { summary: true }
+      eventCategory: { rank: 10 }
+      audience: { rank: 11 }
+      categorySource: { rank: 12 }
       organizer:
         rank: 8
         annotations: { summary: true }
@@ -539,3 +597,172 @@ enums:
               cs: Přibližně, střed obce
               en: Approximate, town centre
               de: Ungefähr, Ortsmitte
+  EventCategory:
+    description: The main event categories of the platform, with labels in sk, cs, en and de.
+    permissible_values:
+      sport:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Šport
+              cs: Sport
+              en: Sport
+              de: Sport
+      outdoor-nature:
+        description: Smart Data Models category outdoorActivities, excursion.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Príroda a turistika
+              cs: Příroda a turistika
+              en: Outdoors and nature
+              de: Natur und Wandern
+      film:
+        description: Smart Data Models category spectacle.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Film
+              cs: Film
+              en: Film
+              de: Film
+      theatre-dance:
+        description: Smart Data Models category spectacle.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Divadlo a tanec
+              cs: Divadlo a tanec
+              en: Theatre and dance
+              de: Theater und Tanz
+      music:
+        description: Smart Data Models category spectacle.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Hudba
+              cs: Hudba
+              en: Music
+              de: Musik
+      festival-fair:
+        description: Smart Data Models category spectacle.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Festivaly a jarmoky
+              cs: Festivaly a jarmarky
+              en: Festivals and fairs
+              de: Feste und Jahrmärkte
+      food-market:
+        description: Smart Data Models category gastronomy, shopping.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Gastronómia a trhy
+              cs: Gastronomie a trhy
+              en: Food and markets
+              de: Essen und Märkte
+      exhibition-museum:
+        description: Smart Data Models category museum.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Výstavy a múzeá
+              cs: Výstavy a muzea
+              en: Exhibitions and museums
+              de: Ausstellungen und Museen
+      history-heritage:
+        description: Smart Data Models category history.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: História a pamiatky
+              cs: Historie a památky
+              en: History and heritage
+              de: Geschichte und Denkmäler
+      faith-tradition:
+        description: Smart Data Models category religiousWorship.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Viera a tradície
+              cs: Víra a tradice
+              en: Faith and traditions
+              de: Glaube und Brauchtum
+      education-talk:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Vzdelávanie a prednášky
+              cs: Vzdělávání a přednášky
+              en: Education and talks
+              de: Bildung und Vorträge
+      children-family:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Deti a rodina
+              cs: Děti a rodina
+              en: Children and family
+              de: Kinder und Familie
+      hobby-workshop:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Hobby a tvorivé dielne
+              cs: Hobby a tvořivé dílny
+              en: Hobbies and workshops
+              de: Hobby und Workshops
+      health-wellness:
+        description: Smart Data Models category wellness.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zdravie a wellness
+              cs: Zdraví a wellness
+              en: Health and wellness
+              de: Gesundheit und Wellness
+      community-civic:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Komunita a samospráva
+              cs: Komunita a samospráva
+              en: Community and civic life
+              de: Gemeinschaft und Bürgerleben
+  EventAudience:
+    description: The Smart Data Models Event audience codes the pipelines write.
+    permissible_values:
+      children:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Deti
+              cs: Děti
+              en: Children
+              de: Kinder
+      family:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Rodiny
+              cs: Rodiny
+              en: Families
+              de: Familien

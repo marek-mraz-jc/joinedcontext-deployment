@@ -13,7 +13,7 @@
     let now = timestamp_unix()
     # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
     # oznámenie, elections, a power cut, a hall's booked or free slot (T-5393). Its record is never loaded.
-    let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|oslava|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené|obsadený|rezervované|rezervovaná|voľné|voľný termín)$|\\bobsaden[ýáé]|prenájom (sály|kd|kultúrn)|súkromn[áé] (akcia|oslava)|rezervácia (jedál|sál|kd|kultúrn|miestn)"
+    let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej|nádob)|^zberný dvor|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|oslava|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené|obsadený|rezervované|rezervovaná|voľné|voľný termín)$|\\bobsaden[ýáé]|prenájom (sály|kd|kultúrn)|súkromn[áé] (akcia|oslava)|rezervácia (jedál|sál|kd|kultúrn|miestn)"
     let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
       "_start": r.start.apply("unix"),
       "_end": if r.end != null && r.end.apply("unix") != null {
@@ -95,6 +95,15 @@
     let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { __ORGANIZER__ }
     # The event's own page, else the organizer's page listing its events: every event carries a link a person opens.
     let link = this.url.apply("link").or(__LISTING__)
+    # The main category (T-5363, docs API/12-event-categories.md): the first rule of seeds/event-categories.json
+    # matching the source's own word without its audience and catch-all parts, else the name, else the whole word
+    # ("akcie pre deti"), else the kind of body whose calendar it is (a theatre). No match: no category.
+    let rules = __CATEGORY_RULES__
+    let word = this.category.apply("text").or("").lowercase()
+    let specific = $word.re_replace_all("trhy, výstavy, veľtrhy \\(ostatné\\)", "trh").re_replace_all("trhy, výstavy, veľtrhy|akcie pre [^,)]*", "")
+    let title = $name.or("").lowercase()
+    let category = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(__CATEGORY_DEFAULT__).filter(c -> c != null).index(0).catch(null)
+    let audience = if $category != "children-family" { null } else if ($word + " " + $title).re_match("deti|detsk|najmenš|škôlk") { ["children"] } else { ["family"] }
     let now = timestamp_unix()
     let lease = __LEASE__
     let ends = if this._end == null { null } else { this._end + __GRACE__ }
@@ -116,6 +125,9 @@
       "areaServed": $municipality.apply("prop"),
       "address": { "type": "Property", "value": $address },
       "eventCategory": this.category.apply("text").apply("prop"),
+      "category": if $category != null { { "type": "Property", "value": [$category] } } else { null },
+      "categorySource": if $category != null { { "type": "Property", "value": "rule" } } else { null },
+      "audience": $audience.apply("prop"),
       # A source that states no licence gives its facts only: what, when, where and the link back
       # (integrator 2026-10-20, T-4894); its text stays on its own page.
       # Contact e-mails and phone numbers stay on the source's page: they may name a person.
