@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); each Open Data BCN batch adds its own classes. Transport: TrafficFlowObserved, the traffic state of each street section and each route of sections the city reports every five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona network with its live socket states. Urbanism: the districts and barris as AdministrativeArea, the works on the public space as CityWork and the street inventory's crossings as PedestrianCrossing.
+What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16). The first type is AirQualityObserved, one entity per station of the city's air-quality network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its agendas (cultural, daily and sports); PointOfInterest the city's register of facilities (equipaments); each Open Data BCN batch adds its own classes. Transport: TrafficFlowObserved, the traffic state of each street section and each route of sections the city reports every five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona network with its live socket states, BikeLane, each segment of the bike network open or under construction, RoadAccident, each accident the Guàrdia Urbana handled, as counts only, and each traffic counter's monthly intensity as TrafficFlowObserved. Urbanism: the districts and barris as AdministrativeArea, the works on the public space as CityWork and the street inventory's crossings as PedestrianCrossing.
 
 - Namespace: `https://joinedcontext.com/models/barcelona/barcelona`
 - Rendered by: `linkml-1.12.0`
@@ -104,7 +104,7 @@ Specialises `Entity`.
 
 ### TrafficFlowObserved
 
-One street section of the city's traffic-state network with its line, its state now and the state forecast for 15 minutes, every five minutes (Open Data BCN trams and transit-relacio-trams).
+One street section of the city's traffic-state network with its line, its state now and the state forecast for 15 minutes, every five minutes (Open Data BCN trams and transit-relacio-trams); one route of sections with its travel time (itineraris); or one traffic or bicycle counter with its mean working-day intensity of the newest month (aforaments-descriptiu and aforaments-detall).
 
 IRI: `sdm:TrafficFlowObserved`
 
@@ -119,6 +119,10 @@ Specialises `Entity`.
 | `trafficStateForecast` | Property | [`TrafficState`](#trafficstate) |  |  | `jc:trafficStateForecast` | The state the city forecasts for the section in 15 minutes, same codes as trafficState (custom). |
 | `travelTime` | Property | `integer` |  | s | `jc:travelTime` | How long a vehicle takes now to drive the route, in seconds (custom: TrafficFlowObserved has no travel time); Open Data BCN dataset itineraris, its fourth field. Absent while the city reports no reading for the route. |
 | `usualTravelTime` | Property | `integer` |  | s | `jc:usualTravelTime` | The time the city expects for the route now from its history of the same kind of day, in seconds (custom; itineraris, its fifth field, temps previst). travelTime above it means slower traffic than usual. |
+| `intensity` | Property | `integer` |  |  | `sdm:intensity` | A traffic counter's mean number of vehicles (or bicycles, at a bicycle counter) a working day of the month dateObservedFrom..dateObservedTo, the city's IMD. |
+| `dateObservedFrom` | Property | `datetime` |  |  | `sdm:dateObservedFrom` | The start of the period a traffic counter's intensity covers, UTC. |
+| `dateObservedTo` | Property | `datetime` |  |  | `sdm:dateObservedTo` | The end of the period a traffic counter's intensity covers, UTC. |
+| `vehicleType` | Property | [`CountedVehicleType`](#countedvehicletype) |  |  | `sdm:vehicleType` | bicycle at a counter of the bicycle network; absent at a counter of motor traffic, which counts every kind. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
@@ -245,6 +249,65 @@ Specialises `Entity`.
 | `crossingTypeLabel` | Property | `string` |  |  | `jc:crossingTypeLabel` | The crossing's kind as the city writes it, in Catalan (Pas de pastilles, Pas de tacs, Pas de bicicletes). |
 | `markedArea` | Property | `float` |  | m2 | `jc:markedArea` | The painted area of the crossing in square metres (unitCode MTK). |
 | `refNeighbourhood` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refNeighbourhood` | The barri the crossing lies in; none for a crossing on the city's edge. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### BikeLane
+
+One segment of Barcelona's bike network as the city's map layer draws it, open (carril-bici) or under construction (carrils-bici-en-construccio), with its line and length.
+
+IRI: `sdm:BikeLane`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` |  |  | `schema:name` | The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work). |
+| `localId` | Property | `string` |  |  | `sdm:localId` | The source's own identifier of the record: a bike lane's segment code in the city's map layer (GL4683814), an accident's police file number (2025S000001). |
+| `bikeLaneState` | Property | [`BikeLaneState`](#bikelanestate) | yes |  | `jc:bikeLaneState` | Whether the lane is open to cycling or still under construction, from the dataset it is read from. |
+| `laneLength` | Property | `float` |  | m | `sdm:laneLength` | The length of the bike lane's line in metres, summed over its points on a local plane (83,550 m a degree of longitude and 111,050 m a degree of latitude at 41.4° N). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### RoadAccident
+
+One road accident the Guàrdia Urbana handled (accidents-gu-bcn), its hour, place and the people injured or dead as counts, with its kinds, causes and the kinds of vehicle involved from the four detail tables joined by file number; nothing about a person.
+
+IRI: `sdm:RoadAccident`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `localId` | Property | `string` |  |  | `sdm:localId` | The source's own identifier of the record: a bike lane's segment code in the city's map layer (GL4683814), an accident's police file number (2025S000001). |
+| `status` | Property | [`RoadAccidentStatus`](#roadaccidentstatus) | yes |  | `sdm:status` | The state of the charging point from its ports: working while one is free, full when none is free and one charges, outOfService when every port is out of order, unavailable or unknown. |
+| `accidentDate` | Property | `datetime` | yes |  | `sdm:accidentDate` | The hour of the accident, UTC: the police file gives the local day and hour only, so the minutes are 00. |
+| `totalInjured` | Property | `integer` |  |  | `sdm:totalInjured` | The people injured and alive, slightly and seriously, as the police file counts them. |
+| `seriouslyInjured` | Property | `integer` |  |  | `jc:seriouslyInjured` | The people seriously injured (lesionats greus). |
+| `slightlyInjured` | Property | `integer` |  |  | `jc:slightlyInjured` | The people slightly injured (lesionats lleus). |
+| `deadCount` | Property | `integer` |  |  | `jc:deadCount` | The people dead, as the police file counts them (morts). |
+| `vehicleCount` | Property | `integer` |  |  | `jc:vehicleCount` | The vehicles the accident involved. |
+| `pedestriansInvolved` | Property | `boolean` |  |  | `sdm:pedestriansInvolved` | True when the police file names a pedestrian's cause; absent otherwise, since the file does not say whether an accident without one involved a pedestrian. |
+| `pedestrianCause` | Property | `string` |  |  | `jc:pedestrianCause` | The pedestrian's cause the police file names, in Catalan (Creuar per fora pas de vianants). |
+| `accidentKind` | Property | `string` (list) |  |  | `jc:accidentKind` | The kinds of the accident the police file names, in Catalan as the city writes them (Col.lisió lateral, Abast, Atropellament), from accidents-tipus-gu-bcn. |
+| `accidentType` | Property | `string` (list) |  |  | `sdm:accidentType` | The Smart Data Model codes of accidentKind where a code means the same: 1 frontal, 2 frontal-lateral, 3 side collision, 4 collision (Abast, Abast multiple, Encalç), 5 pedestrian hit, 8 impact with an obstacle (Xoc contra element estàtic); a kind with no such code has none. |
+| `accidentCause` | Property | `string` (list) |  |  | `jc:accidentCause` | The causes the police file names, in Catalan: the mediate causes (accidents-causes-gu-bcn, Alcoholèmia), then the drivers' causes (accidents_causa_conductor_gu_bcn, Gir indegut o sense precaució). |
+| `vehicleKind` | Property | `string` (list) |  |  | `jc:vehicleKind` | The kind of each vehicle involved, once a vehicle, in Catalan as the city writes it (Turisme, Motocicleta), from accidents-vehicles-gu-bcn; no make, model, colour or licence. |
+| `vehiclesInvolved` | Property | `string` (list) |  |  | `sdm:vehiclesInvolved` | The Smart Data Model code of each vehicleKind where a code means the same (1 bicycle, 3 bus, 4 minibus, 5 car, 7 tram, 11 lorry, 12 moped, 14 motorcycle, 18 van, 20 construction or maintenance vehicle); a personal mobility vehicle, an ambulance or an unreported kind has none. |
+| `numPassengersInjured` | Property | `integer` |  |  | `sdm:numPassengersInjured` | The passengers injured and alive, a count from accidents-persones-gu-bcn. |
+| `numPassengersDead` | Property | `integer` |  |  | `sdm:numPassengersDead` | The passengers dead, a count from accidents-persones-gu-bcn. |
+| `numPedestrianInjured` | Property | `integer` |  |  | `sdm:numPedestrianInjured` | The pedestrians injured and alive, a count from accidents-persones-gu-bcn. |
+| `numPedestrianDead` | Property | `integer` |  |  | `sdm:numPedestrianDead` | The pedestrians dead, a count from accidents-persones-gu-bcn. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where the station, the well, the event, the facility or the charging point is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park). |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data file or the Open Data BCN dataset the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -419,3 +482,28 @@ The three kinds of crossing marking the city's typology names.
 | `stripes` | Painted bars across the road, the zebra crossing (Pas de pastilles). |
 | `blocks` | A crossing marked with painted square blocks (Pas de tacs). |
 | `cycle` | A crossing for bicycles (Pas de bicicletes). |
+
+### BikeLaneState
+
+Which of the city's two bike lane layers the segment is read from.
+
+| Value | Meaning |
+|---|---|
+| `inService` | Open to cycling (carril-bici). |
+| `underConstruction` | Being built (carrils-bici-en-construccio). |
+
+### RoadAccidentStatus
+
+The Smart Data Model RoadAccident status; a police file the city publishes is closed.
+
+| Value | Meaning |
+|---|---|
+| `archived` | A closed police file of a past accident. |
+
+### CountedVehicleType
+
+The Smart Data Model vehicleType a counter counts, where it counts one kind only.
+
+| Value | Meaning |
+|---|---|
+| `bicycle` | A counter of the bicycle network (Bicis). |

@@ -11,7 +11,9 @@ description: >-
   the traffic state of each street section and each route of sections the city reports every
   five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading
   and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona
-  network with its live socket states. Urbanism: the districts and barris as
+  network with its live socket states, BikeLane, each segment of the bike network open or under
+  construction, RoadAccident, each accident the Guàrdia Urbana handled, as counts only, and
+  each traffic counter's monthly intensity as TrafficFlowObserved. Urbanism: the districts and barris as
   AdministrativeArea, the works on the public space as CityWork and the street inventory's
   crossings as PedestrianCrossing.
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -670,6 +672,192 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
+  localId:
+    slot_uri: sdm:localId
+    description: >-
+      The source's own identifier of the record: a bike lane's segment code in the city's map
+      layer (GL4683814), an accident's police file number (2025S000001).
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  laneLength:
+    slot_uri: sdm:laneLength
+    description: >-
+      The length of the bike lane's line in metres, summed over its points on a local plane
+      (83,550 m a degree of longitude and 111,050 m a degree of latitude at 41.4° N).
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m }
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  bikeLaneState:
+    slot_uri: jc:bikeLaneState
+    description: Whether the lane is open to cycling or still under construction, from the dataset it is read from.
+    range: BikeLaneState
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  accidentDate:
+    slot_uri: sdm:accidentDate
+    description: >-
+      The hour of the accident, UTC: the police file gives the local day and hour only, so the
+      minutes are 00.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  totalInjured:
+    slot_uri: sdm:totalInjured
+    description: The people injured and alive, slightly and seriously, as the police file counts them.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  seriouslyInjured:
+    slot_uri: jc:seriouslyInjured
+    description: The people seriously injured (lesionats greus).
+    range: integer
+    minimum_value: 0
+    annotations: { ngsi_ld_kind: Property }
+  slightlyInjured:
+    slot_uri: jc:slightlyInjured
+    description: The people slightly injured (lesionats lleus).
+    range: integer
+    minimum_value: 0
+    annotations: { ngsi_ld_kind: Property }
+  deadCount:
+    slot_uri: jc:deadCount
+    description: The people dead, as the police file counts them (morts).
+    range: integer
+    minimum_value: 0
+    annotations: { ngsi_ld_kind: Property }
+  vehicleCount:
+    slot_uri: jc:vehicleCount
+    description: The vehicles the accident involved.
+    range: integer
+    minimum_value: 1
+    annotations: { ngsi_ld_kind: Property }
+  pedestriansInvolved:
+    slot_uri: sdm:pedestriansInvolved
+    description: >-
+      True when the police file names a pedestrian's cause; absent otherwise, since the file does
+      not say whether an accident without one involved a pedestrian.
+    range: boolean
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  pedestrianCause:
+    slot_uri: jc:pedestrianCause
+    description: The pedestrian's cause the police file names, in Catalan (Creuar per fora pas de vianants).
+    annotations: { ngsi_ld_kind: Property }
+  accidentKind:
+    slot_uri: jc:accidentKind
+    description: >-
+      The kinds of the accident the police file names, in Catalan as the city writes them
+      (Col.lisió lateral, Abast, Atropellament), from accidents-tipus-gu-bcn.
+    multivalued: true
+    annotations: { ngsi_ld_kind: Property }
+  accidentType:
+    slot_uri: sdm:accidentType
+    description: >-
+      The Smart Data Model codes of accidentKind where a code means the same: 1 frontal, 2
+      frontal-lateral, 3 side collision, 4 collision (Abast, Abast multiple, Encalç), 5 pedestrian
+      hit, 8 impact with an obstacle (Xoc contra element estàtic); a kind with no such code has none.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  accidentCause:
+    slot_uri: jc:accidentCause
+    description: >-
+      The causes the police file names, in Catalan: the mediate causes (accidents-causes-gu-bcn,
+      Alcoholèmia), then the drivers' causes (accidents_causa_conductor_gu_bcn, Gir indegut o
+      sense precaució).
+    multivalued: true
+    annotations: { ngsi_ld_kind: Property }
+  vehicleKind:
+    slot_uri: jc:vehicleKind
+    description: >-
+      The kind of each vehicle involved, once a vehicle, in Catalan as the city writes it
+      (Turisme, Motocicleta), from accidents-vehicles-gu-bcn; no make, model, colour or licence.
+    multivalued: true
+    annotations: { ngsi_ld_kind: Property }
+  vehiclesInvolved:
+    slot_uri: sdm:vehiclesInvolved
+    description: >-
+      The Smart Data Model code of each vehicleKind where a code means the same (1 bicycle, 3 bus,
+      4 minibus, 5 car, 7 tram, 11 lorry, 12 moped, 14 motorcycle, 18 van, 20 construction or
+      maintenance vehicle); a personal mobility vehicle, an ambulance or an unreported kind has none.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPassengersInjured:
+    slot_uri: sdm:numPassengersInjured
+    description: The passengers injured and alive, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPassengersDead:
+    slot_uri: sdm:numPassengersDead
+    description: The passengers dead, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPedestrianInjured:
+    slot_uri: sdm:numPedestrianInjured
+    description: The pedestrians injured and alive, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPedestrianDead:
+    slot_uri: sdm:numPedestrianDead
+    description: The pedestrians dead, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  intensity:
+    slot_uri: sdm:intensity
+    description: >-
+      A traffic counter's mean number of vehicles (or bicycles, at a bicycle counter) a working
+      day of the month dateObservedFrom..dateObservedTo, the city's IMD.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedFrom:
+    slot_uri: sdm:dateObservedFrom
+    description: The start of the period a traffic counter's intensity covers, UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedTo:
+    slot_uri: sdm:dateObservedTo
+    description: The end of the period a traffic counter's intensity covers, UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: bicycle at a counter of the bicycle network; absent at a counter of motor traffic, which counts every kind.
+    range: CountedVehicleType
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+
 classes:
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
@@ -750,7 +938,9 @@ classes:
     description: >-
       One street section of the city's traffic-state network with its line, its state now and
       the state forecast for 15 minutes, every five minutes (Open Data BCN trams and
-      transit-relacio-trams).
+      transit-relacio-trams); one route of sections with its travel time (itineraris); or one
+      traffic or bicycle counter with its mean working-day intensity of the newest month
+      (aforaments-descriptiu and aforaments-detall).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -762,6 +952,10 @@ classes:
       - trafficStateForecast
       - travelTime
       - usualTravelTime
+      - intensity
+      - dateObservedFrom
+      - dateObservedTo
+      - vehicleType
       - source
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -854,6 +1048,50 @@ classes:
       dataProvider, source).
     is_a: Entity
     slots: [crossingType, crossingTypeLabel, markedArea, refNeighbourhood, dataProvider, source]
+  BikeLane:
+    class_uri: sdm:BikeLane
+    description: >-
+      One segment of Barcelona's bike network as the city's map layer draws it, open
+      (carril-bici) or under construction (carrils-bici-en-construccio), with its line and length.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots: [name, localId, bikeLaneState, laneLength, dataProvider, source]
+  RoadAccident:
+    class_uri: sdm:RoadAccident
+    description: >-
+      One road accident the Guàrdia Urbana handled (accidents-gu-bcn), its hour, place and the
+      people injured or dead as counts, with its kinds, causes and the kinds of vehicle involved
+      from the four detail tables joined by file number; nothing about a person.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - localId
+      - status
+      - accidentDate
+      - totalInjured
+      - seriouslyInjured
+      - slightlyInjured
+      - deadCount
+      - vehicleCount
+      - pedestriansInvolved
+      - pedestrianCause
+      - accidentKind
+      - accidentType
+      - accidentCause
+      - vehicleKind
+      - vehiclesInvolved
+      - numPassengersInjured
+      - numPassengersDead
+      - numPedestrianInjured
+      - numPedestrianDead
+      - address
+      - areaServed
+      - dataProvider
+      - source
+    slot_usage:
+      status: { range: RoadAccidentStatus, required: true }
 
   Event:
     class_uri: sdm:Event
@@ -954,3 +1192,16 @@ enums:
         description: Painted bars across the road, the zebra crossing (Pas de pastilles).
       blocks: { description: A crossing marked with painted square blocks (Pas de tacs). }
       cycle: { description: A crossing for bicycles (Pas de bicicletes). }
+  BikeLaneState:
+    description: Which of the city's two bike lane layers the segment is read from.
+    permissible_values:
+      inService: { description: Open to cycling (carril-bici). }
+      underConstruction: { description: Being built (carrils-bici-en-construccio). }
+  RoadAccidentStatus:
+    description: The Smart Data Model RoadAccident status; a police file the city publishes is closed.
+    permissible_values:
+      archived: { description: A closed police file of a past accident. }
+  CountedVehicleType:
+    description: The Smart Data Model vehicleType a counter counts, where it counts one kind only.
+    permissible_values:
+      bicycle: { description: A counter of the bicycle network (Bicis). }

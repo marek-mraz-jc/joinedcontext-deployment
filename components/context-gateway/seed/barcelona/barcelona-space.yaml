@@ -93,6 +93,12 @@ spec:
       history: 'off'
     - entityType: PedestrianCrossing
       history: 'off'
+    # A bike lane segment is a reference layer each weekly run rewrites (it leaves by its own
+    # expiresAt); an accident is a record that never changes: current state only (T-5374).
+    - entityType: BikeLane
+      history: 'off'
+    - entityType: RoadAccident
+      history: 'off'
     # An activity is a record, not a measurement: its current state only (T-5265).
     - entityType: Event
       history: 'off'
@@ -118,6 +124,16 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: charging-in-area
       entityType: EVChargingStation
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-bike-lanes
+      entityType: BikeLane
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-accidents
+      entityType: RoadAccident
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

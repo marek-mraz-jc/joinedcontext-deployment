@@ -26,5 +26,7 @@ spec:
         - type: AdministrativeArea
         - type: CityWork
         - type: PedestrianCrossing
+        - type: BikeLane
+        - type: RoadAccident
         - type: Event
         - type: PointOfInterest
