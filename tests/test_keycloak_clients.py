@@ -140,6 +140,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.zilina@hel.fi",
         # Ajuntament de Barcelona's (T-5260).
         "demo.barcelona@hel.fi",
+        # Hlavné mesto SR Bratislava's (T-5271).
+        "demo.bratislava@hel.fi",
         *SHARING_PEOPLE,
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -147,6 +149,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
     assert users["demo.zilina@hel.fi"]["groups"] == ["/platform-readers", "/zilina"]
     assert users["demo.barcelona@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.barcelona@hel.fi"]["groups"] == ["/platform-readers", "/barcelona"]
+    assert users["demo.bratislava@hel.fi"]["realmRoles"] == ["portal-approver"]
+    assert users["demo.bratislava@hel.fi"]["groups"] == ["/platform-readers", "/bratislava"]
     assert users["demo.approver@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.viewer@hel.fi"]["realmRoles"] == [], "demo.viewer is read only"
     assert users["demo.editor@hel.fi"]["realmRoles"] == [], "demo.editor approves nothing"
@@ -191,6 +195,7 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-probe",
         "keycloak-user-demo-zilina",
         "keycloak-user-demo-barcelona",
+        "keycloak-user-demo-bratislava",
         *("keycloak-user-" + name.split("@")[0].replace(".", "-") for name in SHARING_PEOPLE),
     }
     for secret in secrets.values():
@@ -198,7 +203,7 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         # The approvers' TOTP seed sits beside the password (T-5120).
         approver = secret["metadata"]["name"] in (
             "keycloak-user-demo-steward", "keycloak-user-demo-approver", "keycloak-user-demo-zilina",
-            "keycloak-user-demo-barcelona",
+            "keycloak-user-demo-barcelona", "keycloak-user-demo-bratislava",
         )
         assert sorted(secret["data"]) == (["password", "totp"] if approver else ["password"])
 
