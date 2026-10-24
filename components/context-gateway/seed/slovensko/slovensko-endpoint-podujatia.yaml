@@ -14,19 +14,8 @@ spec:
   slug: c64i77g2akwuakkouvndhkfg6ujqyfqd
   audience: public
   policyRef: urn:ngsi-ld:Policy:joinedcontext.com:slovensko-podujatia:podujatia-read
-  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
-  # representations.ical (EP-125, EP-159); events.ics is the first one (deprecated alias).
+  # ical: the calendar a person subscribes to, /api/endpoint/{slug}/ical/v1/events.ics (EP-125).
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]
-  representations:
-    ical:
-      - name: vsetky
-        title: { sk: "Všetky podujatia na Slovensku", en: "All events in Slovakia" }
-        lang: sk
-        timezone: Europe/Bratislava
-        sources:
-          - type: Event
-            preset: sdm-event
-            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
