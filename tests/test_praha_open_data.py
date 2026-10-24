@@ -394,6 +394,7 @@ PARTS = {
     "praha-linky-pid": "CC_BY_4_0", "praha-zastavky-pid": "CC_BY_4_0", "praha-vstupy-metra": "CC_BY_4_0",
     "praha-tarifni-pasma": "CC_BY_4_0",
     "praha-zelen": "CC_BY_4_0",
+    "praha-stromy": "CC_BY_4_0",
 }
 
 

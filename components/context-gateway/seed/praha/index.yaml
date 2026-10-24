@@ -279,3 +279,5 @@ praha-pipeline-green-nature-parks.yaml: projects/praha/pipelines/green-nature-pa
 praha-pipeline-green-nature-parks-bento.yaml: projects/praha/pipelines/green-nature-parks/bento.yaml
 praha-endpoint-zelen.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zelen.yaml
 praha-policy-public-zelen.yaml: projects/praha/spaces/praha-mesto/policies/public-zelen.yaml
+praha-endpoint-stromy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-stromy.yaml
+praha-policy-public-stromy.yaml: projects/praha/spaces/praha-mesto/policies/public-stromy.yaml

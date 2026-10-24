@@ -1,17 +1,15 @@
-# Parks, green areas and trees of the IPR Praha geoportal (T-5425): the parks and nature parks, the
-# basic green areas and the trees and tree rows of the shared green register, Garden and Tree of
-# the space praha-mesto read through its own Policy, which narrows the public read to the green- ids.
+# Parks and green areas of the IPR Praha geoportal (T-5425): the parks, the nature parks and the basic
+# green areas of the shared green register, Garden of the space praha-mesto read through its own
+# Policy, which narrows the public read to the green- ids. The trees are the dataset praha-stromy.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
   name: praha-zelen
   namespace: praha
-  title:
-    cs: Parky, zeleň a stromy — Praha
-    en: Parks, green areas and trees — Prague
+  title: { cs: Parky a plochy zeleně — Praha, en: Parks and green areas — Prague }
   description:
-    cs: 'Parky, přírodní parky, základní plochy zeleně, stromy a stromořadí: plocha nebo poloha, druh, správce, režim péče a datum poslední změny. Zdroj: IPR Praha, CC BY 4.0.'
-    en: 'Parks, nature parks, basic green areas, trees and tree rows: area or location, kind, manager, care regime and date of the last edit. Source: IPR Praha, CC BY 4.0.'
+    cs: 'Parky, přírodní parky a základní plochy zeleně: plocha, druh, správce, režim péče a datum poslední změny. Zdroj: IPR Praha, CC BY 4.0.'
+    en: 'Parks, nature parks and basic green areas: area, kind, manager, care regime and date of the last edit. Source: IPR Praha, CC BY 4.0.'
 spec:
   contextSpaceRef: praha-mesto
   slug: criiz77fepoukmw4opvl2osua3b6ug5k
@@ -24,7 +22,7 @@ spec:
       license: cc-by
       datastore: { representation: csv, refresh: onReconcile }
   catalog:
-    # Areas and trees with their manager, a city district or a city department: no person.
+    # Areas with their manager, a city district or a city department: no person.
     personalData: does-not-contain
     applicableLegislation:
       - https://www.e-sbirka.cz/eli/cz/sb/1999/106/2025-08-19
@@ -34,32 +32,13 @@ spec:
       en: 'Source: data © IPR Praha (CC BY 4.0)'
     themes: [ENVI, REGI]
     keywords:
-      cs: [Praha, zeleň, parky, stromy, stromořadí, přírodní parky]
-      en: [Prague, green areas, parks, trees, tree rows, nature parks]
+      cs: [Praha, zeleň, parky, přírodní parky]
+      en: [Prague, green areas, parks, nature parks]
     spatial:
       - CZ010
       - https://linked.cuzk.cz/resource/ruian/obec/554782
     frequency: WEEKLY
     source:
-      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_VP_B/FeatureServer/0?f=json
-        title:
-          cs: Sdílená data o zeleni – stromy (IPR Praha)
-          en: 'Shared green register: trees (IPR Praha)'
-        description:
-          cs: Stromy (body vegetačních prvků) ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
-          en: Trees (the vegetation element points) of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
-      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_VP_L/FeatureServer/0?f=json
-        title:
-          cs: Sdílená data o zeleni – stromořadí (IPR Praha)
-          en: 'Shared green register: tree rows (IPR Praha)'
-        description:
-          cs: Stromořadí (linie vegetačních prvků) ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
-          en: Tree rows (the vegetation element lines) of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
-      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/URK_CUR_URK_SS_STROMORADI_L/FeatureServer/0?f=json
-        title: { cs: Stromořadí (IPR Praha), en: Tree rows (IPR Praha) }
-        description:
-          cs: Stromořadí z územně analytických podkladů z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
-          en: Tree rows of the planning analysis from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
       - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_ZAKLADNIPL_P/FeatureServer/0?f=json
         title:
           cs: Sdílená data o zeleni – základní plochy zeleně (IPR Praha)
