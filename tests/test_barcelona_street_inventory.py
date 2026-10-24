@@ -62,7 +62,7 @@ def run(mapping: Path, document: str, answer: str | None = None, steps: int | No
     processors = pipeline["pipeline"]["processors"]
     for i, step in enumerate(processors):
         if "http" in step:
-            assert step["http"]["url"] == "${! @file }"
+            assert step["http"]["url"] == "https://opendata-ajuntament.barcelona.cat/data/dataset/${! @file }"
             processors[i] = {"mapping": 'root = if @file.or("") == "" { throw("no file picked") } else { %s }' % json.dumps(answer or "")}
     if steps is not None:
         del processors[steps:]
@@ -177,7 +177,8 @@ def test_the_run_reads_the_newest_csv_file_of_the_package():
         package["result"]["resources"].append({"format": "CSV", "url": "https://example.org/fonts.csv",
                                                "last_modified": "2026-10-01T00:00:00"})
         picked = open_data.run_all(probe, json.dumps(package).encode(), "barcelona", "barcelona.cat", AS_OF)
-        assert picked == [{"file": "https://opendata-ajuntament.barcelona.cat/data/dataset/889c583e-6c11-46c3-bc45-7f3ae5e6c621"
+        # The http step keeps the host and path literal (PL-07): the message names only the rest.
+        assert picked == [{"file": "889c583e-6c11-46c3-bc45-7f3ae5e6c621"
                           "/resource/8f63c3cf-399a-4a8d-a73d-eb1fca80d7f0/download/fonts_beure_2026.csv"}]
     finally:
         probe.unlink()

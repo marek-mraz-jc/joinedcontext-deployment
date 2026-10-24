@@ -22,10 +22,10 @@ pipeline:
         let files = if content().length() > 1048576 { throw("the fonts-ornamentals package answer is %d bytes, more than the 1 MiB read".format(content().length())) } else if this.success.or(false) != true { throw("Open Data BCN refused the fonts-ornamentals package") } else { this.result.resources.or([]) }
         let newest = $files.filter(r -> r.format.or("") == "CSV" && r.url.or("").re_match("^https://opendata-ajuntament[.]barcelona[.]cat/data/dataset/[0-9a-f-]{36}/resource/[0-9a-f-]{36}/download/[A-Za-z0-9_.-]+[.]csv$")).sort_by(r -> r.last_modified.or("")).index(-1).or(null)
         let floor = $now.ts_sub_iso8601("P13M").ts_format("2006-01-02T15:04:05", "UTC")
-        meta file = if $newest == null { throw("the fonts-ornamentals package lists no CSV file on Open Data BCN") } else if $newest.last_modified.or("") < $floor { throw("the newest ornamental fountains file is from %s, more than 13 months old".format($newest.last_modified.or("an unknown day"))) } else { $newest.url }
+        meta file = if $newest == null { throw("the fonts-ornamentals package lists no CSV file on Open Data BCN") } else if $newest.last_modified.or("") < $floor { throw("the newest ornamental fountains file is from %s, more than 13 months old".format($newest.last_modified.or("an unknown day"))) } else { $newest.url.trim_prefix("https://opendata-ajuntament.barcelona.cat/data/dataset/") }
         root = ""
     - http:
-        url: ${! @file }
+        url: https://opendata-ajuntament.barcelona.cat/data/dataset/${! @file }
         verb: GET
         headers:
           Accept: text/csv
