@@ -207,6 +207,21 @@ spec:
         description:
           sk: "Podujatia zo stránky https://ft.tuzvo.sk/sk/kalendar-udalosti; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://ft.tuzvo.sk/sk/kalendar-udalosti; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.bkis.sk/podujatia/"
+        title: { sk: "Bratislava, bkis.sk", en: "Bratislava, bkis.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.bkis.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.bkis.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://novacvernovka.eu/program/"
+        title: { sk: "Bratislava, novacvernovka.eu", en: "Bratislava, novacvernovka.eu" }
+        description:
+          sk: "Podujatia zo stránky https://novacvernovka.eu/program/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://novacvernovka.eu/program/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://uluv.sk/podujatia/"
+        title: { sk: "Bratislava, uluv.sk", en: "Bratislava, uluv.sk" }
+        description:
+          sk: "Podujatia zo stránky https://uluv.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://uluv.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://gunagu.sk/"
         title: { sk: "Bratislava, gunagu.sk", en: "Bratislava, gunagu.sk" }
         description:
@@ -222,6 +237,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.visitbratislava.com/event-categories/top-events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.visitbratislava.com/event-categories/top-events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.vsmu.sk/podujatia/"
+        title: { sk: "Bratislava, vsmu.sk", en: "Bratislava, vsmu.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.vsmu.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.vsmu.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.senec.sk/zivot-v-meste/podujatia-prehlad/"
         title: { sk: "Senec, senec.sk", en: "Senec, senec.sk" }
         description:
@@ -302,6 +322,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.obec-hradok.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.obec-hradok.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://prievidza.sk/podujatia/"
+        title: { sk: "Prievidza, prievidza.sk", en: "Prievidza, prievidza.sk" }
+        description:
+          sk: "Podujatia zo stránky https://prievidza.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://prievidza.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://zabokrekynadnitrou.sk/"
         title: { sk: "Žabokreky nad Nitrou, zabokrekynadnitrou.sk", en: "Žabokreky nad Nitrou, zabokrekynadnitrou.sk" }
         description:
@@ -322,6 +347,16 @@ spec:
         description:
           sk: "Podujatia zo stránky https://regiontekov.info/podujatia?ical=1; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://regiontekov.info/podujatia?ical=1; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.kosnr.sk/kalendar-podujati"
+        title: { sk: "Nitra, kosnr.sk", en: "Nitra, kosnr.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.kosnr.sk/kalendar-podujati; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.kosnr.sk/kalendar-podujati; no licence stated, facts only (name, time, place, link)."
+      - url: "https://agrokomplex.sk/vystavy/"
+        title: { sk: "Nitra, agrokomplex.sk", en: "Nitra, agrokomplex.sk" }
+        description:
+          sk: "Podujatia zo stránky https://agrokomplex.sk/vystavy/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://agrokomplex.sk/vystavy/; no licence stated, facts only (name, time, place, link)."
       - url: "https://turiec.com/events"
         title: { sk: "Martin, turiec.com", en: "Martin, turiec.com" }
         description:
@@ -347,6 +382,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.obecvlachy.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.obecvlachy.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://kultura.mestocadca.sk/kulturne-podujatia"
+        title: { sk: "Čadca, kultura.mestocadca.sk", en: "Čadca, kultura.mestocadca.sk" }
+        description:
+          sk: "Podujatia zo stránky https://kultura.mestocadca.sk/kulturne-podujatia; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://kultura.mestocadca.sk/kulturne-podujatia; no licence stated, facts only (name, time, place, link)."
       - url: "https://zilina.sk/kultura-a-komunity/podujatia/"
         title: { sk: "Žilina, zilina.sk", en: "Žilina, zilina.sk" }
         description:
