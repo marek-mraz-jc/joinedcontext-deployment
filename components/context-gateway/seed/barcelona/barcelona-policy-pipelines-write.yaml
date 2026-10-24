@@ -30,3 +30,4 @@ spec:
         - type: TouristRental
         - type: Event
         - type: PointOfInterest
+        - type: KeyPerformanceIndicator
