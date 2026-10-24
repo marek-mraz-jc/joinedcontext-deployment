@@ -44,7 +44,8 @@ spec:
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]
-    - name: in-area
+    # Rule names are unique per space (DM-87): one duplicate makes the Portal refuse the whole space.
+    - name: in-area-places
       entityType: PointOfInterest
       kind: area
       attribute: location

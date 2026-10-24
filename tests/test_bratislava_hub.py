@@ -2,8 +2,9 @@
 checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
-on 2026-10-23 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places and 18
-statistics tables (the long series cut to their two newest years). The calls to the hub are the
+on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
+and the 327 statistics tables of the three statistics pipelines (the first 18 rows of each table the
+2026-10-24 batch added). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
@@ -53,7 +54,9 @@ def run(
             )
             step["branch"]["processors"] = [
                 {
-                    "mapping": f'root = {json.dumps(answers)}.get(@path).or(throw("unasked"))'
+                    # A path with a dot ("1._ročníka") is a path to `get`: the dots go out of the key.
+                    "mapping": f'root = {json.dumps({k.replace(".", "%2E"): v for k, v in (answers or {}).items()})}'
+                    '.get(@path.replace_all(".", "%2E")).or(throw("unasked"))'
                 }
             ]
     config = {
@@ -217,18 +220,22 @@ def test_a_table_the_hub_no_longer_lists_is_left_out_and_logged():
 
 @requires_docker
 def test_the_recorded_statistics_map_to_valid_indicators_and_each_bad_figure_is_dropped_by_reason():
+    answers = statistics()
     indicators, log = run(
         "bratislava-pipeline-statistics-bento.yaml",
         fixture("services.json"),
-        statistics(),
+        answers,
     )
-    # The land-use table leaves two columns empty for 2021 and 2022 (2 x 34 cells): no number.
-    assert (
-        'dropped by reason {\\"duplicate\\":1,\\"no number\\":68,\\"not a city district\\":1,'
-        '\\"out of range\\":1}'
-    ) in log, log
+    # The test's three rows on top of the recording: one district too many, one rate out of range
+    # and one figure twice (beside the recording's own duplicate in the census tables).
+    figures, dropped = reading("statistics", answers)
+    assert logged(log) == dropped
+    baseline = reading("statistics", fixture("statistics.json"))[1]
+    assert dropped["out of range"] == baseline.get("out of range", 0) + 1
+    assert dropped["not a city district"] == baseline["not a city district"] + 1
+    assert dropped["duplicate"] == baseline.get("duplicate", 0) + 1
     by_id = {i["id"]: i for i in indicators}
-    assert len(by_id) == len(indicators) == 1326
+    assert len(by_id) == len(indicators) == len(figures)
     for indicator in indicators:
         valid(indicator, "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator")
     offences = by_id[kpi("priestupky.pocet.529346.2025")]
@@ -262,11 +269,11 @@ def test_the_recorded_statistics_map_to_valid_indicators_and_each_bad_figure_is_
 def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
     """Every table key of the places and statistics mappings is one public dataset: an Endpoint
     whose Policy reads only the ids of that table, harvested into the city's CKAN organisation."""
-    kinds = {"places": "PointOfInterest", "statistics": "KeyPerformanceIndicator"}
+    kinds = {"places": "PointOfInterest"} | {p: "KeyPerformanceIndicator" for p in STATISTICS}
     index = yaml.safe_load((SEED / "index.yaml").read_text())
     for pipeline, kind in kinds.items():
         text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
-        for key in sorted(set(re.findall(r'\{ "key": "([a-z0-9-]+)"', text))):
+        for key in sorted(set(re.findall(r'\{ ?"(?:key|name)": "([a-z0-9-]+)"', text))):
             endpoint = yaml.safe_load(
                 (SEED / f"bratislava-endpoint-{key}.yaml").read_text()
             )
@@ -297,3 +304,140 @@ def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
                 f"bratislava-endpoint-{key}.yaml" in index
                 and f"bratislava-policy-public-{key}.yaml" in index
             )
+
+
+STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city"}
+CITY_DISTRICTS = {
+    "stare mesto": "528595", "podunajske biskupice": "529311", "p biskupice": "529311", "ruzinov": "529320",
+    "vrakuna": "529338", "nove mesto": "529346", "raca": "529354", "vajnory": "529362", "devinska nova ves": "529371",
+    "d n ves": "529371", "dubravka": "529389", "karlova ves": "529397", "devin": "529401", "lamac": "529419",
+    "zahorska bystrica": "529427", "z bystrica": "529427", "cunovo": "529435", "jarovce": "529443",
+    "petrzalka": "529460", "rusovce": "529494",
+}
+OKRESY = {f"bratislava {n}": str(100 + i) for i, ns in enumerate([("i", "1"), ("ii", "2"), ("iii", "3"), ("iv", "4"), ("v", "5")], 1) for n in ns}
+FOLDED = str.maketrans("áäàâčçďéěëíĺľňóôöőŕřšťúüűůýžèò", "aaaaccdeeeillnoooorrstuuuuyzcn", ".")
+YEAR = re.compile(r"(19|20)\d\d")
+
+
+def fold(text) -> str:
+    return " ".join(str(text).lower().translate(FOLDED).split())
+
+
+def tables(pipeline: str) -> list[dict]:
+    text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
+    start = text.index("let tables = [") + len("let tables = ")
+    return json.loads(text[start : text.index("\n        ]", start) + 10])
+
+
+def years(value) -> str | None:
+    v = str(value).strip()
+    if re.fullmatch(r"(19|20)\d\d", v):
+        return v
+    if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
+        return "-".join(m.group() for m in YEAR.finditer(v))
+    return None
+
+
+def number(value) -> float | None:
+    if value is None:
+        return None
+    text = re.sub(r"[\s %]", "", str(value)).replace(",", ".")
+    return float(text) if re.fullmatch(r"-?\d+(\.\d+)?", text) else None
+
+
+def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
+    """The figures each table of `pipeline` holds by the matrix's rule, read without the mapping:
+    {id: value} and the count of dropped figures by reason."""
+    figures, dropped, seen = {}, {}, 0
+    for t in tables(pipeline):
+        for row in answers[t["path"]]["features"]:
+            r = row["attributes"]
+            if "only" in t and not str(r.get(t["only"][0]) or "").startswith(t["only"][1]):
+                continue
+            name = fold(r.get(t["area"]) or "") if t.get("area") else "bratislava"
+            code = {"district": CITY_DISTRICTS.get(name), "okres": OKRESY.get(name)}.get(
+                t["areas"], "582000" if name == "bratislava" else None
+            )
+            if "fixed" in t:
+                slug = years(t["fixed"])
+            elif "quarter" in t:
+                y, q = str(r.get(t["year"]) or "").strip(), str(r.get(t["quarter"]) or "").strip()
+                slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
+            else:
+                slug = years(r.get(t["year"]) or "")
+            by = [re.sub(r"[^a-z0-9]+", "-", fold(r.get(c) or "")).strip("-") for c in t.get("by", [])]
+            for column, segment, _, low, high in t["values"]:
+                n = number(r.get(column))
+                reason = (
+                    {"district": "not a city district", "okres": "not a Bratislava okres"}.get(t["areas"], "not Bratislava")
+                    if code is None
+                    else "no period" if slug is None
+                    else "no breakdown" if "" in by
+                    else "no number" if n is None
+                    else "out of range" if (low is not None and n < low) or (high is not None and n > high)
+                    else None
+                )
+                if reason:
+                    dropped[reason] = dropped.get(reason, 0) + 1
+                    continue
+                seen += 1
+                figures.setdefault(kpi(".".join([t["name"], segment, *by, code, slug])), n)
+    if seen > len(figures):
+        dropped["duplicate"] = seen - len(figures)
+    return figures, dropped
+
+
+def logged(log: str) -> dict:
+    found = re.search(r"dropped by reason (\{.*?\})\"", log.replace('\\"', '"'))
+    assert found, log
+    return json.loads(found.group(1))
+
+
+@requires_docker
+@pytest.mark.parametrize("pipeline", STATISTICS)
+def test_each_statistics_pipeline_agrees_with_an_independent_reading_of_its_tables(pipeline):
+    """Id for id and value for value, the mapping writes what the tables hold by the matrix's rule
+    (Research/bratislava-open-data.md 6.4), and drops the same figures for the same reasons; every
+    figure is a valid KeyPerformanceIndicator of its pipeline's areas."""
+    answers = fixture("statistics.json")
+    indicators, log = run(f"bratislava-pipeline-{pipeline}-bento.yaml", fixture("services.json"), answers)
+    figures, dropped = reading(pipeline, answers)
+    assert {i["id"]: i["kpiValue"]["value"] for i in indicators} == figures
+    assert len(indicators) == len(figures)
+    assert logged(log) == dropped
+    for indicator in indicators:
+        valid(indicator, "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator")
+        assert all(indicator["calculationPeriod"]["value"].values())
+
+
+def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
+    """The three pipelines differ only in their tables, each table in the pipeline of its areas,
+    and no table twice."""
+    def body(pipeline: str) -> str:
+        text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
+        start = text.index("        let tables = [")
+        return text[text.index("pipeline:"): start] + text[text.index("\n        ]", start):]
+
+    assert len({body(p) for p in STATISTICS}) == 1
+    keys = [t["name"] for p in STATISTICS for t in tables(p)]
+    assert len(keys) == len(set(keys)) == 327
+    for pipeline, areas in STATISTICS.items():
+        assert {t["areas"] for t in tables(pipeline)} == {areas}
+        manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
+        assert manifest["spec"]["source"]["dataSourceRef"]["name"] == "bratislava-hub"
+        assert manifest["spec"]["output"] == {"type": "KeyPerformanceIndicator", "mode": "upsert"}
+
+
+@requires_docker
+def test_a_city_table_keeps_bratislava_beside_slovakia_and_a_region_table_its_own_okresy():
+    """The fixture's own cases: a Bratislava-and-Slovakia table drops the Slovakia rows, a table of
+    the whole region the okresy outside Bratislava, a census table a breakdown left as "-"."""
+    answers = fixture("statistics.json")
+    city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
+    assert logged(log)["not Bratislava"] > 0
+    assert {i["area"]["value"] for i in city} == {"Bratislava"}
+    assert all(":582000." not in i["id"] or i["id"].count(".582000.") == 1 for i in city)
+    okresy, log = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
+    assert {i["area"]["value"] for i in okresy} == {f"Bratislava {n}" for n in ("I", "II", "III", "IV", "V")}
+    drivers = kpi("pocet-evidovanych-vodicov.pocet-evidovanych-vodicov.101.2013")
+    assert {i["id"]: i for i in okresy}[drivers]["kpiValue"]["value"] == 22038

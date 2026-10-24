@@ -1,5 +1,7 @@
-# The hub's district tables as KeyPerformanceIndicator, one entity per figure, district and period
-# (T-5274). The tables change once a year at most; a weekly run shows a new year within a week.
+# The hub's tables of the 17 city districts as KeyPerformanceIndicator, one entity per figure,
+# breakdown, district and period (T-5274). The tables change once a year at most; a weekly run shows
+# a new year within a week. 75 tables, 15,765 figures on 2026-10-24; the run peaks between 256 and
+# 320 MiB (docker --memory: killed at 256).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
@@ -14,4 +16,4 @@ spec:
     dataSourceRef: { kind: DataSource, name: bratislava-hub }
   targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
   output: { type: KeyPerformanceIndicator, mode: upsert }
-  quotas: { maxMemoryMb: 256, cpuMillicores: 100 }
+  quotas: { maxMemoryMb: 320, cpuMillicores: 100 }
