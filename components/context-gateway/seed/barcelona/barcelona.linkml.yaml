@@ -13,8 +13,9 @@ description: >-
   and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona
   network with its live socket states. Urbanism: the districts and barris as
   AdministrativeArea, the works on the public space as CityWork and the street inventory's
-  crossings as PedestrianCrossing. Tourism: each licensed tourist flat (habitatge d'ús turístic)
-  as TouristRental, at the building's address and point.
+  crossings as PedestrianCrossing, its speed reducers as StreetFurniture and the drinking and
+  ornamental fountains as PointOfInterest. Tourism: each licensed tourist flat (habitatge d'ús
+  turístic) as TouristRental, at the building's address and point.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -384,7 +385,8 @@ slots:
       (culture-leisure, sports, education, social-services, public-administration,
       markets-shopping, information-centres, religious-services, environment, animals-plants,
       cemeteries, media, utility-companies, restaurants), then the register's own kind in
-      Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from
+      Catalan (Biblioteques, Poliesportius); a fountain is drinking-fountain or
+      ornamental-fountain alone. An OnStreetParking's kind of regulated parking, from
       the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
     multivalued: true
     annotations:
@@ -400,7 +402,8 @@ slots:
   address:
     slot_uri: schema:address
     description: >-
-      Where the station, the well, the event, the facility or the charging point is, as the city
+      Where the station, the well, the event, the facility, the charging point or the street
+      furniture is, as the city
       publishes it, field by field (Smart Data Models' common PostalAddress); a field the source
       leaves out is absent.
     range: PostalAddress
@@ -593,6 +596,16 @@ slots:
     minimum_value: 0
     maximum_value: 500
     unit: { ucum_code: m2 }
+    annotations: { ngsi_ld_kind: Property }
+  furnitureType:
+    slot_uri: jc:furnitureType
+    description: What the piece of street furniture is, from the model code of the city's street inventory.
+    range: StreetFurnitureType
+    required: true
+    annotations: { ngsi_ld_kind: Property }
+  furnitureTypeLabel:
+    slot_uri: jc:furnitureTypeLabel
+    description: The piece's model as the city writes it, in Catalan (Coixí berlinés, Banda reductora).
     annotations: { ngsi_ld_kind: Property }
   neighbourhoods:
     slot_uri: jc:neighbourhoods
@@ -864,6 +877,15 @@ classes:
       dataProvider, source).
     is_a: Entity
     slots: [crossingType, crossingTypeLabel, markedArea, refNeighbourhood, dataProvider, source]
+  StreetFurniture:
+    class_uri: jc:StreetFurniture
+    description: >-
+      One piece of furniture standing on Barcelona's streets, from the city's street inventory:
+      today its speed reducers, each with its kind, its model and its address. Smart Data Models
+      has no street furniture model; the class is the project's own, with SDM's common names where
+      they exist (location, address, dataProvider, source).
+    is_a: Entity
+    slots: [furnitureType, furnitureTypeLabel, address, dataProvider, source]
 
   Event:
     class_uri: sdm:Event
@@ -969,6 +991,12 @@ enums:
       open: { description: In execution (En execució). }
       other: { description: Stopped (Aturada). }
       completed: { description: Finished (Finalitzada). }
+  StreetFurnitureType:
+    description: The kinds of street furniture the city's street inventory lists that the space carries.
+    permissible_values:
+      speedCushion:
+        description: 'A Berlin cushion: a raised block a car straddles (Coixí berlinés).'
+      speedBump: { description: A speed bump or rumble band across the lane (Banda reductora). }
   CrossingType:
     description: The three kinds of crossing marking the city's typology names.
     permissible_values:

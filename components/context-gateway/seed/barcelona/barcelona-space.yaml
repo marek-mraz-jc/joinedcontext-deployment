@@ -93,6 +93,7 @@ spec:
       history: 'off'
     - entityType: PedestrianCrossing
       history: 'off'
+    - entityType: StreetFurniture
     # A licence register the weekly file rewrites: the current state only (T-5417).
     - entityType: TouristRental
       history: 'off'
@@ -149,6 +150,8 @@ spec:
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-street-furniture
+      entityType: StreetFurniture
     - name: in-area-tourist-flats
       entityType: TouristRental
       kind: area
