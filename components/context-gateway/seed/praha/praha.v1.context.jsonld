@@ -16,14 +16,26 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "FareCollectionSystem": {
+      "@id": "sdm:FareCollectionSystem"
+    },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
+    },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
+    "ParkingGroup": {
+      "@id": "sdm:ParkingGroup"
     },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "RestrictedTrafficArea": {
+      "@id": "sdm:RestrictedTrafficArea"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -119,6 +131,9 @@
     "districtCode": {
       "@id": "jc:districtCode"
     },
+    "equipmentId": {
+      "@id": "sdm:equipmentId"
+    },
     "facilityType": {
       "@id": "jc:facilityType"
     },
@@ -185,6 +200,10 @@
     "operatorName": {
       "@id": "jc:operatorName"
     },
+    "parkingGroups": {
+      "@id": "jc:parkingGroups",
+      "@type": "@id"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -199,6 +218,10 @@
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refParkingSite": {
+      "@id": "sdm:refParkingSite",
       "@type": "@id"
     },
     "refWasteContainerIsle": {
@@ -242,6 +265,9 @@
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
+    },
+    "tariff": {
+      "@id": "jc:tariff"
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
@@ -292,7 +318,10 @@
       "@id": "jc:wheelchairAccessible",
       "@type": "xsd:boolean"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "jc:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.11.1"
 }

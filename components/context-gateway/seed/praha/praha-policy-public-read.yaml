@@ -34,3 +34,7 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: OnStreetParking
+        - type: ParkingGroup
+        - type: RestrictedTrafficArea
+        - type: FareCollectionSystem
