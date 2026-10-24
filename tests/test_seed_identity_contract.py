@@ -34,13 +34,26 @@ def test_every_space_pins_the_segment_its_ids_carry_today():
 
 
 def test_no_mapping_types_its_space_or_project_in():
-    segments = {doc["spec"]["urnSegment"] for _, doc in manifests("ContextSpace")}
-    projects = {doc["metadata"]["name"] for _, doc in manifests("Project")}
-    literal = re.compile(r'"(%s)"' % "|".join(map(re.escape, sorted(segments | projects))))
+    # Each mapping against the spaces and the name of the projects its seed folder's manifests
+    # live in: a Slovak events mapping that names the town "bratislava" is not typing the space
+    # bratislava in (T-5271).
+    names: dict[str, set] = {}
+    for _, doc in manifests("Project"):
+        names.setdefault(doc["metadata"]["name"], set()).add(doc["metadata"]["name"])
+    for _, doc in manifests("ContextSpace"):
+        names[doc["metadata"]["namespace"]].add(doc["spec"]["urnSegment"])
+    folders: dict[str, set] = {}
+    for path in sorted(SEED.glob("*/*.yaml")):
+        if not path.name.endswith("-bento.yaml") and path.name != "index.yaml":
+            for doc in documents(path):
+                if doc.get("metadata", {}).get("namespace") in names:
+                    folders.setdefault(path.parent.name, set()).update(names[doc["metadata"]["namespace"]])
     bentos = sorted(SEED.glob("*/*-bento.yaml"))
     assert bentos, "the seed holds mappings"
+    assert {p.parent.name for p in bentos} <= set(folders), "every mapping's folder names its project"
     minted = 0
     for path in bentos:
+        literal = re.compile(r'"(%s)"' % "|".join(map(re.escape, sorted(folders[path.parent.name]))))
         for number, line in enumerate(path.read_text().splitlines(), 1):
             stripped = line.lstrip()
             # `let source_url` is the publisher's own address, and one of them lives under
@@ -120,6 +133,11 @@ def _shape(destination: str, name: str) -> str:
     return "/".join(shaped)
 
 
+# Kinds jc-core places at both levels (PATH_TEMPLATE and PROJECT_PATH_TEMPLATE): the org-wide
+# open-data connector sits at mcp/{name}.yaml, each publisher's at projects/{project}/mcp/ (T-5367).
+_ORG_OR_PROJECT = {"McpServer"}
+
+
 def test_every_kind_is_seeded_to_one_repository_path():
     """MF-06: a manifest lives at the path its kind declares, or the loader refuses it.
 
@@ -132,6 +150,8 @@ def test_every_kind_is_seeded_to_one_repository_path():
     shapes: dict[str, dict[str, list[str]]] = {}
     for _path, doc, destination in _index_destinations():
         shape = _shape(destination, doc.get("metadata", {}).get("name"))
+        if doc["kind"] in _ORG_OR_PROJECT:
+            shape = shape.removeprefix("projects/{namespace}/")
         shapes.setdefault(doc["kind"], {}).setdefault(shape, []).append(destination)
     assert shapes, "the seed holds manifests"
     disagreeing = {kind: paths for kind, paths in shapes.items() if len(paths) > 1}
