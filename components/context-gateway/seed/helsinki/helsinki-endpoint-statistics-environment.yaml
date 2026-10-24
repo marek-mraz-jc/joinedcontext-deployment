@@ -17,7 +17,7 @@ metadata:
     en: 'Helsinki environment statistics and sustainable development indicators: greenhouse gas emissions, energy use, air quality, waters, nature, waste and the measures of the UN Agenda 2030 goals (the Voluntary Local Review). One Smart Data Models KeyPerformanceIndicator per indicator, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (0910000000 for the whole city), divisionLevel (city), statisticsTable and dimensionKey (the source table and cell). Sources: City of Helsinki, Environmental Services (Ymparistotilasto) and Urban Research and Statistics (SDG), CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
-  slug: 4gr7xjetq25axmbpn1obvyspuvlf5kbt
+  slug: 6u27vozaruni2uaxbfk2ij3k57yutwfk
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-environment
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

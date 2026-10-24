@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground or a waste collection yard.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.
 
 IRI: `sdm:PointOfInterest`
 
@@ -230,6 +230,93 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### PublicTransportRoute
+
+One PID line as IPR Praha maps it today: its number, what it runs, the termini and the line it draws through Prague and Central Bohemia, simplified to about 5 m.
+
+IRI: `sdm:PublicTransportRoute`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `routeCode` | Property | `string` |  |  | `sdm:routeCode` | The PID line's GTFS route_id (L22, L991). |
+| `shortRouteCode` | Property | `string` |  |  | `sdm:shortRouteCode` | The line's public number or letter (22, A, S9, P2). |
+| `transportationType` | Property | `integer` |  |  | `sdm:transportationType` | The GTFS basic route type of the line: 0 tram, 1 metro, 2 train, 3 bus, 4 ferry, 7 funicular. The Smart Data Model lists only 0 to 7, so a trolleybus (GTFS 11) is 3 and its transportMode says trolleybus. |
+| `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus). |
+| `description` | Property | `string` |  |  | `sdm:description` | The publisher's own description: the termini a line runs between, the streets and connections a metro entrance leads to. |
+| `url` | Property | `uri` |  |  | `schema:url` | The place's own web page. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsStop
+
+One PID stop platform in Prague (GTFS stop of location type 0): its name, platform, fare zone, the lines that stop there and whether it is step-free.
+
+IRI: `sdm:GtfsStop`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `platformCode` | Property | `string` |  |  | `jc:platformCode` | The platform letter or number of a stop (A, 2); absent where the stop has one. |
+| `zoneCode` | Property | `string` |  |  | `sdm:zoneCode` | The PID fare zone (P, 0, B, 1 to 12): of a stop, every zone it counts in, comma separated on a zone border; of a fare zone area, the zones it is. |
+| `servedLines` | Property | `string` (list) |  |  | `jc:servedLines` | The PID lines that stop there, or that the metro entrance leads to (22, 136, A). |
+| `transportModes` | Property | [`TransportMode`](#transportmode) (list) |  |  | `jc:transportModes` | What stops there, as the GTFS route types name it (bus, tram); a tram and bus stop lists both. |
+| `wheelchairAccessible` | Property | `boolean` |  |  | `jc:wheelchairAccessible` | Whether the publisher states the place is reachable in a wheelchair; absent when it does not say. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsAccessPoint
+
+One entrance of a Prague metro station: its sign, the station, the streets it leads to and the metro lines behind it.
+
+IRI: `sdm:GtfsAccessPoint`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `code` | Property | `string` |  |  | `sdm:code` | The sign of a metro entrance (E1, E2). |
+| `description` | Property | `string` |  |  | `sdm:description` | The publisher's own description: the termini a line runs between, the streets and connections a metro entrance leads to. |
+| `servedLines` | Property | `string` (list) |  |  | `jc:servedLines` | The PID lines that stop there, or that the metro entrance leads to (22, 136, A). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### FareZone
+
+One area of the PID fare zones (P, 0, B, 1 to 12) the ticket price is counted by. No Smart Data Model holds a fare zone; the nearest, Transportation RestrictedTrafficArea, is an access restriction.
+
+IRI: `jc:FareZone`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `zoneCode` | Property | `string` |  |  | `sdm:zoneCode` | The PID fare zone (P, 0, B, 1 to 12): of a stop, every zone it counts in, comma separated on a zone border; of a fare zone area, the zones it is. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### PostalAddress
 
 The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
@@ -306,6 +393,22 @@ IRI: `ngsi-ld:Entity`
 | `garden` | A public garden or park of the city. |
 | `playground` | A public children's playground. |
 | `wasteCollectionYard` | A waste collection yard (sběrný dvůr) that takes bulky and hazardous waste. |
+| `healthCentre` | A polyclinic or health centre. |
+| `university` | A university, faculty or university workplace. |
+| `placeOfWorship` | A church, chapel, prayer room or other place of worship. |
+| `communityCentre` | A cultural or community centre, a local library, a youth or senior club. |
+| `accommodation` | A hotel, guest house, hostel, campsite or other accommodation. |
+| `groceryStore` | A full-range grocery store or supermarket. |
+| `drinkingFountain` | A public drinking fountain. |
+| `fountain` | A fountain or ornamental pool. |
+| `spring` | A well or spring. |
+| `waterPump` | A public water pump. |
+| `mistShower` | A mist shower that cools passers-by in summer. |
+| `bathingPlace` | A swimming pool, natural pool or other place to swim. |
+| `animalCorner` | A petting zoo, farm, terrarium or animal rescue station. |
+| `landmark` | A notable building or place of the city. |
+| `wasteCollectionPoint` | A collection point for hazardous waste or bio-waste that is not a collection yard. |
+| `trailStop` | A stop of a nature trail. |
 
 ### WasteAccess
 
