@@ -754,11 +754,29 @@ slots:
   parkingZone:
     slot_uri: jc:parkingZone
     description: The paid parking zone of the section as TSK codes it, RES (blue, residents), MIX (purple, mixed) or VIS (orange, visitors).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Parkovacia zóna
+          cs: Parkovací zóna
+          en: Parking zone
+          de: Parkzone
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   tariff:
     slot_uri: jc:tariff
     description: The section's tariff as TSK writes it, days, hours and price, such as Po-Ne 08:00-19:59 300Kč/hod (max. 75 Kč).
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Tarifa
+          cs: Tarif
+          en: Tariff
+          de: Tarif
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   refParkingSite:
     slot_uri: sdm:refParkingSite
     description: The paid parking section (OnStreetParking) whose tariff this segment of a street follows.
@@ -768,6 +786,14 @@ slots:
     inverse: parkingGroups
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Parkovací úsek
+          cs: Parkovací úsek
+          en: Parking section
+          de: Parkabschnitt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   parkingGroups:
@@ -778,12 +804,29 @@ slots:
     multivalued: true
     inverse: refParkingSite
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Úseky ulíc
+          cs: Úseky ulic
+          en: Street segments
+          de: Straßenabschnitte
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   equipmentId:
     slot_uri: sdm:equipmentId
     description: The parking machine's number as TSK labels it on the machine, such as 22000004.
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo automatu
+          cs: Číslo automatu
+          en: Machine number
+          de: Automatennummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
 
