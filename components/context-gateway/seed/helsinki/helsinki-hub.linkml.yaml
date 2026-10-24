@@ -40,6 +40,7 @@ classes:
     is_a: Entity
     slots:
       - name
+      - title
       - currentValue
       - calculationPeriod
       - calculationFormula
@@ -161,6 +162,13 @@ slots:
     description: The indicator's own name, equal to the `{localId}` of its id, so the territory is legible without parsing the URN.
     required: true
     annotations: { ngsi_ld_kind: Property }
+  title:
+    slot_uri: jc:title
+    description: >-
+      The indicator's human name, one text per language of the space, such as `{sk: Index
+      starnutia, en: Ageing index}`: what a table labels the row with, because `name` is the
+      slug. Optional: an indicator written before it, or by a writer that names none, has none.
+    annotations: { ngsi_ld_kind: LanguageProperty }
   currentValue:
     slot_uri: jc:currentValue
     description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the instant it describes as `observedAt`. A window with no reading in it carries the string `not measured` instead of a number, and never a zero: a zero reads as a measurement.'

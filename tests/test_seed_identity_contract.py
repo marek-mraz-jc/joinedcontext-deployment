@@ -65,10 +65,11 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # read per dataset split out of helsinki-all (T-4344), and the history of helsinki-all's types
     # that keep one (T-4372), and the pipelines' delete of withdrawn Alerts (T-4823), and the
     # steward's import of journey 41's test places (T-4867), and the steward's add and delete of
-    # the data workspace journey's test alerts (T-5092), and the public read of air quality (T-5259),
-    # the public reads of the cycle and traffic counts (T-5253)
-    # and the public read of the street cleaning air pilot (T-5255), and of feedback reports (T-5257).
-    assert len(policies) == 30
+    # the data workspace journey's test alerts (T-5092), and the public read of the street cleaning
+    # air pilot (T-5255), and one public read per area statistics theme (T-5258), and the public read
+    # of air quality (T-5259), and the service usage counters (T-5258), and the public reads of the heat vulnerability index and the service
+    # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257).
+    assert len(policies) == 40
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
@@ -274,3 +275,11 @@ def test_every_bound_group_is_seeded_or_the_identity_providers():
         else:
             assert "source" not in subject, f"{name}: unknown source {subject['source']}"
             assert subject["group"] in seeded, f"{name}: {subject['group']} is no seeded Group and not marked provider"
+
+
+def test_every_quality_rule_name_is_unique_in_its_space():
+    # The Portal refuses a whole space whose quality rules share a name (DM-87); dev kept
+    # barcelona's last valid space while six rules were all `in-area` (T-5265, T-5264).
+    for path, space in manifests("ContextSpace"):
+        names = [rule["name"] for rule in space["spec"].get("quality", [])]
+        assert len(names) == len(set(names)), f"{path.name}: {sorted(n for n in names if names.count(n) > 1)}"

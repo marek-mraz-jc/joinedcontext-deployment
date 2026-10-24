@@ -265,6 +265,23 @@ and query on `opendata.{domain}` (T-4679), for links shared before the move. `/c
 primary host answers a 302 to that host rather than proxying: CKAN builds every link it
 renders from `CKAN_SITE_URL`, so a proxied prefix would emit links off the prefix anyway.
 
+## Content Security Policy
+
+Every HTML page CKAN renders carries the theme's own policy (T-5147, `_csp` in `plugin.py`):
+scripts and styles from this host or with the request's nonce, frames, fetches and images from
+`{domain}` and its subdomains (the Endpoints, `tiles.`, `viz.`, `assistant.`), `form-action`
+and `frame-ancestors 'self'`, no `'unsafe-inline'` or `'unsafe-eval'`. The map page `/map/{id}`
+sends the same policy with `frame-ancestors *`. The edge's frame-ancestors-only baseline still
+covers the answers CKAN sends without a policy (static files, JSON).
+
+A template that writes an inline `<script>` or `<style>` gives it `nonce="{{ h.jc_csp_nonce() }}"`;
+an inline handler or a `style` attribute is refused, so the theme overrides the CKAN 2.11.6
+templates that carry one (`dataviewer/base.html`, `text_view.html`, `datatables_view.html`,
+`resource_upload_field.html`, `image_view.html`) and `jc-forms.js` does what their `onclick`
+did. A CKAN upgrade re-checks those copies against the new templates. Gravatar is off
+(`CKAN__GRAVATAR_DEFAULT`): its images come from outside the policy and would send each
+account's e-mail hash to gravatar.com.
+
 ## Running under the runtime policies
 
 Kyverno is in Enforce mode on dev, so every container here runs non-root with a read-only

@@ -47,6 +47,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | Property | `string` | yes |  | `jc:name` | The indicator's own name, equal to the `{localId}` of its id, so the territory is legible without parsing the URN. |
+| `title` | LanguageProperty | `string` per language | no |  | `jc:title` | The indicator's human name per language, which a table labels the row with, because `name` is the slug. |
 | `currentValue` | Property | `string` | yes |  | `jc:currentValue` | The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the instant it describes as `observedAt`. A window with no reading in it carries the string `not measured` instead of a number, and never a zero: a zero reads as a measurement. |
 | `calculationPeriod` | Property | `string` | yes |  | `jc:calculationPeriod` | The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end` and `updatedAt` is how stale the source is. |
 | `calculationFormula` | Property | `string` | yes |  | `jc:calculationFormula` | How the value was computed, in words a reader can check the number against: the measure, the aggregation, the window and any divisor, such as `per km² of the district's own area`. |

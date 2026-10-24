@@ -48,6 +48,12 @@ metrics:
   port: 9464
   name: metrics
 
+# One broker process per database (ANTARES_BUS=local, below): a surge would run a second matcher
+# beside the old one, and the old pod's writes keep a boot migration's ACCESS EXCLUSIVE lock out
+# until the startup probe gives up (dev 2026-10-19, migration 0011: three restarts in four
+# minutes). Recreate stops the old pod first; the gap is the boot time, about 47 s on dev (T-5311).
+updateStrategy: Recreate
+
 probes:
   readiness:
     path: /q/ready

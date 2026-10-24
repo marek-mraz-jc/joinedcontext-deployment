@@ -172,6 +172,20 @@ helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/be
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
+# HSL's network registers (T-5254): fare zones, ticket sales points, City Bike Vantaa's stations and the
+# boardings per stop, which go to the indicator space.
+helsinki-datasource-fare-zones.yaml: projects/helsinki/datasources/hsl-fare-zones.yaml
+helsinki-datasource-sales-points.yaml: projects/helsinki/datasources/hsl-sales-points.yaml
+helsinki-datasource-vantaa-bikes.yaml: projects/helsinki/datasources/hsl-vantaa-bikes.yaml
+helsinki-datasource-stop-boardings.yaml: projects/helsinki/datasources/hsl-stop-boardings.yaml
+helsinki-pipeline-fare-zones.yaml: projects/helsinki/pipelines/fare-zones/pipeline.yaml
+helsinki-pipeline-sales-points.yaml: projects/helsinki/pipelines/sales-points/pipeline.yaml
+helsinki-pipeline-vantaa-bikes.yaml: projects/helsinki/pipelines/vantaa-bikes/pipeline.yaml
+helsinki-pipeline-stop-boardings.yaml: projects/helsinki/pipelines/stop-boardings/pipeline.yaml
+helsinki-pipeline-fare-zones-bento.yaml: projects/helsinki/pipelines/fare-zones/bento.yaml
+helsinki-pipeline-sales-points-bento.yaml: projects/helsinki/pipelines/sales-points/bento.yaml
+helsinki-pipeline-vantaa-bikes-bento.yaml: projects/helsinki/pipelines/vantaa-bikes/bento.yaml
+helsinki-pipeline-stop-boardings-bento.yaml: projects/helsinki/pipelines/stop-boardings/bento.yaml
 # HSL's stops and lines (T-3356): the network transit-reach routes over, beside the live vehicles.
 helsinki-datasource-transit-stops.yaml: projects/helsinki/datasources/hsl-gtfs-stops.yaml
 helsinki-datasource-transit-routes.yaml: projects/helsinki/datasources/hsl-routes.yaml
@@ -254,5 +268,41 @@ helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsi
 helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-cycle-counts.yaml
 helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml
 helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml
+# Helsinki area statistics (T-5258): one pipeline, one Endpoint and one public Policy per theme.
+helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-subdistrict-codes.yaml
+helsinki-pipeline-statistics.yaml: projects/helsinki/pipelines/statistics/pipeline.yaml
+helsinki-pipeline-statistics-bento.yaml: projects/helsinki/pipelines/statistics/bento.yaml
+helsinki-endpoint-statistics-population.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-population.yaml
+helsinki-policy-public-statistics-population.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-population.yaml
+helsinki-endpoint-statistics-housing.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-housing.yaml
+helsinki-policy-public-statistics-housing.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-housing.yaml
+helsinki-endpoint-statistics-employment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-employment.yaml
+helsinki-policy-public-statistics-employment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-employment.yaml
+helsinki-endpoint-statistics-income.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-income.yaml
+helsinki-policy-public-statistics-income.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-income.yaml
+helsinki-endpoint-statistics-education.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-education.yaml
+helsinki-policy-public-statistics-education.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-education.yaml
+helsinki-endpoint-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-welfare.yaml
+helsinki-policy-public-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-welfare.yaml
+helsinki-endpoint-statistics-environment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-environment.yaml
+helsinki-policy-public-statistics-environment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-environment.yaml
+# Service usage (T-5258): the zoo visitor and web analytics counters, one more statistics theme.
+helsinki-datasource-zoo-visitors.yaml: projects/helsinki/datasources/hel-zoo-visitors.yaml
+helsinki-pipeline-service-usage.yaml: projects/helsinki/pipelines/service-usage/pipeline.yaml
+helsinki-pipeline-service-usage-bento.yaml: projects/helsinki/pipelines/service-usage/bento.yaml
+helsinki-endpoint-statistics-services.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-services.yaml
+helsinki-policy-public-statistics-services.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-services.yaml
+# Heat vulnerability index and service property energy use (T-5278): one pipeline, one Endpoint and
+# one public Policy each.
+helsinki-datasource-heat-vulnerability.yaml: projects/helsinki/datasources/hel-heat-vulnerability.yaml
+helsinki-pipeline-heat-vulnerability.yaml: projects/helsinki/pipelines/heat-vulnerability/pipeline.yaml
+helsinki-pipeline-heat-vulnerability-bento.yaml: projects/helsinki/pipelines/heat-vulnerability/bento.yaml
+helsinki-endpoint-heat-vulnerability.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-heat-vulnerability.yaml
+helsinki-policy-public-heat-vulnerability.yaml: projects/helsinki/spaces/helsinki/policies/public-heat-vulnerability.yaml
+helsinki-datasource-service-property-energy.yaml: projects/helsinki/datasources/hel-nuuka-properties.yaml
+helsinki-pipeline-service-property-energy.yaml: projects/helsinki/pipelines/service-property-energy/pipeline.yaml
+helsinki-pipeline-service-property-energy-bento.yaml: projects/helsinki/pipelines/service-property-energy/bento.yaml
+helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-service-property-energy.yaml
+helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
 helsinki-policy-public-cycle-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-cycle-counts.yaml
 helsinki-policy-public-traffic-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-counts.yaml

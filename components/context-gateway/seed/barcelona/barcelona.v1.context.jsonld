@@ -13,6 +13,9 @@
     "ContactPoint": {
       "@id": "schema:ContactPoint"
     },
+    "EVChargingStation": {
+      "@id": "sdm:EVChargingStation"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
@@ -24,6 +27,9 @@
     },
     "KpiPeriod": {
       "@id": "jc:KpiPeriod"
+    },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
     },
     "PedestrianCrossing": {
       "@id": "jc:PedestrianCrossing"
@@ -37,6 +43,9 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
+    },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
     },
@@ -48,6 +57,9 @@
     },
     "addressLocality": {
       "@id": "schema:addressLocality"
+    },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
     },
     "altitude": {
       "@id": "jc:altitude",
@@ -65,6 +77,10 @@
     "atmosphericPressure": {
       "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
+    },
+    "availableCapacity": {
+      "@id": "sdm:availableCapacity",
+      "@type": "xsd:integer"
     },
     "awardAmount": {
       "@id": "jc:awardAmount",
@@ -88,6 +104,10 @@
     "calculationPeriod": {
       "@id": "sdm:calculationPeriod"
     },
+    "capacity": {
+      "@id": "sdm:capacity",
+      "@type": "xsd:integer"
+    },
     "category": {
       "@id": "sdm:category"
     },
@@ -98,6 +118,10 @@
     "co": {
       "@id": "sdm:co",
       "@type": "xsd:float"
+    },
+    "congested": {
+      "@id": "sdm:congested",
+      "@type": "xsd:boolean"
     },
     "contactPoint": {
       "@id": "schema:contactPoint"
@@ -201,6 +225,9 @@
       "@id": "jc:neighbourhoods",
       "@type": "@id"
     },
+    "network": {
+      "@id": "sdm:network"
+    },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no": {
       "@id": "sdm:no",
@@ -221,6 +248,12 @@
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
+    },
+    "openingHours": {
+      "@id": "schema:openingHours"
+    },
+    "operator": {
+      "@id": "sdm:operator"
     },
     "organization": {
       "@id": "sdm:organization"
@@ -283,6 +316,18 @@
       "@id": "sdm:so2",
       "@type": "xsd:float"
     },
+    "socketNumber": {
+      "@id": "sdm:socketNumber",
+      "@type": "xsd:integer"
+    },
+    "socketType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:socketType"
+    },
     "solarRadiation": {
       "@id": "sdm:solarRadiation",
       "@type": "xsd:float"
@@ -301,11 +346,22 @@
     "statisticsTable": {
       "@id": "jc:statisticsTable"
     },
+    "status": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:status"
+    },
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
     "subCategory": {
       "@id": "sdm:subCategory"
+    },
+    "tariffCode": {
+      "@id": "jc:tariffCode"
     },
     "telephone": {
       "@id": "schema:telephone"
@@ -325,7 +381,35 @@
       "@id": "sdm:to",
       "@type": "xsd:date"
     },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "trafficState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficState"
+    },
+    "trafficStateForecast": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficStateForecast"
+    },
+    "travelTime": {
+      "@id": "jc:travelTime",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
+    "usualTravelTime": {
+      "@id": "jc:usualTravelTime",
+      "@type": "xsd:integer"
+    },
     "waterTable": {
       "@id": "sdm:waterTable",
       "@type": "xsd:float"
@@ -355,7 +439,10 @@
     "workStateLabel": {
       "@id": "jc:workStateLabel"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "jc:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.12.0"
 }

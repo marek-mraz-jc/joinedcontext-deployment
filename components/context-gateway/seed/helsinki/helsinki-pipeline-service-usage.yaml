@@ -1,0 +1,20 @@
+# Usage counters of city services as KeyPerformanceIndicator series (T-5258): Korkeasaari zoo's
+# visitors per day and month, and visits and page views per city website and month. Written into
+# the city space beside the area statistics; the mapping names the reads and the checks.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Pipeline
+metadata:
+  name: service-usage
+  namespace: helsinki
+  title: { en: Helsinki service usage, fi: Helsingin palvelujen käyttö }
+spec:
+  class: auto
+  # The zoo updates its count at least daily and the web analytics export appears on the 1st of
+  # the month: a daily read writes each ended day and month once (record: observed).
+  period: 24h
+  schedule: '50 5 * * *'
+  source:
+    dataSourceRef: { kind: DataSource, name: hel-zoo-visitors }
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  output: { type: KeyPerformanceIndicator, mode: upsert }
+  quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

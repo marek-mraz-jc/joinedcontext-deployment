@@ -39,6 +39,24 @@ rate_limit_resources:
     local:
       count: 1
       interval: 2s
+  # barcelona traffic-state and traffic-routes: Open Data BCN (opendata-ajuntament.barcelona.cat),
+  # the section and route lists once a run (T-5262).
+  - label: barcelona_opendata
+    local:
+      count: 1
+      interval: 1s
+  # helsinki statistics: the city's statistics service (stat.hel.fi PXWEB) is called at most once
+  # a second, one table after another (T-5258).
+  - label: hel_stat
+    local:
+      count: 1
+      interval: 1s
+  # helsinki service property energy: Nuuka's open API is asked one location and utility per call,
+  # about 3,000 calls a week, at most ten a second (T-5278).
+  - label: hel_nuuka
+    local:
+      count: 10
+      interval: 1s
   # hsl-hfp-vehicles: the most positions it writes a second (T-5046), two and a half times
   # HSL's peak of about 2,000 vehicles; a flood of frames waits here instead of reaching the
   # gateway.

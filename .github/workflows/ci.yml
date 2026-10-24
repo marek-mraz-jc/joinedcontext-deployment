@@ -218,12 +218,23 @@ jobs:
       # The slowest durations go to the log; refresh the table with --record from a --durations=0 run.
       # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
       # rebuilds the standalone assistant's bundle and compares it with the committed one.
-      - name: the platform commit of the ai bundle
+      # T-5357: tests/test_portal_pin_reads_the_seed.py holds every seed manifest to the jc-core schemas of
+      # the platform commit the pinned Portal is built from (its Cargo.toml rev), of the gateway's commit,
+      # of platform 5a24c42 (the prod incident it replays) and of platform main.
+      - name: the platform commits of the ai bundle, the Portal and gateway pins and platform main
         run: |
+          set -euo pipefail
           sha=$(sed -n 's/^platform: //p' components/ai/bundle.lock)
+          portal=$(yq '.portal.portal.commit' components/portal/images.yaml)
+          git init -q "$RUNNER_TEMP/portal"
+          git -C "$RUNNER_TEMP/portal" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-portal "$portal"
+          jc_core=$(git -C "$RUNNER_TEMP/portal" show "$portal:Cargo.toml" | sed -n 's/^jc-core = {.*rev = "\([0-9a-f]\{40\}\)".*/\1/p')
+          gateway=$(yq '.["context-gateway"].gateway.commit' components/context-gateway/images.yaml)
           git init -q "$RUNNER_TEMP/platform"
-          git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform "$sha"
+          git -C "$RUNNER_TEMP/platform" fetch -q --depth 1 https://github.com/marek-mraz-jc/joinedcontext-platform \
+            "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
+          echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
       - run: pytest -q -n auto --dist loadgroup --durations=30 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
       # How each seed pipeline creates history rows, per pipeline x type x attribute, with a verdict
       # (T-4844); tests/test_temporal_audit.py fails on a row that is not ok, the report is the table.

@@ -12,6 +12,7 @@ sibling joinedcontext-platform folder) or else of GitHub's compare API; without 
 ancestry case skips, and the format case still holds.
 """
 
+import functools
 import json
 import os
 import re
@@ -24,6 +25,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 PLATFORM_REPO = "marek-mraz-jc/joinedcontext-platform"
+# One worker reads the whole seed once per platform commit (refusals() caches it).
+pytestmark = pytest.mark.xdist_group("portal-pin-seed")
 
 # A ContextSpace spec field, and the platform commit whose jc-core first reads it.
 SINCE = {
@@ -199,3 +202,139 @@ def test_the_datacube_step_is_caught_on_the_pin_before_it():
     if known is None:
         pytest.skip("no platform clone and no answer from GitHub")
     assert known is False
+
+
+# The whole seed against each pinned jc-core (T-5357). The SINCE maps above hold only the fields someone
+# listed: deployment 653fd563 carried `spec.catalog.harvest` (T-4744) under portal 299564d, whose jc-core
+# (platform 5a24c42) predates it, and prod's Portal refused 9 Endpoints and withdrew 81 CKAN datasets.
+# jc-core's committed schemas/kinds/*.json are what its serde types accept, with two known gaps: a
+# templated `{orgDomain}` URN and a few custom string forms fail every commit's schema. So a seed document
+# fails only where the pinned commit's schema refuses something platform main's schema accepts.
+def platform_clone() -> Path:
+    return Path(os.environ.get("JC_PLATFORM_DIR", ROOT.parent / "joinedcontext-platform"))
+
+
+def git_show(clone: Path, commit: str, path: str) -> str | None:
+    result = subprocess.run(["git", "-C", str(clone), "show", f"{commit}:{path}"], capture_output=True, text=True)
+    return result.stdout if result.returncode == 0 else None
+
+
+def unavailable(why: str):
+    """CI fetches every commit this gate reads (ci.yml), so there a missing one is a red, not a skip."""
+    if os.environ.get("CI"):
+        pytest.fail(why)
+    pytest.skip(why)
+
+
+def portal_jc_core_rev(cargo_toml: str) -> str:
+    match = re.search(r'^jc-core = \{[^}]*\brev = "([0-9a-f]{40})"', cargo_toml, re.MULTILINE)
+    assert match, "the portal's Cargo.toml pins jc-core by a full `rev`"
+    return match.group(1)
+
+
+def pinned_commits() -> dict[str, str]:
+    images = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["portal"]
+    gateway = yaml.safe_load((ROOT / "components/context-gateway/images.yaml").read_text())["context-gateway"]["gateway"]
+    return {"portal": images["commit"], "gateway": gateway["commit"]}
+
+
+def portal_platform() -> str:
+    """The platform commit the pinned Portal's jc-core is built from, read from its Cargo.toml."""
+    portal = pinned_commits()["portal"]
+    clone = Path(os.environ.get("JC_PORTAL_DIR", ROOT.parent / "joinedcontext-portal"))
+    cargo = git_show(clone, portal, "Cargo.toml")
+    if cargo is None:
+        unavailable(f"portal {portal[:7]} is not in {clone}")
+    return portal_jc_core_rev(cargo)
+
+
+def test_the_platform_field_is_the_pinned_portals_jc_core():
+    """The hand-kept `platform` field said 0069530 at 653fd563 while portal 299564d ran jc-core 5a24c42."""
+    assert pinned_platform() == portal_platform(), (
+        f"components/portal/images.yaml: platform is {pinned_platform()[:7]}, but portal "
+        f"{pinned_commits()['portal'][:7]}'s Cargo.toml builds jc-core from {portal_platform()[:7]}: write that commit"
+    )
+
+
+@functools.cache
+def seed_documents() -> tuple[tuple[str, dict], ...]:
+    return tuple(
+        (f"{path.relative_to(ROOT)}#{index}", document)
+        for path in sorted(ROOT.glob("components/*/seed/**/*.yaml"))
+        for index, document in enumerate(yaml.safe_load_all(path.read_text()))
+        if isinstance(document, dict) and isinstance(document.get("kind"), str)
+    )
+
+
+def reason(error) -> str:
+    """The innermost cause: an anyOf/oneOf refusal says which branch failed and why, not the whole value."""
+    while error.context:
+        error = max(error.context, key=lambda inner: (len(inner.absolute_path), inner.validator != "type"))
+    return error.message[:160]
+
+
+@functools.cache
+def refusals(commit: str) -> dict[str, dict[tuple, str]]:
+    """What platform `commit`'s schemas refuse in each seed document: (where, which keyword) -> the message."""
+    jsonschema = pytest.importorskip("jsonschema")
+    validators: dict[str, object] = {}
+    found: dict[str, dict[tuple, str]] = {}
+    for name, document in seed_documents():
+        kind = document["kind"]
+        if kind not in validators:
+            text = git_show(platform_clone(), commit, f"schemas/kinds/{kind}.json")
+            validators[kind] = text and jsonschema.Draft7Validator(json.loads(text))
+        validator = validators[kind]
+        if not validator:
+            found[name] = {(("kind",), "kind"): f"jc-core has no {kind}"}
+            continue
+        errors = {(tuple(map(str, error.absolute_path)), error.validator): reason(error)
+                  for error in validator.iter_errors(document)}
+        if errors:
+            found[name] = errors
+    return found
+
+
+def newly_refused(pin: str, reference: str) -> list[str]:
+    """Each refusal of `pin` that `reference` does not share, as `file#document (path: message)`."""
+    known = refusals(reference)
+    return [
+        f"{name} ({'.'.join(where) or 'document'}: {message})"
+        for name, errors in refusals(pin).items()
+        for (where, keyword), message in sorted(errors.items())
+        if (where, keyword) not in known.get(name, {})
+    ]
+
+
+def platform_main() -> str:
+    for ref in ("origin/main", "main"):
+        result = subprocess.run(["git", "-C", str(platform_clone()), "rev-parse", "--verify", "-q", f"{ref}^{{commit}}"],
+                                capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+    unavailable(f"no platform main in {platform_clone()}")
+
+
+@pytest.mark.parametrize("image", ["portal", "gateway"])
+def test_every_seed_manifest_is_one_the_pinned_jc_core_reads(image):
+    pin = portal_platform() if image == "portal" else pinned_commits()["gateway"]
+    if git_show(platform_clone(), pin, "schemas/kinds/ContextSpace.json") is None:
+        unavailable(f"platform {pin[:7]} is not in {platform_clone()}")
+    refused = newly_refused(pin, platform_main())
+    assert not refused, (
+        f"the {image} pin's jc-core (platform {pin[:7]}) refuses what platform main reads, and drops these "
+        f"manifests whole: {refused[:10]}{' ...' if len(refused) > 10 else ''}; pin a {image} built on a platform "
+        f"commit that has them in the same commit"
+    )
+
+
+def test_the_harvest_field_of_653fd563_is_caught():
+    """The prod incident: Endpoint spec.catalog.harvest under platform 5a24c42 (portal 299564d)."""
+    if git_show(platform_clone(), "5a24c4298689bd21e842511bda8fbf21157b1580", "schemas/kinds/Endpoint.json") is None:
+        unavailable("platform 5a24c42 is not in the clone")
+    harvest = {name for name, document in seed_documents()
+               if document["kind"] == "Endpoint" and "harvest" in ((document.get("spec") or {}).get("catalog") or {})}
+    assert harvest, "seed Endpoints carry spec.catalog.harvest"
+    refused = {line.split(" ")[0] for line in newly_refused("5a24c4298689bd21e842511bda8fbf21157b1580", platform_main())
+               if "(spec.catalog: " in line}
+    assert harvest <= refused, sorted(harvest - refused)

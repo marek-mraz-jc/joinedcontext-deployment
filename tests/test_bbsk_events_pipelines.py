@@ -21,6 +21,7 @@ import sys
 import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import jsonschema
 import pytest
@@ -156,6 +157,11 @@ def pipeline(name: str, fixture: str, pages: str | None = None) -> list:
     return run(offline(processors(name), recorded), (FIXTURES / fixture).read_text())
 
 
+def pipeline_ns(name: str, fixture: str) -> list:
+    """A national-store source's generated steps over its recorded feed."""
+    return run(offline(processors(name, "slovensko"), {}), (FIXTURES / fixture).read_text(), "slovensko-podujatia")
+
+
 def home_point(events_url: str) -> list[float]:
     """[lon, lat] of the venues.csv row homes.csv names for a source."""
     events = ROOT / "seeds/bbsk-events"
@@ -283,7 +289,7 @@ def test_each_national_feed_runs_every_3_hours_and_each_village_calendar_daily_i
     for path in (p for p in NATIONAL.glob("slovensko-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml")):
         spec = yaml.safe_load(path.read_text())["spec"]
         kind = yaml.safe_load(NATIONAL.joinpath(path.name.replace("-pipeline-", "-datasource-")).read_text())["metadata"]["title"]["en"]
-        daily = kind.endswith(("(lego-html)", "(weby-feed)", "(umb-cms)", "(drupal-kalendar)"))
+        daily = kind.endswith(tuple(f"({k})" for k in generate.STORES[1]["cadences"][0]["kinds"]))
         assert spec["targetEndpoint"] == target and spec["period"] == ("24h" if daily else "3h"), path.name
         minute, hour, *rest = spec["schedule"].split()
         assert rest == ["*", "*", "*"], path.name
@@ -1066,3 +1072,131 @@ def test_the_venue_pipeline_writes_each_venue_once_as_a_valid_point_of_interest(
             "address": {"streetAddress": "Obrancov mieru 871/1", "addressLocality": "Detva", "addressCountry": "SK"},
             "areaServed": "Detva", "source": "https://www.openstreetmap.org/way/292648504",
             "dataProvider": "© OpenStreetMap contributors, ODbL 1.0"}
+
+
+def test_every_wp_rest_fields_source_names_where_its_start_date_is():
+    kinds = {urlsplit(r["check_url"]).hostname for r in generate.kept_sources() if r["feed_kind"] == "wp-rest-fields"}
+    assert kinds == set(generate.WP_FIELDS), "a wp-rest-fields row without its WP_FIELDS entry writes nothing"
+    assert all(f.get("start") for f in generate.WP_FIELDS.values())
+
+
+@requires_docker
+def test_wordpress_events_with_their_dates_in_fields_of_their_own_are_read_per_site():
+    # Fixtures recorded 2026-10-23 from each site's REST list (T-5365), contacts scrubbed.
+    out = {}
+    for name in ("zilina", "regiontatry", "podujatiaksk", "upjs", "senec", "ruzomberok"):
+        entities = pipeline_ns(name, f"{name}-wp-rest.json")
+        assert entities, name
+        for e in entities:
+            assert VALID.is_valid(key_values(e)), (name, list(VALID.iter_errors(key_values(e))))
+        out[name] = {e["name"]["value"]: e for e in entities}
+    # Žilina: meta.iq_dateStart; a post titled only by its day ("19.&nbsp;10.&nbsp;2026 (PONDELOK)") is no event.
+    assert out["zilina"]["MindLab"]["startDate"]["value"] == "2026-11-02"
+    assert not any(n[0].isdigit() for n in out["zilina"])
+    # regiontatry.sk: YYYYMMDD plus a time; 00:00:00 is the empty time field, so the event keeps its day.
+    tatry = out["regiontatry"]
+    assert tatry["To ťa musí baviť – Pavol Jackovič"]["startDate"]["value"] == "2026-10-29T17:30:00+01:00"
+    assert tatry["Halloweenska večera pod hviezdami"]["startDate"]["value"] == "2026-10-31"
+    # KSK calendar: one ACF group with a local datetime.
+    assert out["podujatiaksk"]["Čo nás učia knihy: Mengeleho dievča"]["startDate"]["value"] == "2026-10-26T13:00:00+01:00"
+    # UPJŠ: YYYYMMDD start and end.
+    assert out["upjs"]["Univerzitné dni športu 2026"]["startDate"]["value"] == "2026-11-09"
+    assert out["upjs"]["Univerzitné dni športu 2026"]["endDate"]["value"] == "2026-11-11"
+    # Senec and Ružomberok run the smart-city theme of Banská Bystrica: Meta Box date_start and time_start.
+    assert out["senec"]["Koncert úcty k starším v Senci"]["startDate"]["value"] == "2026-10-22T18:00:00+02:00"
+    assert out["ruzomberok"]
+
+
+# --- the HTML sources of T-5354 ----------------------------------------------------------------------------------
+
+
+@requires_docker
+def test_sliac_events_take_their_times_from_the_pages_microdata_and_never_the_towns_default_point():
+    # Recorded 2026-10-23 from sliac.sk: every page names the town alone as its place, beside one static-map point.
+    pages = json.loads((FIXTURES / "pages/sliac.json").read_text())
+    out = {e["name"]["value"]: e for e in pipeline("sliac", "sliac-rss.xml", "sliac.json")}
+    assert len(out) == 6
+    india = out["Cestovateľský večer – India"]
+    assert india["startDate"]["value"] == "2026-10-23T18:00:00+02:00" and india["endDate"]["value"] == "2026-10-23T19:00:00+02:00"
+    assert out["PONOŽKOVÝ OKTÓBER"]["startDate"]["value"] == "2026-10-01" and out["PONOŽKOVÝ OKTÓBER"]["endDate"]["value"] == "2026-10-30"
+    # The town's own name as the place: the town office, labelled so, never the theme's point as the event's.
+    office = home_point("https://www.sliac.sk/podujatia/")
+    assert all(e["location"]["value"]["coordinates"] == office and e["locationPrecision"]["value"] == "office" for e in out.values())
+    assert all(VALID.is_valid(key_values(e)) for e in out.values())
+    # A page naming a place of its own gives its point (the lantern parade page with its place changed).
+    path = "/podujatia/lampionovy-sprievo/"
+    pages[path] = pages[path].replace('<span itemprop="name">Sliač</span>', '<span itemprop="name">Parkovisko pri stanici</span>')
+    (parade,) = [e for e in run(offline(processors("sliac"), pages), (FIXTURES / "sliac-rss.xml").read_text())
+                 if e["name"]["value"] == "LAMPIÓNOVÝ SPRIEVOD"]
+    assert parade["location"]["value"]["coordinates"] == [19.133676, 48.616528]
+    assert parade["locationPrecision"]["value"] == "source" and parade["venue"]["value"] == "Parkovisko pri stanici"
+
+
+@requires_docker
+def test_ticketware_gives_each_show_with_its_year_and_hall_and_an_event_without_shows_nothing():
+    # Recorded 2026-10-23 from kultura.banskastiavnica.sk; the talk of 837515 lists no show and writes nothing.
+    out = pipeline("kultura-banskastiavnica", "ticketware-banskastiavnica.html", "ticketware-banskastiavnica.json")
+    by_name = {e["name"]["value"]: e for e in out}
+    assert len(out) == 3 and "Večer s Katarínou Nádaskou" not in by_name
+    trio = by_name["Music Argentum: Alan Bartus New York Trio - Deep Roots"]
+    assert trio["startDate"]["value"] == "2026-10-24T19:00:00+02:00"
+    assert trio["venue"]["value"] == "Kultúrne centrum" and trio["locationPrecision"]["value"] == "building"
+    assert trio["address"]["value"] == {"streetAddress": "Kammerhofská 1", "postalCode": "969 01", "addressLocality": "Banská Štiavnica",
+                                        "addressRegion": "Banskobystrický kraj", "addressCountry": "SK"}
+    assert by_name["David Kollar: Between Strings & Signals"]["venue"]["value"] == "Kino Akademik"
+    assert trio["url"]["value"] == "https://www.kultura.banskastiavnica.sk/event/839978/music-argentum-alan-bartus-new-york-trio-deep-roots"
+    assert all(VALID.is_valid(key_values(e)) for e in out)
+    tornala = pipeline("kultura-tornala", "ticketware-tornala.html", "ticketware-tornala.json")
+    assert {e["venue"]["value"] for e in tornala} == {"Mestské kultúrne stredisko"} and len(tornala) == 2
+
+
+@requires_docker
+def test_a_ticketware_date_without_its_year_is_the_next_one_and_an_off_host_link_is_never_read():
+    pages = {
+        "/event/1/silvester": '<h2 class="left">Silvester</h2><span class="date">Štvrtok,&nbsp;31. 12.&nbsp;o&nbsp;20:00</span>'
+        '<td class="miesto"> <span class="miesto-btn off">Kino<span></span></span> <div class="miesto-content"> <span> Námestie sv. Trojice 1<br> 969 01&#32;Banská Štiavnica<br>',
+        "/event/2/novy-rok": '<h2 class="left">Nový rok</h2><span class="date">Piatok,&nbsp;8. 1.&nbsp;o&nbsp;18:00</span>'
+        '<td class="miesto"> <span class="miesto-btn off">Kino<span></span></span> <div class="miesto-content"> <span> Námestie sv. Trojice 1<br> 969 01&#32;Banská Štiavnica<br>',
+        "/event/3/cudzi": '<h2 class="left">Cudzí</h2><span class="date">Piatok,&nbsp;6. 11.&nbsp;o&nbsp;18:00</span>'
+        '<td class="miesto"> <span class="miesto-btn off">Kino<span></span></span> <div class="miesto-content"> <span> Námestie sv. Trojice 1<br> 969 01&#32;Banská Štiavnica<br>',
+    }
+    home = ('<a href="/event/1/silvester">a</a><a href="https://www.kultura.banskastiavnica.sk/event/2/novy-rok">b</a>'
+            '<a href="/event/1/silvester-2">the same event again</a><a href="https://evil.example/event/3/cudzi">c</a>')
+    out = {e["name"]["value"]: e["startDate"]["value"] for e in run(offline(processors("kultura-banskastiavnica"), pages), home)}
+    assert out == {"Silvester": "2026-12-31T20:00:00+01:00", "Nový rok": "2027-01-08T18:00:00+01:00"}
+
+
+@requires_docker
+def test_brezno_events_come_from_the_calendars_map_list_one_per_date_and_placed_by_the_venue_table():
+    # Recorded 2026-10-23 from brezno.sk: 26 event pages, 36 dates.
+    out = pipeline("brezno", "brezno-eventphp.html", "brezno.json")
+    assert len(out) == 36 and all(VALID.is_valid(key_values(e)) for e in out)
+    dragon = sorted((e for e in out if e["name"]["value"] == "Drakovláčikom za kúzlami"), key=lambda e: e["startDate"]["value"])
+    assert [e["startDate"]["value"] for e in dragon] == ["2026-10-29T16:00:00+01:00", "2026-10-30T16:00:00+01:00", "2026-10-31T16:00:00+01:00"]
+    assert len({e["id"] for e in dragon}) == 3 and {e["venue"]["value"] for e in dragon} == {"Mestská veža"}
+    (verity,) = [e for e in out if e["name"]["value"] == "Verity"]
+    assert verity["startDate"]["value"] == "2026-10-23T19:00:00+02:00" and verity["venue"]["value"] == "Kino Mostár"
+    assert verity["location"]["value"]["coordinates"] == [19.63921, 48.802746]
+    assert verity["address"]["value"]["postalCode"] == "977 01" and verity["address"]["value"]["addressLocality"] == "Brezno"
+    assert verity["url"]["value"] == "https://www.brezno.sk/verity/"
+    placed = sum("location" in e for e in out)
+    assert placed >= 30, placed
+    # The map array's points are the CMS's default and never read; a list link outside the array is never read.
+    assert all(e["url"]["value"].startswith("https://www.brezno.sk/") and "?f=" not in e["url"]["value"] for e in out)
+
+
+@requires_docker
+def test_krupina_events_read_the_summary_list_with_a_date_range_and_the_town_last_in_the_place():
+    # Recorded 2026-10-23 from krupina.sk.
+    out = {e["name"]["value"] + " " + e["startDate"]["value"]: e for e in pipeline("krupina", "krupina-podujatia.html", "krupina.json")}
+    assert len(out) == 12 and all(VALID.is_valid(key_values(e)) for e in out.values())
+    market = out["Vianočné trhy v Kúpeľoch Dudince 2026-12-03"]
+    assert market["endDate"]["value"] == "2026-12-05" and market["address"]["value"]["addressLocality"] == "Dudince"
+    # A Dudince event is never placed at Krupina's office; one at Krupina's own name is.
+    assert "location" not in market
+    talk = out["Katarína Nádaská: Dejiny čarodejníctva 2026-11-04"]
+    assert talk["location"]["value"]["coordinates"] == home_point("https://krupina.sk/podujatia")
+    harp = out["Harfový koncert 2026-11-01"]
+    assert harp["venue"]["value"] == "Lobby bar v Liečebnom dome Rubín" and harp["organizer"]["value"] == {"name": "Kúpele Dudince"}
+    blood = out["Mobilná kvapka krvi 2026-11-02"]
+    assert blood["location"]["value"]["coordinates"] == [19.065536, 48.352837]
