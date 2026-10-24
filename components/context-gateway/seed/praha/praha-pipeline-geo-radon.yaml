@@ -9,7 +9,9 @@ spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.
   period: 168h
-  schedule: '40 3 * * 3'
+  # Thursday 02:00-02:45, five minutes apart: the ten IPR hazard layers (256 MiB each for radon and
+  # the Q areas) never run beside each other or beside the Wednesday green layers (T-5425).
+  schedule: '0 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-radon }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto

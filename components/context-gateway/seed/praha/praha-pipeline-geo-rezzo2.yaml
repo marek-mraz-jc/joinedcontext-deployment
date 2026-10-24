@@ -11,7 +11,7 @@ spec:
   class: auto
   # The register is updated once a year; one read a week keeps up.
   period: 168h
-  schedule: '50 3 * * 3'
+  schedule: '45 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-rezzo2 }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto

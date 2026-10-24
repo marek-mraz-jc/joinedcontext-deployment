@@ -9,7 +9,7 @@ spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.
   period: 168h
-  schedule: '40 3 * * 3'
+  schedule: '20 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-flood-q100 }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
