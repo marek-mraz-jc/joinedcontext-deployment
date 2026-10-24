@@ -33,9 +33,14 @@ for ns in $namespaces; do
 	# shows Error or Completed rather than Terminating, so skip it by its deletionTimestamp.
 	deleting=$(kubectl get pods -n "$ns" -o jsonpath='{range .items[?(@.metadata.deletionTimestamp)]}{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
 	# A Job's pod in Error is one attempt; the Job retries it and removes it (a CronJob's pod
-	# did, mid-apply). Only a Job whose `Failed` condition is True is a failure of the apply.
+	# did, mid-apply). Only a Job whose `Failed` condition is True is a failure of the apply, unless
+	# its CronJob ran again later and that run completed: the CronJob kept the failed run's pod
+	# (failedJobsHistoryLimit) but works now (a lane-token run while the upgrade restarted Gitea).
 	owners=$(kubectl get pods -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.metadata.ownerReferences[?(@.kind=="Job")].name}{"\n"}{end}' 2>/dev/null || true)
-	failed_jobs=$(kubectl get jobs -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' 2>/dev/null | awk '$2 == "True" {print $1}' || true)
+	failed_jobs=$(kubectl get jobs -n "$ns" -o jsonpath='{range .items[*]}{.metadata.name}{"|"}{.status.conditions[?(@.type=="Failed")].status}{"|"}{.status.conditions[?(@.type=="Complete")].status}{"|"}{.metadata.ownerReferences[?(@.kind=="CronJob")].name}{"|"}{.metadata.creationTimestamp}{"\n"}{end}' 2>/dev/null | awk -F'|' '
+		{ name[NR] = $1; failed[NR] = $2; cron[NR] = $4; at[NR] = $5 }
+		$3 == "True" && $4 != "" && $5 > done[$4] { done[$4] = $5 }
+		END { for (i = 1; i <= NR; i++) if (failed[i] == "True" && !(cron[i] != "" && done[cron[i]] > at[i])) print name[i] }' || true)
 	while read -r pod; do
 		[ -n "$pod" ] || continue
 		grep -qxF "$pod" <<<"$deleting" && continue

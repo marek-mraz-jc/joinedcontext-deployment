@@ -34,3 +34,7 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: PublicTransportRoute
+        - type: GtfsStop
+        - type: GtfsAccessPoint
+        - type: FareZone
