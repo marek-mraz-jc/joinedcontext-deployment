@@ -20,5 +20,11 @@ spec:
         - type: AirQualityObserved
         - type: WeatherObserved
         - type: PhreaticObserved
+        - type: TrafficFlowObserved
+        - type: OnStreetParking
+        - type: EVChargingStation
+        - type: AdministrativeArea
+        - type: CityWork
+        - type: PedestrianCrossing
         - type: Event
         - type: PointOfInterest

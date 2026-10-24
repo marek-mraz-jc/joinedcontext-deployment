@@ -16,6 +16,10 @@
     "maxSurge": {
       "type": "string"
     },
+    "updateStrategy": {
+      "type": "string",
+      "enum": ["RollingUpdate", "Recreate"]
+    },
     "image": {
       "type": "object",
       "additionalProperties": false,

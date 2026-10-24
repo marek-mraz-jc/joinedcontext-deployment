@@ -46,6 +46,16 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.banskastiavnica.travel/events/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.banskastiavnica.travel/events/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.kultura.banskastiavnica.sk/"
+        title: { sk: "Banská Štiavnica, kultura.banskastiavnica.sk", en: "Banská Štiavnica, kultura.banskastiavnica.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.kultura.banskastiavnica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.kultura.banskastiavnica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.brezno.sk/event.php?work=events"
+        title: { sk: "Brezno, brezno.sk", en: "Brezno, brezno.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.brezno.sk/event.php?work=events; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.brezno.sk/event.php?work=events; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.detva.sk/kulturne-podujatia-0.html"
         title: { sk: "Detva, detva.sk", en: "Detva, detva.sk" }
         description:
@@ -76,6 +86,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.visitkremnica.com/event.php; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.visitkremnica.com/event.php; no licence stated, facts only (name, time, place, link)."
+      - url: "https://krupina.sk/podujatia"
+        title: { sk: "Krupina, krupina.sk", en: "Krupina, krupina.sk" }
+        description:
+          sk: "Podujatia zo stránky https://krupina.sk/podujatia; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://krupina.sk/podujatia; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.lucenec.sk/-akcie-/.html"
         title: { sk: "Lučenec, lucenec.sk", en: "Lučenec, lucenec.sk" }
         description:
@@ -96,6 +111,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.rimavskasobota.sk/kultura-0.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.rimavskasobota.sk/kultura-0.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.sliac.sk/podujatia/"
+        title: { sk: "Sliač, sliac.sk", en: "Sliač, sliac.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.sliac.sk/podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.sliac.sk/podujatia/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.tisovec.com/sk/aktuality/kalendar-akcii/"
         title: { sk: "Tisovec, tisovec.com", en: "Tisovec, tisovec.com" }
         description:
@@ -106,6 +126,11 @@ spec:
         description:
           sk: "Podujatia zo stránky https://tornala.virtualne.sk/akcie-a-podujatia.html; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://tornala.virtualne.sk/akcie-a-podujatia.html; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.kultura.tornala.eu/"
+        title: { sk: "Tornaľa, kultura.tornala.eu", en: "Tornaľa, kultura.tornala.eu" }
+        description:
+          sk: "Podujatia zo stránky https://www.kultura.tornala.eu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.kultura.tornala.eu/; no licence stated, facts only (name, time, place, link)."
       - url: "https://www.velky-krtis.sk/"
         title: { sk: "Veľký Krtíš, velky-krtis.sk", en: "Veľký Krtíš, velky-krtis.sk" }
         description:
@@ -316,4 +341,14 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.jesenske.sk/udalosti-v-obci/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.jesenske.sk/udalosti-v-obci/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ciernybalog.sk/"
+        title: { sk: "Čierny Balog, ciernybalog.sk", en: "Čierny Balog, ciernybalog.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ciernybalog.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ciernybalog.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ppolhora.sk/"
+        title: { sk: "Pohronská Polhora, ppolhora.sk", en: "Pohronská Polhora, ppolhora.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ppolhora.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ppolhora.sk/; no licence stated, facts only (name, time, place, link)."
     # END sources generated by seeds/bbsk-events/generate.py

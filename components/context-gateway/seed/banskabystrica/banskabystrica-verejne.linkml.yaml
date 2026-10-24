@@ -30,6 +30,14 @@ slots:
     slot_uri: schema:name
     description: The name, per language, as the publisher writes it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   address:
@@ -39,32 +47,80 @@ slots:
     range: PostalAddress
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
     slot_uri: schema:streetAddress
     description: The street and the house number, or the venue.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Ulica a číslo
+          cs: Ulice a číslo
+          en: Street and number
+          de: Straße und Hausnummer
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/streetAddress
   postalCode:
     slot_uri: schema:postalCode
     description: The postal code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PSČ
+          cs: PSČ
+          en: Postal code
+          de: Postleitzahl
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
     description: The town or the municipality.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Town
+          de: Ort
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressLocality
   addressCountry:
     slot_uri: schema:addressCountry
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Krajina
+          cs: Země
+          en: Country
+          de: Land
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressCountry
   url:
     slot_uri: schema:url
     description: The web page the publisher gives for it.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          en: Web page
+          de: Webseite
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
   dataProvider:
@@ -159,41 +215,104 @@ slots:
     pattern: ^[0-9]{9}$
     examples:
       - value: '100009329'
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód školy (EDUID)
+          cs: Kód školy (EDUID)
+          en: School code (EDUID)
+          de: Schulkennzahl (EDUID)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   teachingLanguage:
     slot_uri: jc:teachingLanguage
     description: The language of instruction, in the register's words.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vyučovací jazyk
+          cs: Vyučovací jazyk
+          en: Language of instruction
+          de: Unterrichtssprache
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   pupilCount:
     slot_uri: jc:pupilCount
     description: How many pupils or children the school or facility has, a count and never a name.
     range: integer
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Počet žiakov
+          cs: Počet žáků
+          en: Number of pupils
+          de: Anzahl der Schüler
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   teachingStaff:
     slot_uri: jc:teachingStaff
     description: Teaching staff, in full-time equivalents.
     range: float
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Pedagogickí zamestnanci (prepočítaní)
+          cs: Pedagogičtí pracovníci (přepočtení)
+          en: Teaching staff (FTE)
+          de: Lehrkräfte (VZÄ)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   nonTeachingStaff:
     slot_uri: jc:nonTeachingStaff
     description: Non-teaching staff, in full-time equivalents.
     range: float
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Nepedagogickí zamestnanci (prepočítaní)
+          cs: Nepedagogičtí pracovníci (přepočtení)
+          en: Non-teaching staff (FTE)
+          de: Nichtpädagogisches Personal (VZÄ)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   annualBudget:
     slot_uri: jc:annualBudget
     description: The school's budget for `budgetYear`, in euro.
     range: float
     minimum_value: 0
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ročný rozpočet (€)
+          cs: Roční rozpočet (€)
+          en: Annual budget (€)
+          de: Jahresbudget (€)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   budgetYear:
     slot_uri: jc:budgetYear
     description: The year `annualBudget` is for, as the school map's column names it.
     range: integer
     minimum_value: 2000
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Rozpočtový rok
+          cs: Rozpočtový rok
+          en: Budget year
+          de: Haushaltsjahr
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   stationCode:
     slot_uri: jc:stationCode
     description: The station's EoI code in the European air-quality network, such as `SK0263A`.
@@ -319,13 +438,31 @@ slots:
       What the place is, as OpenStreetMap tags it: `pharmacy`, `hospital` or `clinic` from its
       `amenity`, and `defibrillator` from `emergency=defibrillator`.
     multivalued: true
-    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.PointOfInterest }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.PointOfInterest
   openingHours:
     slot_uri: schema:openingHours
     description: >-
       The opening hours exactly as OpenStreetMap's `opening_hours` tag gives them, in its own
       syntax (for example `Mo-Fr 07:30-18:00; Sa 08:00-12:00`); never reinterpreted.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Otváracie hodiny
+          cs: Otevírací doba
+          en: Opening hours
+          de: Öffnungszeiten
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/openingHours
   socketType:
@@ -336,7 +473,17 @@ slots:
       schuko Wall_Euro, type1 J-1772, tesla_supercharger Tesla, any other Other); absent when
       the map names none.
     multivalued: true
-    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ zásuvky
+          cs: Typ zásuvky
+          en: Socket type
+          de: Steckertyp
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
   capacity:
     slot_uri: sdm-transport:capacity
     description: >-
@@ -344,7 +491,17 @@ slots:
       of its socket counts when it has none; absent when the map gives neither.
     range: integer
     minimum_value: 1
-    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kapacita
+          cs: Kapacita
+          en: Capacity
+          de: Kapazität
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
   allowedVehicleType:
     slot_uri: sdm-transport:allowedVehicleType
     description: >-
@@ -352,11 +509,31 @@ slots:
       `motorcycle`, `bus` and `hgv` set to yes (car, bicycle, motorcycle, bus, truck); absent
       when the map sets none.
     multivalued: true
-    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolené vozidlá
+          cs: Povolená vozidla
+          en: Allowed vehicles
+          de: Zugelassene Fahrzeuge
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
   operator:
     slot_uri: sdm-transport:operator
     description: Who runs the station, as OpenStreetMap's `operator` tag names it.
-    annotations: { ngsi_ld_kind: Property, upstream_source: dataModel.Transportation }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Prevádzkovateľ
+          cs: Provozovatel
+          en: Operator
+          de: Betreiber
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: dataModel.Transportation
 
   parcelNumber:
     slot_uri: jc:parcelNumber
@@ -369,6 +546,14 @@ slots:
     examples:
       - value: 1266/16
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo parcely
+          cs: Číslo parcely
+          en: Parcel number
+          de: Flurstücksnummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
   register:
@@ -378,7 +563,16 @@ slots:
       `E` for the parcels of the original land plots (KN-E).
     required: true
     range: CadastralRegister
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Register
+          cs: Rejstřík
+          en: Register
+          de: Register
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   cadastralAreaCode:
     slot_uri: jc:cadastralAreaCode
     description: The six-digit code of the cadastral area (katastrálne územie) the parcel lies in, `801062`.
@@ -387,12 +581,29 @@ slots:
     examples:
       - value: '801062'
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód katastrálneho územia
+          cs: Kód katastrálního území
+          en: Cadastral area code
+          de: Gemarkungsnummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
   cadastralAreaName:
     slot_uri: jc:cadastralAreaName
     description: The name of that cadastral area, `Banská Bystrica`.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Katastrálne územie
+          cs: Katastrální území
+          en: Cadastral area
+          de: Gemarkung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   nationalCadastralReference:
     slot_uri: jc:nationalCadastralReference
     description: >-
@@ -401,6 +612,14 @@ slots:
     required: true
     pattern: ^[0-9]{6}_[0-9]+(/[0-9]+)?\.[CE]$
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Národná katastrálna referencia
+          cs: Národní katastrální reference
+          en: National cadastral reference
+          de: Nationale Katasterreferenz
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
   areaValue:
@@ -413,6 +632,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: m2 }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Výmera (m²)
+          cs: Výměra (m²)
+          en: Area (m²)
+          de: Fläche (m²)
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
 
@@ -423,6 +650,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://schema.org/Event
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
     slots:
       - name
       - startDate
@@ -536,6 +770,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Organization
+      label:
+        tag: label
+        value:
+          sk: Organizácia
+          cs: Organizace
+          en: Organization
+          de: Organisation
     slots:
       - name
       - schoolCode
@@ -563,6 +804,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, stationCode, dateObserved, pm10, pm25, no2, o3, dataProvider, source]
     slot_usage:
       name:
@@ -653,6 +901,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
+      label:
+        tag: label
+        value:
+          sk: Meranie počasia
+          cs: Měření počasí
+          en: Weather reading
+          de: Wetterbeobachtung
     slots:
       - name
       - dateObserved
@@ -774,6 +1029,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots: [name, category, openingHours, address, dataProvider, source]
   EVChargingStation:
     class_uri: sdm:EVChargingStation
@@ -783,6 +1045,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Nabíjacia stanica
+          cs: Nabíjecí stanice
+          en: EV charging station
+          de: Ladestation
     slots:
       - name
       - socketType
@@ -806,6 +1075,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://inspire.ec.europa.eu/id/document/tg/cp
+      label:
+        tag: label
+        value:
+          sk: Katastrálna parcela
+          cs: Katastrální parcela
+          en: Cadastral parcel
+          de: Flurstück
     slots:
       - name
       - parcelNumber

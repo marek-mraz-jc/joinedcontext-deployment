@@ -43,10 +43,27 @@ spec:
         "SK0329": "okres-rimavska-sobota", "SK032A": "okres-velky-krtis", "SK032B": "okres-zvolen",
         "SK032C": "okres-zarnovica", "SK032D": "okres-ziar-nad-hronom"
       }
+      # Each territory's name in the indicator's title (Development/11 §4), by the same code.
+      let territory_title = {
+        "SK032": { "sk": "Banskobystrický kraj", "en": "Banská Bystrica Region" },
+        "SK0321": { "sk": "okres Banská Bystrica", "en": "Banská Bystrica district" },
+        "SK0322": { "sk": "okres Banská Štiavnica", "en": "Banská Štiavnica district" },
+        "SK0323": { "sk": "okres Brezno", "en": "Brezno district" },
+        "SK0324": { "sk": "okres Detva", "en": "Detva district" },
+        "SK0325": { "sk": "okres Krupina", "en": "Krupina district" },
+        "SK0326": { "sk": "okres Lučenec", "en": "Lučenec district" },
+        "SK0327": { "sk": "okres Poltár", "en": "Poltár district" },
+        "SK0328": { "sk": "okres Revúca", "en": "Revúca district" },
+        "SK0329": { "sk": "okres Rimavská Sobota", "en": "Rimavská Sobota district" },
+        "SK032A": { "sk": "okres Veľký Krtíš", "en": "Veľký Krtíš district" },
+        "SK032B": { "sk": "okres Zvolen", "en": "Zvolen district" },
+        "SK032C": { "sk": "okres Žarnovica", "en": "Žarnovica district" },
+        "SK032D": { "sk": "okres Žiar nad Hronom", "en": "Žiar nad Hronom district" }
+      }
       # The indicators of Development/11 §3, keyed by the cube each one reads.
       let indicator = {
-        "om7102rr": { "name": "obyvatelstvo-stav", "unit": "C62", "formula": "the published value of om7102rr/IN010115/SPOLU for the territory and the latest year the cube carries" },
-        "zp3803rs": { "name": "emisie-tuhe-km2", "unit": "TNE", "formula": "the published value of zp3803rs/ODPAD_TONY_KM2, pollutant 1, in tonnes per km2, for the territory and the latest year the cube carries" }
+        "om7102rr": { "name": "obyvatelstvo-stav", "title": { "sk": "Stav trvale bývajúceho obyvateľstva na konci obdobia", "en": "Resident population at the end of the period" }, "unit": "C62", "formula": "the published value of om7102rr/IN010115/SPOLU for the territory and the latest year the cube carries" },
+        "zp3803rs": { "name": "emisie-tuhe-km2", "title": { "sk": "Emisie tuhých znečisťujúcich látok na km²", "en": "Solid particulate emissions per square kilometre" }, "unit": "TNE", "formula": "the published value of zp3803rs/ODPAD_TONY_KM2, pollutant 1, in tonnes per km2, for the territory and the latest year the cube carries" }
       }
       let domain = "bbsk.sk"
       let space = env("JC_SPACE")
@@ -64,6 +81,7 @@ spec:
       root = if $rows.length() == 0 { deleted() } else { $wanted.map_each(w -> {
         "spec": $indicator.get(w.cube),
         "token": $territory.get(w.area),
+        "place": $territory_title.get(w.area),
         "pick": $rows.filter(r -> r.dataSet.value == w.cube && r.refArea.value == w.area).sort_by(r -> r.refPeriod.value).index(-1).catch(null)
       # A territory the cube carries no row for is left out rather than written as "not measured"
       # over a zero period (T-4081): the last value it had stays until the expiry removes it.
@@ -71,6 +89,7 @@ spec:
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:%v-%v".format($domain, $space, c.spec.name, c.token),
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "%v-%v".format(c.spec.name, c.token) },
+        "title": { "type": "LanguageProperty", "languageMap": { "sk": "%v, %v".format(c.spec.title.sk, c.place.sk), "en": "%v, %v".format(c.spec.title.en, c.place.en) } },
         "currentValue": { "type": "Property", "value": c.pick.kpiValue.value, "unitCode": c.spec.unit, "observedAt": c.pick.dateObserved.value },
         "calculationPeriod": { "type": "Property", "value": { "start": "%v-01-01T00:00:00Z".format(c.pick.refPeriod.value), "end": "%v-12-31T23:59:59Z".format(c.pick.refPeriod.value) } },
         "calculationFormula": { "type": "Property", "value": c.spec.formula },

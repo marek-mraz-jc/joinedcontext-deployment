@@ -1,17 +1,32 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "CityWork": {
+      "@id": "sdm:CityWork"
+    },
     "ContactPoint": {
       "@id": "schema:ContactPoint"
+    },
+    "EVChargingStation": {
+      "@id": "sdm:EVChargingStation"
     },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
     "Event": {
       "@id": "sdm:Event"
+    },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
+    "PedestrianCrossing": {
+      "@id": "jc:PedestrianCrossing"
     },
     "PhreaticObserved": {
       "@id": "sdm:PhreaticObserved"
@@ -21,6 +36,9 @@
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
     },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
@@ -33,6 +51,9 @@
     },
     "addressLocality": {
       "@id": "schema:addressLocality"
+    },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
     },
     "altitude": {
       "@id": "jc:altitude",
@@ -48,19 +69,53 @@
       "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
     },
+    "availableCapacity": {
+      "@id": "sdm:availableCapacity",
+      "@type": "xsd:integer"
+    },
+    "awardAmount": {
+      "@id": "jc:awardAmount",
+      "@type": "xsd:float"
+    },
     "blackCarbon": {
       "@id": "jc:blackCarbon",
       "@type": "xsd:float"
     },
+    "capacity": {
+      "@id": "sdm:capacity",
+      "@type": "xsd:integer"
+    },
     "category": {
       "@id": "sdm:category"
+    },
+    "cityWorks": {
+      "@id": "jc:cityWorks",
+      "@type": "@id"
     },
     "co": {
       "@id": "sdm:co",
       "@type": "xsd:float"
     },
+    "congested": {
+      "@id": "sdm:congested",
+      "@type": "xsd:boolean"
+    },
     "contactPoint": {
       "@id": "schema:contactPoint"
+    },
+    "contractingAuthority": {
+      "@id": "sdm:contractingAuthority"
+    },
+    "crossingType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:crossingType"
+    },
+    "crossingTypeLabel": {
+      "@id": "jc:crossingTypeLabel"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -69,8 +124,22 @@
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "description": {
+      "@id": "schema:description"
+    },
     "district": {
       "@id": "sdm:district"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
+    "divisionLevel": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:divisionLevel"
     },
     "endDate": {
       "@id": "schema:endDate",
@@ -91,6 +160,10 @@
     "location": {
       "@id": "geojson:geometry"
     },
+    "markedArea": {
+      "@id": "jc:markedArea",
+      "@type": "xsd:float"
+    },
     "maxTemperature": {
       "@id": "jc:maxTemperature",
       "@type": "xsd:float"
@@ -109,6 +182,13 @@
     },
     "name": {
       "@id": "schema:name"
+    },
+    "neighbourhoods": {
+      "@id": "jc:neighbourhoods",
+      "@type": "@id"
+    },
+    "network": {
+      "@id": "sdm:network"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no": {
@@ -131,6 +211,16 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "openingHours": {
+      "@id": "schema:openingHours"
+    },
+    "operator": {
+      "@id": "sdm:operator"
+    },
+    "pedestrianCrossings": {
+      "@id": "jc:pedestrianCrossings",
+      "@type": "@id"
+    },
     "piezometricLevel": {
       "@id": "jc:piezometricLevel",
       "@type": "xsd:float"
@@ -150,17 +240,45 @@
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
     },
+    "refDistrict": {
+      "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refNeighbourhood": {
+      "@id": "jc:refNeighbourhood",
+      "@type": "@id"
+    },
+    "refParentDistrict": {
+      "@id": "jc:refParentDistrict",
+      "@type": "@id"
+    },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",
       "@type": "xsd:float"
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "seeAlso": {
+      "@id": "sdm:seeAlso",
+      "@type": "xsd:anyURI"
+    },
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "so2": {
       "@id": "sdm:so2",
       "@type": "xsd:float"
+    },
+    "socketNumber": {
+      "@id": "sdm:socketNumber",
+      "@type": "xsd:integer"
+    },
+    "socketType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:socketType"
     },
     "solarRadiation": {
       "@id": "sdm:solarRadiation",
@@ -177,11 +295,22 @@
     "stationCode": {
       "@id": "jc:stationCode"
     },
+    "status": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:status"
+    },
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
     "subCategory": {
       "@id": "sdm:subCategory"
+    },
+    "tariffCode": {
+      "@id": "jc:tariffCode"
     },
     "telephone": {
       "@id": "schema:telephone"
@@ -190,7 +319,42 @@
       "@id": "sdm:temperature",
       "@type": "xsd:float"
     },
+    "tenderAmount": {
+      "@id": "jc:tenderAmount",
+      "@type": "xsd:float"
+    },
+    "territorialArea": {
+      "@id": "sdm:territorialArea"
+    },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
+      "@type": "xsd:integer"
+    },
+    "trafficState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficState"
+    },
+    "trafficStateForecast": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficStateForecast"
+    },
+    "travelTime": {
+      "@id": "jc:travelTime",
+      "@type": "xsd:integer"
+    },
     "type": "@type",
+    "usualTravelTime": {
+      "@id": "jc:usualTravelTime",
+      "@type": "xsd:integer"
+    },
     "waterTable": {
       "@id": "sdm:waterTable",
       "@type": "xsd:float"
@@ -203,7 +367,27 @@
       "@id": "sdm:windSpeed",
       "@type": "xsd:float"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "workCategory": {
+      "@id": "jc:workCategory"
+    },
+    "workNumber": {
+      "@id": "sdm:workNumber"
+    },
+    "workState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:workState"
+    },
+    "workStateLabel": {
+      "@id": "jc:workStateLabel"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "jc:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.12.0"
 }

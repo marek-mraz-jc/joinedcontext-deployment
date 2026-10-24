@@ -156,7 +156,6 @@
  "test_reusable_workflows.py": 1.4,
  "test_rollout_keeps_serving.py": 0.0,
  "test_rotate_secret.py": 5.9,
- "test_runner_inflate.py": 0.9,
  "test_runtime_policies.py": 36.9,
  "test_sample_apps_seed.py": 120.0,
  "test_sample_project_seed.py": 5.8,

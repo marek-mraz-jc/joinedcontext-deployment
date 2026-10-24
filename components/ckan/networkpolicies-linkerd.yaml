@@ -27,6 +27,10 @@ ckan-allow-linkerd:
               app.kubernetes.io/instance: ckan-catalogue
               app.kubernetes.io/component: harvest
           componentNamespace: ckan
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP

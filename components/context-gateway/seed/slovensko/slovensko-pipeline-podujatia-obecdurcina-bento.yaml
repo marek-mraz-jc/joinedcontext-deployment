@@ -48,8 +48,8 @@ pipeline:
       }
       let now = timestamp_unix()
       # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
-      # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
-      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      # oznámenie, elections, a power cut, a hall's booked or free slot (T-5393). Its record is never loaded.
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|oslava|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené|obsadený|rezervované|rezervovaná|voľné|voľný termín)$|\\bobsaden[ýáé]|prenájom (sály|kd|kultúrn)|súkromn[áé] (akcia|oslava)|rezervácia (jedál|sál|kd|kultúrn|miestn)"
       let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
@@ -99,7 +99,7 @@ pipeline:
       let lat = $pick.lat.or(null)
       let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
-      let town = $known.town.or($area.town.or("durcina"))
+      let town = $known.town.or($area.town.or(null))
       # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
       # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
       # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
@@ -140,7 +140,7 @@ pipeline:
         "type": "Event",
         # The scope comes from the inventory row's region and town, never from the feed (T-4898). A
         # scope level is letters, digits and "_" (CIM 009 4.18): the broker refuses a hyphen (T-5051).
-        "scope": if $town != null { "/SK/ZA" + "/" + $town.replace_all("-", "_") } else { "/SK/ZA" },
+        "scope": if $town != null { "/SK/ZA" + "/" + $town.replace_all("-", "_") } else { "/SK/ZA/durcina" },
         "name": $name.apply("prop"),
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),

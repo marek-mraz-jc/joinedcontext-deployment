@@ -305,6 +305,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, stationCode, dateObserved, pm10, pm25, no2, o3, co, dataProvider, source]
   PointOfInterest:
     class_uri: sdm:PointOfInterest
@@ -314,6 +321,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots:
       - name
       - monumentNumber
@@ -331,4 +345,11 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Zastávka
+          cs: Zastávka
+          en: Stop
+          de: Haltestelle
     slots: [name, stopCode, dailyDepartures, dataProvider, source]

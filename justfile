@@ -515,6 +515,10 @@ _smoke domain namespace:
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
+	# The Portal's edge wave (T-5318): the served edge stays the same when the Portal's write of
+	# apisix-standalone-config is refused, so the smoke makes it write once and checks it landed.
+	echo "edge wave"
+	python3 scripts/smoke-edge-wave.py || rc=1
 	# The background map (T-4638): a range request answers 206, and the monthly refresh kept the
 	# file younger than 40 days (Last-Modified is the file's own time).
 	echo "basemap"

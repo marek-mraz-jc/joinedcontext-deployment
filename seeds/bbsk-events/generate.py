@@ -20,6 +20,7 @@ import math
 import re
 import sys
 import unicodedata
+from collections import Counter
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -75,7 +76,8 @@ STORES = (
         # apart: once a day, spread over the day. The feeds run every 3 hours. Each lease outlasts two missed
         # runs, so a source down for one run keeps its events.
         "cadences": (
-            {"kinds": ("lego-html", "weby-feed", "umb-cms", "drupal-kalendar"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
+            {"kinds": ("lego-html", "weby-feed", "umb-cms", "drupal-kalendar", "sc-rss", "ticketware-html", "eventphp-html",
+                       "krupina-html"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
             {"kinds": None, "period": "3h", "every": 3, "window": 180, "lease": 8 * 3600},
         ),
         "grace": 86400,
@@ -84,6 +86,7 @@ STORES = (
 #: feed kind of the inventory -> template files under pipelines/, run in this order.
 TEMPLATES = {
     "wp-rest-sc": ("wp-rest-sc",),
+    "wp-rest-fields": ("wp-rest-fields",),
     "tribe-rest": ("tribe-rest",),
     "ical": ("ical",),
     "weby-feed": ("weby-feed",),
@@ -96,16 +99,97 @@ TEMPLATES = {
     "lego-html": ("lego-html",),
     "umb-cms": ("umb-cms",),
     "drupal-kalendar": ("drupal-kalendar",),
+    "sc-rss": ("rss-list", "sc-event-page"),
+    "ticketware-html": ("ticketware-html",),
+    "eventphp-html": ("eventphp-html",),
+    "krupina-html": ("krupina-html",),
+    "html-cards": ("html-cards",),
 }
 #: Fewer bytes per run: the fields the template reads (WordPress `_fields`). The kinds that read each
 #: event's page list the 50 newest posts: every page read is one more request to a small town's site.
 _PAGES = "_fields=id,link,title,modified_gmt&per_page=50"
 TRIM = {
     "wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box",
+    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info",
     "mec-rest": _PAGES,
     "lsvr-rest": _PAGES,
     "eventon-rest": _PAGES,
     "wp-rest-jsonld": _PAGES,
+}
+#: wp-rest-fields: per feed host, the dotted path of each field the template reads in a REST item (T-5365,
+#: read on each site 2026-10-23). A path absent here is no field of that site.
+WP_FIELDS = {
+    "zilina.sk": {"start": "meta.iq_dateStart", "end": "meta.iq_dateEnd", "time_start": "meta.iq_timeStart",
+                  "time_end": "meta.iq_timeEnd", "venue": "meta.iq_addressLocality", "lat": "meta.iq_coordinatesLat",
+                  "lon": "meta.iq_coordinatesLng"},
+    "regiontatry.sk": {"start": "more_info.datum_od", "end": "more_info.datum_do", "time_start": "more_info.cas_od",
+                       "time_end": "more_info.cas_do", "venue": "more_info.miesto_konania"},
+    "www.podujatiaksk.sk": {"start": "acf.podujatie_datum.podujatie_datum_od", "end": "acf.podujatie_datum.podujatie_datum_do"},
+    "www.upjs.sk": {"start": "acf.cpt_udalost_datum_konania", "end": "acf.cpt_udalost_datum_koniec",
+                    "time_start": "acf.cpt_udalost_cas_konania", "venue": "acf.cpt_udalost_miesto_konania"},
+}
+#: html-cards: per feed host, where an events list page starts a card and the pattern of each field inside it,
+#: the value in the groups v, v2 and v3 (T-5393, read on each site 2026-10-23). A field absent here is no field of that site.
+CARDS = {
+    "prievidza.sk": {
+        "card": '<a href="[^"]{1,300}" class="event-card">',
+        "url": '<a href="(?P<v>[^"]{1,300})"',
+        "name": 'event-card__heading">(?P<v>[^<]{1,300})<',
+        "venue": 'event-card__location">(?P<v>[^<]{1,300})<',
+        "when": 'event-card__date">(?P<v>[^<]{1,100})<',
+    },
+    "uluv.sk": {
+        "card": '<a href="https://uluv\\.sk/podujatia/[^"]{1,300}">\\s*<div class="event-single',
+        "url": '<a href="(?P<v>[^"]{1,300})"',
+        "name": 'event-single__title[^>]*>(?P<v>[^<]{1,300})<',
+        "venue": 'event-single__place">(?P<v>[^<]{1,300})<',
+        "locality": 'event-single__place">[^<]{0,100}ÚĽUV (?P<v>\\p{Lu}[^<]{1,60}?)\\s*<',
+        "when": 'event-single__place">[^<]{0,300}</div>\\s*<div class="ps-md-3">(?P<v>[^<]{1,100})<',
+    },
+    "www.vsmu.sk": {
+        "card": '<a href="[^"]{1,300}" class="cell card card--horizontal card--event"',
+        "url": '<a href="(?P<v>[^"]{1,300})"',
+        "name": '<h2 class="headline">(?P<v>[^<]{1,300})<',
+        "venue": '<div class="category">(?P<v>[^<]{1,300})<',
+        "when": '<ul class="meta">\\s*<li><div[^>]*></div></li>\\s*<li>(?P<v>[^<]{1,60})</li>',
+        "time": '<ul class="meta">\\s*<li><div[^>]*></div></li>\\s*<li>[^<]{1,60}</li>\\s*<li>(?P<v>[^<]{1,20})</li>',
+    },
+    "agrokomplex.sk": {
+        "card": '<div class="exhib__box[^"]{0,100}" data-href=',
+        "url": 'data-href="(?P<v>[^"]{1,300})"',
+        "name": '<h2>(?P<v>[^<]{1,300})</h2>',
+        "when": '<span class="date"><img[^>]*>(?P<v>[^<]{1,60})<',
+    },
+    "novacvernovka.eu": {
+        "card": '<article class="infinite-scroll-item',
+        "url": 'data-href="(?P<v>[^"]{1,300})"',
+        "name": '<h3 class="entry-title[^"]{0,100}">(?P<v>[^<]{1,300})<',
+        "when": 'data-start="(?P<v>[0-9]{8})"',
+        "end": 'data-end="(?P<v>[0-9]{8})"',
+        "time": 'class="Dayname">[^<]{0,30}</div>\\s*<div>\\s*(?P<v>[0-9]{1,2}:[0-9]{2})',
+    },
+    "www.bkis.sk": {
+        "card": '<a class="event" href=',
+        "url": 'href="(?P<v>[^"]{1,300})"',
+        "name": 'event-name">(?P<v>[^<]{1,300})<',
+        "when": '<p class="font-variation">(?P<v>[0-9][^<]{1,60})</p>',
+        "venue": '<p class="font-variation">[0-9][^<]{1,60}</p>\\s*<div[^>]*>\\s*<p class="font-variation">(?P<v>[^<]{1,300})<',
+    },
+    "www.kosnr.sk": {
+        "card": '<div class="ic-box"',
+        "url": '<h3>\\s*<a href="(?P<v>[^"]{1,300})"',
+        "name": '<h3>\\s*<a href="[^"]{1,300}">(?P<v>[^<]{1,300})<',
+        "when": 'ic-day">\\s*(?P<v>[0-9]{1,2})\\s*</div>\\s*<div class="ic-month">\\s*(?P<v2>[^<\\s]{1,12})\\s*</div>\\s*<div class="ic-year">\\s*(?P<v3>[0-9]{4})',
+        "time": 'ic-time">\\s*(?P<v>[0-9]{1,2}:[0-9]{2})',
+        "venue": 'ic-place">\\s*(?P<v>[^<]{1,300})<',
+    },
+    "kultura.mestocadca.sk": {
+        "card": '<div class="page-header">\\s*<h2>',
+        "url": '<h2>\\s*<a href="(?P<v>[^"]{1,300})"',
+        "name": '<h2>\\s*<a href="[^"]{1,300}">(?P<v>[^<]{1,300})<',
+        "when": 'Kedy:\\s*</span>\\s*<span class="field-value\\s*">(?P<v>[^<]{1,100})<',
+        "venue": 'Kde:\\s*</span>\\s*<span class="field-value\\s*">(?P<v>[^<]{1,300})<',
+    },
 }
 #: Upcoming events first where the feed sorts and filters itself (owner 2026-10-20).
 UPCOMING = {"tribe-rest": "start_date=now"}
@@ -148,13 +232,16 @@ def kept_sources() -> list[dict]:
         and r["feed_kind"] in TEMPLATES
         and r["check_url"].startswith("https://")
     ]
+    labels_of = lambda r: urlsplit(r["check_url"]).hostname.removeprefix("www.").split(".")
+    # A first label two hosts share (kultura.trnava.sk, kultura.tornala.eu) names neither: both take two labels.
+    shared = {k for k, n in Counter(labels_of(r)[0] for r in kept).items() if n > 1}
     for row in kept:
         parts = urlsplit(row["check_url"])
         assert parts.scheme == "https" and re.fullmatch(
             r"[a-z0-9.-]+", parts.hostname or ""
         ), row["check_url"]
-        labels = parts.hostname.removeprefix("www.").split(".")
-        row["name"] = "podujatia-" + labels[0]
+        labels = labels_of(row)
+        row["name"] = "podujatia-" + "-".join(labels[:2] if labels[0] in shared else labels[:1])
         row["host"] = f"https://{parts.hostname}"
         row["town_slug"] = None if row["town"] == REGION else slug(row["town"])
         row["scope"], row["region_name"] = REGIONS[row["region"]]
@@ -308,7 +395,11 @@ def processors(row: dict, store: dict) -> list:
         "__TOWN__": json.dumps(
             None if row["town_slug"] is None else row["town"], ensure_ascii=False
         ),
-        "__TOWN_SLUG__": json.dumps(row["town_slug"]),
+        # The feed's town as one whole scope literal: a bare slug can equal a project name ("zilina").
+        "__TOWN_SCOPE__": json.dumps(
+            "/SK/" + row["scope"]
+            + ("" if row["town_slug"] is None else "/" + row["town_slug"].replace("-", "_"))
+        ),
         "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
         "__TOWNS__": json.dumps(towns_for(row), ensure_ascii=False, separators=(",", ":")),
         # A place text that is only the town's or the organizer's own name names no place of its own.
@@ -326,6 +417,8 @@ def processors(row: dict, store: dict) -> list:
         "__LIST_PATH_RE__": re.escape(urlsplit(row["check_url"]).path).replace("\\", "\\\\"),
         "__LIST_PATH__": json.dumps(urlsplit(row["check_url"]).path),
         "__GRACE__": json.dumps(store["grace"]),
+        "__FIELDS__": json.dumps(WP_FIELDS.get(urlsplit(row["check_url"]).hostname)),
+        "__CARDS__": json.dumps(CARDS.get(urlsplit(row["check_url"]).hostname), ensure_ascii=False),
         "__LEASE__": json.dumps(cadence(row, store)["lease"]),
     }
     text = "".join(
@@ -542,6 +635,11 @@ def accept(kind: str) -> str:
         "lego-html": "text/html",
         "umb-cms": "text/html",
         "drupal-kalendar": "text/html",
+        "ticketware-html": "text/html",
+        "eventphp-html": "text/html",
+        "krupina-html": "text/html",
+        "html-cards": "text/html",
+        "sc-rss": "application/rss+xml, application/atom+xml, application/xml",
         "wp-rss-jsonld": "application/rss+xml, application/atom+xml, application/xml",
     }.get(kind, "application/json")
 

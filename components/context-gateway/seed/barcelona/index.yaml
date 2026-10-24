@@ -36,6 +36,48 @@ barcelona-pipeline-groundwater.yaml: projects/barcelona/pipelines/groundwater/pi
 barcelona-pipeline-groundwater-bento.yaml: projects/barcelona/pipelines/groundwater/bento.yaml
 barcelona-endpoint-groundwater.yaml: projects/barcelona/spaces/barcelona/endpoints/groundwater.yaml
 barcelona-policy-public-groundwater.yaml: projects/barcelona/spaces/barcelona/policies/public-groundwater.yaml
+# Transport (T-5262): the traffic state of each street section every five minutes, and the
+# regulated surface parking sections of B:SM once a day, each its own public catalogue dataset.
+barcelona-datasource-traffic-state.yaml: projects/barcelona/datasources/bcn-traffic-state.yaml
+barcelona-pipeline-traffic-state.yaml: projects/barcelona/pipelines/traffic-state/pipeline.yaml
+barcelona-pipeline-traffic-state-bento.yaml: projects/barcelona/pipelines/traffic-state/bento.yaml
+barcelona-endpoint-traffic.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-traffic.yaml
+barcelona-policy-public-traffic.yaml: projects/barcelona/spaces/barcelona/policies/public-traffic.yaml
+barcelona-datasource-parking-sections.yaml: projects/barcelona/datasources/bcn-parking-sections.yaml
+barcelona-pipeline-parking-sections.yaml: projects/barcelona/pipelines/parking-sections/pipeline.yaml
+barcelona-pipeline-parking-sections-bento.yaml: projects/barcelona/pipelines/parking-sections/bento.yaml
+barcelona-endpoint-parking.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-parking.yaml
+barcelona-policy-public-parking.yaml: projects/barcelona/spaces/barcelona/policies/public-parking.yaml
+# The travel time of the city's traffic routes every five minutes, into the traffic dataset, and
+# the Endolla charging points with their free ports every five minutes, a dataset of its own.
+barcelona-datasource-traffic-routes.yaml: projects/barcelona/datasources/bcn-traffic-routes.yaml
+barcelona-pipeline-traffic-routes.yaml: projects/barcelona/pipelines/traffic-routes/pipeline.yaml
+barcelona-pipeline-traffic-routes-bento.yaml: projects/barcelona/pipelines/traffic-routes/bento.yaml
+barcelona-datasource-ev-charging.yaml: projects/barcelona/datasources/bcn-ev-charging.yaml
+barcelona-pipeline-ev-charging.yaml: projects/barcelona/pipelines/ev-charging/pipeline.yaml
+barcelona-pipeline-ev-charging-bento.yaml: projects/barcelona/pipelines/ev-charging/bento.yaml
+barcelona-endpoint-charging.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-charging.yaml
+barcelona-policy-public-charging.yaml: projects/barcelona/spaces/barcelona/policies/public-charging.yaml
+# Batch 3, urbanism (T-5264): the districts and barris, the works on the public space and the
+# pedestrian crossings.
+barcelona-datasource-districts.yaml: projects/barcelona/datasources/bcn-districts.yaml
+barcelona-datasource-neighbourhoods.yaml: projects/barcelona/datasources/bcn-neighbourhoods.yaml
+barcelona-datasource-city-works.yaml: projects/barcelona/datasources/bcn-city-works.yaml
+barcelona-pipeline-districts.yaml: projects/barcelona/pipelines/districts/pipeline.yaml
+barcelona-pipeline-districts-bento.yaml: projects/barcelona/pipelines/districts/bento.yaml
+barcelona-pipeline-neighbourhoods.yaml: projects/barcelona/pipelines/neighbourhoods/pipeline.yaml
+barcelona-pipeline-neighbourhoods-bento.yaml: projects/barcelona/pipelines/neighbourhoods/bento.yaml
+barcelona-pipeline-city-works.yaml: projects/barcelona/pipelines/city-works/pipeline.yaml
+barcelona-pipeline-city-works-bento.yaml: projects/barcelona/pipelines/city-works/bento.yaml
+barcelona-endpoint-areas.yaml: projects/barcelona/spaces/barcelona/endpoints/areas.yaml
+barcelona-policy-public-areas.yaml: projects/barcelona/spaces/barcelona/policies/public-areas.yaml
+barcelona-endpoint-city-works.yaml: projects/barcelona/spaces/barcelona/endpoints/city-works.yaml
+barcelona-policy-public-city-works.yaml: projects/barcelona/spaces/barcelona/policies/public-city-works.yaml
+barcelona-datasource-pedestrian-crossings.yaml: projects/barcelona/datasources/bcn-pedestrian-crossings.yaml
+barcelona-pipeline-pedestrian-crossings.yaml: projects/barcelona/pipelines/pedestrian-crossings/pipeline.yaml
+barcelona-pipeline-pedestrian-crossings-bento.yaml: projects/barcelona/pipelines/pedestrian-crossings/bento.yaml
+barcelona-endpoint-pedestrian-crossings.yaml: projects/barcelona/spaces/barcelona/endpoints/pedestrian-crossings.yaml
+barcelona-policy-public-pedestrian-crossings.yaml: projects/barcelona/spaces/barcelona/policies/public-pedestrian-crossings.yaml
 # The activity agendas (T-5265): one DataStore query, one daily pipeline, one public dataset.
 barcelona-datasource-agenda.yaml: projects/barcelona/datasources/bcn-agenda.yaml
 barcelona-pipeline-agenda.yaml: projects/barcelona/pipelines/agenda/pipeline.yaml

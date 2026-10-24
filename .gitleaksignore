@@ -27,3 +27,7 @@ e2cb2f2ec903ae8a4835c44f17bed33bee14c901:scripts/open-data/sdm/pins.json:generic
 # T-4875's broker-callers probe wrote a WebSocket handshake key, base64 of "smoke-forged-key",
 # as a literal; smoke.sh builds it at run time now (T-4875 follow-up, deployer).
 38f256ee14af9f2e91551bca7a5f8f7b42cc12c6:scripts/smoke.sh:generic-api-key:1149
+# T-5318 (0e70633): tests/test_smoke_edge_wave.py held base64 of "routes: []" as a literal fixture,
+# built with base64.b64encode now.
+0e706330d7021b8a93111200be6a834f504ad15a:tests/test_smoke_edge_wave.py:generic-api-key:29
+0e706330d7021b8a93111200be6a834f504ad15a:tests/test_smoke_edge_wave.py:generic-api-key:104

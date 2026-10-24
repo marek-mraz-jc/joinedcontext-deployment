@@ -34,7 +34,32 @@ slots:
       The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
       without parsing the URN.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  title:
+    slot_uri: jc:title
+    description: >-
+      The indicator's human name, one text per language of the space, such as `{sk: Index
+      starnutia, en: Ageing index}`: what a table labels the row with, because `name` is the
+      slug. Optional: an indicator written before it, or by a writer that names none, has none.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov ukazovateľa
+          cs: Název ukazatele
+          en: Indicator title
+          de: Indikatortitel
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: LanguageProperty
   currentValue:
     slot_uri: jc:currentValue
     description: >-
@@ -48,6 +73,14 @@ slots:
       - range: float
       - range: string
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Hodnota
+          cs: Hodnota
+          en: Value
+          de: Wert
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
   calculationPeriod:
@@ -59,7 +92,16 @@ slots:
     required: true
     range: CalculationPeriod
     inlined: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie výpočtu
+          cs: Období výpočtu
+          en: Calculation period
+          de: Berechnungszeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   calculationFormula:
     slot_uri: jc:calculationFormula
     description: >-
@@ -67,19 +109,47 @@ slots:
       the aggregation, the window and any divisor, such as `per km² of the district's own area`.
       English plain text: a table leaves it out, so a Slovak answer never shows English prose.
     required: true
-    annotations: { ngsi_ld_kind: Property, hidden: true }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Spôsob výpočtu
+          cs: Způsob výpočtu
+          en: Calculation method
+          de: Berechnungsmethode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      hidden: true
   derivedFrom:
     slot_uri: jc:derivedFrom
     description: >-
       The Endpoint the sources were read through, as its URN. The endpoint and not the space:
       what an indicator could see is what that endpoint's policy let it see.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj údajov
+          cs: Zdroj dat
+          en: Derived from
+          de: Abgeleitet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vypočítané procesom
+          cs: Vypočteno procesem
+          en: Computed by
+          de: Berechnet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   updatedAt:
     slot_uri: jc:updatedAt
     description: >-
@@ -88,17 +158,44 @@ slots:
       which is the visible fact that the source is static.
     range: datetime
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Posledný výpočet
+          cs: Poslední výpočet
+          en: Last computed
+          de: Zuletzt berechnet
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   start:
     slot_uri: jc:start
     description: The first instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Začiatok
+          cs: Začátek
+          en: Start
+          de: Beginn
+        annotations: { generated: sk cs en de }
   end:
     slot_uri: jc:end
     description: The last instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Koniec
+          cs: Konec
+          en: End
+          de: Ende
+        annotations: { generated: sk cs en de }
 
 classes:
   KeyPerformanceIndicator:
@@ -107,6 +204,7 @@ classes:
     is_a: Entity
     slots:
       - name
+      - title
       - currentValue
       - calculationPeriod
       - calculationFormula

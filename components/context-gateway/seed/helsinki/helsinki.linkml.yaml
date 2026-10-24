@@ -28,18 +28,42 @@ slots:
     description: The publisher's own identifier of the record (a news item's RSS guid), the one the Article extension requires.
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Identifikátor
+          cs: Identifikátor
+          en: Identifier
+          de: Kennung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.CPSV-AP
   name:
     slot_uri: schema:name
     description: The name, per language.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/name
   description:
     slot_uri: schema:description
     description: A short description, per language.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/description
   startDate:
@@ -72,27 +96,67 @@ slots:
     range: PostalAddress
     inlined: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Adresa
+          cs: Adresa
+          en: Address
+          de: Adresse
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models/blob/master/common-schema.json
   streetAddress:
     slot_uri: schema:streetAddress
     description: The street and the house number.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Ulica a číslo
+          cs: Ulice a číslo
+          en: Street and number
+          de: Straße und Hausnummer
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/streetAddress
   postalCode:
     slot_uri: schema:postalCode
     description: The postal code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PSČ
+          cs: PSČ
+          en: Postal code
+          de: Postleitzahl
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
     description: The town or the municipality.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Town
+          de: Ort
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressLocality
   addressCountry:
     slot_uri: schema:addressCountry
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Krajina
+          cs: Země
+          en: Country
+          de: Land
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressCountry
   contactPoint:
     slot_uri: schema:contactPoint
@@ -149,6 +213,14 @@ slots:
       ride site's open, closed or closedAbnormal (Fintraffic LIIPI's IN_OPERATION, INACTIVE or
       TEMPORARILY_CLOSED, EXCEPTIONAL_SITUATION).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Stav
+          cs: Stav
+          en: Status
+          de: Status
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   dateModified:
@@ -189,12 +261,28 @@ slots:
     slot_uri: sdm:route
     description: The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Linka
+          cs: Linka
+          en: Route
+          de: Linie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   vehicleType:
     slot_uri: sdm:vehicleType
     description: The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ vozidla
+          cs: Typ vozidla
+          en: Vehicle type
+          de: Fahrzeugtyp
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   fleetVehicleId:
@@ -216,6 +304,14 @@ slots:
     description: Where the item is published in full.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          en: Web page
+          de: Webseite
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
   datePublished:
@@ -223,6 +319,14 @@ slots:
     description: When the item was published, ISO 8601 with a time zone.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum zverejnenia
+          cs: Datum zveřejnění
+          en: Published
+          de: Veröffentlicht
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/datePublished
   image:
@@ -230,6 +334,14 @@ slots:
     description: The item's picture, when the feed carries one.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obrázok
+          cs: Obrázek
+          en: Image
+          de: Bild
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/image
   dateObserved:
@@ -237,6 +349,14 @@ slots:
     description: When the readings were taken.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed at
+          de: Messzeitpunkt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   temperature:
@@ -247,6 +367,14 @@ slots:
     range: float
     unit: { ucum_code: Cel }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Teplota (°C)
+          cs: Teplota (°C)
+          en: Temperature (°C)
+          de: Temperatur (°C)
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
   roadSurfaceTemperature:
@@ -298,6 +426,14 @@ slots:
     slot_uri: sdm:category
     description: The alert's domain; traffic for everything Fintraffic and HSL publish.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória
+          cs: Kategorie
+          en: Category
+          de: Kategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   subCategory:
@@ -306,6 +442,14 @@ slots:
       The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out
       where no code fits: a Fintraffic traffic announcement and an HSL service alert.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Podkategória
+          cs: Podkategorie
+          en: Subcategory
+          de: Unterkategorie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   dateIssued:
@@ -313,26 +457,68 @@ slots:
     description: When the situation was published.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum vydania
+          cs: Datum vydání
+          en: Issued
+          de: Herausgegeben
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   alertSource:
     slot_uri: sdm:alertSource
     description: Who raised the alert, Fintraffic or HSL.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj upozornenia
+          cs: Zdroj upozornění
+          en: Alert source
+          de: Quelle der Meldung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   effect:
     slot_uri: jc:effect
     description: What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dopad
+          cs: Dopad
+          en: Effect
+          de: Auswirkung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   cause:
     slot_uri: jc:cause
     description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Príčina
+          cs: Příčina
+          en: Cause
+          de: Ursache
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   severity:
     slot_uri: sdm:severity
     description: How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Závažnosť
+          cs: Závažnost
+          en: Severity
+          de: Schweregrad
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   refRoute:
@@ -342,7 +528,17 @@ slots:
     multivalued: true
     inverse: routeAlerts
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dotknuté linky
+          cs: Dotčené linky
+          en: Affected lines
+          de: Betroffene Linien
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
   refStop:
     slot_uri: jc:refStop
     description: The stops an HSL service alert affects, each a GtfsStop of this space.
@@ -350,7 +546,17 @@ slots:
     multivalued: true
     inverse: stopAlerts
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dotknuté zastávky
+          cs: Dotčené zastávky
+          en: Affected stops
+          de: Betroffene Haltestellen
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
     # T-3893: a vehicle's links to the line it runs and the stop it is at or heading to. They name
     # entities by URN and point outside the model (uriorcurie): the hub carries Vehicle slot for
     # slot without the GTFS classes (DM-61), and a vehicle is written even before the day's GTFS
@@ -397,7 +603,16 @@ slots:
     multivalued: true
     inverse: refRoute
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Upozornenia na linke
+          cs: Upozornění na lince
+          en: Line alerts
+          de: Meldungen zur Linie
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   stopAlerts:
     slot_uri: jc:stopAlerts
     description: The HSL service alerts on the stop, computed from their refStop and never stored.
@@ -405,19 +620,45 @@ slots:
     multivalued: true
     inverse: refStop
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Upozornenia na zastávke
+          cs: Upozornění na zastávce
+          en: Stop alerts
+          de: Meldungen zur Haltestelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   unknownReference:
     slot_uri: jc:unknownReference
     description: >-
       What an HSL service alert names that this space holds no entity for, as `route:<id>` or
       `stop:<id>`, kept as text rather than as a relationship that would point at nothing.
     multivalued: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ďalšie dotknuté miesta
+          cs: Další dotčená místa
+          en: Other affected places
+          de: Weitere betroffene Orte
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   validFrom:
     slot_uri: sdm:validFrom
     description: When the situation starts.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Platí od
+          cs: Platí od
+          en: Valid from
+          de: Gültig ab
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   validTo:
@@ -425,6 +666,14 @@ slots:
     description: When the situation ends; absent while open-ended.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Platí do
+          cs: Platí do
+          en: Valid until
+          de: Gültig bis
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   pm10:
@@ -476,6 +725,14 @@ slots:
       The opening hours as the city's service register words them, per language. Free text,
       because the register writes exceptions and self-service hours no fixed shape holds.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Otváracie hodiny
+          cs: Otevírací doba
+          en: Opening hours
+          de: Öffnungszeiten
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://schema.org/openingHours
   serviceCategory:
@@ -483,7 +740,16 @@ slots:
     description: Which of the city's services the place is, from the service register's own codes.
     range: ServiceCategory
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh služby
+          cs: Druh služby
+          en: Service type
+          de: Dienstart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   refPointOfInterest:
     slot_uri: sdm:refPointOfInterest
     description: The place in the city's service register the sensor stands at.
@@ -491,6 +757,14 @@ slots:
     inverse: waterQualityObservations
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       on_delete: restrict
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
@@ -500,63 +774,156 @@ slots:
     range: integer
     minimum_value: 0
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Počet miest
+          cs: Počet míst
+          en: Total spaces
+          de: Stellplätze gesamt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   zoneCode:
     slot_uri: jc:zoneCode
     description: The zone's own code, a fee zone number or a resident permit letter, as the signs show it.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód zóny
+          cs: Kód zóny
+          en: Zone code
+          de: Zonencode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   permitKind:
     slot_uri: jc:permitKind
     description: What the permit lets its holder do on the public area.
     range: PermitKind
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh povolenia
+          cs: Druh povolení
+          en: Permit type
+          de: Genehmigungsart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   permitNumber:
     slot_uri: jc:permitNumber
     description: The application number the city's permit register gives the permit, such as KP1900206-23.
     required: true
     pattern: ^[A-Z]{2}[0-9]{7}(-[0-9]+)?$
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo povolenia
+          cs: Číslo povolení
+          en: Permit number
+          de: Genehmigungsnummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   permitStatus:
     slot_uri: jc:permitStatus
     description: Where the permitted work or event stands today.
     range: PermitStatus
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Stav povolenia
+          cs: Stav povolení
+          en: Permit status
+          de: Genehmigungsstatus
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   permitStart:
     slot_uri: jc:permitStart
     description: The first day the permit covers.
     range: date
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolenie od
+          cs: Povolení od
+          en: Permit from
+          de: Genehmigung ab
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   permitEnd:
     slot_uri: jc:permitEnd
     description: The last day the permit covers.
     range: date
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolenie do
+          cs: Povolení do
+          en: Permit until
+          de: Genehmigung bis
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   refDistrict:
     slot_uri: jc:refDistrict
     description: The district the record lies in.
     range: AdministrativeArea
     inverse: publicAreaPermits
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: restrict }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Mestská časť
+          cs: Městská část
+          en: District
+          de: Stadtbezirk
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
   districtCode:
     slot_uri: jc:districtCode
     description: >-
       The city's own code of the area: the district number, or for a sub-district the full
-      ten-digit code the city's statistics use for it.
-    required: true
+      ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its
+      `fareZone`. The districts and sub-districts mappings write no area without it.
     pattern: ^[0-9]{1,10}$
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód časti
+          cs: Kód části
+          en: District code
+          de: Bezirksnummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   divisionLevel:
     slot_uri: jc:divisionLevel
-    description: Which of the city's two divisions the area belongs to.
+    description: >-
+      Which of the city's divisions the area belongs to: a district or sub-district for an
+      AdministrativeArea; for a statistics indicator also the city, a major or basic district, or
+      the inner city or the suburbs.
     range: DivisionLevel
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Úroveň členenia
+          cs: Úroveň členění
+          en: Division level
+          de: Gliederungsebene
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   stewardNote:
     slot_uri: jc:stewardNote
     description: >-
@@ -582,7 +949,16 @@ slots:
     multivalued: true
     inverse: refPointOfInterest
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Merania kvality vody
+          cs: Měření kvality vody
+          en: Water quality readings
+          de: Wasserqualitätsmessungen
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   thematic:
     slot_uri: sdm:thematic
     description: >-
@@ -637,6 +1013,14 @@ slots:
     inverse: subEvent
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Nadradené podujatie
+          cs: Nadřazená akce
+          en: Parent event
+          de: Übergeordnete Veranstaltung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   subEvent:
@@ -647,6 +1031,14 @@ slots:
     inverse: superEvent
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Termíny a časti podujatia
+          cs: Termíny a části akce
+          en: Dates and parts of the event
+          de: Termine und Teile der Veranstaltung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
   service_request_id:
@@ -654,30 +1046,70 @@ slots:
     description: The number the city's feedback system gives the report (Open311 `service_request_id`).
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo podnetu
+          cs: Číslo podnětu
+          en: Report number
+          de: Meldungsnummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   service_code:
     slot_uri: sdm:service_code
     description: The feedback system's code of the sector the report is filed under, for example 2809.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód oblasti
+          cs: Kód oblasti
+          en: Sector code
+          de: Bereichscode
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   service_name:
     slot_uri: sdm:service_name
     description: The sector's name in English, read from the feedback system's services list, for example City environment.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Oblasť
+          cs: Oblast
+          en: Sector
+          de: Bereich
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   status_notes:
     slot_uri: sdm:status_notes
     description: The city's answer or note on the report, as published.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Odpoveď mesta
+          cs: Odpověď města
+          en: City reply
+          de: Antwort der Stadt
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   agency_responsible:
     slot_uri: sdm:agency_responsible
     description: The city unit handling the report, when the feedback system names one.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Zodpovedný útvar
+          cs: Odpovědný útvar
+          en: Responsible unit
+          de: Zuständige Stelle
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   requested_datetime:
@@ -686,6 +1118,14 @@ slots:
     range: datetime
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Podané
+          cs: Podáno
+          en: Filed at
+          de: Eingereicht am
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   updated_datetime:
@@ -693,6 +1133,14 @@ slots:
     description: When the report last changed, ISO 8601 in UTC.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Naposledy zmenené
+          cs: Naposledy změněno
+          en: Last changed
+          de: Zuletzt geändert
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   expected_datetime:
@@ -700,12 +1148,28 @@ slots:
     description: When the city expects to have handled the report, if it says.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Očakávané vybavenie
+          cs: Očekávané vyřízení
+          en: Expected resolution
+          de: Voraussichtliche Erledigung
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   address_string:
     slot_uri: sdm:address_string
     description: The street or place the reporter named, as written, for example Malminkatu.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   publicAreaPermits:
@@ -715,31 +1179,102 @@ slots:
     multivalued: true
     inverse: refDistrict
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolenia na verejnom priestranstve
+          cs: Povolení na veřejném prostranství
+          en: Public area permits
+          de: Genehmigungen für öffentliche Flächen
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+  areaIndicators:
+    slot_uri: jc:areaIndicators
+    description: The statistics indicators that describe this sub-district, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ukazovatele územia
+          cs: Ukazatele území
+          en: Area indicators
+          de: Gebietsindikatoren
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   stopCode:
     slot_uri: jc:stopCode
     description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód zastávky
+          cs: Kód zastávky
+          en: Stop code
+          de: Haltestellencode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   fareZone:
     slot_uri: jc:fareZone
-    description: The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.
+    description: The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.
     pattern: ^[A-Z]$
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Tarifné pásmo
+          cs: Tarifní pásmo
+          en: Fare zone
+          de: Tarifzone
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   routeShortName:
     slot_uri: jc:routeShortName
     description: The line number riders see, such as 4 or 550.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo linky
+          cs: Číslo linky
+          en: Line number
+          de: Liniennummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   headsign:
     slot_uri: jc:headsign
     description: Where the line runs to in this direction, as its sign shows it.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Cieľová zastávka
+          cs: Cílová zastávka
+          en: Destination
+          de: Fahrtziel
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   directionId:
     slot_uri: jc:directionId
     description: HSL's direction of the line, 1 or 2.
     range: integer
     minimum_value: 1
     maximum_value: 2
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Smer
+          cs: Směr
+          en: Direction
+          de: Richtung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   transportMode:
     slot_uri: jc:transportMode
     description: What serves the stop or runs the line.
@@ -764,6 +1299,14 @@ slots:
     maximum_value: 7
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh dopravy
+          cs: Druh dopravy
+          en: Transport mode
+          de: Verkehrsmittel
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   stopSequence:
@@ -772,13 +1315,30 @@ slots:
       The stops the line serves in this direction, in order, each the GTFS stop id that ends
       the id of a GtfsStop of this space.
     multivalued: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zastávky v poradí
+          cs: Zastávky v pořadí
+          en: Stops in order
+          de: Haltestellen der Reihe nach
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   availableSpotNumber:
     slot_uri: sdm:availableSpotNumber
     description: Free spaces at the park and ride site when it last reported, LIIPI's spacesAvailable.
     range: integer
     minimum_value: 0
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Voľné miesta
+          cs: Volná místa
+          en: Free spaces
+          de: Freie Stellplätze
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   allowedVehicleType:
@@ -786,6 +1346,14 @@ slots:
     description: What may park, the site's own kind first (car or bicycle), then motorcycle where it has spaces for them.
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolené vozidlá
+          cs: Povolená vozidla
+          en: Allowed vehicles
+          de: Zugelassene Fahrzeuge
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
   capacityByType:
@@ -793,14 +1361,33 @@ slots:
     description: >-
       The built capacity per kind of space, as LIIPI names them in lower case (car, disabled,
       bicycle, electricCar, motorcycle, bicycleSecureSpace), each a count.
-    annotations: { ngsi_ld_kind: JsonProperty }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kapacita podľa druhu
+          cs: Kapacita podle druhu
+          en: Capacity by type
+          de: Kapazität nach Art
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: JsonProperty
   refNearestStation:
     slot_uri: jc:refNearestStation
     description: The HSL station within 500 m of the park and ride site, the nearest one, a GtfsStation of this space.
     range: GtfsStation
     inverse: nearbyParking
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Najbližšia stanica
+          cs: Nejbližší stanice
+          en: Nearest station
+          de: Nächste Station
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
   nearbyParking:
     slot_uri: jc:nearbyParking
     description: The park and ride sites whose nearest station this is, computed from their refNearestStation and never stored.
@@ -808,7 +1395,16 @@ slots:
     multivalued: true
     inverse: refNearestStation
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Parkoviská P+R v okolí
+          cs: Parkoviště P+R v okolí
+          en: Nearby park and ride
+          de: Park-and-ride in der Nähe
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   departures:
     slot_uri: jc:departures
     description: >-
@@ -817,12 +1413,29 @@ slots:
       and its `status` (scheduled, skipped or canceled), and `delay` in seconds with the
       `scheduled` time it implies when HSL sends one. Set every 30 s for a curated set of stops
       from HSL's GTFS-RT trip updates; empty after five minutes without a feed.
-    annotations: { ngsi_ld_kind: JsonProperty }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Najbližšie odchody
+          cs: Nejbližší odjezdy
+          en: Next departures
+          de: Nächste Abfahrten
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: JsonProperty
   wheelChairAccessible:
     slot_uri: sdm:wheelChairAccessible
     description: Whether a wheelchair can board here, GTFS's wheelchair_boarding; 0 unknown, 1 possible, 2 not possible.
     pattern: ^[012]$
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Bezbariérový nástup
+          cs: Bezbariérový nástup
+          en: Wheelchair boarding
+          de: Rollstuhlgerechter Einstieg
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   hasParentStation:
@@ -832,6 +1445,14 @@ slots:
     inverse: hasStop
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Stanica
+          cs: Stanice
+          en: Station
+          de: Station
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   hasStop:
@@ -842,6 +1463,14 @@ slots:
     inverse: hasParentStation
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Nástupištia
+          cs: Nástupiště
+          en: Platforms
+          de: Bahnsteige
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   page:
@@ -849,36 +1478,84 @@ slots:
     description: The publisher's web page about it.
     range: uri
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          en: Web page
+          de: Webseite
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   agencyName:
     slot_uri: sdm:agencyName
     description: The transit agency's full name.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dopravca
+          cs: Dopravce
+          en: Transit agency
+          de: Verkehrsunternehmen
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   timezone:
     slot_uri: sdm:timezone
     description: The agency's time zone, an IANA name such as Europe/Helsinki.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Časové pásmo
+          cs: Časové pásmo
+          en: Time zone
+          de: Zeitzone
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   language:
     slot_uri: sdm:language
     description: The agency's main language, a two-letter code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Jazyk
+          cs: Jazyk
+          en: Language
+          de: Sprache
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   phone:
     slot_uri: sdm:phone
     description: The agency's public customer service number.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Telefón
+          cs: Telefon
+          en: Telephone
+          de: Telefon
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   shortName:
     slot_uri: sdm:shortName
     description: The line number riders see, such as 4 or 550.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo linky
+          cs: Číslo linky
+          en: Line number
+          de: Liniennummer
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   routeType:
@@ -888,6 +1565,14 @@ slots:
       extended codes (109, 700s, 900) are written as the basic one they extend.
     pattern: ^[0-7]$
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh dopravy
+          cs: Druh dopravy
+          en: Route type
+          de: Linienart
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   operatedBy:
@@ -897,6 +1582,14 @@ slots:
     inverse: routes
     inlined: false
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Dopravca
+          cs: Dopravce
+          en: Operated by
+          de: Betrieben von
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   routes:
@@ -906,21 +1599,246 @@ slots:
     multivalued: true
     inverse: operatedBy
     inlined: false
-    annotations: { ngsi_ld_kind: Relationship }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Linky
+          cs: Linky
+          en: Lines
+          de: Linien
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
   distanceTravelled:
     slot_uri: sdm:distanceTravelled
     description: The distance along the shape at each point of its line, in kilometres.
     range: float
     multivalued: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Prejdená vzdialenosť (km)
+          cs: Ujetá vzdálenost (km)
+          en: Distance travelled (km)
+          de: Zurückgelegte Strecke (km)
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  kpiValue:
+    slot_uri: sdm:kpiValue
+    description: >-
+      The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count,
+      P1 a percentage, EUR euros, MTK square metres) and the period's last day as `observedAt`,
+      so the history holds one value per period.
+    range: float
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Hodnota ukazovateľa
+          cs: Hodnota ukazatele
+          en: Indicator value
+          de: Indikatorwert
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationPeriod:
+    slot_uri: sdm:calculationPeriod
+    description: The period the value covers, its first and last day.
+    range: KpiPeriod
+    inlined: true
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie výpočtu
+          cs: Období výpočtu
+          en: Calculation period
+          de: Berechnungszeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  from:
+    slot_uri: sdm:from
+    description: The first day of the period.
+    range: date
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Od
+          cs: Od
+          en: From
+          de: Von
+        annotations: { generated: sk cs en de }
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  to:
+    slot_uri: sdm:to
+    description: The last day of the period.
+    range: date
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Do
+          cs: Do
+          en: To
+          de: Bis
+        annotations: { generated: sk cs en de }
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationFrequency:
+    slot_uri: sdm:calculationFrequency
+    description: How often the source publishes a new period.
+    range: CalculationFrequency
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Frekvencia výpočtu
+          cs: Frekvence výpočtu
+          en: Calculation frequency
+          de: Berechnungshäufigkeit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculatedBy:
+    slot_uri: sdm:calculatedBy
+    description: The organization that computes the value.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vypočítal
+          cs: Vypočítal
+          en: Calculated by
+          de: Berechnet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  organization:
+    slot_uri: sdm:organization
+    description: The organization the indicator describes.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Organizácia
+          cs: Organizace
+          en: Organization
+          de: Organisation
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  process:
+    slot_uri: sdm:process
+    description: The statistics table the value comes from, in the source's words.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Štatistická tabuľka
+          cs: Statistická tabulka
+          en: Statistics table
+          de: Statistiktabelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  area:
+    slot_uri: sdm:area
+    description: The name of the area the value describes, a sub-district, district or the whole city.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Oblasť
+          cs: Oblast
+          en: Area
+          de: Gebiet
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  refArea:
+    slot_uri: jc:refArea
+    description: >-
+      The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the
+      city's register holds; a district or the whole city is named by `area` and `districtCode`.
+    range: AdministrativeArea
+    inverse: areaIndicators
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Sub-district
+          de: Teilgebiet
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+  statisticsTable:
+    slot_uri: jc:statisticsTable
+    description: The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it.
+    pattern: ^([a-z]+_[a-z]+_[0-9]{3}[a-z]|[a-z]+(-[a-z]+)+)$
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kód tabuľky
+          cs: Kód tabulky
+          en: Table code
+          de: Tabellencode
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  dimensionKey:
+    slot_uri: jc:dimensionKey
+    description: >-
+      Which cell of the table the value is: each kept dimension and its code, such as
+      Sukupuoli=ALL;Tiedot=tyottomyysaste.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ďalšie členenie
+          cs: Další členění
+          en: Further breakdown
+          de: Weitere Gliederung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  updatedAt:
+    slot_uri: sdm:updatedAt
+    description: When the source last updated the table.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Posledná aktualizácia
+          cs: Poslední aktualizace
+          en: Last updated
+          de: Zuletzt aktualisiert
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
 
   dateObservedFrom:
     slot_uri: sdm:dateObservedFrom
     description: The start of the period the observation counts, the local midnight that opens the day.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie od
+          cs: Období od
+          en: Period from
+          de: Zeitraum ab
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   dateObservedTo:
@@ -928,6 +1846,14 @@ slots:
     description: The end of the period the observation counts, the local midnight that closes the day.
     range: datetime
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie do
+          cs: Období do
+          en: Period to
+          de: Zeitraum bis
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   intensity:
@@ -937,6 +1863,14 @@ slots:
     minimum_value: 0
     unit: { ucum_code: /d }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Intenzita (počet za deň)
+          cs: Intenzita (počet za den)
+          en: Intensity (per day)
+          de: Verkehrsstärke (pro Tag)
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   averageVehicleSpeed:
@@ -947,6 +1881,14 @@ slots:
     maximum_value: 150
     unit: { ucum_code: km/h }
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Priemerná rýchlosť
+          cs: Průměrná rychlost
+          en: Average speed
+          de: Durchschnittsgeschwindigkeit
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   trafficDirection:
@@ -957,7 +1899,16 @@ slots:
       segment to mean anything, which the counters do not name. Absent when the counter sums both
       directions.
     range: TrafficDirection
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Smer dopravy
+          cs: Směr dopravy
+          en: Traffic direction
+          de: Verkehrsrichtung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
 
 classes:
   Event:
@@ -966,6 +1917,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
     slots:
       - name
       - description
@@ -1076,17 +2034,29 @@ classes:
               de: Kontakt
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
-    description: One HSL city bike station, its position and what it holds right now.
+    description: >-
+      One city bike station, its position and what it holds right now: HSL's stations from the live
+      GBFS feed, and City Bike Vantaa's stations from HSL's register, which carries their address and
+      number of slots but no live count.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Stanica zdieľaných bicyklov
+          cs: Stanice sdílených kol
+          en: Bike sharing station
+          de: Leihradstation
     slots:
       - name
       - availableBikeNumber
       - freeSlotNumber
       - totalSlotNumber
       - status
+      - address
       - dateModified
+      - dataProvider
       - source
     slot_usage:
       name:
@@ -1148,12 +2118,29 @@ classes:
               fi: Tila
               en: Status
               de: Status
+      address:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Adresa
+              cs: Adresa
+              fi: Osoite
+              en: Address
+              de: Adresse
   Vehicle:
     class_uri: sdm:Vehicle
     description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Vozidlo
+          cs: Vozidlo
+          en: Vehicle
+          de: Fahrzeug
     slots:
       - speed
       - heading
@@ -1254,6 +2241,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
+      label:
+        tag: label
+        value:
+          sk: Článok
+          cs: Článek
+          en: Article
+          de: Artikel
     slots: [identifier, name, description, url, datePublished, image, source]
   WeatherObserved:
     class_uri: sdm:WeatherObserved
@@ -1261,6 +2255,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
+      label:
+        tag: label
+        value:
+          sk: Meranie počasia
+          cs: Měření počasí
+          en: Weather reading
+          de: Wetterbeobachtung
     slots:
       - name
       - dateObserved
@@ -1370,6 +2371,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+      label:
+        tag: label
+        value:
+          sk: Upozornenie
+          cs: Upozornění
+          en: Alert
+          de: Warnung
     slots:
       - name
       - description
@@ -1395,6 +2403,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, dateObserved, pm10, pm25, airQualityIndex, stewardNote, source]
     slot_usage:
       name:
@@ -1460,17 +2475,27 @@ classes:
     class_uri: sdm:PointOfInterest
     description: >-
       One place of the city's service register a resident goes to: a library, a health station,
-      a swimming hall, a beach, a school, or any other unit of the register (`other`). The register's contact lines are left out, because
-      they can name a person.
+      a swimming hall, a beach, a school, or any other unit of the register (`other`); or one of
+      HSL's ticket sales points (a kiosk, a service point, a ticket machine or a parking meter that
+      sells tickets). The register's contact lines are left out, because they can name a person.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots:
       - name
       - serviceCategory
       - address
       - url
       - openingHours
+      - description
+      - fareZone
       - dateModified
       - dataProvider
       - source
@@ -1483,6 +2508,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality vody
+          cs: Měření kvality vody
+          en: Water quality reading
+          de: Wasserqualitätsmessung
     slots: [name, temperature, dateObserved, refPointOfInterest, dataProvider, source]
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -1494,6 +2526,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovanie na ulici
+          cs: Parkování na ulici
+          en: On-street parking
+          de: Parken an der Straße
     slots: [name, category, totalSpotNumber, zoneCode, description, url, dataProvider, source]
     slot_usage:
       category:
@@ -1509,6 +2548,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovisko
+          cs: Parkoviště
+          en: Car park
+          de: Parkplatz
     slots:
       - name
       - status
@@ -1529,6 +2575,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Práce v meste
+          cs: Práce ve městě
+          en: City works
+          de: Bauarbeiten in der Stadt
     slots:
       - name
       - permitKind
@@ -1549,13 +2602,35 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
-    slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Administrative area
+          de: Verwaltungsgebiet
+    slots:
+      - name
+      - districtCode
+      - divisionLevel
+      - fareZone
+      - dataProvider
+      - source
+      - publicAreaPermits
+      - areaIndicators
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Zastávka
+          cs: Zastávka
+          en: Stop
+          de: Haltestelle
     slots:
       - name
       - stopCode
@@ -1578,6 +2653,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka MHD
+          cs: Linka MHD
+          en: Public transport route
+          de: ÖPNV-Linie
     slots:
       - name
       - route
@@ -1595,6 +2677,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Stanica
+          cs: Stanice
+          en: Station
+          de: Station
     slots:
       - name
       - fareZone
@@ -1611,6 +2700,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Dopravca
+          cs: Dopravce
+          en: Transit agency
+          de: Verkehrsunternehmen
     slots: [agencyName, page, timezone, language, phone, routes, dataProvider, source]
   GtfsRoute:
     class_uri: sdm:GtfsRoute
@@ -1620,6 +2716,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka
+          cs: Linka
+          en: Route
+          de: Linie
     slots:
       - shortName
       - name
@@ -1638,6 +2741,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Trasa linky
+          cs: Trasa linky
+          en: Route shape
+          de: Linienverlauf
     slots: [name, distanceTravelled, dataProvider, source]
 
   ServiceRequest:
@@ -1671,6 +2781,81 @@ classes:
       description:
         description: The report as the reporter wrote it, in the language they wrote it in (`@none`).
 
+  KeyPerformanceIndicator:
+    class_uri: sdm:KeyPerformanceIndicator
+    description: >-
+      One indicator of the city's area statistics (Aluesarjat) for one area: the newest period's
+      value, its history one row per period. Read daily from stat.hel.fi.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+    slots:
+      - name
+      - description
+      - kpiValue
+      - calculationPeriod
+      - calculationFrequency
+      - area
+      - districtCode
+      - divisionLevel
+      - refArea
+      - process
+      - statisticsTable
+      - dimensionKey
+      - calculatedBy
+      - organization
+      - updatedAt
+      - dataProvider
+      - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              en: Name
+              de: Name
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: LanguageProperty
+          upstream_source: https://schema.org/name
+      kpiValue:
+        rank: 2
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Hodnota ukazovateľa
+              cs: Hodnota ukazatele
+              en: Indicator value
+              de: Indikatorwert
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+      area:
+        rank: 3
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Oblasť
+              cs: Oblast
+              en: Area
+              de: Gebiet
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+      districtCode: { required: false }
+      divisionLevel: { required: false }
+  KpiPeriod:
+    class_uri: jc:KpiPeriod
+    description: The value of `calculationPeriod`, never an entity of its own.
+    slots: [from, to]
   TrafficFlowObserved:
     class_uri: sdm:TrafficFlowObserved
     description: >-
@@ -1681,6 +2866,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie dopravy
+          cs: Sčítání dopravy
+          en: Traffic count
+          de: Verkehrszählung
     slots:
       - name
       - dateObserved
@@ -1712,6 +2904,12 @@ classes:
     slots: [streetAddress, postalCode, addressLocality, addressCountry]
 
 enums:
+  CalculationFrequency:
+    permissible_values:
+      daily: { description: A new value every day. }
+      monthly: { description: A new value every month. }
+      quarterly: { description: A new value every quarter. }
+      yearly: { description: A new value every year. }
   ServiceCategory:
     permissible_values:
       library: { description: A public library. }
@@ -1721,6 +2919,12 @@ enums:
       school: { description: A comprehensive school. }
       other:
         description: Any other unit of the service register, such as a youth centre, a playground or a city office.
+      ticketSalesPoint: { description: An HSL ticket sales point in a shop or kiosk (Myyntipiste). }
+      ticketServicePoint: { description: An HSL customer service point (Palvelupiste). }
+      ticketMachine:
+        description: An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).
+      ticketParkingMeter:
+        description: A parking meter that also sells HSL tickets (Pysäköintiautomaatti).
   ServiceRequestStatus:
     description: Open311's two report states, as Smart Data Models' service_requests names them.
     permissible_values:
@@ -1748,10 +2952,19 @@ enums:
       teardown: { description: The event's structures are being taken down. }
   DivisionLevel:
     permissible_values:
+      city: { description: The whole city (statistics only). }
+      majorDistrict:
+        description: A major district (suurpiiri), 8 of them (statistics only).
+      basicDistrict:
+        description: A basic district (peruspiiri), 34 of them (statistics only).
+      cityPart:
+        description: The inner city (kantakaupunki) or the suburbs (esikaupungit) (statistics only).
       district:
         description: A district (kaupunginosa), 60 of them.
       subDistrict:
         description: A sub-district (osa-alue), the unit the city's statistics use.
+      fareZone:
+        description: An HSL fare zone (A, B, C or D), the area a ticket is valid in.
   TransportMode:
     permissible_values:
       bus: { description: A bus. }

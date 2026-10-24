@@ -133,5 +133,8 @@ pipeline:
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-cykloscitace-miesta-6e967d" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
+    - split:
+        size: 1000
+        byte_size: 2097152
     - archive:
         format: json_array

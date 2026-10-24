@@ -448,7 +448,7 @@ def test_no_gitea_release_outgrows_the_secret_helm_keeps_it_in(dev):
         assert stored < 0.75 * 1024 * 1024, f"{release} would be stored in {stored} bytes"
 
 
-SEED_RELEASES = ("gitea-seed", *(f"gitea-seed-{n}" for n in range(2, 12)))
+SEED_RELEASES = ("gitea-seed", *(f"gitea-seed-{n}" for n in range(2, 16)))
 
 
 def stored_bytes(docs):

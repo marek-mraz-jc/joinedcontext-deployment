@@ -36,6 +36,13 @@ on the rendered output, the eight k3d deployment variants, the nightly k3d deplo
 test job, and the dev cluster (`just dev-apply` + `just dev-smoke`) is what proves a deployment
 before anyone relies on it.
 
+`release-gate.yml` runs on a release tag `vX.Y.Z` (`scripts/release.py cut`) and on demand, never on a
+schedule (T-0051, OPS-01, OPS-04). It renders `smartcity` at the tag and at the previous release tag,
+writes the difference to the job summary through `scripts/release-diff.py` (Secret values redacted, the
+whole diff as an artifact), then waits on the GitHub environment `production`, whose required reviewer
+signs off. It holds no cluster credential and applies nothing: prod-deployer applies the approved tag
+from the sandbox with `just prod-apply` (owner decision 2026-10-24).
+
 ## What a caller has to know
 
 - **Actions are pinned by commit**, never by tag. A tag is mutable, and a supply-chain gate
