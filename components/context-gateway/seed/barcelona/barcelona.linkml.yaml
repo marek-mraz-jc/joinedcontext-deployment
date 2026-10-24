@@ -14,7 +14,8 @@ description: >-
   network with its live socket states. Urbanism: the districts and barris as
   AdministrativeArea, the works on the public space as CityWork and the street inventory's
   crossings as PedestrianCrossing, its speed reducers as StreetFurniture and the drinking and
-  ornamental fountains as PointOfInterest.
+  ornamental fountains as PointOfInterest. Tourism: each licensed tourist flat (habitatge d'ús
+  turístic) as TouristRental, at the building's address and point.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -30,7 +31,7 @@ imports:
 slots:
   name:
     slot_uri: schema:name
-    description: The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).
+    description: The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).
     annotations:
       label:
         tag: label
@@ -813,7 +814,9 @@ slots:
       upstream_source: https://schema.org/addressCountry
   capacity:
     slot_uri: sdm:capacity
-    description: How many vehicles the charging point charges at once, one per port the city lists.
+    description: >-
+      How many vehicles the charging point charges at once, one per port the city lists; how many
+      guests a tourist flat's licence admits (its places).
     range: integer
     minimum_value: 1
     annotations:
@@ -940,8 +943,8 @@ slots:
   areaServed:
     slot_uri: sdm:areaServed
     description: >-
-      Where the entity is as the city names it: the barri of a station or well, the place of a work
-      (a street and number, a square, a park).
+      Where the entity is as the city names it: the barri of a station, a well or a tourist flat,
+      the place of a work (a street and number, a square, a park).
     annotations:
       label:
         tag: label
@@ -1364,6 +1367,13 @@ slots:
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  registerNumber:
+    slot_uri: jc:registerNumber
+    description: >-
+      The flat's number in the Generalitat's tourism register (Registre de Turisme de Catalunya),
+      HUTB- and six digits, which every advert of the flat must show.
+    pattern: ^HUTB-[0-9]{6}$
+    annotations: { ngsi_ld_kind: Property }
   seeAlso:
     slot_uri: sdm:seeAlso
     description: The work's page on the city's works site.
@@ -1583,6 +1593,18 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
     slots: [name, startDate, endDate, category, subCategory, address, contactPoint, source]
+  TouristRental:
+    class_uri: sdm:TouristRental
+    description: >-
+      One tourist flat (habitatge d'ús turístic) the city has licensed, by its licence file: the
+      guests it admits, its Generalitat register number, and the building it is in (street and
+      number, district, barri and point). Floor, door, staircase and block are never written: they
+      locate a household. Smart Data Models' TouristRental is a facility rented to tourists; the
+      licence register names the facility, so no rental dates or tourist.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+    slots: [name, capacity, registerNumber, address, areaServed, dataProvider, source]
   PointOfInterest:
     class_uri: sdm:PointOfInterest
     description: >-

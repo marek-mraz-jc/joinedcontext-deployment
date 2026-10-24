@@ -91,6 +91,12 @@ barcelona-pipeline-drinking-fountains-bento.yaml: projects/barcelona/pipelines/d
 barcelona-datasource-ornamental-fountains.yaml: projects/barcelona/datasources/bcn-ornamental-fountains.yaml
 barcelona-pipeline-ornamental-fountains.yaml: projects/barcelona/pipelines/ornamental-fountains/pipeline.yaml
 barcelona-pipeline-ornamental-fountains-bento.yaml: projects/barcelona/pipelines/ornamental-fountains/bento.yaml
+# The licensed tourist flats (T-5417): one CSV file, one weekly pipeline, one public dataset.
+barcelona-datasource-tourist-flats.yaml: projects/barcelona/datasources/bcn-tourist-flats.yaml
+barcelona-pipeline-tourist-flats.yaml: projects/barcelona/pipelines/tourist-flats/pipeline.yaml
+barcelona-pipeline-tourist-flats-bento.yaml: projects/barcelona/pipelines/tourist-flats/bento.yaml
+barcelona-endpoint-tourist-flats.yaml: projects/barcelona/spaces/barcelona/endpoints/tourist-flats.yaml
+barcelona-policy-public-tourist-flats.yaml: projects/barcelona/spaces/barcelona/policies/public-tourist-flats.yaml
 # The activity agendas (T-5265): one DataStore query, one daily pipeline, one public dataset.
 barcelona-datasource-agenda.yaml: projects/barcelona/datasources/bcn-agenda.yaml
 barcelona-pipeline-agenda.yaml: projects/barcelona/pipelines/agenda/pipeline.yaml

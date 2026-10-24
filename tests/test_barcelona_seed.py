@@ -28,6 +28,7 @@ TYPES = {
     "CityWork",
     "PedestrianCrossing",
     "StreetFurniture",
+    "TouristRental",
 }
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
