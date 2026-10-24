@@ -19,6 +19,9 @@
     "FareZone": {
       "@id": "jc:FareZone"
     },
+    "Garden": {
+      "@id": "sdm:Garden"
+    },
     "GtfsAccessPoint": {
       "@id": "sdm:GtfsAccessPoint"
     },
@@ -36,6 +39,9 @@
     },
     "PublicTransportRoute": {
       "@id": "sdm:PublicTransportRoute"
+    },
+    "Tree": {
+      "@id": "jc:Tree"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -71,6 +77,9 @@
       "@id": "jc:approvedAmount",
       "@type": "xsd:float"
     },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
@@ -94,6 +103,9 @@
     "capacity": {
       "@id": "jc:capacity",
       "@type": "xsd:integer"
+    },
+    "careRegime": {
+      "@id": "jc:careRegime"
     },
     "category": {
       "@context": {
@@ -156,6 +168,9 @@
       "@type": "xsd:integer"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "greenspaceType": {
+      "@id": "jc:greenspaceType"
+    },
     "heading": {
       "@id": "sdm:heading",
       "@type": "xsd:integer"
@@ -301,10 +316,16 @@
       "@id": "sdm:transportationType",
       "@type": "xsd:integer"
     },
+    "treeCategory": {
+      "@id": "jc:treeCategory"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "vegetationType": {
+      "@id": "jc:vegetationType"
     },
     "vehicleType": {
       "@context": {

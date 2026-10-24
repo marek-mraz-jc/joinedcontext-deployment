@@ -19,6 +19,8 @@ spec:
     - AdministrativeArea
     - BudgetLine
     - Vehicle
+    - Garden
+    - Tree
     - PublicTransportRoute
     - GtfsStop
     - GtfsAccessPoint
