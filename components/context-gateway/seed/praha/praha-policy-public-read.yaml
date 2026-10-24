@@ -38,3 +38,7 @@ spec:
         - type: GtfsStop
         - type: GtfsAccessPoint
         - type: FareZone
+        - type: OnStreetParking
+        - type: ParkingGroup
+        - type: RestrictedTrafficArea
+        - type: FareCollectionSystem
