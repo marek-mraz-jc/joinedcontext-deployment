@@ -10,7 +10,7 @@
 # and one write. Every request goes to mp.iprpraha.cz; the path comes from the lets below.
 #
 # Ids: urn:ngsi-ld:Tree:{org}:{space}:green-{set}-{h}, h the SHA-1 of the geometry in the shape of a UUID; the
-# Policy public-zelen names them. The register keeps every saved version of an object as a record of
+# Policy public-stromy names them. The register keeps every saved version of an object as a record of
 # its own GUID with the same geometry (1,856 green areas three times, 17,222 tree positions more than
 # once, read 2026-10-24), so the geometry is the identity: the versions of one object are one entity.
 # Pages are read oldest edit first, so the newest version is the one written last.
