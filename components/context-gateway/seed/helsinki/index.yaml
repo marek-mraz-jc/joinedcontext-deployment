@@ -306,3 +306,10 @@ helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsink
 helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
 helsinki-policy-public-cycle-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-cycle-counts.yaml
 helsinki-policy-public-traffic-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-counts.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+helsinki-space-catalog.yaml: projects/helsinki/spaces/catalog/space.yaml
+helsinki-datamodel-catalog.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.linkml.yaml
+helsinki-endpoint-catalog.yaml: projects/helsinki/spaces/catalog/endpoints/catalog.yaml
+helsinki-policy-catalog-portal-write.yaml: projects/helsinki/spaces/catalog/policies/catalog-portal-write.yaml
+helsinki-policy-catalog-public-read.yaml: projects/helsinki/spaces/catalog/policies/catalog-public-read.yaml

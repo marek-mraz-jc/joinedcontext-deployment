@@ -78,14 +78,15 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
         # map's and its grids' (T-2784).
         # The sixth is the space of every other table of the catalogue (T-4255), and the other four
         # the registers' datasets, one per type (T-4344); the events of the region and of Slovakia (T-4895),
-        # and the events dashboard's own (T-4897).
-        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data", "bbsk-podujatia"], 12),
+        # and the events dashboard's own (T-4897), and the region's own catalogue (T-5493).
+        (REGION, "bbsk", ["bbsk-kraj", "bbsk-kpi", "bbsk-registre", "bbsk-otvorene-data", "bbsk-podujatia", "catalog"], 13),
         # The third public endpoint of the city is the air-quality App's own (T-2972), the fourth
         # and fifth the city map's and the data grids' (T-2782), then the public space's events,
         # schools and weather as their own datasets (T-4344), and OpenStreetMap's health places
-        # and charging stations (T-4514), and the cadastre's parcels (T-4697).
+        # and charging stations (T-4514), and the cadastre's parcels (T-4697), and the city's own
+        # catalogue (T-5493).
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                                  "banskabystrica-otvorene-data"], 12),
+                                  "banskabystrica-otvorene-data", "catalog"], 13),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -101,7 +102,10 @@ def test_every_new_space_pins_the_segment_its_ids_carry():
     # every space in this seed pins it, so an id cannot change under anyone.
     for folder in (REGION, CITY):
         for path, space in manifests(folder, "ContextSpace"):
-            assert space["spec"]["urnSegment"] == space["metadata"]["name"], path.name
+            # An organization's catalogue slice pins `{project}-catalog` (T-5493).
+            name = space["metadata"]["name"]
+            expected = f"{space['metadata']['namespace']}-catalog" if name == "catalog" else name
+            assert space["spec"]["urnSegment"] == expected, path.name
 
 
 def test_the_raw_spaces_are_not_public_and_the_indicators_of_the_region_are():
@@ -678,6 +682,8 @@ CLEARED = {
     ("bbsk", "bbsk-mosty"),
     # The events, cleared by the owner (2026-10-20): the region's and Slovakia's (T-4895).
     ("bbsk", "bbsk-podujatia"),
+    # Each body's own catalogue of what it publishes (owner 2026-10-19, T-4746 addendum, T-5493).
+    ("banskabystrica", "catalog"), ("bbsk", "catalog"),
 }
 
 

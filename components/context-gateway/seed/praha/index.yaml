@@ -127,3 +127,10 @@ praha-endpoint-vozidla.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-v
 praha-policy-public-vozidla.yaml: projects/praha/spaces/praha-mesto/policies/public-vozidla-pid.yaml
 praha-endpoint-sluzby.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-sluzby.yaml
 praha-policy-public-sluzby.yaml: projects/praha/spaces/praha-mesto/policies/public-sluzby.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+praha-space-catalog.yaml: projects/praha/spaces/catalog/space.yaml
+praha-datamodel-catalog.yaml: projects/praha/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/praha/spaces/catalog/datamodels/catalog.linkml.yaml
+praha-endpoint-catalog.yaml: projects/praha/spaces/catalog/endpoints/catalog.yaml
+praha-policy-catalog-portal-write.yaml: projects/praha/spaces/catalog/policies/catalog-portal-write.yaml
+praha-policy-catalog-public-read.yaml: projects/praha/spaces/catalog/policies/catalog-public-read.yaml

@@ -389,7 +389,8 @@ PARTS = {
 
 def _parts():
     docs = [yaml.safe_load(p.read_text()) for p in PRAHA.glob("praha-endpoint-*.yaml")]
-    return {d["metadata"]["name"]: d for d in docs if d["spec"].get("publish")}
+    # The city's own catalogue (T-5493) publishes too, from its own space: no part of this one.
+    return {d["metadata"]["name"]: d for d in docs if d["spec"].get("publish") and d["metadata"]["name"] != "catalog"}
 
 
 def test_the_space_is_public_and_published_one_model_per_dataset_with_its_sources_licence():
