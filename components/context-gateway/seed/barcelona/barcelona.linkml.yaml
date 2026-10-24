@@ -708,7 +708,8 @@ slots:
       (culture-leisure, sports, education, social-services, public-administration,
       markets-shopping, information-centres, religious-services, environment, animals-plants,
       cemeteries, media, utility-companies, restaurants), then the register's own kind in
-      Catalan (Biblioteques, Poliesportius). An OnStreetParking's kind of regulated parking, from
+      Catalan (Biblioteques, Poliesportius); a dog area of the city's parks carries
+      animals-plants, dog-area, a tree of local interest environment, local-interest-tree. An OnStreetParking's kind of regulated parking, from
       the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
     multivalued: true
     annotations:
@@ -1349,6 +1350,52 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
+  dateIssued:
+    slot_uri: sdm:dateIssued
+    description: When the meteorological service issued the forecast, UTC (Meteocat's datacreacio, local time in the file).
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  validFrom:
+    slot_uri: sdm:validFrom
+    description: The start of the day a forecast covers, local midnight in Europe/Madrid, as UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  validTo:
+    slot_uri: sdm:validTo
+    description: The end of the day a forecast covers, the next local midnight in Europe/Madrid, as UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  dayMaximum:
+    slot_uri: sdm:dayMaximum
+    description: The highest values forecast for the day (Smart Data Models' structured value); Meteocat gives the air temperature.
+    range: DayExtremes
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  dayMinimum:
+    slot_uri: sdm:dayMinimum
+    description: The lowest values forecast for the day (Smart Data Models' structured value); Meteocat gives the air temperature.
+    range: DayExtremes
+    inlined: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  weatherType:
+    slot_uri: sdm:weatherType
+    description: >-
+      The sky Meteocat forecasts in Catalan, morning then afternoon when they differ ("sol i
+      núvols alts (matí), sol (tarda)"), read from the symbol table of the same file.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
 classes:
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
@@ -1401,6 +1448,26 @@ classes:
       - solarRadiation
       - stationCode
       - altitude
+      - address
+      - areaServed
+      - dataProvider
+      - source
+  WeatherForecast:
+    class_uri: sdm:WeatherForecast
+    description: >-
+      Meteocat's forecast for the comarca of Barcelonès, one entity per day ahead (day-1 tomorrow,
+      day-2 the day after), as Open Data BCN republishes it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots:
+      - name
+      - dateIssued
+      - validFrom
+      - validTo
+      - dayMaximum
+      - dayMinimum
+      - weatherType
       - address
       - areaServed
       - dataProvider
@@ -1564,6 +1631,14 @@ classes:
     annotations:
       upstream_source: https://schema.org/ContactPoint
     slots: [telephone]
+  DayExtremes:
+    class_uri: schema:StructuredValue
+    description: 'The value of `dayMaximum` or `dayMinimum`: the forecast extremes of one day, never an entity of its own.'
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots: [temperature]
+    slot_usage:
+      temperature: { description: The air temperature forecast as the day's highest or lowest. }
 enums:
   MeasurementType:
     description: What a PhreaticObserved measures (Smart Data Models' enum).
