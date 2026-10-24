@@ -464,6 +464,95 @@ slots:
         value: { cs: Dopravce, en: Operator }
       ngsi_ld_kind: Property
 
+  routeCode:
+    slot_uri: sdm:routeCode
+    description: The PID line's GTFS route_id (L22, L991).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Kód linky, en: Route code }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  shortRouteCode:
+    slot_uri: sdm:shortRouteCode
+    description: The line's public number or letter (22, A, S9, P2).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Číslo linky, en: Line number }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  transportationType:
+    slot_uri: sdm:transportationType
+    description: >-
+      The GTFS basic route type of the line: 0 tram, 1 metro, 2 train, 3 bus, 4 ferry, 7
+      funicular. The Smart Data Model lists only 0 to 7, so a trolleybus (GTFS 11) is 3 and its
+      transportMode says trolleybus.
+    range: integer
+    minimum_value: 0
+    maximum_value: 7
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  description:
+    slot_uri: sdm:description
+    description: >-
+      The publisher's own description: the termini a line runs between, the streets and
+      connections a metro entrance leads to.
+    annotations:
+      label:
+        tag: label
+        value: { cs: Popis, en: Description }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/data-models
+  code:
+    slot_uri: sdm:code
+    description: The sign of a metro entrance (E1, E2).
+    annotations:
+      label:
+        tag: label
+        value: { cs: Označení, en: Sign }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  platformCode:
+    slot_uri: jc:platformCode
+    description: The platform letter or number of a stop (A, 2); absent where the stop has one.
+    annotations:
+      label:
+        tag: label
+        value: { cs: Stanoviště, en: Platform }
+      ngsi_ld_kind: Property
+  zoneCode:
+    slot_uri: sdm:zoneCode
+    description: >-
+      The PID fare zone (P, 0, B, 1 to 12): of a stop, every zone it counts in, comma separated
+      on a zone border; of a fare zone area, the zones it is.
+    annotations:
+      label:
+        tag: label
+        value: { cs: Tarifní pásmo, en: Fare zone }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  transportModes:
+    slot_uri: jc:transportModes
+    description: What stops there, as the GTFS route types name it (bus, tram); a tram and bus stop lists both.
+    range: TransportMode
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value: { cs: Druhy dopravy, en: Transport modes }
+      ngsi_ld_kind: Property
+  servedLines:
+    slot_uri: jc:servedLines
+    description: The PID lines that stop there, or that the metro entrance leads to (22, 136, A).
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value: { cs: Linky, en: Lines }
+      ngsi_ld_kind: Property
+
 classes:
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
@@ -675,6 +764,87 @@ classes:
       - dataProvider
       - source
 
+  PublicTransportRoute:
+    class_uri: sdm:PublicTransportRoute
+    description: >-
+      One PID line as IPR Praha maps it today: its number, what it runs, the termini and the line
+      it draws through Prague and Central Bohemia, simplified to about 5 m.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka MHD
+          cs: Linka PID
+          en: Public transport route
+          de: ÖPNV-Linie
+    slots:
+      - name
+      - routeCode
+      - shortRouteCode
+      - transportationType
+      - transportMode
+      - description
+      - url
+      - dataProvider
+      - source
+  GtfsStop:
+    class_uri: sdm:GtfsStop
+    description: >-
+      One PID stop platform in Prague (GTFS stop of location type 0): its name, platform, fare
+      zone, the lines that stop there and whether it is step-free.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Zastávka
+          cs: Zastávka
+          en: Stop
+          de: Haltestelle
+    slots:
+      - name
+      - platformCode
+      - zoneCode
+      - servedLines
+      - transportModes
+      - wheelchairAccessible
+      - dataProvider
+      - source
+  GtfsAccessPoint:
+    class_uri: sdm:GtfsAccessPoint
+    description: >-
+      One entrance of a Prague metro station: its sign, the station, the streets it leads to and
+      the metro lines behind it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Vstup do metra
+          cs: Vstup do metra
+          en: Metro entrance
+          de: U-Bahn-Eingang
+    slots: [name, code, description, servedLines, dataProvider, source]
+  FareZone:
+    class_uri: jc:FareZone
+    description: >-
+      One area of the PID fare zones (P, 0, B, 1 to 12) the ticket price is counted by. No Smart
+      Data Model holds a fare zone; the nearest, Transportation RestrictedTrafficArea, is an
+      access restriction.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Tarifné pásmo
+          cs: Tarifní pásmo
+          en: Fare zone
+          de: Tarifzone
+    slots: [name, zoneCode, dataProvider, source]
   PostalAddress:
     class_uri: schema:PostalAddress
     description: >-
