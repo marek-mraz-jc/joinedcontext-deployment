@@ -28,6 +28,9 @@
     "FloodZone": {
       "@id": "jc:FloodZone"
     },
+    "Garden": {
+      "@id": "sdm:Garden"
+    },
     "GtfsAccessPoint": {
       "@id": "sdm:GtfsAccessPoint"
     },
@@ -48,6 +51,9 @@
     },
     "RadonRiskArea": {
       "@id": "jc:RadonRiskArea"
+    },
+    "Tree": {
+      "@id": "jc:Tree"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -86,6 +92,9 @@
       "@id": "jc:approvedAmount",
       "@type": "xsd:float"
     },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
     "atmosphericPressure": {
       "@id": "sdm:atmosphericPressure",
       "@type": "xsd:float"
@@ -113,6 +122,9 @@
     "capacity": {
       "@id": "jc:capacity",
       "@type": "xsd:integer"
+    },
+    "careRegime": {
+      "@id": "jc:careRegime"
     },
     "category": {
       "@context": {
@@ -210,6 +222,9 @@
       "@id": "jc:fuelType"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "greenspaceType": {
+      "@id": "jc:greenspaceType"
+    },
     "gustSpeed": {
       "@id": "sdm:gustSpeed",
       "@type": "xsd:float"
@@ -411,10 +426,16 @@
       "@id": "sdm:transportationType",
       "@type": "xsd:integer"
     },
+    "treeCategory": {
+      "@id": "jc:treeCategory"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "vegetationType": {
+      "@id": "jc:vegetationType"
     },
     "vehicleType": {
       "@context": {

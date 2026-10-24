@@ -12,7 +12,7 @@ metadata:
       Sdílená kola, kvalita ovzduší, městské části, školy, kultura, veřejné toalety, tříděný
       odpad a zaplněnost kontejnerů, P+R a jejich obsazenost, vozidla PID v provozu, prodejní místa PID, rozpočet města,
       služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost, oázy chladu,
-      linky, zastávky a tarifní pásma PID, vstupy do metra, zdroje znečišťování ovzduší, radonové riziko,
+      linky, zastávky a tarifní pásma PID, vstupy do metra, parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko,
       záplavová území, protipovodňová ochrana a počasí.
       Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
       Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
@@ -22,7 +22,7 @@ metadata:
       and how full its containers are, park and ride and how full it is, the PID vehicles in service, PID ticket points,
       the city budget, municipal police stations, libraries, municipal offices, gardens, playgrounds,
       waste collection yards, city amenities, cool spots, the PID lines, stops and fare zones, the metro entrances,
-      air pollution sources, radon risk, flood areas, flood defences and the weather.
+      parks, green areas and trees, air pollution sources, radon risk, flood areas, flood defences and the weather.
       Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
       under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
       hl. m. Prahy's counters) as open data.
@@ -72,6 +72,8 @@ spec:
       history: 'off'
     - entityType: FloodZone
       history: 'off'
+    - entityType: Garden
+      history: 'off'
     - entityType: GtfsAccessPoint
       history: 'off'
     - entityType: GtfsStop
@@ -94,6 +96,8 @@ spec:
     - entityType: PublicTransportRoute
       history: 'off'
     - entityType: RadonRiskArea
+      history: 'off'
+    - entityType: Tree
       history: 'off'
     - entityType: Vehicle
       # A vehicle keeps an hour of track at most, the owner's order for every live vehicle feed

@@ -43,3 +43,5 @@ spec:
         - type: GtfsStop
         - type: GtfsAccessPoint
         - type: FareZone
+        - type: Garden
+        - type: Tree
