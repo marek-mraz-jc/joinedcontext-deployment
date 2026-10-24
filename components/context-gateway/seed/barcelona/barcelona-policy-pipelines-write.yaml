@@ -27,5 +27,7 @@ spec:
         - type: AdministrativeArea
         - type: CityWork
         - type: PedestrianCrossing
+        - type: StreetFurniture
+        - type: TouristRental
         - type: Event
         - type: PointOfInterest

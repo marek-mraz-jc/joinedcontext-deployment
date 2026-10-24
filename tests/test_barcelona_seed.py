@@ -28,6 +28,8 @@ TYPES = {
     "AdministrativeArea",
     "CityWork",
     "PedestrianCrossing",
+    "StreetFurniture",
+    "TouristRental",
 }
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
