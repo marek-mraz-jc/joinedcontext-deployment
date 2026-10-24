@@ -72,8 +72,6 @@ spec:
       - url: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/aforaments-descriptiu
         title: { ca: Equips d'aforament de mobilitat, en: Mobility counters }
         description:
-          ca: El nom
-          el tipus i el lloc de cada aforament.: null
-          en: The name
-          kind and place of each counter.: null
+          ca: El nom, el tipus i el lloc de cada aforament.
+          en: The name, kind and place of each counter.
     pipelineRef: { kind: Pipeline, name: traffic-state }

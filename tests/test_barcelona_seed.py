@@ -18,6 +18,7 @@ BARCELONA = SEED / "barcelona"
 TYPES = {
     "AirQualityObserved",
     "WeatherObserved",
+    "WeatherForecast",
     "PhreaticObserved",
     "TrafficFlowObserved",
     "OnStreetParking",

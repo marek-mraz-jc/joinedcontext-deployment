@@ -47,6 +47,16 @@ spec:
         areaServed: { record: onChange, heartbeat: P1D }
         dataProvider: { record: onChange, heartbeat: P1D }
         source: { record: onChange, heartbeat: P1D }
+    # The forecast of each day ahead: every issue is a row (twice a day), what never moves one a day.
+    - entityType: WeatherForecast
+      history: P30D
+      attributes:
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+        address: { record: onChange, heartbeat: P1D }
+        areaServed: { record: onChange, heartbeat: P1D }
+        dataProvider: { record: onChange, heartbeat: P1D }
+        source: { record: onChange, heartbeat: P1D }
     # Groundwater is read by hand about once a month: 400 days keep a year's readings.
     - entityType: PhreaticObserved
       history: P400D
@@ -139,6 +149,11 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: in-area-weather
       entityType: WeatherObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-weather-forecast
+      entityType: WeatherForecast
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]

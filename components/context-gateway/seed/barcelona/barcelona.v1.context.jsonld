@@ -16,6 +16,9 @@
     "ContactPoint": {
       "@id": "schema:ContactPoint"
     },
+    "DayExtremes": {
+      "@id": "schema:StructuredValue"
+    },
     "EVChargingStation": {
       "@id": "sdm:EVChargingStation"
     },
@@ -45,6 +48,9 @@
     },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
+    },
+    "WeatherForecast": {
+      "@id": "sdm:WeatherForecast"
     },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
@@ -147,6 +153,10 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
+    "dateIssued": {
+      "@id": "sdm:dateIssued",
+      "@type": "xsd:dateTime"
+    },
     "dateObserved": {
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
@@ -158,6 +168,12 @@
     "dateObservedTo": {
       "@id": "sdm:dateObservedTo",
       "@type": "xsd:dateTime"
+    },
+    "dayMaximum": {
+      "@id": "sdm:dayMaximum"
+    },
+    "dayMinimum": {
+      "@id": "sdm:dayMinimum"
     },
     "deadCount": {
       "@id": "jc:deadCount",
@@ -440,6 +456,14 @@
       "@id": "jc:usualTravelTime",
       "@type": "xsd:integer"
     },
+    "validFrom": {
+      "@id": "sdm:validFrom",
+      "@type": "xsd:dateTime"
+    },
+    "validTo": {
+      "@id": "sdm:validTo",
+      "@type": "xsd:dateTime"
+    },
     "vehicleCount": {
       "@id": "jc:vehicleCount",
       "@type": "xsd:integer"
@@ -461,6 +485,9 @@
     "waterTable": {
       "@id": "sdm:waterTable",
       "@type": "xsd:float"
+    },
+    "weatherType": {
+      "@id": "sdm:weatherType"
     },
     "windDirection": {
       "@id": "sdm:windDirection",
