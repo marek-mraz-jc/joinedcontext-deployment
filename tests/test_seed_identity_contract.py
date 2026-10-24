@@ -26,11 +26,21 @@ def manifests(kind: str):
                 yield path, doc
 
 
+def pinned(space: dict) -> str:
+    """The segment a seeded space pins: its name, except an organization's catalogue slice
+    (T-5493), which pins `{project}-catalog`, the segment the Portal and the gateway read as a
+    project's slice of the installation's catalogue."""
+    meta = space["metadata"]
+    if meta["name"] == "catalog" and meta["namespace"] != "slovensko":
+        return f"{meta['namespace']}-catalog"
+    return meta["name"]
+
+
 def test_every_space_pins_the_segment_its_ids_carry_today():
     spaces = list(manifests("ContextSpace"))
     assert spaces, "the seed holds spaces"
     for path, space in spaces:
-        assert space["spec"].get("urnSegment") == space["metadata"]["name"], path.name
+        assert space["spec"].get("urnSegment") == pinned(space), path.name
 
 
 def test_no_mapping_types_its_space_or_project_in():
@@ -68,8 +78,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # the data workspace journey's test alerts (T-5092), and the public read of the street cleaning
     # air pilot (T-5255), and one public read per area statistics theme (T-5258), and the public read
     # of air quality (T-5259), and the service usage counters (T-5258), and the public reads of the heat vulnerability index and the service
-    # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257).
-    assert len(policies) == 40
+    # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257), and its catalogue's
+    # Portal write and public read (T-5493).
+    assert len(policies) == 42
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

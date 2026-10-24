@@ -242,3 +242,10 @@ pipeline-kataster.yaml: projects/banskabystrica/pipelines/kataster/pipeline.yaml
 pipeline-kataster-bento.yaml: projects/banskabystrica/pipelines/kataster/bento.yaml
 endpoint-kataster.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-kataster.yaml
 policy-kataster-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/kataster-read.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+space-catalog.yaml: projects/banskabystrica/spaces/catalog/space.yaml
+datamodel-catalog.yaml: projects/banskabystrica/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/banskabystrica/spaces/catalog/datamodels/catalog.linkml.yaml
+endpoint-catalog.yaml: projects/banskabystrica/spaces/catalog/endpoints/catalog.yaml
+policy-catalog-portal-write.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-portal-write.yaml
+policy-catalog-public-read.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-public-read.yaml
