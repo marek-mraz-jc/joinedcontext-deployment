@@ -952,8 +952,11 @@ def test_an_eventon_offset_with_a_one_digit_hour_is_read():
 def test_notices_are_never_loaded_for_any_source_kind():
     notices = ["Vývoz triedeného zberu plastov", "Odvoz komunálneho odpadu", "Zber papiera", "Papier",
                "Zasadnutie OZ – 30.09.2026", "Oznámenie o prerušení distribúcie elektriny", "VZN č. 3/2026",
-               "Zámer predaja pozemku", "Komunálne voľby", "Svadba", "Rodinná oslava"]
-    events = ["Mikuláš v obci", "Koncert skupiny FIDEM", "Zberateľská burza"]
+               "Zámer predaja pozemku", "Komunálne voľby", "Svadba", "Rodinná oslava",
+               # A hall's booking calendar (Ďurkov on dev 2026-10-24, T-5393): its slots, booked or free, are no events.
+               "Oslava", "KD obsadený - súkromná akcia", "Rezervácia jedáleň ocu - J.M.", "Rezervované", "Voľné",
+               "14.11.2026 Prenájom sály KD- súkromná oslava"]
+    events = ["Mikuláš v obci", "Koncert skupiny FIDEM", "Zberateľská burza", "Katarínska zábava", "Oslava 800. výročia obce"]
     day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
     # wp-rest-sc (feed with dates), lsvr-rest (page JSON-LD), lego-html and every other kind share common.yaml.
     sc = run(offline(processors("banskabystrica"), {}),
@@ -1105,6 +1108,35 @@ def test_wordpress_events_with_their_dates_in_fields_of_their_own_are_read_per_s
     # Senec and Ružomberok run the smart-city theme of Banská Bystrica: Meta Box date_start and time_start.
     assert out["senec"]["Koncert úcty k starším v Senci"]["startDate"]["value"] == "2026-10-22T18:00:00+02:00"
     assert out["ruzomberok"]
+
+
+@requires_docker
+def test_events_list_pages_that_print_each_date_as_text_are_read_card_by_card():
+    # Recorded 2026-10-23 from each site's events list page (T-5393): no REST date field, no JSON-LD Event.
+    want = {"prievidza": 8, "uluv": 7, "vsmu": 4, "agrokomplex": 12, "novacvernovka": 20, "bkis": 6, "kosnr": 9,
+            "kultura-mestocadca": 12}
+    out = {}
+    for name, n in want.items():
+        entities = pipeline_ns(name, f"{name}-cards.html")
+        assert len(entities) == n, name
+        for e in entities:
+            assert VALID.is_valid(key_values(e)), (name, list(VALID.iter_errors(key_values(e))))
+            assert e["url"]["value"].startswith("https://"), (name, e["url"])
+        out[name] = {e["name"]["value"]: e for e in entities}
+    # "28. 10. 2026" with a time of its own; "17. novembra 2026"; YYYYMMDD with data-end; day, month word and year apart.
+    assert out["vsmu"]["Jubilejný Galla koncert"]["startDate"]["value"] == "2026-10-28T18:00:00+01:00"
+    assert out["novacvernovka"]["Stupavar Brewing Punk vol. 2"]["endDate"]["value"] == "2026-11-28"
+    assert out["kosnr"]["Klub grafológie (pokročilí)"]["startDate"]["value"] == "2026-11-04T17:00:00+01:00"
+    dogs = out["agrokomplex"]["Medzinárodná výstava psov"]
+    assert (dogs["startDate"]["value"], dogs["endDate"]["value"]) == ("2026-12-17", "2026-12-20")
+    # A fair's own site is its link; a card's venue is the event's venue.
+    assert dogs["url"]["value"] == "https://www.nitradog.sk/"
+    assert out["bkis"]["DIVADLO TANDEM – Ukáž, či ma poznáš"]["venue"]["value"] == "Dom kultúry Lúky"
+    # A branch in another town is that town's event: no point of the source's own town (Bratislava).
+    kosice = out["uluv"]["Čo drôt spojil, čas nerozdelí…"]
+    assert kosice["address"]["value"]["addressLocality"] == "Košice" and "location" not in kosice
+    # Every other card without a venue point takes its town's office (towns.csv), labelled so.
+    assert out["prievidza"]["Tvorivá dielňa Na Šech svatých"]["locationPrecision"]["value"] == "office"
 
 
 # --- the HTML sources of T-5354 ----------------------------------------------------------------------------------

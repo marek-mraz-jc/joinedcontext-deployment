@@ -133,26 +133,66 @@ slots:
     slot_uri: schema:streetAddress
     description: The street and the house number.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Ulica a číslo
+          cs: Ulice a číslo
+          en: Street and number
+          de: Straße und Hausnummer
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/streetAddress
   postalCode:
     slot_uri: schema:postalCode
     description: The postal code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: PSČ
+          cs: PSČ
+          en: Postal code
+          de: Postleitzahl
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/postalCode
   addressLocality:
     slot_uri: schema:addressLocality
     description: The town or the municipality, by its Slovak name with diacritics (`Banská Bystrica`).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obec
+          cs: Obec
+          en: Town
+          de: Ort
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressLocality
   addressRegion:
     slot_uri: schema:addressRegion
     description: The self-governing region, by its Slovak name (`Banskobystrický kraj`).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Kraj
+          cs: Kraj
+          en: Region
+          de: Region
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressRegion
   addressCountry:
     slot_uri: schema:addressCountry
     description: The country, as an ISO 3166-1 alpha-2 code.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Krajina
+          cs: Země
+          en: Country
+          de: Land
+        annotations: { generated: sk cs en de }
       upstream_source: https://schema.org/addressCountry
   eventCategory:
     slot_uri: jc:eventCategory
@@ -384,6 +424,17 @@ classes:
           organizer's or the town's office or the town's centre, as `locationPrecision` says (owner 2026-10-21:
           at least 90 % of events with a point).
         rank: 4
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Poloha
+              cs: Poloha
+              en: Location
+              de: Standort
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: GeoProperty
+          upstream_source: ETSI NGSI-LD core context v1.8
       venue:
         rank: 5
         annotations: { summary: true }
@@ -418,6 +469,17 @@ classes:
       location:
         required: true
         description: The venue's building as a GeoJSON Point in WGS 84 inside Slovakia.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Poloha
+              cs: Poloha
+              en: Location
+              de: Standort
+            annotations: { generated: sk cs en de }
+          ngsi_ld_kind: GeoProperty
+          upstream_source: ETSI NGSI-LD core context v1.8
   PostalAddress:
     class_uri: schema:PostalAddress
     description: The value of `address`, never an entity of its own.

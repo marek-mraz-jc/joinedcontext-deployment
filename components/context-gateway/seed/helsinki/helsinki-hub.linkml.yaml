@@ -34,6 +34,98 @@ classes:
       - nextStop
       - delay
       - occupancy
+    slot_usage:
+      route:
+        rank: 1
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Linka
+              cs: Linka
+              fi: Linja
+              en: Route
+              de: Linie
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      vehicleType:
+        rank: 2
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Typ vozidla
+              cs: Typ vozidla
+              fi: Ajoneuvotyyppi
+              en: Vehicle type
+              de: Fahrzeugtyp
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      nextStop:
+        rank: 3
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Ďalšia zastávka
+              cs: Další zastávka
+              fi: Seuraava pysäkki
+              en: Next stop
+              de: Nächste Haltestelle
+          ngsi_ld_kind: Relationship
+      delay:
+        rank: 4
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Meškanie
+              cs: Zpoždění
+              fi: Myöhästyminen
+              en: Delay
+              de: Verspätung
+          ngsi_ld_kind: Property
+      speed:
+        rank: 5
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Rýchlosť
+              cs: Rychlost
+              fi: Nopeus
+              en: Speed
+              de: Geschwindigkeit
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      occupancy:
+        rank: 6
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Obsadenosť
+              cs: Obsazenost
+              fi: Kuormitus
+              en: Occupancy
+              de: Auslastung
+          ngsi_ld_kind: Property
+      heading:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Smer
+              cs: Směr
+              fi: Suunta
+              en: Heading
+              de: Fahrtrichtung
+          ngsi_ld_kind: Property
+          upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   KeyPerformanceIndicator:
     class_uri: jc:KeyPerformanceIndicator
     description: One computed indicator, registered from the helsinki-kpi space.
@@ -47,6 +139,77 @@ classes:
       - derivedFrom
       - computedBy
       - updatedAt
+    slot_usage:
+      name:
+        rank: 1
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Názov
+              cs: Název
+              fi: Nimi
+              en: Name
+              de: Name
+            annotations: { generated: de }
+          ngsi_ld_kind: Property
+      currentValue:
+        rank: 2
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Hodnota
+              cs: Hodnota
+              fi: Arvo
+              en: Value
+              de: Wert
+            annotations: { generated: de }
+          ngsi_ld_kind: Property
+          upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
+      calculationPeriod:
+        rank: 3
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Obdobie
+              cs: Období
+              fi: Jakso
+              en: Period
+              de: Berechnungszeitraum
+            annotations: { generated: de }
+          ngsi_ld_kind: Property
+      updatedAt:
+        rank: 4
+        annotations:
+          summary: true
+          label:
+            tag: label
+            value:
+              sk: Aktualizované
+              cs: Aktualizováno
+              fi: Päivitetty
+              en: Updated
+              de: Zuletzt berechnet
+            annotations: { generated: de }
+          ngsi_ld_kind: Property
+      calculationFormula:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Výpočet
+              cs: Výpočet
+              fi: Laskentakaava
+              en: Formula
+              de: Berechnungsmethode
+            annotations: { generated: de }
+          ngsi_ld_kind: Property
+          hidden: true
   CalculationPeriod:
     class_uri: jc:CalculationPeriod
     description: >-
@@ -135,12 +298,28 @@ slots:
     slot_uri: sdm:route
     description: The HSL route id the vehicle is serving, as GTFS names it (2550, 1009, 31M1, 3001K).
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Linka
+          cs: Linka
+          en: Route
+          de: Linie
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   vehicleType:
     slot_uri: sdm:vehicleType
     description: The Smart Data Models kind of vehicle - bus, tram, passengerVessel for a ferry, other for metro and train; transportMode names HSL's mode.
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ vozidla
+          cs: Typ vozidla
+          en: Vehicle type
+          de: Fahrzeugtyp
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   fleetVehicleId:
@@ -159,7 +338,9 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   name:
     slot_uri: jc:name
-    description: The indicator's own name, equal to the `{localId}` of its id, so the territory is legible without parsing the URN.
+    description: >-
+      The indicator's own name, equal to the `{localId}` of its id, so the territory is legible
+      without parsing the URN.
     required: true
     annotations: { ngsi_ld_kind: Property }
   title:
@@ -168,10 +349,22 @@ slots:
       The indicator's human name, one text per language of the space, such as `{sk: Index
       starnutia, en: Ageing index}`: what a table labels the row with, because `name` is the
       slug. Optional: an indicator written before it, or by a writer that names none, has none.
-    annotations: { ngsi_ld_kind: LanguageProperty }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Názov ukazovateľa
+          cs: Název ukazatele
+          en: Indicator title
+          de: Indikatortitel
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: LanguageProperty
   currentValue:
     slot_uri: jc:currentValue
-    description: 'The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the instant it describes as `observedAt`. A window with no reading in it carries the string `not measured` instead of a number, and never a zero: a zero reads as a measurement.'
+    description: >-
+      The number, with its unit on the Property as `unitCode`, a UN/CEFACT common code, and the
+      instant it describes as `observedAt`. A window with no reading in it carries the string
+      `not measured` instead of a number, and never a zero: a zero reads as a measurement.
     required: true
     range: Any
     inlined: true
@@ -183,29 +376,56 @@ slots:
       upstream_source: https://vocabulary.uncefact.org/UnitMeasureCode#
   calculationPeriod:
     slot_uri: jc:calculationPeriod
-    description: The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the window the pipeline used and not the one it was asked for, so the distance between `calculationPeriod.end` and `updatedAt` is how stale the source is.
+    description: >-
+      The window the value actually covers, as `{ start, end }` RFC 3339 instants. It is the
+      window the pipeline used and not the one it was asked for, so the distance between
+      `calculationPeriod.end` and `updatedAt` is how stale the source is.
     required: true
     range: CalculationPeriod
     inlined: true
     annotations: { ngsi_ld_kind: Property }
   calculationFormula:
     slot_uri: jc:calculationFormula
-    description: "How the value was computed, in words a reader can check the number against: the measure, the aggregation, the window and any divisor, such as `per km² of the district's own area`. English plain text: a table leaves it out, so a Slovak answer never shows English prose."
+    description: >-
+      How the value was computed, in words a reader can check the number against: the measure,
+      the aggregation, the window and any divisor, such as `per km² of the district's own area`.
+      English plain text: a table leaves it out, so a Slovak answer never shows English prose.
     required: true
     annotations: { ngsi_ld_kind: Property, hidden: true }
   derivedFrom:
     slot_uri: jc:derivedFrom
     description: "The Endpoint the sources were read through, as its URN. The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see."
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj údajov
+          cs: Zdroj dat
+          en: Derived from
+          de: Abgeleitet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   computedBy:
     slot_uri: jc:computedBy
     description: The Pipeline that computed it, as its URN.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vypočítané procesom
+          cs: Vypočteno procesem
+          en: Computed by
+          de: Berechnet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   updatedAt:
     slot_uri: jc:updatedAt
-    description: 'When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window: an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`, which is the visible fact that the source is static.'
+    description: >-
+      When the pipeline last ran, as an NGSI-LD DateTime. It is the run and not the window:
+      an indicator whose source stopped moving keeps its window and gains a newer `updatedAt`,
+      which is the visible fact that the source is static.
     range: datetime
     required: true
     annotations: { ngsi_ld_kind: Property }
@@ -214,11 +434,29 @@ slots:
     description: The first instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Začiatok
+          cs: Začátek
+          en: Start
+          de: Beginn
+        annotations: { generated: sk cs en de }
   end:
     slot_uri: jc:end
     description: The last instant the window covers.
     range: datetime
     required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Koniec
+          cs: Konec
+          en: End
+          de: Ende
+        annotations: { generated: sk cs en de }
 enums:
   TransportMode:
     permissible_values:

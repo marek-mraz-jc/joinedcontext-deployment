@@ -481,6 +481,8 @@ v1/ConfigMap dev/gitea-seed-s1-*
 v1/ConfigMap dev/gitea-seed-s10-*
 v1/ConfigMap dev/gitea-seed-s11-*
 v1/ConfigMap dev/gitea-seed-s12-*
+v1/ConfigMap dev/gitea-seed-s13-*
+v1/ConfigMap dev/gitea-seed-s14-*
 v1/ConfigMap dev/gitea-seed-s2-*
 v1/ConfigMap dev/gitea-seed-s3-*
 v1/ConfigMap dev/gitea-seed-s4-*
