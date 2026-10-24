@@ -13,8 +13,20 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "GtfsAgency": {
+      "@id": "sdm:GtfsAgency"
+    },
+    "GtfsRoute": {
+      "@id": "sdm:GtfsRoute"
+    },
+    "GtfsStop": {
+      "@id": "sdm:GtfsStop"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
+    },
+    "agencyName": {
+      "@id": "sdm:agencyName"
     },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
@@ -49,6 +61,7 @@
       "@id": "sdm:intensity",
       "@type": "xsd:integer"
     },
+    "jc": "https://joinedcontext.com/models/",
     "laneDirection": {
       "@context": {
         "description": "skos:prefLabel",
@@ -56,6 +69,9 @@
         "text": "skos:notation"
       },
       "@id": "sdm:laneDirection"
+    },
+    "language": {
+      "@id": "sdm:language"
     },
     "linkml": "https://w3id.org/linkml/",
     "location": {
@@ -70,6 +86,14 @@
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
     },
+    "operatedBy": {
+      "@id": "sdm:operatedBy",
+      "@type": "@id"
+    },
+    "page": {
+      "@id": "sdm:page",
+      "@type": "xsd:anyURI"
+    },
     "peopleCount": {
       "@id": "sdm:peopleCount",
       "@type": "xsd:integer"
@@ -82,13 +106,32 @@
       "@id": "sdm:peopleCountTowards",
       "@type": "xsd:integer"
     },
+    "phone": {
+      "@id": "sdm:phone"
+    },
+    "platformCode": {
+      "@id": "jc:platformCode"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
     },
+    "routeColor": {
+      "@id": "sdm:routeColor"
+    },
+    "routeType": {
+      "@id": "sdm:routeType"
+    },
+    "routes": {
+      "@id": "jc:routes",
+      "@type": "@id"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
+    "shortName": {
+      "@id": "sdm:shortName"
+    },
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
       "@id": "sdm:source",
@@ -102,9 +145,23 @@
       },
       "@id": "sdm:status"
     },
+    "stopCode": {
+      "@id": "jc:stopCode"
+    },
+    "timezone": {
+      "@id": "sdm:timezone"
+    },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
       "@type": "xsd:integer"
+    },
+    "transportMode": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:transportMode"
     },
     "type": "@type",
     "vehicleType": {
@@ -115,7 +172,10 @@
       },
       "@id": "sdm:vehicleType"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "sdm:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.12.0"
 }

@@ -56,10 +56,13 @@ def day(table: str) -> dict:
     return {"rows": [f["attributes"] for f in answer["features"]]}
 
 
-def run(mapping: str, document: str, answers: list[dict]) -> tuple[list[dict], list[str], subprocess.CompletedProcess]:
-    """The mapping with its n-th branch answered by answers[n]; the entities it writes, the
+def run(mapping: str, document: str, answers: list[dict], metadata: dict | None = None,
+        ) -> tuple[list[dict], list[str], subprocess.CompletedProcess]:
+    """The mapping with its n-th branch answered by answers[n], after the metadata a connection's
+    own steps set (the member name of an archive read, PL-72); the entities it writes, the
     messages it logs and the process."""
-    steps, n = [], 0
+    steps = [{"mapping": "\n".join(f"meta {k} = {json.dumps(v)}" for k, v in metadata.items())}] if metadata else []
+    n = 0
     for step in yaml.safe_load((BRATISLAVA / mapping).read_text())["pipeline"]["processors"]:
         if "branch" in step:
             branch = dict(step["branch"])

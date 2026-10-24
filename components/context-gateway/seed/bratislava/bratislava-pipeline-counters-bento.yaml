@@ -30,9 +30,11 @@ pipeline:
         let times = this.features.or([]).map_each(f -> f.attributes.newest.or("").string().ts_parse("2006-01-02T15:04:05Z07:00").ts_unix().catch(null)).filter(t -> t != null && t <= $now + 86400)
         let newest = $times.fold(0, t -> if t.value > t.tally { t.value } else { t.tally })
         let next = ($newest + 3600).ts_format("2006-01-02", "Europe/Bratislava")
-        let day = ($next + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_sub_iso8601("P1D").ts_format("2006-01-02", "UTC")
-        let from = (($day + "T00:00:00") + ($day + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_format("-07:00", "Europe/Bratislava")).ts_parse("2006-01-02T15:04:05Z07:00")
-        let to = (($next + "T00:00:00") + ($next + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_format("-07:00", "Europe/Bratislava")).ts_parse("2006-01-02T15:04:05Z07:00")
+        let day = ($next + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_sub_iso8601("P1D").ts_format("2006-01-02", "UTC")
+        # Each midnight's offset is read at 00:00Z of that date: noon has the new offset on the day the
+        # clocks change (2026-10-25 would end the day at 23:00Z instead of 22:00Z, T-5489).
+        let from = (($day + "T00:00:00") + ($day + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_format("-07:00", "Europe/Bratislava")).ts_parse("2006-01-02T15:04:05Z07:00")
+        let to = (($next + "T00:00:00") + ($next + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_format("-07:00", "Europe/Bratislava")).ts_parse("2006-01-02T15:04:05Z07:00")
         # A throw here would keep the newest rows as the message: the problem rides on it instead and
         # fails the run at the end, after nothing was read or written.
         root = { "day": $day, "from": $from.ts_format("2006-01-02T15:04:05Z", "UTC"), "to": $to.ts_format("2006-01-02T15:04:05Z", "UTC"),

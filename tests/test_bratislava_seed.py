@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BRATISLAVA = SEED / "bratislava"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved", "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation"}
+TYPES = {"AirQualityObserved", "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation", "GtfsStop", "GtfsRoute", "GtfsAgency"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -91,7 +91,8 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
     assert {row["entityType"] for row in spec["retention"]} == TYPES
     areas = {q["entityType"]: q["bbox"] for q in spec["quality"] if q["kind"] == "area"}
-    assert set(areas) == TYPES
+    # A line and its agency have no place of their own; every type with a location is checked.
+    assert set(areas) == TYPES - {"GtfsRoute", "GtfsAgency"}
     for west, south, east, north in areas.values():
         # The municipality (16.946..17.285 E, 48.007..48.265 N, OSM) with about 1 km to spare,
         # nothing wider.
@@ -188,7 +189,8 @@ def test_keycloak_makes_the_subtree_root_and_the_administrator():
 
 # T-5273: each catalogue dataset is its own door with its own public Policy.
 DATASETS = {"bratislava-cyklisti": "public-cyklisti", "bratislava-vozidla": "public-vozidla",
-            "bratislava-chodci": "public-chodci", "bratislava-bajk": "public-bajk"}
+            "bratislava-chodci": "public-chodci", "bratislava-bajk": "public-bajk",
+            "bratislava-mhd-zastavky": "public-mhd-zastavky", "bratislava-mhd-linky": "public-mhd-linky"}
 
 
 def test_each_dataset_door_reads_through_its_own_public_policy_and_publishes_to_the_city():

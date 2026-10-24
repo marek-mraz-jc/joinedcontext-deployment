@@ -67,26 +67,38 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         status: { record: onChange, heartbeat: P7D }
         totalSlotNumber: { record: onChange, heartbeat: P7D }
+    # The public transport network from DPB's GTFS: the current timetable only (T-5273).
+    - entityType: GtfsAgency
+      history: 'off'
+    - entityType: GtfsRoute
+      history: 'off'
+    - entityType: GtfsStop
+      history: 'off'
   # The municipality of Bratislava (OSM relation, lon 16.946..17.285, lat 48.007..48.265) with a
   # 1 km margin (owner 2026-10-22T18:10Z); an entity outside it is flagged, never refused (DM-87).
   quality:
-    - name: in-area
+    - name: in-area-air-quality-observed
       entityType: AirQualityObserved
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]
-    - name: in-area
+    - name: in-area-traffic-flow-observed
       entityType: TrafficFlowObserved
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]
-    - name: in-area
+    - name: in-area-crowd-flow-observed
       entityType: CrowdFlowObserved
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]
-    - name: in-area
+    - name: in-area-bike-hire-docking-station
       entityType: BikeHireDockingStation
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-gtfs-stop
+      entityType: GtfsStop
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]

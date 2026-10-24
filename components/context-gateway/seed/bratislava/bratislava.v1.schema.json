@@ -445,6 +445,361 @@
       "title": "Entity",
       "type": "object"
     },
+    "GtfsAgency": {
+      "additionalProperties": false,
+      "description": "The transit agency DPB's GTFS timetable names, Dopravn\u00fd podnik Bratislava itself.",
+      "properties": {
+        "agencyName": {
+          "description": "The transit agency's full name.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the licence its credit names.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "language": {
+          "description": "The agency's main language, a two-letter code.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "page": {
+          "description": "The publisher's web page about it.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "phone": {
+          "description": "The agency's public customer service number.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "timezone": {
+          "description": "The agency's time zone, an IANA name such as Europe/Bratislava.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsAgency",
+      "type": "object"
+    },
+    "GtfsRoute": {
+      "additionalProperties": false,
+      "description": "One DPB line as its GTFS timetable gives it, every variant, with its number, what runs it, its colour and the agency.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the licence its credit names.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "operatedBy": {
+          "description": "The agency that runs the line.",
+          "pattern": "^urn:ngsi-ld:GtfsAgency:",
+          "type": "string",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-one",
+            "inverse": "routes",
+            "onDelete": "restrict",
+            "target": "GtfsAgency",
+            "unique": false
+          }
+        },
+        "routeColor": {
+          "description": "The line's colour on DPB's maps and signs, six hexadecimal digits without the hash (F56200).",
+          "pattern": "^[0-9A-F]{6}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "routeType": {
+          "description": "GTFS's basic route type: 0 a tram, 3 a bus. A trolleybus (GTFS 11, which Smart Data Models' list lacks) is written as 3, and transportMode says trolleybus.",
+          "pattern": "^[0-7]$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "shortName": {
+          "description": "The line number riders see, such as 4, 40 or N29.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportMode": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TransportMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What runs the line.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsRoute",
+      "type": "object"
+    },
+    "GtfsStop": {
+      "additionalProperties": false,
+      "description": "One platform of a DPB stop (GTFS stop of location type 0): its name, the stop number and platform letter on its sign, its fare zone and where it is. The lines stopping there come through trips.txt and stop_times.txt, which are not read.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the licence its credit names.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "platformCode": {
+          "description": "The platform letter of a stop (A, B), as the sign shows it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stopCode": {
+          "description": "The number DPB gives a stop, shared by its platforms (93 for every platform of Hlavn\u00e1 stanica).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zoneCode": {
+          "description": "The fare zone of the Bratislava integrated transport system the stop lies in (100 the city core, 101 the rest of the city).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsStop",
+      "type": "object"
+    },
     "LaneDirection": {
       "description": "",
       "enum": [
@@ -618,6 +973,21 @@
       ],
       "title": "TrafficFlowObserved",
       "type": "object"
+    },
+    "TransportMode": {
+      "description": "",
+      "enum": [
+        "tram",
+        "bus",
+        "trolleybus"
+      ],
+      "title": "TransportMode",
+      "type": "string",
+      "x-enum-descriptions": {
+        "bus": "Bus (GTFS route type 3).",
+        "tram": "Tram (GTFS route type 0).",
+        "trolleybus": "Trolleybus (GTFS route type 11)."
+      }
     }
   },
   "metamodel_version": "1.12.0",

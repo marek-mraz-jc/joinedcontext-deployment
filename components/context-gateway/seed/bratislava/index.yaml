@@ -41,3 +41,11 @@ bratislava-policy-public-cyklisti.yaml: projects/bratislava/spaces/bratislava/po
 bratislava-policy-public-vozidla.yaml: projects/bratislava/spaces/bratislava/policies/public-vozidla.yaml
 bratislava-policy-public-chodci.yaml: projects/bratislava/spaces/bratislava/policies/public-chodci.yaml
 bratislava-policy-public-bajk.yaml: projects/bratislava/spaces/bratislava/policies/public-bajk.yaml
+# T-5273: DPB's public transport network from its GTFS timetable, stops and lines as two datasets.
+bratislava-datasource-mhd-gtfs.yaml: projects/bratislava/datasources/dpb-gtfs.yaml
+bratislava-pipeline-mhd-gtfs.yaml: projects/bratislava/pipelines/mhd-gtfs/pipeline.yaml
+bratislava-pipeline-mhd-gtfs-bento.yaml: projects/bratislava/pipelines/mhd-gtfs/bento.yaml
+bratislava-endpoint-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-zastavky.yaml
+bratislava-endpoint-mhd-linky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-linky.yaml
+bratislava-policy-public-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-zastavky.yaml
+bratislava-policy-public-mhd-linky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-linky.yaml
