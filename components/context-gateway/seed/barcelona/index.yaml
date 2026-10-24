@@ -90,3 +90,21 @@ barcelona-pipeline-equipaments.yaml: projects/barcelona/pipelines/equipaments/pi
 barcelona-pipeline-equipaments-bento.yaml: projects/barcelona/pipelines/equipaments/bento.yaml
 barcelona-endpoint-places.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-places.yaml
 barcelona-policy-public-places.yaml: projects/barcelona/spaces/barcelona/policies/public-places.yaml
+# Batch 2, environment rest (T-5413): the city's dog areas, one weekly pipeline, one dataset.
+barcelona-datasource-dog-areas.yaml: projects/barcelona/datasources/bcn-dog-areas.yaml
+barcelona-pipeline-dog-areas.yaml: projects/barcelona/pipelines/dog-areas/pipeline.yaml
+barcelona-pipeline-dog-areas-bento.yaml: projects/barcelona/pipelines/dog-areas/bento.yaml
+barcelona-endpoint-dog-areas.yaml: projects/barcelona/spaces/barcelona/endpoints/dog-areas.yaml
+barcelona-policy-public-dog-areas.yaml: projects/barcelona/spaces/barcelona/policies/public-dog-areas.yaml
+# The trees of local interest (T-5413), entries of the facility register read from its DataStore.
+barcelona-datasource-local-trees.yaml: projects/barcelona/datasources/bcn-local-trees.yaml
+barcelona-pipeline-local-trees.yaml: projects/barcelona/pipelines/local-trees/pipeline.yaml
+barcelona-pipeline-local-trees-bento.yaml: projects/barcelona/pipelines/local-trees/bento.yaml
+barcelona-endpoint-local-trees.yaml: projects/barcelona/spaces/barcelona/endpoints/local-trees.yaml
+barcelona-policy-public-local-trees.yaml: projects/barcelona/spaces/barcelona/policies/public-local-trees.yaml
+# Meteocat's forecast for Barcelonès (T-5413), every half hour, one dataset.
+barcelona-datasource-weather-forecast.yaml: projects/barcelona/datasources/bcn-weather-forecast.yaml
+barcelona-pipeline-weather-forecast.yaml: projects/barcelona/pipelines/weather-forecast/pipeline.yaml
+barcelona-pipeline-weather-forecast-bento.yaml: projects/barcelona/pipelines/weather-forecast/bento.yaml
+barcelona-endpoint-weather-forecast.yaml: projects/barcelona/spaces/barcelona/endpoints/weather-forecast.yaml
+barcelona-policy-public-weather-forecast.yaml: projects/barcelona/spaces/barcelona/policies/public-weather-forecast.yaml
