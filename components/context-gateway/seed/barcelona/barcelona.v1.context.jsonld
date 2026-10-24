@@ -37,6 +37,12 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
+    "StreetFurniture": {
+      "@id": "jc:StreetFurniture"
+    },
+    "TouristRental": {
+      "@id": "sdm:TouristRental"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
     },
@@ -145,6 +151,17 @@
       "@id": "schema:endDate",
       "@type": "xsd:dateTime"
     },
+    "furnitureType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:furnitureType"
+    },
+    "furnitureTypeLabel": {
+      "@id": "jc:furnitureTypeLabel"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "gustSpeed": {
       "@id": "sdm:gustSpeed",
@@ -251,6 +268,9 @@
     "refParentDistrict": {
       "@id": "jc:refParentDistrict",
       "@type": "@id"
+    },
+    "registerNumber": {
+      "@id": "jc:registerNumber"
     },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",

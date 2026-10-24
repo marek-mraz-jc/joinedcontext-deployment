@@ -10,7 +10,7 @@ metadata:
 spec:
   contextSpaceRef: barcelona
   linkml: ./barcelona.linkml.yaml
-  version: 1.3.0
+  version: 1.4.0
   lifecycle: published
   classes:
     - AirQualityObserved
@@ -24,6 +24,8 @@ spec:
     - AdministrativeArea
     - CityWork
     - PedestrianCrossing
+    - StreetFurniture
+    - TouristRental
   # A published model commits all four artifacts (DM-02); the gateway serves schema/v1 from them
   # (DM-22, EP-49). Regenerate as ../zilina/README.md shows.
   artifacts:

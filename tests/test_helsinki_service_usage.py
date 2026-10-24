@@ -9,7 +9,8 @@ answers the step after it sees.
 
 import copy
 import json
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 import yaml
@@ -23,6 +24,11 @@ pytestmark = pytest.mark.xdist_group("docker-helsinki-statistics")
 MAPPING = HELSINKI / "helsinki-pipeline-service-usage-bento.yaml"
 FIXTURES = ROOT / "tests/fixtures/helsinki/service-usage"
 PREFIX = "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:helsinki:stat-services-"
+
+
+def helsinki_today() -> date:
+    """The day the mapping counts in: Europe/Helsinki, a day ahead of UTC late each evening."""
+    return datetime.now(ZoneInfo("Europe/Helsinki")).date()
 
 
 def steps() -> list:
@@ -58,7 +64,7 @@ def test_the_newest_ended_day_and_month_of_the_zoo_and_each_site_are_one_indicat
     assert day["calculationPeriod"]["value"] == {"from": "2026-10-22", "to": "2026-10-22"}
     assert day["calculationFrequency"]["value"] == "daily"
     month = entities[PREFIX + "zoo-visitors-month-total-0910000000"]
-    newest_ended = "2026-09" if date.today() < date(2026, 11, 1) else "2026-10"
+    newest_ended = "2026-09" if helsinki_today() < date(2026, 11, 1) else "2026-10"
     assert month["calculationPeriod"]["value"]["from"] == f"{newest_ended}-01"
     # Months of the API count from 0: September is month 8 and its total 29,719.
     if newest_ended == "2026-09":
@@ -96,9 +102,11 @@ def test_out_of_range_not_a_number_and_duplicate_are_dropped_with_a_count():
 def test_no_site_fails_the_run_and_a_year_with_no_ended_day_writes_no_day():
     assert decode(zoo(), []) is None
     january = copy.deepcopy(zoo())
-    # On 1 January the answer holds only the running day: nothing of the zoo is written.
-    january["year"] = date.today().year
-    january["months"] = [{"month": date.today().month - 1, "total": 100, "days": [{"day": date.today().day, "total": 100}]}]
+    # On 1 January the answer holds only the running day: nothing of the zoo is written. The
+    # mapping's day is Helsinki's, which is already tomorrow from 21:00Z (22:00Z in winter).
+    today = helsinki_today()
+    january["year"] = today.year
+    january["months"] = [{"month": today.month - 1, "total": 100, "days": [{"day": today.day, "total": 100}]}]
     out = decode(january, sites())
     assert out["dropped"] == {"zoo: no ended day in the answer": 1}
     assert not [e for e in out["entities"] if "zoo-visitors" in e["id"]]

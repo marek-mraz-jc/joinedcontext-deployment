@@ -15,7 +15,7 @@ metadata:
     en: 'Each public charging point of the Endolla Barcelona network with its sockets and how many are free now, every 5 minutes. Source: Barcelona City Council (B:SM), Open Data BCN, CC BY 4.0.'
 spec:
   contextSpaceRef: barcelona
-  slug: 8j2f9suehyfmedmxxjb8hnxlkwtonv1r
+  slug: hptanmkb42cdhkwvjminrm7mn4ejx4ah
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-charging
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
