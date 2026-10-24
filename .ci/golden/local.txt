@@ -317,6 +317,7 @@ v1/Secret local/keycloak-user-demo-approver
 v1/Secret local/keycloak-user-demo-author
 v1/Secret local/keycloak-user-demo-barcelona
 v1/Secret local/keycloak-user-demo-bearer
+v1/Secret local/keycloak-user-demo-bratislava
 v1/Secret local/keycloak-user-demo-editor
 v1/Secret local/keycloak-user-demo-janitor
 v1/Secret local/keycloak-user-demo-member

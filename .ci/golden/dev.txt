@@ -554,6 +554,7 @@ v1/Secret dev/keycloak-user-demo-approver
 v1/Secret dev/keycloak-user-demo-author
 v1/Secret dev/keycloak-user-demo-barcelona
 v1/Secret dev/keycloak-user-demo-bearer
+v1/Secret dev/keycloak-user-demo-bratislava
 v1/Secret dev/keycloak-user-demo-editor
 v1/Secret dev/keycloak-user-demo-janitor
 v1/Secret dev/keycloak-user-demo-member
