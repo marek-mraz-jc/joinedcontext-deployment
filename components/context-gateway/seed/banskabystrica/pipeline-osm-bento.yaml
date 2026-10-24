@@ -11,8 +11,9 @@
 # is the object's own, so an object keeps its entity from week to week.
 #
 # Removal: after the map is read, the pipeline asks the space for the osm- entities it holds
-# and deletes, in one batch, those the new answer no longer lists (deleteBatch of the
-# verejne-osm-delete Policy, only these two types). An answer Overpass cut short (its `remark`
+# and deletes, in one batch, those the new answer no longer lists (deleteBatch on only these two
+# types: verejne-osm-delete for the shared pipelines account, verejne-osm-account for pl-osm where
+# each Pipeline runs as its own account). An answer Overpass cut short (its `remark`
 # says so) or one with fewer than 20 objects fails the run before anything is written or
 # deleted, so an outage never empties the dataset. The space holding 1000 or more osm-
 # entities skips the removal rather than judge from one page.

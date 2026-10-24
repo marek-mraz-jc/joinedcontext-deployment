@@ -7,7 +7,7 @@ its org-admin `demo.barcelona` and its readers, the members of the Keycloak grou
 
 | space | model | holds |
 |---|---|---|
-| `barcelona` | `barcelona` | Open Data BCN (CC BY 4.0) as Smart Data Models: `AirQualityObserved`, `AdministrativeArea` (10 districts, 73 barris), `CityWork` (works on the public space), `PedestrianCrossing` (the street inventory's crossings) |
+| `barcelona` | `barcelona` | Open Data BCN (CC BY 4.0) as Smart Data Models: `AirQualityObserved`, `AdministrativeArea` (10 districts, 73 barris), `CityWork` (works on the public space), `PedestrianCrossing` (the street inventory's crossings), `StreetFurniture` (its speed reducers), `PointOfInterest` (facilities, drinking and ornamental fountains), `TouristRental` (the licensed tourist flats, at building level) |
 
 The pipelines' account `pipelines` writes the space through the Endpoint `barcelona` and the
 Policy `pipelines-write`, which lists the model's types and no other. Each Open Data BCN batch
