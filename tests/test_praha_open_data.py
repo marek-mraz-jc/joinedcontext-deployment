@@ -384,6 +384,10 @@ PARTS = {
     # (owner 2026-10-22T18:40Z, T-5268).
     "praha-vozidla-pid": None,
     "praha-sluzby": None,
+    "praha-vybavenost": "CC_BY_4_0",
+    # The PID network, one dataset per type (T-5423).
+    "praha-linky-pid": "CC_BY_4_0", "praha-zastavky-pid": "CC_BY_4_0", "praha-vstupy-metra": "CC_BY_4_0",
+    "praha-tarifni-pasma": "CC_BY_4_0",
 }
 
 
