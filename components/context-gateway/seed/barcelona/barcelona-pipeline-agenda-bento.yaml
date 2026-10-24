@@ -108,10 +108,11 @@ pipeline:
         }
         let sub = { "music": ["music"], "theatre-dance": ["theater"] }
         # The agenda's date is a day: its hours sit in a free-text timetable. The day starts at
-        # local midnight in Barcelona, whatever offset summer time gives it that day.
-        let offset = (this.starts + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")
+        # local midnight in Barcelona, at the offset that holds then: 00:00Z is local 01:00 or 02:00,
+        # before either summer time change (01:00Z), while noon already has the new offset.
+        let offset = (this.starts + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")
         let end_offset = if this.ends.or(null) == null { null } else {
-          (this.ends + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")
+          (this.ends + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")
         }
         # The event leaves the space by itself (NGSI-LD 4.22 expiresAt): at the end of its last day,
         # or three daily runs after the newest run that listed it, whichever comes first; an hour
@@ -123,7 +124,7 @@ pipeline:
           ((this.ends + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_unix() + 86400).ts_format("2006-01-02", "UTC")
         }
         let ends_at = if $next_day == null { null } else {
-          ($next_day + "T00:00:00" + ($next_day + "T12:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix()
+          ($next_day + "T00:00:00" + ($next_day + "T00:00:00Z").ts_parse("2006-01-02T15:04:05Z07:00").ts_tz("Europe/Madrid").ts_format("Z07:00")).ts_parse("2006-01-02T15:04:05Z07:00").ts_unix()
         }
         let lease = $now + 259200
         let expires = [if $ends_at == null { $lease } else { [$ends_at, $lease].min() }, $now + 3600].max()
