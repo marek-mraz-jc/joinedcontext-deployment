@@ -1373,7 +1373,16 @@ slots:
       The flat's number in the Generalitat's tourism register (Registre de Turisme de Catalunya),
       HUTB- and six digits, which every advert of the flat must show.
     pattern: ^HUTB-[0-9]{6}$
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo v registri cestovného ruchu
+          cs: Číslo v registru cestovního ruchu
+          en: Tourism register number
+          de: Nummer im Tourismusregister
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   seeAlso:
     slot_uri: sdm:seeAlso
     description: The work's page on the city's works site.
