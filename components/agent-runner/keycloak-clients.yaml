@@ -191,7 +191,7 @@ helsinki-agent-proxy:
         protocolMapper: oidc-audience-mapper
         consentRequired: false
         config:
-          included.custom.audience: 7qsdid06pjaxmzd44rheqngd7o6cvj8h
+          included.custom.audience: 2otvm3oapms4vsucerjhnywlumdqf3px
           access.token.claim: 'true'
           id.token.claim: 'false'
       - name: helsinki-statistics-welfare-audience
@@ -199,7 +199,7 @@ helsinki-agent-proxy:
         protocolMapper: oidc-audience-mapper
         consentRequired: false
         config:
-          included.custom.audience: c8dnu3ta9fdvyjqwv5swdkd0dkc8kbhk
+          included.custom.audience: n7eqxs3kybuh66al65cxadjqp6zxlm3f
           access.token.claim: 'true'
           id.token.claim: 'false'
       - name: helsinki-statistics-environment-audience
@@ -207,7 +207,7 @@ helsinki-agent-proxy:
         protocolMapper: oidc-audience-mapper
         consentRequired: false
         config:
-          included.custom.audience: 4gr7xjetq25axmbpn1obvyspuvlf5kbt
+          included.custom.audience: 6u27vozaruni2uaxbfk2ij3k57yutwfk
           access.token.claim: 'true'
           id.token.claim: 'false'
       # The heat vulnerability index and the service property energy use (T-5278).

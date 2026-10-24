@@ -17,7 +17,7 @@ metadata:
     en: 'Helsinki welfare statistics: the welfare, education, work, health and income of children and young people, working-age and elderly residents; for the city, its major districts and basic districts. One Smart Data Models KeyPerformanceIndicator per indicator and area, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (the code of the area in the statistics of the city), divisionLevel (city, majorDistrict or basicDistrict), statisticsTable and dimensionKey (the source table and cell). Source: City of Helsinki, Urban Research and Statistics (Hyvinvointitilastot), CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
-  slug: c8dnu3ta9fdvyjqwv5swdkd0dkc8kbhk
+  slug: n7eqxs3kybuh66al65cxadjqp6zxlm3f
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-welfare
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

@@ -180,5 +180,8 @@ pipeline:
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-pohyb-obyvatelstva-v-okresoch-1996-2024-8b7fa1" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
+    - split:
+        size: 1000
+        byte_size: 2097152
     - archive:
         format: json_array
