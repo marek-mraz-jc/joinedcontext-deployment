@@ -6,7 +6,7 @@
 # JSON strings ending in exactly one newline, which is what the bootstrap's block scalars made of
 # them, so no blob already on the forge changes.
 {{- $seed := dict }}
-{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/barcelona" "context-gateway/seed/slovensko" }}
+{{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/barcelona" "context-gateway/seed/bratislava" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
 {{- /* The App sharing matrix's test project and people (T-4911): development profile only. */}}
 {{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}

@@ -62,6 +62,14 @@ demo.barcelona:
   lastName: Admin
   realmRoles: [portal-approver]
   groups: [barcelona]
+# Hlavné mesto SR Bratislava's organization administrator (ADR-N-058, T-5271): org-admin of the
+# Organization `bratislava` alone (seed/bratislava/bratislava-rolebinding-admins.yaml), as
+# demo.zilina is of Žilina; the group is the Organization's subtree root and project bratislava's own.
+demo.bratislava:
+  firstName: Bratislava
+  lastName: Admin
+  realmRoles: [portal-approver]
+  groups: [bratislava]
 # The residue sweep's approver (T-2627): bound to `janitor` alone, which approves and deletes only
 # journey- and take-named resources of helsinki. No realm role and no project group, so the
 # gateway admits it to no context data.

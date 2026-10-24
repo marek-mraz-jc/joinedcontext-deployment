@@ -1,0 +1,38 @@
+# The open data of the City of Bratislava (data.bratislava.sk, CC BY 4.0) as Smart Data Models,
+# one space the city's pipelines write (T-5271). The first type is AirQualityObserved; each batch
+# of the ranked matrix (T-5272) adds its types to the model, the Policies and the retention below.
+apiVersion: joinedcontext.com/v1alpha1
+kind: ContextSpace
+metadata:
+  name: bratislava
+  namespace: bratislava
+  title:
+    sk: Bratislava — otvorené údaje
+    en: Bratislava, open data
+  description:
+    sk: Otvorené údaje hlavného mesta SR Bratislavy (data.bratislava.sk, CC BY 4.0) ako entity NGSI-LD podľa Smart Data Models.
+    en: The open data of the City of Bratislava (data.bratislava.sk, CC BY 4.0) as NGSI-LD entities of the Smart Data Models.
+spec:
+  # The space name is the segment its ids carry, pinned so it cannot drift (PF-84).
+  urnSegment: bratislava
+  isSandbox: false
+  # Its one model: a write of a type it does not declare is refused (DM-61).
+  dataModelRef: { kind: DataModel, name: bratislava }
+  defaultLocale: sk
+  # A measurement series: thirty days of history, the seed's default for a measurement, one row
+  # per change and one a day for what a read repeats (DM-82, DM-108, DM-109).
+  retention:
+    - entityType: AirQualityObserved
+      history: P30D
+      attributes:
+        dateObserved: { record: onChange, heartbeat: P1D }
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+  # The municipality of Bratislava (OSM relation, lon 16.946..17.285, lat 48.007..48.265) with a
+  # 1 km margin (owner 2026-10-22T18:10Z); an entity outside it is flagged, never refused (DM-87).
+  quality:
+    - name: in-area
+      entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
