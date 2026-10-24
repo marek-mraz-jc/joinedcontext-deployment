@@ -24,6 +24,10 @@ spec:
     - FloodZone
     - FloodDefence
     - WeatherObserved
+    - PublicTransportRoute
+    - GtfsStop
+    - GtfsAccessPoint
+    - FareZone
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld
