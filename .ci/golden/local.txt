@@ -263,6 +263,7 @@ v1/ConfigMap local/gitea-seed-s12-*
 v1/ConfigMap local/gitea-seed-s13-*
 v1/ConfigMap local/gitea-seed-s14-*
 v1/ConfigMap local/gitea-seed-s15-*
+v1/ConfigMap local/gitea-seed-s16-*
 v1/ConfigMap local/gitea-seed-s2-*
 v1/ConfigMap local/gitea-seed-s3-*
 v1/ConfigMap local/gitea-seed-s4-*
