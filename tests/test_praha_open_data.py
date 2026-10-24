@@ -388,6 +388,9 @@ PARTS = {
     # The PID network, one dataset per type (T-5423).
     "praha-linky-pid": "CC_BY_4_0", "praha-zastavky-pid": "CC_BY_4_0", "praha-vstupy-metra": "CC_BY_4_0",
     "praha-tarifni-pasma": "CC_BY_4_0",
+    "praha-parkovani": "CC_BY_4_0",
+    "praha-zakazy-stani": "CC_BY_4_0",
+    "praha-parkovaci-automaty": "CC_BY_4_0",
 }
 
 
