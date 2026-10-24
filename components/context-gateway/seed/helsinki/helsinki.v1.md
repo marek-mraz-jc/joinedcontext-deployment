@@ -27,8 +27,14 @@ Specialises `Entity`.
 | `endDate` | Property | `datetime` |  |  | `schema:endDate` | When the event ends; absent while the register does not say. |
 | `eventStatus` | Property | [`EventStatus`](#eventstatus) |  |  | `schema:eventStatus` | The register's status of the event, one of schema.org's EventStatusType values. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
+| `thematic` | Property | `string` (list) |  |  | `sdm:thematic` | The event's keywords from the register's YSO terms, in English where the term has an English name and in Finnish otherwise (Smart Data Models Event `thematic`). |
+| `isAccessibleForFree` | Property | `boolean` |  |  | `schema:isAccessibleForFree` | True when every offer of the event is free of charge, as the register marks it. |
+| `webSite` | Property | `uri` |  |  | `sdm:webSite` | The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish. |
+| `superEvent` | Relationship | [`Event`](#event) |  |  | `sdm:superEvent` | The recurring or umbrella event this event is one date or part of. |
+| `subEvent` | Relationship | [`Event`](#event) (list) |  |  | `sdm:subEvent` | The dates and parts of this event, computed from their superEvent and never stored. |
 | `contactPoint` | Property | `string` |  |  | `schema:contactPoint` | The organizer's contact line as the register carries it, often a named person with a phone number. The space keeps it for the city's own coordination; no public endpoint serves it. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `refPointOfInterest` | Relationship | `string` |  |  | `sdm:refPointOfInterest` | The venue as the city's service register knows it: a Linked Events `tprek:` place is the Service Map unit of that number, written by the services pipeline. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -182,7 +188,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place of the city's service register a resident goes to: a library, a health station, a swimming hall, a beach or a school. The register's contact lines are left out, because they can name a person.
+One place of the city's service register a resident goes to: a library, a health station, a swimming hall, a beach, a school, or any other unit of the register (`other`). The register's contact lines are left out, because they can name a person.
 
 IRI: `sdm:PointOfInterest`
 
@@ -309,8 +315,8 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `districtCode` | Property | `string` | yes |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. |
-| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's two divisions the area belongs to. |
+| `districtCode` | Property | `string` | no |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its `fareZone`. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `publicAreaPermits` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:publicAreaPermits` | The public-area permits that lie in this district, computed from their refDistrict and never stored. |
@@ -461,6 +467,76 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### ServiceRequest
+
+One report of the City of Helsinki's feedback system (Open311 GeoReport v2, the Issue Reporting API) that the city published. Smart Data Models names the type service_requests; the space names it ServiceRequest like its other types, with the model's attribute names. The reporter's name, e-mail, phone and photos are never read.
+
+IRI: `sdm:service_requests`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `service_request_id` | Property | `string` | yes |  | `sdm:service_request_id` | The number the city's feedback system gives the report (Open311 `service_request_id`). |
+| `status` | Property | [`ServiceRequestStatus`](#servicerequeststatus) | yes |  | `sdm:status` | open while the city handles the report (PROCESSING), closed once it has answered (READY). |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | The report as the reporter wrote it, in the language they wrote it in (`@none`). |
+| `service_code` | Property | `string` |  |  | `sdm:service_code` | The feedback system's code of the sector the report is filed under, for example 2809. |
+| `service_name` | Property | `string` |  |  | `sdm:service_name` | The sector's name in English, read from the feedback system's services list, for example City environment. |
+| `status_notes` | Property | `string` |  |  | `sdm:status_notes` | The city's answer or note on the report, as published. |
+| `agency_responsible` | Property | `string` |  |  | `sdm:agency_responsible` | The city unit handling the report, when the feedback system names one. |
+| `requested_datetime` | Property | `datetime` | yes |  | `sdm:requested_datetime` | When the report was filed, ISO 8601 in UTC. |
+| `updated_datetime` | Property | `datetime` |  |  | `sdm:updated_datetime` | When the report last changed, ISO 8601 in UTC. |
+| `expected_datetime` | Property | `datetime` |  |  | `sdm:expected_datetime` | When the city expects to have handled the report, if it says. |
+| `address_string` | Property | `string` |  |  | `sdm:address_string` | The street or place the reporter named, as written, for example Malminkatu. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### KeyPerformanceIndicator
+
+One indicator of the city's area statistics (Aluesarjat) for one area: the newest period's value, its history one row per period. Read daily from stat.hel.fi.
+
+IRI: `sdm:KeyPerformanceIndicator`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `kpiValue` | Property | `float` | yes |  | `sdm:kpiValue` | The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count, P1 a percentage, EUR euros, MTK square metres) and the period's last day as `observedAt`, so the history holds one value per period. |
+| `calculationPeriod` | Property | [`KpiPeriod`](#kpiperiod) | yes |  | `sdm:calculationPeriod` | The period the value covers, its first and last day. |
+| `calculationFrequency` | Property | [`CalculationFrequency`](#calculationfrequency) |  |  | `sdm:calculationFrequency` | How often the source publishes a new period. |
+| `area` | Property | `string` |  |  | `sdm:area` | The name of the area the value describes, a sub-district, district or the whole city. |
+| `districtCode` | Property | `string` |  |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) |  |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
+| `refArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refArea` | The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the city's register holds; a district or the whole city is named by `area` and `districtCode`. |
+| `process` | Property | `string` |  |  | `sdm:process` | The statistics table the value comes from, in the source's words. |
+| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it. |
+| `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | Which cell of the table the value is: each kept dimension and its code, such as Sukupuoli=ALL;Tiedot=tyottomyysaste. |
+| `calculatedBy` | Property | `string` |  |  | `sdm:calculatedBy` | The organization that computes the value. |
+| `organization` | Property | `string` |  |  | `sdm:organization` | The organization the indicator describes. |
+| `updatedAt` | Property | `datetime` |  |  | `sdm:updatedAt` | When the source last updated the table. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### KpiPeriod
+
+The value of `calculationPeriod`, never an entity of its own.
+
+IRI: `jc:KpiPeriod`
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `from` | Property | `date` | yes |  | `sdm:from` | The first day of the period. |
+| `to` | Property | `date` | yes |  | `sdm:to` | The last day of the period. |
+
 ### TrafficFlowObserved
 
 One day of one of the city's traffic counters in one direction: the cyclists an Eco-Counter station counted, or the motor vehicles and their mean speed at one of the city's induction loop (LAM) stations, from the city's traffic measurement API. The counter's name and place ride on the observation; the history of the days is the entity's temporal history.
@@ -514,6 +590,15 @@ IRI: `ngsi-ld:Entity`
 
 ## Enumerations
 
+### CalculationFrequency
+
+| Value | Meaning |
+|---|---|
+| `daily` | A new value every day. |
+| `monthly` | A new value every month. |
+| `quarterly` | A new value every quarter. |
+| `yearly` | A new value every year. |
+
 ### ServiceCategory
 
 | Value | Meaning |
@@ -523,6 +608,16 @@ IRI: `ngsi-ld:Entity`
 | `swimmingHall` | An indoor swimming hall. |
 | `beach` | A public beach. |
 | `school` | A comprehensive school. |
+| `other` | Any other unit of the service register, such as a youth centre, a playground or a city office. |
+
+### ServiceRequestStatus
+
+Open311's two report states, as Smart Data Models' service_requests names them.
+
+| Value | Meaning |
+|---|---|
+| `open` | The city is handling the report (the feedback system's PROCESSING). |
+| `closed` | The city has answered the report (READY). |
 
 ### StreetParkingCategory
 
@@ -555,8 +650,13 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 
 | Value | Meaning |
 |---|---|
+| `city` | The whole city (statistics only). |
+| `majorDistrict` | A major district (suurpiiri), 8 of them (statistics only). |
+| `basicDistrict` | A basic district (peruspiiri), 34 of them (statistics only). |
+| `cityPart` | The inner city (kantakaupunki) or the suburbs (esikaupungit) (statistics only). |
 | `district` | A district (kaupunginosa), 60 of them. |
 | `subDistrict` | A sub-district (osa-alue), the unit the city's statistics use. |
+| `fareZone` | An HSL fare zone (A, B, C or D), the area a ticket is valid in. |
 
 ### TransportMode
 

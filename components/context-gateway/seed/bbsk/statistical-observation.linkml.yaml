@@ -34,13 +34,30 @@ slots:
     description: The publisher's own code for the table this cell comes from, such as `zp3803rs`.
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Tabuľka
+          cs: Tabulka
+          en: Table
+          de: Tabelle
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: http://purl.org/linked-data/cube#
   indicator:
     slot_uri: jc:indicator
     description: The publisher's own code for the measure, such as `ODPAD_TONY_KM2`.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ukazovateľ
+          cs: Ukazatel
+          en: Indicator
+          de: Indikator
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   refArea:
     slot_uri: sdmx-dim:refArea
     description: >-
@@ -48,6 +65,14 @@ slots:
       an okres (`SK032`, `SK0323`), a LAU code for a municipality (`SK0321508438`).
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Area
+          de: Gebiet
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: http://purl.org/linked-data/sdmx/2009/dimension#
   refPeriod:
@@ -55,6 +80,14 @@ slots:
     description: The period the cell covers, as the publisher labels it, such as `2023` or `2025Q2`.
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie
+          cs: Období
+          en: Period
+          de: Zeitraum
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: http://purl.org/linked-data/sdmx/2009/dimension#
   dimensionKey:
@@ -64,7 +97,16 @@ slots:
       hyphen and in the cube's own dimension order, such as `1` for the solid-emissions
       pollutant. It is the tail of the `{localId}`, repeated here so a query can select a slice
       without matching on an id pattern. Absent when the table has no further dimension.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ďalšie členenie
+          cs: Další členění
+          en: Further breakdown
+          de: Weitere Gliederung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   kpiValue:
     slot_uri: sdm-kpi:kpiValue
     description: >-
@@ -73,23 +115,58 @@ slots:
     range: float
     required: true
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Hodnota
+          cs: Hodnota
+          en: Value
+          de: Wert
+        annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
   unitText:
     slot_uri: jc:unitText
     description: The unit in the publisher's own words, such as `v tis. m3`, kept because a UN/CEFACT code loses the scale factor.
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Jednotka
+          cs: Jednotka
+          en: Unit
+          de: Einheit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   source:
     slot_uri: jc:source
     description: The exact URL the row was fetched from, with its query, so the cell can be fetched again.
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj
+          cs: Zdroj
+          en: Source
+          de: Quelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   dateObserved:
     slot_uri: jc:dateObserved
     description: When the publisher last updated the table, as the table itself reports it.
     range: datetime
     required: true
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas merania
+          cs: Čas měření
+          en: Observed at
+          de: Messzeitpunkt
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
 
   stewardNote:
     slot_uri: jc:stewardNote
@@ -100,7 +177,16 @@ slots:
       back (AP-62, EP-14). Every figure beside it belongs to the publisher and is read-only.
       At most 500 characters and no angle brackets, because it is a note and not a document.
     pattern: ^[^<>]{0,500}$
-    annotations: { ngsi_ld_kind: Property }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Poznámka správcu
+          cs: Poznámka správce
+          en: Steward's note
+          de: Anmerkung des Datenverwalters
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
 
 classes:
   KeyPerformanceIndicator:

@@ -21,8 +21,11 @@ requires_docker = pytest.mark.skipif(
 RESOURCES = Path(__file__).resolve().parent.parent / "components/pipeline-runner/streams/resources.yaml"
 
 
-def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, metadata: dict | None = None) -> bytes:
+def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, metadata: dict | None = None,
+           then: tuple[dict, ...] = ()) -> bytes:
     pipeline = yaml.safe_load(mapping.read_text())["pipeline"]
+    # The steps the reconciler renders after the mapping, such as a spec.lifetime (PL-80).
+    pipeline["processors"].extend(then)
     if metadata:
         # What a connection's own steps leave on the message, such as the member name an archive
         # read sets (PL-72), set the way those steps set it.
@@ -51,11 +54,12 @@ def run(mapping: Path, document: bytes, space: str, domain: str = "hel.fi") -> l
     return json.loads(_bento(mapping, document, space, domain, "all-bytes"))
 
 
-def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi", metadata: dict | None = None) -> list[dict]:
+def run_all(mapping: Path, document: bytes, space: str, domain: str = "hel.fi", metadata: dict | None = None,
+            then: tuple[dict, ...] = ()) -> list[dict]:
     """Like `run`, for a mapping that answers many messages (one entity each, or arrays), as one
     that splits and regroups its rows does: the runner batches whichever it gets (T-3356)."""
     entities: list[dict] = []
-    for line in _bento(mapping, document, space, domain, "lines", metadata).decode().splitlines():
+    for line in _bento(mapping, document, space, domain, "lines", metadata, then).decode().splitlines():
         if line.strip():
             message = json.loads(line)
             entities.extend(message if isinstance(message, list) else [message])

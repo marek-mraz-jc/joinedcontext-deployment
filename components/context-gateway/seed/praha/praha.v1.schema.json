@@ -602,6 +602,348 @@
       "title": "Entity",
       "type": "object"
     },
+    "FareZone": {
+      "additionalProperties": false,
+      "description": "One area of the PID fare zones (P, 0, B, 1 to 12) the ticket price is counted by. No Smart Data Model holds a fare zone; the nearest, Transportation RestrictedTrafficArea, is an access restriction.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zoneCode": {
+          "description": "The PID fare zone (P, 0, B, 1 to 12): of a stop, every zone it counts in, comma separated on a zone border; of a fare zone area, the zones it is.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "FareZone",
+      "type": "object"
+    },
+    "GtfsAccessPoint": {
+      "additionalProperties": false,
+      "description": "One entrance of a Prague metro station: its sign, the station, the streets it leads to and the metro lines behind it.",
+      "properties": {
+        "code": {
+          "description": "The sign of a metro entrance (E1, E2).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "description": "The publisher's own description: the termini a line runs between, the streets and connections a metro entrance leads to.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "servedLines": {
+          "description": "The PID lines that stop there, or that the metro entrance leads to (22, 136, A).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsAccessPoint",
+      "type": "object"
+    },
+    "GtfsStop": {
+      "additionalProperties": false,
+      "description": "One PID stop platform in Prague (GTFS stop of location type 0): its name, platform, fare zone, the lines that stop there and whether it is step-free.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "platformCode": {
+          "description": "The platform letter or number of a stop (A, 2); absent where the stop has one.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "servedLines": {
+          "description": "The PID lines that stop there, or that the metro entrance leads to (22, 136, A).",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportModes": {
+          "description": "What stops there, as the GTFS route types name it (bus, tram); a tram and bus stop lists both.",
+          "items": {
+            "$ref": "#/definitions/TransportMode"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "wheelchairAccessible": {
+          "description": "Whether the publisher states the place is reachable in a wheelchair; absent when it does not say.",
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "zoneCode": {
+          "description": "The PID fare zone (P, 0, B, 1 to 12): of a stop, every zone it counts in, comma separated on a zone border; of a fare zone area, the zones it is.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "GtfsStop",
+      "type": "object"
+    },
     "OffStreetParking": {
       "additionalProperties": false,
       "description": "One park-and-ride car park at the edge of the city.",
@@ -727,7 +1069,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One place a resident goes to: a school, a cultural venue, a public toilet or a public transport ticket point.",
+      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.",
       "properties": {
         "address": {
           "anyOf": [
@@ -925,6 +1267,148 @@
       "title": "PostalAddress",
       "type": "object"
     },
+    "PublicTransportRoute": {
+      "additionalProperties": false,
+      "description": "One PID line as IPR Praha maps it today: its number, what it runs, the termini and the line it draws through Prague and Central Bohemia, simplified to about 5 m.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "description": "The publisher's own description: the termini a line runs between, the streets and connections a metro entrance leads to.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "routeCode": {
+          "description": "The PID line's GTFS route_id (L22, L991).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "shortRouteCode": {
+          "description": "The line's public number or letter (22, A, S9, P2).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportMode": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TransportMode"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "transportationType": {
+          "description": "The GTFS basic route type of the line: 0 tram, 1 metro, 2 train, 3 bus, 4 ferry, 7 funicular. The Smart Data Model lists only 0 to 7, so a trolleybus (GTFS 11) is 3 and its transportMode says trolleybus.",
+          "maximum": 7,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "url": {
+          "description": "The place's own web page.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "PublicTransportRoute",
+      "type": "object"
+    },
     "ServiceCategory": {
       "description": "",
       "enum": [
@@ -937,7 +1421,23 @@
         "police",
         "garden",
         "playground",
-        "wasteCollectionYard"
+        "wasteCollectionYard",
+        "healthCentre",
+        "university",
+        "placeOfWorship",
+        "communityCentre",
+        "accommodation",
+        "groceryStore",
+        "drinkingFountain",
+        "fountain",
+        "spring",
+        "waterPump",
+        "mistShower",
+        "bathingPlace",
+        "animalCorner",
+        "landmark",
+        "wasteCollectionPoint",
+        "trailStop"
       ],
       "title": "ServiceCategory",
       "type": "string"

@@ -7,8 +7,8 @@ metadata:
   namespace: helsinki
   title: { fi: Kaupungin palvelut — Helsinki, en: City services — Helsinki }
   description:
-    fi: 'Kirjastot, terveysasemat, uimahallit, uimarannat ja koulut Palvelukartasta. Lähde: Helsingin kaupunki, CC BY 4.0.'
-    en: 'Libraries, health stations, swimming halls, beaches and schools from the Service Map. Source: City of Helsinki, CC BY 4.0.'
+    fi: 'Palvelukartan kaikki Helsingin toimipisteet: kirjastot, terveysasemat, uimahallit, uimarannat, koulut ja muut (other), sekä HSL:n lipunmyyntipisteet: myyntipisteet, palvelupisteet, lippuautomaatit ja pysäköintiautomaatit (serviceCategory ticket…, vyöhyke kentässä fareZone, maksutavat kentässä description). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
+    en: "Every unit of the Service Map in Helsinki: libraries, health stations, swimming halls, beaches, schools and the rest (other), and HSL's ticket sales points: kiosks, service points, ticket machines and parking meters (serviceCategory ticket…, the zone in fareZone, the payment methods in description). Sources: City of Helsinki and HSL, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
@@ -29,22 +29,29 @@ spec:
       uri: https://www.hel.fi/
     license: CC_BY_4_0
     attribution:
-      fi: 'Lähde: Helsingin kaupunki, CC BY 4.0'
-      sv: 'Källa: Helsingfors stad, CC BY 4.0'
-      en: 'Source: City of Helsinki, CC BY 4.0'
-    themes: [EDUC, HEAL, SOCI]
+      fi: 'Lähteet: Helsingin kaupunki ja Helsingin seudun liikenne (HSL), CC BY 4.0'
+      sv: 'Källor: Helsingfors stad och Helsingforsregionens trafik (HRT), CC BY 4.0'
+      en: 'Sources: City of Helsinki and Helsinki Region Transport (HSL), CC BY 4.0'
+    themes: [EDUC, HEAL, SOCI, TRAN]
     keywords:
-      fi: [palvelut, kirjastot, koulut, uimarannat]
-      sv: [tjänster, bibliotek, skolor, badstränder]
-      en: [services, libraries, schools, beaches]
+      fi: [palvelut, kirjastot, koulut, uimarannat, lipunmyynti]
+      sv: [tjänster, bibliotek, skolor, badstränder, biljettförsäljning]
+      en: [services, libraries, schools, beaches, ticket sales]
     spatial:
       - FI1B1
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
     frequency: WEEKLY
     source:
-      - url: https://api.hel.fi/servicemap/v2/unit/?service=813,703,729,731,661,662,601,602,149,150&municipality=helsinki&page_size=1000&format=json
+      - url: https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&format=json
         title: { fi: Kaupungin palvelut (Palvelukartta), en: City services (Service Map) }
         description:
           fi: 'Palvelukartan rajapinta: kaupungin toimipisteet sijainteineen.'
           en: "The Service Map API: the city's units with their locations."
+      - url: https://hri.fi/data/en_GB/dataset/hsl-n-myyntipisteet
+        title:
+          fi: HSL:n myyntipisteet
+          en: HSL ticket sales points
+        description:
+          fi: HSL:n avoimen datan palvelun taso, GeoJSON (WGS84), CC BY 4.0. Luetaan päivittäin (putki sales-points).
+          en: A layer of HSL's open data hub, as GeoJSON (WGS84), CC BY 4.0. Read daily (pipeline sales-points).
     pipelineRef: { kind: Pipeline, name: services }

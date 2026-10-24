@@ -42,6 +42,9 @@ spec:
         - type: OnStreetParking
         - type: CityWork
         - type: AdministrativeArea
+        # The reports the city published in its feedback system (T-5257): the reporter's name, contact
+        # details and photos are never written.
+        - type: ServiceRequest
     # Every attribute but refPointOfInterest, as public-water-quality (T-5089): a sensor's Service Map
     # unit is often no entity a public Endpoint holds.
     - entities:

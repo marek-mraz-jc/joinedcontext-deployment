@@ -1,0 +1,102 @@
+name: release gate
+# The approval gate of a production release (T-0051, T-4678, owner decision 2026-10-24): a release
+# tag vX.Y.Z (scripts/release.py cut) renders `smartcity` at the tag and at the previous release
+# tag, puts the difference in the job summary, then waits on the GitHub environment `production`,
+# whose required reviewer signs off. No cluster credential lives in GitHub and nothing here
+# applies: prod-deployer runs `just prod-apply` from the sandbox on the approved tag.
+# Metered private repository: a tag push and a manual run only, no schedule.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "release tag to gate, for example v0.2.0"
+        required: true
+        type: string
+permissions: { contents: read }
+concurrency: { group: "release-gate-${{ github.event.inputs.tag || github.ref_name }}", cancel-in-progress: false }
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: release tag
+        id: tag
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -eu
+          if ! printf '%s' "$TAG" | grep -qxE 'v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?'; then
+            echo "::error::'$TAG' is no release tag vX.Y.Z"; exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: refs/tags/${{ steps.tag.outputs.tag }}
+          fetch-depth: 0
+      - name: refuse anything but an annotated release tag on origin
+        run: python3 scripts/release.py verify HEAD
+      - name: previous release
+        id: previous
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -eu
+          previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' "${TAG}^" 2>/dev/null || true)
+          echo "previous=${previous}" >> "$GITHUB_OUTPUT"
+          echo "previous release: ${previous:-none}"
+      - uses: ./.github/actions/tools
+      - name: render smartcity at both tags
+        env:
+          PREVIOUS: ${{ steps.previous.outputs.previous }}
+        run: |
+          set -eu
+          just _dev-assemble
+          helmfile -f deployment/helmfile.yaml -e smartcity repos
+          scripts/render.sh smartcity "${RUNNER_TEMP}/release.yaml" --deployed
+          : > "${RUNNER_TEMP}/previous.yaml"
+          if [ -n "$PREVIOUS" ]; then
+            git worktree add --detach "${RUNNER_TEMP}/previous" "refs/tags/${PREVIOUS}"
+            (cd "${RUNNER_TEMP}/previous" && just _dev-assemble && scripts/render.sh smartcity "${RUNNER_TEMP}/previous.yaml" --deployed)
+          fi
+      - name: job summary
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          PREVIOUS: ${{ steps.previous.outputs.previous }}
+        run: |
+          set -eu
+          python3 scripts/release-diff.py "${RUNNER_TEMP}/previous.yaml" "${RUNNER_TEMP}/release.yaml" > "${RUNNER_TEMP}/release-diff.md"
+          python3 scripts/release-diff.py --max-bytes 100000000 "${RUNNER_TEMP}/previous.yaml" "${RUNNER_TEMP}/release.yaml" > "${RUNNER_TEMP}/release-diff-full.md"
+          {
+            echo "## ${TAG} on smartcity, against ${PREVIOUS:-an empty cluster}"
+            echo
+            cat "${RUNNER_TEMP}/release-diff.md"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-diff-${{ steps.tag.outputs.tag }}
+          path: ${{ runner.temp }}/release-diff-full.md
+          retention-days: 30
+  approve:
+    # The environment's required reviewer (owner) approves in the Actions UI; deployments to it are
+    # limited to v* tags and main by its deployment policy.
+    needs: diff
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: record the sign-off
+        env:
+          TAG: ${{ needs.diff.outputs.tag }}
+          APPROVED_BY: ${{ github.triggering_actor }}
+        run: |
+          set -eu
+          {
+            echo "## ${TAG} approved for production"
+            echo
+            echo "Run started by ${APPROVED_BY}; the reviewer is on this run's deployment record."
+            echo "Apply it from the sandbox: check out ${TAG}, then \`just prod-apply\` and \`just prod-smoke\`."
+          } >> "$GITHUB_STEP_SUMMARY"

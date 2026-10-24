@@ -95,8 +95,8 @@ pipeline:
       }
       let now = timestamp_unix()
       # A notice is no event (owner 2026-10-22, T-5215): waste collection, a council session, VZN, a zámer, an
-      # oznámenie, elections, a power cut, a hall's private booking. Its record is never loaded.
-      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené)$"
+      # oznámenie, elections, a power cut, a hall's booked or free slot (T-5393). Its record is never loaded.
+      let notice = "(?i)(vývoz|odvoz|zvoz|zber|separ)\\S*\\s.*(odpad|papier|plast|skl|kov|kartón|bio|elektro|textil|olej)|^(papier|plasty?|sklo|kovy|bioodpad|komunálny odpad)$|\\bVZN\\b|všeobecne záväzn|\\bzámer|oznámeni|voľby|volby|referend|zasadnut|zastupiteľstv|preruš\\S* (dodávky|distribúcie)|odstávk|nová webová stránka|^(svadba|oslava|rodinná oslava|súkromná akcia|oslava narodenín|kar|obsadené|obsadený|rezervované|rezervovaná|voľné|voľný termín)$|\\bobsaden[ýáé]|prenájom (sály|kd|kultúrn)|súkromn[áé] (akcia|oslava)|rezervácia (jedál|sál|kd|kultúrn|miestn)"
       let records = this.filter(r -> !r.name.or("").string().unescape_html().trim().re_match($notice)).map_each(r -> r.merge({
         "_start": r.start.apply("unix"),
         "_end": if r.end != null && r.end.apply("unix") != null {
@@ -134,7 +134,7 @@ pipeline:
       let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
       let locality = $feed_locality.or($known.addressLocality.or("Bratislava"))
       # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
-      let hit = if $locality != null { [["Dubnica nad Váhom","dubnica-nad-vahom",48.95758,18.16566,"office"],["Jablonec","jablonec",48.33242,17.4481,"office"],["Kostolná pri Dunaji","kostolna-pri-dunaji",48.18472,17.43602,"office"],["Kuchyňa","kuchyna",48.40734,17.15973,"office"],["Malinovo","malinovo",48.15655,17.29792,"office"],["Marianka","marianka",48.2495,17.05765,"office"],["Nitra","nitra",48.30563,18.08377,"office"],["Pernek","pernek",48.36778,17.14382,"office"],["Prešov","presov",49.00001,21.23921,"centre"],["Reca","reca",48.2301,17.45832,"office"],["Tomášov","tomasov",48.14252,17.3366,"office"],["Trenčín","trencin",48.89435,18.04058,"office"],["Tureň","turen",48.19197,17.38952,"office"],["Veľký Biel","velky-biel",48.21306,17.3597,"office"],["Vištuk","vistuk",48.33494,17.39631,"office"],["Častá","casta",48.39413,17.35264,"office"],["Čataj","cataj",48.27231,17.47512,"office"],["Bratislava","bratislava",48.14418,17.10942,"office"],["Doľany","dolany",48.416,17.37593,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+      let hit = if $locality != null { [["Dubnica nad Váhom","dubnica-nad-vahom",48.95758,18.16566,"office"],["Jablonec","jablonec",48.33242,17.4481,"office"],["Kostolná pri Dunaji","kostolna-pri-dunaji",48.18472,17.43602,"office"],["Kuchyňa","kuchyna",48.40734,17.15973,"office"],["Malinovo","malinovo",48.15655,17.29792,"office"],["Marianka","marianka",48.2495,17.05765,"office"],["Nitra","nitra",48.30563,18.08377,"office"],["Pernek","pernek",48.36778,17.14382,"office"],["Prešov","presov",49.00001,21.23921,"centre"],["Reca","reca",48.2301,17.45832,"office"],["Tomášov","tomasov",48.14252,17.3366,"office"],["Trenčín","trencin",48.89435,18.04058,"office"],["Tureň","turen",48.19197,17.38952,"office"],["Veľký Biel","velky-biel",48.21306,17.3597,"office"],["Vištuk","vistuk",48.33494,17.39631,"office"],["Častá","casta",48.39413,17.35264,"office"],["Čataj","cataj",48.27231,17.47512,"office"],["Bratislava","bratislava",48.14418,17.10942,"office"],["Doľany","dolany",48.416,17.37593,"office"],["Senec","senec",48.2198,17.39732,"office"],["Budmerice","budmerice",48.35653,17.40783,"office"],["Ivanka pri Dunaji","ivanka-pri-dunaji",48.19017,17.25719,"office"],["Šenkvice","senkvice",48.29653,17.34672,"office"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
       let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
       # The municipality by its official name, on every event (DM-141): the town table's, the venue's, else the feed's.
       let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
@@ -146,7 +146,7 @@ pipeline:
       let lat = $pick.lat.or(null)
       let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
-      let town = $known.town.or($area.town.or("bratislava"))
+      let town = $known.town.or($area.town.or(null))
       # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
       # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
       # 16:35 and 16:36 agree, or the day) and the town, the dedup key of the Event model (T-4895, T-5215).
@@ -187,7 +187,7 @@ pipeline:
         "type": "Event",
         # The scope comes from the inventory row's region and town, never from the feed (T-4898). A
         # scope level is letters, digits and "_" (CIM 009 4.18): the broker refuses a hyphen (T-5051).
-        "scope": if $town != null { "/SK/BA" + "/" + $town.replace_all("-", "_") } else { "/SK/BA" },
+        "scope": if $town != null { "/SK/BA" + "/" + $town.replace_all("-", "_") } else { "/SK/BA/bratislava" },
         "name": $name.apply("prop"),
         "startDate": this.start.apply("prop"),
         "endDate": this.end.apply("prop"),

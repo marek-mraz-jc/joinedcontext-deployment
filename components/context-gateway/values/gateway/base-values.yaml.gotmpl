@@ -73,6 +73,8 @@ env:
   JC_GATEWAY_BROKER_URL_TEMPLATE: "http://context-broker-{broker}.{{ (index .Values "context-broker" "broker" "namespace") }}.svc.cluster.local:8080"
   JC_GATEWAY_ORG_DOMAIN: {{ $global.orgDomain | quote }}
   JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
+  # The spaces' personal-data keys the Portal writes (the personal-keys volume below, DM-121).
+  JC_GATEWAY_PERSONAL_KEYS: /var/run/secrets/jc/personal-keys
   # The runner's headless Service: a broker admits a tokenless CONNECT only from its pods (T-4004).
   JC_GATEWAY_MQTT_RUNNER_HOST: "pipeline-runner-pods.{{ index .Values "pipeline-runner" "runner" "namespace" }}.svc.cluster.local"
   # The Portal's headless Service: a capture broker admits its tokenless subscriber only from
@@ -192,6 +194,16 @@ extraVolumes:
             audience: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
             expirationSeconds: 600
             path: token
+  # Each space's `spec.personalData.keyRef`, one file per space segment, which the Portal's
+  # reconciler writes (DM-121). Optional: the gateway starts before the first sync and refuses a
+  # hashed write 503 while a space's file is missing. No subPath, so the kubelet swaps a rotated
+  # key in and the gateway reads it at its next hashed write. 0444 because the pod sets no
+  # fsGroup for the gateway's user 1000; only the gateway container mounts the volume.
+  - name: personal-keys
+    secret:
+      secretName: personal-data-keys
+      optional: true
+      defaultMode: 0444
   # The previews the gateway fetched; at most two on the node, each a branch's manifests.
   - name: previews
     emptyDir:
@@ -218,6 +230,7 @@ extraVolumeMounts:
   - { name: repo, mountPath: /repo, readOnly: true }
   - { name: previews, mountPath: /previews }
   - { name: keycloak-token, mountPath: /var/run/secrets/jc/keycloak, readOnly: true }
+  - { name: personal-keys, mountPath: /var/run/secrets/jc/personal-keys, readOnly: true }
 {{- if $layout2 }}
   - { name: projects, mountPath: /projects, readOnly: true }
   - { name: assembly, mountPath: /assembly }

@@ -9,6 +9,13 @@
     "type": "Property",
     "value": "obyvatelstvo-stav-mesto"
   },
+  "title": {
+    "type": "LanguageProperty",
+    "languageMap": {
+      "sk": "Stav trvale bývajúceho obyvateľstva na konci obdobia",
+      "en": "Resident population at the end of the quarter"
+    }
+  },
   "currentValue": {
     "type": "Property",
     "value": 79617,

@@ -7,11 +7,22 @@
 }
 :root[data-theme="dark"] { color-scheme: dark; --bg: #0b1220; --fg: #e2e8f0; --muted: #a3b1c6; --line: #334155; --soft: #142033; --accent: #93c5fd; --err-bg: #3b1219; --err: #fecaca; }
 [hidden] { display: none !important; }
+/* T-5415: the page's own background on the root too: the view's stylesheet paints the root the
+   Portal's grey, which showed as a second panel inside the catalogue's white card. */
+html, body { background: var(--bg); }
+/* The view honours `&theme=light` on a dark device (explorer.css); on a light device it follows the
+   device alone, so with `&theme=dark` the root keeps the view's ground and its text stays readable. */
+@media (prefers-color-scheme: light) { :root[data-theme="dark"], :root[data-theme="dark"] body { background: var(--portal-bg, var(--bg)); } }
 body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); background: var(--bg); }
 main { padding: 12px 16px 16px; }
 .inline main { padding: 0 2px 8px; }
 .page-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .inline .page-head { justify-content: flex-end; }
+/* T-5415: Data API and Embed as one row of equal buttons, full width on a phone. */
+@media (max-width: 600px) {
+  .page-head .actions { flex: 1 1 100%; flex-wrap: nowrap; gap: 8px; }
+  .page-head .actions .page-button { flex: 1 1 0; min-width: 0; }
+}
 .inline #title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 #title { font-size: 1.15rem; margin: 0; }
 #map-title { font-size: 1rem; margin: 16px 0 6px; }

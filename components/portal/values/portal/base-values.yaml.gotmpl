@@ -242,6 +242,14 @@ env:
   # browser resolves no .svc.cluster.local name. Same prefix as the forge's ROOT_URL.
   JC_GITEA_PUBLIC_URL: "https://{{ $global.domain }}{{ .Values.gitea.forge.pathPrefix | trimSuffix "/" }}"
 {{- end }}
+{{- if has "ckan" .Values.components }}
+  # The catalogue's own public URL, which every CkanInstance of this deployment names, and its
+  # Service, which the reconciler publishes through instead (T-5314): through the edge every
+  # publication spent the visitors' per-address limit (184 organization lookups in two minutes
+  # on prod). Linkerd carries the token between the two pods.
+  JC_PORTAL_CKAN_URL: "https://{{ .Values.ckan.catalogue.subDomain }}.{{ $global.domain }}"
+  JC_PORTAL_CKAN_API_URL: "http://ckan.{{ .Values.ckan.catalogue.namespace }}.svc.cluster.local:5000"
+{{- end }}
 {{- if $mirrorOwner }}
   # The GitHub organization or user every application repository is copied to (AP-79).
   JC_APP_MIRROR_GITHUB_OWNER: {{ $mirrorOwner | quote }}
@@ -410,6 +418,11 @@ env:
   # client trusts (AP-159, T-3372); the identities part grants it that namespace.
   JC_PORTAL_APP_IDENTITY_NAMESPACE: {{ index .Values "wasm-host" "identities" "appNamespace" | quote }}
   {{- end }}
+{{- end }}
+{{- if has "context-gateway" .Values.components }}
+  # Where the reconciler writes each space's personal-data key as the Secret the gateway mounts,
+  # with the Role context-gateway's portal-access part grants it there (DM-121).
+  JC_PORTAL_GATEWAY_NAMESPACE: {{ index .Values "context-gateway" "gateway" "namespace" | quote }}
 {{- end }}
 {{- if has "mqtt-brokers" .Values.components }}
   # Where the reconciler stamps one release per MqttBroker from the chart's template, with the

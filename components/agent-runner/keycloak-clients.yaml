@@ -145,6 +145,88 @@ helsinki-agent-proxy:
           included.custom.audience: w5vgo2mi6phigetdq3pvvcjgznw73hji
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The area statistics, one Endpoint per theme (T-5258).
+      - name: helsinki-statistics-population-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: hb4cgyuttzzhtgxangivybcsvjx747ui
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-housing-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: fxokhhdfi5kf2sahspabslnxd2ahhr7c
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-employment-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: yvvjivtkvjt7bitgrg34s442gerqo4k2
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-income-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: ciub7zhdbmaqh2gg3e4yau6f6bjvuoax
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-education-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: cparzbvehzoznbb2nuiyzkeudohmdhsq
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-services-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 2otvm3oapms4vsucerjhnywlumdqf3px
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-welfare-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: n7eqxs3kybuh66al65cxadjqp6zxlm3f
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-statistics-environment-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: 6u27vozaruni2uaxbfk2ij3k57yutwfk
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # The heat vulnerability index and the service property energy use (T-5278).
+      - name: helsinki-heat-vulnerability-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: yo2xtons6kf3b6xvzyrursdf6jteaegv
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-service-property-energy-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: vdv6dd5zhwph3ggzjz6xyffu2ikrmvtl
+          access.token.claim: 'true'
+          id.token.claim: 'false'
       - name: helsinki-parking-audience
         protocol: openid-connect
         protocolMapper: oidc-audience-mapper
@@ -183,6 +265,14 @@ helsinki-agent-proxy:
         consentRequired: false
         config:
           included.custom.audience: p2qfrq3sxuoif6okjzhrp4jwul3eeowd
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-feedback-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: gv24bicwway4foznuszsagmzydzk3e2z
           access.token.claim: 'true'
           id.token.claim: 'false'
       # The hub (seed/helsinki/helsinki-endpoint-hub.yaml, T-1209): one door over the live

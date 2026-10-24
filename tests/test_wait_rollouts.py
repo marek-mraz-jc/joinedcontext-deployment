@@ -1,6 +1,7 @@
 """scripts/wait-rollouts.sh against a stub kubectl: a pod that is not ready fails the apply, the old
 pod of a finished rollout does not, even once its containers exited and it shows Error, and
-neither does one attempt of a Job that has not failed."""
+neither does one attempt of a Job that has not failed, nor a failed run of a CronJob whose newer
+run completed."""
 
 import os
 import subprocess
@@ -13,15 +14,15 @@ case "$*" in
   "get ns -o name") echo namespace/dev ;;
   "get pod "*) [ "$LIVE_OWNER" = gone ] && exit 1; printf '%s' "$LIVE_OWNER" ;;
   *deletionTimestamp*) printf '%s' "$DELETING" ;;
-  *ownerReferences*) printf 'old-7f5c \\nnew-8dc8 \\nlane-29840325-mfgw4 lane-29840325\\n' ;;
   "get jobs"*) printf '%s' "$JOBS" ;;
+  *ownerReferences*) printf 'old-7f5c \\nnew-8dc8 \\nlane-29840325-mfgw4 lane-29840325\\n' ;;
   *"--no-headers"*) printf 'old-7f5c 0/2 Error 0 113m\\nnew-8dc8 2/2 Running 0 3m\\njob-x 0/1 Completed 0 1h\\nlane-29840325-mfgw4 0/2 Error 0 4m\\n%s' "$LATE" ;;
   *) ;;
 esac
 """
 
 
-def run(tmp_path: Path, deleting: str, jobs: str = "lane-29840325 \n", late: str = "", live_owner: str = "") -> subprocess.CompletedProcess:
+def run(tmp_path: Path, deleting: str, jobs: str = "lane-29840325|||lane|2026-10-24T08:00:00Z\n", late: str = "", live_owner: str = "") -> subprocess.CompletedProcess:
     stub = tmp_path / "kubectl"
     stub.write_text(KUBECTL)
     stub.chmod(0o755)
@@ -49,9 +50,29 @@ def test_an_attempt_of_a_job_still_retrying_is_not_a_failure(tmp_path):
 
 
 def test_the_pod_of_a_failed_job_fails_the_apply(tmp_path):
-    done = run(tmp_path, "old-7f5c\n", jobs="lane-29840325 True\n")
+    done = run(tmp_path, "old-7f5c\n", jobs=FAILED)
     assert done.returncode == 1
     assert "--- not ready: dev/lane-29840325-mfgw4" in done.stdout
+
+
+FAILED = "lane-29840325|True||lane|2026-10-24T08:00:00Z\n"
+
+
+def test_a_failed_cronjob_run_a_newer_run_completed_is_not_a_failure(tmp_path):
+    # One run failed while the upgrade restarted Gitea, the next one completed (ci-full 40074726891).
+    done = run(tmp_path, "old-7f5c\n", jobs=FAILED + "lane-29840330||True|lane|2026-10-24T08:05:00Z\n")
+    assert done.returncode == 0, done.stdout
+
+
+def test_a_failed_cronjob_run_newer_than_its_last_success_fails_the_apply(tmp_path):
+    done = run(tmp_path, "old-7f5c\n", jobs="lane-29840320||True|lane|2026-10-24T07:55:00Z\n" + FAILED)
+    assert done.returncode == 1
+    assert "--- not ready: dev/lane-29840325-mfgw4" in done.stdout
+
+
+def test_a_success_of_another_cronjob_does_not_excuse_a_failed_run(tmp_path):
+    done = run(tmp_path, "old-7f5c\n", jobs=FAILED + "seed-29840330||True|seed|2026-10-24T08:05:00Z\n")
+    assert done.returncode == 1
 
 
 LATE = "token-29861355-w8scj 0/2 ContainerCreating 0 3s\n"
