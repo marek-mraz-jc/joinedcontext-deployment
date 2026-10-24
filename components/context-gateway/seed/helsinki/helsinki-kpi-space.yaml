@@ -20,6 +20,13 @@ spec:
   retention:
     - entityType: KeyPerformanceIndicator
       history: P30D
+      # A row when a value moves, and one a month for an indicator that stands still, such as HSL's
+      # November 2016 boardings (T-5254), which a daily read rewrites unchanged; `updatedAt` is the
+      # run's own clock and no measurement.
+      record: onChange
+      heartbeat: P30D
+      attributes:
+        updatedAt: { record: never }
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the HSL area with a margin; a KeyPerformanceIndicator outside it is flagged, never refused (DM-87).
   quality:

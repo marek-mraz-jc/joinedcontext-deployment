@@ -235,3 +235,16 @@ def test_gomemlimit_is_off_by_default_and_refuses_what_it_cannot_read(tmp_path):
         with pytest.raises(subprocess.CalledProcessError) as refused:
             render_workload(tmp_path / name, values)
         assert reason in refused.value.stderr, name
+
+
+@requires_helm
+def test_recreate_stops_the_old_pod_without_a_rolling_block(tmp_path):
+    """T-5311: a single-writer workload opts into Recreate; Kubernetes refuses rollingUpdate beside it."""
+    dep = find_resource(render_workload(tmp_path, {"updateStrategy": "Recreate"}), "Deployment")
+    assert dep["spec"]["strategy"] == {"type": "Recreate"}
+
+
+@requires_helm
+def test_an_unknown_update_strategy_fails_the_render(tmp_path):
+    with pytest.raises(subprocess.CalledProcessError):
+        render_workload(tmp_path, {"updateStrategy": "OnDelete"})

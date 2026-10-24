@@ -40,6 +40,12 @@
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
     },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "KpiPeriod": {
+      "@id": "jc:KpiPeriod"
+    },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
@@ -86,6 +92,9 @@
     "allowedVehicleType": {
       "@id": "sdm:allowedVehicleType"
     },
+    "area": {
+      "@id": "sdm:area"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
@@ -93,6 +102,20 @@
     "availableSpotNumber": {
       "@id": "sdm:availableSpotNumber",
       "@type": "xsd:integer"
+    },
+    "calculatedBy": {
+      "@id": "sdm:calculatedBy"
+    },
+    "calculationFrequency": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:calculationFrequency"
+    },
+    "calculationPeriod": {
+      "@id": "sdm:calculationPeriod"
     },
     "capacityByType": {
       "@id": "jc:capacityByType",
@@ -138,6 +161,9 @@
       "@container": "@language",
       "@id": "schema:description"
     },
+    "dimensionKey": {
+      "@id": "jc:dimensionKey"
+    },
     "directionId": {
       "@id": "jc:directionId",
       "@type": "xsd:integer"
@@ -177,6 +203,10 @@
       "@id": "sdm:freeSlotNumber",
       "@type": "xsd:integer"
     },
+    "from": {
+      "@id": "sdm:from",
+      "@type": "xsd:date"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
     "hasParentStation": {
       "@id": "sdm:hasParentStation",
@@ -202,6 +232,10 @@
       "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
     "language": {
       "@id": "sdm:language"
     },
@@ -241,6 +275,9 @@
     "operatedBy": {
       "@id": "sdm:operatedBy",
       "@type": "@id"
+    },
+    "organization": {
+      "@id": "sdm:organization"
     },
     "page": {
       "@id": "sdm:page",
@@ -291,8 +328,15 @@
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
     },
+    "process": {
+      "@id": "sdm:process"
+    },
     "publicAreaPermits": {
       "@id": "jc:publicAreaPermits",
+      "@type": "@id"
+    },
+    "refArea": {
+      "@id": "jc:refArea",
       "@type": "@id"
     },
     "refDistrict": {
@@ -370,6 +414,9 @@
       "@id": "schema:startDate",
       "@type": "xsd:dateTime"
     },
+    "statisticsTable": {
+      "@id": "jc:statisticsTable"
+    },
     "status": {
       "@id": "sdm:status"
     },
@@ -399,6 +446,10 @@
     "timezone": {
       "@id": "sdm:timezone"
     },
+    "to": {
+      "@id": "sdm:to",
+      "@type": "xsd:date"
+    },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
       "@type": "xsd:integer"
@@ -422,6 +473,10 @@
     "type": "@type",
     "unknownReference": {
       "@id": "jc:unknownReference"
+    },
+    "updatedAt": {
+      "@id": "sdm:updatedAt",
+      "@type": "xsd:dateTime"
     },
     "url": {
       "@id": "schema:url",
@@ -456,6 +511,58 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "jc:zoneCode"
+    },
+    "ServiceRequest": {
+      "@id": "sdm:service_requests"
+    },
+    "address_string": {
+      "@id": "sdm:address_string"
+    },
+    "agency_responsible": {
+      "@id": "sdm:agency_responsible"
+    },
+    "expected_datetime": {
+      "@id": "sdm:expected_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "isAccessibleForFree": {
+      "@id": "schema:isAccessibleForFree",
+      "@type": "xsd:boolean"
+    },
+    "requested_datetime": {
+      "@id": "sdm:requested_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "service_code": {
+      "@id": "sdm:service_code"
+    },
+    "service_name": {
+      "@id": "sdm:service_name"
+    },
+    "service_request_id": {
+      "@id": "sdm:service_request_id"
+    },
+    "status_notes": {
+      "@id": "sdm:status_notes"
+    },
+    "subEvent": {
+      "@id": "sdm:subEvent",
+      "@type": "@id"
+    },
+    "superEvent": {
+      "@id": "sdm:superEvent",
+      "@type": "@id"
+    },
+    "thematic": {
+      "@id": "sdm:thematic"
+    },
+    "updated_datetime": {
+      "@id": "sdm:updated_datetime",
+      "@type": "xsd:dateTime"
+    },
+    "webSite": {
+      "@id": "sdm:webSite",
+      "@type": "xsd:anyURI"
     },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"

@@ -45,6 +45,7 @@ spec:
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:spotreba-vody-obyvatel-mesto".format($domain, $space),
         "type": "KeyPerformanceIndicator",
         "name": { "type": "Property", "value": "spotreba-vody-obyvatel-mesto" },
+        "title": { "type": "LanguageProperty", "languageMap": { "sk": "Fakturovaná spotreba pitnej vody na obyvateľa za deň", "en": "Invoiced drinking water per inhabitant per day" } },
         "currentValue": if $litres_per_person_day == null { { "type": "Property", "value": "not measured" } } else {
           { "type": "Property", "value": $litres_per_person_day.round(), "unitCode": "LTR", "observedAt": $water.dateObserved.value }
         },

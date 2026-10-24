@@ -6,6 +6,12 @@
 # position and name and no temperature, rather than with a zero nobody measured. A sensor's
 # `servicemap_url` names the beach in the city's service register, and that unit is the
 # PointOfInterest the services pipeline writes, so the reading points at it.
+#
+# Not every unit is one the services pipeline writes: 12 of the 28 sensors on 2026-10-23 name a
+# Vantaa or Espoo beach, a swimming place (service 730), a winter swimming spot, a carpet washing
+# pier or a harbour, and the gateway refuses a link to an entity the space does not hold (DM-70),
+# which lost those readings on prod. So the pipeline asks the space which of the named units it
+# holds and links only those; a failed ask writes every reading without its link this round.
 
 pipeline:
   processors:
@@ -33,3 +39,32 @@ pipeline:
           "dataProvider": { "type": "Property", "value": "Forum Virium Helsinki, Uiras beach sensors" },
           "source": { "type": "Property", "value": "https://iot.fvh.fi/opendata/uiras/uiras_latest.geojson" }
         }.filter(entry -> entry.value != null))
+
+    - branch:
+        request_map: |
+          let units = this.filter(e -> e.refPointOfInterest != null).map_each(e -> e.refPointOfInterest.object).unique()
+          root = if $units.length() == 0 { deleted() } else { {
+            "type": "Query",
+            "entities": $units.map_each(id -> { "id": id, "type": "PointOfInterest" })
+          } }
+        processors:
+          - try:
+              - http:
+                  url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
+                  verb: POST
+                  headers: { Content-Type: application/json }
+                  oauth2:
+                    enabled: true
+                    client_key: ${JC_CLIENT_ID}
+                    client_secret: ${JC_CLIENT_SECRET}
+                    token_url: ${JC_TOKEN_URL}
+                  timeout: 20s
+                  rate_limit: pipeline_egress
+              - mapping: 'root = { "held": this.map_each(e -> e.id) }'
+          - catch:
+              - mapping: 'root = { "held": [] }'
+        result_map: meta held = this.held.join(" ")
+
+    - mapping: |
+        let held = @held.or("").split(" ")
+        root = this.map_each(e -> if e.refPointOfInterest != null && !$held.contains(e.refPointOfInterest.object) { e.without("refPointOfInterest") } else { e })

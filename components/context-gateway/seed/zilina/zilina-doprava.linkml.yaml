@@ -209,6 +209,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovisko
+          cs: Parkoviště
+          en: Car park
+          de: Parkplatz
     slots:
       - name
       - availableSpotNumber
@@ -223,6 +230,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Vozidlo
+          cs: Vozidlo
+          en: Vehicle
+          de: Fahrzeug
     slots:
       - name
       - vehicleType
@@ -241,6 +255,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie dopravy
+          cs: Sčítání dopravy
+          en: Traffic count
+          de: Verkehrszählung
     slots:
       - name
       - intensity
@@ -255,4 +276,11 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Streetlighting
+      label:
+        tag: label
+        value:
+          sk: Pouličné osvetlenie
+          cs: Pouliční osvětlení
+          en: Streetlight
+          de: Straßenlaterne
     slots: [name, dataProvider, source]

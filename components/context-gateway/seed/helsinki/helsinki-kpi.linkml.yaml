@@ -35,6 +35,13 @@ slots:
       without parsing the URN.
     required: true
     annotations: { ngsi_ld_kind: Property }
+  title:
+    slot_uri: jc:title
+    description: >-
+      The indicator's human name, one text per language of the space, such as `{sk: Index
+      starnutia, en: Ageing index}`: what a table labels the row with, because `name` is the
+      slug. Optional: an indicator written before it, or by a writer that names none, has none.
+    annotations: { ngsi_ld_kind: LanguageProperty }
   currentValue:
     slot_uri: jc:currentValue
     description: >-
@@ -107,6 +114,7 @@ classes:
     is_a: Entity
     slots:
       - name
+      - title
       - currentValue
       - calculationPeriod
       - calculationFormula

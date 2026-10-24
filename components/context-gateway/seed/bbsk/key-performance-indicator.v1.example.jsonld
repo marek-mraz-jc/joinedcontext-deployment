@@ -9,6 +9,13 @@
     "type": "Property",
     "value": "emisie-tuhe-km2-okres-brezno"
   },
+  "title": {
+    "type": "LanguageProperty",
+    "languageMap": {
+      "sk": "Emisie tuhých znečisťujúcich látok na km², okres Brezno",
+      "en": "Solid particulate emissions per square kilometre, Brezno district"
+    }
+  },
   "currentValue": {
     "type": "Property",
     "value": 0.3,

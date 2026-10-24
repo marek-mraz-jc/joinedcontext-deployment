@@ -1,0 +1,17 @@
+# The city's sub-district register (osa-alueet) as codes only, the first read of the statistics
+# pipeline (T-5258): an indicator of a sub-district links its AdministrativeArea only when this
+# register holds the code. The same open WFS layer as `hel-subdistricts`, without the outlines.
+# No key. CC-BY-4.0, read from the HRI catalogue (package helsingin-piirijako).
+apiVersion: joinedcontext.com/v1alpha1
+kind: DataSource
+metadata:
+  name: hel-subdistrict-codes
+  namespace: helsinki
+  title: { en: City sub-district codes (osa-alueet), fi: Osa-alueiden tunnukset }
+spec:
+  type: http
+  http:
+    url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&typeNames=avoindata:Piirijako_osaalue&propertyName=kokotunnus
+    verb: GET
+    headers: { Accept: application/json }
+    timeout: 30s

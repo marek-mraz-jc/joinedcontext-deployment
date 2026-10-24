@@ -204,6 +204,7 @@ policy/v1/PodDisruptionBudget staging/keycloak-app-keycloakx
 policy/v1/PodDisruptionBudget staging/model-tools
 policy/v1/PodDisruptionBudget staging/observability-collector
 policy/v1/PodDisruptionBudget staging/portal
+policy/v1/PodDisruptionBudget staging/portal-ui
 postgresql.cnpg.io/v1/Cluster staging/postgres-cluster
 postgresql.cnpg.io/v1/Database staging/antares
 postgresql.cnpg.io/v1/Database staging/gitea
@@ -226,6 +227,7 @@ rbac.authorization.k8s.io/v1/Role staging/gitea-bootstrap
 rbac.authorization.k8s.io/v1/Role staging/portal
 rbac.authorization.k8s.io/v1/Role staging/portal-build-pods
 rbac.authorization.k8s.io/v1/Role staging/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role staging/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role staging/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role staging/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/Role staging/postgres-operator-cloudnative-pg
@@ -235,6 +237,7 @@ rbac.authorization.k8s.io/v1/RoleBinding staging/gitea-bootstrap
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding staging/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding staging/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding staging/postgres-operator-cloudnative-pg

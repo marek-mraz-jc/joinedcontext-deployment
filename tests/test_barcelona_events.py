@@ -125,7 +125,7 @@ def test_the_datasource_reads_the_three_agendas_in_one_query_from_open_data_bcn(
 
 def test_the_pipeline_runs_daily_through_the_one_door_and_the_endpoint_publishes_events_only():
     pipeline = yaml.safe_load((BARCELONA / "barcelona-pipeline-agenda.yaml").read_text())["spec"]
-    assert pipeline["period"] == "24h" and pipeline["output"] == {"type": "Event", "mode": "upsert"}
+    assert pipeline["schedule"] == "17 6 * * *" and pipeline["output"] == {"type": "Event", "mode": "upsert"}
     assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
     endpoint = yaml.safe_load((BARCELONA / "barcelona-endpoint-events.yaml").read_text())["spec"]
     assert endpoint["policyRef"] == "urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-events"
@@ -164,3 +164,18 @@ def test_one_place_within_20_m_is_one_event_and_each_event_expires_by_itself():
     floor = max(midnight, now + timedelta(hours=1)).astimezone(timezone.utc).replace(microsecond=0)
     expires = datetime.strptime(by_id["14"]["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     assert floor <= expires <= max(midnight, floor + timedelta(minutes=1)), (expires, midnight, now)
+
+
+@requires_docker
+def test_a_day_of_a_summer_time_change_starts_at_the_offset_its_midnight_has():
+    # 2026-10-25 and 2027-03-28 change at 01:00Z: their midnights are still +02:00 and +01:00,
+    # their noons already +01:00 and +02:00.
+    base = answer()["result"]["records"][1]
+    events, log, code = run(answer(records=[
+        dict(base, id="21", name="Tardor", starts="2026-10-25", ends="2027-03-28"),
+        dict(base, id="22", name="Primavera", starts="2027-03-28", ends="2027-04-01")]))
+    assert code == 0, log
+    by_id = {e["id"].rsplit(":", 1)[1]: e for e in events}
+    assert by_id["21"]["startDate"]["value"] == "2026-10-25T00:00:00+02:00"
+    assert by_id["21"]["endDate"]["value"] == "2027-03-28T00:00:00+01:00"
+    assert by_id["22"]["startDate"]["value"] == "2027-03-28T00:00:00+01:00"

@@ -471,6 +471,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Stanica zdieľaných bicyklov
+          cs: Stanice sdílených kol
+          en: Bike sharing station
+          de: Leihradstation
     slots:
       - name
       - totalSlotNumber
@@ -486,6 +493,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, dateObserved, pm10, pm25, no2, o3, so2, co, dataProvider, source]
   PointOfInterest:
     class_uri: sdm:PointOfInterest
@@ -496,6 +510,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots:
       - name
       - serviceCategory
@@ -515,6 +536,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+      label:
+        tag: label
+        value:
+          sk: Kontajnerové stanovište
+          cs: Kontejnerové stání
+          en: Waste container site
+          de: Containerstandort
     slots:
       - name
       - stationCode
@@ -529,6 +557,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+      label:
+        tag: label
+        value:
+          sk: Kontajner na odpad
+          cs: Kontejner na odpad
+          en: Waste container
+          de: Abfallbehälter
     slots:
       - name
       - containerCode
@@ -544,6 +579,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovisko
+          cs: Parkoviště
+          en: Car park
+          de: Parkplatz
     slots:
       - name
       - totalSpotNumber
@@ -560,6 +602,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Administrative area
+          de: Verwaltungsgebiet
     slots: [name, districtCode, dataProvider, source, wasteContainerIsles]
   BudgetLine:
     class_uri: jc:BudgetLine
@@ -570,6 +619,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine
+      label:
+        tag: label
+        value:
+          sk: Rozpočtová položka
+          cs: Rozpočtová položka
+          en: Budget line
+          de: Haushaltsposten
     slots:
       - name
       - identifier
@@ -591,6 +647,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Vozidlo
+          cs: Vozidlo
+          en: Vehicle
+          de: Fahrzeug
     slots:
       - name
       - vehicleType

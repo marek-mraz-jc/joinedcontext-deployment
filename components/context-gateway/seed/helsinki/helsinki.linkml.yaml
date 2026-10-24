@@ -547,13 +547,16 @@ slots:
     slot_uri: jc:districtCode
     description: >-
       The city's own code of the area: the district number, or for a sub-district the full
-      ten-digit code the city's statistics use for it.
-    required: true
+      ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its
+      `fareZone`. The districts and sub-districts mappings write no area without it.
     pattern: ^[0-9]{1,10}$
     annotations: { ngsi_ld_kind: Property }
   divisionLevel:
     slot_uri: jc:divisionLevel
-    description: Which of the city's two divisions the area belongs to.
+    description: >-
+      Which of the city's divisions the area belongs to: a district or sub-district for an
+      AdministrativeArea; for a statistics indicator also the city, a major or basic district, or
+      the inner city or the suburbs.
     range: DivisionLevel
     required: true
     annotations: { ngsi_ld_kind: Property }
@@ -583,6 +586,131 @@ slots:
     inverse: refPointOfInterest
     inlined: false
     annotations: { ngsi_ld_kind: Relationship }
+  thematic:
+    slot_uri: sdm:thematic
+    description: >-
+      The event's keywords from the register's YSO terms, in English where the term has an English
+      name and in Finnish otherwise (Smart Data Models Event `thematic`).
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Témy
+          cs: Témata
+          fi: Teemat
+          en: Topics
+          de: Themen
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  isAccessibleForFree:
+    slot_uri: schema:isAccessibleForFree
+    description: True when every offer of the event is free of charge, as the register marks it.
+    range: boolean
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vstup zdarma
+          cs: Vstup zdarma
+          fi: Maksuton
+          en: Free admission
+          de: Eintritt frei
+      ngsi_ld_kind: Property
+      upstream_source: https://schema.org/isAccessibleForFree
+  webSite:
+    slot_uri: sdm:webSite
+    description: The organizer's page for the event, the register's `info_url` in Finnish, else English or Swedish.
+    range: uri
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Webová stránka
+          cs: Webová stránka
+          fi: Verkkosivu
+          en: Website
+          de: Webseite
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  superEvent:
+    slot_uri: sdm:superEvent
+    description: The recurring or umbrella event this event is one date or part of.
+    range: Event
+    inverse: subEvent
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  subEvent:
+    slot_uri: sdm:subEvent
+    description: The dates and parts of this event, computed from their superEvent and never stored.
+    range: Event
+    multivalued: true
+    inverse: superEvent
+    inlined: false
+    annotations:
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
+  service_request_id:
+    slot_uri: sdm:service_request_id
+    description: The number the city's feedback system gives the report (Open311 `service_request_id`).
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  service_code:
+    slot_uri: sdm:service_code
+    description: The feedback system's code of the sector the report is filed under, for example 2809.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  service_name:
+    slot_uri: sdm:service_name
+    description: The sector's name in English, read from the feedback system's services list, for example City environment.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  status_notes:
+    slot_uri: sdm:status_notes
+    description: The city's answer or note on the report, as published.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  agency_responsible:
+    slot_uri: sdm:agency_responsible
+    description: The city unit handling the report, when the feedback system names one.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  requested_datetime:
+    slot_uri: sdm:requested_datetime
+    description: When the report was filed, ISO 8601 in UTC.
+    range: datetime
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  updated_datetime:
+    slot_uri: sdm:updated_datetime
+    description: When the report last changed, ISO 8601 in UTC.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  expected_datetime:
+    slot_uri: sdm:expected_datetime
+    description: When the city expects to have handled the report, if it says.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+  address_string:
+    slot_uri: sdm:address_string
+    description: The street or place the reporter named, as written, for example Malminkatu.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
   publicAreaPermits:
     slot_uri: jc:publicAreaPermits
     description: The public-area permits that lie in this district, computed from their refDistrict and never stored.
@@ -591,13 +719,21 @@ slots:
     inverse: refDistrict
     inlined: false
     annotations: { ngsi_ld_kind: Relationship }
+  areaIndicators:
+    slot_uri: jc:areaIndicators
+    description: The statistics indicators that describe this sub-district, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship }
   stopCode:
     slot_uri: jc:stopCode
     description: The code on the stop's sign, such as H2014; empty for a stop HSL gives none.
     annotations: { ngsi_ld_kind: Property }
   fareZone:
     slot_uri: jc:fareZone
-    description: The HSL fare zone the stop lies in, A to D; none for a stop beyond HSL's zones.
+    description: The HSL fare zone the stop or the sales point lies in, A to D; none for a place beyond HSL's zones.
     pattern: ^[A-Z]$
     annotations: { ngsi_ld_kind: Property }
   routeShortName:
@@ -790,6 +926,98 @@ slots:
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+  kpiValue:
+    slot_uri: sdm:kpiValue
+    description: >-
+      The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count,
+      P1 a percentage, EUR euros, MTK square metres) and the period's last day as `observedAt`,
+      so the history holds one value per period.
+    range: float
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationPeriod:
+    slot_uri: sdm:calculationPeriod
+    description: The period the value covers, its first and last day.
+    range: KpiPeriod
+    inlined: true
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  from:
+    slot_uri: sdm:from
+    description: The first day of the period.
+    range: date
+    required: true
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  to:
+    slot_uri: sdm:to
+    description: The last day of the period.
+    range: date
+    required: true
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationFrequency:
+    slot_uri: sdm:calculationFrequency
+    description: How often the source publishes a new period.
+    range: CalculationFrequency
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculatedBy:
+    slot_uri: sdm:calculatedBy
+    description: The organization that computes the value.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  organization:
+    slot_uri: sdm:organization
+    description: The organization the indicator describes.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  process:
+    slot_uri: sdm:process
+    description: The statistics table the value comes from, in the source's words.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  area:
+    slot_uri: sdm:area
+    description: The name of the area the value describes, a sub-district, district or the whole city.
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  refArea:
+    slot_uri: jc:refArea
+    description: >-
+      The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the
+      city's register holds; a district or the whole city is named by `area` and `districtCode`.
+    range: AdministrativeArea
+    inverse: areaIndicators
+    inlined: false
+    annotations: { ngsi_ld_kind: Relationship, on_delete: set-null }
+  statisticsTable:
+    slot_uri: jc:statisticsTable
+    description: The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it.
+    pattern: ^([a-z]+_[a-z]+_[0-9]{3}[a-z]|[a-z]+(-[a-z]+)+)$
+    annotations: { ngsi_ld_kind: Property }
+  dimensionKey:
+    slot_uri: jc:dimensionKey
+    description: >-
+      Which cell of the table the value is: each kept dimension and its code, such as
+      Sukupuoli=ALL;Tiedot=tyottomyysaste.
+    annotations: { ngsi_ld_kind: Property }
+  updatedAt:
+    slot_uri: sdm:updatedAt
+    description: When the source last updated the table.
+    range: datetime
+    annotations:
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
 
   dateObservedFrom:
     slot_uri: sdm:dateObservedFrom
@@ -841,7 +1069,40 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Event
-    slots: [name, description, startDate, endDate, eventStatus, address, contactPoint, source]
+      label:
+        tag: label
+        value:
+          sk: Podujatie
+          cs: Akce
+          en: Event
+          de: Veranstaltung
+    slots:
+      - name
+      - description
+      - startDate
+      - endDate
+      - eventStatus
+      - address
+      - thematic
+      - isAccessibleForFree
+      - webSite
+      - superEvent
+      - subEvent
+      - contactPoint
+      - source
+    attributes:
+      # Its own slot, because the shared refPointOfInterest is already WaterQualityObserved's end of
+      # another relationship; the attribute name and IRI are Smart Data Models' all the same. No
+      # range: an event can name a unit the Service Map read does not hold (a venue outside
+      # Helsinki), so it is an external reference (DM-69), not a relationship the broker checks.
+      refPointOfInterest:
+        slot_uri: sdm:refPointOfInterest
+        description: >-
+          The venue as the city's service register knows it: a Linked Events `tprek:` place is the
+          Service Map unit of that number, written by the services pipeline.
+        annotations:
+          ngsi_ld_kind: Relationship
+          upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations
     slot_usage:
       name:
         rank: 1
@@ -925,17 +1186,29 @@ classes:
               de: Kontakt
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
-    description: One HSL city bike station, its position and what it holds right now.
+    description: >-
+      One city bike station, its position and what it holds right now: HSL's stations from the live
+      GBFS feed, and City Bike Vantaa's stations from HSL's register, which carries their address and
+      number of slots but no live count.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Stanica zdieľaných bicyklov
+          cs: Stanice sdílených kol
+          en: Bike sharing station
+          de: Leihradstation
     slots:
       - name
       - availableBikeNumber
       - freeSlotNumber
       - totalSlotNumber
       - status
+      - address
       - dateModified
+      - dataProvider
       - source
     slot_usage:
       name:
@@ -997,12 +1270,29 @@ classes:
               fi: Tila
               en: Status
               de: Status
+      address:
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Adresa
+              cs: Adresa
+              fi: Osoite
+              en: Address
+              de: Adresse
   Vehicle:
     class_uri: sdm:Vehicle
     description: One HSL bus, tram, metro, train or ferry in service, where it is, how fast it moves and how late it runs.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Vozidlo
+          cs: Vozidlo
+          en: Vehicle
+          de: Fahrzeug
     slots:
       - speed
       - heading
@@ -1103,6 +1393,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
+      label:
+        tag: label
+        value:
+          sk: Článok
+          cs: Článek
+          en: Article
+          de: Artikel
     slots: [identifier, name, description, url, datePublished, image, source]
   WeatherObserved:
     class_uri: sdm:WeatherObserved
@@ -1110,6 +1407,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
+      label:
+        tag: label
+        value:
+          sk: Meranie počasia
+          cs: Měření počasí
+          en: Weather reading
+          de: Wetterbeobachtung
     slots:
       - name
       - dateObserved
@@ -1219,6 +1523,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
+      label:
+        tag: label
+        value:
+          sk: Upozornenie
+          cs: Upozornění
+          en: Alert
+          de: Warnung
     slots:
       - name
       - description
@@ -1244,6 +1555,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality ovzdušia
+          cs: Měření kvality ovzduší
+          en: Air quality reading
+          de: Luftqualitätsmessung
     slots: [name, dateObserved, pm10, pm25, airQualityIndex, stewardNote, source]
     slot_usage:
       name:
@@ -1309,17 +1627,27 @@ classes:
     class_uri: sdm:PointOfInterest
     description: >-
       One place of the city's service register a resident goes to: a library, a health station,
-      a swimming hall, a beach or a school. The register's contact lines are left out, because
-      they can name a person.
+      a swimming hall, a beach, a school, or any other unit of the register (`other`); or one of
+      HSL's ticket sales points (a kiosk, a service point, a ticket machine or a parking meter that
+      sells tickets). The register's contact lines are left out, because they can name a person.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Place
+          de: Ort
     slots:
       - name
       - serviceCategory
       - address
       - url
       - openingHours
+      - description
+      - fareZone
       - dateModified
       - dataProvider
       - source
@@ -1332,6 +1660,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Environment
+      label:
+        tag: label
+        value:
+          sk: Meranie kvality vody
+          cs: Měření kvality vody
+          en: Water quality reading
+          de: Wasserqualitätsmessung
     slots: [name, temperature, dateObserved, refPointOfInterest, dataProvider, source]
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -1343,6 +1678,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovanie na ulici
+          cs: Parkování na ulici
+          en: On-street parking
+          de: Parken an der Straße
     slots: [name, category, totalSpotNumber, zoneCode, description, url, dataProvider, source]
     slot_usage:
       category:
@@ -1358,6 +1700,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovisko
+          cs: Parkoviště
+          en: Car park
+          de: Parkplatz
     slots:
       - name
       - status
@@ -1378,6 +1727,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Práce v meste
+          cs: Práce ve městě
+          en: City works
+          de: Bauarbeiten in der Stadt
     slots:
       - name
       - permitKind
@@ -1398,13 +1754,35 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
-    slots: [name, districtCode, divisionLevel, dataProvider, source, publicAreaPermits]
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Administrative area
+          de: Verwaltungsgebiet
+    slots:
+      - name
+      - districtCode
+      - divisionLevel
+      - fareZone
+      - dataProvider
+      - source
+      - publicAreaPermits
+      - areaIndicators
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Zastávka
+          cs: Zastávka
+          en: Stop
+          de: Haltestelle
     slots:
       - name
       - stopCode
@@ -1427,6 +1805,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka MHD
+          cs: Linka MHD
+          en: Public transport route
+          de: ÖPNV-Linie
     slots:
       - name
       - route
@@ -1444,6 +1829,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Stanica
+          cs: Stanice
+          en: Station
+          de: Station
     slots:
       - name
       - fareZone
@@ -1460,6 +1852,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Dopravca
+          cs: Dopravce
+          en: Transit agency
+          de: Verkehrsunternehmen
     slots: [agencyName, page, timezone, language, phone, routes, dataProvider, source]
   GtfsRoute:
     class_uri: sdm:GtfsRoute
@@ -1469,6 +1868,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Linka
+          cs: Linka
+          en: Route
+          de: Linie
     slots:
       - shortName
       - name
@@ -1487,8 +1893,88 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
+      label:
+        tag: label
+        value:
+          sk: Trasa linky
+          cs: Trasa linky
+          en: Route shape
+          de: Linienverlauf
     slots: [name, distanceTravelled, dataProvider, source]
 
+  ServiceRequest:
+    class_uri: sdm:service_requests
+    description: >-
+      One report of the City of Helsinki's feedback system (Open311 GeoReport v2, the Issue
+      Reporting API) that the city published. Smart Data Models names the type service_requests;
+      the space names it ServiceRequest like its other types, with the model's attribute names.
+      The reporter's name, e-mail, phone and photos are never read.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.IssueTracking
+    slots:
+      - service_request_id
+      - status
+      - description
+      - service_code
+      - service_name
+      - status_notes
+      - agency_responsible
+      - requested_datetime
+      - updated_datetime
+      - expected_datetime
+      - address_string
+      - source
+    slot_usage:
+      status:
+        range: ServiceRequestStatus
+        description: open while the city handles the report (PROCESSING), closed once it has answered (READY).
+        required: true
+      description:
+        description: The report as the reporter wrote it, in the language they wrote it in (`@none`).
+
+  KeyPerformanceIndicator:
+    class_uri: sdm:KeyPerformanceIndicator
+    description: >-
+      One indicator of the city's area statistics (Aluesarjat) for one area: the newest period's
+      value, its history one row per period. Read daily from stat.hel.fi.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+    slots:
+      - name
+      - description
+      - kpiValue
+      - calculationPeriod
+      - calculationFrequency
+      - area
+      - districtCode
+      - divisionLevel
+      - refArea
+      - process
+      - statisticsTable
+      - dimensionKey
+      - calculatedBy
+      - organization
+      - updatedAt
+      - dataProvider
+      - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations: { summary: true }
+      kpiValue:
+        rank: 2
+        annotations: { summary: true }
+      area:
+        rank: 3
+        annotations: { summary: true }
+      districtCode: { required: false }
+      divisionLevel: { required: false }
+  KpiPeriod:
+    class_uri: jc:KpiPeriod
+    description: The value of `calculationPeriod`, never an entity of its own.
+    slots: [from, to]
   TrafficFlowObserved:
     class_uri: sdm:TrafficFlowObserved
     description: >-
@@ -1499,6 +1985,13 @@ classes:
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie dopravy
+          cs: Sčítání dopravy
+          en: Traffic count
+          de: Verkehrszählung
     slots:
       - name
       - dateObserved
@@ -1530,6 +2023,12 @@ classes:
     slots: [streetAddress, postalCode, addressLocality, addressCountry]
 
 enums:
+  CalculationFrequency:
+    permissible_values:
+      daily: { description: A new value every day. }
+      monthly: { description: A new value every month. }
+      quarterly: { description: A new value every quarter. }
+      yearly: { description: A new value every year. }
   ServiceCategory:
     permissible_values:
       library: { description: A public library. }
@@ -1537,6 +2036,19 @@ enums:
       swimmingHall: { description: An indoor swimming hall. }
       beach: { description: A public beach. }
       school: { description: A comprehensive school. }
+      other:
+        description: Any other unit of the service register, such as a youth centre, a playground or a city office.
+      ticketSalesPoint: { description: An HSL ticket sales point in a shop or kiosk (Myyntipiste). }
+      ticketServicePoint: { description: An HSL customer service point (Palvelupiste). }
+      ticketMachine:
+        description: An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).
+      ticketParkingMeter:
+        description: A parking meter that also sells HSL tickets (Pysäköintiautomaatti).
+  ServiceRequestStatus:
+    description: Open311's two report states, as Smart Data Models' service_requests names them.
+    permissible_values:
+      open: { description: The city is handling the report (the feedback system's PROCESSING). }
+      closed: { description: The city has answered the report (READY). }
   StreetParkingCategory:
     description: The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
     permissible_values:
@@ -1559,10 +2071,19 @@ enums:
       teardown: { description: The event's structures are being taken down. }
   DivisionLevel:
     permissible_values:
+      city: { description: The whole city (statistics only). }
+      majorDistrict:
+        description: A major district (suurpiiri), 8 of them (statistics only).
+      basicDistrict:
+        description: A basic district (peruspiiri), 34 of them (statistics only).
+      cityPart:
+        description: The inner city (kantakaupunki) or the suburbs (esikaupungit) (statistics only).
       district:
         description: A district (kaupunginosa), 60 of them.
       subDistrict:
         description: A sub-district (osa-alue), the unit the city's statistics use.
+      fareZone:
+        description: An HSL fare zone (A, B, C or D), the area a ticket is valid in.
   TransportMode:
     permissible_values:
       bus: { description: A bus. }
