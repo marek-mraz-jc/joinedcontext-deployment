@@ -213,10 +213,10 @@ slots:
   category:
     slot_uri: sdm:category
     description: >-
-      The event's main category, one code of the platform's list of 15 (docs API/12-event-categories.md),
+      The event's main category, one code of the platform's list of 16 (docs API/12-event-categories.md),
       picked by the rule table seeds/event-categories.json from the source's own word, the name or the kind of
-      body that announced it (`music`, `sport`). A list of one, as Smart Data Models' Event writes `category`;
-      absent when no rule names the event.
+      body that announced it (`music`, `sport`), else by the decision model's cached answer (T-5490). A list of
+      one, as Smart Data Models' Event writes `category`; absent while neither has named the event.
     range: EventCategory
     multivalued: true
     annotations:
@@ -231,9 +231,11 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.TourismDestinations/blob/master/Event/schema.json
   categorySource:
     slot_uri: jc:categorySource
-    description: How `category` was picked; `rule` is the rule table, the only way today.
+    description: >-
+      How `category` was picked: `rule` the rule table, `model` the decision model's cached answer for an event no
+      rule decides (scripts/events-classify.py, T-5490).
     range: string
-    pattern: ^rule$
+    pattern: ^(rule|model)$
     annotations:
       label:
         tag: label
@@ -351,6 +353,22 @@ slots:
           en: Location precision
           de: Genauigkeit des Orts
       ngsi_ld_kind: Property
+  locationSource:
+    slot_uri: jc:locationSource
+    description: >-
+      Who placed `location`: `feed` the publisher, `register-adries`, `overpass`, `nominatim` or `hand` the venue
+      table's row (seeds/bbsk-events/venues.csv), `towns` the town table's office or centre (T-5490).
+    range: string
+    pattern: ^(feed|register-adries|overpass|nominatim|hand|towns)$
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj polohy
+          cs: Zdroj polohy
+          en: Location placed by
+          de: Ort bestimmt durch
+      ngsi_ld_kind: Property
   areaServed:
     slot_uri: sdm:areaServed
     description: >-
@@ -447,6 +465,7 @@ classes:
       - endDate
       - location
       - locationPrecision
+      - locationSource
       - venue
       - refPointOfInterest
       - areaServed
@@ -745,6 +764,16 @@ enums:
               cs: Komunita a samospráva
               en: Community and civic life
               de: Gemeinschaft und Bürgerleben
+      other:
+        description: No other code fits; only the decision model gives it (T-5490), never the rule table.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Iné
+              cs: Jiné
+              en: Other
+              de: Sonstiges
   EventAudience:
     description: The Smart Data Models Event audience codes the pipelines write.
     permissible_values:

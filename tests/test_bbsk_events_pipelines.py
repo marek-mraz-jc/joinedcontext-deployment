@@ -12,6 +12,7 @@ Without a container runtime the Bento cases skip; the seed and inventory cases d
 
 import copy
 import csv
+import hashlib
 import json
 import os
 import re
@@ -1050,11 +1051,30 @@ def test_an_event_no_rule_names_has_no_category_unless_its_body_holds_one_kind()
     assert [e["category"]["value"] for e in categorised(cases, "theatre (Divadlo GUnaGU)")] == [["theatre-dance"]] * 2
 
 
+@requires_docker
+def test_an_event_no_rule_names_takes_the_decision_models_cached_answer(monkeypatch):
+    """scripts/events-classify.py caches a code per source and hash of name and venue; the pipeline reads it (T-5490)."""
+    cached = hashlib.sha256("zdruff|".encode()).hexdigest()[:16]
+    monkeypatch.setitem(generate.DECIDED, "https://www.casta.sk/", {cached: "children-family"})
+    cases = [("ostatné (nešpecifikované/ostatné)", "ZDRUFF"), (None, "Hriešnice"), (None, "Koncert skupiny FIDEM")]
+    zdruff, unknown, ruled = categorised(cases)
+    assert (zdruff["category"]["value"], zdruff["categorySource"]["value"]) == (["children-family"], "model")
+    assert zdruff["audience"]["value"] == ["family"]
+    assert VALID.is_valid(key_values(zdruff)), list(VALID.iter_errors(key_values(zdruff)))
+    # Not cached: no category until the next offline run; a rule's answer beats the cache.
+    assert {"category", "categorySource"}.isdisjoint(unknown)
+    assert (ruled["category"]["value"], ruled["categorySource"]["value"]) == (["music"], "rule")
+
+
 def test_every_category_has_four_labels_a_valid_rule_and_is_the_models_enum():
     cats = generate.CATEGORIES
-    assert len(cats) == 15 and len({c["code"] for c in cats}) == 15
+    assert len(cats) == 16 and len({c["code"] for c in cats}) == 16
+    # `other` has no rule: only the decision model gives it (T-5490).
+    assert [c["code"] for c in cats if c["rule"] is None] == ["other"]
     for c in cats:
         assert set(c["label"]) == {"sk", "cs", "en", "de"} and all(c["label"].values()), c["code"]
+        if c["rule"] is None:
+            continue
         re.compile(c["rule"])
         # RE2 (Bento) has no look-around or back-references.
         assert not re.search(r"\(\?[=!<]|\\[1-9]", c["rule"]), c["code"]
@@ -1080,6 +1100,11 @@ def records(monkeypatch, items: list[dict], town: str = "Cífer", org_type: str 
     return {e["sourceId"]["value"]: e for e in run(steps, json.dumps(payload, ensure_ascii=False), "slovensko-podujatia")}
 
 
+#: Who placed Cífer's culture house in the venue table.
+CIFER_KD = next(v["checked_by"] for v in csv.DictReader((EVENTS / "venues.csv").open(encoding="utf-8"))
+                if (v["town"], v["match"]) == ("cifer", "kultúrny dom"))
+
+
 def town_point(town: str) -> list[float]:
     (row,) = [t for t in csv.DictReader((EVENTS / "towns.csv").open(encoding="utf-8")) if t["town"] == town]
     return [round(float(row["lon"]), 5), round(float(row["lat"]), 5)]
@@ -1100,6 +1125,8 @@ def test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns
     assert out["2"]["locationPrecision"]["value"] == "building" and out["2"]["venue"]["value"] == "Kultúrny dom"
     assert out["2"]["location"]["value"]["coordinates"] == [17.5184876, 48.3025638]
     assert "location" not in out["3"] and "locationPrecision" not in out["3"]
+    # Who placed each point (T-5490): the town table, the feed, the venue table's checker; nobody, no source.
+    assert [out[k].get("locationSource", {}).get("value") for k in "0123"] == ["towns", "feed", CIFER_KD, None]
     # Only the venue table's place links its PointOfInterest; every event names its municipality (DM-141).
     kd = [v for v in generate.venues_for("cifer") if v["venue"] == "Kultúrny dom"][0]
     assert out["2"]["refPointOfInterest"] == {"type": "Relationship",

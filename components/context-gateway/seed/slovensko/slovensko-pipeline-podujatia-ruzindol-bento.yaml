@@ -74,14 +74,14 @@ pipeline:
       map prop {
         root = if this == null { null } else { { "type": "Property", "value": this } }
       }
-      let venues = [{"poi":"osm-way-59011639","match":"obecný úrad ružindol","town":"ruzindol","venue":"Obecný úrad Ružindol","streetAddress":"Hlavná 130/118","addressLocality":"Ružindol","lat":48.3728395,"lon":17.4909281}]
+      let venues = [{"poi":"osm-way-59011639","match":"obecný úrad ružindol","town":"ruzindol","venue":"Obecný úrad Ružindol","streetAddress":"Hlavná 130/118","addressLocality":"Ružindol","lat":48.3728395,"lon":17.4909281,"checked_by":"overpass"}]
       let name = this.name.apply("text")
       let venue_text = this.venue.apply("text")
       let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
       let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
       # An event that names no place, or only the town or its organizer, takes its organizer's own address
       # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
-      let home = if $place == null && ($venue_key == "" || ["celá obec", "mesto", "mesto ružindol", "mestský úrad", "mestský úrad ružindol", "obec", "obec ružindol", "obecný úrad", "obecný úrad ružindol", "ružindol", "ružindol - celá obec", "v obci"].contains($venue_key)) { {"poi":"osm-way-59011639","match":"obecný úrad ružindol","town":"ruzindol","venue":"Obecný úrad Ružindol","streetAddress":"Hlavná 130/118","addressLocality":"Ružindol","lat":48.3728395,"lon":17.4909281} } else { null }
+      let home = if $place == null && ($venue_key == "" || ["celá obec", "mesto", "mesto ružindol", "mestský úrad", "mestský úrad ružindol", "obec", "obec ružindol", "obecný úrad", "obecný úrad ružindol", "ružindol", "ružindol - celá obec", "v obci"].contains($venue_key)) { {"poi":"osm-way-59011639","match":"obecný úrad ružindol","town":"ruzindol","venue":"Obecný úrad Ružindol","streetAddress":"Hlavná 130/118","addressLocality":"Ružindol","lat":48.3728395,"lon":17.4909281,"checked_by":"overpass"} } else { null }
       let known = $place.or($home)
       # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
       let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
@@ -95,7 +95,8 @@ pipeline:
       # precision says which (owner 2026-10-21: at least 90 % with a point; approximate points labelled).
       let feed_lat = this.lat.number().catch(null)
       let feed_lon = this.lon.number().catch(null)
-      let pick = if $feed_lat != null && $feed_lon != null { { "lat": $feed_lat, "lon": $feed_lon, "precision": "source" } } else if $place != null { $place.merge({ "precision": "building" }) } else if $home != null { $home.merge({ "precision": "office" }) } else { $area }
+      # The source says who placed the point: the feed, the venue table's checker, or the town table (T-5490).
+      let pick = if $feed_lat != null && $feed_lon != null { { "lat": $feed_lat, "lon": $feed_lon, "precision": "source", "source": "feed" } } else if $place != null { $place.merge({ "precision": "building", "source": $place.checked_by }) } else if $home != null { $home.merge({ "precision": "office", "source": $home.checked_by }) } else if $area != null { $area.merge({ "source": "towns" }) } else { null }
       let lat = $pick.lat.or(null)
       let lon = $pick.lon.or(null)
       let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
@@ -133,12 +134,16 @@ pipeline:
       let link = this.url.apply("link").or("https://www.ruzindol.sk/obcan/kalendar-podujati/")
       # The main category (T-5363, docs API/12-event-categories.md): the first rule of seeds/event-categories.json
       # matching the source's own word without its audience and catch-all parts, else the name, else the whole word
-      # ("akcie pre deti"), else the kind of body whose calendar it is (a theatre). No match: no category.
-      let rules = [["sport", "šport|sport|futbal|hokej|volejbal|nohejbal|basketbal|hádzan|tenis|kolky|karate|\\bbeh|maratón|turnaj|zápas|pohár|cyklo|korčuľ|plávan|lyžov|šach|atletik|fitnes|zumba|bowling|biliard|súťaž|hasič|krampuslauf|\\brun\\b"], ["outdoor-nature", "turistik|túra|výstup|výlet|príro|vychádzk|pochod|hike|nature|outdoor|jaskyň|splav|rastlín|stromy|záhrad"], ["film", "kino|film|premietan|projekci|cinema|movie"], ["theatre-dance", "divad|činohr|opera|balet|tanec|muzikál|predstaven|inscenác|bábk|repríza|premiér|kabaret|stand-?up|komédi|kúzel|zájazd|theat|dance|sľuk|lúčnic|színház"], ["music", "hudb|hudob|koncert|music|spev|zbor|orchest|kapel|\\bband\\b|trio\\b|kvartet|recitál|jazz|rock|disco|disko|párty|party|karaoke|\\bdj\\b|heligón|dychov|cimbal|organ|folklór|zábava|veselic|tančiare|\\bples|\\bbál\\b|vivaldi|zenekar"], ["festival-fair", "festival|\\bfest\\b|jarmo|\\bhody|hodov|dni obce|dni mesta|slávnos|oslav|karneval|maškar|fašiang|majáles|dožink|vinobran|ohňostroj|vatr|silvest|lampión|halloween|strašidel|tekvič|mikuláš"], ["food-market", "gastro|\\btrh|jedl|ochutnávk|degust|\\bvín|vinár|pivo|guláš|kapustnic|zabíjač|varen|pečen|burz|bazár|punč|kuchár|kuchyn|palacink|coffee|kávy|food|market|swap"], ["exhibition-museum", "výstav|vernisáž|finisáž|kurátor|galéri|múze|muze|expozíc|exhibit|museum|gallery|maľb|insit|sochár|ateliér|salón"], ["history-heritage", "histor|pamiatk|hrad|kaštie|zámo|dejin|výroči|spomienk|piet|vencov|vojn|veterán|\\bsnp\\b|remesl|kódex|prehliadk|baníc|patrón|minulos|dedičstv"], ["faith-tradition", "cirkev|omš|bohoslužb|kostol|púť|svät|modlitb|duchovn|poklon|pobožn|evanjel|reformač|farsk|farnos|biblick|advent|vianoc|vianoč|veľkonoč|dušičk|svetlono|koled|koľad|tradíci"], ["education-talk", "prednášk|seminár|konferenc|besed|workshop|kurz|vzdeláv|diskus|čítan|autorsk|knih|kniž|literár|poézi|poeti|básn|vedeck|\\bved|webinár|info dni|študent|talk|lecture|\\bai\\b|haiku|poviedk|recenzi|kvíz"], ["children-family", "deti|detsk|pre najmenš|rozprávk|rodin|rodič|škôlk|mamičk|story time|kids|children|family"], ["hobby-workshop", "tvoriv|tvoren|tvoríme|dielni|ručné práce|ručných prác|háčkov|pleten|plsten|modrotlač|ikeban|vyrezáv|spoločensk[ýé]ch hier|stolov[áé] hr|chovateľ|fotograf|hobby|craft"], ["health-wellness", "zdrav|wellness|cvičen|pohyb|kvapka krvi|darovanie krvi|meditác|relax|somatick|masáž|medicín|jóg|joga|parkinson|ženské kruhy|open class"], ["community-civic", "komunit|stretnut|posedeni|zhromažd|fórum|forum|občian|dobrovoľn|brigád|spolok|\\bklub|schôdz|ocenen|uvítan|jubil|prípitok|charit|zbierk|slobod|seniorov|susedia"]]
+      # ("akcie pre deti"), else the kind of body whose calendar it is (a theatre). No match: the decision model's
+      # cached answer below, else none.
+      let rules = [["sport", "šport|sport|futbal|hokej|volejbal|nohejbal|basketbal|hádzan|tenis|kolky|karate|(^|\\s)beh|maratón|turnaj|zápas|pohár|cyklo|korčuľ|plávan|lyžov|šach|atletik|fitnes|zumba|bowling|biliard|súťaž|hasič|krampuslauf|\\brun\\b|\\bfk\\b|\\bmfk\\b|\\bbež(me|íme|ime|ecký)|regat"], ["outdoor-nature", "turistik|\\btúr|výstup|výlet|príro|vychádzk|pochod|hike|nature|outdoor|jaskyň|splav|rastlín|stromy|záhrad|vtác|zviera|chodník"], ["film", "kino|film|premietan|projekci|cinema|movie"], ["theatre-dance", "divad|činohr|činoher|opera|balet|tanec|muzikál|predstaven|inscenác|bábk|repríza|premiér|kabaret|stand-?up|komédi|kúzel|zájazd|theat|dance|sľuk|lúčnic|színház"], ["music", "hudb|hudob|koncert|music|spev|zbor|orchest|kapel|\\bband\\b|trio\\b|kvartet|recitál|jazz|rock|disco|disko|párty|party|karaoke|\\bdj\\b|heligón|dychov|cimbal|organ|folklór|zábava|veselic|tančiare|\\bples(\\b|y|ov)|\\bbál\\b|vivaldi|zenekar|jam session|feat\\.|ľudov\\S* (nôt|pies)|klavír"], ["festival-fair", "festival|\\bfest\\b|jarmo|\\bhody|hodov|dni obce|dni mesta|slávnos|oslav|karneval|maškar|fašiang|majáles|dožink|vinobran|ohňostroj|vatr|silvest|lampión|halloween|strašidel|tekvič|mikuláš"], ["food-market", "gastro|\\btrh|jedl|ochutnávk|degust|\\bvín|vinár|pivo|guláš|kapustnic|zabíjač|varen|pečen|burz|bazár|punč|kuchár|kuchyn|palacink|coffee|kávy|food|market|swap|špecialít"], ["exhibition-museum", "výstav|vernisáž|finisáž|kurátor|galéri|múze|muze|expozíc|exhibit|museum|gallery|maľb|insit|sochár|ateliér|salón|architekt|\\bexpo\\b|výtvarn"], ["history-heritage", "histor|pamiatk|hrad|kaštie|zámo|dejin|výroči|spomienk|piet|vencov|vojn|veterán|\\bsnp\\b|remesl|kódex|prehliadk|baníc|patrón|minulos|dedičstv|histór|zámk|baník|povstan"], ["faith-tradition", "cirkev|omš|bohoslužb|kostol|púť|svät|modlitb|duchovn|poklon|pobožn|evanjel|reformač|farsk|farnos|biblick|advent|vianoc|vianoč|veľkonoč|dušičk|svetlono|koled|koľad|tradíci|diecéz|kroj"], ["education-talk", "prednášk|seminár|konferenc|besed|workshop|kurz|vzdeláv|diskus|čítan|autorsk|knih|kniž|literár|poézi|poeti|básn|vedeck|\\bved|webinár|info dni|študent|talk|lecture|\\bai\\b|haiku|poviedk|recenzi|kvíz|inteligenc|kvíz|kviz|cestovateľ|planetári|hvezdár|filozof|dialóg|prezentáci"], ["children-family", "deti|detsk|pre najmenš|rozprávk|rodin|rodič|škôlk|mamičk|story time|kids|children|family"], ["hobby-workshop", "tvoriv|tvoren|tvoríme|dielni|ručné práce|ručných prác|háčkov|pleten|plsten|modrotlač|ikeban|vyrezáv|spoločensk[ýé]ch hier|stolov[áé] hr|chovateľ|fotograf|hobby|craft|potlač|čipk|3d tlač"], ["health-wellness", "zdrav|wellness|cvičen|pohyb|kvapka krvi|darovanie krvi|meditác|relax|somatick|masáž|medicín|jóg|joga|parkinson|ženské kruhy|open class|psych"], ["community-civic", "komunit|stretnut|posedeni|zhromažd|fórum|forum|občian|dobrovoľn|brigád|spolok|\\bklub|schôdz|ocenen|uvítan|jubil|prípitok|charit|zbierk|slobod|seniorov|susedia|sused"]]
       let word = this.category.apply("text").or("").lowercase()
       let specific = $word.re_replace_all("trhy, výstavy, veľtrhy \\(ostatné\\)", "trh").re_replace_all("trhy, výstavy, veľtrhy|akcie pre [^,)]*", "")
       let title = $name.or("").lowercase()
-      let category = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(null).filter(c -> c != null).index(0).catch(null)
+      let ruled = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(null).filter(c -> c != null).index(0).catch(null)
+      # No rule: the decision model's answer scripts/events-classify.py cached for this name and venue (T-5490).
+      let decided = if $ruled == null { {}.get("%s|%s".format($title, $place.venue.or($venue_text).or("").lowercase()).hash("sha256").encode("hex").slice(0, 16)).catch(null) } else { null }
+      let category = $ruled.or($decided)
       let audience = if $category != "children-family" { null } else if ($word + " " + $title).re_match("deti|detsk|najmenš|škôlk") { ["children"] } else { ["family"] }
       let now = timestamp_unix()
       let lease = 187200
@@ -155,6 +160,7 @@ pipeline:
         "endDate": this.end.apply("prop"),
         "location": if $point != null { { "type": "GeoProperty", "value": $point } } else { null },
         "locationPrecision": if $point != null { { "type": "Property", "value": $pick.precision } } else { null },
+        "locationSource": if $point != null { { "type": "Property", "value": $pick.source } } else { null },
         "venue": $place.venue.or($venue_text).apply("prop"),
         # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-141).
         "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
@@ -162,7 +168,7 @@ pipeline:
         "address": { "type": "Property", "value": $address },
         "eventCategory": this.category.apply("text").apply("prop"),
         "category": if $category != null { { "type": "Property", "value": [$category] } } else { null },
-        "categorySource": if $category != null { { "type": "Property", "value": "rule" } } else { null },
+        "categorySource": if $ruled != null { { "type": "Property", "value": "rule" } } else if $decided != null { { "type": "Property", "value": "model" } } else { null },
         "audience": $audience.apply("prop"),
         # A source that states no licence gives its facts only: what, when, where and the link back
         # (integrator 2026-10-20, T-4894); its text stays on its own page.

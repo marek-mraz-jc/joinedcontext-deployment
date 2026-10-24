@@ -71,6 +71,9 @@
       },
       "@id": "jc:locationPrecision"
     },
+    "locationSource": {
+      "@id": "jc:locationSource"
+    },
     "name": {
       "@id": "schema:name"
     },
