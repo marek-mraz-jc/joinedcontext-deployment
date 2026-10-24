@@ -151,6 +151,7 @@ v1/Secret minimal/keycloak-user-demo-approver
 v1/Secret minimal/keycloak-user-demo-author
 v1/Secret minimal/keycloak-user-demo-barcelona
 v1/Secret minimal/keycloak-user-demo-bearer
+v1/Secret minimal/keycloak-user-demo-bratislava
 v1/Secret minimal/keycloak-user-demo-editor
 v1/Secret minimal/keycloak-user-demo-janitor
 v1/Secret minimal/keycloak-user-demo-member
