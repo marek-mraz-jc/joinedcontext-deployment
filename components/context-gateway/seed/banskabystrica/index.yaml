@@ -151,6 +151,7 @@ datasource-osm.yaml: projects/banskabystrica/datasources/osm-overpass.yaml
 pipeline-osm.yaml: projects/banskabystrica/pipelines/osm/pipeline.yaml
 pipeline-osm-bento.yaml: projects/banskabystrica/pipelines/osm/bento.yaml
 policy-verejne-osm-delete.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-osm-delete.yaml
+policy-verejne-osm-account.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/verejne-osm-account.yaml
 # Both EEA files into `ovzdusie` too, so the public-air dataset carries the real reading; the
 # pipeline expires what it stops renewing (T-3120, PL-64).
 policy-ovzdusie-pipelines-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/ovzdusie-pipelines-write.yaml
