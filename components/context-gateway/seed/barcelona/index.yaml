@@ -78,6 +78,12 @@ barcelona-pipeline-pedestrian-crossings.yaml: projects/barcelona/pipelines/pedes
 barcelona-pipeline-pedestrian-crossings-bento.yaml: projects/barcelona/pipelines/pedestrian-crossings/bento.yaml
 barcelona-endpoint-pedestrian-crossings.yaml: projects/barcelona/spaces/barcelona/endpoints/pedestrian-crossings.yaml
 barcelona-policy-public-pedestrian-crossings.yaml: projects/barcelona/spaces/barcelona/policies/public-pedestrian-crossings.yaml
+# The licensed tourist flats (T-5417): one CSV file, one weekly pipeline, one public dataset.
+barcelona-datasource-tourist-flats.yaml: projects/barcelona/datasources/bcn-tourist-flats.yaml
+barcelona-pipeline-tourist-flats.yaml: projects/barcelona/pipelines/tourist-flats/pipeline.yaml
+barcelona-pipeline-tourist-flats-bento.yaml: projects/barcelona/pipelines/tourist-flats/bento.yaml
+barcelona-endpoint-tourist-flats.yaml: projects/barcelona/spaces/barcelona/endpoints/tourist-flats.yaml
+barcelona-policy-public-tourist-flats.yaml: projects/barcelona/spaces/barcelona/policies/public-tourist-flats.yaml
 # The activity agendas (T-5265): one DataStore query, one daily pipeline, one public dataset.
 barcelona-datasource-agenda.yaml: projects/barcelona/datasources/bcn-agenda.yaml
 barcelona-pipeline-agenda.yaml: projects/barcelona/pipelines/agenda/pipeline.yaml

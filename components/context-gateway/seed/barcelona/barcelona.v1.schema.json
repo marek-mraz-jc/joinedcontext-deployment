@@ -60,7 +60,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -130,7 +130,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park).",
+          "description": "Where the entity is as the city names it: the barri of a station, a well or a tourist flat, the place of a work (a street and number, a square, a park).",
           "type": [
             "string",
             "null"
@@ -209,7 +209,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -366,7 +366,7 @@
       "description": "One work on Barcelona's public space, in execution, stopped or finished within 30 days, with its outline, its dates and its promoter. The constructor is left out.",
       "properties": {
         "areaServed": {
-          "description": "Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park).",
+          "description": "Where the entity is as the city names it: the barri of a station, a well or a tourist flat, the place of a work (a street and number, a square, a park).",
           "type": [
             "string",
             "null"
@@ -446,7 +446,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -641,7 +641,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "capacity": {
-          "description": "How many vehicles the charging point charges at once, one per port the city lists.",
+          "description": "How many vehicles the charging point charges at once, one per port the city lists; how many guests a tourist flat's licence admits (its places).",
           "minimum": 1,
           "type": [
             "integer",
@@ -689,7 +689,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -925,7 +925,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -1052,7 +1052,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -1256,7 +1256,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park).",
+          "description": "Where the entity is as the city names it: the barri of a station, a well or a tourist flat, the place of a work (a street and number, a square, a park).",
           "type": [
             "string",
             "null"
@@ -1331,7 +1331,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -1480,7 +1480,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -1604,6 +1604,128 @@
         "onlyWithPermit": "VR and DUM, a resident permit or the DUM app registration is needed."
       }
     },
+    "TouristRental": {
+      "additionalProperties": false,
+      "description": "One tourist flat (habitatge d'\u00fas tur\u00edstic) the city has licensed, by its licence file: the guests it admits, its Generalitat register number, and the building it is in (street and number, district, barri and point). Floor, door, staircase and block are never written: they locate a household. Smart Data Models' TouristRental is a facility rented to tourists; the licence register names the facility, so no rental dates or tourist.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where the station, the well, the event, the facility or the charging point is, as the city publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "areaServed": {
+          "description": "Where the entity is as the city names it: the barri of a station, a well or a tourist flat, the place of a work (a street and number, a square, a park).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "capacity": {
+          "description": "How many vehicles the charging point charges at once, one per port the city lists; how many guests a tourist flat's licence admits (its places).",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "registerNumber": {
+          "description": "The flat's number in the Generalitat's tourism register (Registre de Turisme de Catalunya), HUTB- and six digits, which every advert of the flat must show.",
+          "pattern": "^HUTB-[0-9]{6}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data file or the Open Data BCN dataset the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "TouristRental",
+      "type": "object"
+    },
     "TrafficFlowObserved": {
       "additionalProperties": false,
       "description": "One street section of the city's traffic-state network with its line, its state now and the state forecast for 15 minutes, every five minutes (Open Data BCN trams and transit-relacio-trams).",
@@ -1656,7 +1778,7 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
@@ -1791,7 +1913,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "areaServed": {
-          "description": "Where the entity is as the city names it: the barri of a station or well, the place of a work (a street and number, a square, a park).",
+          "description": "Where the entity is as the city names it: the barri of a station, a well or a tourist flat, the place of a work (a street and number, a square, a park).",
           "type": [
             "string",
             "null"
@@ -1896,7 +2018,7 @@
           }
         },
         "name": {
-          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work).",
+          "description": "The name as the city publishes it, in Catalan (a station, an event, a facility, a street section and its stretch, a street address, a district or barri, a work, a tourist flat by its register number).",
           "type": [
             "string",
             "null"
