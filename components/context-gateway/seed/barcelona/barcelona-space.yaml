@@ -93,6 +93,8 @@ spec:
       history: 'off'
     - entityType: PedestrianCrossing
       history: 'off'
+    - entityType: StreetFurniture
+      history: 'off'
     # An activity is a record, not a measurement: its current state only (T-5265).
     - entityType: Event
       history: 'off'
@@ -143,6 +145,11 @@ spec:
       bbox: [2.04, 41.3, 2.24, 41.48]
     - name: in-area-pedestrian-crossings
       entityType: PedestrianCrossing
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-street-furniture
+      entityType: StreetFurniture
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
