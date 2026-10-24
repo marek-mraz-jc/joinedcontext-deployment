@@ -12,4 +12,10 @@ spec:
   callerRole: true
   contextSpaceRef: { kind: ContextSpace, name: bbsk-podujatia }
   enabledRepresentations: [ngsi-ld, mcp, ogc-features, ical]
+  representations:
+    ical:
+      - name: events
+        sources:
+          - type: Event
+            preset: sdm-event
   slug: suaf5rzxgkoptcss4ghgke75ck
