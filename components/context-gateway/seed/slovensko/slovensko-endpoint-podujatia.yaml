@@ -1362,4 +1362,179 @@ spec:
         description:
           sk: "Podujatia zo stránky https://www.jaslovske-bohunice.sk/zivot-v-obci/najblizsie-podujatia/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
           en: "Events from https://www.jaslovske-bohunice.sk/zivot-v-obci/najblizsie-podujatia/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.vrable.sk/"
+        title: { sk: "Vráble, vrable.sk", en: "Vráble, vrable.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.vrable.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.vrable.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.povazska-bystrica.sk/"
+        title: { sk: "Považská Bystrica, povazska-bystrica.sk", en: "Považská Bystrica, povazska-bystrica.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.povazska-bystrica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.povazska-bystrica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.borskymikulas.sk/"
+        title: { sk: "Borský Mikuláš, borskymikulas.sk", en: "Borský Mikuláš, borskymikulas.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.borskymikulas.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.borskymikulas.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.nitrianskepravno.sk/"
+        title: { sk: "Nitrianske Pravno, nitrianskepravno.sk", en: "Nitrianske Pravno, nitrianskepravno.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.nitrianskepravno.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.nitrianskepravno.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.liptovskyhradok.sk/"
+        title: { sk: "Liptovský Hrádok, liptovskyhradok.sk", en: "Liptovský Hrádok, liptovskyhradok.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.liptovskyhradok.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.liptovskyhradok.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.puchov.sk/"
+        title: { sk: "Púchov, puchov.sk", en: "Púchov, puchov.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.puchov.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.puchov.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecbetliar.sk/aktualne/kalendar-podujati/"
+        title: { sk: "Betliar, obecbetliar.sk", en: "Betliar, obecbetliar.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecbetliar.sk/aktualne/kalendar-podujati/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecbetliar.sk/aktualne/kalendar-podujati/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obeclubica.sk/"
+        title: { sk: "Ľubica, obeclubica.sk", en: "Ľubica, obeclubica.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obeclubica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obeclubica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.senkvice.eu/"
+        title: { sk: "Šenkvice, senkvice.eu", en: "Šenkvice, senkvice.eu" }
+        description:
+          sk: "Podujatia zo stránky https://www.senkvice.eu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.senkvice.eu/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.turciansketeplice.sk/"
+        title: { sk: "Turčianske Teplice, turciansketeplice.sk", en: "Turčianske Teplice, turciansketeplice.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.turciansketeplice.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.turciansketeplice.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.vrutky.sk/"
+        title: { sk: "Vrútky, vrutky.sk", en: "Vrútky, vrutky.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.vrutky.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.vrutky.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ciernybalog.sk/"
+        title: { sk: "Čierny Balog, ciernybalog.sk", en: "Čierny Balog, ciernybalog.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ciernybalog.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ciernybalog.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.brhlovce.sk/"
+        title: { sk: "Brhlovce, brhlovce.sk", en: "Brhlovce, brhlovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.brhlovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.brhlovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ivankapridunaji.sk/"
+        title: { sk: "Ivanka pri Dunaji, ivankapridunaji.sk", en: "Ivanka pri Dunaji, ivankapridunaji.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ivankapridunaji.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ivankapridunaji.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.zlatemoravce.eu/"
+        title: { sk: "Zlaté Moravce, zlatemoravce.eu", en: "Zlaté Moravce, zlatemoravce.eu" }
+        description:
+          sk: "Podujatia zo stránky https://www.zlatemoravce.eu/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.zlatemoravce.eu/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.gelnica.sk/"
+        title: { sk: "Gelnica, gelnica.sk", en: "Gelnica, gelnica.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.gelnica.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.gelnica.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.strba.sk/"
+        title: { sk: "Štrba, strba.sk", en: "Štrba, strba.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.strba.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.strba.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.hurbanovo.sk/"
+        title: { sk: "Hurbanovo, hurbanovo.sk", en: "Hurbanovo, hurbanovo.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.hurbanovo.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.hurbanovo.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.velkysaris.sk/"
+        title: { sk: "Veľký Šariš, velkysaris.sk", en: "Veľký Šariš, velkysaris.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.velkysaris.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.velkysaris.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.tvrdosovce.sk/"
+        title: { sk: "Tvrdošovce, tvrdosovce.sk", en: "Tvrdošovce, tvrdosovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.tvrdosovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.tvrdosovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.mojmirovce.sk/udalosti-v-obci/kalendar-akcii/"
+        title: { sk: "Mojmírovce, mojmirovce.sk", en: "Mojmírovce, mojmirovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.mojmirovce.sk/udalosti-v-obci/kalendar-akcii/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.mojmirovce.sk/udalosti-v-obci/kalendar-akcii/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.martinnadzitavou.sk/"
+        title: { sk: "Martin nad Žitavou, martinnadzitavou.sk", en: "Martin nad Žitavou, martinnadzitavou.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.martinnadzitavou.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.martinnadzitavou.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecliesek.sk/"
+        title: { sk: "Liesek, obecliesek.sk", en: "Liesek, obecliesek.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecliesek.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecliesek.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.velkeuherce.sk/"
+        title: { sk: "Veľké Uherce, velkeuherce.sk", en: "Veľké Uherce, velkeuherce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.velkeuherce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.velkeuherce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.liskova.sk/"
+        title: { sk: "Lisková, liskova.sk", en: "Lisková, liskova.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.liskova.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.liskova.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.levice.sk/"
+        title: { sk: "Levice, levice.sk", en: "Levice, levice.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.levice.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.levice.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.kysuckenovemesto.sk/"
+        title: { sk: "Kysucké Nové Mesto, kysuckenovemesto.sk", en: "Kysucké Nové Mesto, kysuckenovemesto.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.kysuckenovemesto.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.kysuckenovemesto.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.svidnik.sk/"
+        title: { sk: "Svidník, svidnik.sk", en: "Svidník, svidnik.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.svidnik.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.svidnik.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.ppolhora.sk/"
+        title: { sk: "Pohronská Polhora, ppolhora.sk", en: "Pohronská Polhora, ppolhora.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.ppolhora.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.ppolhora.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.teplice.sk/"
+        title: { sk: "Trenčianske Teplice, teplice.sk", en: "Trenčianske Teplice, teplice.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.teplice.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.teplice.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.budmerice.sk/"
+        title: { sk: "Budmerice, budmerice.sk", en: "Budmerice, budmerice.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.budmerice.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.budmerice.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecsolcany.sk/"
+        title: { sk: "Solčany, obecsolcany.sk", en: "Solčany, obecsolcany.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecsolcany.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecsolcany.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.banovce.sk/"
+        title: { sk: "Bánovce nad Bebravou, banovce.sk", en: "Bánovce nad Bebravou, banovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.banovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.banovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.giraltovce.sk/"
+        title: { sk: "Giraltovce, giraltovce.sk", en: "Giraltovce, giraltovce.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.giraltovce.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.giraltovce.sk/; no licence stated, facts only (name, time, place, link)."
+      - url: "https://www.obecpreselany.sk/"
+        title: { sk: "Preseľany, obecpreselany.sk", en: "Preseľany, obecpreselany.sk" }
+        description:
+          sk: "Podujatia zo stránky https://www.obecpreselany.sk/; licencia neuvedená, preberáme len fakty (názov, čas, miesto, odkaz)."
+          en: "Events from https://www.obecpreselany.sk/; no licence stated, facts only (name, time, place, link)."
     # END sources generated by seeds/bbsk-events/generate.py
