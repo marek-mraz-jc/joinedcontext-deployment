@@ -37,6 +37,9 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
+    "TouristRental": {
+      "@id": "sdm:TouristRental"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
     },
@@ -251,6 +254,9 @@
     "refParentDistrict": {
       "@id": "jc:refParentDistrict",
       "@type": "@id"
+    },
+    "registerNumber": {
+      "@id": "jc:registerNumber"
     },
     "relativeHumidity": {
       "@id": "sdm:relativeHumidity",
