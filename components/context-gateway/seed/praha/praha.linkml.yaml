@@ -1100,7 +1100,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Kód linky, en: Route code }
+        value:
+          sk: Kód linky
+          cs: Kód linky
+          en: Route code
+          de: Liniencode
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   shortRouteCode:
@@ -1109,7 +1113,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Číslo linky, en: Line number }
+        value:
+          sk: Číslo linky
+          cs: Číslo linky
+          en: Line number
+          de: Liniennummer
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   transportationType:
@@ -1122,6 +1130,13 @@ slots:
     minimum_value: 0
     maximum_value: 7
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh dopravy (GTFS)
+          cs: Druh dopravy (GTFS)
+          en: Transport type (GTFS)
+          de: Verkehrsart (GTFS)
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   description:
@@ -1132,7 +1147,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Popis, en: Description }
+        value:
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   code:
@@ -1141,7 +1160,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Označení, en: Sign }
+        value:
+          sk: Označenie
+          cs: Označení
+          en: Sign
+          de: Kennzeichnung
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   platformCode:
@@ -1150,7 +1173,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Stanoviště, en: Platform }
+        value:
+          sk: Nástupište
+          cs: Stanoviště
+          en: Platform
+          de: Bahnsteig
       ngsi_ld_kind: Property
   zoneCode:
     slot_uri: sdm:zoneCode
@@ -1160,7 +1187,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Tarifní pásmo, en: Fare zone }
+        value:
+          sk: Tarifné pásmo
+          cs: Tarifní pásmo
+          en: Fare zone
+          de: Tarifzone
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
   transportModes:
@@ -1171,7 +1202,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Druhy dopravy, en: Transport modes }
+        value:
+          sk: Druhy dopravy
+          cs: Druhy dopravy
+          en: Transport modes
+          de: Verkehrsarten
       ngsi_ld_kind: Property
   servedLines:
     slot_uri: jc:servedLines
@@ -1180,7 +1215,11 @@ slots:
     annotations:
       label:
         tag: label
-        value: { cs: Linky, en: Lines }
+        value:
+          sk: Linky
+          cs: Linky
+          en: Lines
+          de: Linien
       ngsi_ld_kind: Property
   greenspaceType:
     slot_uri: jc:greenspaceType

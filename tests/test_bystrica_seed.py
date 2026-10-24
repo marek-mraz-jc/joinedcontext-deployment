@@ -144,7 +144,7 @@ def test_no_service_account_can_write_into_the_other_bodys_space():
 def test_every_endpoint_slug_is_unguessable_and_unique():
     slugs = [
         (path.name, doc["spec"]["slug"])
-        for folder in (REGION, CITY, SEED / "helsinki")
+        for folder in sorted(d for d in SEED.iterdir() if d.is_dir())
         for path, doc in manifests(folder, "Endpoint")
         if "slug" in doc["spec"]
     ]
