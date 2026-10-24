@@ -4,9 +4,7 @@ kind: Pipeline
 metadata:
   name: geo-flood-defences
   namespace: praha
-  title:
-    en: Flood defences
-    cs: Protipovodňová ochrana
+  title: { en: Flood defences, cs: Protipovodňová ochrana }
 spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.

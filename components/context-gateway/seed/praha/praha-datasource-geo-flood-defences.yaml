@@ -5,9 +5,7 @@ kind: DataSource
 metadata:
   name: ipr-geo-flood-defences
   namespace: praha
-  title:
-    en: Flood defences (IPR Praha)
-    cs: Protipovodňová ochrana (IPR Praha)
+  title: { en: Flood defences (IPR Praha), cs: Protipovodňová ochrana (IPR Praha) }
 spec:
   type: http
   http:

@@ -1,7 +1,8 @@
 """Prague's environment layers (T-5429, PL-03): the REZZO 1 and REZZO 2 air pollution sources as
 EmissionSource, the radon risk map as RadonRiskArea, the designated flood areas as FloodZone, the
 flood defence lines as FloodDefence (IPR Praha geoportal), and ČHMÚ's eight Prague weather stations
-as WeatherObserved; the datasets praha-zdroje-znecisteni, praha-prirodni-rizika and praha-pocasi.
+as WeatherObserved; the datasets praha-zdroje-znecisteni, praha-radon, praha-zaplavova-uzemi,
+praha-protipovodnova-ochrana and praha-pocasi.
 
 Bento runs each committed mapping over real records downloaded on 2026-10-24
 (`fixtures/praha/environment.json`: per IPR layer its smallest records, one per code where the
@@ -313,7 +314,9 @@ def test_the_weather_is_read_hourly_from_chmi_only():
 def test_each_dataset_reads_only_its_own_types():
     expected = {
         "zdroje-znecisteni": ["EmissionSource"],
-        "prirodni-rizika": ["RadonRiskArea", "FloodZone", "FloodDefence"],
+        "radon": ["RadonRiskArea"],
+        "zaplavova-uzemi": ["FloodZone"],
+        "protipovodnova-ochrana": ["FloodDefence"],
         "pocasi": ["WeatherObserved"],
     }
     for name, types in expected.items():
@@ -325,5 +328,5 @@ def test_each_dataset_reads_only_its_own_types():
         assert endpoint["spec"]["policyRef"] == f"urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-{name}"
         assert endpoint["spec"]["catalog"]["license"] == "CC_BY_4_0"
         assert endpoint["spec"]["catalog"]["personalData"] == "does-not-contain"
-    risks = yaml.safe_load((PRAHA / "praha-endpoint-prirodni-rizika.yaml").read_text())
-    assert len(risks["spec"]["catalog"]["source"]) == 8
+    zones = yaml.safe_load((PRAHA / "praha-endpoint-zaplavova-uzemi.yaml").read_text())
+    assert len(zones["spec"]["catalog"]["source"]) == 5

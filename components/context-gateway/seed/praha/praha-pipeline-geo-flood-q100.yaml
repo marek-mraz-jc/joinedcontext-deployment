@@ -4,9 +4,7 @@ kind: Pipeline
 metadata:
   name: geo-flood-q100
   namespace: praha
-  title:
-    en: Flood area of the 100-year flood (Q100)
-    cs: Záplavové území (Q100)
+  title: { en: Flood area of the 100-year flood (Q100), cs: Záplavové území (Q100) }
 spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.

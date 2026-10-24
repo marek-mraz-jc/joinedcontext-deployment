@@ -1016,6 +1016,8 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
             for a in model["classes"][t]["slots"]:
                 slot = model["slots"][a]
                 r = "string-list" if slot.get("multivalued") else slot.get("range", "string")
+                if r in model["classes"] and a in known:
+                    continue  # an object the base already declares (address): the base's shape holds (T-5429)
                 emitted[a] = {r if r in SCHEMA_ORG else "string"}
                 described[a] = " ".join(slot.get("description", "").split()) or f"The space model's `{a}`."
         columns: dict[str, list[str]] = {}

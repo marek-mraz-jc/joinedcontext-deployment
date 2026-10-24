@@ -4,9 +4,7 @@ kind: Pipeline
 metadata:
   name: geo-flood-sandbags
   namespace: praha
-  title:
-    en: Flood defences (sandbag lines)
-    cs: Protipovodňová ochrana (pytle s pískem)
+  title: { en: Flood defences (sandbag lines), cs: Protipovodňová ochrana (pytle s pískem) }
 spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.

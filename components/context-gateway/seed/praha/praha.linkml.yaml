@@ -574,7 +574,7 @@ slots:
     range: float
     minimum_value: -40
     maximum_value: 50
-    unit: { ucum_code: 'Cel' }
+    unit: { ucum_code: Cel }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -594,7 +594,7 @@ slots:
     range: float
     minimum_value: 800
     maximum_value: 1100
-    unit: { ucum_code: 'hPa' }
+    unit: { ucum_code: hPa }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -604,7 +604,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 100
-    unit: { ucum_code: 'mm' }
+    unit: { ucum_code: mm }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -614,7 +614,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 75
-    unit: { ucum_code: 'm/s' }
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -624,7 +624,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 360
-    unit: { ucum_code: 'deg' }
+    unit: { ucum_code: deg }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -634,7 +634,7 @@ slots:
     range: float
     minimum_value: 0
     maximum_value: 100
-    unit: { ucum_code: 'm/s' }
+    unit: { ucum_code: m/s }
     annotations:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Weather
@@ -1045,32 +1045,39 @@ enums:
         description: Paper, plastic and cartons in one container (multikomoditní sběr).
   EmissionRegister:
     permissible_values:
-      rezzo1: { description: 'REZZO 1, a large stationary source (kategorie 1).' }
-      rezzo2: { description: 'REZZO 2, a medium stationary source (kategorie 2).' }
+      rezzo1:
+        description: REZZO 1, a large stationary source (kategorie 1).
+      rezzo2:
+        description: REZZO 2, a medium stationary source (kategorie 2).
   RadonRisk:
     permissible_values:
-      transitional: { description: 'Transitional, on variable Quaternary soils (přechodná).' }
-      low: { description: 'Low (nízká).' }
-      medium: { description: 'Medium (střední).' }
-      high: { description: 'High (vysoká).' }
+      transitional:
+        description: Transitional, on variable Quaternary soils (přechodná).
+      low: { description: Low (nízká). }
+      medium: { description: Medium (střední). }
+      high: { description: High (vysoká). }
   FloodZoneCategory:
     permissible_values:
-      active: { description: 'The active zone, where a flood flows fastest (aktivní).' }
-      flowThrough: { description: 'Ground the flood flows through (průtočná).' }
-      nonFlowThrough: { description: 'Ground where the flood water stands (neprůtočná).' }
-      protectedByCity: { description: 'Ground the city''s flood defences protect (určená k ochraně městem).' }
-      protectedIndividually: { description: 'Ground its owners protect themselves (určená k ochraně individuálně).' }
+      active:
+        description: The active zone, where a flood flows fastest (aktivní).
+      flowThrough: { description: Ground the flood flows through (průtočná). }
+      nonFlowThrough: { description: Ground where the flood water stands (neprůtočná). }
+      protectedByCity:
+        description: Ground the city's flood defences protect (určená k ochraně městem).
+      protectedIndividually:
+        description: Ground its owners protect themselves (určená k ochraně individuálně).
   FloodDefenceType:
     permissible_values:
-      unknown: { description: 'The register does not say (neznámo).' }
-      fixed: { description: 'A fixed barrier or wall (pevné opatření).' }
-      mobileWall: { description: 'A mobile wall put up before a flood (mobilní stěna).' }
-      sandbags: { description: 'A line of sandbags (pytle s pískem).' }
+      unknown: { description: The register does not say (neznámo). }
+      fixed: { description: A fixed barrier or wall (pevné opatření). }
+      mobileWall: { description: A mobile wall put up before a flood (mobilní stěna). }
+      sandbags: { description: A line of sandbags (pytle s pískem). }
   FloodDefenceKeeper:
     permissible_values:
-      city: { description: 'The city sets it up and keeps it (zajišťovaná městem).' }
-      individual: { description: 'The owner of the ground behind it does (zajišťovaná individuálně).' }
+      city: { description: The city sets it up and keeps it (zajišťovaná městem). }
+      individual:
+        description: The owner of the ground behind it does (zajišťovaná individuálně).
   FloodDesignLevel:
     permissible_values:
-      q100: { description: 'The 100-year flood (Q100).' }
-      flood2002: { description: 'The level of the August 2002 flood (Q2002).' }
+      q100: { description: The 100-year flood (Q100). }
+      flood2002: { description: The level of the August 2002 flood (Q2002). }

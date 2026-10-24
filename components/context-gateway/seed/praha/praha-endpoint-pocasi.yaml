@@ -5,9 +5,7 @@ kind: Endpoint
 metadata:
   name: praha-pocasi
   namespace: praha
-  title:
-    cs: Počasí — Praha
-    en: Weather — Prague
+  title: { cs: Počasí — Praha, en: Weather — Prague }
   description:
     cs: 'Nejnovější desetiminutové hodnoty osmi meteorologických stanic ČHMÚ v Praze: teplota, vlhkost, tlak, srážky, rychlost a směr větru a nárazy. Zdroj: Český hydrometeorologický ústav, CC BY 4.0.'
     en: 'The newest 10-minute values of the eight ČHMÚ weather stations in Prague: temperature, humidity, pressure, precipitation, wind speed and direction and gusts. Source: the Czech Hydrometeorological Institute, CC BY 4.0.'
@@ -41,8 +39,10 @@ spec:
     frequency: HOURLY
     source:
       - url: https://opendata.chmi.cz/meteorology/climate/now/data/
-        title: { cs: Desetiminutová meteorologická data (ČHMÚ), en: '10-minute weather data (ČHMÚ)' }
+        title:
+          cs: Desetiminutová meteorologická data (ČHMÚ)
+          en: '10-minute weather data (ČHMÚ)'
         description:
           cs: Aktuální desetiminutová pozorování stanic ČHMÚ, z nichž prostor drží osm pražských, CC BY 4.0.
-          en: "The current 10-minute observations of ČHMÚ's stations, of which the space keeps Prague's eight, CC BY 4.0."
+          en: The current 10-minute observations of ČHMÚ's stations, of which the space keeps Prague's eight, CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: chmi-weather }

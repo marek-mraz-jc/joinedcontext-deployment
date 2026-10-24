@@ -4,9 +4,7 @@ kind: Pipeline
 metadata:
   name: chmi-weather
   namespace: praha
-  title:
-    en: Weather from ČHMÚ
-    cs: Počasí z ČHMÚ
+  title: { en: Weather from ČHMÚ, cs: Počasí z ČHMÚ }
 spec:
   class: auto
   # ČHMÚ rewrites the day files once an hour, a few minutes past the hour; minute 15 finds the hour's

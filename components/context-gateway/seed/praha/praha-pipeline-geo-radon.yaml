@@ -4,9 +4,7 @@ kind: Pipeline
 metadata:
   name: geo-radon
   namespace: praha
-  title:
-    en: Radon risk categories
-    cs: Kategorie radonového rizika
+  title: { en: Radon risk categories, cs: Kategorie radonového rizika }
 spec:
   class: auto
   # IPR republishes the layer a few times a year; one read a week keeps up.

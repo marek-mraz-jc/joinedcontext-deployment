@@ -5,9 +5,7 @@ kind: DataSource
 metadata:
   name: ipr-geo-radon
   namespace: praha
-  title:
-    en: Radon risk categories (IPR Praha)
-    cs: Kategorie radonového rizika (IPR Praha)
+  title: { en: Radon risk categories (IPR Praha), cs: Kategorie radonového rizika (IPR Praha) }
 spec:
   type: http
   http:

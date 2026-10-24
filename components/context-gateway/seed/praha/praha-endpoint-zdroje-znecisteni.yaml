@@ -42,12 +42,16 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://hub.arcgis.com/api/v3/datasets/d2382afbf9454951ab71a0a89c762d15_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
-        title: { cs: 'Stacionární zdroje znečišťování ovzduší REZZO 1 (IPR Praha)', en: 'Stationary air pollution sources REZZO 1 (IPR Praha)' }
+        title:
+          cs: Stacionární zdroje znečišťování ovzduší REZZO 1 (IPR Praha)
+          en: Stationary air pollution sources REZZO 1 (IPR Praha)
         description:
-          cs: 'Velké stacionární zdroje (REZZO 1) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.'
-          en: 'Large stationary sources (REZZO 1) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.'
+          cs: Velké stacionární zdroje (REZZO 1) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Large stationary sources (REZZO 1) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
       - url: https://hub.arcgis.com/api/v3/datasets/8f600add6b104be9810b23c1bf212b78_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
-        title: { cs: 'Stacionární zdroje znečišťování ovzduší REZZO 2 (IPR Praha)', en: 'Stationary air pollution sources REZZO 2 (IPR Praha)' }
+        title:
+          cs: Stacionární zdroje znečišťování ovzduší REZZO 2 (IPR Praha)
+          en: Stationary air pollution sources REZZO 2 (IPR Praha)
         description:
-          cs: 'Střední stacionární zdroje (REZZO 2) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.'
-          en: 'Medium stationary sources (REZZO 2) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.'
+          cs: Střední stacionární zdroje (REZZO 2) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Medium stationary sources (REZZO 2) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

@@ -23,7 +23,6 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
-| `address` | Property | `string` |  |  | `sdm:address` | The Smart Data Models PostalAddress: the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares. |
 | `coEmission` | Property | `float` |  |  | `jc:coEmission` | The source's yearly emission of carbon monoxide, in tonnes a year. |
 | `fuelType` | Property | `string` |  |  | `jc:fuelType` | The fuel group that dominates the source as the register writes it, such as zemní plyn, nafta or technologie (a process, not a fuel). |
 | `name` | Property | `string` |  |  | `sdm:name` | The name, per language, as the publisher writes it. |

@@ -212,7 +212,11 @@ praha-pipeline-chmi-weather.yaml: projects/praha/pipelines/chmi-weather/pipeline
 praha-pipeline-chmi-weather-bento.yaml: projects/praha/pipelines/chmi-weather/bento.yaml
 praha-endpoint-zdroje-znecisteni.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zdroje-znecisteni.yaml
 praha-policy-public-zdroje-znecisteni.yaml: projects/praha/spaces/praha-mesto/policies/public-zdroje-znecisteni.yaml
-praha-endpoint-prirodni-rizika.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-prirodni-rizika.yaml
-praha-policy-public-prirodni-rizika.yaml: projects/praha/spaces/praha-mesto/policies/public-prirodni-rizika.yaml
+praha-endpoint-radon.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-radon.yaml
+praha-policy-public-radon.yaml: projects/praha/spaces/praha-mesto/policies/public-radon.yaml
+praha-endpoint-zaplavova-uzemi.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zaplavova-uzemi.yaml
+praha-policy-public-zaplavova-uzemi.yaml: projects/praha/spaces/praha-mesto/policies/public-zaplavova-uzemi.yaml
+praha-endpoint-protipovodnova-ochrana.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-protipovodnova-ochrana.yaml
+praha-policy-public-protipovodnova-ochrana.yaml: projects/praha/spaces/praha-mesto/policies/public-protipovodnova-ochrana.yaml
 praha-endpoint-pocasi.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-pocasi.yaml
 praha-policy-public-pocasi.yaml: projects/praha/spaces/praha-mesto/policies/public-pocasi.yaml

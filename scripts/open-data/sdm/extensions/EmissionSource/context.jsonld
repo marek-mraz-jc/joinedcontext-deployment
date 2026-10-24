@@ -7,9 +7,6 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
-    "address": {
-      "@id": "sdm:address"
-    },
     "coEmission": {
       "@id": "jc:coEmission",
       "@type": "xsd:float"

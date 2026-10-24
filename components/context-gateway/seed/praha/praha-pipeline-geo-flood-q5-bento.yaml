@@ -5,8 +5,8 @@
 # the code lists IPR publishes with the layer (coded: the record's field, the attribute it fills and,
 # per code, the model's value and the Czech words of the name).
 #
-# Ids: urn:ngsi-ld:{class}:{org}:{space}:geo-{layer}-{globalid}; the Policy public-prirodni-rizika
-# names them.
+# Ids: urn:ngsi-ld:{class}:{org}:{space}:geo-{layer}-{globalid}; the Policy of its
+# class (public-radon, public-zaplavova-uzemi, public-protipovodnova-ochrana) names them.
 #
 # Read: the outline or line (a third, height coordinate dropped, every coordinate rounded to 6 decimals,
 # about 0.1 m: the largest Q5 area falls from 4.3 MB to 2.5 MB, under the broker's 4 MiB body), and the

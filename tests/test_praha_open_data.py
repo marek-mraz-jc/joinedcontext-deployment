@@ -386,7 +386,9 @@ PARTS = {
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
     "praha-zdroje-znecisteni": "CC_BY_4_0",
-    "praha-prirodni-rizika": "CC_BY_4_0",
+    "praha-radon": "CC_BY_4_0",
+    "praha-zaplavova-uzemi": "CC_BY_4_0",
+    "praha-protipovodnova-ochrana": "CC_BY_4_0",
     "praha-pocasi": "CC_BY_4_0",
 }
 

@@ -1,10 +1,6 @@
 {
   "id": "urn:ngsi-ld:EmissionSource:joinedcontext.com:example:1",
   "type": "EmissionSource",
-  "address": {
-    "type": "Property",
-    "value": "address"
-  },
   "coEmission": {
     "type": "Property",
     "value": 0.0
