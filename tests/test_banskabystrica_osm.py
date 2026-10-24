@@ -4,6 +4,7 @@ and charging stations) and a stand-in gateway, so the entities, the attribution 
 of what the map no longer lists are checked without the network."""
 import http.server
 import json
+import re
 import shutil
 import subprocess
 import threading
@@ -274,3 +275,34 @@ def test_the_datasets_are_odbl_with_the_osm_credit_and_the_pipeline_alone_may_de
     pipeline = yaml.safe_load((CITY / "pipeline-osm.yaml").read_text())["spec"]
     assert pipeline["period"] == "168h"
     assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}"
+
+
+def grants(account: str) -> dict[str, set[str]]:
+    """The operations `account` holds per type in the space: the Policies naming it, and for the
+    pipeline's own account (PL-19) the one jc-core pipeline_identity::derive grants, its output's
+    type with upsertBatch, createBatch and queryBatch (deleteBatch only with spec.expiry)."""
+    held: dict[str, set[str]] = {}
+    for path in CITY.glob("policy-*.yaml"):
+        spec = yaml.safe_load(path.read_text())["spec"]
+        if spec["assignee"] != {"kind": "serviceAccount", "id": account} or spec["contextSpaceRef"]["name"] != SPACE:
+            continue
+        for info in spec["information"]:
+            for selector in info["entities"]:
+                held.setdefault(selector["type"], set()).update(spec["operations"])
+    pipeline = yaml.safe_load((CITY / "pipeline-osm.yaml").read_text())
+    if account == "pl-" + pipeline["metadata"]["name"]:
+        derived = {"upsertBatch", "createBatch", "queryBatch"} | ({"deleteBatch"} if "expiry" in pipeline["spec"] else set())
+        held.setdefault(pipeline["spec"]["output"]["type"], set()).update(derived)
+    return held
+
+
+@pytest.mark.parametrize("account", ["pipelines", "pl-osm"])
+def test_the_account_the_runner_writes_as_may_write_and_remove_every_type_the_mapping_writes(account):
+    # T-5320: on dev the runner writes as the pipeline's own account pl-osm, whose derived Policy
+    # grants only the output's type, so all 22 charging stations came back "no policy grants this
+    # operation". Each runner mode's account needs both types: the writes and the removal.
+    written_types = {"PointOfInterest", "EVChargingStation"}
+    assert written_types <= set(re.findall(r'"(PointOfInterest|EVChargingStation)"', MAPPING.read_text()))
+    held = grants(account)
+    for entity_type in sorted(written_types):
+        assert {"upsertBatch", "createBatch", "queryBatch", "deleteBatch"} <= held.get(entity_type, set()), (account, entity_type, held)
