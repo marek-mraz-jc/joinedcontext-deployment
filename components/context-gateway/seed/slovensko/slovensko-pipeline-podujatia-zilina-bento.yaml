@@ -80,7 +80,7 @@ pipeline:
       let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
       let locality = $feed_locality.or($known.addressLocality.or("Žilina"))
       # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
-      let hit = if $locality != null { [["Žilina","zilina",49.22347,18.73931,"centre"]].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+      let hit = if $locality != null { [].filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
       let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
       # The municipality by its official name, on every event (DM-141): the town table's, the venue's, else the feed's.
       let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
