@@ -16,8 +16,17 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "FareZone": {
+      "@id": "jc:FareZone"
+    },
     "Garden": {
       "@id": "sdm:Garden"
+    },
+    "GtfsAccessPoint": {
+      "@id": "sdm:GtfsAccessPoint"
+    },
+    "GtfsStop": {
+      "@id": "sdm:GtfsStop"
     },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
@@ -27,6 +36,9 @@
     },
     "PostalAddress": {
       "@id": "schema:PostalAddress"
+    },
+    "PublicTransportRoute": {
+      "@id": "sdm:PublicTransportRoute"
     },
     "Tree": {
       "@id": "jc:Tree"
@@ -107,6 +119,9 @@
       "@id": "sdm:co",
       "@type": "xsd:float"
     },
+    "code": {
+      "@id": "sdm:code"
+    },
     "containerCode": {
       "@id": "jc:containerCode"
     },
@@ -124,6 +139,9 @@
     "delay": {
       "@id": "jc:delay",
       "@type": "xsd:integer"
+    },
+    "description": {
+      "@id": "sdm:description"
     },
     "direction": {
       "@id": "jc:direction"
@@ -200,6 +218,9 @@
     "operatorName": {
       "@id": "jc:operatorName"
     },
+    "platformCode": {
+      "@id": "jc:platformCode"
+    },
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
@@ -220,8 +241,14 @@
       "@id": "sdm:refWasteContainerIsle",
       "@type": "@id"
     },
+    "routeCode": {
+      "@id": "sdm:routeCode"
+    },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "servedLines": {
+      "@id": "jc:servedLines"
+    },
     "serviceCategory": {
       "@context": {
         "description": "skos:prefLabel",
@@ -231,6 +258,9 @@
       "@id": "jc:serviceCategory"
     },
     "shex": "http://www.w3.org/ns/shex#",
+    "shortRouteCode": {
+      "@id": "sdm:shortRouteCode"
+    },
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "so2": {
       "@id": "sdm:so2",
@@ -274,6 +304,18 @@
       },
       "@id": "jc:transportMode"
     },
+    "transportModes": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:transportModes"
+    },
+    "transportationType": {
+      "@id": "sdm:transportationType",
+      "@type": "xsd:integer"
+    },
     "treeCategory": {
       "@id": "jc:treeCategory"
     },
@@ -313,7 +355,10 @@
       "@id": "jc:wheelchairAccessible",
       "@type": "xsd:boolean"
     },
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "zoneCode": {
+      "@id": "sdm:zoneCode"
+    }
   },
   "x-generator-version": "linkml-1.11.1"
 }

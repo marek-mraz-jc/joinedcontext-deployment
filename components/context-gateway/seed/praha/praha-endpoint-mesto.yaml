@@ -314,3 +314,23 @@ spec:
         description:
           cs: Přírodní parky z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Nature parks from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/DOP_CUR_DOP_PID_LINKY_L/FeatureServer/0/query?where=1%3D1&outFields=route_id,linka,trasa,druh,odkaz,globalid&outSR=4326&f=geojson&maxAllowableOffset=0.00005&geometryPrecision=6
+        title: { cs: Linky PID (IPR Praha), en: PID lines (IPR Praha) }
+        description:
+          cs: Linky Pražské integrované dopravy z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The Prague Integrated Transport lines from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://data.pid.cz/geodata/Zastavky_WGS84.json
+        title: { cs: Zastávky PID (ROPID), en: PID stops (ROPID) }
+        description:
+          cs: Zastávková stanoviště Pražské integrované dopravy s linkami a tarifními pásmy, ROPID, CC BY 4.0.
+          en: The Prague Integrated Transport stop platforms with their lines and fare zones, ROPID, CC BY 4.0.
+      - url: https://hub.arcgis.com/api/v3/datasets/62106cae6acf4507b988c0e745f55bba_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Vstupy do metra (IPR Praha), en: Metro entrances (IPR Praha) }
+        description:
+          cs: Vstupy do metra Pražské integrované dopravy z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The Prague Integrated Transport metro entrances from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/DOP_CUR_DOP_PID_TARIFPASMA_P/FeatureServer/0/query?where=1%3D1&outFields=id,popis,globalid&outSR=4326&f=geojson&maxAllowableOffset=0.00005&geometryPrecision=6
+        title: { cs: Tarifní pásma PID (IPR Praha), en: PID fare zones (IPR Praha) }
+        description:
+          cs: Tarifní pásma Pražské integrované dopravy z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The Prague Integrated Transport fare zones from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

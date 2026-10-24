@@ -619,6 +619,12 @@ bbsk-pipeline-podujatia-breziny-bento.yaml: projects/bbsk/pipelines/podujatia-br
 bbsk-datasource-podujatia-jesenske.yaml: projects/bbsk/datasources/podujatia-jesenske.yaml
 bbsk-pipeline-podujatia-jesenske.yaml: projects/bbsk/pipelines/podujatia-jesenske/pipeline.yaml
 bbsk-pipeline-podujatia-jesenske-bento.yaml: projects/bbsk/pipelines/podujatia-jesenske/bento.yaml
+bbsk-datasource-podujatia-ciernybalog.yaml: projects/bbsk/datasources/podujatia-ciernybalog.yaml
+bbsk-pipeline-podujatia-ciernybalog.yaml: projects/bbsk/pipelines/podujatia-ciernybalog/pipeline.yaml
+bbsk-pipeline-podujatia-ciernybalog-bento.yaml: projects/bbsk/pipelines/podujatia-ciernybalog/bento.yaml
+bbsk-datasource-podujatia-ppolhora.yaml: projects/bbsk/datasources/podujatia-ppolhora.yaml
+bbsk-pipeline-podujatia-ppolhora.yaml: projects/bbsk/pipelines/podujatia-ppolhora/pipeline.yaml
+bbsk-pipeline-podujatia-ppolhora-bento.yaml: projects/bbsk/pipelines/podujatia-ppolhora/bento.yaml
 bbsk-datasource-miesta-podujati.yaml: projects/bbsk/datasources/miesta-podujati.yaml
 bbsk-pipeline-miesta-podujati.yaml: projects/bbsk/pipelines/miesta-podujati/pipeline.yaml
 bbsk-pipeline-miesta-podujati-bento.yaml: projects/bbsk/pipelines/miesta-podujati/bento.yaml

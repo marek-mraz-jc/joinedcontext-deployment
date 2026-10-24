@@ -36,3 +36,7 @@ spec:
         - type: Vehicle
         - type: Garden
         - type: Tree
+        - type: PublicTransportRoute
+        - type: GtfsStop
+        - type: GtfsAccessPoint
+        - type: FareZone

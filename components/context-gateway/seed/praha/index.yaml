@@ -32,6 +32,10 @@ praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
 praha-datasource-park-and-ride-occupancy.yaml: projects/praha/datasources/golemio-park-and-ride.yaml
 praha-datasource-waste-fill.yaml: projects/praha/datasources/golemio-waste-containers.yaml
 praha-datasource-pid-vehicles.yaml: projects/praha/datasources/golemio-pid-vehicles.yaml
+praha-datasource-pid-lines.yaml: projects/praha/datasources/ipr-pid-lines.yaml
+praha-datasource-pid-stops.yaml: projects/praha/datasources/pid-stops.yaml
+praha-datasource-pid-metro-entrances.yaml: projects/praha/datasources/ipr-pid-metro-entrances.yaml
+praha-datasource-pid-fare-zones.yaml: projects/praha/datasources/ipr-pid-fare-zones.yaml
 praha-datasource-golemio-police.yaml: projects/praha/datasources/golemio-police.yaml
 praha-datasource-golemio-libraries.yaml: projects/praha/datasources/golemio-libraries.yaml
 praha-datasource-golemio-authorities.yaml: projects/praha/datasources/golemio-authorities.yaml
@@ -103,6 +107,14 @@ praha-pipeline-geo-bathing-places.yaml: projects/praha/pipelines/geo-bathing-pla
 praha-pipeline-geo-animal-corners.yaml: projects/praha/pipelines/geo-animal-corners/pipeline.yaml
 praha-pipeline-geo-landmarks.yaml: projects/praha/pipelines/geo-landmarks/pipeline.yaml
 praha-pipeline-pid-vehicles-bento.yaml: projects/praha/pipelines/pid-vehicles/bento.yaml
+praha-pipeline-pid-lines.yaml: projects/praha/pipelines/pid-lines/pipeline.yaml
+praha-pipeline-pid-lines-bento.yaml: projects/praha/pipelines/pid-lines/bento.yaml
+praha-pipeline-pid-stops.yaml: projects/praha/pipelines/pid-stops/pipeline.yaml
+praha-pipeline-pid-stops-bento.yaml: projects/praha/pipelines/pid-stops/bento.yaml
+praha-pipeline-pid-metro-entrances.yaml: projects/praha/pipelines/pid-metro-entrances/pipeline.yaml
+praha-pipeline-pid-metro-entrances-bento.yaml: projects/praha/pipelines/pid-metro-entrances/bento.yaml
+praha-pipeline-pid-fare-zones.yaml: projects/praha/pipelines/pid-fare-zones/pipeline.yaml
+praha-pipeline-pid-fare-zones-bento.yaml: projects/praha/pipelines/pid-fare-zones/bento.yaml
 praha-pipeline-golemio-police-bento.yaml: projects/praha/pipelines/golemio-police/bento.yaml
 praha-pipeline-golemio-libraries-bento.yaml: projects/praha/pipelines/golemio-libraries/bento.yaml
 praha-pipeline-golemio-authorities-bento.yaml: projects/praha/pipelines/golemio-authorities/bento.yaml
@@ -218,3 +230,11 @@ praha-endpoint-zelen.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zel
 praha-policy-public-zelen.yaml: projects/praha/spaces/praha-mesto/policies/public-zelen.yaml
 praha-endpoint-stromy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-stromy.yaml
 praha-policy-public-stromy.yaml: projects/praha/spaces/praha-mesto/policies/public-stromy.yaml
+praha-endpoint-linky-pid.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-linky-pid.yaml
+praha-policy-public-linky-pid.yaml: projects/praha/spaces/praha-mesto/policies/public-linky-pid.yaml
+praha-endpoint-zastavky-pid.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zastavky-pid.yaml
+praha-policy-public-zastavky-pid.yaml: projects/praha/spaces/praha-mesto/policies/public-zastavky-pid.yaml
+praha-endpoint-vstupy-metra.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vstupy-metra.yaml
+praha-policy-public-vstupy-metra.yaml: projects/praha/spaces/praha-mesto/policies/public-vstupy-metra.yaml
+praha-endpoint-tarifni-pasma.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-tarifni-pasma.yaml
+praha-policy-public-tarifni-pasma.yaml: projects/praha/spaces/praha-mesto/policies/public-tarifni-pasma.yaml

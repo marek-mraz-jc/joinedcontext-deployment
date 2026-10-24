@@ -17,7 +17,7 @@ metadata:
     en: 'Usage of Helsinki services: Korkeasaari zoo visitors per day and month, and visits and page views per city website and month. One Smart Data Models KeyPerformanceIndicator per indicator, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (0910000000, the whole city), divisionLevel (city), statisticsTable (the series: zoo-visitors-day, zoo-visitors-month, web-visits, web-pageviews) and dimensionKey (count=total, or idsite=<the site id of the export>). Sources: Korkeasaari Zoo and the City of Helsinki Digitalisation unit, CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
-  slug: 7qsdid06pjaxmzd44rheqngd7o6cvj8h
+  slug: 2otvm3oapms4vsucerjhnywlumdqf3px
   audience: public
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-services
   # The NGSI-LD door also answers the temporal API, the series per indicator. An indicator has
