@@ -385,6 +385,7 @@ PARTS = {
     "praha-vozidla-pid": None,
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
+    "praha-zelen": "CC_BY_4_0",
 }
 
 
@@ -462,6 +463,7 @@ SDM_MODELS = {
     "WasteContainerIsle": "dataModel.WasteManagement/WasteContainerIsle",
     "WasteContainer": "dataModel.WasteManagement/WasteContainer",
     "OffStreetParking": "dataModel.Parking/OffStreetParking",
+    "Garden": "dataModel.ParksAndGardens/Garden",
     # T-4338: no official model holds these as they are; each is the extension of its nearest one.
     "AdministrativeArea": "extensions/AdministrativeArea",
     "BudgetLine": "extensions/BudgetLine",

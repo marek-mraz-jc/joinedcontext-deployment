@@ -34,3 +34,5 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: Garden
+        - type: Tree
