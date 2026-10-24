@@ -385,9 +385,16 @@ PARTS = {
     "praha-vozidla-pid": None,
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
+    "praha-zdroje-znecisteni": "CC_BY_4_0",
+    "praha-radon": "CC_BY_4_0",
+    "praha-zaplavova-uzemi": "CC_BY_4_0",
+    "praha-protipovodnova-ochrana": "CC_BY_4_0",
+    "praha-pocasi": "CC_BY_4_0",
     # The PID network, one dataset per type (T-5423).
     "praha-linky-pid": "CC_BY_4_0", "praha-zastavky-pid": "CC_BY_4_0", "praha-vstupy-metra": "CC_BY_4_0",
     "praha-tarifni-pasma": "CC_BY_4_0",
+    "praha-zelen": "CC_BY_4_0",
+    "praha-stromy": "CC_BY_4_0",
 }
 
 
@@ -465,6 +472,7 @@ SDM_MODELS = {
     "WasteContainerIsle": "dataModel.WasteManagement/WasteContainerIsle",
     "WasteContainer": "dataModel.WasteManagement/WasteContainer",
     "OffStreetParking": "dataModel.Parking/OffStreetParking",
+    "Garden": "dataModel.ParksAndGardens/Garden",
     # T-4338: no official model holds these as they are; each is the extension of its nearest one.
     "AdministrativeArea": "extensions/AdministrativeArea",
     "BudgetLine": "extensions/BudgetLine",
