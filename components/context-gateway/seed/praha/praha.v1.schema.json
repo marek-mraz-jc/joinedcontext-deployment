@@ -133,7 +133,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateObserved": {
-          "description": "When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report.",
+          "description": "When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes.",
           "format": "date-time",
           "type": [
             "string",
@@ -1005,7 +1005,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateObserved": {
-          "description": "When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report.",
+          "description": "When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes.",
           "format": "date-time",
           "type": [
             "string",
@@ -1426,7 +1426,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "stationCode": {
-          "description": "The collection point's number in the city's waste register, such as 0022/ 001.",
+          "description": "The collection point's number in the city's waste register, such as 0022/ 001, or the ČHMÚ weather station's WIGOS id, such as 0-20000-0-11518.",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
@@ -1470,6 +1470,801 @@
       ],
       "title": "WasteKind",
       "type": "string"
+    },
+    "EmissionRegister": {
+      "description": "",
+      "enum": [
+        "rezzo1",
+        "rezzo2"
+      ],
+      "title": "EmissionRegister",
+      "type": "string",
+      "x-enum-descriptions": {
+        "rezzo1": "REZZO 1, a large stationary source (kategorie 1).",
+        "rezzo2": "REZZO 2, a medium stationary source (kategorie 2)."
+      }
+    },
+    "EmissionSource": {
+      "additionalProperties": false,
+      "description": "One stationary source of air pollution of the Prague emission register (REZZO 1 or REZZO 2): where it is, its fuel and its yearly emissions, as the Smart Data Model extension EmissionSource (PointOfInterest base). The operator is not read: some are private persons.",
+      "properties": {
+        "address": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PostalAddress"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Smart Data Models PostalAddress: the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "coEmission": {
+          "description": "The source's yearly emission of carbon monoxide, in tonnes a year.",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "fuelType": {
+          "description": "The fuel group that dominates the source as the register writes it, such as zemní plyn, nafta or technologie (a process, not a fuel).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "noxEmission": {
+          "description": "The source's yearly emission of nitrogen oxides (NOx), in tonnes a year.",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pm10Emission": {
+          "description": "The source's yearly emission of PM10, in tonnes a year, as the register states it.",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        },
+        "pm25Emission": {
+          "description": "The source's yearly emission of PM2.5, in tonnes a year (REZZO 2 only).",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        },
+        "registerCategory": {
+          "$ref": "#/definitions/EmissionRegister",
+          "description": "Which part of the Prague emission register lists the source: REZZO 1 (large stationary sources, rezzo1) or REZZO 2 (medium sources, rezzo2), as IPR Praha publishes them.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "so2Emission": {
+          "description": "The source's yearly emission of sulphur dioxide, in tonnes a year.",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vocEmission": {
+          "description": "The source's yearly emission of volatile organic compounds, in tonnes a year.",
+          "maximum": 100000,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "t/a"
+          }
+        }
+      },
+      "required": [
+        "registerCategory",
+        "id",
+        "type"
+      ],
+      "title": "EmissionSource",
+      "type": "object"
+    },
+    "FloodDefence": {
+      "additionalProperties": false,
+      "description": "One line of Prague's flood defences: a fixed barrier, a mobile wall or a sandbag line, who keeps it and the flood it is designed for, as the Smart Data Model extension FloodDefence (PointOfInterest base).",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "defenceType": {
+          "$ref": "#/definitions/FloodDefenceType",
+          "description": "The kind of flood defence line, a fixed barrier, a mobile wall or sandbags.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "designFlood": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FloodDesignLevel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The flood the line is designed to hold back, the 100-year flood (q100) or the August 2002 flood (flood2002).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "protectedBy": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FloodDefenceKeeper"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Who sets the line up and keeps it, the city or the owner of the ground behind it.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "defenceType",
+        "id",
+        "type"
+      ],
+      "title": "FloodDefence",
+      "type": "object"
+    },
+    "FloodDefenceKeeper": {
+      "description": "",
+      "enum": [
+        "city",
+        "individual"
+      ],
+      "title": "FloodDefenceKeeper",
+      "type": "string",
+      "x-enum-descriptions": {
+        "city": "The city sets it up and keeps it (zajišťovaná městem).",
+        "individual": "The owner of the ground behind it does (zajišťovaná individuálně)."
+      }
+    },
+    "FloodDefenceType": {
+      "description": "",
+      "enum": [
+        "unknown",
+        "fixed",
+        "mobileWall",
+        "sandbags"
+      ],
+      "title": "FloodDefenceType",
+      "type": "string",
+      "x-enum-descriptions": {
+        "fixed": "A fixed barrier or wall (pevné opatření).",
+        "mobileWall": "A mobile wall put up before a flood (mobilní stěna).",
+        "sandbags": "A line of sandbags (pytle s pískem).",
+        "unknown": "The register does not say (neznámo)."
+      }
+    },
+    "FloodDesignLevel": {
+      "description": "",
+      "enum": [
+        "q100",
+        "flood2002"
+      ],
+      "title": "FloodDesignLevel",
+      "type": "string",
+      "x-enum-descriptions": {
+        "flood2002": "The level of the August 2002 flood (Q2002).",
+        "q100": "The 100-year flood (Q100)."
+      }
+    },
+    "FloodZone": {
+      "additionalProperties": false,
+      "description": "One designated flood area of Prague: the ground a 5, 20, 50 or 100-year flood covers, or a zone of the Vltava and Berounka flood area, as the Smart Data Model extension FloodZone (PointOfInterest base).",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "floodReturnPeriod": {
+          "description": "The return period of the flood the area is flooded by, in years: 5, 20, 50 or 100 for the designated flood areas Q5, Q20, Q50 and Q100.",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "floodZoneCategory": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FloodZoneCategory"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The kind of zone of the Vltava and Berounka flood area: the active zone, where water flows through, where it stands, or ground the city or its owners protect.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "FloodZone",
+      "type": "object"
+    },
+    "FloodZoneCategory": {
+      "description": "",
+      "enum": [
+        "active",
+        "flowThrough",
+        "nonFlowThrough",
+        "protectedByCity",
+        "protectedIndividually"
+      ],
+      "title": "FloodZoneCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "active": "The active zone, where a flood flows fastest (aktivní).",
+        "flowThrough": "Ground the flood flows through (průtočná).",
+        "nonFlowThrough": "Ground where the flood water stands (neprůtočná).",
+        "protectedByCity": "Ground the city's flood defences protect (určená k ochraně městem).",
+        "protectedIndividually": "Ground its owners protect themselves (určená k ochraně individuálně)."
+      }
+    },
+    "RadonRisk": {
+      "description": "",
+      "enum": [
+        "transitional",
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "RadonRisk",
+      "type": "string",
+      "x-enum-descriptions": {
+        "high": "High (vysoká).",
+        "low": "Low (nízká).",
+        "medium": "Medium (střední).",
+        "transitional": "Transitional, on variable Quaternary soils (přechodná)."
+      }
+    },
+    "RadonRiskArea": {
+      "additionalProperties": false,
+      "description": "One area of Prague's radon risk map and the risk category of its ground, as the Smart Data Model extension RadonRiskArea (PointOfInterest base).",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "radonRiskCategory": {
+          "$ref": "#/definitions/RadonRisk",
+          "description": "The radon risk category of the ground in the area, as the Czech Geological Survey's radon index map gives it (transitional, low, medium, high).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "radonRiskCategory",
+        "id",
+        "type"
+      ],
+      "title": "RadonRiskArea",
+      "type": "object"
+    },
+    "WeatherObserved": {
+      "additionalProperties": false,
+      "description": "One of ČHMÚ's weather stations in Prague and the newest 10-minute values it published.",
+      "properties": {
+        "atmosphericPressure": {
+          "description": "The air pressure at the station's height (not reduced to sea level), the newest 10-minute value.",
+          "maximum": 1100,
+          "minimum": 800,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "hPa"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObserved": {
+          "description": "When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "gustSpeed": {
+          "description": "The strongest gust of the newest 10 minutes, 10 m above ground.",
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m/s"
+          }
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "precipitation": {
+          "description": "The precipitation of the newest 10 minutes, in millimetres (litres per square metre).",
+          "maximum": 100,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "mm"
+          }
+        },
+        "relativeHumidity": {
+          "description": "The relative humidity as a fraction (0.57 is 57 %), the newest 10-minute value.",
+          "maximum": 1,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "1"
+          }
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "stationCode": {
+          "description": "The collection point's number in the city's waste register, such as 0022/ 001, or the ČHMÚ weather station's WIGOS id, such as 0-20000-0-11518.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "temperature": {
+          "description": "The air temperature 2 m above ground, ČHMÚ's newest 10-minute value.",
+          "maximum": 50,
+          "minimum": -40,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "Cel"
+          }
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "windDirection": {
+          "description": "The mean wind direction over the newest 10 minutes, in degrees from north.",
+          "maximum": 360,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "deg"
+          }
+        },
+        "windSpeed": {
+          "description": "The mean wind speed 10 m above ground over the newest 10 minutes.",
+          "maximum": 75,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m/s"
+          }
+        }
+      },
+      "required": [
+        "stationCode",
+        "id",
+        "type"
+      ],
+      "title": "WeatherObserved",
+      "type": "object"
     }
   },
   "metamodel_version": "1.11.0",

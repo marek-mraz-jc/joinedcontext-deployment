@@ -34,3 +34,8 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: EmissionSource
+        - type: RadonRiskArea
+        - type: FloodZone
+        - type: FloodDefence
+        - type: WeatherObserved

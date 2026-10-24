@@ -61,6 +61,27 @@ SPACE_EXTENSIONS = {
         "description": "One line of a city budget in the national budget classification, with the approved and the adjusted amount.",
         "why": "CPSV-AP Cost is the official model of an amount a public body sets (identifier, value, currency); no subject holds a budget line",
     },
+    # Prague's environment layers (T-5429): a register entry or a mapped area, located and named.
+    "EmissionSource": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One stationary source of air pollution of a city's emission register: where it is, its fuel and its yearly emissions.",
+        "why": "Environment's AirQualityObserved and EnvironmentObserved hold concentrations measured at a station; no model holds a register entry of yearly emissions",
+    },
+    "RadonRiskArea": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One area of a radon risk map and the risk category of its ground.",
+        "why": "Environment has no model of a mapped ground property; EnvironmentObserved is a measurement at a time",
+    },
+    "FloodZone": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One designated flood area: the ground a flood of a given return period covers, or a zone of it.",
+        "why": "Environment's FloodMonitoring holds a water level measured at a gauge, not the area a flood covers",
+    },
+    "FloodDefence": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One line of flood defences: what it is built of, who keeps it and the flood it is designed for.",
+        "why": "no Smart Data Model holds a flood defence structure",
+    },
 }
 SDM_HEADER = ("$schema", "$schemaVersion", "$id", "modelTags", "title", "description", "derivedFrom", "license")
 JSON_TYPE = {"integer": "integer", "float": "number", "date": "string", "datetime": "string", "uri": "string", "string": "string"}

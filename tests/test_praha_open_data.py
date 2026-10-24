@@ -385,6 +385,9 @@ PARTS = {
     "praha-vozidla-pid": None,
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
+    "praha-zdroje-znecisteni": "CC_BY_4_0",
+    "praha-prirodni-rizika": "CC_BY_4_0",
+    "praha-pocasi": "CC_BY_4_0",
 }
 
 
