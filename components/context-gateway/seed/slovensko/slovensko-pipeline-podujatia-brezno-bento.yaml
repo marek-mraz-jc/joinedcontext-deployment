@@ -4,7 +4,7 @@ pipeline:
   processors:
   - mapping: |
       let places = content().string().re_find_object("var places = \\[\\[(?P<v>[\\s\\S]*?)\\]\\];").v.or("")
-      let slugs = $places.re_find_all_object("<a href=\"https://www\\.brezno\\.sk/(?P<s>[a-z0-9-]{1,200})/\">").map_each(m -> m.s).unique()
+      let slugs = $places.re_find_all_object("<a href=\"https?://www\\.brezno\\.sk/(?P<s>[a-z0-9-]{1,200})/\">").map_each(m -> m.s).unique()
       root = $slugs.slice(0, [$slugs.length(), 50].min()).map_each(s -> { "url": "https://www.brezno.sk/" + s + "/", "path": "/" + s + "/", "sourceId": "/" + s + "/" })
   - unarchive:
       format: json_array

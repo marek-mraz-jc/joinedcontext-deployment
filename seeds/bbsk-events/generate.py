@@ -445,7 +445,9 @@ def processors(row: dict, store: dict) -> list:
         "__ORGANIZER__": json.dumps(organizer(row), ensure_ascii=False),
         "__LISTING__": json.dumps(row["events_url"], ensure_ascii=False),
         "__FACTS_ONLY__": "true" if facts_only else "false",
-        "__HOST_RE__": re.escape(row["host"]).replace("\\", "\\\\"),
+        # A link to the source's own host over http is still its page (Kysucké Nové Mesto's feed links every
+        # event over http): the regex takes either scheme, the request goes to __HOST__ over https.
+        "__HOST_RE__": re.escape(row["host"]).replace("\\", "\\\\").replace("https:", "https?:", 1),
         "__HOST__": row["host"],
         # The events list's own path: a Lego source reads only the event pages under it, never a sidebar's news.
         "__LIST_PATH_RE__": re.escape(urlsplit(row["check_url"]).path).replace("\\", "\\\\"),

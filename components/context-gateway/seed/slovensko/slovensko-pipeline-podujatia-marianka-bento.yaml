@@ -3,7 +3,7 @@
 pipeline:
   processors:
   - mapping: |
-      let paths = content().string().re_find_all_object("href=\"(?:https://www\\.marianka\\.sk)?(?P<p>/zivot\\-v\\-obci/kalendar\\-akcii/[A-Za-z0-9._~%/-]{1,300}-[0-9]{1,9}(?:_[0-9]{1,9})?[a-z]{2}\\.html)\"").map_each(m -> m.p).unique()
+      let paths = content().string().re_find_all_object("href=\"(?:https?://www\\.marianka\\.sk)?(?P<p>/zivot\\-v\\-obci/kalendar\\-akcii/[A-Za-z0-9._~%/-]{1,300}-[0-9]{1,9}(?:_[0-9]{1,9})?[a-z]{2}\\.html)\"").map_each(m -> m.p).unique()
       root = $paths.map_each(p -> { "url": "https://www.marianka.sk" + p, "path": p, "sourceId": p })
   - unarchive:
       format: json_array
