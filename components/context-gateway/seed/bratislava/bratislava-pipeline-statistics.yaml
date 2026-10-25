@@ -1,6 +1,6 @@
 # The hub's tables of the 17 city districts as KeyPerformanceIndicator, one entity per figure,
 # breakdown, district and period (T-5274). The tables change once a year at most; a weekly run shows
-# a new year within a week. 75 tables, 15,765 figures on 2026-10-24; the run peaks between 256 and
+# a new year within a week. 75 tables, 15,765 figures on 2026-10-24; T-5672 added 1 table (17 figures) on 2026-10-25; the run peaks between 256 and
 # 320 MiB (docker --memory: killed at 256).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline

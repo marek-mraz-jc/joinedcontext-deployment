@@ -3,8 +3,8 @@ checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
 on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 327 statistics tables of the three statistics pipelines (the first 18 rows of each table the
-2026-10-24 batch added). The calls to the hub are the
+and the 339 statistics tables of the three statistics pipelines (the first 18 rows of each table the
+2026-10-24 batch added; the 12 tables of T-5672, recorded 2026-10-25, whole). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
@@ -363,6 +363,9 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             elif "quarter" in t:
                 y, q = str(r.get(t["year"]) or "").strip(), str(r.get(t["quarter"]) or "").strip()
                 slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
+            elif "month" in t:
+                y, m = str(r.get(t["year"]) or "").strip(), str(r.get(t["month"]) or "").strip().removeprefix("0")
+                slug = f"{y}-{int(m):02d}" if re.fullmatch(r"(19|20)\d\d", y) and re.fullmatch(r"[1-9]|1[0-2]", m) else None
             else:
                 slug = years(r.get(t["year"]) or "")
             by = [re.sub(r"[^a-z0-9]+", "-", fold(r.get(c) or "")).strip("-") for c in t.get("by", [])]
@@ -420,7 +423,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 327
+    assert len(keys) == len(set(keys)) == 339
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
@@ -441,3 +444,30 @@ def test_a_city_table_keeps_bratislava_beside_slovakia_and_a_region_table_its_ow
     assert {i["area"]["value"] for i in okresy} == {f"Bratislava {n}" for n in ("I", "II", "III", "IV", "V")}
     drivers = kpi("pocet-evidovanych-vodicov.pocet-evidovanych-vodicov.101.2013")
     assert {i["id"]: i for i in okresy}[drivers]["kpiValue"]["value"] == 22038
+
+
+@requires_docker
+def test_a_month_column_and_a_period_from_the_item_description_give_each_figure_its_period():
+    """T-5672: the quarantine facility's months become monthly indicators with the month's last day
+    (a month outside 1 to 12 is no period), a table whose description names the years carries that
+    range, and the CVČ table's 170 blank rows drop as no period instead of failing the table."""
+    answers = copy.deepcopy(fixture("statistics.json"))
+    hradska = next(v for k, v in answers.items() if k.startswith("Mestsk%C3%A9%20karant%C3%A9ne"))["features"]
+    hradska.append({"attributes": dict(hradska[0]["attributes"], Mesiac="13", Rok="2021")})
+    city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
+    by_id = {i["id"]: i for i in city}
+    feb = by_id[kpi("mestske-karantene-zariadenie-hradska.pocet-prijatych-klientov.582000.2021-02")]
+    assert feb["calculationPeriod"]["value"] == {"from": "2021-02-01", "to": "2021-02-28"}
+    assert feb["calculationFrequency"]["value"] == "monthly"
+    oct_ = by_id[kpi("mestske-karantene-zariadenie-hradska.maximalna-kapacita-mkz.582000.2020-10")]
+    assert oct_["kpiValue"]["value"] == 50 and oct_["calculationPeriod"]["value"]["to"] == "2020-10-31"
+    assert logged(log) == reading("statistics-mesto", answers)[1]
+    assert len([i for i in city if ":mestske-karantene-zariadenie-hradska." in i["id"]]) == 77
+    founders = by_id[kpi("pocet-deti-a-specialnych-skol.pocet.ss-pocet-ziakov.iny-organ-statnej-spravy.582000.2021")]
+    assert founders["kpiValue"]["value"] == 136
+    okresy, log = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
+    life = {i["id"]: i for i in okresy}[kpi("prispevky-dlzka-zivota-muzi-roky.prispevky-roky.0-19.101.2000-2019")]
+    assert life["kpiValue"]["value"] == 0.31
+    assert life["calculationPeriod"]["value"] == {"from": "2000-01-01", "to": "2019-12-31"}
+    assert "calculationFrequency" not in life
+    assert logged(log)["no period"] >= 170

@@ -14,7 +14,8 @@ pipeline:
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
         # or city (Bratislava as a whole); area: the area column, none for a table of the city
         # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
+        # month: its month column (1 to 12), or fixed: the year or range the table's title or the
+        # item's description names; by: breakdown columns (age, sex,
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
@@ -93,7 +94,8 @@ pipeline:
           {"name": "sodb-2011-sukromne-domacnosti-podla", "item": "5f285aedcabb4e9b8018b207c5ff05ae", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20pr%C3%A1vneho%20u%C5%BE%C3%ADvania%20bytu", "title": "SODB 2011 - Súkromné domácnosti podľa právneho užívania bytu", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Spolu", "spolu", "Spolu", null, null], ["Domácnosti__v_ktorých_je_aspoň_", "domacnosti-v-ktorych-je-aspon", "Domácnosti, v ktorých je aspoň jeden člen domácnosti vlastníkom obytnej jednotky", null, null], ["Domácnosti__v_ktorých_je_aspoň1", "domacnosti-v-ktorych-je-aspon1", "Domácnosti, v ktorých je aspoň jeden člen domácnosti nájomcom celej obytnej jednotky alebo jej časti", null, null], ["Domácnosti__ktoré_obývajú_celú_", "domacnosti-ktore-obyvaju-celu", "Domácnosti, ktoré obývajú celú obytnú jednotku alebo jej časť na základe iného právneho dôvodu užívania", null, null], ["Nezistené", "nezistene", "Nezistené", null, null]]},
           {"name": "sodb-2011-sukromne-domacnosti-podla-typu", "item": "87118ab82ab847cfbcb32bee21db2326", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20typu", "title": "SODB 2011 - Súkromné domácnosti podľa typu", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Nerodinné_domácnosti__spolu_", "nerodinne-domacnosti-spolu", "Nerodinné domácnosti (spolu)", null, null], ["Nerodinné_domácnosti___Domácnos", "nerodinne-domacnosti-domacnos", "Nerodinné domácnosti - Domácnosti jednotlivcov", null, null], ["Nerodinné_domácnosti___Viacčlen", "nerodinne-domacnosti-viacclen", "Nerodinné domácnosti - Viacčlenné domácnosti", null, null], ["Domácnosti__ktoré_tvorí_jedna_r", "domacnosti-ktore-tvori-jedna-r", "Domácnosti, ktoré tvorí jedna rodina (spolu)", null, null], ["Domácnosti__ktoré_tvorí_jedna_1", "domacnosti-ktore-tvori-jedna-1", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti pozostávajúce z manželských párov", null, null], ["Domácnosti__ktoré_tvorí_jedna_2", "domacnosti-ktore-tvori-jedna-2", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti párov žijúcich v konsenzuálnom zväzku", null, null], ["Domácnosti__ktoré_tvorí_jedna_3", "domacnosti-ktore-tvori-jedna-3", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti osamelých otcov", null, null], ["Domácnosti__ktoré_tvorí_jedna_4", "domacnosti-ktore-tvori-jedna-4", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti osamelých matiek", null, null], ["Domácnosti_pozostávajúce_z_dvoc", "domacnosti-pozostavajuce-z-dvoc", "Domácnosti pozostávajúce z dvoch a viac rodín", null, null]]},
           {"name": "sodb-2011-sukromne-podla-velkosti", "item": "c1d6b2ff59b84d6aa6e8229390b8f145", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20ve%C4%BEkosti", "title": "SODB 2011 - Súkromné domácnosti podľa veľkosti", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Spolu", "spolu", "Spolu", null, null], ["F1_osoba", "f1-osoba", "1 osoba", null, null], ["F2_osoby", "f2-osoby", "2 osoby", null, null], ["F3_až_5_osôb", "f3-az-5-osob", "3 až 5 osôb", null, null], ["F6_až_10_osôb", "f6-az-10-osob", "6 až 10 osôb", null, null], ["F11_osôb_a_viac", "f11-osob-a-viac", "11 osôb a viac", null, null]]},
-          {"name": "vzajomne-migracne-saldo-casti-2000-2004-ba", "item": "504e50b164f44b8d80dcf76ae9b77caa", "path": "Vz%C3%A1jomn%C3%A9_migra%C4%8Dn%C3%A9_saldo_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_2000_%E2%80%93_2004", "title": "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", "areas": "district", "area": "MESTSKA_CAST_ZISKOVA", "fixed": "2000-2004", "by": ["MESTSKA_CAST_STRATOVA"], "values": [["MIGRACNE_SALDO", "migracne-saldo", "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", null, null]]}
+          {"name": "vzajomne-migracne-saldo-casti-2000-2004-ba", "item": "504e50b164f44b8d80dcf76ae9b77caa", "path": "Vz%C3%A1jomn%C3%A9_migra%C4%8Dn%C3%A9_saldo_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_2000_%E2%80%93_2004", "title": "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", "areas": "district", "area": "MESTSKA_CAST_ZISKOVA", "fixed": "2000-2004", "by": ["MESTSKA_CAST_STRATOVA"], "values": [["MIGRACNE_SALDO", "migracne-saldo", "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", null, null]]},
+          {"name": "rozloha-mestskych-casti", "item": "baa9f32132a340b7a193d5cd130619c2", "path": "Rozloha%20mestsk%C3%BDch%20%C4%8Dast%C3%AD", "title": "Rozloha mestských častí", "areas": "district", "area": "Mestská_časť", "fixed": "2023", "values": [["Rozloha__km2_", "rozloha-km2", "Rozloha mestskej časti (km²)", 0, 400]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -208,11 +210,28 @@ pipeline:
             }
           } else { null }
         }
+        # A month column holds 1 to 12, with or without a leading zero; anything else is no period.
+        map month {
+          let y = this.index(0)
+          let m = this.index(1).trim_prefix("0")
+          root = if $y.re_match("^(19|20)[0-9]{2}$") && $m.re_match("^([1-9]|1[0-2])$") {
+            {
+              "from": "%s-%02d-01".format($y, $m.number().int64()),
+              "to": "%s-%02d-%s".format($y, $m.number().int64(), if $m == "2" && $y.number().int64() % 4 == 0 && ($y.number().int64() % 100 != 0 || $y.number().int64() % 400 == 0) { "29" } else {
+                ["31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m.number().int64() - 1)
+              }),
+              "slug": "%s-%02d".format($y, $m.number().int64()),
+              "label": "%d/%s".format($m.number().int64(), $y),
+              "frequency": "monthly"
+            }
+          } else { null }
+        }
         map period {
           let t = this.table
           let r = this.row
           root = if $t.fixed.or("") != "" { $t.fixed.apply("years") }
             else if $t.quarter.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.quarter).or("").string().trim()].apply("quarter") }
+            else if $t.month.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.month).or("").string().trim()].apply("month") }
             else { $r.get($t.year).or("").apply("years") }
         }
         map areaname {
