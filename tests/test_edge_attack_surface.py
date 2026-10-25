@@ -48,7 +48,16 @@ TRUSTED_HEADERS = (
     "X-Forwarded-Prefix",
     "X-Forwarded-Server",
     "X-Real-IP",
+    # The broker shows every version of an attribute when the gateway sets it (ADR-N-054 2.4).
+    "JC-Read-Versions",
 )
+
+# Whole header families the platform's own services write on the internal hop, cleared by
+# prefix because a list of names goes stale the day a service adds one (T-5566): the gateway's
+# caller identity to the broker (`x-jc-subject`, `x-jc-groups`, `x-jc-client`, ...), the
+# provenance it stamps (`jc-provenance-*`) and Linkerd's own (`l5d-client-id`, which the
+# gateway's MQTT decider reads). The Lua compares the lower-cased, hyphenated name.
+TRUSTED_PREFIXES = ("x-jc-", "jc-provenance-", "l5d-")
 
 # How a caller with no token is authenticated on a route. The class is what the reviewed
 # allow-list below records, and every route carries the plugins its class names.
@@ -473,6 +482,99 @@ def test_the_clearing_loop_is_the_same_lua_on_every_route(component_plugins):
     assert len(by_lua) == 1, "the clearing loop differs between routes:\n" + "\n\n".join(
         "--- " + ", ".join(routes) + "\n" + lua for lua, routes in by_lua.items()
     )
+
+
+PREFIX_LOOP = re.compile(
+    r"for name in pairs\(ngx\.req\.get_headers\(0\)\) do.*?\n\s*end\n\s*end\n\s*end",
+    re.DOTALL,
+)
+
+
+def test_every_route_clears_the_platform_identity_prefixes(component_plugins):
+    """GW12, AG-38, GW25 (T-5566): an `x-jc-*`, `jc-provenance-*` or `l5d-*` header from the
+    internet never reaches a service; until now only the gateway stripped them, so one handler
+    that forgot to would have trusted a forged caller. `get_headers(0)` reads every header: the
+    default stops at 100, and the 101st would pass uncleared."""
+    loops: dict[str, list[str]] = {}
+    for route_id, (source, config) in component_plugins.items():
+        lua = sanitiser(config["plugins"])
+        found = PREFIX_LOOP.search(lua)
+        assert found, f"{route_id} ({source}) does not clear the {TRUSTED_PREFIXES} header families"
+        loop = "\n".join(line.strip() for line in found.group(0).splitlines())
+        for prefix in TRUSTED_PREFIXES:
+            assert f'"{prefix}"' in loop, f"{route_id} ({source}) does not clear {prefix}*"
+        assert 'name:lower():gsub("_", "-")' in loop, f"{route_id} ({source}) misses X_JC_Subject"
+        assert "ngx.req.clear_header(name)" in loop, f"{route_id} ({source}) names the prefixes and clears none"
+        loops.setdefault(loop, []).append(f"{route_id} ({source})")
+    assert len(loops) == 1, "the prefix loop differs between routes:\n" + "\n\n".join(
+        "--- " + ", ".join(routes) + "\n" + lua for lua, routes in loops.items()
+    )
+
+
+@pytest.mark.xdist_group("docker-apisix-sanitiser")
+@pytest.mark.skipif(not __import__("shutil").which("docker"), reason="docker not installed")
+def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(component_plugins, tmp_path):
+    """GW12, AG-38 (T-5566), played on `apache/apisix` as pinned with the Lua `portal-api`
+    ships: the upstream, APISIX itself, echoes the headers it was sent."""
+    import json
+    import subprocess
+    import time
+    import urllib.request
+
+    from test_apisix_429_contract import pinned_image
+    from test_edge_csp_baseline import free_port
+
+    pre = component_plugins["portal-api"][1]["plugins"]["serverless-pre-function"]
+    echo = 'return function() ngx.say(require("cjson").encode(ngx.req.get_headers(0))); ngx.exit(200) end'
+    routes = [
+        {"id": "echo", "uri": "/echo", "plugins": {
+            "serverless-pre-function": {"phase": "rewrite", "functions": [echo]}}},
+        {"id": "edge", "uri": "/edge", "plugins": {
+            "proxy-rewrite": {"uri": "/echo"}, "serverless-pre-function": pre},
+         "upstream": {"type": "roundrobin", "nodes": {"127.0.0.1:9080": 1}}},
+    ]
+    (tmp_path / "config.yaml").write_text(
+        "deployment:\n  role: data_plane\n  role_data_plane:\n    config_provider: yaml\n"
+        "nginx_config:\n  http:\n    underscores_in_headers: \"on\"\n"
+    )
+    (tmp_path / "apisix.yaml").write_text(yaml.safe_dump({"routes": routes}) + "#END\n")
+    port = free_port()
+    name = f"apisix-sanitiser-{port}"
+    subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+    started = subprocess.run(
+        ["docker", "run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:9080",
+         "-v", f"{tmp_path / 'config.yaml'}:/usr/local/apisix/conf/config.yaml:ro",
+         "-v", f"{tmp_path / 'apisix.yaml'}:/usr/local/apisix/conf/apisix.yaml:ro",
+         pinned_image()],
+        capture_output=True, text=True, check=False,
+    )
+    if started.returncode != 0:
+        pytest.skip(f"the pinned image does not run here: {started.stderr.strip()}")
+    forged = {
+        "X-JC-Subject": "admin", "x-jc-groups": "/platform-admins", "X_JC_Client": "portal",
+        "JC-Provenance-Actor": "someone-else", "L5d-Client-Id": "mqtt-a.mqtt.serviceaccount.identity",
+        "X-Userinfo": "e30",
+    }
+    kept = {"X-Jcx-Note": "kept", "Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}
+    request = urllib.request.Request(f"http://127.0.0.1:{port}/edge", headers={**forged, **kept})
+    try:
+        deadline = time.time() + 60
+        while True:
+            try:
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    seen = json.loads(response.read())
+                break
+            except OSError:
+                if time.time() > deadline:
+                    pytest.fail("APISIX did not start")
+                time.sleep(1)
+    finally:
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+    arrived = {key.lower().replace("_", "-") for key in seen}
+    leaked = sorted(h for h in forged if h.lower().replace("_", "-") in arrived)
+    assert not leaked, f"the upstream was sent {leaked}"
+    for header, value in kept.items():
+        assert seen.get(header.lower()) == value, f"{header} was cleared too: {seen}"
 
 
 def test_the_sanitiser_clears_the_underscore_spelling_of_every_header(component_plugins, apisix_config):

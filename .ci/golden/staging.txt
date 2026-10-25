@@ -188,14 +188,17 @@ networking.k8s.io/v1/NetworkPolicy staging/runner-to-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy staging/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy staging/sandbox-reaper-linkerd-control-plane
 policy.linkerd.io/v1alpha1/AuthorizationPolicy staging/context-broker-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy staging/context-gateway-internal
 policy.linkerd.io/v1alpha1/AuthorizationPolicy staging/pipeline-runner-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy staging/portal-ui-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication staging/context-broker-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication staging/context-gateway-internal
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication staging/pipeline-runner-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication staging/portal-ui-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server staging/context-broker-api
+policy.linkerd.io/v1beta3/Server staging/context-gateway-internal
 policy.linkerd.io/v1beta3/Server staging/pipeline-runner-api
 policy.linkerd.io/v1beta3/Server staging/portal-ui-api
 policy/v1/PodDisruptionBudget staging/apisix
