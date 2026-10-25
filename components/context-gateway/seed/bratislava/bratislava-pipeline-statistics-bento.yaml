@@ -13,14 +13,18 @@ pipeline:
     - mapping: |
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V),
-        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city) or obec
-        # (the municipalities of the Bratislava Region); area: the area column (a zsj's 7-digit code),
-        # none for a table of the city alone; label: a zsj's name column, within: its city district's
-        # code column; year: the period column (a year, a range of years, two ranges compared or a
-        # day), quarter: its quarter column, month: its month column (1 to 12), spans: the range each
-        # year of it stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's
-        # title or the item's description names; by: breakdown columns (age, sex,
-        # category), each one segment of the id and one part of the name; only: [column, prefix]
+        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city), obec
+        # (the municipalities of the Bratislava Region) or kraj (the Bratislava region, NUTS 3 SK010);
+        # area: the area column (a zsj's 7-digit code), none for a table of the city alone; label: a
+        # zsj's name column, within: its city district's code column; year: the period column (a
+        # year, a range of years, two ranges compared, a day or a month such as 2018-06), quarter:
+        # its quarter column, month: its month column (1 to 12), spans: the range each year of it
+        # stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's title or
+        # the item's description names; by: breakdown columns (age, sex,
+        # category), each one segment of the id and one part of the name, or {code, name, optional}:
+        # the id segment from the code column, the name part from the name column (a budget item's
+        # code and title), an optional one left out of both where its cell is empty; abs: the figure
+        # without its sign (an age pyramid writes the men's side negative); only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
         # A table of events or bookings asks the hub for sums: group: the columns or expressions
@@ -107,7 +111,9 @@ pipeline:
           {"name": "vzajomne-migracne-saldo-casti-2000-2004-ba", "item": "504e50b164f44b8d80dcf76ae9b77caa", "path": "Vz%C3%A1jomn%C3%A9_migra%C4%8Dn%C3%A9_saldo_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_2000_%E2%80%93_2004", "title": "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", "areas": "district", "area": "MESTSKA_CAST_ZISKOVA", "fixed": "2000-2004", "by": ["MESTSKA_CAST_STRATOVA"], "values": [["MIGRACNE_SALDO", "migracne-saldo", "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", null, null]]},
           {"name": "pocet-ostatnych-udalosti", "item": "453481307bfe4386b8d2ec14ca8fb63d", "path": "Po%C4%8Det%20ostatn%C3%BDch%20udalost%C3%AD%20v%20rokoch%202017%20-%202022", "title": "Počet ostatných udalostí v rokoch 2017 - 2022", "areas": "district", "area": "Mestská_časť", "year": "EXPR_1", "past": true, "by": ["Skupina_udalosti"], "group": "SUBSTRING(Dátum_a_čas_od,1,4),Skupina_udalosti,Mestská_časť", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet udalostí", 0, null]]},
           {"name": "pocet-priestupkov-podla-druhu-udalosti", "item": "2566d894a604427196b65b09a46ea60b", "path": "Po%C4%8Det%20priestupkov%20pod%C4%BEa%20druhu%20udalosti%20v%20rokoch%202017%20-%202022", "title": "Počet priestupkov podľa druhu udalosti v rokoch 2017 - 2022", "areas": "district", "area": "Mestská_časť", "year": "EXPR_1", "past": true, "by": ["Skupina_udalosti"], "group": "SUBSTRING(Dátum_a_čas_od,1,4),Skupina_udalosti,Mestská_časť", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet priestupkov", 0, null]]},
-          {"name": "rozloha-mestskych-casti", "item": "baa9f32132a340b7a193d5cd130619c2", "path": "Rozloha%20mestsk%C3%BDch%20%C4%8Dast%C3%AD", "title": "Rozloha mestských častí", "areas": "district", "area": "Mestská_časť", "fixed": "2023", "values": [["Rozloha__km2_", "rozloha-km2", "Rozloha mestskej časti (km²)", 0, 400]]}
+          {"name": "rozloha-mestskych-casti", "item": "baa9f32132a340b7a193d5cd130619c2", "path": "Rozloha%20mestsk%C3%BDch%20%C4%8Dast%C3%AD", "title": "Rozloha mestských častí", "areas": "district", "area": "Mestská_časť", "fixed": "2023", "values": [["Rozloha__km2_", "rozloha-km2", "Rozloha mestskej časti (km²)", 0, 400]]},
+          {"name": "vekove-zlozenie-podiel", "item": "c1252c1579444a15998d8046aef696ea", "path": "Vekov%C3%A9_zlo%C5%BEenie_obyvate%C4%BEov_v_najstar%C5%A1ej_a_najmlad%C5%A1ej_mestskej_%C4%8Dasti_Bratislavy_v_roku_2021", "title": "Vekové zloženie obyvateľov najstaršej a najmladšej mestskej časti Bratislavy v roku 2021 (podiel)", "areas": "district", "area": "MESTSKA_CAST", "fixed": "2021", "by": ["POHLAVIE", "VEK"], "abs": true, "values": [["PODIEL", "podiel", "Podiel na obyvateľoch rovnakého pohlavia v mestskej časti", 0, 1]]},
+          {"name": "vekove-zlozenie-pocet", "item": "9ddb4493ef6047898e378431c34d8a02", "path": "Vekov%C3%A9_zlo%C5%BEenie_obyvate%C4%BEov_v_najstar%C5%A1ej_a_najmlad%C5%A1ej_mestskej_%C4%8Dasti_Bratislavy_v_roku_202", "title": "Vekové zloženie obyvateľov najstaršej a najmladšej mestskej časti Bratislavy v roku 2021 (počet)", "areas": "district", "area": "MESTSKA_CAST", "fixed": "2021", "by": ["POHLAVIE", "VEK"], "abs": true, "values": [["POCET_OBYVATELOV", "pocet", "Počet obyvateľov", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -207,6 +213,8 @@ pipeline:
           "bratislava 2": ["102", "Bratislava II"], "bratislava 3": ["103", "Bratislava III"], "bratislava 4": ["104", "Bratislava IV"],
           "bratislava 5": ["105", "Bratislava V"]
         }
+        # A table of the region beside Slovakia keeps the region's rows.
+        let kraje = { "bratislavsky kraj": ["sk010", "Bratislavský kraj"] }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
         # A basic settlement unit (ZSJ) by its 7-digit code, named with its city district, kept only
@@ -225,6 +233,22 @@ pipeline:
         map number {
           root = if this == null { null } else { this.string().re_replace_all("[\\s %]", "").replace_all(",", ".").number().catch(null) }
         }
+        map magnitude {
+          let n = this.apply("number")
+          root = if $n == null { null } else { $n.abs() }
+        }
+        map yearmonth {
+          let y = this.slice(0, 4).number().int64()
+          let m = this.slice(5, 7).number().int64()
+          let february = if $y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0) { "29" } else { "28" }
+          root = {
+            "from": this + "-01",
+            "to": this + "-" + ["31", $february, "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m - 1),
+            "slug": this,
+            "label": ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"].index($m - 1) + " " + $y.string(),
+            "frequency": "monthly"
+          }
+        }
         map years {
           let v = this.string().trim()
           let y = $v.re_find_all("(19|20)[0-9]{2}")
@@ -240,7 +264,7 @@ pipeline:
             }
           } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
             { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
-          } else { null }
+          } else if $v.re_match("^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$") { $v.apply("yearmonth") } else { null }
         }
         map quarter {
           let y = this.index(0)
@@ -284,11 +308,19 @@ pipeline:
         map areaname {
           root = if this.table.area.or("") == "" { "*" } else { this.row.get(this.table.area).or("").apply("fold") }
         }
+        # Each breakdown cell as its id segment and its label; a label read as Latin-1 from cp1250
+        # text ("Raèianska") gets its č and ň back.
         map breakdown {
           let r = this.row
           let labels = this.table.labels.or({})
           # "Nan" is the hub's word for a category it did not detect: no breakdown.
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(b -> if b.lowercase() == "nan" { "" } else { b }).map_each(v -> $labels.get(v).or(v))
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.merge({
+            "raw": $r.get(c.code).or("").string().trim()
+          })).map_each(c -> c.merge({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
+            "segment": c.raw.apply("segment"),
+            "label": (if c.name.or("") != "" { $r.get(c.name).or("").string().trim() } else { c.raw }).replace_all_many(["è", "č", "ò", "ň"]),
+            "optional": c.optional.or(false)
+          })
         }
         map zsj {
           let code = this.row.get(this.table.area).or("").string().trim()
@@ -310,27 +342,28 @@ pipeline:
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "zsj" { { "table": t, "row": r, "parts": $parts }.apply("zsj") }
             else if t.areas == "obec" { { "table": t, "row": r }.apply("obec") }
+            else if t.areas == "kraj" { $kraje.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
-          "number": r.get(v.index(0)).apply("number")
+          "number": r.get(v.index(0)).apply(if t.abs.or(false) { "magnitude" } else { "number" })
         }))).flatten().flatten()
         map reason {
           let v = this.value
           root = if this.area == null {
               { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava",
-                "zsj": "not a ZSJ of the city", "obec": "no municipality" }.get(this.table.areas)
+                "zsj": "not a ZSJ of the city", "obec": "no municipality", "kraj": "not the Bratislava region" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
             else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
-            else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
+            else if this.by.filter(b -> b.segment == "" && !b.optional).length() > 0 { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }
             else { null }
         }
         let marked = $cells.map_each(c -> c.assign({
           "_drop": c.apply("reason"),
-          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.apply("segment"))).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
+          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.segment).filter(s -> s != "")).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
         }))
         let usable = $marked.filter(c -> c._drop == null)
         let once = $usable.unique(c -> c._id)
@@ -350,7 +383,7 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
           "type": "KeyPerformanceIndicator",
-          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by).concat([this.area.index(1), this.period.label])).join(", ") },
+          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by.map_each(b -> b.label).filter(l -> l != "")).concat([this.area.index(1), this.period.label])).join(", ") },
           "description": { "type": "Property", "value": $t.title },
           "process": { "type": "Property", "value": this.value.index(2) },
           "category": { "type": "Property", "value": ["quantitative"] },

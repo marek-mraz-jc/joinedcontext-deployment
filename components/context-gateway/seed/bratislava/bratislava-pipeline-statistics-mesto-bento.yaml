@@ -13,14 +13,18 @@ pipeline:
     - mapping: |
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V),
-        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city) or obec
-        # (the municipalities of the Bratislava Region); area: the area column (a zsj's 7-digit code),
-        # none for a table of the city alone; label: a zsj's name column, within: its city district's
-        # code column; year: the period column (a year, a range of years, two ranges compared or a
-        # day), quarter: its quarter column, month: its month column (1 to 12), spans: the range each
-        # year of it stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's
-        # title or the item's description names; by: breakdown columns (age, sex,
-        # category), each one segment of the id and one part of the name; only: [column, prefix]
+        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city), obec
+        # (the municipalities of the Bratislava Region) or kraj (the Bratislava region, NUTS 3 SK010);
+        # area: the area column (a zsj's 7-digit code), none for a table of the city alone; label: a
+        # zsj's name column, within: its city district's code column; year: the period column (a
+        # year, a range of years, two ranges compared, a day or a month such as 2018-06), quarter:
+        # its quarter column, month: its month column (1 to 12), spans: the range each year of it
+        # stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's title or
+        # the item's description names; by: breakdown columns (age, sex,
+        # category), each one segment of the id and one part of the name, or {code, name, optional}:
+        # the id segment from the code column, the name part from the name column (a budget item's
+        # code and title), an optional one left out of both where its cell is empty; abs: the figure
+        # without its sign (an age pyramid writes the men's side negative); only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
         # A table of events or bookings asks the hub for sums: group: the columns or expressions
@@ -244,7 +248,22 @@ pipeline:
           {"name": "charakter-zariadeni-zakladnych-skol", "item": "821c498081ce41fcb9e87fb8bb0d7b70", "path": "Charakter_zariaden%C3%AD_z%C3%A1kladn%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení základných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet základných škôl podľa charakteru objektu", 0, null]]},
           {"name": "mestske-karantene-zariadenie-hradska", "item": "8ed75fd2aaca4abfaa21ff07890b759c", "path": "Mestsk%C3%A9%20karant%C3%A9ne%20zariadenie%20Hradsk%C3%A1%20-%20kr%C3%ADzov%C3%A9%20ubytovanie", "title": "Mestské karanténe zariadenie Hradská - krízové ubytovanie", "areas": "city", "year": "Rok", "month": "Mesiac", "values": [["Počet_prijatých_klientov", "pocet-prijatych-klientov", "Počet prijatých klientov", 0, null], ["Personál_TPP", "personal-tpp", "Personál TPP", 0, null], ["Obslužný_personál_dohodári", "obsluzny-personal-dohodari", "Obslužný personál (dohodári)", 0, null], ["Lekár", "lekar", "Lekár", 0, null], ["Zdravotná_sestra", "zdravotna-sestra", "Zdravotná sestra", 0, null], ["Dobrovoľníci", "dobrovolnici", "Dobrovoľníci", 0, null], ["Maximálna_kapacita_MKZ", "maximalna-kapacita-mkz", "Maximálna kapacita MKZ", 0, null]]},
           {"name": "pocet-deti-a-zariadeni-dalsieho-vzdelavania", "item": "dd0ac1c15c244c60b35eea88634553b3", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_zariaden%C3%AD_pre_%C4%8Fal%C5%A1ie_vzdel%C3%A1vanie_pod%C4%BEa_typu_zria%C4%8Fovate%C4%BEa", "title": "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["VZDELAVACIE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie", 0, null]]},
-          {"name": "pocet-deti-a-specialnych-skol", "item": "629aae1ae9ce45bc8e521735736ed01e", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_%C5%A1peci%C3%A1lnych_%C5%A1k%C3%B4l_a_%C5%A1kolsk%C3%BDch_zariaden%C3%AD_pod%C4%BEa_typu_zria", "title": "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["SKOLSKE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení", 0, null]]}
+          {"name": "pocet-deti-a-specialnych-skol", "item": "629aae1ae9ce45bc8e521735736ed01e", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_%C5%A1peci%C3%A1lnych_%C5%A1k%C3%B4l_a_%C5%A1kolsk%C3%BDch_zariaden%C3%AD_pod%C4%BEa_typu_zria", "title": "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["SKOLSKE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení", 0, null]]},
+          {"name": "starz-navstevnici", "item": "e09c4d8e474f4d9ba784f1b7fe0c6d21", "path": "Po%C4%8Det_n%C3%A1v%C5%A1tevn%C3%ADkov_v_zariadeniach_STaRZ", "title": "Počet návštevníkov v zariadeniach STaRZ", "areas": "city", "year": "ROK", "values": [["KUPALISKA", "kupaliska", "Návštevníci kúpalísk STaRZ", 0, null], ["PLAVAREN_PASIENKY", "plavaren-pasienky", "Návštevníci plavárne Pasienky", 0, null], ["OSTATNE", "ostatne", "Návštevníci ostatných zariadení STaRZ", 0, null], ["SPOLU", "spolu", "Návštevníci zariadení STaRZ spolu", 0, null]]},
+          {"name": "bkis-ziadosti", "item": "e745d77470e04ea896e134635a4e1e3a", "path": "Po%C4%8Det_schv%C3%A1len%C3%BDch_%C5%BEiadost%C3%AD_v_r%C3%A1mci_zria%C4%8Fovanej_a_nezria%C4%8Fovanej_kult%C3%BAry_BKIS", "title": "Počet schválených žiadostí v rámci zriaďovanej a nezriaďovanej kultúry BKIS", "areas": "city", "year": "ROK", "values": [["ZRIADOVANA_KULTURA", "zriadovana", "Schválené žiadosti BKIS, zriaďovaná kultúra", 0, null], ["NEZRIADOVANA_KULTURA", "nezriadovana", "Schválené žiadosti BKIS, nezriaďovaná kultúra", 0, null]]},
+          {"name": "priestupky-ulice", "item": "f9cb0a89231b4dbb8e082e35b95707c9", "path": "Ulice_s_viac_ako_400_priestupkami_v_Bratislave", "title": "Ulice s viac ako 400 priestupkami v Bratislave", "areas": "city", "year": "ROK", "by": ["ULICA"], "values": [["POCET_PRIESTUPKOV", "pocet", "Počet priestupkov na ulici", 0, null]]},
+          {"name": "wifi-pouzivatelia", "item": "44deb37ca534488a956af5164d33ce6f", "path": "Po%C4%8Det%20u%C5%BE%C3%ADvate%C4%BEov%20Free%20Wifi%20VisitBratislava%20pod%C4%BEa%20lokality", "title": "Počet užívateľov Free Wifi VisitBratislava podľa lokality", "areas": "city", "year": "Dátum", "by": ["Lokalita"], "values": [["Počet_užívateľov", "pocet", "Počet užívateľov Free Wifi VisitBratislava", 0, null]]},
+          {"name": "vydavky-programy", "item": "0cd89fe509b649dc810880504c798b9a", "path": "Be%C5%BEn%C3%A9_a_kapit%C3%A1lov%C3%A9_v%C3%BDdavky_pod%C4%BEa_programovej_%C5%A1trukt%C3%BAry", "title": "Bežné a kapitálové výdavky mesta Bratislava podľa programovej štruktúry", "areas": "city", "year": "ROK", "values": [["MOBILITA_A_VEREJNA_DOPRAVA", "mobilita", "Bežné a kapitálové výdavky (EUR): Mobilita a verejná doprava", 0, null], ["VEREJNA_INFRASTRUKTURA", "infrastruktura", "Bežné a kapitálové výdavky (EUR): Verejná infraštruktúra", 0, null], ["PORIADOK_A_BEZPECNOST", "poriadok", "Bežné a kapitálové výdavky (EUR): Poriadok a bezpečnosť", 0, null], ["KULTURA_SPORT_PODPORA_SLUZIEB_A_CESTOVNEHO_RUCHU", "kultura", "Bežné a kapitálové výdavky (EUR): Kultúra, šport, podpora služieb a cestovného ruchu", 0, null], ["VZDELAVANIE_A_VOLNY_CAS", "vzdelavanie", "Bežné a kapitálové výdavky (EUR): Vzdelávanie a voľný čas", 0, null], ["SOCIALNA_POMOCT_A_SOCIALNE_SLUZBY", "socialna", "Bežné a kapitálové výdavky (EUR): Sociálna pomoc a sociálne služby", 0, null], ["EFEKTIVNA_A_TRANSPARENTNA_SAMOSPRAVA", "samosprava", "Bežné a kapitálové výdavky (EUR): Efektívna a transparentná samospráva", 0, null], ["SPRAVA_A_NAKLADANIE_S_MAJETKOM", "majetok", "Bežné a kapitálové výdavky (EUR): Správa a nakladanie s majetkom", 0, null]]},
+          {"name": "pzi-v-zahranici", "item": "1e4423aaeb0c47da9d39bd140d7a27ec", "path": "Objem_priamych_zahrani%C4%8Dn%C3%BDch_invest%C3%ADci%C3%AD_v_zahrani%C4%8D%C3%AD_vo_vybran%C3%BDch_rokoch_%E2%80%93_k%C3%B3pia", "title": "Objem priamych zahraničných investícií v zahraničí vo vybraných rokoch", "areas": "kraj", "area": "UZEMIE", "year": "ROK", "values": [["HODNOTA", "objem", "Objem priamych zahraničných investícií v zahraničí", 0, null]]},
+          {"name": "pzi-rast", "item": "94747ea9e72b4031b654b478c0442f0f", "path": "Medziro%C4%8Dn%C3%BD_rast_priamych_zahrani%C4%8Dn%C3%BDch_invest%C3%ADci%C3%AD_na_Slovensku_a_v_BSK_v_rokoch_2016_2019", "title": "Medziročný rast priamych zahraničných investícií v BSK v rokoch 2016 – 2019", "areas": "kraj", "area": "UZEMIE", "year": "ROK", "values": [["RAST_V__", "rast", "Medziročný rast priamych zahraničných investícií (%)", -100, null]]},
+          {"name": "rozpocet-prijmy-2014", "item": "d85797a60d184d7d87d5a9358429347a", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202014%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2014 – príjmy", "areas": "city", "fixed": "2014", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2014", "schvaleny", "Schválený rozpočet príjmov 2014 (EUR)", null, null], ["Upravený_stav_k_31_12_2014", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2014 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2014", "skutocnost", "Skutočné príjmy k 31. 12. 2014 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2015", "item": "58582ad336014a6f8f38ba6645d9a860", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202015%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2015 – príjmy", "areas": "city", "fixed": "2015", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2015", "schvaleny", "Schválený rozpočet príjmov 2015 (EUR)", null, null], ["Upravený_stav_k_31_12_2015", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2015 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2015", "skutocnost", "Skutočné príjmy k 31. 12. 2015 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2016", "item": "10bdc80617c44d39b2a1e8f9a11a4dd4", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202016%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2016 – príjmy", "areas": "city", "fixed": "2016", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická", {"code": "Typ_zdroja", "optional": true}], "values": [["Schválený_2016", "schvaleny", "Schválený rozpočet príjmov 2016 (EUR)", null, null], ["Upravený_stav_k_31_12_2016", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2016 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2016", "skutocnost", "Skutočné príjmy k 31. 12. 2016 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2017", "item": "4f1ac1ceffcd44499eb0d03f1acdcfc5", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202017%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2017 – príjmy", "areas": "city", "fixed": "2017", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická", {"code": "Typ_zdroja", "optional": true}], "values": [["Schválený_2017", "schvaleny", "Schválený rozpočet príjmov 2017 (EUR)", null, null], ["Upravený_stav_k_31_12_2017", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2017 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2017", "skutocnost", "Skutočné príjmy k 31. 12. 2017 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2018", "item": "0a5381f860e14fc09fcd53efc7780283", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202018%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2018 – príjmy", "areas": "city", "fixed": "2018", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2018", "schvaleny", "Schválený rozpočet príjmov 2018 (EUR)", null, null], ["Upravený_stav_k_31_12_2018", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2018 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2018", "skutocnost", "Skutočné príjmy k 31. 12. 2018 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2019", "item": "0f2810963d6b4d1eb182001faf417579", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202019%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2019 – príjmy", "areas": "city", "fixed": "2019", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2019", "schvaleny", "Schválený rozpočet príjmov 2019 (EUR)", null, null], ["Upravený_stav_k_30_06_2019", "upraveny", "Upravený rozpočet príjmov k 30. 6. 2019 (EUR)", null, null], ["Skutočnosť_stav_k_30_06_2019", "skutocnost", "Skutočné príjmy k 30. 6. 2019 (EUR)", null, null]]},
+          {"name": "osv-cerpanie-2019-09-06", "item": "1a8a4671f65a4600aac82671c8be443e", "path": "%C4%8Cerpanie%20rozpo%C4%8Dtu%20oddelenia%20soci%C3%A1lnych%20vec%C3%AD%20k%2006.09.2019", "title": "Čerpanie rozpočtu oddelenia sociálnych vecí k 6. 9. 2019", "areas": "city", "fixed": "2019", "by": [{"code": "Program___kód", "optional": true}, "Ukazovateľ"], "values": [["Schválený_rozpočet_OSV_2019", "schvaleny", "Schválený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Upravený_rozpočet_OSV_2019", "upraveny", "Upravený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Čerpanie_k_06_09_2019", "cerpanie", "Čerpanie k 6. 9. 2019 (EUR)", 0, null], ["Zostatok", "zostatok", "Zostatok rozpočtu (EUR)", null, null], ["F__čerpania", "percento", "Čerpanie (% upraveného rozpočtu)", 0, null]]},
+          {"name": "osv-cerpanie-2019-06-30", "item": "11b7cdd27d9f446ca97c1c2913cc169a", "path": "%C4%8Cerpanie%20rozpo%C4%8Dtu%20oddelenia%20soci%C3%A1lnych%20vec%C3%AD%20k%2030.06.2019", "title": "Čerpanie rozpočtu oddelenia sociálnych vecí k 30. 6. 2019", "areas": "city", "fixed": "2019", "by": [{"code": "Program___kód", "optional": true}, "Ukazovateľ"], "values": [["Schválený_rozpočet_OSV_2019", "schvaleny", "Schválený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Upravený_rozpočet_OSV_2019", "upraveny", "Upravený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Čerpanie_k_30_06_2019", "cerpanie", "Čerpanie k 30. 6. 2019 (EUR)", 0, null], ["Zostatok", "zostatok", "Zostatok rozpočtu (EUR)", null, null], ["F__čerpania", "percento", "Čerpanie (% upraveného rozpočtu)", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -344,6 +363,8 @@ pipeline:
           "bratislava 2": ["102", "Bratislava II"], "bratislava 3": ["103", "Bratislava III"], "bratislava 4": ["104", "Bratislava IV"],
           "bratislava 5": ["105", "Bratislava V"]
         }
+        # A table of the region beside Slovakia keeps the region's rows.
+        let kraje = { "bratislavsky kraj": ["sk010", "Bratislavský kraj"] }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
         # A basic settlement unit (ZSJ) by its 7-digit code, named with its city district, kept only
@@ -362,6 +383,22 @@ pipeline:
         map number {
           root = if this == null { null } else { this.string().re_replace_all("[\\s %]", "").replace_all(",", ".").number().catch(null) }
         }
+        map magnitude {
+          let n = this.apply("number")
+          root = if $n == null { null } else { $n.abs() }
+        }
+        map yearmonth {
+          let y = this.slice(0, 4).number().int64()
+          let m = this.slice(5, 7).number().int64()
+          let february = if $y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0) { "29" } else { "28" }
+          root = {
+            "from": this + "-01",
+            "to": this + "-" + ["31", $february, "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m - 1),
+            "slug": this,
+            "label": ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"].index($m - 1) + " " + $y.string(),
+            "frequency": "monthly"
+          }
+        }
         map years {
           let v = this.string().trim()
           let y = $v.re_find_all("(19|20)[0-9]{2}")
@@ -377,7 +414,7 @@ pipeline:
             }
           } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
             { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
-          } else { null }
+          } else if $v.re_match("^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$") { $v.apply("yearmonth") } else { null }
         }
         map quarter {
           let y = this.index(0)
@@ -421,11 +458,19 @@ pipeline:
         map areaname {
           root = if this.table.area.or("") == "" { "*" } else { this.row.get(this.table.area).or("").apply("fold") }
         }
+        # Each breakdown cell as its id segment and its label; a label read as Latin-1 from cp1250
+        # text ("Raèianska") gets its č and ň back.
         map breakdown {
           let r = this.row
           let labels = this.table.labels.or({})
           # "Nan" is the hub's word for a category it did not detect: no breakdown.
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(b -> if b.lowercase() == "nan" { "" } else { b }).map_each(v -> $labels.get(v).or(v))
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.merge({
+            "raw": $r.get(c.code).or("").string().trim()
+          })).map_each(c -> c.merge({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
+            "segment": c.raw.apply("segment"),
+            "label": (if c.name.or("") != "" { $r.get(c.name).or("").string().trim() } else { c.raw }).replace_all_many(["è", "č", "ò", "ň"]),
+            "optional": c.optional.or(false)
+          })
         }
         map zsj {
           let code = this.row.get(this.table.area).or("").string().trim()
@@ -447,27 +492,28 @@ pipeline:
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "zsj" { { "table": t, "row": r, "parts": $parts }.apply("zsj") }
             else if t.areas == "obec" { { "table": t, "row": r }.apply("obec") }
+            else if t.areas == "kraj" { $kraje.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
-          "number": r.get(v.index(0)).apply("number")
+          "number": r.get(v.index(0)).apply(if t.abs.or(false) { "magnitude" } else { "number" })
         }))).flatten().flatten()
         map reason {
           let v = this.value
           root = if this.area == null {
               { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava",
-                "zsj": "not a ZSJ of the city", "obec": "no municipality" }.get(this.table.areas)
+                "zsj": "not a ZSJ of the city", "obec": "no municipality", "kraj": "not the Bratislava region" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
             else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
-            else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
+            else if this.by.filter(b -> b.segment == "" && !b.optional).length() > 0 { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }
             else { null }
         }
         let marked = $cells.map_each(c -> c.assign({
           "_drop": c.apply("reason"),
-          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.apply("segment"))).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
+          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.segment).filter(s -> s != "")).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
         }))
         let usable = $marked.filter(c -> c._drop == null)
         let once = $usable.unique(c -> c._id)
@@ -487,7 +533,7 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
           "type": "KeyPerformanceIndicator",
-          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by).concat([this.area.index(1), this.period.label])).join(", ") },
+          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by.map_each(b -> b.label).filter(l -> l != "")).concat([this.area.index(1), this.period.label])).join(", ") },
           "description": { "type": "Property", "value": $t.title },
           "process": { "type": "Property", "value": this.value.index(2) },
           "category": { "type": "Property", "value": ["quantitative"] },
