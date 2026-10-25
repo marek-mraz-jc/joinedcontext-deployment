@@ -1058,6 +1058,31 @@ def expected_catalogue() -> dict[str, int]:
     return counts
 
 
+def test_every_endpoint_text_is_one_string_per_language():
+    """A comma in a flow-mapped text, expanded by a formatter, split barcelona-endpoint-traffic's counter
+    description into keys such as `el tipus i el lloc de cada aforament.: null`, which DCAT then published."""
+    def texts(node, where):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in ("title", "description") and isinstance(value, dict):
+                    yield where + "." + key, value
+                else:
+                    yield from texts(value, f"{where}.{key}")
+        elif isinstance(node, list):
+            for i, item in enumerate(node):
+                yield from texts(item, f"{where}[{i}]")
+
+    broken = []
+    for path in sorted([*SEED.glob("*/*.yaml"), *SEED.glob("slovensko/susr-*/endpoint.yaml")]):
+        for doc in yaml.safe_load_all(path.read_text()):
+            if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
+                for where, text in texts(doc.get("spec"), path.name):
+                    if not all(re.fullmatch(r"[a-z]{2,3}", str(k)) and isinstance(v, str) and v.strip()
+                               for k, v in text.items()):
+                        broken.append((where, text))
+    assert broken == []
+
+
 def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     od = mapped_rows()
     mapped = {e["name"] for e in MAPPING["datasets"] if e["status"] == "mapped"}
@@ -1067,10 +1092,11 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5258 the eight Helsinki statistics themes; T-5278 the heat vulnerability index and the service property energy use; T-5268 PID vehicles and T-5276 Golemio city services and T-5269 IPR city amenities and T-5423 the PID lines, stops, metro entrances and fare zones in praha; T-5257 Helsinki's feedback reports.
         # T-5263 added Barcelona's air quality, weather and groundwater; T-5265 its activity agenda and its
         # facilities; T-5262 its traffic, parking and EV charging; T-5264 its districts and barris, its
-        # works on the public space and its crossings; T-5431 its street furniture; T-5417 its tourist flats.
+        # works on the public space and its crossings; T-5431 its street furniture; T-5417 its tourist flats;
+        # T-5413 its dog areas, trees and weather forecast; T-5374 its bike lanes and road accidents.
         # T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city).
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
-        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327,
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327,
         "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1, "praha": 8 + 1 + 1 + 4 + 1, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 
