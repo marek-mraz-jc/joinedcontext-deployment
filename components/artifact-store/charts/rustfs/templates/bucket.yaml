@@ -65,9 +65,11 @@ spec:
                 --object-lock-configuration '{"ObjectLockEnabled":"Enabled","Rule":{"DefaultRetention":{"Mode":"COMPLIANCE","Days":{{ int .Values.objectLock.defaultRetentionDays }}}}}'
               echo "default retention: COMPLIANCE for {{ int .Values.objectLock.defaultRetentionDays }} days"
               {{- end }}
-              # Cached file downloads are the one thing here that is not kept (PF-33).
+              # Cached file downloads are the one thing here that is not kept (PF-33). The bucket is
+              # versioned (object lock), so an expiry only stacks a delete marker over the old
+              # version: the noncurrent versions and the markers left alone go too (F-DEP1-014).
               aws --endpoint-url "$endpoint" s3api put-bucket-lifecycle-configuration --bucket "$BUCKET" \
-                --lifecycle-configuration '{"Rules":[{"ID":"file-cache","Status":"Enabled","Filter":{"Prefix":"{{ .Values.fileCache.prefix }}"},"Expiration":{"Days":{{ int .Values.fileCache.expiryDays }}}}]}'
+                --lifecycle-configuration '{"Rules":[{"ID":"file-cache","Status":"Enabled","Filter":{"Prefix":"{{ .Values.fileCache.prefix }}"},"Expiration":{"Days":{{ int .Values.fileCache.expiryDays }}},"NoncurrentVersionExpiration":{"NoncurrentDays":{{ int .Values.fileCache.expiryDays }}}},{"ID":"file-cache-markers","Status":"Enabled","Filter":{"Prefix":"{{ .Values.fileCache.prefix }}"},"Expiration":{"ExpiredObjectDeleteMarker":true}}]}'
               echo "lifecycle: {{ .Values.fileCache.prefix }} expires after {{ int .Values.fileCache.expiryDays }} day(s)"
               {{- if .Values.appsBucket.enabled }}
               # The server WASM Apps' bucket: each shard's key is minted by the Portal (AP-158);

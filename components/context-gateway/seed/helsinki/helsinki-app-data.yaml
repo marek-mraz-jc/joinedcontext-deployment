@@ -75,5 +75,6 @@ spec:
         - windSpeed
         - windDirection
         - precipitation
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, csv, ogc-features]

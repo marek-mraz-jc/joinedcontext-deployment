@@ -197,8 +197,8 @@ def test_the_year_of_a_figure_is_the_publishers_year_and_not_its_position(entiti
         ("om7102rr", "SK032", "2024"): 611124,
         ("om7102rr", "SK032", "2023"): 614356,
         ("om7102rr", "SK0321", "2024"): 106604,
-        ("vh5003rr", "SK0321508438", "2023"): 3868,
-        ("vh5003rr", "SK0321508438", "2022"): 3991,
+        ("vh5003rr", "SK0321508438", "2023"): 3868000,
+        ("vh5003rr", "SK0321508438", "2022"): 3991000,
     }
     found = {
         (e["dataSet"]["value"], e["refArea"]["value"], e["refPeriod"]["value"]): e["kpiValue"]["value"]
@@ -614,3 +614,13 @@ def test_a_replace_may_remove_what_an_earlier_mapping_wrote():
     assert "title" in view_slots(model, "Article")
     for name in ("dataset", "title", "cisloObjednavky"):
         assert model["slots"][name].get("deprecated"), name
+
+
+@requires_docker
+def test_the_city_register_updates_the_same_entities_every_day(entities):
+    """The register is read nightly: an id with the day in it minted 105 new entities a night and
+    left every earlier night's beside them (F-BNT1-014)."""
+    produced = entities[SEED / "banskabystrica/pipeline-obyvatelia-bento.yaml"]
+    day = produced[0]["refPeriod"]["value"]
+    assert all(day not in e["id"] for e in produced)
+    assert {e["id"].rsplit("-", 1)[1] for e in produced} == {e["dimensionKey"]["value"] for e in produced}

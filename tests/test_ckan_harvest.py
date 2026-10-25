@@ -394,6 +394,25 @@ def test_a_dataset_the_publisher_no_longer_lists_is_withdrawn(monkeypatch, capsy
     assert "  - bb-dtm-bb-register-ulic: no longer ingested from the catalogue" in capsys.readouterr().out
 
 
+
+def test_a_distribution_host_down_tonight_withdraws_nothing(monkeypatch, capsys):
+    """A 503 or a timeout on the city's file host is no withdrawal: one bad night deleted every
+    dataset it served (F-DEP1-013). An unlisted dataset still goes."""
+    harvest = load(monkeypatch)
+    assert harvest.main() == 0
+    fake = harvest.ckan
+    published = {n for n, p in fake.packages.items() if p.get("state", "active") == "active"}
+    harvest = load(monkeypatch, catalogue=[r for r in CATALOGUE if r["title"] != "DTM_BB-register-ulic"])
+    harvest.ckan = fake
+
+    def down(url, *_):
+        raise harvest.urllib.error.URLError("timed out")
+    monkeypatch.setattr(harvest, "fetch", down)
+    harvest.main()
+    deleted = {n for n, p in fake.packages.items() if p.get("state") == "deleted"}
+    assert deleted == {"bb-dtm-bb-register-ulic"}, deleted
+    assert published - deleted, "the datasets of the host that is down stay published"
+
 def test_an_empty_catalogue_answer_deletes_nothing(monkeypatch, capsys):
     harvest = load(monkeypatch)
     assert harvest.main() == 0

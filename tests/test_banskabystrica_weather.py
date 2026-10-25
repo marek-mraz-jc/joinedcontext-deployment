@@ -226,6 +226,19 @@ def test_a_minute_without_a_reading_leaves_that_attribute_out_and_keeps_the_othe
     assert station["windSpeed"]["value"] == row["vie_pr_rych"]
 
 
+
+@requires_docker
+def test_ten_minutes_without_a_rain_reading_write_no_precipitation_rather_than_zero():
+    """An empty sum is 0 mm: a gauge that reported nothing read as a dry day (F-BNT1-016)."""
+    document = recorded_file()
+    for r in document["data"]:
+        if r["ind_kli"] == 11898:
+            r["zra_uhrn"] = None
+    result = pocasie({DATA + "20261015/" + FILE: json.dumps(document).encode()})
+    assert result.returncode == 0, result.stderr.decode()
+    station = next(e for e in json.loads(result.stdout) if e["id"].endswith("shmu-11898"))
+    assert "precipitation" not in station and "temperature" in station
+
 @requires_docker
 def test_a_day_folder_without_a_file_fails_the_run_and_writes_nothing():
     result = pocasie({DATA + "20261015/": b"<html><body><h1>Index of</h1></body></html>"})

@@ -37,7 +37,7 @@ pipeline:
                 meta rows = this.rowCount
                 root = ""
             - http:
-                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0/query?where=1%3D1&outFields=Funkcia,Utvar_nazov,Kancelaria,Adresa,Upraven%C3%A9,Vytvoren%C3%A9&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0/query?where=1%3D1&outFields=Funkcia,Utvar_nazov,Kancelaria,Adresa,Upraven%C3%A9,Vytvoren%C3%A9&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000&orderByFields=FID"
                 verb: GET
                 headers:
                   Accept: application/geo+json
@@ -126,7 +126,7 @@ pipeline:
           "upravene": this.properties."Upravené".apply("datetime"),
           "vytvorene": this.properties."Vytvorené".apply("datetime"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
-          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0/query?where=1%3D1&outFields=Funkcia,Utvar_nazov,Kancelaria,Adresa,Upraven%C3%A9,Vytvoren%C3%A9&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0/query?where=1%3D1&outFields=Funkcia,Utvar_nazov,Kancelaria,Adresa,Upraven%C3%A9,Vytvoren%C3%A9&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-organizacna-struktura-40329b" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.

@@ -143,5 +143,8 @@ pipeline:
               "dateModified": if v.r.edited.type() == "number" && !v.r.late { { "type": "Property", "value": (v.r.edited / 1000).ts_format("2006-01-02T15:04:05Z", "UTC") } } else { null },
               "location": { "type": "GeoProperty", "value": v.r.g },
               "dataProvider": { "type": "Property", "value": "datový podklad © IPR Praha (CC BY 4.0)" },
-              "source": { "type": "Property", "value": $source }
+              "source": { "type": "Property", "value": $source },
+              # The id is a hash of the geometry, so a redrawn outline is a new entity: the old one
+              # leaves four weekly runs after its last write, as the waste containers do (F-BNT3-019).
+              "expiresAt": (now().ts_unix() + 2419200).ts_format("2006-01-02T15:04:05Z", "UTC")
             }.filter(kv -> kv.value != null))

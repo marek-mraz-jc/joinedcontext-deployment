@@ -236,10 +236,10 @@ update:
 [group('components')]
 update-components:
 	@for d in components/*; do \
-		if [ -d "$$d" ]; then \
-			name=$$(basename "$$d"); \
-			echo "Updating $$name..."; \
-			( cd components && copier update --skip-answered --vcs-ref 8969ae22 -a "$$name/.copier-answers.yml" ) || echo "copier update failed for $$name"; \
+		if [ -d "$d" ]; then \
+			name=$(basename "$d"); \
+			echo "Updating $name..."; \
+			( cd components && copier update --skip-answered --vcs-ref 8969ae22 -a "$name/.copier-answers.yml" ) || echo "copier update failed for $name"; \
 		fi; \
 	done
 
@@ -373,7 +373,8 @@ _check-dependencies dependencies='k3d':
 		exit 1
 	fi
 
-# Install dependencies
+# Install dependencies: release downloads checked against the sha256 images/gitops-helmfile/Dockerfile
+# pins (linkerd's from tools.env), never an install script from a branch (F-DEP2-012).
 [group('helpers')]
 [linux]
 install-dependencies:
@@ -387,30 +388,34 @@ install-dependencies:
 		echo "Docker is already installed."; \
 	fi
 	if ! which kubectl > /dev/null; then \
-		curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"; \
-		sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl; \
+		curl -fsSLO "https://dl.k8s.io/release/v1.35.9/bin/linux/amd64/kubectl"; \
+		echo "3cfeaf80be482b435b0aa214aff6e0b2c312ee23c0ff20810c75517b6004c6eb  kubectl" | sha256sum -c - || exit 1; \
+		sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && rm kubectl; \
 	else \
 		echo "kubectl is already installed."; \
 	fi
 	if ! which helm > /dev/null; then \
-		curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash; \
+		curl -fsSL -o helm.tgz https://get.helm.sh/helm-v4.3.0-linux-amd64.tar.gz; \
+		echo "86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb  helm.tgz" | sha256sum -c - || exit 1; \
+		tar -xzf helm.tgz linux-amd64/helm && sudo install -o root -g root -m 0755 linux-amd64/helm /usr/local/bin/helm; \
+		rm -rf helm.tgz linux-amd64; \
 		helm plugin install https://github.com/databus23/helm-diff; \
 	else \
 		echo "Helm is already installed."; \
 	fi
 	if ! which helmfile > /dev/null; then \
-		curl -LO https://github.com/helmfile/helmfile/releases/download/v1.2.3/helmfile_1.2.3_linux_amd64.tar.gz; \
-		tar -xzf helmfile_1.2.3_linux_amd64.tar.gz && sudo install -o root -g root -m 0755 helmfile /usr/local/bin/helmfile; \
-		rm helmfile_1.2.3_linux_amd64.tar.gz; \
+		curl -fsSLO https://github.com/helmfile/helmfile/releases/download/v1.8.1/helmfile_1.8.1_linux_amd64.tar.gz; \
+		echo "ccabbe75dddbc25008d055fe92a44f95a184342211e7244d32b870409239c7a3  helmfile_1.8.1_linux_amd64.tar.gz" | sha256sum -c - || exit 1; \
+		tar -xzf helmfile_1.8.1_linux_amd64.tar.gz helmfile && sudo install -o root -g root -m 0755 helmfile /usr/local/bin/helmfile; \
+		rm helmfile_1.8.1_linux_amd64.tar.gz helmfile; \
 	else \
 		echo "Helmfile is already installed."; \
 	fi
 	if ! which linkerd > /dev/null; then \
-		export LINKERD2_VERSION=edge-25.12.2; \
-		curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh; \
-		export PATH=$HOME/.linkerd2/bin:$PATH; \
-		echo 'export PATH="$HOME/.linkerd2/bin:$PATH"' >> ~/.bashrc; \
-		linkerd version; \
+		curl -fsSL -o linkerd https://github.com/linkerd/linkerd2/releases/download/edge-26.9.1/linkerd2-cli-edge-26.9.1-linux-amd64; \
+		echo "094e1de06215fbe76fc011cf62c96214f8dae0cd5a58135fb40307be88b6b176  linkerd" | sha256sum -c - || exit 1; \
+		sudo install -o root -g root -m 0755 linkerd /usr/local/bin/linkerd && rm linkerd; \
+		linkerd version --client; \
 	else \
 		echo "Linkerd is already installed."; \
 	fi

@@ -186,6 +186,15 @@ COMMON_LABELS = {
     "source": {"sk": "Zdroj", "cs": "Zdroj", "en": "Source", "de": "Quelle"},
     "isPartOf": {"sk": "Dataset", "cs": "Datová sada", "en": "Dataset", "de": "Datensatz"},
 }
+# Smart Data Models terms that many classes map, each from a column of its own: the slot is one for the
+# whole space, so its text is the model's meaning, never the heading of whichever column came first
+# ("Miesto" labelled every Organization's name, F-BNT2-010).
+GENERIC = {
+    "name": ("The entity's name.", {"sk": "Názov", "cs": "Název", "en": "Name", "de": "Name"}),
+    "legalName": ("The organisation's registered name.",
+                  {"sk": "Úradný názov", "cs": "Úřední název", "en": "Legal name", "de": "Rechtlicher Name"}),
+    "description": ("A description of the entity.", {"sk": "Popis", "cs": "Popis", "en": "Description", "de": "Beschreibung"}),
+}
 LICENCE = {"cc-by": "CC BY 4.0", "cc-by-sa": "CC BY-SA 4.0"}
 # The types whose history matters, a measurement series read over time; every other type keeps its
 # current state only (T-4275, DM-82). The space's owner changes either on its Retention tab.
@@ -482,6 +491,11 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
         "outSR": "4326", "geometryPrecision": "6", "f": "geojson",
         "resultOffset": offset, "resultRecordCount": str(PAGE),
     }
+    # In object id order, so the pages of one run neither skip nor repeat a row: an unordered
+    # resultOffset page is any slice the server likes, and a skipped row is deleted in replace mode.
+    # The field is the layer's own (FID, OBJECTID, ObjectId), read from its ?f=json when mapped.
+    if s.get("objectIdField"):
+        params["orderByFields"] = s["objectIdField"]
     url = f"{s['url']}/query?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',*')}"
     url = url.replace(urllib.parse.quote("${! @offset }"), "${! @offset }")
     # Decided on the paging template's length, the longest this query is ever written, so page 0
@@ -562,7 +576,16 @@ def source_url(e: dict) -> str:
     if s["kind"] == "ckan-datastore":
         return f"{CKAN}/api/3/action/datastore_search?resource_id={s['resource']}&limit=32000"
     fields = ",".join(dict.fromkeys(c for p in e["properties"].values() for c in [p["column"], *p.get("otherwise", [])]))
-    return f"{s['url']}?per_page=100&_fields={fields}"
+    return f"{s['url']}?per_page={WP_PAGE}&_fields={fields}"
+
+
+# Posts per WordPress REST request: the most `per_page` takes.
+WP_PAGE = 100
+
+
+def wp_count(e: dict) -> str:
+    """One post's id, asked only for the X-WP-Total header: how many posts the feed holds."""
+    return f"{e['source']['url']}?per_page=1&_fields=id"
 
 
 def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
@@ -683,9 +706,54 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     - mapping: |
         root = if this.success.or(false) != true { throw("the catalogue answered no table") } else { this.result.records.or([]) }""")
     else:
-        steps.append("""\
+        cap = max(2 * s["rows"], 10 * WP_PAGE)
+        steps.append(f"""\
     - mapping: |
-        root = if this.type() != "array" { throw("the site answered no post list") } else { this }""")
+        root = if this.type() != "array" {{ throw("the site answered no post list") }} else {{ {{ "posts": this }} }}
+    # Page 1 as it came. A full page means there may be more: the feed is asked how many posts it
+    # holds (X-WP-Total) and every further page of them is read, so the replace-mode run does not
+    # delete each post past the newest {WP_PAGE} (F-BNT1-011). One run holds every page, so a feed
+    # past {cap} posts fails the run with its count: regenerate the mapping and size the quota.
+    - branch:
+        request_map: |
+          root = if this.posts.length() < {WP_PAGE} {{ deleted() }} else {{ "" }}
+        processors:
+          - http:
+              url: {q(wp_count(e))}
+              verb: GET
+              headers:
+                Accept: application/json
+              extract_headers:
+                include_patterns: ["(?i)^x-wp-total$"]
+              timeout: 60s
+              retries: 2
+              rate_limit: pipeline_egress
+        result_map: |
+          root.total = if errored() {{ error() }} else {{ metadata("x-wp-total").or("no X-WP-Total header").number().catch("no X-WP-Total header") }}
+    - mapping: |
+        let total = this.total.or(null)
+        root = if this.posts.length() < {WP_PAGE} {{ [this] }} else if $total.type() != "number" {{ [{{ "problem": "the feed did not say how many posts it holds: %v".format($total) }}] }} else if $total > {cap} {{ [{{ "problem": "the feed holds %v posts, more than the {cap} one run reads: regenerate the mapping with scripts/open-data/generate.py".format($total) }}] }} else {{ [this].concat(range(2, (($total + {WP_PAGE - 1}) / {WP_PAGE}).floor() + 1).map_each(p -> {{ "page": p }})) }}
+    - unarchive:
+        format: json_array
+    - switch:
+        - check: this.page.or(null) != null
+          processors:
+            - mapping: |
+                meta page = this.page
+                root = ""
+            - http:
+                url: {q(source_url(e) + "&page=${! @page }")}
+                verb: GET
+                headers:
+                  Accept: application/json
+                timeout: 60s
+                retries: 2
+                rate_limit: pipeline_egress
+            - mapping: |
+                root = if errored() {{ throw("the page %v did not come: %v".format(@page, error())) }} else if this.type() != "array" {{ {{ "problem": "the page %v answered no post list".format(@page) }} }} else {{ {{ "posts": this }} }}
+    # A refusal above fails the run and writes none of its message's rows.
+    - mapping: |
+        root = if this.problem.or(null) != null {{ throw(this.problem) }} else {{ this.posts }}""")
     maps = MAPS + ("\n" + krovak_maps() if s["kind"] == "zip-geojson" else "")
     body = "\n".join("        " + line for line in (maps + "\n" + entity(e, slug, model_ranges, read)).splitlines())
     keep = (e.get("rowFilter") or {}).get("keep")
@@ -807,6 +875,9 @@ def linkml(project: str, space: str, entries: list[dict], model_ranges: dict[str
                     **({"multivalued": True} if r == "string-list" else {"range": r} if r != "string" else {}),
                     "annotations": {"ngsi_ld_kind": "Property",
                                     **({"label": label({"sk": h})} if not built and (h := heading(columns[a])) else {})}}
+        if a in GENERIC:
+            slots[a] = {**slots[a], "description": GENERIC[a][0],
+                        "annotations": {"ngsi_ld_kind": "Property", "label": label(GENERIC[a][1])}}
     for e in entries:
         for a, v in (e.get("constants") or {}).items():
             slots.setdefault(a, {"description": f"`{v}` on every entity: the model requires it and no column holds it.",

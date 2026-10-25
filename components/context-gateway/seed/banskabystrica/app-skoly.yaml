@@ -41,7 +41,15 @@ spec:
     # The schools of the city's public space, the counts the desk computes from (T-2781).
     - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
       types: [Organization]
-      attrs: [name, address, pupilCount, teachingStaff, nonTeachingStaff, annualBudget, budgetYear]
+      attrs:
+        - name
+        - address
+        - pupilCount
+        - teachingStaff
+        - nonTeachingStaff
+        - annualBudget
+        - budgetYear
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]
       roles: [viewer]

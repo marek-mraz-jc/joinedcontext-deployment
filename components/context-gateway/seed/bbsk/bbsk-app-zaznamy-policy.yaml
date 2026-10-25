@@ -13,7 +13,15 @@ spec:
   information:
     - entities:
         - type: KeyPerformanceIndicator
-      propertyNames: [indicator, refArea, refPeriod, kpiValue, unitText, dateObserved, stewardNote]
+      propertyNames:
+        - indicator
+        - refArea
+        - refPeriod
+        - kpiValue
+        - unitText
+        - dateObserved
+        - stewardNote
+        - location
       relationshipNames:
         - indicator
         - refArea
@@ -22,4 +30,5 @@ spec:
         - unitText
         - dateObserved
         - stewardNote
+        - location
   operations: [queryEntity, retrieveEntity]

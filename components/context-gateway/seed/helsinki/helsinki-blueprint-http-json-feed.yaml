@@ -13,10 +13,10 @@ metadata:
     cs: Načítat kanál JSON do kontextového prostoru
     de: Einen JSON-Feed in einen Kontextbereich abfragen
   description:
-    en: Fetches a JSON resource on a schedule and writes its records as entities of one type.
-    sk: Podľa plánu načíta zdroj JSON a jeho záznamy zapíše ako entity jedného typu.
-    cs: Podle plánu načte zdroj JSON a jeho záznamy zapíše jako entity jednoho typu.
-    de: Ruft eine JSON-Ressource nach Zeitplan ab und schreibt ihre Datensätze als Entitäten eines Typs.
+    en: Fetches a JSON resource on a schedule and writes its records as entities of one type; the record-to-entity mapping is added in the Pipeline editor.
+    sk: Podľa plánu načíta zdroj JSON a jeho záznamy zapíše ako entity jedného typu; mapovanie záznamu na entitu doplníte v editore Pipeline.
+    cs: Podle plánu načte zdroj JSON a jeho záznamy zapíše jako entity jednoho typu; mapování záznamu na entitu doplníte v editoru Pipeline.
+    de: Ruft eine JSON-Ressource nach Zeitplan ab und schreibt ihre Datensätze als Entitäten eines Typs; die Abbildung eines Datensatzes auf eine Entität ergänzen Sie im Pipeline-Editor.
 spec:
   version: 1.0.0
   category: ingestion
@@ -80,6 +80,7 @@ spec:
         title: Cron schedule
         x-jc-title: { sk: Plán cron, cs: Plán cron, de: Cron-Zeitplan }
         default: '*/30 * * * *'
+        pattern: ^[0-9*/,-]+( [0-9*/,-]+){4}$
         description: The cron line of the period above.
         x-jc-description:
           sk: Riadok cron pre interval vyššie.
@@ -122,6 +123,7 @@ spec:
           source:
             dataSourceRef: { kind: DataSource, name: "{{ name }}" }
           targetEndpoint: "{{ targetEndpoint }}"
+          output: { type: "{{ entityType }}", mode: upsert }
           quotas:
             maxMemoryMb: 128
             cpuMillicores: 100

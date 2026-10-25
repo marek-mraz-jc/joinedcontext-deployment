@@ -32,6 +32,7 @@ spec:
   dataNeeds:
     # The three types of the city's public space with every column the grids show; the downloads
     # are the endpoint's own files, under the same grant (API/02 §3, §4).
+    # `location` too: a GeoJSON or OGC download without it carries no geometry (F-BNT1-018).
     - contextSpaceRef: { kind: ContextSpace, name: banskabystrica-verejne }
       types: [Event, Organization, AirQualityObserved]
       attrs:
@@ -53,5 +54,6 @@ spec:
         - dateObserved
         - pm10
         - pm25
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, csv, ogc-features]

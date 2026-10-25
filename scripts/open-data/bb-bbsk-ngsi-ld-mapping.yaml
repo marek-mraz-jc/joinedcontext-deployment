@@ -1276,6 +1276,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C4%8Clenovia_samospr%C3%A1vy/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 125
   entityId:
@@ -1402,6 +1403,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/S%C4%8D%C3%ADta%C4%8De_detail_ECOVISIO/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 13
   entityId:
@@ -1449,6 +1451,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_CTT_ML/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPolyline
     rows: 220
   entityId:
@@ -1511,6 +1514,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_povrchy_ML/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPolyline
     rows: 785
   entityId:
@@ -1560,6 +1564,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/nosic_info_odpoc_WGS_ML/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 1519
   entityId:
@@ -1636,6 +1641,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dilata%C4%8Dn%C3%A9_celky_v_Banskobystrickom_kraji_(organization)_view/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 1652
   entityId:
@@ -1704,6 +1710,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pokus_dodavatelia/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 5066
   entityId:
@@ -1893,6 +1900,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_potencial_project/FeatureServer/1
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 306
   entityId:
@@ -2004,6 +2012,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_stav_project/FeatureServer/1
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 306
   entityId:
@@ -2115,6 +2124,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 28844
   entityId:
@@ -2179,6 +2189,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hlasovania_poslancov/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 89670
   entityId:
@@ -2229,6 +2240,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_hustota_obyvate%C4%BEstva/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -2363,6 +2375,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Hustota_obyvate%C4%BEstva_obce_BBK1/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: null
     rows: 516
   entityId:
@@ -2485,6 +2498,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Komisie_ZBBSK/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 135
   entityId:
@@ -2521,6 +2535,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 65
   entityId:
@@ -2597,6 +2612,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontakty_na_samospr%C3%A1vy/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 516
   entityId:
@@ -2705,6 +2721,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kraj3_WebMercator/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 8
   entityId:
@@ -2762,6 +2779,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 23
   entityId:
@@ -2841,6 +2859,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_view/FeatureServer/7
+    objectIdField: OBJECTID
     geometry: esriGeometryPoint
     rows: 23
   entityId:
@@ -2908,6 +2927,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Matersk%C3%A9_%C5%A1koly/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 405
   entityId:
@@ -3078,6 +3098,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 1651
   entityId:
@@ -3150,6 +3171,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mosty_v_spr%C3%A1ve_BBRSC_(public_view)/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 1031
   entityId:
@@ -3255,6 +3277,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Nab%C3%ADja%C4%8Dky_a_Zast%C3%A1vky/FeatureServer/0
+    objectIdField: FID2
     geometry: esriGeometryPoint
     rows: 606
   entityId:
@@ -3412,6 +3435,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Export_z_vizualu_nehodovost_MINV/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPoint
     rows: 3046
   entityId:
@@ -3475,6 +3499,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec_centroid/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPoint
     rows: 516
   entityId:
@@ -3556,6 +3581,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obec3_WebMercator/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -3640,6 +3666,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Objedn%C3%A1vky/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 18896
   entityId:
@@ -3694,6 +3721,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -3975,6 +4003,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_%C4%8Fal%C5%A1ia_n%C3%A1rodnos%C5%A5_okresy/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -4241,6 +4270,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_pracuj%C3%BAci_nezaestnan%C3%AD/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -4417,6 +4447,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -4548,6 +4579,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_materinsk%C3%BD_jazyk_okres/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -4706,6 +4738,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -4963,6 +4996,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_materinsk%C3%BD_jazyk_okresy/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -5208,6 +5242,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -5372,6 +5407,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1bo%C5%BEenstvo_okresy/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -5578,6 +5614,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Obyvate%C4%BEstvo_pod%C4%BEa_n%C3%A1bo%C5%BEensk%C3%A9ho_vyznania_(2021)/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -5829,6 +5866,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1bo%C5%BEenstvo_okres/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -6071,6 +6109,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_n%C3%A1rodnos%C5%A5_vsrstvy/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -6211,6 +6250,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Okres3_WebMercator_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -6387,6 +6427,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -6662,6 +6703,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_n%C3%A1rodnos%C5%A5_okresy/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -6928,6 +6970,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -7050,6 +7093,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_rodinn%C3%BD_stav_okres/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -7160,6 +7204,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_ekonomick%C3%A1_aktivita/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 1032
   entityId:
@@ -7274,6 +7319,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2011_2021_vekov%C3%A1_%C5%A1trukt%C3%BAra_okres/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 26
   entityId:
@@ -7373,6 +7419,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_SODB_2021_vzdelanie/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -7510,6 +7557,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Dataset_hodnotenia_ohrozenia_samospr%C3%A1v_zmenou_kl%C3%ADmy_a_extr%C3%A9mnymi_prejavmi_zobrazenie/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -7584,6 +7632,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_sucho/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -7655,6 +7704,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Ohrozenie_samospr%C3%A1v_zmenou_kl%C3%ADmy___extr%C3%A9mne_zr%C3%A1%C5%BEky/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 516
   entityId:
@@ -7726,6 +7776,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Okres3_WebMercator/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -7798,6 +7849,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/NEW_VIEW_Organiz%C3%A1cie_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 105
   entityId:
@@ -7856,6 +7908,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Organizacna_struktura/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 353
   entityId:
@@ -7905,6 +7958,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pet%C3%ADcie/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 12
   entityId:
@@ -7964,6 +8018,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pl%C3%A1n_verejn%C3%A9ho_obstar%C3%A1vania/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 3836
   entityId:
@@ -8014,6 +8069,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Po%C4%8Det_obyvate%C4%BEov_obce_BBK1/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: null
     rows: 516
   entityId:
@@ -8157,6 +8213,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Podjazdy_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 148
   entityId:
@@ -8216,6 +8273,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 14961
   entityId:
@@ -8423,6 +8481,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/pohyb_okresy_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 377
   entityId:
@@ -8609,6 +8668,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PovodiavBanskobystri_Project/FeatureServer/1
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 3
   entityId:
@@ -8703,6 +8763,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_2/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 13750
   entityId:
@@ -8753,6 +8814,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/PPA_dataset_AGOL_1/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 109
   entityId:
@@ -8804,6 +8866,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Priepusty_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryMultipoint
     rows: 7078
   entityId:
@@ -8860,6 +8923,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pr%C3%ADspevkov%C3%A9_rozpo%C4%8Dtov%C3%A9_a_in%C3%A9_organiz%C3%A1cie_samospr%C3%A1vy/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 126
   entityId:
@@ -8921,6 +8985,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_2018_2040/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 13
   entityId:
@@ -9022,6 +9087,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obce_BBK_centroidy_view_new/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPoint
     rows: 592
   entityId:
@@ -9147,6 +9213,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Realizovan%C3%A9_verejn%C3%A9_obstar%C3%A1vania/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 6829
   entityId:
@@ -9251,6 +9318,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pripoji%C5%A51_FINAL_JITTERED_XYTableToPoint_ExportFeatures/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPoint
     rows: 4853
   entityId:
@@ -9378,6 +9446,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Ok_Dissolve_Export_Features/FeatureServer/0
+    objectIdField: OBJECTID
     geometry: esriGeometryPolygon
     rows: 755
   entityId:
@@ -9470,6 +9539,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%A0koly_a_%C5%A1kolsk%C3%A9_zariadenia_v_zria%C4%8Fovate%C4%BEskej_p%C3%B4sobnosti_BBSK_view/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 44
   entityId:
@@ -9547,6 +9617,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/skoly_RIS_spolu/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 94
   entityId:
@@ -9717,6 +9788,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Stredn%C3%A9_%C5%A1koly_v_Banskobystrickom_kraji_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPoint
     rows: 446
   entityId:
@@ -9994,6 +10066,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C3%9Aradn%C3%A9_hodiny/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 14
   entityId:
@@ -10041,6 +10114,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Join_Features_to_Obec3_WebMercator_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 14961
   entityId:
@@ -10167,6 +10241,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/vekove_indexy_okresy_zeny_muzi_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 1079
   entityId:
@@ -10276,6 +10351,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/V%C5%A0/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 224
   entityId:
@@ -10340,6 +10416,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/JF_to_Okresy_BBK_hranice_view/FeatureServer/0
+    objectIdField: ObjectId
     geometry: esriGeometryPolygon
     rows: 1144
   entityId:
@@ -10431,6 +10508,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Imisie_dataset/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 714
   entityId:
@@ -10480,6 +10558,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Z%C3%A1kladn%C3%A9_%C5%A1koly/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 267
   entityId:
@@ -10650,6 +10729,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zasadnutia_samospr%C3%A1vy/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 11
   entityId:
@@ -10703,6 +10783,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/%C5%BDelezni%C4%8Dn%C3%A9_priecestia_v_Banskobystrickom_kraji_(public_view)/FeatureServer/2
+    objectIdField: OBJECTID
     geometry: esriGeometryPolyline
     rows: 103
   entityId:
@@ -10765,6 +10846,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zmluvy_13_3_2025/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 5164
   entityId:
@@ -10856,6 +10938,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_lek%C3%A1rn%C3%AD_v_BBK_public_2025/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 266
   entityId:
@@ -10936,6 +11019,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_poskytovate%C4%BEov_soci%C3%A1lnych_slu%C5%BEieb_v_BBK_public_2025/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 740
   entityId:
@@ -11027,6 +11111,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_%C3%BA%C4%8Dinn%C3%BDch_v%C5%A1eobecne_z%C3%A1v%C3%A4zn%C3%BDch_nariaden%C3%AD_(VZN)/FeatureServer/0
+    objectIdField: FID
     geometry: null
     rows: 34
   entityId:
@@ -11080,6 +11165,7 @@ datasets:
   source:
     kind: esri-featureserver
     url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Zoznam_zdravotn%C3%ADckych_zariaden%C3%AD_v_BBK_public_2025/FeatureServer/0
+    objectIdField: FID
     geometry: esriGeometryPoint
     rows: 2572
   entityId:
