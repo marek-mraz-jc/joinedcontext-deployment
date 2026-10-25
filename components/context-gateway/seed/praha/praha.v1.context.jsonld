@@ -10,6 +10,9 @@
     "BikeHireDockingStation": {
       "@id": "sdm:BikeHireDockingStation"
     },
+    "BikeLane": {
+      "@id": "sdm:BikeLane"
+    },
     "BudgetLine": {
       "@id": "jc:BudgetLine"
     },

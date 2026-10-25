@@ -476,3 +476,37 @@ spec:
         description:
           cs: Parkovací automaty zón placeného stání s číslem a ulicí, TSK hl. m. Prahy na geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: The parking machines of the paid parking zones with their number and street, TSK hl. m. Prahy on the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/787f7c3ce4964b519ddc39246377c31b_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Hřbitovy (IPR Praha), en: Cemeteries (IPR Praha) }
+        description:
+          cs: Hřbitovy z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Cemeteries from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/927f999ff604463cbce63914de97a6d7_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Naučné stezky (IPR Praha), en: Nature trails (IPR Praha) }
+        description:
+          cs: Naučné stezky z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Nature trails from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/e01b4bb6d148496abff4f065686290ff_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title:
+          cs: Oázy chladu – vodní plochy a toky (IPR Praha)
+          en: 'Cool spots: water areas and streams (IPR Praha)'
+        description:
+          cs: Oázy chladu – vodní plochy a toky z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: 'Cool spots: water areas and streams from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.'
+      - url: https://hub.arcgis.com/api/v3/datasets/143a034267e34baaacdf253b89f4f09e_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Volný pohyb psů – psí zóny (IPR Praha), en: Dog zones (IPR Praha) }
+        description:
+          cs: Volný pohyb psů – psí zóny z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Dog zones from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/8a85aa7854b048f8a5cf8a92070dcbbe_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title:
+          cs: Bilanční územní celky (BUC) (IPR Praha)
+          en: Planning balance units (BUC) (IPR Praha)
+        description:
+          cs: Bilanční územní celky (BUC) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Planning balance units (BUC) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://hub.arcgis.com/api/v3/datasets/45063acce89d4b37afc6d51f03f3ad49_0/downloads/data?format=geojson&spatialRefId=4326&where=1%3D1
+        title: { cs: Cyklistické trasy (IPR Praha), en: Cycle routes (IPR Praha) }
+        description:
+          cs: Cyklistické trasy z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: Cycle routes from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

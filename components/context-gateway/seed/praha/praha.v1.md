@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone.
 
 IRI: `sdm:PointOfInterest`
 
@@ -157,7 +157,7 @@ Specialises `Entity`.
 
 ### AdministrativeArea
 
-One of the 57 city districts (městské části) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
+One of the 57 city districts (městské části) of Prague, its outline and its code, or one of the 120 planning balance units (bilanční územní celky) IPR Praha divides the city into, its outline and its name, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).
 
 IRI: `jc:AdministrativeArea`
 
@@ -166,7 +166,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `districtCode` | Property | `string` | yes |  | `jc:districtCode` | The district's RÚIAN code, the key the national registers and the waste register use. |
+| `districtCode` | Property | `string` |  |  | `jc:districtCode` | The district's RÚIAN code, the key the national registers and the waste register use; a planning balance unit has none. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `wasteContainerIsles` | Relationship | [`WasteContainerIsle`](#wastecontainerisle) (list) |  |  | `jc:wasteContainerIsles` | The waste-container isles in this city district, computed from their refDistrict and never stored. |
@@ -494,6 +494,25 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### BikeLane
+
+One stretch of a cycle route of the city's cycle route map, its route number and the kind of way it runs on (a cycle lane, a shared path, a quiet street), as IPR Praha maps it.
+
+IRI: `sdm:BikeLane`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `facilityType` | Property | `string` |  |  | `jc:facilityType` | The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### FareCollectionSystem
 
 One parking machine of the paid parking zones, its number and its street.
@@ -664,6 +683,10 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `landmark` | A notable building or place of the city. |
 | `wasteCollectionPoint` | A collection point for hazardous waste or bio-waste that is not a collection yard. |
 | `trailStop` | A stop of a nature trail. |
+| `cemetery` | A cemetery or burial ground, drawn as its area. |
+| `natureTrail` | A nature trail, drawn as its course. |
+| `waterArea` | A stream, pond or other water area, drawn as its outline. |
+| `dogZone` | An area where dogs may run free, must stay on a lead or may not enter, or a dog park. |
 
 ### WasteAccess
 

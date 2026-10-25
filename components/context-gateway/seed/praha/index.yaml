@@ -321,3 +321,35 @@ catalog.linkml.yaml: projects/praha/spaces/catalog/datamodels/catalog.linkml.yam
 praha-endpoint-catalog.yaml: projects/praha/spaces/catalog/endpoints/catalog.yaml
 praha-policy-catalog-portal-write.yaml: projects/praha/spaces/catalog/policies/catalog-portal-write.yaml
 praha-policy-catalog-public-read.yaml: projects/praha/spaces/catalog/policies/catalog-public-read.yaml
+# The IPR place layers drawn as areas or lines (T-5426): cemeteries, nature trails, water areas, dog zones,
+# planning balance units, cycle routes.
+praha-datasource-area-cemeteries.yaml: projects/praha/datasources/ipr-area-cemeteries.yaml
+praha-pipeline-area-cemeteries.yaml: projects/praha/pipelines/area-cemeteries/pipeline.yaml
+praha-pipeline-area-cemeteries-bento.yaml: projects/praha/pipelines/area-cemeteries/bento.yaml
+praha-endpoint-hrbitovy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-hrbitovy.yaml
+praha-policy-public-hrbitovy.yaml: projects/praha/spaces/praha-mesto/policies/public-hrbitovy.yaml
+praha-datasource-area-nature-trails.yaml: projects/praha/datasources/ipr-area-nature-trails.yaml
+praha-pipeline-area-nature-trails.yaml: projects/praha/pipelines/area-nature-trails/pipeline.yaml
+praha-pipeline-area-nature-trails-bento.yaml: projects/praha/pipelines/area-nature-trails/bento.yaml
+praha-endpoint-naucne-stezky.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-naucne-stezky.yaml
+praha-policy-public-naucne-stezky.yaml: projects/praha/spaces/praha-mesto/policies/public-naucne-stezky.yaml
+praha-datasource-area-water-areas.yaml: projects/praha/datasources/ipr-area-water-areas.yaml
+praha-pipeline-area-water-areas.yaml: projects/praha/pipelines/area-water-areas/pipeline.yaml
+praha-pipeline-area-water-areas-bento.yaml: projects/praha/pipelines/area-water-areas/bento.yaml
+praha-endpoint-vodni-plochy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vodni-plochy.yaml
+praha-policy-public-vodni-plochy.yaml: projects/praha/spaces/praha-mesto/policies/public-vodni-plochy.yaml
+praha-datasource-area-dog-zones.yaml: projects/praha/datasources/ipr-area-dog-zones.yaml
+praha-pipeline-area-dog-zones.yaml: projects/praha/pipelines/area-dog-zones/pipeline.yaml
+praha-pipeline-area-dog-zones-bento.yaml: projects/praha/pipelines/area-dog-zones/bento.yaml
+praha-endpoint-psi-zony.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-psi-zony.yaml
+praha-policy-public-psi-zony.yaml: projects/praha/spaces/praha-mesto/policies/public-psi-zony.yaml
+praha-datasource-area-buc.yaml: projects/praha/datasources/ipr-area-buc.yaml
+praha-pipeline-area-buc.yaml: projects/praha/pipelines/area-buc/pipeline.yaml
+praha-pipeline-area-buc-bento.yaml: projects/praha/pipelines/area-buc/bento.yaml
+praha-endpoint-bilancni-celky.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-bilancni-celky.yaml
+praha-policy-public-bilancni-celky.yaml: projects/praha/spaces/praha-mesto/policies/public-bilancni-celky.yaml
+praha-datasource-area-cycle-routes.yaml: projects/praha/datasources/ipr-area-cycle-routes.yaml
+praha-pipeline-area-cycle-routes.yaml: projects/praha/pipelines/area-cycle-routes/pipeline.yaml
+praha-pipeline-area-cycle-routes-bento.yaml: projects/praha/pipelines/area-cycle-routes/bento.yaml
+praha-endpoint-cyklotrasy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-cyklotrasy.yaml
+praha-policy-public-cyklotrasy.yaml: projects/praha/spaces/praha-mesto/policies/public-cyklotrasy.yaml

@@ -5,7 +5,7 @@
   "definitions": {
     "AdministrativeArea": {
       "additionalProperties": false,
-      "description": "One of the 57 city districts (městské části) of Prague, its outline and its code, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
+      "description": "One of the 57 city districts (městské části) of Prague, its outline and its code, or one of the 120 planning balance units (bilanční územní celky) IPR Praha divides the city into, its outline and its name, as the Smart Data Model extension AdministrativeArea (PointOfInterest base).",
       "properties": {
         "dataProvider": {
           "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
@@ -16,7 +16,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "districtCode": {
-          "description": "The district's RÚIAN code, the key the national registers and the waste register use.",
+          "description": "The district's RÚIAN code, the key the national registers and the waste register use; a planning balance unit has none.",
           "pattern": "^[0-9]{6}$",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -101,7 +101,6 @@
         }
       },
       "required": [
-        "districtCode",
         "id",
         "type"
       ],
@@ -402,6 +401,101 @@
         "type"
       ],
       "title": "BikeHireDockingStation",
+      "type": "object"
+    },
+    "BikeLane": {
+      "additionalProperties": false,
+      "description": "One stretch of a cycle route of the city's cycle route map, its route number and the kind of way it runs on (a cycle lane, a shared path, a quiet street), as IPR Praha maps it.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "facilityType": {
+          "description": "The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "BikeLane",
       "type": "object"
     },
     "BudgetLine": {
@@ -1548,7 +1642,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.",
+      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone.",
       "properties": {
         "address": {
           "anyOf": [
@@ -2003,7 +2097,11 @@
         "animalCorner",
         "landmark",
         "wasteCollectionPoint",
-        "trailStop"
+        "trailStop",
+        "cemetery",
+        "natureTrail",
+        "waterArea",
+        "dogZone"
       ],
       "title": "ServiceCategory",
       "type": "string"
