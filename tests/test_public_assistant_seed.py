@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 import pytest
 import yaml
-from conftest import dev_catalogue, render_catalogue_assistant
+from conftest import dev_catalogue, render_catalogue_assistant, seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 # jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
@@ -48,12 +48,9 @@ ORIGINS = [
 def manifests(kind: str, project: str) -> dict[str, dict]:
     found = {}
     # A topic folder, such as slovensko/susr-pr/, holds its own manifests (T-4390).
-    for path in sorted((SEED / project).rglob("*.yaml")):
-        if path.name == "index.yaml":
-            continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == kind:
-                found[doc["metadata"]["name"]] = doc
+    for path, doc in seed_documents(project):
+        if path.name != "index.yaml" and isinstance(doc, dict) and doc.get("kind") == kind:
+            found[doc["metadata"]["name"]] = doc
     return found
 
 
@@ -181,15 +178,14 @@ def test_a_conversation_holds_100000_tokens_and_costs_at_most_15_cents():
     # in a row, about 15 cents at most: the conversation's cost cap is the money guard, and
     # T-4763 cuts what one answer costs. The data-eval copies measure answers and keep 3,000,000.
     seen = 0
-    for path in sorted(SEED.rglob("*.yaml")):
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment":
-                seen += 1
-                budget = doc["spec"]["budget"]
-                assert budget["tokensPerConversation"] >= 100_000, path.name
-                if not doc["metadata"]["name"].startswith("data-eval-"):
-                    assert 0 < budget["costPerConversationUsd"] <= 0.15, path.name
-                    assert budget["costPerConversationUsd"] <= budget["costPerDayUsd"], path.name
+    for path, doc in seed_documents():
+        if isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment":
+            seen += 1
+            budget = doc["spec"]["budget"]
+            assert budget["tokensPerConversation"] >= 100_000, path.name
+            if not doc["metadata"]["name"].startswith("data-eval-"):
+                assert 0 < budget["costPerConversationUsd"] <= 0.15, path.name
+                assert budget["costPerConversationUsd"] <= budget["costPerDayUsd"], path.name
     assert seen >= 15
 
 
@@ -407,20 +403,21 @@ def test_no_anonymous_deployment_runs_out_of_tokens_before_its_cost_cap():
     deployment anonymous visitors reach, the day's tokens at the measured price buy more than
     costPerDayUsd, so the cost cap binds first, and past it the answers are links."""
     checked = 0
-    for path in sorted(SEED.glob("*/*.yaml")):
-        for doc in yaml.safe_load_all(path.read_text()):
-            if not (isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment"):
-                continue
-            spec = doc["spec"]
-            if spec["channel"] == "internal":
-                continue
-            budget = spec["budget"]
-            cost = budget.get("costPerDayUsd", 3)
-            assert budget["tokensPerDay"] * MEASURED_USD_PER_TOKEN >= cost, (
-                f"{path.name}: tokensPerDay {budget['tokensPerDay']} buys about "
-                f"${budget['tokensPerDay'] * MEASURED_USD_PER_TOKEN:.2f}, less than costPerDayUsd {cost}"
-            )
-            checked += 1
+    for path, doc in seed_documents():
+        if len(path.relative_to(SEED).parts) != 2:
+            continue
+        if not (isinstance(doc, dict) and doc.get("kind") == "AssistantDeployment"):
+            continue
+        spec = doc["spec"]
+        if spec["channel"] == "internal":
+            continue
+        budget = spec["budget"]
+        cost = budget.get("costPerDayUsd", 3)
+        assert budget["tokensPerDay"] * MEASURED_USD_PER_TOKEN >= cost, (
+            f"{path.name}: tokensPerDay {budget['tokensPerDay']} buys about "
+            f"${budget['tokensPerDay'] * MEASURED_USD_PER_TOKEN:.2f}, less than costPerDayUsd {cost}"
+        )
+        checked += 1
     assert checked >= 3, "the public, catalogue and eval deployments are checked"
 
 

@@ -9,19 +9,18 @@ at any depth of the seed (the ŠÚ SR models sit one folder deeper, T-4434).
 from pathlib import Path
 
 import pytest
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 FOUR = ("jsonSchema", "context", "docs", "example")
 
 
 def published():
-    for path in sorted(SEED.rglob("*.yaml")):
+    for path, doc in seed_documents():
         if path.name.endswith(("-bento.yaml", ".linkml.yaml")) or path.name == "index.yaml":
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == "DataModel" and doc["spec"].get("lifecycle") == "published":
-                yield pytest.param(path, doc["spec"], id=str(path.relative_to(SEED)))
+        if isinstance(doc, dict) and doc.get("kind") == "DataModel" and doc["spec"].get("lifecycle") == "published":
+            yield pytest.param(path, doc["spec"], id=str(path.relative_to(SEED)))
 
 
 @pytest.mark.parametrize(("path", "spec"), list(published()))

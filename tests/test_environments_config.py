@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional
 
 import pytest
 import yaml
+from conftest import load_yaml_all
 
 # Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
 # shares nothing with another module. Its own xdist group keeps the module on one worker, so its
@@ -94,7 +95,7 @@ def assert_contains_k8s_resource(
     asserts: Optional[Dict[str, Any]] = None,
 ):
     documents = [
-        doc for doc in yaml.safe_load_all(rendered_output)
+        doc for doc in load_yaml_all(rendered_output)
         if isinstance(doc, dict)
     ]
     for doc in documents:

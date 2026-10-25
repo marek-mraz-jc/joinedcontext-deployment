@@ -6,6 +6,7 @@ list of documents.
 """
 
 import fcntl
+import functools
 import shutil
 import subprocess
 from pathlib import Path
@@ -16,6 +17,32 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RENDER_SH = PROJECT_ROOT / "scripts/render.sh"
 TREE_IGNORE = shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache", "node_modules")
+SEED = PROJECT_ROOT / "components/context-gateway/seed"
+# libyaml's loader resolves the same YAML 1.1 tags as SafeLoader (bare on/no stay bool) and
+# parses the seed ten times faster: 0.7 s instead of 7.6 s for its 2,500 files (T-5550).
+_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+def load_yaml(text: str):
+    return yaml.load(text, Loader=_LOADER)
+
+
+def load_yaml_all(text: str) -> list:
+    return list(yaml.load_all(text, Loader=_LOADER))
+
+
+@functools.cache
+def seed_documents(project: str = "") -> tuple[tuple[Path, object], ...]:
+    """Every (path, document) of the context-gateway seed, or of one project's folder, by path.
+
+    The seed is parsed once per process; a module that walked it per test or per parameter
+    spent minutes re-reading the same files (T-5550). Callers filter by name and kind, and
+    must not change the documents they get: every test of the process shares them.
+    """
+    if project:
+        root = SEED / project
+        return tuple((path, doc) for path, doc in seed_documents() if path.is_relative_to(root))
+    return tuple((path, doc) for path in sorted(SEED.rglob("*.yaml")) for doc in load_yaml_all(path.read_text()))
 
 
 @pytest.fixture(scope="session")
@@ -48,7 +75,7 @@ def rendered(tmp_path_factory, worker_id):
                     )
                     assert result.returncode == 0, result.stderr
                     partial.rename(out)
-            cache[env] = [d for d in yaml.safe_load_all(out.read_text()) if isinstance(d, dict)]
+            cache[env] = [d for d in load_yaml_all(out.read_text()) if isinstance(d, dict)]
         return cache[env]
 
     return _rendered
@@ -97,7 +124,7 @@ def rendered_variant(tmp_path_factory):
             cwd=str(tree), capture_output=True, text=True,
         )
         assert result.returncode == 0, result.stderr
-        return [d for d in yaml.safe_load_all(out.read_text()) if isinstance(d, dict)]
+        return [d for d in load_yaml_all(out.read_text()) if isinstance(d, dict)]
 
     return _rendered
 
