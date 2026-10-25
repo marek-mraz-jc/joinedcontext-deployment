@@ -1,7 +1,7 @@
 # The hub's tables of the okresy Bratislava I to V as KeyPerformanceIndicator, one entity per figure, breakdown, area
 # and period (T-5274), with the same mapping text as the statistics pipeline. The tables change once a
-# year at most; a weekly run shows a new year within a week. 75 tables, 10,257 figures on 2026-10-24;
-# the run fits 256 MiB (docker --memory: killed at 192).
+# year at most; a weekly run shows a new year within a week. 77 tables, 13,549 figures on 2026-10-25
+# (T-5671 added 2); the run fits 256 MiB (docker --memory: killed at 192).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Pipeline
 metadata:
