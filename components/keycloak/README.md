@@ -20,6 +20,8 @@ The realm import (`values/config/base-values.yaml.gotmpl`) sets the same rules o
 | Setting | Value |
 |---|---|
 | Second factor | TOTP required for every holder of realm role `mfa-required`: portal-approver and platform-admin carry it as a composite, and it can be granted to anyone directly. A holder without TOTP enrols at the next login (Keycloak's CONFIGURE_TOTP page). Everyone else is asked for TOTP or WebAuthn only once they configured one. |
+| Step-up (T-5567) | The password is level 1 (`acr` `pwd`); a login asking `acr_values=mfa` runs the level-2 subflow `custom browser step-up`, which asks anyone for TOTP and enrols who has none, and the token then carries `acr` `mfa`. Every OTP step has its own `otp reference …` config, so `amr` names `otp` whichever subflow asked the code (one alias per step: keycloak-config-cli binds a config to one execution). Every platform client carries the `oidc-amr-mapper`. The Portal refuses every decision without one of the two (`403 second-factor-required`) and offers `GET /api/v1/auth/login?step_up=true`. |
+| Master realm | Browser flow `master browser`: password and TOTP for every administrator, CONFIGURE_TOTP at the first login after the change. The direct grant keycloak-config-cli uses is Keycloak's own and stays password-only. |
 | Password grant | Flow `custom direct grant` asks the same: a holder of `mfa-required` sends `totp=<code>` with the password, and one who has not enrolled gets no token (Keycloak answers `unknown_error` and logs an AuthenticationFlowException of direct-grant-validate-otp; enrolment happens in the browser). Everyone else sends a code only once they configured TOTP. |
 | TOTP | HMAC-SHA256, 6 digits, 30 s, look-ahead 1. Use an app that honours the algorithm (FreeOTP, Aegis, 1Password, KeePassXC); some versions of Google Authenticator compute SHA-1 codes and every code fails. |
 | Brute force | The 10th wrong password within 12 h locks the account for 60 s; every further 10 add 60 s, up to 15 min. A retry faster than 1 s after a failure waits 60 s. Never a permanent lockout. |
@@ -41,6 +43,7 @@ scripts/keycloak-login-journey.py --base https://<keycloak host> --realm <slug> 
 export KC_ADMIN_USER=... KC_ADMIN_PASSWORD=...           # keycloak-admin-user
 scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> enrol
 scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> lockout
+scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> stepup
 export JC_GRANT_CLIENT_ID=apisix-gateway JC_GRANT_CLIENT_SECRET=...  # its client Secret
 scripts/keycloak-login-journey.py --base https://<keycloak host> --admin-base http://localhost:8080 --realm <slug> grant
 ```

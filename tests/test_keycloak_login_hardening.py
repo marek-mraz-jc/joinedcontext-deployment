@@ -60,21 +60,22 @@ def test_approvers_and_admins_carry_mfa_required(realm):
 def test_the_browser_flow_demands_totp_of_mfa_required_and_offers_2fa_to_the_rest(realm):
     assert realm["browserFlow"] == "custom browser"
     assert steps(realm, "custom browser forms") == [
-        ("auth-username-password-form", "REQUIRED", None),
+        ("custom browser password", "CONDITIONAL", None),
         ("custom browser required 2fa", "CONDITIONAL", None),
         ("custom browser 2fa", "CONDITIONAL", None),
+        ("custom browser step-up", "CONDITIONAL", None),
     ]
     # REQUIRED OTP with no credential: Keycloak adds CONFIGURE_TOTP, the enrolment at next login.
     assert steps(realm, "custom browser required 2fa") == [
         ("conditional-user-role", "REQUIRED", "mfa required"),
-        ("auth-otp-form", "REQUIRED", None),
+        ("auth-otp-form", "REQUIRED", "otp reference required"),
     ]
     assert role_condition(realm, "mfa required") == {"condUserRole": "mfa-required", "negate": "false"}
     # The optional subflow excludes the same role, so nobody is asked for a code twice.
     assert steps(realm, "custom browser 2fa") == [
         ("conditional-user-role", "REQUIRED", "mfa not required"),
         ("conditional-user-configured", "REQUIRED", None),
-        ("auth-otp-form", "ALTERNATIVE", None),
+        ("auth-otp-form", "ALTERNATIVE", "otp reference optional"),
         ("webauthn-authenticator", "ALTERNATIVE", None),
     ]
     assert role_condition(realm, "mfa not required") == {"condUserRole": "mfa-required", "negate": "true"}
@@ -175,10 +176,71 @@ def test_the_password_grant_demands_totp_of_mfa_required(realm):
     ]
     assert steps(realm, "custom direct grant required otp") == [
         ("conditional-user-role", "REQUIRED", "mfa required"),
-        ("direct-grant-validate-otp", "REQUIRED", None),
+        ("direct-grant-validate-otp", "REQUIRED", "otp reference grant required"),
     ]
     assert steps(realm, "custom direct grant otp") == [
         ("conditional-user-role", "REQUIRED", "mfa not required"),
         ("conditional-user-configured", "REQUIRED", None),
-        ("direct-grant-validate-otp", "REQUIRED", None),
+        ("direct-grant-validate-otp", "REQUIRED", "otp reference grant"),
     ]
+
+
+def master(env_docs):
+    env, docs = env_docs
+    return realms(docs)["master.json"]
+
+
+def test_otp_sets_an_acr_level_and_enrolment_is_enabled(realm):
+    """T-5567: the Portal asks every decision for a second factor, whatever gave the right. A
+    step-up login (`acr_values=mfa`) runs the level-2 subflow, which asks the code of anyone,
+    enrolling who has none, and the token says so twice: `acr` is `mfa`, `amr` names `otp`."""
+    assert json.loads(realm["attributes"]["acr.loa.map"]) == {"pwd": 1, "mfa": 2}
+    # Keycloak runs every level when none is asked or reached: the password is level 1, or a
+    # plain login would run the step-up too.
+    assert steps(realm, "custom browser password") == [
+        ("conditional-level-of-authentication", "REQUIRED", "password level"),
+        ("auth-username-password-form", "REQUIRED", None),
+    ]
+    assert role_condition(realm, "password level") == {"loa-condition-level": "1", "loa-max-age": "36000"}
+    assert steps(realm, "custom browser step-up") == [
+        ("conditional-level-of-authentication", "REQUIRED", "step-up level"),
+        ("auth-otp-form", "REQUIRED", "otp reference step-up"),
+    ]
+    assert role_condition(realm, "step-up level") == {"loa-condition-level": "2", "loa-max-age": "300"}
+    # Every one-time-code step tags the session with `otp`, which the amr mapper writes; each
+    # needs a config of its own, since keycloak-config-cli binds one alias to one execution.
+    used = []
+    for alias in ("custom browser required 2fa", "custom browser 2fa", "custom browser step-up",
+                  "custom direct grant required otp", "custom direct grant otp"):
+        otp = [s for s in steps(realm, alias) if s[0] in ("auth-otp-form", "direct-grant-validate-otp")]
+        assert len(otp) == 1, alias
+        used.append(otp[0][2])
+        assert role_condition(realm, otp[0][2]) == {"default.reference.value": "otp"}, alias
+    assert len(set(used)) == len(used), used
+    actions = {a["alias"]: a for a in realm["requiredActions"]}
+    assert actions["CONFIGURE_TOTP"]["enabled"] is True
+    assert actions["CONFIGURE_TOTP"]["providerId"] == "CONFIGURE_TOTP"
+    platform = [c for c in realm["clients"] if any(m["name"] == "groups" for m in c.get("protocolMappers", []))]
+    assert any(c["clientId"] == "edge" for c in platform) and any(c["clientId"] == "portal-api" for c in platform)
+    for client in platform:
+        amr = [m for m in client.get("protocolMappers", []) if m["protocolMapper"] == "oidc-amr-mapper"]
+        assert len(amr) == 1, client["clientId"]
+        assert amr[0]["config"]["id.token.claim"] == "true", client["clientId"]
+        assert amr[0]["config"]["access.token.claim"] == "true", client["clientId"]
+
+
+def test_the_master_realm_asks_a_second_factor(env_docs):
+    """T-5567: the master realm holds only Keycloak's administrators; its browser login asks
+    every one of them for a code and enrols who has none."""
+    m = master(env_docs)
+    assert m["browserFlow"] == "master browser"
+    assert steps(m, "master browser") == [
+        ("auth-cookie", "ALTERNATIVE", None),
+        ("master browser forms", "ALTERNATIVE", None),
+    ]
+    assert steps(m, "master browser forms") == [
+        ("auth-username-password-form", "REQUIRED", None),
+        ("auth-otp-form", "REQUIRED", None),
+    ]
+    actions = {a["alias"]: a for a in m["requiredActions"]}
+    assert actions["CONFIGURE_TOTP"]["enabled"] is True
