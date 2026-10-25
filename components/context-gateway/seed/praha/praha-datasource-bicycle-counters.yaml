@@ -24,4 +24,5 @@ spec:
       header: X-Access-Token
       headerRef: { name: golemio, key: token }
     timeout: 30s
-    maxBytes: 4194304
+    # the runner caps the body at its default (32 MiB on platform main); `maxBytes` waits for the
+    # Portal and gateway pins to read it (tests/test_portal_pin_reads_the_seed.py)
