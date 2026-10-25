@@ -29,6 +29,9 @@ jobs:
           set -eu
           git config user.name "pin-images"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # A skipped source fails the run after the other source was tried, so tasks/ci files a
+          # ci-red: 10-23..10-25 every run skipped both sources and stayed green (T-5686).
+          skipped=""
           for source in platform portal; do
             message=$(python3 scripts/pin-images.py "$source")
             git diff --quiet -- components && continue
@@ -36,6 +39,8 @@ jobs:
             helmfile -f deployment/helmfile.yaml -e dev repos >/dev/null
             if ! scripts/render.sh dev /tmp/rendered-dev.yaml >/dev/null; then
               echo "::error::$message: the dev render fails, nothing pinned"
+              echo "- $source: $message: the dev render fails, nothing pinned" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+              skipped="$skipped $source"
               git checkout -- components
               continue
             fi
@@ -43,6 +48,8 @@ jobs:
             # head whose docs are not pinned yet (portal scripts/public-docs.sh) waits (T-4931).
             if ! scripts/check-docs-pin.sh; then
               echo "::error::$message: the pinned docs do not hold for this code, nothing pinned"
+              echo "- $source: $message: the pinned docs do not hold for this code, nothing pinned" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"
+              skipped="$skipped $source"
               git checkout -- components
               continue
             fi
@@ -50,3 +57,7 @@ jobs:
             git pull -q --rebase origin main
             git push -q origin HEAD:main
           done
+          if [ -n "$skipped" ]; then
+            echo "::error::not pinned:$skipped (see the errors above)"
+            exit 1
+          fi
