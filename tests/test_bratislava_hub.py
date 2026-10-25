@@ -349,7 +349,8 @@ def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
             )
 
 
-STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city", "statistics-denne": "city"}
+STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city", "statistics-denne": "city",
+              "statistics-zsj": "zsj", "statistics-obce": "obec"}
 CITY_DISTRICTS = {
     "stare mesto": "528595", "podunajske biskupice": "529311", "p biskupice": "529311", "ruzinov": "529320",
     "vrakuna": "529338", "nove mesto": "529346", "raca": "529354", "vajnory": "529362", "devinska nova ves": "529371",
@@ -406,10 +407,17 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             if "only" in t and not str(r.get(t["only"][0]) or "").startswith(t["only"][1]):
                 continue
             name = fold(r.get(t["area"]) or "") if t.get("area") else "bratislava"
-            code = {"district": CITY_DISTRICTS.get(name), "okres": OKRESY.get(name)}.get(
-                t["areas"], "582000" if name == "bratislava" else None
-            )
-            if "fixed" in t:
+            zsj = str(r.get(t["area"]) or "").strip() if t["areas"] == "zsj" else ""
+            code = {
+                "district": CITY_DISTRICTS.get(name),
+                "okres": OKRESY.get(name),
+                "zsj": zsj if re.fullmatch(r"\d{7}", zsj) and str(r.get(t.get("within")) or "").strip()
+                in CITY_DISTRICTS.values() and str(r.get(t.get("label")) or "").strip() else None,
+                "obec": re.sub(r"[^a-z0-9]+", "-", name).strip("-") or None,
+            }.get(t["areas"], "582000" if name == "bratislava" else None)
+            if "spans" in t:
+                slug = years(t["spans"].get(str(r.get(t["year"]) or "").strip(), ""))
+            elif "fixed" in t:
                 slug = years(t["fixed"])
             elif "quarter" in t:
                 y = str(r.get(t["year"]) or "").strip()
@@ -427,7 +435,8 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             for column, segment, _, low, high in t["values"]:
                 n = number(r.get(column))
                 reason = (
-                    {"district": "not a city district", "okres": "not a Bratislava okres"}.get(t["areas"], "not Bratislava")
+                    {"district": "not a city district", "okres": "not a Bratislava okres", "zsj": "not a ZSJ of the city",
+                     "obec": "no municipality"}.get(t["areas"], "not Bratislava")
                     if code is None
                     else "no period" if slug is None
                     else "in the future" if t.get("past") and slug[:4] > str(date.today().year)
@@ -479,7 +488,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 344 + 19 + 12 + 12
+    assert len(keys) == len(set(keys)) == 344 + 19 + 12 + 12 + 14
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
@@ -574,3 +583,32 @@ def test_a_month_column_and_a_period_from_the_item_description_give_each_figure_
     assert life["calculationPeriod"]["value"] == {"from": "2000-01-01", "to": "2019-12-31"}
     assert "calculationFrequency" not in life
     assert logged(log)["no period"] >= 170
+
+
+@requires_docker
+def test_a_census_table_reads_each_basic_settlement_unit_of_the_city_and_a_model_its_spans():
+    """T-5674: a census 2021 table of the basic settlement units (ZSJ) keys each figure by the ZSJ's
+    code, names it with its city district and drops a unit outside the city's 17; a growth model of
+    the region's municipalities reads its 1991 as 1991-2021 and drops a year it does not span and a
+    row without a municipality."""
+    answers = copy.deepcopy(fixture("statistics.json"))
+    floor = next(v for k, v in answers.items() if k.startswith("Po%C4%8Det%20bytov%20pod%C4%BEa%20celkovej"))["features"]
+    malacky = floor[0]["attributes"] | {"Obec___kód": "507423", "Základná_sídelná_jednotka___kód": "1234567"}
+    floor.append({"attributes": malacky})
+    growth = next(v for k, v in answers.items() if k.startswith("Model_rastu_po%C4%8Dtu"))["features"]
+    growth += [{"attributes": dict(growth[0]["attributes"], ROK="2051")}, {"attributes": dict(growth[0]["attributes"], OBEC=" ")}]
+    zsj, log = run("bratislava-pipeline-statistics-zsj-bento.yaml", fixture("services.json"), answers)
+    assert logged(log) == reading("statistics-zsj", answers)[1]
+    assert logged(log)["not a ZSJ of the city"] == reading("statistics-zsj", fixture("statistics.json"))[1].get("not a ZSJ of the city", 0) + 5
+    by_id = {i["id"]: i for i in zsj}
+    small = by_id[kpi("pocet-bytov-podla-celkovej-plochy-zsj.do-40-m2.2040640.2021")]
+    assert small["kpiValue"]["value"] == 5 and small["area"]["value"] == "Hradný svah (Staré Mesto)"
+    assert small["calculationPeriod"]["value"] == {"from": "2021-01-01", "to": "2021-12-31"}
+    assert not any(".1234567." in i for i in by_id)
+    obce, log = run("bratislava-pipeline-statistics-obce-bento.yaml", fixture("services.json"), answers)
+    assert logged(log) == reading("statistics-obce", answers)[1]
+    assert logged(log)["no period"] == 1 and logged(log)["no municipality"] == 1
+    vinicne = {i["id"]: i for i in obce}[kpi("model-rastu-poctu-obyvatelov-v-obciach-bsk.index-rastu.vinicne.1991-2021")]
+    assert vinicne["kpiValue"]["value"] == 1.867268937 and vinicne["area"]["value"] == "Viničné"
+    assert vinicne["calculationPeriod"]["value"] == {"from": "1991-01-01", "to": "2021-12-31"}
+    assert "calculationFrequency" not in vinicne
