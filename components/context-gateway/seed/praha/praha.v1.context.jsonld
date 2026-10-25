@@ -64,6 +64,9 @@
     "RestrictedTrafficArea": {
       "@id": "sdm:RestrictedTrafficArea"
     },
+    "TrafficFlowObserved": {
+      "@id": "sdm:TrafficFlowObserved"
+    },
     "Tree": {
       "@id": "jc:Tree"
     },
@@ -171,6 +174,14 @@
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "dateObservedFrom": {
+      "@id": "sdm:dateObservedFrom",
+      "@type": "xsd:dateTime"
+    },
+    "dateObservedTo": {
+      "@id": "sdm:dateObservedTo",
+      "@type": "xsd:dateTime"
+    },
     "defenceType": {
       "@context": {
         "description": "skos:prefLabel",
@@ -251,6 +262,10 @@
     "id": "@id",
     "identifier": {
       "@id": "sdm:dataModel.CPSV-AP/identifier"
+    },
+    "intensity": {
+      "@id": "sdm:intensity",
+      "@type": "xsd:integer"
     },
     "jc": "https://joinedcontext.com/models/",
     "lineName": {

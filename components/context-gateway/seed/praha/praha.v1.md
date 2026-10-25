@@ -212,7 +212,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `vehicleType` | Property | [`VehicleKind`](#vehiclekind) |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names. |
+| `vehicleType` | Property | [`VehicleKind`](#vehiclekind) |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names; bicycle for what a cycle counter counts. |
 | `category` | Property | [`VehicleCategory`](#vehiclecategory) (list) |  |  | `sdm:category` | The Smart Data Models category: public and tracked for a PID vehicle in service; for an OnStreetParking what the section or bay is for (forResidents and onlyWithPermit in the blue resident zone RES, feeCharged and forResidents in the purple mixed zone MIX, feeCharged and shortTerm in the orange visitor zone VIS, forDisabled for a ZTP/P bay, with onlyWithPermit when it is reserved for one registration plate, forLoadUnload for a delivery bay and onlyWithPermit for a special reserved bay). |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus). |
 | `lineName` | Property | `string` |  |  | `jc:lineName` | The PID line the vehicle runs, its short name (17, A, S9, 331). |
@@ -312,6 +312,28 @@ Specialises `Entity`.
 | `defenceType` | Property | [`FloodDefenceType`](#flooddefencetype) | yes |  | `jc:defenceType` | The kind of flood defence line, a fixed barrier, a mobile wall or sandbags. |
 | `protectedBy` | Property | [`FloodDefenceKeeper`](#flooddefencekeeper) |  |  | `jc:protectedBy` | Who sets the line up and keeps it, the city or the owner of the ground behind it. |
 | `designFlood` | Property | [`FloodDesignLevel`](#flooddesignlevel) |  |  | `jc:designFlood` | The flood the line is designed to hold back, the 100-year flood (q100) or the August 2002 flood (flood2002). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### TrafficFlowObserved
+
+One direction of a Golemio cycle counter in Prague and the bicycles it counted in its newest five-minute interval (Golemio bicycle counters, Camea).
+
+IRI: `sdm:TrafficFlowObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `vehicleType` | Property | [`VehicleKind`](#vehiclekind) |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names; bicycle for what a cycle counter counts. |
+| `intensity` | Property | `integer` |  |  | `sdm:intensity` | Bicycles a Golemio cycle counter saw going one way in its newest five-minute interval (dateObservedFrom to dateObservedTo). |
+| `dateObservedFrom` | Property | `datetime` |  |  | `sdm:dateObservedFrom` | The start of the interval the count covers. |
+| `dateObservedTo` | Property | `datetime` |  |  | `sdm:dateObservedTo` | The end of the interval the count covers. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -606,6 +628,7 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `tram` | A tram. |
 | `bus` | A bus. |
 | `trolley` | A trolleybus. |
+| `bicycle` | A bicycle as a cycle counter counts it. |
 | `other` | A metro train, a train, a ferry or the funicular. |
 
 ### VehicleCategory

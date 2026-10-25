@@ -208,6 +208,7 @@
  "test_postgres_memory_budget.py": 89.2,
  "test_postgres_recovery.py": 64.4,
  "test_postgres_tuning.py": 85.2,
+ "test_praha_bicycle_counters.py": 14.9,
  "test_praha_environment.py": 25.4,
  "test_praha_golemio_places.py": 6.6,
  "test_praha_green.py": 21.0,

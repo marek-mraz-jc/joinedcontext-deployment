@@ -142,6 +142,11 @@ spec:
         description:
           cs: Aktuální polohy a zpoždění vozidel PID, Operátor ICT, podle podmínek užití Golemio.
           en: Current positions and delays of the PID vehicles, Operátor ICT, under Golemio's terms of use.
+      - url: https://api.golemio.cz/v2/bicyclecounters
+        title: { cs: Sčítače cyklistů – API (Golemio), en: Cycle counters API (Golemio) }
+        description:
+          cs: Sčítače cyklistů v Praze a jejich pětiminutové počty, Operátor ICT, podle podmínek užití Golemio.
+          en: The cycle counters of Prague and their five-minute counts, Operátor ICT, under Golemio's terms of use.
       - url: https://api.golemio.cz/v2/municipalpolicestations?limit=10000
         title:
           cs: Služebny Městské policie – API (Golemio)

@@ -383,6 +383,7 @@ PARTS = {
     # Golemio's terms allow republishing but grant no sublicence: no licence of our own is claimed
     # (owner 2026-10-22T18:40Z, T-5268).
     "praha-vozidla-pid": None,
+    "praha-scitace-cyklistu": None,
     "praha-sluzby": None,
     "praha-vybavenost": "CC_BY_4_0",
     "praha-zdroje-znecisteni": "CC_BY_4_0",

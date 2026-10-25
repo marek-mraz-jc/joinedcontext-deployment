@@ -2237,7 +2237,7 @@
         },
         "vehicleType": {
           "$ref": "#/definitions/VehicleKind",
-          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names.",
+          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names; bicycle for what a cycle counter counts.",
           "x-ngsi-ld-kind": "Property"
         },
         "wheelchairAccessible": {
@@ -2271,10 +2271,14 @@
         "tram",
         "bus",
         "trolley",
+        "bicycle",
         "other"
       ],
       "title": "VehicleKind",
-      "type": "string"
+      "type": "string",
+      "x-enum-descriptions": {
+        "bicycle": "A bicycle as a cycle counter counts it."
+      }
     },
     "WasteAccess": {
       "description": "",
@@ -3337,126 +3341,6 @@
       "title": "WeatherObserved",
       "type": "object"
     },
-    "Garden": {
-      "additionalProperties": false,
-      "description": "One green area of the city: a park of the planning layer, a nature park, or a basic green area of the shared green register (IPR Praha), with its kind, manager and care regime.",
-      "properties": {
-        "areaServed": {
-          "description": "Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "careRegime": {
-          "description": "The maintenance class the register gives it, such as Intenzitní třída údržby I.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dataProvider": {
-          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "dateModified": {
-          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "greenspaceType": {
-          "description": "IPR Praha's word for the kind of green area: its function in the shared green register (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or přírodní park.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "id": {
-          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "location": {
-          "description": "Where the entity is, as GeoJSON geometry.",
-          "properties": {
-            "coordinates": {
-              "type": "array"
-            },
-            "type": {
-              "enum": [
-                "Point",
-                "MultiPoint",
-                "LineString",
-                "MultiLineString",
-                "Polygon",
-                "MultiPolygon"
-              ],
-              "type": "string"
-            }
-          },
-          "required": [
-            "type",
-            "coordinates"
-          ],
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "GeoProperty"
-        },
-        "name": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "description": "The name, per language, as the publisher writes it.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "LanguageProperty"
-        },
-        "observedAt": {
-          "description": "When the observation the entity reports was made.",
-          "format": "date-time",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "source": {
-          "description": "The open-data service the entity was read from.",
-          "format": "uri",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "type": {
-          "description": "The entity type, one class of a published data model.",
-          "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        }
-      },
-      "required": [
-        "id",
-        "type"
-      ],
-      "title": "Garden",
-      "type": "object"
-    },
     "Tree": {
       "additionalProperties": false,
       "description": "One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha): where it stands, its category, manager and care regime. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.",
@@ -3583,6 +3467,133 @@
         "type"
       ],
       "title": "Tree",
+      "type": "object"
+    },
+    "TrafficFlowObserved": {
+      "additionalProperties": false,
+      "description": "One direction of a Golemio cycle counter in Prague and the bicycles it counted in its newest five-minute interval (Golemio bicycle counters, Camea).",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObservedFrom": {
+          "description": "The start of the interval the count covers.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateObservedTo": {
+          "description": "The end of the interval the count covers.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "intensity": {
+          "description": "Bicycles a Golemio cycle counter saw going one way in its newest five-minute interval (dateObservedFrom to dateObservedTo).",
+          "maximum": 2000,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vehicleType": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/VehicleKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names; bicycle for what a cycle counter counts.",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "TrafficFlowObserved",
       "type": "object"
     }
   },
