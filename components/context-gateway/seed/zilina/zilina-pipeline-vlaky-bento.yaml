@@ -8,11 +8,17 @@
 
 pipeline:
   processors:
-    - unarchive: { format: zip }
+    # The download's size is capped before it is unpacked (T-5701): the feed was 290550 bytes on
+    # 2026-10-25, four times that is the cap. Bento cannot cap what a member inflates to, so this
+    # packed size is the only bound. An errored zip skips the unpack and becomes a problem below.
+    - try:
+        - mapping: |
+            root = if content().length() > 1162200 { throw("the timetable zip holds %v bytes; more than 1162200 is not the national GTFS feed of 290 kB".format(content().length())) } else { content() }
+        - unarchive: { format: zip }
     # The five tables the count reads; the rest of the timetable (2.3 MB unpacked) is dropped here.
     - mapping: |
         let tables = ["stops.txt", "trips.txt", "stop_times.txt", "calendar.txt", "calendar_dates.txt"]
-        root = if !$tables.contains(@archive_filename) { deleted() } else {
+        root = if errored() { { "table": "problem", "rows": error() } } else if !$tables.contains(@archive_filename) { deleted() } else {
           { "table": @archive_filename.trim_suffix(".txt"), "rows": content().string().trim_prefix("﻿").parse_csv() }
         }
     - archive: { format: json_array }
@@ -23,8 +29,12 @@ pipeline:
         # The empty-read guard (T-3138): a ZIP without the city's stations is a broken download,
         # never a city whose railway closed, so the run fails where it can be seen.
         let stations = $t.stops.or([]).filter(s -> $names.contains(s.stop_name) && s.location_type.or("0") != "1")
-        root = if $stations.length() == 0 { throw("the timetable names none of the city's stations") } else { this }
+        # A refused download fails the run with its own reason and writes no station.
+        root = if $t.problem.or(null) != null { throw($t.problem) } else if $stations.length() == 0 { throw("the timetable names none of the city's stations") } else { this }
         meta today = now().ts_format("20060102", "Europe/Bratislava")
+    # A throw keeps the message's content: a refused download goes on as no table at all.
+    - mapping: |
+        root = if this.any(x -> x.table == "problem") { [] } else { this }
 
     - mapping: |
         let names = ["Žilina", "Žilina-zariečie", "Žilina-Solinky", "Bytčica", "Brodno"]
