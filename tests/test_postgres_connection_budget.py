@@ -17,12 +17,20 @@ own checks. A role this test does not know fails it: name its ceiling here befor
 
 T-5125: the ceilings also stay at or under ALERT_SHARE of max_connections, the threshold of the CNPG
 chart's CNPGClusterHighConnectionsWarning, so that alert fires only for a client nobody counted.
+
+T-5553: the same rule holds for `apps-db`, the Apps' database, and every CNPG Cluster's memory limit
+holds shared_buffers plus max_connections backends at the measured memory of one backend:
+
+    shared_buffers + max_connections x MIB_PER_BACKEND[cluster] <= limits.memory
+
+max_connections, not the pools' sum, because Postgres lets that many backends in.
 """
 
 import math
 import re
 
 import pytest
+from test_postgres_memory_budget import PER_PROCESS_MIB
 
 ENVIRONMENTS = ["local", "dev", "smartcity", "staging", "production", "minimal", "broker-only"]
 HEADROOM = 1.2
@@ -30,12 +38,25 @@ ALERT_SHARE = 0.8  # CNPGClusterHighConnectionsWarning, charts/cluster prometheu
 SUPERUSER_RESERVED_DEFAULT = 3
 # Ceilings compiled into the programs (sqlx PgPoolOptions::max_connections):
 # joinedcontext-portal src/db.rs and joinedcontext-platform crates/assistant/src/bin/jc-assistant.rs.
-COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 4)}
+# joinedcontext-portal src/state.rs: the Portal's apps admin pool in apps-db, 4.
+COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 4), "jc_apps_admin": ("portal", 4)}
 # Drivers' own defaults, used when the render sets nothing.
 ANTARES_DEFAULT = 20  # antares-broker main.rs parse_pg_pool
 KEYCLOAK_DEFAULT = 100  # Quarkus/Agroal KC_DB_POOL_MAX_SIZE
 SQLALCHEMY_DEFAULT = (5, 10)  # QueuePool pool_size, max_overflow
 CKAN_UWSGI_PROCESSES = 2  # ckan/ckan-base start_ckan.sh: `-p 2`, one thread each
+WASM_DB_POOL_DEFAULT = 20  # joinedcontext-platform crates/wasm-host/src/main.rs JC_WASM_DB_POOL
+SHARED_BUFFERS_DEFAULT_MIB = 128
+# Memory of one backend, RSS of its own (Pss_Anon), at the work it serves.
+# postgres-cluster: about 19 MiB per backend on dev (T-4933, test_postgres_memory_budget.py, which
+# also sums its worker and maintenance memory).
+# apps-db (T-5553, 2026-10-25): the cluster's image (cloudnative-pg/postgis 16-3.6-system-trixie)
+# with 1000 App schemas, 40 backends each running one shard transaction (set_config role, a join,
+# an insert) in K App schemas: 1.0 MiB at K=0, 3.4 at 100, 7.8 at 300, 22.3 at 1000 (10 backends:
+# 22.1). A backend keeps the catalog of every App it served until sqlx retires it (30 min), so
+# its memory grows with the Apps of its shard: 8 MiB holds 300 Apps per shard, three times the
+# hundred dev and smartcity are sized for.
+MIB_PER_BACKEND = {"postgres-cluster": PER_PROCESS_MIB, "apps-db": 8}
 
 
 def workloads(docs: list[dict]) -> list[dict]:
@@ -102,6 +123,16 @@ def gitea(docs: list[dict]) -> int:
     return sum(replicas(w) for w in named(docs, "gitea")) * ceiling
 
 
+def wasm_host(shard: str):
+    # A shard's pool, and one App owner login while the Portal migrates an App of the shard.
+    def count(docs: list[dict]) -> int:
+        found = [w for w in workloads(docs) if env_of(w).get("JC_WASM_SHARD") == shard and "JC_WASM_DB_URL" in env_of(w)]
+        assert found, f"role wasm_host_{shard} has no jc-wasm-host shard {shard} in the render"
+        return sum(replicas(w) * int(env_of(w).get("JC_WASM_DB_POOL", WASM_DB_POOL_DEFAULT)) for w in found) + 1
+
+    return count
+
+
 def compiled(role: str):
     def count(docs: list[dict]) -> int:
         workload, ceiling = COMPILED[role]
@@ -120,19 +151,27 @@ CLIENTS = {
     "portal": compiled("portal"),
     "assistant": compiled("assistant"),
     "ckan": ckan,
+    "jc_apps_admin": compiled("jc_apps_admin"),
 }
 
 
-def budget(docs: list[dict]) -> tuple[dict[str, int], int, int]:
-    found = [d for d in docs if d.get("kind") == "Cluster" and d["metadata"]["name"] == "postgres-cluster"]
-    assert len(found) == 1
-    spec = found[0]["spec"]
+def cnpg_clusters(docs: list[dict]) -> dict[str, dict]:
+    return {d["metadata"]["name"]: d["spec"] for d in docs if d.get("kind") == "Cluster" and d["apiVersion"].startswith("postgresql.cnpg.io/")}
+
+
+def counter(role: str):
+    shard = re.fullmatch(r"wasm_host_(\d+)", role)
+    return wasm_host(shard[1]) if shard else CLIENTS.get(role)
+
+
+def budget(docs: list[dict], cluster: str = "postgres-cluster") -> tuple[dict[str, int], int, int]:
+    spec = cnpg_clusters(docs)[cluster]
     parameters = spec["postgresql"].get("parameters", {})
     roles = [r["name"] for r in spec.get("managed", {}).get("roles", [])]
     clients = {"ckan" if r.startswith("ckan_") else r for r in roles}
-    unknown = sorted(clients - CLIENTS.keys())
-    assert not unknown, f"no pool ceiling known for role(s) {unknown}: add them to CLIENTS"
-    pools = {client: CLIENTS[client](docs) for client in clients}
+    unknown = sorted(c for c in clients if counter(c) is None)
+    assert not unknown, f"{cluster}: no pool ceiling known for role(s) {unknown}: add them to CLIENTS"
+    pools = {client: counter(client)(docs) for client in clients}
     reserved = int(parameters.get("superuser_reserved_connections", SUPERUSER_RESERVED_DEFAULT))
     return pools, reserved, int(parameters.get("max_connections", 100))
 
@@ -140,6 +179,35 @@ def budget(docs: list[dict]) -> tuple[dict[str, int], int, int]:
 def fits(pools: dict[str, int], reserved: int, max_connections: int) -> bool:
     total = sum(pools.values())
     return math.ceil(total * HEADROOM) + reserved <= max_connections and total <= ALERT_SHARE * max_connections
+
+
+def mib(quantity: str, units: dict[str, int]) -> float:
+    number, unit = re.fullmatch(r"(\d+)([A-Za-z]*)", quantity).groups()
+    assert unit in units, f"unit of {quantity!r} not one of {sorted(units)}"
+    return int(number) * units[unit]
+
+
+KUBERNETES_UNITS = {"Mi": 1, "Gi": 1024, "Ki": 1 / 1024, "M": 1e6 / 2**20, "G": 1e9 / 2**20}
+POSTGRES_UNITS = {"kB": 1 / 1024, "MB": 1, "GB": 1024, "": 8 / 1024}  # a bare number counts 8 kB pages
+
+
+def memory_need(spec: dict, cluster: str) -> tuple[float, float]:
+    """Return (shared_buffers + max_connections x MIB_PER_BACKEND, limits.memory), both in MiB."""
+    assert cluster in MIB_PER_BACKEND, f"no measured memory per backend for Cluster {cluster}: measure it and add it to MIB_PER_BACKEND"
+    parameters = spec["postgresql"].get("parameters", {})
+    limit = spec.get("resources", {}).get("limits", {}).get("memory")
+    assert limit, f"Cluster {cluster} sets no memory limit"
+    buffers = mib(parameters["shared_buffers"], POSTGRES_UNITS) if "shared_buffers" in parameters else SHARED_BUFFERS_DEFAULT_MIB
+    return buffers + int(parameters.get("max_connections", 100)) * MIB_PER_BACKEND[cluster], mib(limit, KUBERNETES_UNITS)
+
+
+def test_the_memory_rule_refuses_apps_db_as_it_ran():
+    # dev and smartcity before T-5553: max_connections 100, default shared_buffers, 768Mi.
+    old = {"postgresql": {"parameters": {"max_connections": "100"}}, "resources": {"limits": {"memory": "768Mi"}}}
+    need, limit = memory_need(old, "apps-db")
+    assert (need, limit) == (928, 768)
+    old["postgresql"]["parameters"] = {"max_connections": "60", "shared_buffers": "16384"}
+    assert memory_need(old, "apps-db") == (608, 768)
 
 
 def test_the_sum_counts_what_starved_gitea():
@@ -188,3 +256,24 @@ def test_every_cnpg_cluster_is_scraped_and_alerts_on_connections_where_prometheu
         assert [e["port"] for m in monitors for e in m["spec"]["podMetricsEndpoints"]] == ["metrics"], f"{env}: {name} has no PodMonitor"
         warning = rules.get("CNPGClusterHighConnectionsWarning", "")
         assert "max_connections" in warning and warning.rstrip().endswith(f"> {ALERT_SHARE * 100:.0f}"), f"{env}: {name} has no 80 % connection alert"
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_apps_db_pools_fit_max_connections(rendered, env):
+    docs = rendered(env)
+    if "apps-db" not in cnpg_clusters(docs):
+        pytest.skip(f"{env} renders no apps-db")
+    pools, reserved, max_connections = budget(docs, "apps-db")
+    assert fits(pools, reserved, max_connections), (
+        f"{env}: apps-db pools {pools} x {HEADROOM} + {reserved} reserved, or past {ALERT_SHARE:.0%}, do not fit max_connections {max_connections}"
+    )
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_every_cnpg_cluster_memory_holds_max_connections(rendered, env):
+    clusters = cnpg_clusters(rendered(env))
+    if not clusters:
+        pytest.skip(f"{env} renders no CNPG Cluster")
+    for name, spec in clusters.items():
+        need, limit = memory_need(spec, name)
+        assert need <= limit, f"{env}: {name} shared_buffers + max_connections x {MIB_PER_BACKEND[name]} MiB = {need:.0f} MiB > memory limit {limit:.0f} MiB"

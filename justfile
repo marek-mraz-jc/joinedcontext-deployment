@@ -482,6 +482,8 @@ dev-apply:
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
+	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
+	./scripts/verify-pinned-images.py dev
 	helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh dev
 	# What dev runs now, who applied it and when (T-4955); dev-smoke prints it.
@@ -757,6 +759,8 @@ prod-apply:
 	tag=$(./scripts/release.py verify HEAD)
 	echo "applying release $tag to smartcity"
 	just _dev-assemble
+	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
+	./scripts/verify-pinned-images.py smartcity
 	# The public assistant is asked every 15 s while the rollouts run (T-4809, at most 40 questions);
 	# its summary line closes the apply's output on success and on failure, for the apply report.
 	probe_log=$(mktemp -t assistant-probe.XXXXXX)

@@ -13,18 +13,17 @@ aimed at such an Endpoint gets a view without batch writes, and every upsert ans
 from pathlib import Path
 
 import pytest
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 
 
 def documents():
-    for path in sorted(SEED.rglob("*.yaml")):
+    for path, doc in seed_documents():
         if path.name.endswith(("-bento.yaml", ".linkml.yaml")) or path.name == "index.yaml":
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and "kind" in doc and isinstance(doc.get("spec"), dict):
-                yield path, doc
+        if isinstance(doc, dict) and "kind" in doc and isinstance(doc.get("spec"), dict):
+            yield path, doc
 
 
 def space_name(ref):

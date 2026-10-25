@@ -9,6 +9,7 @@ token would reach it.
 from pathlib import Path
 
 import yaml
+from conftest import seed_documents
 
 ROOT = Path(__file__).resolve().parent.parent
 CLIENTS = ROOT / "components/context-gateway/keycloak-clients.yaml"
@@ -42,10 +43,9 @@ def test_the_conformance_client_stays_a_development_test_object():
 
 def test_no_seeded_endpoint_holds_an_isolation_slug():
     held = {}
-    for path in SEED.rglob("*.yaml"):
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
-                held[doc["spec"]["slug"]] = path
+    for path, doc in seed_documents():
+        if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
+            held[doc["spec"]["slug"]] = path
     assert not ISOLATION_SLUGS & held.keys(), {
         s: str(held[s]) for s in ISOLATION_SLUGS & held.keys()
     }

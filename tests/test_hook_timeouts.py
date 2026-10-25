@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import yaml
+from conftest import load_yaml_all
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -27,7 +27,7 @@ def test_slow_hook_releases_wait_for_their_job():
     assert built.returncode == 0, built.stderr
     releases = {
         r["name"]: r
-        for s in yaml.safe_load_all(built.stdout) if isinstance(s, dict)
+        for s in load_yaml_all(built.stdout) if isinstance(s, dict)
         for r in s.get("releases") or []
     }
     for name, least in SLOW_HOOKS.items():

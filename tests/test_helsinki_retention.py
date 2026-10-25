@@ -11,6 +11,7 @@ import csv
 from pathlib import Path
 
 import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 HELSINKI = SEED / "helsinki"
@@ -19,12 +20,11 @@ STOPS = Path(__file__).resolve().parent / "fixtures/helsinki/gtfs/stops.txt"
 
 def spaces() -> dict[str, dict]:
     found = {}
-    for path in SEED.rglob("*.yaml"):
+    for path, doc in seed_documents():
         if path.name.endswith(".linkml.yaml"):
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == "ContextSpace":
-                found[f"{doc['metadata']['namespace']}/{doc['metadata']['name']}"] = doc
+        if isinstance(doc, dict) and doc.get("kind") == "ContextSpace":
+            found[f"{doc['metadata']['namespace']}/{doc['metadata']['name']}"] = doc
     return found
 
 

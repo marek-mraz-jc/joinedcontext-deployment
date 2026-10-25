@@ -8,7 +8,7 @@ each dimension is still set, so a project the Portal opens later still has one t
 
 from pathlib import Path
 
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 
@@ -26,14 +26,13 @@ FLOORS = {
 
 def seeded_quotas() -> list[tuple[str, dict]]:
     found = []
-    for path in sorted(SEED.rglob("*.yaml")):
-        for doc in yaml.safe_load_all(path.read_text()):
-            if not isinstance(doc, dict):
-                continue
-            if doc.get("kind") == "Project" and "quotas" in doc.get("spec", {}):
-                found.append((path.relative_to(SEED).as_posix(), doc["spec"]["quotas"]))
-            elif doc.get("kind") == "Organization" and "quota" in doc.get("spec", {}).get("projects", {}):
-                found.append((path.relative_to(SEED).as_posix(), doc["spec"]["projects"]["quota"]))
+    for path, doc in seed_documents():
+        if not isinstance(doc, dict):
+            continue
+        if doc.get("kind") == "Project" and "quotas" in doc.get("spec", {}):
+            found.append((path.relative_to(SEED).as_posix(), doc["spec"]["quotas"]))
+        elif doc.get("kind") == "Organization" and "quota" in doc.get("spec", {}).get("projects", {}):
+            found.append((path.relative_to(SEED).as_posix(), doc["spec"]["projects"]["quota"]))
     return found
 
 
