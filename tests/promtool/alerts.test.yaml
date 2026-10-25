@@ -283,6 +283,29 @@ tests:
     exp_alerts: []
 - interval: 1m
   input_series:
+  # T-5662: the nightly at minute 30 fails after a good one at minute 0; one at minute 60 completes.
+  - series: cnpg_collector_last_available_backup_timestamp{namespace="jc",cluster="postgres-cluster",pod="postgres-cluster-1"}
+    values: 0x60 3600x60
+  - series: cnpg_collector_last_failed_backup_timestamp{namespace="jc",cluster="postgres-cluster",pod="postgres-cluster-1"}
+    values: 0x30 1800x90
+  alert_rule_test:
+  - eval_time: 33m
+    alertname: PostgresBackupFailed
+    exp_alerts: []
+  - eval_time: 40m
+    alertname: PostgresBackupFailed
+    exp_alerts:
+    - exp_labels:
+        namespace: jc
+        cluster: postgres-cluster
+        severity: critical
+      exp_annotations:
+        summary: 'The newest base backup of postgres-cluster in jc failed: read kubectl get backups and the instance log (barman-cloud-backup), then start one with kubectl cnpg backup'
+  - eval_time: 70m
+    alertname: PostgresBackupFailed
+    exp_alerts: []
+- interval: 1m
+  input_series:
   # promtool's clock starts at 0: a drill 36 days before it.
   - series: jc_probe_restore_drill_timestamp_seconds{namespace="jc"}
     values: -3110400x100

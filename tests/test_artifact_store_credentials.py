@@ -151,6 +151,8 @@ def test_an_environment_without_the_store_wires_none_of_it(rendered_variant):
         # dev archives Postgres to the store (T-5289); without it, the backups go too.
         pg = tree / "deployment/environments/dev/postgres.yaml.gotmpl"
         pg.write_text(pg.read_text().replace("target: 'artifact-store'", "target: ''").replace("enabled: true", "enabled: false"))
+        # and so does apps-db's (T-5662).
+        (tree / "deployment/environments/dev/apps-db.yaml.gotmpl").unlink()
 
     docs = rendered_variant("dev", without_store)
     assert [e["name"] for e in portal_container(docs)["env"] if "ARTIFACT_STORE" in e["name"]] == []

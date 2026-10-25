@@ -19,6 +19,8 @@ apps-db:
       region: ''
       bucket: ''
       path: '/'
+      # '' names an external store by the keys above; 'artifact-store' archives to the platform's own (T-5662).
+      target: ''
       existingSecret: 'apps-db-backup-s3'
       retentionPolicy: '30d'
       schedule: '0 30 3 * * *'

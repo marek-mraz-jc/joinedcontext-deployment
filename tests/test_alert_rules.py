@@ -51,7 +51,8 @@ def test_slo_and_operations_alerts_are_rendered_where_their_source_is(groups):
     names = {r["alert"] for r in alerts(groups)}
     assert {"SurfaceAvailabilityBudgetBurnFast", "SurfaceAvailabilityBudgetBurnSlow", "SurfaceLatencyBudgetBurnFast",
             "SurfaceLatencyBudgetBurnSlow", "TLSCertificateExpiresSoon", "DomainExpiresSoon", "NodeDiskAlmostFull",
-            "VolumeAlmostFull", "NodeMemoryHigh", "PostgresBackupStale", "PipelineDataStale", "PipelineErrorRatio"} <= names
+            "VolumeAlmostFull", "NodeMemoryHigh", "PostgresBackupStale", "PostgresBackupFailed", "PipelineDataStale",
+            "PipelineErrorRatio"} <= names
 
 
 def test_alert_payloads_name_no_secret_or_person(groups):
