@@ -1098,7 +1098,7 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5273 its counters, pedestrians, BAjk and MHD stops and lines.
         # T-5444 eight more tables of places.
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
-        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1,
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17,
         "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 

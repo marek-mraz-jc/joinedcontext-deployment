@@ -1260,12 +1260,27 @@ def test_wordpress_events_with_their_dates_in_fields_of_their_own_are_read_per_s
     assert tatry["Halloweenska večera pod hviezdami"]["startDate"]["value"] == "2026-10-31"
     # KSK calendar: one ACF group with a local datetime.
     assert out["podujatiaksk"]["Čo nás učia knihy: Mengeleho dievča"]["startDate"]["value"] == "2026-10-26T13:00:00+01:00"
+
     # UPJŠ: YYYYMMDD start and end.
     assert out["upjs"]["Univerzitné dni športu 2026"]["startDate"]["value"] == "2026-11-09"
     assert out["upjs"]["Univerzitné dni športu 2026"]["endDate"]["value"] == "2026-11-11"
     # Senec and Ružomberok run the smart-city theme of Banská Bystrica: Meta Box date_start and time_start.
     assert out["senec"]["Koncert úcty k starším v Senci"]["startDate"]["value"] == "2026-10-22T18:00:00+02:00"
     assert out["ruzomberok"]
+
+
+@requires_docker
+def test_visitbratislava_events_take_their_days_from_the_rest_field_event_date():
+    # Recorded 2026-10-25 (T-5435): the event pages lost their JSON-LD Event; event_date holds each
+    # day's 00:00 UTC in Unix seconds, which is the day the page prints ("From 23. Oct 2026 12:00").
+    entities = pipeline_ns("visitbratislava", "visitbratislava-wp-rest.json")
+    for e in entities:
+        assert VALID.is_valid(key_values(e)), list(VALID.iter_errors(key_values(e)))
+    by_name = {e["name"]["value"]: e for e in entities}
+    assert len(by_name) == 4
+    jazz = by_name["Bratislavské jazzové dni 2026"]
+    assert (jazz["startDate"]["value"], jazz["endDate"]["value"]) == ("2026-10-23", "2026-10-25")
+    assert by_name["Mauglí"]["startDate"]["value"] == "2026-10-25"
 
 
 @requires_docker

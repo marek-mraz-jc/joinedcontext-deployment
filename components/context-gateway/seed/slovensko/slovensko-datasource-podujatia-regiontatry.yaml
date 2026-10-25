@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://regiontatry.sk/wp-json/wp/v2/events?per_page=100&_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info
+    url: https://regiontatry.sk/wp-json/wp/v2/events?per_page=100&_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info,event_date
     verb: GET
     headers:
       User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)

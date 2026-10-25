@@ -48,6 +48,7 @@
  "test_blueprint_languages.py": 0.1,
  "test_blueprint_library_seed.py": 0.1,
  "test_bratislava_bikes.py": 7.9,
+ "test_bratislava_coach_stops.py": 4.9,
  "test_bratislava_counters.py": 4.9,
  "test_bratislava_gtfs.py": 5.8,
  "test_bratislava_hub.py": 35.6,

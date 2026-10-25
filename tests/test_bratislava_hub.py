@@ -3,8 +3,8 @@ checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
 on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 327 statistics tables of the three statistics pipelines (the first 18 rows of each table the
-2026-10-24 batch added). The calls to the hub are the
+and the 344 statistics tables of the three statistics pipelines (the first 18 rows of each table the
+2026-10-24 batch and the 2026-10-25 batch T-5435 added). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
@@ -389,7 +389,8 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             if "fixed" in t:
                 slug = years(t["fixed"])
             elif "quarter" in t:
-                y, q = str(r.get(t["year"]) or "").strip(), str(r.get(t["quarter"]) or "").strip()
+                y = str(r.get(t["year"]) or "").strip()
+                q = re.sub(r"^([1-4])\s*\.?\s*[Qq]$", r"\1", str(r.get(t["quarter"]) or "").strip())
                 slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
             else:
                 slug = years(r.get(t["year"]) or "")
@@ -448,7 +449,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 327
+    assert len(keys) == len(set(keys)) == 344
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
