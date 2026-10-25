@@ -11,6 +11,7 @@ import json
 
 import pytest
 
+from conftest import load_yaml_all
 from test_context_brokers import BROKERS, OTHER, render
 
 NAMES = ["main", *OTHER]
@@ -20,9 +21,7 @@ NAMES = ["main", *OTHER]
 def realm(tmp_path_factory):
     result = render(tmp_path_factory, BROKERS)
     assert result.returncode == 0, result.stderr
-    import yaml
-
-    docs = [d for d in yaml.safe_load_all(result.out.read_text()) if isinstance(d, dict)]
+    docs = [d for d in load_yaml_all(result.out.read_text()) if isinstance(d, dict)]
     secret = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"].endswith("config-cli-config-realms"))
     return json.loads(base64.b64decode(secret["data"]["dev.json"]))
 

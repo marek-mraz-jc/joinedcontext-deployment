@@ -15,7 +15,7 @@ import subprocess
 import pytest
 import yaml
 
-from conftest import PROJECT_ROOT, TREE_IGNORE, set_global
+from conftest import PROJECT_ROOT, TREE_IGNORE, load_yaml_all, set_global
 
 # archive takes every default: size small, the environment's storage class.
 BROKERS = [{"name": "archive"},
@@ -47,7 +47,7 @@ def rendered_file(tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def docs(rendered_file):
-    return [d for d in yaml.safe_load_all(rendered_file.read_text()) if isinstance(d, dict)]
+    return [d for d in load_yaml_all(rendered_file.read_text()) if isinstance(d, dict)]
 
 
 def named(docs, kind, name):
@@ -172,7 +172,7 @@ def test_prometheus_scrapes_each_broker_where_monitoring_is_deployed(tmp_path_fa
     """Dev deploys no monitoring; production does, with one ServiceMonitor per broker."""
     result = render(tmp_path_factory, BROKERS, "production")
     assert result.returncode == 0, result.stderr
-    monitors = {d["metadata"]["name"]: d["spec"] for d in yaml.safe_load_all(result.out.read_text())
+    monitors = {d["metadata"]["name"]: d["spec"] for d in load_yaml_all(result.out.read_text())
                 if isinstance(d, dict) and d.get("kind") == "ServiceMonitor"}
     for name in ("broker", *OTHER):
         monitor = monitors["context-broker" if name == "broker" else f"context-broker-{name}"]

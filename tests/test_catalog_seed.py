@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 OD_DATASETS = SEED.parent.parent.parent / "charts/ckan/files/od-datasets.json"
@@ -16,12 +17,11 @@ SUBSCRIPTIONS = {"createSubscription", "retrieveSubscription", "updateSubscripti
 
 
 def manifests():
-    for path in SEED.rglob("*.yaml"):
+    for path, doc in seed_documents():
         if path.name == "index.yaml" or path.name.endswith(".linkml.yaml"):
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and "kind" in doc:
-                yield path, doc
+        if isinstance(doc, dict) and "kind" in doc:
+            yield path, doc
 
 
 def space_of(spec):

@@ -10,7 +10,7 @@ from collections import defaultdict
 from functools import cache
 from pathlib import Path
 
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 MEASURED = {
@@ -24,10 +24,8 @@ DURATION = re.compile(r"^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(?=\d)(\d+H)?(\d+M)
 def manifests() -> tuple[dict, ...]:
     return tuple(
         doc
-        for path in SEED.rglob("*.yaml")
-        if not path.name.endswith(".linkml.yaml")
-        for doc in yaml.safe_load_all(path.read_text())
-        if isinstance(doc, dict) and "kind" in doc
+        for path, doc in seed_documents()
+        if not path.name.endswith(".linkml.yaml") and isinstance(doc, dict) and "kind" in doc
     )
 
 
