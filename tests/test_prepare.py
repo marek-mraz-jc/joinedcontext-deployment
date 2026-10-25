@@ -11,22 +11,36 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from conftest import load_yaml_all
+from conftest import TREE_IGNORE, load_yaml_all, set_global
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
 
-@pytest.fixture(scope="module")
-def hook():
-    """The prepare hook's shell script, as `helmfile build` resolves it for dev."""
+def build(root=PROJECT_ROOT):
+    """`helmfile build` of dev in `root`, the repository or an edited copy of it."""
     if not (PROJECT_ROOT / "deployment/environments/dev").is_dir():
         pytest.skip("run `just _dev-assemble` first")
-    built = subprocess.run(
+    return subprocess.run(
         ["helmfile", "-f", "deployment/helmfile.yaml", "-e", "dev", "build"],
-        cwd=PROJECT_ROOT, capture_output=True, text=True,
+        cwd=root, capture_output=True, text=True,
     )
+
+
+def edited(tmp_path, **values):
+    """A copy of the tree with `global.*` defaults edited (`--state-values-set` reaches no component)."""
+    if not (PROJECT_ROOT / "deployment/environments/dev").is_dir():
+        pytest.skip("run `just _dev-assemble` first")
+    tree = tmp_path / "repo"
+    shutil.copytree(PROJECT_ROOT, tree, ignore=TREE_IGNORE)
+    for dotted, value in values.items():
+        set_global(tree, dotted.replace("__", "."), value)
+    return tree
+
+
+def prepare_hook(root=PROJECT_ROOT):
+    built = build(root)
     assert built.returncode == 0, built.stderr
     states = [s for s in load_yaml_all(built.stdout) if isinstance(s, dict)]
     (prepare,) = [s for s in states if (s.get("commonLabels") or {}).get("component") == "prepare"]
@@ -36,8 +50,23 @@ def hook():
 
 
 @pytest.fixture(scope="module")
+def hook():
+    """The prepare hook's shell script, as `helmfile build` resolves it for dev."""
+    return prepare_hook()
+
+
+@pytest.fixture(scope="module")
 def dev(rendered):
     return rendered("dev")
+
+
+# The injected proxy's resources as defaults/environment/global.yaml sets them (T-5554); Linkerd
+# gives linkerd-network-validator the same proxy.resources, so both meet require-requests-limits.
+PROXY = (
+    " config.linkerd.io/proxy-cpu-request=10m"
+    " config.linkerd.io/proxy-memory-limit=250Mi"
+    " config.linkerd.io/proxy-memory-request=24Mi"
+)
 
 
 def first_command(script):
@@ -94,9 +123,54 @@ def test_every_ensured_namespace_is_meshed_and_admits_only_authenticated_traffic
     for name in ensured(hook):
         assert (
             f'kubectl annotate namespace "{name}" linkerd.io/inject=enabled '
-            f'config.linkerd.io/default-inbound-policy="cluster-authenticated" --overwrite'
+            f'config.linkerd.io/default-inbound-policy="cluster-authenticated"{PROXY} --overwrite'
         ) in hook, name
     assert not re.search(r"kubectl annotate namespace \"[^\"]+\" linkerd.io/inject=enabled --overwrite", hook), (
         "injection written on its own, without the inbound policy"
     )
     assert "default-inbound-policy-" not in hook, "dev must not clear the policy"
+
+
+def annotations(script):
+    return re.findall(r"kubectl annotate namespace .*", script)
+
+
+@requires_helmfile
+def test_the_proxy_resources_come_from_the_global_values(hook, tmp_path):
+    lines = annotations(prepare_hook(edited(
+        tmp_path,
+        serviceMesh__proxyResources__memoryLimit="96Mi",
+        serviceMesh__proxyResources__cpuRequest="",
+    )))
+    assert len(lines) == len(ensured(hook)), lines
+    for line in lines:
+        assert "config.linkerd.io/proxy-memory-limit=96Mi config.linkerd.io/proxy-memory-request=24Mi --overwrite" in line
+        # An emptied value removes what an earlier apply wrote (re-apply), it never keeps it.
+        assert " config.linkerd.io/proxy-cpu-request- " in line, line
+        assert "proxy-cpu-request=" not in line, "an emptied value still writes its annotation"
+
+
+@requires_helmfile
+def test_an_unmeshed_namespace_gets_no_proxy_resources(hook, dev, tmp_path):
+    # The hook writes the proxy keys only together with linkerd.io/inject=enabled; a namespace its
+    # own release renders unmeshed (the app-tests sandbox, T-2675) is not the hook's to annotate.
+    assert hook.count("proxy-memory-limit") == len(ensured(hook))
+    for line in annotations(hook):
+        assert "linkerd.io/inject=enabled" in line
+    disabled = [
+        d["metadata"] for d in dev
+        if d.get("kind") == "Namespace" and (d["metadata"].get("annotations") or {}).get("linkerd.io/inject") == "disabled"
+    ]
+    assert disabled, "dev renders no unmeshed namespace: the check below would pass vacuously"
+    for meta in disabled:
+        assert meta["name"] not in ensured(hook), meta["name"]
+        assert not any(k.startswith("config.linkerd.io/proxy-") for k in meta["annotations"]), meta["name"]
+    unmeshed = prepare_hook(edited(tmp_path, serviceMesh__patchNamespaces=False))
+    assert "proxy-memory" not in unmeshed and "linkerd.io/inject" not in unmeshed
+
+
+@requires_helmfile
+def test_a_proxy_resource_that_is_no_quantity_is_refused(tmp_path):
+    built = build(edited(tmp_path, serviceMesh__proxyResources__memoryLimit="64Mi --overwrite; id"))
+    assert built.returncode != 0
+    assert "global.serviceMesh.proxyResources.memoryLimit" in built.stderr + built.stdout
