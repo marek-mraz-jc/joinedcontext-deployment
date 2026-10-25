@@ -49,3 +49,5 @@ spec:
         - type: ParkingGroup
         - type: RestrictedTrafficArea
         - type: FareCollectionSystem
+        - type: KeyPerformanceIndicator
+        - type: CityWork

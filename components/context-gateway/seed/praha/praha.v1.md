@@ -559,6 +559,58 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### KeyPerformanceIndicator
+
+One figure of one city table for one period: a count of the municipal police's monthly activity report, city-wide or per police unit, or what the city has drawn of a budget line or of a transfer to a city district so far this year. Each year's file adds periods to the same series (`dataSet`).
+
+IRI: `sdm:KeyPerformanceIndicator`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `dataSet` | Property | `string` | yes |  | `jc:dataSet` | The series the figure belongs to, the same for every year's file of one publication, such as `mp-cinnost` for the monthly activity reports of the municipal police. |
+| `indicator` | Property | `string` | yes |  | `jc:indicator` | What the figure counts, as the publisher's own headings joined by ` / `, such as `Odtahy vozidel / Celkem`, or the budget line's function and item codes. |
+| `refArea` | Property | `string` | yes |  | `jc:refArea` | The territory the figure describes: `CZ010` for the whole city, or a city district's identification number (IČO) and name, such as `00063410 HMP-MČ PRAHA 1`. |
+| `refPeriod` | Property | `string` | yes |  | `jc:refPeriod` | The period the figure covers, a month (`2025-09`) or a budget year to date (`2026`). |
+| `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | The further breakdown beyond area and period: the police unit (`OŘ1`, `Hlídkový útvar`), the budget area of a budget line (`09 Školství`) or where a district's transfer comes from (`Státní rozpočet`); absent when the series has none. |
+| `kpiValue` | Property | `float` | yes |  | `sdm:kpiValue` | The figure as published: a count (unitCode C62), a share in percent (P1), or an amount of money drawn so far, in the unit the budget publishes (thousands of CZK), named by `unitText`. |
+| `unitText` | Property | `string` |  |  | `jc:unitText` | The unit in words, such as `Kč` or `tis. Kč`, kept because a UN/CEFACT code has no currency. |
+| `approvedAmount` | Property | `float` |  |  | `jc:approvedAmount` | The amount the council approved, as the city publishes it. The city's documentation names no unit; the 2026 expenditure lines add up to 119 054 085, which is the size of Prague's budget in thousands of CZK. |
+| `adjustedAmount` | Property | `float` |  |  | `jc:adjustedAmount` | The amount after the year's budget changes so far, in the same unit as the approved one. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### CityWork
+
+One work or event that occupies a Prague street, as the city's opravujeme.to service lists it for drivers: what and where, from when until when, its state, how hard it restricts traffic and who invests in it. The responsible people, their phones and e-mails and the contractor are left out, and so are the free-text restrictions, which name contact people.
+
+IRI: `sdm:CityWork`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The Smart Data Models PostalAddress: the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares. |
+| `startDate` | Property | `datetime` | yes |  | `schema:startDate` | When the work on the street starts, as the opravujeme.to record gives it in Europe/Prague time. |
+| `endDate` | Property | `datetime` | yes |  | `schema:endDate` | When the work on the street is planned to end, in Europe/Prague time. |
+| `workState` | Property | [`WorkState`](#workstate) | yes |  | `sdm:workState` | Where the work stands, in the Smart Data Model's terms (planned, open, completed). |
+| `workCategory` | Property | [`WorkCategory`](#workcategory) |  |  | `jc:workCategory` | What occupies the street, as opravujeme.to classes it (construction, cultural, sport, others). |
+| `trafficImpact` | Property | [`TrafficImpact`](#trafficimpact) |  |  | `jc:trafficImpact` | How hard the work restricts traffic, opravujeme.to's colour as a word (minor green, moderate yellow, severe red). |
+| `contractingAuthority` | Property | `string` |  |  | `sdm:contractingAuthority` | The work's investor, a public body, utility or company; left out when it does not read as an organisation, because a private investor is a person. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` | yes |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### PostalAddress
 
 The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
@@ -734,3 +786,30 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 |---|---|
 | `q100` | The 100-year flood (Q100). |
 | `flood2002` | The level of the August 2002 flood (Q2002). |
+
+### WorkState
+
+The CityWork `workState` values opravujeme.to's states map to, a subset of the Smart Data Model's enum.
+
+| Value | Meaning |
+|---|---|
+| `planned` | Announced and not started yet (FUTURE). |
+| `open` | Under way now (ACTIVE). |
+| `completed` | Finished (DONE). |
+
+### WorkCategory
+
+| Value | Meaning |
+|---|---|
+| `construction` | Construction or repair work (CONSTRUCTION). |
+| `cultural` | A cultural event on the street (CULTURAL). |
+| `sport` | A sports event on the street (SPORT). |
+| `other` | Anything else (OTHERS). |
+
+### TrafficImpact
+
+| Value | Meaning |
+|---|---|
+| `minor` | Little restriction, opravujeme.to's green. |
+| `moderate` | Lanes or turns closed, opravujeme.to's yellow. |
+| `severe` | A street or ramp closed, opravujeme.to's red. |

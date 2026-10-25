@@ -34,6 +34,8 @@ spec:
     - ParkingGroup
     - RestrictedTrafficArea
     - FareCollectionSystem
+    - KeyPerformanceIndicator
+    - CityWork
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

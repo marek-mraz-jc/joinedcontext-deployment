@@ -398,6 +398,10 @@ PARTS = {
     "praha-parkovani": "CC_BY_4_0",
     "praha-zakazy-stani": "CC_BY_4_0",
     "praha-parkovaci-automaty": "CC_BY_4_0",
+    # The city tables and road works, one dataset per file family; the city and its police waive
+    # every right (T-5428).
+    "praha-cinnost-mestske-policie": "CC0", "praha-cinnost-mestske-policie-utvary": "CC0",
+    "praha-cerpani-rozpoctu": "CC0", "praha-financni-vztahy-mc": "CC0", "praha-opravy-a-uzavirky": "CC0",
 }
 
 

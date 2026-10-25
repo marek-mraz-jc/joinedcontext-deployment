@@ -509,6 +509,69 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {
       "@id": "sdm:zoneCode"
+    },
+    "CityWork": {
+      "@id": "sdm:CityWork"
+    },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "contractingAuthority": {
+      "@id": "sdm:contractingAuthority"
+    },
+    "dataSet": {
+      "@id": "jc:dataSet"
+    },
+    "dimensionKey": {
+      "@id": "jc:dimensionKey"
+    },
+    "endDate": {
+      "@id": "schema:endDate",
+      "@type": "xsd:dateTime"
+    },
+    "indicator": {
+      "@id": "jc:indicator"
+    },
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
+    "refArea": {
+      "@id": "jc:refArea"
+    },
+    "refPeriod": {
+      "@id": "jc:refPeriod"
+    },
+    "startDate": {
+      "@id": "schema:startDate",
+      "@type": "xsd:dateTime"
+    },
+    "trafficImpact": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trafficImpact"
+    },
+    "unitText": {
+      "@id": "jc:unitText"
+    },
+    "workCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:workCategory"
+    },
+    "workState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:workState"
     }
   },
   "x-generator-version": "linkml-1.11.1"
