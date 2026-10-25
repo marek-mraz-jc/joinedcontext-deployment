@@ -5,8 +5,9 @@
 # differ only in `tables` below, split by area so that one run fits its memory quota. A table is
 # one line of `tables`, never a pipeline of its own. The bratislava-hub DataSource answers the
 # hub's list of services; a table the list no longer names is logged and left out. Each table is
-# read with one query of at most 2,000 rows; an answer that says it holds more fails that table
-# instead of writing part of it. Nothing here deletes.
+# read in pages of 1,000 rows, at most 20; a table that holds more fails instead of writing part
+# of it. A table of events or bookings is read as the hub's own counts and sums per group (T-5671).
+# Nothing here deletes.
 pipeline:
   processors:
     - mapping: |
@@ -18,6 +19,12 @@ pipeline:
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
+        # A table of events or bookings asks the hub for sums: group: the columns or expressions
+        # (SUBSTRING of a date) one figure stands for, in the order the hub names its answer
+        # (an expression answers as EXPR_1); stats: [statistic, column or expression, answer
+        # column]; where: the rows counted (the year-end month of a running ledger); labels: a
+        # breakdown code by its Slovak word; past: a period that starts after today is a wrong
+        # date in the ledger, dropped.
         let tables = [
           {"name": "priestupky", "item": "db2bc2a556af4a3dbb1d76107769a089", "path": "Po%C4%8Det_priestupkov_pod%C4%BEa_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_pod%C4%BEa_evidencie_mestskej_pol%C3%ADcie", "title": "Priestupky podľa evidencie mestskej polície", "areas": "district", "area": "MESTSKA_CAST", "year": "ROK", "values": [["POCET_PRIESTUPKOV", "pocet", "Počet priestupkov", 0, null]]},
           {"name": "komare", "item": "95df2faeda284dfdba5dbbcebd2d5cfd", "path": "Z%C3%A1sahy_pod%C4%BEa_jednotliv%C3%BDch_mestsk%C3%BDch_%C4%8Dast%C3%AD", "title": "Biologická regulácia komárov", "areas": "district", "area": "MESTSKA_CAST", "year": "ROK", "values": [["POCET_KONTROL", "kontroly", "Počet kontrol", 0, null], ["OSETRENA_PLOCHA_V_M2", "plocha-m2", "Ošetrená plocha (m²)", 0, null]]},
@@ -93,7 +100,9 @@ pipeline:
           {"name": "sodb-2011-sukromne-domacnosti-podla", "item": "5f285aedcabb4e9b8018b207c5ff05ae", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20pr%C3%A1vneho%20u%C5%BE%C3%ADvania%20bytu", "title": "SODB 2011 - Súkromné domácnosti podľa právneho užívania bytu", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Spolu", "spolu", "Spolu", null, null], ["Domácnosti__v_ktorých_je_aspoň_", "domacnosti-v-ktorych-je-aspon", "Domácnosti, v ktorých je aspoň jeden člen domácnosti vlastníkom obytnej jednotky", null, null], ["Domácnosti__v_ktorých_je_aspoň1", "domacnosti-v-ktorych-je-aspon1", "Domácnosti, v ktorých je aspoň jeden člen domácnosti nájomcom celej obytnej jednotky alebo jej časti", null, null], ["Domácnosti__ktoré_obývajú_celú_", "domacnosti-ktore-obyvaju-celu", "Domácnosti, ktoré obývajú celú obytnú jednotku alebo jej časť na základe iného právneho dôvodu užívania", null, null], ["Nezistené", "nezistene", "Nezistené", null, null]]},
           {"name": "sodb-2011-sukromne-domacnosti-podla-typu", "item": "87118ab82ab847cfbcb32bee21db2326", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20typu", "title": "SODB 2011 - Súkromné domácnosti podľa typu", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Nerodinné_domácnosti__spolu_", "nerodinne-domacnosti-spolu", "Nerodinné domácnosti (spolu)", null, null], ["Nerodinné_domácnosti___Domácnos", "nerodinne-domacnosti-domacnos", "Nerodinné domácnosti - Domácnosti jednotlivcov", null, null], ["Nerodinné_domácnosti___Viacčlen", "nerodinne-domacnosti-viacclen", "Nerodinné domácnosti - Viacčlenné domácnosti", null, null], ["Domácnosti__ktoré_tvorí_jedna_r", "domacnosti-ktore-tvori-jedna-r", "Domácnosti, ktoré tvorí jedna rodina (spolu)", null, null], ["Domácnosti__ktoré_tvorí_jedna_1", "domacnosti-ktore-tvori-jedna-1", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti pozostávajúce z manželských párov", null, null], ["Domácnosti__ktoré_tvorí_jedna_2", "domacnosti-ktore-tvori-jedna-2", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti párov žijúcich v konsenzuálnom zväzku", null, null], ["Domácnosti__ktoré_tvorí_jedna_3", "domacnosti-ktore-tvori-jedna-3", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti osamelých otcov", null, null], ["Domácnosti__ktoré_tvorí_jedna_4", "domacnosti-ktore-tvori-jedna-4", "Domácnosti, ktoré tvorí jedna rodina - Domácnosti osamelých matiek", null, null], ["Domácnosti_pozostávajúce_z_dvoc", "domacnosti-pozostavajuce-z-dvoc", "Domácnosti pozostávajúce z dvoch a viac rodín", null, null]]},
           {"name": "sodb-2011-sukromne-podla-velkosti", "item": "c1d6b2ff59b84d6aa6e8229390b8f145", "path": "SODB%202011%20-%20S%C3%BAkromn%C3%A9%20dom%C3%A1cnosti%20pod%C4%BEa%20ve%C4%BEkosti", "title": "SODB 2011 - Súkromné domácnosti podľa veľkosti", "areas": "district", "area": "Mestská_časť", "fixed": "2011", "by": ["Okres"], "values": [["Spolu", "spolu", "Spolu", null, null], ["F1_osoba", "f1-osoba", "1 osoba", null, null], ["F2_osoby", "f2-osoby", "2 osoby", null, null], ["F3_až_5_osôb", "f3-az-5-osob", "3 až 5 osôb", null, null], ["F6_až_10_osôb", "f6-az-10-osob", "6 až 10 osôb", null, null], ["F11_osôb_a_viac", "f11-osob-a-viac", "11 osôb a viac", null, null]]},
-          {"name": "vzajomne-migracne-saldo-casti-2000-2004-ba", "item": "504e50b164f44b8d80dcf76ae9b77caa", "path": "Vz%C3%A1jomn%C3%A9_migra%C4%8Dn%C3%A9_saldo_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_2000_%E2%80%93_2004", "title": "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", "areas": "district", "area": "MESTSKA_CAST_ZISKOVA", "fixed": "2000-2004", "by": ["MESTSKA_CAST_STRATOVA"], "values": [["MIGRACNE_SALDO", "migracne-saldo", "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", null, null]]}
+          {"name": "vzajomne-migracne-saldo-casti-2000-2004-ba", "item": "504e50b164f44b8d80dcf76ae9b77caa", "path": "Vz%C3%A1jomn%C3%A9_migra%C4%8Dn%C3%A9_saldo_mestsk%C3%BDch_%C4%8Dast%C3%AD_Bratislavy_2000_%E2%80%93_2004", "title": "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", "areas": "district", "area": "MESTSKA_CAST_ZISKOVA", "fixed": "2000-2004", "by": ["MESTSKA_CAST_STRATOVA"], "values": [["MIGRACNE_SALDO", "migracne-saldo", "Vzájomné migračné saldo mestských častí Bratislavy 2000 – 2004", null, null]]},
+          {"name": "pocet-ostatnych-udalosti", "item": "453481307bfe4386b8d2ec14ca8fb63d", "path": "Po%C4%8Det%20ostatn%C3%BDch%20udalost%C3%AD%20v%20rokoch%202017%20-%202022", "title": "Počet ostatných udalostí v rokoch 2017 - 2022", "areas": "district", "area": "Mestská_časť", "year": "EXPR_1", "past": true, "by": ["Skupina_udalosti"], "group": "SUBSTRING(Dátum_a_čas_od,1,4),Skupina_udalosti,Mestská_časť", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet udalostí", 0, null]]},
+          {"name": "pocet-priestupkov-podla-druhu-udalosti", "item": "2566d894a604427196b65b09a46ea60b", "path": "Po%C4%8Det%20priestupkov%20pod%C4%BEa%20druhu%20udalosti%20v%20rokoch%202017%20-%202022", "title": "Počet priestupkov podľa druhu udalosti v rokoch 2017 - 2022", "areas": "district", "area": "Mestská_časť", "year": "EXPR_1", "past": true, "by": ["Skupina_udalosti"], "group": "SUBSTRING(Dátum_a_čas_od,1,4),Skupina_udalosti,Mestská_časť", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet priestupkov", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -114,29 +123,51 @@ pipeline:
                 message: 'statistics: the hub no longer lists ${! @missing }, left out of this run'
     - unarchive: { format: json_array }
 
-    # One table a request; the path is the constant above, never text of an answer.
-    - branch:
-        request_map: |
-          meta path = this.path
-          root = ""
-        processors:
-          - sleep: { duration: '200ms' }
-          - http:
-              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2000&f=json
-              verb: GET
-              headers:
-                Accept: application/json
-                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
-              timeout: 30s
-              retries: 2
-        result_map: |
-          root.rows = if content().length() > 4194304 {
-            throw("the table answer is over 4 MiB")
-          } else if this.error.or(null) != null {
-            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
-          } else if this.exceededTransferLimit.or(false) {
-            throw("the table holds more than 2,000 rows, more than one read")
-          } else { this.features.or([]).map_each(f -> f.attributes) }
+    # One table at a time, read in pages of 1,000 rows (the hub's smallest maxRecordCount) until
+    # the hub says no more, at most 20 pages; a table with more fails instead of writing part of
+    # it. The path and the query are the constants above, never text of an answer. A table line
+    # with `group` asks the hub for its sums instead of its rows: one row a group, ordered by the
+    # group so the pages do not overlap.
+    - for_each:
+        - branch:
+            request_map: |
+              meta path = this.path
+              meta query = if this.group.or("") == "" { "where=1%3D1&outFields=*" } else {
+                "where=" + this.where.or("1=1").escape_url_query() +
+                "&groupByFieldsForStatistics=" + this.group.escape_url_query() +
+                "&orderByFields=" + this.group.escape_url_query() +
+                "&outStatistics=" + this.stats.map_each(s -> { "statisticType": s.index(0), "onStatisticField": s.index(1), "outStatisticFieldName": s.index(2) }).format_json(no_indent: true).escape_url_query()
+              }
+              root = { "rows": [], "offset": 0, "more": true }
+            processors:
+              - while:
+                  check: this.more && !errored()
+                  max_loops: 20
+                  processors:
+                    - branch:
+                        request_map: |
+                          meta offset = this.offset.string()
+                          root = ""
+                        processors:
+                          - sleep: { duration: '200ms' }
+                          - http:
+                              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?${! @query }&resultOffset=${! @offset }&resultRecordCount=1000&f=json
+                              verb: GET
+                              headers:
+                                Accept: application/json
+                                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
+                              timeout: 30s
+                              retries: 2
+                        result_map: |
+                          root.rows = if content().length() > 4194304 {
+                            throw("the table answer is over 4 MiB")
+                          } else if this.error.or(null) != null {
+                            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
+                          } else { root.rows.concat(this.features.or([]).map_each(f -> f.attributes)) }
+                          root.offset = root.offset + 1000
+                          root.more = this.exceededTransferLimit.or(false)
+            result_map: |
+              root.rows = if this.more { throw("the table holds more than 20,000 rows, more than 20 pages") } else { this.rows }
     # A table the hub refuses is logged and left out of this run; the others still write.
     - catch:
         - log: { level: WARN, message: 'statistics: ${! json("name") } not read: ${! error() }' }
@@ -221,7 +252,8 @@ pipeline:
         }
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          let labels = this.table.labels.or({})
+          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(v -> $labels.get(v).or(v))
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
@@ -241,6 +273,7 @@ pipeline:
               { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
+            else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
             else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }

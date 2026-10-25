@@ -5,8 +5,9 @@
 # differ only in `tables` below, split by area so that one run fits its memory quota. A table is
 # one line of `tables`, never a pipeline of its own. The bratislava-hub DataSource answers the
 # hub's list of services; a table the list no longer names is logged and left out. Each table is
-# read with one query of at most 2,000 rows; an answer that says it holds more fails that table
-# instead of writing part of it. Nothing here deletes.
+# read in pages of 1,000 rows, at most 20; a table that holds more fails instead of writing part
+# of it. A table of events or bookings is read as the hub's own counts and sums per group (T-5671).
+# Nothing here deletes.
 pipeline:
   processors:
     - mapping: |
@@ -18,6 +19,12 @@ pipeline:
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
+        # A table of events or bookings asks the hub for sums: group: the columns or expressions
+        # (SUBSTRING of a date) one figure stands for, in the order the hub names its answer
+        # (an expression answers as EXPR_1); stats: [statistic, column or expression, answer
+        # column]; where: the rows counted (the year-end month of a running ledger); labels: a
+        # breakdown code by its Slovak word; past: a period that starts after today is a wrong
+        # date in the ledger, dropped.
         let tables = [
           {"name": "buduci-bytovy-fond-v-okresoch-bsk-v", "item": "5581185b07bb4010aa6aa7066aa60343", "path": "Bud%C3%BAci_bytov%C3%BD_fond_v_okresoch_BSK_v_rokoch_2031_-_2051", "title": "Budúci bytový fond v okresoch BSK v rokoch 2031 - 2051", "areas": "okres", "area": "OKRES", "year": "ROK", "values": [["POCET_BYTOV_V_TIS", "pocet-bytov-v-tis", "Budúci bytový fond v okresoch BSK v rokoch 2031 - 2051", 0, null]]},
           {"name": "miera-objasnenosti-trestnych-cinov-v", "item": "661e8890ae104ce1a2344acbc9d82485", "path": "Miera%20objasnenosti%20trestn%C3%BDch%20%C4%8Dinov%20%28v%20%29", "title": "Miera objasnenosti trestných činov (v %)", "areas": "okres", "area": "Okres", "year": "Rok", "by": ["Typ"], "values": [["Miera", "miera", "Miera objasnenosti trestných činov (v %)", null, null]]},
@@ -99,7 +106,9 @@ pipeline:
           {"name": "dopravne-nehody", "item": "39d5a295afd24560bacd092e80531401", "path": "Po%C4%8Det%20dopravn%C3%BDch%20neh%C3%B4d%20v%20cestnej%20doprave", "title": "Počet dopravných nehôd v cestnej doprave", "areas": "okres", "area": "Okres", "year": "Rok", "values": [["Počet_nehôd", "pocet", "Počet dopravných nehôd", 0, null]]},
           {"name": "dopravne-nehody-druh-vozidla-vinnika", "item": "07c428da9c4b4fbcbdbdae9056d495e1", "path": "Po%C4%8Det%20dopravn%C3%BDch%20neh%C3%B4d%20v%20cestnej%20doprave___", "title": "Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka)", "areas": "okres", "area": "Okres", "year": "Rok", "values": [["Malý_motocykel", "maly-motocykel", "Nehody, vinník malý motocykel", 0, null], ["Motocykel", "motocykel", "Nehody, vinník motocykel", 0, null], ["Osobný_automobil", "osobny-automobil", "Nehody, vinník osobný automobil", 0, null], ["Nákladný_automobil", "nakladny-automobil", "Nehody, vinník nákladný automobil", 0, null], ["Autobus", "autobus", "Nehody, vinník autobus", 0, null], ["Traktor", "traktor", "Nehody, vinník traktor", 0, null], ["Bicykel", "bicykel", "Nehody, vinník bicykel", 0, null], ["Dodávka", "dodavka", "Nehody, vinník dodávka", 0, null], ["Ostatné_druhy_vozidiel", "ostatne", "Nehody, vinník iné vozidlo", 0, null], ["Nezadané", "nezadane", "Nehody, vinník nezadaný", 0, null]]},
           {"name": "dopravne-nehody-kategoria-cesty", "item": "60953eb5610d45d28464b3f6c90cd6be", "path": "Po%C4%8Det%20dopravn%C3%BDch%20neh%C3%B4d%20v%20cestnej%20doprave%20pod%C4%BEa%20kateg%C3%B3rie%20ces", "title": "Počet dopravných nehôd v cestnej doprave podľa kategórie cesty", "areas": "okres", "area": "Okres", "year": "Rok", "values": [["Diaľnica___diaľničný_privádzač", "dialnica", "Nehody na diaľnici a privádzači", 0, null], ["Rýchlostná_cesta___privádzač", "rychlostna-cesta", "Nehody na rýchlostnej ceste a privádzači", 0, null], ["Cesta_I__triedy", "cesta-i", "Nehody na ceste I. triedy", 0, null], ["Cesta_II__triedy", "cesta-ii", "Nehody na ceste II. triedy", 0, null], ["Cesta_III__triedy", "cesta-iii", "Nehody na ceste III. triedy", 0, null], ["Komunikácia_účelová___poľné__le", "ucelova-polna-lesna", "Nehody na účelovej komunikácii (poľnej, lesnej)", 0, null], ["Komunikácia_účelová___ostatné__", "ucelova-ostatna", "Nehody na ostatnej účelovej komunikácii", 0, null], ["Komunikácia_v_km_systéme_nesled", "miestna", "Nehody na komunikácii mimo kilometrovníka (miestnej)", 0, null], ["Nezadané", "nezadane", "Nehody, kategória cesty nezadaná", 0, null]]},
-          {"name": "dopravne-nehody-v-obci-a-mimo-obce", "item": "9fb20b6ffa00433d8d39a77ca5167582", "path": "Po%C4%8Det%20dopravn%C3%BDch%20neh%C3%B4d%20v%20cestnej%20doprave%20pod%C4%BEa%20miesta%20%E2%80%93%20v%20mi", "title": "Počet dopravných nehôd v cestnej doprave podľa miesta (v/mimo obce)", "areas": "okres", "area": "Okres", "year": "Rok", "by": ["Miesto"], "values": [["Počet_nehôd", "pocet", "Počet dopravných nehôd", 0, null]]}
+          {"name": "dopravne-nehody-v-obci-a-mimo-obce", "item": "9fb20b6ffa00433d8d39a77ca5167582", "path": "Po%C4%8Det%20dopravn%C3%BDch%20neh%C3%B4d%20v%20cestnej%20doprave%20pod%C4%BEa%20miesta%20%E2%80%93%20v%20mi", "title": "Počet dopravných nehôd v cestnej doprave podľa miesta (v/mimo obce)", "areas": "okres", "area": "Okres", "year": "Rok", "by": ["Miesto"], "values": [["Počet_nehôd", "pocet", "Počet dopravných nehôd", 0, null]]},
+          {"name": "pocet-ziakov-sportovych-tried", "item": "7fe91e633f354199a2bf715124d6e195", "path": "Po%C4%8Det_%C5%BEiakov_%C5%A1portov%C3%BDch_tried_z%C3%A1kladn%C3%BDch_%C5%A1k%C3%B4l_pod%C4%BEa_druhu_%C5%A1portu", "title": "Počet žiakov športových tried základných škôl podľa druhu športu", "areas": "okres", "area": "Okres", "year": "Rok", "by": ["Ročník", "Kategória", "Druh_športu"], "values": [["Počet", "pocet", "Počet žiakov", 0, null]]},
+          {"name": "zachytne-bezpecnostne-zariadenia", "item": "62e63d75b79f49f4a17c49436124b085", "path": "tmpsh988bwkaaa", "title": "Typy záchytného bezpečnostného zariadenia podľa triedy cestnej komunikácie a správcu", "areas": "okres", "area": "Okres", "fixed": "2016", "by": ["Trieda_CK", "Typ_záchytného_bezpečnostného_z", "Typ_správcu"], "group": "Okres,Trieda_CK,Typ_záchytného_bezpečnostného_z,Typ_správcu", "stats": [["count", "ObjectId", "n"], ["sum", "CAST(Evidenčná_dĺžka_úseku__m_ AS FLOAT)", "m"]], "values": [["n", "pocet-usekov", "Počet úsekov", 0, null], ["m", "dlzka-m", "Evidenčná dĺžka (m)", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -120,29 +129,51 @@ pipeline:
                 message: 'statistics: the hub no longer lists ${! @missing }, left out of this run'
     - unarchive: { format: json_array }
 
-    # One table a request; the path is the constant above, never text of an answer.
-    - branch:
-        request_map: |
-          meta path = this.path
-          root = ""
-        processors:
-          - sleep: { duration: '200ms' }
-          - http:
-              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2000&f=json
-              verb: GET
-              headers:
-                Accept: application/json
-                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
-              timeout: 30s
-              retries: 2
-        result_map: |
-          root.rows = if content().length() > 4194304 {
-            throw("the table answer is over 4 MiB")
-          } else if this.error.or(null) != null {
-            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
-          } else if this.exceededTransferLimit.or(false) {
-            throw("the table holds more than 2,000 rows, more than one read")
-          } else { this.features.or([]).map_each(f -> f.attributes) }
+    # One table at a time, read in pages of 1,000 rows (the hub's smallest maxRecordCount) until
+    # the hub says no more, at most 20 pages; a table with more fails instead of writing part of
+    # it. The path and the query are the constants above, never text of an answer. A table line
+    # with `group` asks the hub for its sums instead of its rows: one row a group, ordered by the
+    # group so the pages do not overlap.
+    - for_each:
+        - branch:
+            request_map: |
+              meta path = this.path
+              meta query = if this.group.or("") == "" { "where=1%3D1&outFields=*" } else {
+                "where=" + this.where.or("1=1").escape_url_query() +
+                "&groupByFieldsForStatistics=" + this.group.escape_url_query() +
+                "&orderByFields=" + this.group.escape_url_query() +
+                "&outStatistics=" + this.stats.map_each(s -> { "statisticType": s.index(0), "onStatisticField": s.index(1), "outStatisticFieldName": s.index(2) }).format_json(no_indent: true).escape_url_query()
+              }
+              root = { "rows": [], "offset": 0, "more": true }
+            processors:
+              - while:
+                  check: this.more && !errored()
+                  max_loops: 20
+                  processors:
+                    - branch:
+                        request_map: |
+                          meta offset = this.offset.string()
+                          root = ""
+                        processors:
+                          - sleep: { duration: '200ms' }
+                          - http:
+                              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?${! @query }&resultOffset=${! @offset }&resultRecordCount=1000&f=json
+                              verb: GET
+                              headers:
+                                Accept: application/json
+                                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
+                              timeout: 30s
+                              retries: 2
+                        result_map: |
+                          root.rows = if content().length() > 4194304 {
+                            throw("the table answer is over 4 MiB")
+                          } else if this.error.or(null) != null {
+                            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
+                          } else { root.rows.concat(this.features.or([]).map_each(f -> f.attributes)) }
+                          root.offset = root.offset + 1000
+                          root.more = this.exceededTransferLimit.or(false)
+            result_map: |
+              root.rows = if this.more { throw("the table holds more than 20,000 rows, more than 20 pages") } else { this.rows }
     # A table the hub refuses is logged and left out of this run; the others still write.
     - catch:
         - log: { level: WARN, message: 'statistics: ${! json("name") } not read: ${! error() }' }
@@ -227,7 +258,8 @@ pipeline:
         }
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          let labels = this.table.labels.or({})
+          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(v -> $labels.get(v).or(v))
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
@@ -247,6 +279,7 @@ pipeline:
               { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
+            else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
             else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }

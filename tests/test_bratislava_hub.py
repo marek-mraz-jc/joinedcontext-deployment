@@ -3,7 +3,8 @@ checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
 on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 344 statistics tables of the three statistics pipelines (the first 18 rows of each table the
+and the 363 statistics tables of the three statistics pipelines (the first 18 rows of each table or
+of each page of the 19 T-5671 read in pages or as the hub's sums; the first 18 rows of each table the
 2026-10-24 batch and the 2026-10-25 batch T-5435 added). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
@@ -12,6 +13,7 @@ dropped with a counted reason. Without a container runtime the Bento cases skip.
 
 import copy
 import json
+from datetime import date
 import re
 import subprocess
 import tempfile
@@ -46,19 +48,31 @@ def run(
     """The committed mapping over `document`; each table request answered from `answers` by the
     path the mapping asks for, an unknown path refused."""
     steps = yaml.safe_load((SEED / mapping).read_text())["pipeline"]["processors"]
+    # A path with a dot ("1._ročníka") is a path to `get`: the dots go out of the key. A paged
+    # answer ({query, pages}) is answered page by page and only for the query it was recorded
+    # with; a single recorded answer is the first page of a table the hub sends whole.
+    table = json.dumps({k.replace(".", "%2E"): v for k, v in (answers or {}).items()})
+    answer = [
+        {
+            "mapping": f"let a = {table}.get(@path.replace_all(\".\", \"%2E\")).or(throw(\"unasked\"))\n"
+            'root = if $a.pages != null {\n'
+            '  if $a.query != @query { throw("asked " + @query + ", recorded " + $a.query) }\n'
+            '  else { $a.pages.index(@offset.number().int64() / 1000).or(throw("no page at " + @offset)) }\n'
+            '} else if @offset.or("0") == "0" { $a } else { throw("no page at " + @offset) }'
+        }
+    ]
     for step in steps:
-        if "branch" in step:
+        page = step.get("for_each", [{}])[0].get("branch", {}).get("processors", [{}])[0].get("while")
+        if page:
+            http = page["processors"][0]["branch"]["processors"][-1]["http"]
+            assert http["url"].startswith(HUB + "${! @path }/FeatureServer/0/query?${! @query }&"), http["url"]
+            page["processors"][0]["branch"]["processors"] = answer
+        elif "branch" in step:
             http = step["branch"]["processors"][-1]["http"]
             assert http["url"].startswith(HUB + "${! @path }/FeatureServer/"), (
                 http["url"]
             )
-            step["branch"]["processors"] = [
-                {
-                    # A path with a dot ("1._ročníka") is a path to `get`: the dots go out of the key.
-                    "mapping": f'root = {json.dumps({k.replace(".", "%2E"): v for k, v in (answers or {}).items()})}'
-                    '.get(@path.replace_all(".", "%2E")).or(throw("unasked"))'
-                }
-            ]
+            step["branch"]["processors"] = answer
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
         "pipeline": {"processors": steps},
@@ -378,7 +392,8 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
     {id: value} and the count of dropped figures by reason."""
     figures, dropped, seen = {}, {}, 0
     for t in tables(pipeline):
-        for row in answers[t["path"]]["features"]:
+        answer = answers[t["path"]]
+        for row in [f for page in answer.get("pages", [answer]) for f in page["features"]]:
             r = row["attributes"]
             if "only" in t and not str(r.get(t["only"][0]) or "").startswith(t["only"][1]):
                 continue
@@ -394,13 +409,15 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
                 slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
             else:
                 slug = years(r.get(t["year"]) or "")
-            by = [re.sub(r"[^a-z0-9]+", "-", fold(r.get(c) or "")).strip("-") for c in t.get("by", [])]
+            labels = t.get("labels", {})
+            by = [re.sub(r"[^a-z0-9]+", "-", fold(labels.get(v, v))).strip("-") for v in (str(r.get(c) or "").strip() for c in t.get("by", []))]
             for column, segment, _, low, high in t["values"]:
                 n = number(r.get(column))
                 reason = (
                     {"district": "not a city district", "okres": "not a Bratislava okres"}.get(t["areas"], "not Bratislava")
                     if code is None
                     else "no period" if slug is None
+                    else "in the future" if t.get("past") and slug[:4] > str(date.today().year)
                     else "no breakdown" if "" in by
                     else "no number" if n is None
                     else "out of range" if (low is not None and n < low) or (high is not None and n > high)
@@ -449,7 +466,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 344
+    assert len(keys) == len(set(keys)) == 344 + 19
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
@@ -470,3 +487,50 @@ def test_a_city_table_keeps_bratislava_beside_slovakia_and_a_region_table_its_ow
     assert {i["area"]["value"] for i in okresy} == {f"Bratislava {n}" for n in ("I", "II", "III", "IV", "V")}
     drivers = kpi("pocet-evidovanych-vodicov.pocet-evidovanych-vodicov.101.2013")
     assert {i["id"]: i for i in okresy}[drivers]["kpiValue"]["value"] == 22038
+
+
+def paged(name: str, pipeline: str = "statistics-mesto") -> dict:
+    return next(t for t in tables(pipeline) if t["name"] == name)
+
+
+@requires_docker
+def test_a_table_over_2000_rows_is_read_page_by_page_and_counted_by_the_hub():
+    """T-5671: the sports classes table answers in four pages of at most 1,000 rows (the recording
+    keeps 18 of each): every page reaches an indicator; the DTMB deposits are the hub's counts per
+    year, and the five deposits dated 2028 and the two header rows of the ledger write nothing."""
+    answers = fixture("statistics.json")
+    sports = paged("pocet-ziakov-sportovych-tried", "statistics-okresy")
+    assert len(answers[sports["path"]]["pages"]) == 4
+    okresy, _ = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
+    years = {i["id"].rsplit(".", 1)[1] for i in okresy if ":pocet-ziakov-sportovych-tried." in i["id"]}
+    pages = [{str(f["attributes"]["Rok"]) for f in p["features"]} for p in answers[sports["path"]]["pages"]]
+    assert set().union(*pages) == years and len(pages[-1] - pages[0]) > 0
+
+    city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
+    deposits = {i["id"]: i["kpiValue"]["value"] for i in city if ":vklady-dtmb-2020-2025." in i["id"]}
+    assert deposits[kpi("vklady-dtmb-2020-2025.pocet.582000.2020")] == 1159
+    assert sorted(k.rsplit(".", 1)[1] for k in deposits) == ["2020", "2021", "2022", "2023", "2024", "2025", "2026"]
+    assert logged(log)["in the future"] == 1
+    budget = {i["id"]: i for i in city if ":cerpanie-rozpoctu-2021." in i["id"]}
+    revenue = budget[kpi("cerpanie-rozpoctu-2021.cerpanie-eur.prijmy.11.582000.2021")]
+    assert revenue["kpiValue"]["value"] == 177323796.86
+    assert revenue["name"]["value"] == "Čerpanie k 31. 12. (EUR), príjmy, 11, Bratislava, 2021"
+
+
+@requires_docker
+def test_a_table_with_more_than_20_pages_or_a_refused_page_writes_nothing_of_itself():
+    """A table whose 20th page still says there is more fails whole, and so does one whose second
+    page the hub refuses; the other tables of the run still write."""
+    answers = copy.deepcopy(fixture("statistics.json"))
+    endless = paged("autorizacie-dtmb-2020-2025")
+    page = dict(answers[endless["path"]]["pages"][0], exceededTransferLimit=True)
+    answers[endless["path"]]["pages"] = [page] * 21
+    refused = paged("pocet-priestupkov-a-vyska-pokut")
+    first = dict(answers[refused["path"]]["pages"][0], exceededTransferLimit=True)
+    answers[refused["path"]]["pages"] = [first, {"error": {"code": 400, "message": "Invalid query"}}]
+    city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
+    written = {i["id"].split(":")[-1].split(".")[0] for i in city}
+    assert "autorizacie-dtmb-2020-2025" not in written and "pocet-priestupkov-a-vyska-pokut" not in written
+    assert "autorizacie-dtmb-2019" in written and "rozpocet-2014-vydavky" in written
+    assert "autorizacie-dtmb-2020-2025 not read: " in log and "more than 20 pages" in log
+    assert "pocet-priestupkov-a-vyska-pokut not read: " in log and "Invalid query" in log
