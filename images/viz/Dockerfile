@@ -2,7 +2,7 @@
 # with the vendored Vega, MapLibre and PMTiles builds inside the image. In the chart they made the
 # Helm release Secret 2.2 MB, over its 1 MiB, and the upgrade failed on dev. The site pages and
 # nginx.conf stay in the chart's ConfigMaps, so a page change is still a values edit.
-FROM docker.io/nginxinc/nginx-unprivileged:1.30.4-alpine-slim@sha256:7bbe8940bc478e5618e6d4cfbeda406e5b4217cacc06faacd665aca5e468595e
+FROM docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6
 
 COPY vendor/ /srv/vendor/
 # The Portal's Endpoint data view for explore.html (T-5082), built by scripts/viz-explorer-bundle.sh.
