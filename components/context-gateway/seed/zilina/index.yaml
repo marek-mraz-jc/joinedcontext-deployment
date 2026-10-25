@@ -184,3 +184,10 @@ zilina-pipeline-scitace-bento.yaml: projects/zilina/pipelines/scitace/bento.yaml
 zilina-pipeline-svietidla.yaml: projects/zilina/pipelines/svietidla/pipeline.yaml
 zilina-pipeline-svietidla-bento.yaml: projects/zilina/pipelines/svietidla/bento.yaml
 zilina-policy-doprava-read.yaml: projects/zilina/spaces/zilina-doprava/policies/doprava-read.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+zilina-space-catalog.yaml: projects/zilina/spaces/catalog/space.yaml
+zilina-datamodel-catalog.yaml: projects/zilina/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/zilina/spaces/catalog/datamodels/catalog.linkml.yaml
+zilina-endpoint-catalog.yaml: projects/zilina/spaces/catalog/endpoints/catalog.yaml
+zilina-policy-catalog-portal-write.yaml: projects/zilina/spaces/catalog/policies/catalog-portal-write.yaml
+zilina-policy-catalog-public-read.yaml: projects/zilina/spaces/catalog/policies/catalog-public-read.yaml
