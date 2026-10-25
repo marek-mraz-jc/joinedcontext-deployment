@@ -193,6 +193,12 @@
             "path": {
               "type": "string"
             },
+            "exec": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "periodSeconds": {
               "type": "number"
             },
