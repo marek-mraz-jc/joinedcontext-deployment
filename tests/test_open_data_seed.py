@@ -1095,9 +1095,9 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # works on the public space and its crossings; T-5431 its street furniture; T-5417 its tourist flats;
         # T-5413 its dog areas, trees and weather forecast; T-5374 its bike lanes and road accidents.
         # T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city);
-        # T-5273 its counters, pedestrians, BAjk and MHD stops and lines.
+        # T-5273 its counters, pedestrians, BAjk and MHD stops and lines; T-5444 eight more tables of places.
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
-        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2,
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8,
         "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 
