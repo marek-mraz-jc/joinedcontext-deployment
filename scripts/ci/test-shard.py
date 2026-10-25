@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """The test files one ci.yml `tests` shard runs, balanced by measured time (T-4789).
 
-usage: scripts/ci/test-shard.py <shard> <shards>      prints that shard's files (tests/<name>), one per line
-       scripts/ci/test-shard.py --record <pytest log>  rewrites .ci/test-durations.json from the
-                                                       output of `pytest --durations=0`
+usage: scripts/ci/test-shard.py <shard> <shards>          prints that shard's files (tests/<name>), one per line
+       scripts/ci/test-shard.py --record <file>...         rewrites .ci/test-durations.json from the shards'
+                                                           `pytest --junitxml` reports (or `--durations=0` logs)
 
 Split by file position (line n in shard n mod 4), the heavy render and container files met in
 one shard: shard 4 ran 13.6 min of pytest against 3-5.5 min for the others and passed the job's
@@ -12,16 +12,26 @@ one shard: shard 4 ran 13.6 min of pytest against 3-5.5 min for the others and p
 (longest processing time first); a file the table lacks weighs the median, so a new test file
 still lands in exactly one shard. Shard 1 starts with SHARD_ONE_STEPS seconds, its extra steps
 (gitleaks over the history, the docs pin, the kyverno apply).
+
+The table went stale within days (T-5551: 73 of 271 files missing, shard 1 at 1,192 s of its 20
+minutes against 544 s for shard 2), so every ci.yml shard uploads its junit report and the
+`test-durations` job on main prints the table they add up to: commit it when the shards drift.
 """
 import json
 import re
 import statistics
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TABLE = ROOT / ".ci" / "test-durations.json"
-SHARD_ONE_STEPS = 60
+# Shard 1's own steps took 120 s of wall in run 40123797109 (kyverno apply 85, temporal audit 17,
+# docs pin 11, gitleaks 4, kyverno test 3); the table counts test seconds, and pytest -n auto
+# finishes about PARALLEL of them per wall second (the table's 9,277 s over the 3,031 s of pytest
+# wall the four shards of run 40133809806 took).
+PARALLEL = 3
+SHARD_ONE_STEPS = round(120 * PARALLEL)
 # `12.34s call     test_x.py::test_y[param]` (setup and teardown lines count too)
 DURATION = re.compile(r"^(\d+(?:\.\d+)?)s (?:call|setup|teardown)\s+(?:tests/)?(test_[\w]+\.py)::")
 
@@ -43,21 +53,41 @@ def shards(names: list[str], weights: dict[str, float], count: int) -> list[list
     return [sorted(s) for s in out]
 
 
-def record(log: Path) -> dict[str, float]:
+def durations(report: Path) -> dict[str, float]:
+    """Seconds per test file in one shard's junit report or `pytest --durations=0` log."""
     totals: dict[str, float] = {}
-    for line in log.read_text(encoding="utf-8").splitlines():
+    if report.suffix == ".xml":
+        known = set(files())
+        for case in ET.parse(report).iter("testcase"):
+            # classname is the module path, then the class: tests.test_x.TestY
+            name = next((f"{p}.py" for p in case.get("classname", "").split(".") if f"{p}.py" in known), None)
+            if name:
+                totals[name] = totals.get(name, 0.0) + float(case.get("time") or 0)
+        return totals
+    for line in report.read_text(encoding="utf-8").splitlines():
         m = DURATION.match(line.strip())
         if m:
             totals[m.group(2)] = totals.get(m.group(2), 0.0) + float(m.group(1))
+    return totals
+
+
+def record(reports: list[Path], old: dict[str, float] | None = None) -> dict[str, float]:
+    totals: dict[str, float] = {}
+    for report in reports:
+        for name, seconds in durations(report).items():
+            totals[name] = totals.get(name, 0.0) + seconds
     if not totals:
-        raise SystemExit(f"{log}: no `pytest --durations=0` lines in it")
-    # pytest hides durations under 5 ms, so a file of only such tests is absent: it weighs nothing
-    return {name: round(totals.get(name, 0.0), 1) for name in files()}
+        raise SystemExit(f"{' '.join(map(str, reports))}: no junit test cases or `pytest --durations=0` lines")
+    # A file no report names keeps its old weight (a shard that did not finish); one never measured,
+    # or only of tests pytest's log hides (under 5 ms), weighs nothing
+    old = old or {}
+    return {name: round(totals[name] if name in totals else old.get(name, 0.0), 1) for name in files()}
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) == 2 and argv[0] == "--record":
-        TABLE.write_text(json.dumps(record(Path(argv[1])), indent=1) + "\n", encoding="utf-8")
+    if len(argv) >= 2 and argv[0] == "--record":
+        table = record([Path(a) for a in argv[1:]], json.loads(TABLE.read_text(encoding="utf-8")))
+        TABLE.write_text(json.dumps(table, indent=1) + "\n", encoding="utf-8")
         return 0
     if len(argv) != 2 or not all(a.isdigit() for a in argv) or not 1 <= int(argv[0]) <= int(argv[1]):
         print(__doc__.split("\n\n")[1], file=sys.stderr)
