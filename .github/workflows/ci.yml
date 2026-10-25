@@ -65,19 +65,24 @@ jobs:
           # minimal and broker-only: the two small component profiles (T-4856); dev and smartcity
           # (production) the hosted clusters (T-4956). smoke-test needs a CI pipeline's env.
           mapfile -t environments < .ci/golden/ENVIRONMENTS
+          # The renders run three at a time (T-5552: 497 s one after another); a failed render
+          # prints its log and names its environment. The gates then run per environment.
+          echo "::group::render ${environments[*]}"
+          RENDER_JOBS=3 scripts/render-all.sh rendered "${environments[@]}"
+          echo "::endgroup::"
           for env in "${environments[@]}"; do
             echo "::group::${env}"
-            helmfile -f deployment/helmfile.yaml -e "${env}" repos
+            cat "rendered/${env}.log"
             helmfile -f deployment/helmfile.yaml -e "${env}" list --output json | python3 scripts/ci/check-chart-pins.py -
-            scripts/render.sh "${env}" "rendered-${env}.yaml"
-            ./kubeconform -strict -kubernetes-version "${KUBERNETES_VERSION}" -skip CustomResourceDefinition -schema-location default -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" -summary "rendered-${env}.yaml"
-            python3 scripts/ci/check-image-digests.py "rendered-${env}.yaml"
-            ./conftest test --all-namespaces -p policies "rendered-${env}.yaml"
-            ! grep -i -E 'civitas' "rendered-${env}.yaml"
-            python3 scripts/check-rendered-secrets.py "rendered-${env}.yaml" /tmp/scan/rendered.yaml
+            ./kubeconform -strict -kubernetes-version "${KUBERNETES_VERSION}" -skip CustomResourceDefinition -schema-location default -schema-location "https://raw.githubusercontent.com/datreeio/CRDs-catalog/${CRDS_CATALOG_COMMIT}/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json" -summary "rendered/${env}.yaml"
+            python3 scripts/ci/check-image-digests.py "rendered/${env}.yaml"
+            ./conftest test --all-namespaces -p policies "rendered/${env}.yaml"
+            # `! grep` alone never failed the step (errexit ignores a negated command).
+            if grep -i -E 'civitas' "rendered/${env}.yaml"; then echo "::error::${env} renders the legacy name civitas"; exit 1; fi
+            python3 scripts/check-rendered-secrets.py "rendered/${env}.yaml" /tmp/scan/rendered.yaml
             ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
-            python3 scripts/check-secrets.py "rendered-${env}.yaml"
-            python3 .ci/golden/list-objects.py "rendered-${env}.yaml" | diff -u ".ci/golden/${env}.txt" - || golden_red="${golden_red} ${env}"
+            python3 scripts/check-secrets.py "rendered/${env}.yaml"
+            python3 .ci/golden/list-objects.py "rendered/${env}.yaml" | diff -u ".ci/golden/${env}.txt" - || golden_red="${golden_red} ${env}"
             echo "::endgroup::"
           done
           if [ -n "${golden_red}" ]; then
@@ -108,7 +113,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: rendered
-          path: rendered-*.yaml
+          path: |
+            rendered/*.yaml
+            rendered-*.yaml
           retention-days: 3
   tests:
     runs-on: ubuntu-latest
