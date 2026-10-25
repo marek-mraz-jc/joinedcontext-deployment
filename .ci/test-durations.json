@@ -143,6 +143,7 @@
  "test_helsinki_statistics.py": 15.9,
  "test_helsinki_street_cleaning_air.py": 1.8,
  "test_helsinki_traffic_counters.py": 5.0,
+ "test_helsinki_traffic_files.py": 5.2,
  "test_helsinki_transport_endpoint.py": 0.2,
  "test_hfp_vehicles.py": 27.3,
  "test_hook_timeouts.py": 60.4,
