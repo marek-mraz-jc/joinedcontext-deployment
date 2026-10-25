@@ -135,7 +135,7 @@ pipeline:
               "name": if v.name != "" { { "type": "LanguageProperty", "languageMap": { "cs": v.name } } } else { null },
               "vegetationType": if $layer.type == "Tree" && v.element != "" { { "type": "Property", "value": v.element } } else { null },
               "greenspaceType": if $layer.type == "Garden" && v.element != "" { { "type": "Property", "value": v.element } } else { null },
-              "treeCategory": if v.category != "" { { "type": "Property", "value": v.category } } else { null },
+              "treeCategory": if $layer.type == "Tree" && v.category != "" { { "type": "Property", "value": v.category } } else { null },
               "careRegime": if v.care != "" { { "type": "Property", "value": v.care } } else { null },
               "areaServed": if v.manager != "" && v.manager != "nespecifikovaný" { { "type": "Property", "value": v.manager } } else { null },
               "dateModified": if v.r.edited.type() == "number" && !v.r.late { { "type": "Property", "value": (v.r.edited / 1000).ts_format("2006-01-02T15:04:05Z", "UTC") } } else { null },
