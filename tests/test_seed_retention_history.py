@@ -6,7 +6,7 @@ kept something; a type no rule names records nothing at all.
 import re
 from pathlib import Path
 
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 DURATION = re.compile(
@@ -15,13 +15,12 @@ DURATION = re.compile(
 
 
 def rules():
-    for path in sorted(SEED.rglob("*.yaml")):
+    for path, doc in seed_documents():
         if path.name.endswith(".linkml.yaml"):
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") == "ContextSpace":
-                for rule in doc.get("spec", {}).get("retention") or []:
-                    yield path.relative_to(SEED), rule
+        if isinstance(doc, dict) and doc.get("kind") == "ContextSpace":
+            for rule in doc.get("spec", {}).get("retention") or []:
+                yield path.relative_to(SEED), rule
 
 
 def test_every_seeded_retention_rule_names_its_history():

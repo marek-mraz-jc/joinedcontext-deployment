@@ -10,7 +10,7 @@ e2e run leaves in a forge repository is not in either and is not judged here.
 import glob
 from pathlib import Path
 
-import yaml
+from conftest import load_yaml_all
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCES = (
@@ -31,7 +31,7 @@ def endpoints() -> list[tuple[str, str, str, list[str]]]:
     found = []
     for pattern in SOURCES:
         for path in sorted(glob.glob(str(PROJECT_ROOT / pattern), recursive=True)):
-            for doc in yaml.safe_load_all(Path(path).read_text()):
+            for doc in load_yaml_all(Path(path).read_text()):
                 if not isinstance(doc, dict) or doc.get("kind") != "Endpoint":
                     continue
                 spec = doc["spec"]

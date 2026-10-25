@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from conftest import set_global
+from conftest import load_yaml_all, set_global
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHART = PROJECT_ROOT / "charts/ckan"
@@ -227,7 +227,7 @@ def render_chart(tmp_path: Path, values: dict) -> list[dict]:
         capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stderr
-    return [d for d in yaml.safe_load_all(result.stdout) if isinstance(d, dict)]
+    return [d for d in load_yaml_all(result.stdout) if isinstance(d, dict)]
 
 
 @requires_helm

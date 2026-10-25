@@ -6,7 +6,7 @@ Project so the record carries the registry IRI and not a web site."""
 import re
 from pathlib import Path
 
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 SK = "https://data.gov.sk/id/legal-subject/"
@@ -21,12 +21,11 @@ LAW_106 = "https://www.e-sbirka.cz/eli/cz/sb/1999/106/2025-08-19"
 
 
 def manifests():
-    for path in SEED.rglob("*.yaml"):
+    for path, doc in seed_documents():
         if path.name == "index.yaml" or path.name.endswith(".linkml.yaml") or ".enc." in path.name:
             continue
-        for doc in yaml.safe_load_all(path.read_text()):
-            if isinstance(doc, dict) and doc.get("kind") in {"Project", "Endpoint"}:
-                yield path, doc
+        if isinstance(doc, dict) and doc.get("kind") in {"Project", "Endpoint"}:
+            yield path, doc
 
 
 def test_each_project_names_its_body_by_its_registry_iri_and_the_installation_desk():

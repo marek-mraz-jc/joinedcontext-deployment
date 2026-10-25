@@ -17,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import pytest
-import yaml
+from conftest import load_yaml_all
 
 # Writes `deployment/environments/testing` in its own copy of the tree (`own_tree`), so it
 # shares nothing with another module. Its own xdist group keeps the module on one worker, so its
@@ -56,7 +56,7 @@ def _render(deployment: Path, mode: bool) -> list[dict]:
     finally:
         shutil.rmtree(env_dir, ignore_errors=True)
     assert result.returncode == 0, result.stderr[-4000:]
-    return [d for d in yaml.safe_load_all(result.stdout) if isinstance(d, dict)]
+    return [d for d in load_yaml_all(result.stdout) if isinstance(d, dict)]
 
 
 @pytest.fixture(scope="module")

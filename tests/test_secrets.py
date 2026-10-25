@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import load_yaml_all
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHECK = PROJECT_ROOT / "scripts" / "check-secrets.py"
@@ -204,7 +205,7 @@ def test_sops_encrypted_value_reaches_the_generated_secret(tmp_path):
         capture_output=True, text=True, env=env, cwd=tmp_path,
     )
     assert out.returncode == 0, out.stderr
-    docs = [d for d in yaml.safe_load_all(out.stdout) if isinstance(d, dict)]
+    docs = [d for d in load_yaml_all(out.stdout) if isinstance(d, dict)]
     secrets = [d for d in docs if d.get("kind") == "Secret"]
     assert len(secrets) == 1, out.stdout
     assert base64.b64decode(secrets[0]["data"]["password"]).decode() == "sops-supplied-password-0123456789"
