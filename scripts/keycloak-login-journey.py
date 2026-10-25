@@ -6,6 +6,10 @@
   enrol    a throwaway holder of `mfa-required` without TOTP is sent to enrolment
   lockout  a throwaway person is locked after 10 wrong passwords, the right one is refused
   grant    a throwaway holder of `mfa-required` without TOTP gets no token by password grant
+  stepup   a throwaway person without `mfa-required` (a steward by RoleBinding alone) signs in
+           with the password: the token proves no second factor; the step-up login
+           (acr_values=mfa, as the Portal's decision doors ask, T-5567) enrols TOTP and the
+           token then carries acr `mfa`
 
 Secrets come from the environment, never argv: JC_LOGIN_PASSWORD and JC_LOGIN_TOTP (the seed
 in Secret keycloak-user-<name>, key `totp`) for steward/plain; KC_ADMIN_USER and
@@ -17,6 +21,7 @@ direct access grants, e.g. apisix-gateway) for grant.
 """
 
 import argparse
+import base64
 import hashlib
 import hmac
 import json
@@ -32,9 +37,10 @@ import urllib.request
 FAILURE_FACTOR = 10  # components/keycloak/values/config/base-values.yaml.gotmpl failureFactor
 
 
-def totp(seed: str, at: float, step: int = 30, digits: int = 6) -> str:
+def totp(seed: str | bytes, at: float, step: int = 30, digits: int = 6) -> str:
     """RFC 6238 with HMAC-SHA256 over the seed's UTF-8 bytes, as Keycloak keeps an OTP secret."""
-    mac = hmac.new(seed.encode(), struct.pack(">Q", int(at) // step), hashlib.sha256).digest()
+    key = seed.encode() if isinstance(seed, str) else seed
+    mac = hmac.new(key, struct.pack(">Q", int(at) // step), hashlib.sha256).digest()
     offset = mac[-1] & 0x0F
     code = struct.unpack(">I", mac[offset : offset + 4])[0] & 0x7FFFFFFF
     return str(code % 10**digits).zfill(digits)
@@ -111,6 +117,52 @@ def password_grant(base: str, realm: str, username: str, password: str) -> dict:
         return json.load(err)
 
 
+ACCOUNT = "account-console"  # Keycloak's own public PKCE client of every realm
+
+
+def code_login(page, base: str, realm: str, user: str, password: str, step_up: bool) -> tuple[dict, bool]:
+    """A code flow of the account console, as the Portal starts one, and the ID token's claims.
+    `step_up` adds what the Portal's `?step_up=true` adds. Enrols TOTP when Keycloak asks; the
+    second value says whether it did."""
+    verifier = secrets.token_urlsafe(48)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    redirect = f"{base}/realms/{realm}/account/"
+    query = {"client_id": ACCOUNT, "redirect_uri": redirect, "response_type": "code", "scope": "openid",
+             "code_challenge": challenge, "code_challenge_method": "S256", "state": secrets.token_hex(8)}
+    if step_up:
+        query |= {"acr_values": "mfa", "prompt": "login"}
+    page.goto(f"{base}/realms/{realm}/protocol/openid-connect/auth?{urllib.parse.urlencode(query)}", wait_until="load")
+    page.wait_for_selector("#username", timeout=30_000)
+    codes: list[str] = []
+    page.on("request", lambda req: codes.extend(urllib.parse.parse_qs(urllib.parse.urlparse(req.url).query).get("code", []))
+            if req.url.startswith(redirect) else None)
+    submit_password(page, user, password)
+    enrolled = False
+    if page.locator("#kc-totp-settings-form").count():
+        enrolled = True
+        page.click("#mode-manual")
+        key = page.locator("#kc-totp-secret-key").inner_text().replace(" ", "")
+        secret = base64.b32decode(key + "=" * (-len(key) % 8))
+        page.fill("#totp", totp(secret, time.time()))
+        page.fill("#userLabel", "journey")
+        with page.expect_navigation(wait_until="load"):
+            page.click("#saveTOTPBtn")
+    if not codes:
+        return {"error": f"no code came back: {page.url}"}, enrolled
+    form = urllib.parse.urlencode({"grant_type": "authorization_code", "client_id": ACCOUNT, "code": codes[0],
+                                   "redirect_uri": redirect, "code_verifier": verifier}).encode()
+    with urllib.request.urlopen(f"{base}/realms/{realm}/protocol/openid-connect/token", form, timeout=30) as r:
+        id_token = json.load(r)["id_token"]
+    payload = id_token.split(".")[1]
+    return json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4))), enrolled
+
+
+def proves(claims: dict) -> bool:
+    """The Portal's rule (src/auth/session.rs proves_second_factor)."""
+    amr = claims.get("amr") or []
+    return claims.get("acr") == "mfa" or "otp" in ([amr] if isinstance(amr, str) else amr)
+
+
 def run(args) -> list[str]:
     failures: list[str] = []
     if args.check == "grant":
@@ -125,6 +177,30 @@ def run(args) -> list[str]:
         return failures
 
     from playwright.sync_api import sync_playwright
+
+    if args.check == "stepup":
+        admin = Admin(args.admin_base or args.base, args.realm)
+        uid, email, password = admin.throwaway(None)
+        try:
+            with sync_playwright() as pw:
+                browser = pw.chromium.launch()
+                plain, asked = code_login(browser.new_context(locale="en").new_page(),
+                                          args.base, args.realm, email, password, step_up=False)
+                if "error" in plain or asked or proves(plain):
+                    failures.append(f"a password login proved a second factor or asked one: {plain}")
+                page = browser.new_context(locale="en").new_page()
+                stepped, enrolled = code_login(page, args.base, args.realm, email, password, step_up=True)
+                if args.screenshot:
+                    page.screenshot(path=args.screenshot, full_page=True)
+                if not enrolled:
+                    failures.append("the step-up login did not enrol a person without TOTP")
+                # The account console has no amr mapper (the platform's clients do): acr carries it.
+                if stepped.get("acr") != "mfa" or not proves(stepped):
+                    failures.append(f"the step-up token says acr {stepped.get('acr')!r}, amr {stepped.get('amr')!r}: {stepped.get('error', '')}")
+                browser.close()
+        finally:
+            admin.call("DELETE", f"/users/{uid}")
+        return failures
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
@@ -185,7 +261,7 @@ def main() -> int:
     parser.add_argument("--realm", required=True)
     parser.add_argument("--user", help="the person for steward/plain")
     parser.add_argument("--screenshot", help="PNG of the last page")
-    parser.add_argument("check", choices=["steward", "plain", "enrol", "lockout", "grant"])
+    parser.add_argument("check", choices=["steward", "plain", "enrol", "lockout", "grant", "stepup"])
     args = parser.parse_args()
     args.base = args.base.rstrip("/")
     if args.check in ("steward", "plain") and not args.user:
