@@ -190,18 +190,25 @@ jobs:
         # tests/test_gitops.py runs Argo CD's helmfile plugin in its sidecar image (T-4674);
         # tests/test_manifest_format.py runs `jcctl fmt --check` in the checkouts image (T-5052).
         # tests/test_alert_rules.py runs `promtool test rules` in the Prometheus image (T-5104).
+        # tests/test_postgres_tuning.py runs the pg_stat_statements Job in the roleJob image (T-5693).
         # Pulled here so a registry failure reads as a registry failure rather than as a red
-        # test.
+        # test; a registry 429 (ghcr.io toomanyrequests, run 40221371387) is retried.
         run: |
           python3 - <<'EOF' > /tmp/test-images
           import yaml
-          for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue"), ("ckan", "solr"), ("gitops", "helmfile"), ("context-gateway", "checkouts")):
+          for component, part in (("observability", "collector"), ("audit-logging", "collector"), ("ckan", "catalogue"), ("ckan", "solr"), ("gitops", "helmfile"), ("context-gateway", "checkouts"), ("postgres", "roleJob")):
               i = yaml.safe_load(open(f"components/{component}/images.yaml"))[component][part]
               print(f"{i['repository']}:{i['tag']}@{i['digest']}")
           import re
           print(re.search(r'^IMAGE = "(.+)"$', open("tests/test_alert_rules.py").read(), re.M).group(1))
           EOF
-          xargs -r -n1 docker pull --quiet < /tmp/test-images
+          while read -r image; do
+            for attempt in 1 2 3; do
+              docker pull --quiet "$image" && break
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 30
+            done
+          done < /tmp/test-images
       - name: assemble deployment dir and add the chart repos
         # Both environments: `addons` pulls chart repositories no core component uses, and a
         # test that renders it would fail on a missing repository rather than on its subject.
