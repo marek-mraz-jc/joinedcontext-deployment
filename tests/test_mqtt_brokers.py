@@ -456,6 +456,7 @@ def image() -> str:
     return f"{pinned['repository']}@{pinned['digest']}"
 
 
+@pytest.mark.xdist_group("docker-rmqtt")
 @pytest.mark.skipif(shutil.which("docker") is None or shutil.which("mosquitto_pub") is None,
                     reason="no container runtime or no mosquitto clients, so RMQTT cannot run")
 def test_a_publish_is_checked_or_the_client_kicked_after_revocation(tmp_path):
