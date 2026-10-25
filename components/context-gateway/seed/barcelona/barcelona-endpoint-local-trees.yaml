@@ -15,7 +15,7 @@ metadata:
     en: 'The trees of local interest of Barcelona, protected for their age, size or history: the name (species and place), the address, the district and the point. Source: Open Data BCN, CC BY 4.0.'
 spec:
   contextSpaceRef: barcelona
-  slug: gfuev5femtnvwwdy59931qw6vb0jm0mz
+  slug: kxklwmn7xk6rfp3suzdp2cqgsajjlf3z
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-local-trees

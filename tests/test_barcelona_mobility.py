@@ -291,7 +291,10 @@ def test_an_out_of_area_point_a_count_out_of_range_and_a_duplicate_file_are_left
     (None, None, 200, "2028-01-02T00:00:00Z", "more than two years old"),
     (None, (FIXTURES / "package-accidents-gu-bcn.json").read_bytes().replace(
         f"{HOST}/data/dataset/".encode(), b"https://example.org/data/dataset/", 1), 200, NOW, "not on the city's dataset path"),
-], ids=["empty", "html", "csv-503", "oversize", "no-files", "record-html", "stale", "foreign-host"])
+    (None, (FIXTURES / "package-accidents-gu-bcn.json").read_bytes().replace(
+        b"/resource/066d46b1-25be-4f08-b0e0-5a233714bda2/", b"/../../api/3/action/066d46b1-25be-4f08-b0e0-5a233714bda2/"),
+     200, NOW, "not on the city's dataset path"),
+], ids=["empty", "html", "csv-503", "oversize", "no-files", "record-html", "stale", "foreign-host", "path-escape"])
 @requires_docker
 def test_an_empty_stale_or_broken_accident_source_fails_the_run_and_writes_nothing(csv_body, record, status, now, reason):
     written, errors = accidents(csv_body, record, status, now)

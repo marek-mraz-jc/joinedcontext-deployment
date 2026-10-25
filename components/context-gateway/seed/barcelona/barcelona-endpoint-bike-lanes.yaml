@@ -12,7 +12,7 @@ metadata:
     en: "Each segment of Barcelona's cycle network: the bike lanes, the bike corridors and the lanes under construction, with their line and length, every week. Source: Barcelona City Council, Open Data BCN, CC BY 4.0."
 spec:
   contextSpaceRef: barcelona
-  slug: 9gn3uq87igfa86cs4o96ti97w9eyp3q5
+  slug: 4xwfy2u27hhhzxtmeplw5aggnxdlfntr
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-bike-lanes
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

@@ -31,10 +31,11 @@ pipeline:
             let files = $record.result.resources.or([]).filter(r -> r.format.or("").uppercase() == "CSV" && r.name.or("").lowercase().re_match("^[0-9]{4}_accidents_gu_bcn\\.csv$")).sort_by(r -> r.name.slice(0, 4))
             let newest = if $files.length() == 0 { throw("the dataset record names no YYYY_accidents_gu_bcn.csv") } else { $files.index(-1) }
             meta accidents_year = $newest.name.slice(0, 4)
-            meta accidents_url = if !$newest.url.or("").has_prefix("https://opendata-ajuntament.barcelona.cat/data/dataset/") { throw("the newest accidents file is not on the city's dataset path") } else if $newest.name.slice(0, 4).number() < now().ts_format("2006", "UTC").number() - 2 { throw("the newest accidents file is of %v, more than two years old".format($newest.name.slice(0, 4))) } else { $newest.url }
+            let file = $newest.url.or("").trim_prefix("https://opendata-ajuntament.barcelona.cat/data/dataset/")
+            meta accidents_path = if !$newest.url.or("").has_prefix("https://opendata-ajuntament.barcelona.cat/data/dataset/") || !$file.re_match("^[0-9a-f-]{36}/resource/[0-9a-f-]{36}/download/[0-9]{4}_accidents_gu_bcn\\.csv$") { throw("the newest accidents file is not on the city's dataset path") } else if $newest.name.slice(0, 4).number() < now().ts_format("2006", "UTC").number() - 2 { throw("the newest accidents file is of %v, more than two years old".format($newest.name.slice(0, 4))) } else { $file }
             root = ""
         - http:
-            url: ${! @accidents_url }
+            url: https://opendata-ajuntament.barcelona.cat/data/dataset/${! @accidents_path }
             verb: GET
             headers:
               Accept: text/csv

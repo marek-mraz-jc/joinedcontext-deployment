@@ -15,7 +15,7 @@ metadata:
     en: 'The fenced dog areas in the parks and squares of Barcelona: the park or square, the address, the district and the point. Source: Open Data BCN, CC BY 4.0.'
 spec:
   contextSpaceRef: barcelona
-  slug: 72lnfklsfoa8a7mgwnbcep0n41jkyq4h
+  slug: gikovj7fove6xy3g6ixatxgabdrhkg6m
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-dog-areas
