@@ -15,7 +15,8 @@ metadata:
       linky, zastávky a tarifní pásma PID, vstupy do metra a parkování na ulici (zóny placeného stání, vyhrazená stání,
       zákazy stání a parkovací automaty), parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko,
       záplavová území, protipovodňová ochrana, počasí, hřbitovy, naučné stezky, vodní plochy a toky,
-      psí zóny, bilanční územní celky a cyklotrasy.
+      psí zóny, bilanční územní celky, cyklotrasy, pietní místa a válečné hroby, pošty a technické
+      prvky zeleně.
       Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
       Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
       otevřená data.
@@ -26,8 +27,8 @@ metadata:
       waste collection yards, city amenities, cool spots, the PID lines, stops and fare zones, the metro entrances and
       on-street parking (paid parking zones, reserved bays, no-parking stretches and parking machines), parks, green
       areas and trees, air pollution sources, radon risk, flood areas, flood defences, the weather,
-      cemeteries, nature trails, water areas and streams, dog zones, planning balance units and
-      cycle routes.
+      cemeteries, nature trails, water areas and streams, dog zones, planning balance units,
+      cycle routes, memorials and war graves, post offices and the elements of the green spaces.
       Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
       under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
       hl. m. Prahy's counters) as open data.
@@ -113,6 +114,8 @@ spec:
     - entityType: FareCollectionSystem
       history: 'off'
     - entityType: Tree
+      history: 'off'
+    - entityType: GreenAsset
       history: 'off'
     - entityType: Vehicle
       # A vehicle keeps an hour of track at most, the owner's order for every live vehicle feed

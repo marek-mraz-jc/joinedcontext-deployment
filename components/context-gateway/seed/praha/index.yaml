@@ -353,3 +353,26 @@ praha-pipeline-area-cycle-routes.yaml: projects/praha/pipelines/area-cycle-route
 praha-pipeline-area-cycle-routes-bento.yaml: projects/praha/pipelines/area-cycle-routes/bento.yaml
 praha-endpoint-cyklotrasy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-cyklotrasy.yaml
 praha-policy-public-cyklotrasy.yaml: projects/praha/spaces/praha-mesto/policies/public-cyklotrasy.yaml
+# The IPR layers without a name field (T-5682): memorials and war graves, post offices and the
+# technical elements of the shared green register.
+praha-datasource-point-war-graves.yaml: projects/praha/datasources/ipr-point-war-graves.yaml
+praha-pipeline-point-war-graves.yaml: projects/praha/pipelines/point-war-graves/pipeline.yaml
+praha-pipeline-point-war-graves-bento.yaml: projects/praha/pipelines/point-war-graves/bento.yaml
+praha-endpoint-pietni-mista.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-pietni-mista.yaml
+praha-policy-public-pietni-mista.yaml: projects/praha/spaces/praha-mesto/policies/public-pietni-mista.yaml
+praha-datasource-point-post-offices.yaml: projects/praha/datasources/ipr-point-post-offices.yaml
+praha-pipeline-point-post-offices.yaml: projects/praha/pipelines/point-post-offices/pipeline.yaml
+praha-pipeline-point-post-offices-bento.yaml: projects/praha/pipelines/point-post-offices/bento.yaml
+praha-endpoint-posty.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-posty.yaml
+praha-policy-public-posty.yaml: projects/praha/spaces/praha-mesto/policies/public-posty.yaml
+praha-datasource-green-tech-points.yaml: projects/praha/datasources/ipr-green-tech-points.yaml
+praha-pipeline-green-tech-points.yaml: projects/praha/pipelines/green-tech-points/pipeline.yaml
+praha-pipeline-green-tech-points-bento.yaml: projects/praha/pipelines/green-tech-points/bento.yaml
+praha-datasource-green-tech-lines.yaml: projects/praha/datasources/ipr-green-tech-lines.yaml
+praha-pipeline-green-tech-lines.yaml: projects/praha/pipelines/green-tech-lines/pipeline.yaml
+praha-pipeline-green-tech-lines-bento.yaml: projects/praha/pipelines/green-tech-lines/bento.yaml
+praha-datasource-green-tech-areas.yaml: projects/praha/datasources/ipr-green-tech-areas.yaml
+praha-pipeline-green-tech-areas.yaml: projects/praha/pipelines/green-tech-areas/pipeline.yaml
+praha-pipeline-green-tech-areas-bento.yaml: projects/praha/pipelines/green-tech-areas/bento.yaml
+praha-endpoint-technicke-prvky-zelene.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-technicke-prvky-zelene.yaml
+praha-policy-public-technicke-prvky-zelene.yaml: projects/praha/spaces/praha-mesto/policies/public-technicke-prvky-zelene.yaml

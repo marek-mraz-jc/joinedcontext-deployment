@@ -50,3 +50,4 @@ spec:
         - type: RestrictedTrafficArea
         - type: FareCollectionSystem
         - type: BikeLane
+        - type: GreenAsset

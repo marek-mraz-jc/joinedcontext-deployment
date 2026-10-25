@@ -396,6 +396,8 @@ PARTS = {
     # The IPR place layers drawn as areas or lines, one dataset per layer (T-5426).
     "praha-hrbitovy": "CC_BY_4_0", "praha-naucne-stezky": "CC_BY_4_0", "praha-vodni-plochy": "CC_BY_4_0",
     "praha-psi-zony": "CC_BY_4_0", "praha-bilancni-celky": "CC_BY_4_0", "praha-cyklotrasy": "CC_BY_4_0",
+    # The IPR layers without a name field (T-5682).
+    "praha-pietni-mista": "CC_BY_4_0", "praha-posty": "CC_BY_4_0", "praha-technicke-prvky-zelene": "CC_BY_4_0",
     "praha-zelen": "CC_BY_4_0",
     "praha-stromy": "CC_BY_4_0",
     "praha-parkovani": "CC_BY_4_0",
