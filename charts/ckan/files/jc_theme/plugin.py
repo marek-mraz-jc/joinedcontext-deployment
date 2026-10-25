@@ -12,6 +12,7 @@ import json
 import os
 import re
 import secrets
+import shlex
 from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 import ckan
@@ -1348,6 +1349,13 @@ def jc_preview(resource):
     return None
 
 
+def _sh(value):
+    """`value` as one shell word in single quotes (T-5701): shlex.quote escapes a `'` in a
+    resource address, which would otherwise end the quoting and run the rest in the reader's shell."""
+    quoted = shlex.quote(value)
+    return quoted if quoted.startswith("'") else f"'{quoted}'"
+
+
 def jc_examples(resource):
     """How to use an Endpoint's address, in the page's language (T-4333): each a title, the
     steps in words and the command to copy. A non-public address carries `$TOKEN` in its
@@ -1368,29 +1376,29 @@ def jc_examples(resource):
                     "id": "jc-ex-%s-%d" % (key, len(out))})
 
     if kind == "NGSI-LD" and "/entities" not in urlsplit(url).path:
-        add(jc_t("ex_types"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, url.split("?", 1)[0].rstrip("/") + "/types"))
+        add(jc_t("ex_types"), "curl%s -H 'Accept: application/ld+json' %s" % (auth, _sh(url.split("?", 1)[0].rstrip("/") + "/types")))
     elif kind == "NGSI-LD":
-        add(jc_t("ex_first"), "curl%s -H 'Accept: application/ld+json' '%s'" % (auth, _with(url, limit="5")))
+        add(jc_t("ex_first"), "curl%s -H 'Accept: application/ld+json' %s" % (auth, _sh(_with(url, limit="5"))))
     elif kind in ("ODATA", "STA"):
-        add(jc_t("ex_first"), "curl%s '%s'" % (auth, _with(url, **{"$top": "5"})))
+        add(jc_t("ex_first"), "curl%s %s" % (auth, _sh(_with(url, **{"$top": "5"}))))
         if kind == "ODATA":
             add(jc_t("ex_excel"), url)
     elif kind == "OGCFEAT":
-        add(jc_t("ex_first"), "curl%s '%s'" % (auth, _with(url, limit="5")))
+        add(jc_t("ex_first"), "curl%s %s" % (auth, _sh(_with(url, limit="5"))))
         add(jc_t("ex_qgis"), url.split("/collections/", 1)[0] + "/")
     elif kind == "MCP":
         add(jc_t("mcp_claude_ai"), url, [jc_t("mcp_claude_ai_1"), jc_t("mcp_claude_ai_2")])
         add(jc_t("ex_chatgpt_title"), url, [jc_t("ex_chatgpt")])
-        add(jc_t("mcp_claude"), "claude mcp add --transport http joinedcontext %s" % url)
+        add(jc_t("mcp_claude"), "claude mcp add --transport http joinedcontext %s" % shlex.quote(url))
     elif kind == "WEBSOCKET":
         body = {"type": "Subscription"}
         body["entities" if kind_type else "watchedAttributes"] = [{"type": kind_type}] if kind_type else ["location"]
         message = json.dumps({"metadata": {"x-op": "x-subscribe", "x-id": "s1"}, "body": body},
                              separators=(",", ":"), ensure_ascii=False)
-        add(jc_t("ex_ws"), "websocat --protocol ngsi-ld-ws%s '%s'\n%s" % (auth, url, message))
+        add(jc_t("ex_ws"), "websocat --protocol ngsi-ld-ws%s %s\n%s" % (auth, _sh(url), message))
     elif kind in ("CSV", "JSON", "GEOJSON", "XLSX", "PARQUET"):
         name = "data." + kind.lower()
-        add(jc_t("ex_file"), "curl%s -L -o %s '%s'" % (auth, name, url))
+        add(jc_t("ex_file"), "curl%s -L -o %s %s" % (auth, name, _sh(url)))
     return out
 
 

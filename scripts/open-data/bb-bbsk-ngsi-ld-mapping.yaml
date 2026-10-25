@@ -273,6 +273,7 @@ datasets:
     kind: zip-geojson
     url: https://dtm-banskabystrica.tmapserver.sk/opendata/OE_01_register_adries.zip
     member: OE_01_register_adries.geojson
+    bytes: 786468
     crs: EPSG:5514
     geometry: true
     rows: 15769
