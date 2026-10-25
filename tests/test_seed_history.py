@@ -83,10 +83,15 @@ CHOSEN = {
     # Barcelona's wells are read by hand about once a month and published months late: 400 days keep
     # a year of readings (T-5263, worker decision, owner may override); the public reads the last 30.
     ("barcelona/barcelona", "PhreaticObserved"): "P400D",
+    # Barcelona's statistics keep ten years, the longest a space keeps (DM-82): one row per
+    # published year or month (T-5266).
+    ("barcelona/barcelona", "KeyPerformanceIndicator"): "P3650D",
     # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
     ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
     # Barcelona's charging points keep a month of free ports (T-5262).
     ("barcelona/barcelona", "EVChargingStation"): "P30D",
+    # Barcelona's forecast days keep a month of Meteocat's issues (T-5413).
+    ("barcelona/barcelona", "WeatherForecast"): "P30D",
 }
 
 
@@ -124,6 +129,8 @@ WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
 # The heat vulnerability index (one period) and the monthly energy use of the service properties
 # are such series too (T-5278).
 WHOLE_HISTORY |= {"helsinki/public-heat-vulnerability", "helsinki/public-service-property-energy"}
+# Barcelona's statistics themes too (T-5266).
+WHOLE_HISTORY |= {f"barcelona/public-statistics-{theme}" for theme in ("population", "housing", "vehicles")}
 
 
 def public_policies():
