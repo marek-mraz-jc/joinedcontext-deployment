@@ -152,6 +152,7 @@ spec:
       # station's fixed attributes one per change and one a week (T-4844, DM-108, DM-109).
       attributes:
         dataProvider: { record: onChange, heartbeat: P7D }
+        dateObserved: { record: onChange, heartbeat: P7D }
         location: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
