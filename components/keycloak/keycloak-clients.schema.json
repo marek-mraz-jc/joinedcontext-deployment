@@ -59,6 +59,10 @@
         "description": "Client description. Defaults to empty string.",
         "type": "string"
       },
+      "backchannelLogout": {
+        "description": "Keycloak posts the end of every session of this client to the Portal's back-channel logout endpoint over the in-cluster Service (T-5568, TR-03187 AR-6). Rendered only where the portal component is deployed.",
+        "type": "boolean"
+      },
       "rawValues": {
         "description": "Free-form overrides merged into the computed client defaults using mergeOverwrite.",
         "type": "object",
