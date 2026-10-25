@@ -470,6 +470,7 @@ PARTS = {
     "praha-zdroje-znecisteni": "CC_BY_4_0",
     "praha-radon": "CC_BY_4_0",
     "praha-zaplavova-uzemi": "CC_BY_4_0",
+    "praha-hluk": "CC_BY_4_0",
     "praha-protipovodnova-ochrana": "CC_BY_4_0",
     "praha-pocasi": "CC_BY_4_0",
     # The PID network, one dataset per type (T-5423).

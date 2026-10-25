@@ -1,5 +1,5 @@
 # The designated flood areas of the IPR Praha geoportal (T-5429): Q5, Q20, Q50, Q100 and the Vltava and
-# Berounka zones, FloodZone of the space praha-mesto read through its own Policy.
+# Berounka zones and the flood areas of the small streams (T-5683), FloodZone of the space praha-mesto read through its own Policy.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -7,8 +7,8 @@ metadata:
   namespace: praha
   title: { cs: Záplavová území — Praha, en: Flood areas — Prague }
   description:
-    cs: 'Záplavová území Q5, Q20, Q50 a Q100 a záplavové území Vltavy a Berounky s jeho zónami (aktivní, průtočná, neprůtočná, chráněná). Zdroj: IPR Praha, CC BY 4.0.'
-    en: 'The flood areas Q5, Q20, Q50 and Q100 and the flood area of the Vltava and Berounka with its zones (active, flow-through, standing water, protected). Source: IPR Praha, CC BY 4.0.'
+    cs: 'Záplavová území Q5, Q20, Q50 a Q100 záplavové území Vltavy a Berounky s jeho zónami (aktivní, průtočná, neprůtočná, chráněná) a záplavová území drobných vodních toků (aktivní zóna a Q100). Zdroj: IPR Praha, CC BY 4.0.'
+    en: 'The flood areas Q5, Q20, Q50 and Q100 the flood area of the Vltava and Berounka with its zones (active, flow-through, standing water, protected) and the flood areas of the small streams (active zone and Q100). Source: IPR Praha, CC BY 4.0.'
 spec:
   contextSpaceRef: praha-mesto
   slug: b4ebzrxxvbkqberzjsgyvk4nq6jgrqtz
@@ -65,3 +65,10 @@ spec:
         description:
           cs: Záplavové území Vltavy a Berounky z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Flood area of the Vltava and Berounka from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/TIV_CUR_TIV_VDS_ZAPLAVA_DVT_P/FeatureServer/0?f=json
+        title:
+          cs: Záplavové území drobných vodních toků (IPR Praha)
+          en: Flood areas of the small streams (IPR Praha)
+        description:
+          cs: Záplavová území drobných vodních toků (aktivní zóna a Q100) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The flood areas of the small streams (active zone and Q100) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

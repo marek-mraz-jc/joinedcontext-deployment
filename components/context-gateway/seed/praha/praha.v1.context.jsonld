@@ -46,6 +46,9 @@
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
     },
+    "NoiseZone": {
+      "@id": "jc:NoiseZone"
+    },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
@@ -115,6 +118,14 @@
     },
     "areaServed": {
       "@id": "sdm:areaServed"
+    },
+    "assessmentPeriod": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:assessmentPeriod"
     },
     "atmosphericPressure": {
       "@id": "sdm:atmosphericPressure",
@@ -298,6 +309,14 @@
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
     "no2": {
       "@id": "sdm:no2",
+      "@type": "xsd:float"
+    },
+    "noiseLevelHigh": {
+      "@id": "jc:noiseLevelHigh",
+      "@type": "xsd:float"
+    },
+    "noiseLevelLow": {
+      "@id": "jc:noiseLevelLow",
       "@type": "xsd:float"
     },
     "noxEmission": {

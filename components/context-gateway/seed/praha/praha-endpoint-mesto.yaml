@@ -595,3 +595,28 @@ spec:
         description:
           cs: Stavby, opravy a uzavírky na pražských ulicích ze služby opravujeme.to, bez omezení práv.
           en: The works, repairs and closures on Prague's streets from the opravujeme.to service, free of rights.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_SPRAVA_P/FeatureServer/0?f=json
+          cs: Sdílená data o zeleni – plochy správy (IPR Praha)
+          en: 'Shared green register: areas in care (IPR Praha)'
+          cs: Plochy správy zeleně ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The areas each green manager looks after, of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_VP_P/FeatureServer/0?f=json
+          cs: Sdílená data o zeleni – vegetační prvky – plocha (IPR Praha)
+          en: 'Shared green register: vegetation areas (IPR Praha)'
+          cs: Plošné vegetační prvky ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The vegetation areas of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/TIV_CUR_TIV_VDS_ZAPLAVA_DVT_P/FeatureServer/0?f=json
+          cs: Záplavové území drobných vodních toků (IPR Praha)
+          en: Flood areas of the small streams (IPR Praha)
+          cs: Záplavová území drobných vodních toků (aktivní zóna a Q100) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The flood areas of the small streams (active zone and Q100) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/HM_CUR_HM_EKOLA_DEN_P/FeatureServer/0?f=json
+          cs: Hluková mapa – den (IPR Praha)
+          en: Noise map, day (IPR Praha)
+          cs: Výpočtová hluková mapa povrchové dopravy pro denní dobu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The computed noise map of surface transport for the day from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/HM_CUR_HM_EKOLA_NOC_P/FeatureServer/0?f=json
+          cs: Hluková mapa – noc (IPR Praha)
+          en: Noise map, night (IPR Praha)
+          cs: Výpočtová hluková mapa povrchové dopravy pro noční dobu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The computed noise map of surface transport for the night from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

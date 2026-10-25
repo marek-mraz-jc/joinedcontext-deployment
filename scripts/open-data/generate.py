@@ -81,6 +81,11 @@ SPACE_EXTENSIONS = {
         "description": "One designated flood area: the ground a flood of a given return period covers, or a zone of it.",
         "why": "Environment's FloodMonitoring holds a water level measured at a gauge, not the area a flood covers",
     },
+    "NoiseZone": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One area of a computed noise map: the ground where the day or the night sound level falls into one 5 dB band.",
+        "why": "Environment's NoiseLevelObserved holds a level measured at a sensor at a time, not the area a noise band covers",
+    },
     "FloodDefence": {
         "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
         "description": "One line of flood defences: what it is built of, who keeps it and the flood it is designed for.",
