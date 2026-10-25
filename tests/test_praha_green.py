@@ -1,6 +1,7 @@
 """Prague's parks, green areas and trees from the IPR Praha geoportal (T-5425, PL-03): the parks and
 nature parks, the basic green areas, trees and tree rows of the shared green register and the tree-row
 layer, one Garden or Tree each, published as the datasets praha-zelen (Garden) and praha-stromy (Tree).
+The register's areas in care and vegetation areas (T-5683) are read a tenth per pipeline, as the trees are.
 
 Each pipeline reads its layer's description from IPR's ArcGIS server, counts the layer, then reads it
 in pages of 2000 records. Here a server on this machine answers those three requests from real
@@ -37,6 +38,9 @@ LAYERS = {
     # The trees are read a tenth per pipeline (green-trees-0 to -9, objectid modulo 10); the first
     # stands for the ten here, test_the_ten_tree_pipelines_differ_only_in_their_tenth checks the rest.
     "trees-0": ("Tree", "802a43db41474d4db5789ef5a47f2985", "OPK_CUR_OPK_SMZ_VP_B", "kod_vp=71 AND MOD(objectid,10)=0"),
+    # The areas in care and the vegetation areas, a tenth per pipeline as well (T-5683).
+    "management-0": ("Garden", "77d575ed2fd14f4987474a2f26caa460", "OPK_CUR_OPK_SMZ_SPRAVA_P", "MOD(objectid,10)=0"),
+    "vegetation-areas-0": ("Garden", "518e85700665441f86ded81dd0653a71", "OPK_CUR_OPK_SMZ_VP_P", "MOD(objectid,10)=0"),
     "register-tree-rows": ("Tree", "8818bda5e5e34d96af02126d9554b385", "OPK_CUR_OPK_SMZ_VP_L", "kod_vp=81"),
     "tree-rows": ("Tree", "3615fd648f1f4182b5f42dcdfba03b54", "URK_CUR_URK_SS_STROMORADI_L", "1=1"),
     "green-areas": ("Garden", "58d3857a49fc43cab69c5aad0162d024", "OPK_CUR_OPK_SMZ_ZAKLADNIPL_P", "1=1"),
@@ -47,7 +51,7 @@ LAYERS = {
 
 def layer_set(name: str) -> str:
     """The set a pipeline writes, which names its ids and its recording."""
-    return "trees" if name.startswith("trees-") else name
+    return re.sub(r"-\d$", "", name)
 
 
 def server_for(layer: dict, requests: list[str], count=None, second_page=None):
@@ -193,6 +197,11 @@ def test_the_coded_values_are_written_in_iprs_own_words(written):
     assert nature["greenspaceType"]["value"] == "přírodní park" and nature["name"]["languageMap"] == {"cs": "Draháň - Troja"}
     area = by_guid("green-areas", written["green-areas"][0])[guid(RECORDED["green-areas"]["features"][0])]
     assert area["areaServed"]["value"] == "MČ Praha 9"
+    managed = by_guid("management-0", written["management-0"][0])[guid(RECORDED["management"]["features"][0])]
+    assert managed["areaServed"]["value"] == "MČ Praha-Klánovice" and managed["greenspaceType"]["value"] == "plocha správy zeleně"
+    bed = by_guid("vegetation-areas-0", written["vegetation-areas-0"][0])[guid(RECORDED["vegetation-areas"]["features"][0])]
+    assert bed["greenspaceType"]["value"] == "Záhon trvalek" and bed["areaServed"]["value"] == "MHMP-OCP"
+    assert bed["careRegime"]["value"] == "Intenzitní třída údržby I"
     # The tree-row layer names nothing but the row itself.
     rows = written["tree-rows"][0]
     assert {e["vegetationType"]["value"] for e in rows} == {"Stromořadí"}
@@ -238,20 +247,25 @@ def test_the_saved_versions_of_one_area_are_one_entity_with_the_newest_edit():
         by_guid("green-areas", entities)[guid(first)]["id"]}
 
 
-def test_the_ten_tree_pipelines_differ_only_in_their_tenth():
+@pytest.mark.parametrize("set_, kind, where", [
+    ("trees", "Tree", "kod_vp=71 AND MOD(objectid,10)={k}"),
+    ("management", "Garden", "MOD(objectid,10)={k}"),
+    ("vegetation-areas", "Garden", "MOD(objectid,10)={k}"),
+])
+def test_the_ten_pipelines_of_a_layer_differ_only_in_their_tenth(set_, kind, where):
     def normal(k: int) -> str:
-        where = f'let where = "{urllib.parse.quote(f"kod_vp=71 AND MOD(objectid,10)={k}")}"'
-        mapping = (PRAHA / f"praha-pipeline-green-trees-{k}-bento.yaml").read_text()
-        assert mapping.count(where) == 1, k
-        return mapping.replace(where, "").replace(f"green-trees-{k} pipeline", "").replace(f"objectid ends in {k}", "")
+        let = f'let where = "{urllib.parse.quote(where.format(k=k))}"'
+        mapping = (PRAHA / f"praha-pipeline-green-{set_}-{k}-bento.yaml").read_text()
+        assert mapping.count(let) == 1, k
+        return mapping.replace(let, "").replace(f"green-{set_}-{k} pipeline", "").replace(f"objectid ends in {k}", "")
 
     assert all(normal(k) == normal(0) for k in range(10))
     for k in range(10):
-        pipeline = yaml.safe_load((PRAHA / f"praha-pipeline-green-trees-{k}.yaml").read_text())
-        assert pipeline["metadata"]["name"] == f"green-trees-{k}"
-        assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == "ipr-green-trees"
-        assert pipeline["spec"]["output"] == {"type": "Tree", "mode": "upsert"}
-    assert not (PRAHA / "praha-pipeline-green-trees.yaml").exists()
+        pipeline = yaml.safe_load((PRAHA / f"praha-pipeline-green-{set_}-{k}.yaml").read_text())
+        assert pipeline["metadata"]["name"] == f"green-{set_}-{k}"
+        assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-green-{set_}"
+        assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
+    assert not (PRAHA / f"praha-pipeline-green-{set_}.yaml").exists()
 
 
 def test_a_record_without_a_guid_or_a_geometry_is_dropped():

@@ -298,6 +298,27 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### NoiseZone
+
+One area of Prague's computed noise map of surface transport: the ground where the day or the night sound level falls into one 5 dB band, as the Smart Data Model extension NoiseZone (PointOfInterest base).
+
+IRI: `jc:NoiseZone`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `noiseLevelLow` | Property | `float` |  | dB | `jc:noiseLevelLow` | The lower bound of the area's 5 dB noise band, the A-weighted sound level the computed noise map gives 4 m above ground, in decibels. |
+| `noiseLevelHigh` | Property | `float` |  | dB | `jc:noiseLevelHigh` | The upper bound of the area's 5 dB noise band, in decibels. |
+| `assessmentPeriod` | Property | [`NoiseAssessmentPeriod`](#noiseassessmentperiod) |  |  | `jc:assessmentPeriod` | The part of the day the noise level holds for, day (06:00-22:00) or night (22:00-06:00). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### FloodDefence
 
 One line of Prague's flood defences: a fixed barrier, a mobile wall or a sandbag line, who keeps it and the flood it is designed for, as the Smart Data Model extension FloodDefence (PointOfInterest base).
@@ -711,6 +732,13 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `nonFlowThrough` | Ground where the flood water stands (neprůtočná). |
 | `protectedByCity` | Ground the city's flood defences protect (určená k ochraně městem). |
 | `protectedIndividually` | Ground its owners protect themselves (určená k ochraně individuálně). |
+
+### NoiseAssessmentPeriod
+
+| Value | Meaning |
+|---|---|
+| `day` | The day, 06:00 to 22:00 (den). |
+| `night` | The night, 22:00 to 06:00 (noc). |
 
 ### FloodDefenceType
 

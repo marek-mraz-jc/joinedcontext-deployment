@@ -316,6 +316,7 @@ def test_each_dataset_reads_only_its_own_types():
         "zdroje-znecisteni": ["EmissionSource"],
         "radon": ["RadonRiskArea"],
         "zaplavova-uzemi": ["FloodZone"],
+        "hluk": ["NoiseZone"],
         "protipovodnova-ochrana": ["FloodDefence"],
         "pocasi": ["WeatherObserved"],
     }
@@ -329,4 +330,4 @@ def test_each_dataset_reads_only_its_own_types():
         assert endpoint["spec"]["catalog"]["license"] == "CC_BY_4_0"
         assert endpoint["spec"]["catalog"]["personalData"] == "does-not-contain"
     zones = yaml.safe_load((PRAHA / "praha-endpoint-zaplavova-uzemi.yaml").read_text())
-    assert len(zones["spec"]["catalog"]["source"]) == 5
+    assert len(zones["spec"]["catalog"]["source"]) == 6

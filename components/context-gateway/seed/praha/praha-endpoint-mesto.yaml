@@ -476,3 +476,38 @@ spec:
         description:
           cs: Parkovací automaty zón placeného stání s číslem a ulicí, TSK hl. m. Prahy na geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: The parking machines of the paid parking zones with their number and street, TSK hl. m. Prahy on the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_SPRAVA_P/FeatureServer/0?f=json
+        title:
+          cs: Sdílená data o zeleni – plochy správy (IPR Praha)
+          en: 'Shared green register: areas in care (IPR Praha)'
+        description:
+          cs: Plochy správy zeleně ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The areas each green manager looks after, of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/OPK_CUR_OPK_SMZ_VP_P/FeatureServer/0?f=json
+        title:
+          cs: Sdílená data o zeleni – vegetační prvky – plocha (IPR Praha)
+          en: 'Shared green register: vegetation areas (IPR Praha)'
+        description:
+          cs: Plošné vegetační prvky ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The vegetation areas of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/TIV_CUR_TIV_VDS_ZAPLAVA_DVT_P/FeatureServer/0?f=json
+        title:
+          cs: Záplavové území drobných vodních toků (IPR Praha)
+          en: Flood areas of the small streams (IPR Praha)
+        description:
+          cs: Záplavová území drobných vodních toků (aktivní zóna a Q100) z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The flood areas of the small streams (active zone and Q100) from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/HM_CUR_HM_EKOLA_DEN_P/FeatureServer/0?f=json
+        title:
+          cs: Hluková mapa – den (IPR Praha)
+          en: Noise map, day (IPR Praha)
+        description:
+          cs: Výpočtová hluková mapa povrchové dopravy pro denní dobu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The computed noise map of surface transport for the day from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/HM_CUR_HM_EKOLA_NOC_P/FeatureServer/0?f=json
+        title:
+          cs: Hluková mapa – noc (IPR Praha)
+          en: Noise map, night (IPR Praha)
+        description:
+          cs: Výpočtová hluková mapa povrchové dopravy pro noční dobu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
+          en: The computed noise map of surface transport for the night from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.

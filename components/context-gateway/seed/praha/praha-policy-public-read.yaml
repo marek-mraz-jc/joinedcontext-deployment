@@ -38,6 +38,7 @@ spec:
         - type: RadonRiskArea
         - type: FloodZone
         - type: FloodDefence
+        - type: NoiseZone
         - type: WeatherObserved
         - type: PublicTransportRoute
         - type: GtfsStop

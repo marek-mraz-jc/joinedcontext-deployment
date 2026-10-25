@@ -1192,6 +1192,56 @@ slots:
           de: Kategorie des Überschwemmungsgebiets
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  noiseLevelLow:
+    slot_uri: jc:noiseLevelLow
+    description: >-
+      The lower bound of the area's 5 dB noise band, the A-weighted sound level the computed noise
+      map gives 4 m above ground, in decibels.
+    range: float
+    minimum_value: 0
+    maximum_value: 120
+    unit: { ucum_code: dB }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dolná hranica hluku
+          cs: Dolní hranice hluku
+          en: Noise level from
+          de: Lärmpegel von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  noiseLevelHigh:
+    slot_uri: jc:noiseLevelHigh
+    description: The upper bound of the area's 5 dB noise band, in decibels.
+    range: float
+    minimum_value: 5
+    maximum_value: 125
+    unit: { ucum_code: dB }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Horná hranica hluku
+          cs: Horní hranice hluku
+          en: Noise level to
+          de: Lärmpegel bis
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  assessmentPeriod:
+    slot_uri: jc:assessmentPeriod
+    description: The part of the day the noise level holds for, day (06:00-22:00) or night (22:00-06:00).
+    range: NoiseAssessmentPeriod
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Časť dňa
+          cs: Část dne
+          en: Assessment period
+          de: Beurteilungszeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   defenceType:
     slot_uri: jc:defenceType
     description: The kind of flood defence line, a fixed barrier, a mobile wall or sandbags.
@@ -1837,6 +1887,23 @@ classes:
           en: Flood zone
           de: Überschwemmungsgebiet
     slots: [name, floodReturnPeriod, floodZoneCategory, dataProvider, source]
+  NoiseZone:
+    class_uri: jc:NoiseZone
+    description: >-
+      One area of Prague's computed noise map of surface transport: the ground where the day or the
+      night sound level falls into one 5 dB band, as the Smart Data Model extension NoiseZone
+      (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
+      label:
+        tag: label
+        value:
+          sk: Hluková zóna
+          cs: Hluková zóna
+          en: Noise zone
+          de: Lärmzone
+    slots: [name, noiseLevelLow, noiseLevelHigh, assessmentPeriod, dataProvider, source]
   FloodDefence:
     class_uri: jc:FloodDefence
     description: >-
@@ -2197,6 +2264,12 @@ enums:
         description: Ground the city's flood defences protect (určená k ochraně městem).
       protectedIndividually:
         description: Ground its owners protect themselves (určená k ochraně individuálně).
+  NoiseAssessmentPeriod:
+    permissible_values:
+      day:
+        description: The day, 06:00 to 22:00 (den).
+      night:
+        description: The night, 22:00 to 06:00 (noc).
   FloodDefenceType:
     permissible_values:
       unknown: { description: The register does not say (neznámo). }

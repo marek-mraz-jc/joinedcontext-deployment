@@ -23,6 +23,7 @@ spec:
     - RadonRiskArea
     - FloodZone
     - FloodDefence
+    - NoiseZone
     - WeatherObserved
     - PublicTransportRoute
     - GtfsStop
