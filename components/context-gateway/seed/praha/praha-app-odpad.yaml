@@ -40,7 +40,14 @@ spec:
     # The sensor containers of waste-fill and the names of the isles they stand at (T-2785).
     - contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
       types: [WasteContainer, WasteContainerIsle]
-      attrs: [containerCode, wasteKind, fillingLevel, dateModified, refWasteContainerIsle, name]
+      attrs:
+        - containerCode
+        - wasteKind
+        - fillingLevel
+        - dateModified
+        - refWasteContainerIsle
+        - name
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]
       roles: [viewer]

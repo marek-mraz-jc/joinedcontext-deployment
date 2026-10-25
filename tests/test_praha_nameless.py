@@ -198,7 +198,7 @@ def test_the_point_layers_read_nothing_but_the_place():
     entities, errors, requests = outcome("point-post-offices")
     assert not errors, errors
     for entity in entities:
-        assert set(entity) == {"id", "type", "name", "serviceCategory", "location", "dataProvider", "source"}
+        assert set(entity) == {"id", "type", "name", "serviceCategory", "location", "dataProvider", "source", "expiresAt"}
         assert entity["location"]["value"]["type"] == "Point" and len(entity["location"]["value"]["coordinates"]) == 2
     page = next(r for r in requests if "resultOffset" in r)
     assert urllib.parse.parse_qs(urllib.parse.urlsplit(page).query)["outFields"] == ["globalid"]

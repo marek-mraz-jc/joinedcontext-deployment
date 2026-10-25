@@ -23,7 +23,9 @@ pipeline:
           "category": { "type": "Property", "value": ["feeCharged"] },
           "zoneCode": { "type": "Property", "value": z.code },
           "description": if z.rules == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": z.rules } } },
-          "url": if z.link == null { null } else { { "type": "Property", "value": if z.link.has_prefix("http") { z.link } else { "https://" + z.link } } },
+          # One address or none: a register value with two links or a space is no IRI, and the
+          # broker refuses the whole zone over it (F-BNT3-018, the T-4011 culture rule).
+          "url": z.link.or("").string().trim().(l -> if l.has_prefix("http") { l } else { "https://" + l }).(u -> if u.re_match("^https?://[^\\s/]+\\.[^\\s]+$") { { "type": "Property", "value": u } } else { null }),
           "location": { "type": "GeoProperty", "value": z.geometry },
           "dataProvider": { "type": "Property", "value": "City of Helsinki, parking" },
           "source": { "type": "Property", "value": "https://kartta.hel.fi/ws/geoserver/avoindata/wfs?typeNames=avoindata:Pysakoinnin_maksuvyohykkeet_alue" }

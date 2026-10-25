@@ -193,9 +193,9 @@ spec:
               value: {{ .Values.database.datastorePool.size | quote }}
             - name: CKAN__DATASTORE__SQLALCHEMY__MAX_OVERFLOW
               value: {{ .Values.database.datastorePool.maxOverflow | quote }}
-            # Read by files/startup/00-secret-key.sh, not by CKAN: 2.11 has no
-            # `CKAN___<OPTION>` env override, and a variable named `CKAN_*` would land in the
-            # config under its own literal name instead of the option it looks like.
+            # Read by files/startup/00-secret-key.sh, which writes the session secret into the ini
+            # itself; a `CKAN___` variable would work too (ckanext-envvars maps it, as the pool
+            # caps above), but this name keeps the secret out of the plugin's environment walk.
             - name: JC_CKAN_SECRET_KEY
               valueFrom:
                 secretKeyRef:

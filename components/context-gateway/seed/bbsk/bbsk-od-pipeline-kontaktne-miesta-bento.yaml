@@ -37,7 +37,7 @@ pipeline:
                 meta rows = this.rowCount
                 root = ""
             - http:
-                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer/0/query?where=1%3D1&outFields=P_%C4%8D_,N%C3%A1zov_organiz%C3%A1cie,I%C4%8CO,Ulica_%C4%8D%C3%ADslo_S%C3%8DDLO,PS%C4%8C_S%C3%8DDLO,Mesto_S%C3%8DDLO,Ulica_%C4%8D%C3%ADslo_PRACOVISKO,PS%C4%8C_PRACOVISKO,Mesto_PRACOVISKO,Kontakt,URL,Kateg%C3%B3ria,ID,Priznak,Okres_PRACOVISKO,Kateg%C3%B3ria_obr%C3%A1zok,LAT_,LON_&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer/0/query?where=1%3D1&outFields=P_%C4%8D_,N%C3%A1zov_organiz%C3%A1cie,I%C4%8CO,Ulica_%C4%8D%C3%ADslo_S%C3%8DDLO,PS%C4%8C_S%C3%8DDLO,Mesto_S%C3%8DDLO,Ulica_%C4%8D%C3%ADslo_PRACOVISKO,PS%C4%8C_PRACOVISKO,Mesto_PRACOVISKO,Kontakt,URL,Kateg%C3%B3ria,ID,Priznak,Okres_PRACOVISKO,Kateg%C3%B3ria_obr%C3%A1zok,LAT_,LON_&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000&orderByFields=FID"
                 verb: GET
                 headers:
                   Accept: application/geo+json
@@ -139,7 +139,7 @@ pipeline:
           "lON": this.properties."LON_".apply("float"),
           "location": if this.geometry.or(null) == null { null } else { { "type": "GeoProperty", "value": this.geometry } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY-SA 4.0)" },
-          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer/0/query?where=1%3D1&outFields=P_%C4%8D_,N%C3%A1zov_organiz%C3%A1cie,I%C4%8CO,Ulica_%C4%8D%C3%ADslo_S%C3%8DDLO,PS%C4%8C_S%C3%8DDLO,Mesto_S%C3%8DDLO,Ulica_%C4%8D%C3%ADslo_PRACOVISKO,PS%C4%8C_PRACOVISKO,Mesto_PRACOVISKO,Kontakt,URL,Kateg%C3%B3ria,ID,Priznak,Okres_PRACOVISKO,Kateg%C3%B3ria_obr%C3%A1zok,LAT_,LON_&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kontaktne_miesta/FeatureServer/0/query?where=1%3D1&outFields=P_%C4%8D_,N%C3%A1zov_organiz%C3%A1cie,I%C4%8CO,Ulica_%C4%8D%C3%ADslo_S%C3%8DDLO,PS%C4%8C_S%C3%8DDLO,Mesto_S%C3%8DDLO,Ulica_%C4%8D%C3%ADslo_PRACOVISKO,PS%C4%8C_PRACOVISKO,Mesto_PRACOVISKO,Kontakt,URL,Kateg%C3%B3ria,ID,Priznak,Okres_PRACOVISKO,Kateg%C3%B3ria_obr%C3%A1zok,LAT_,LON_&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-kontaktne-miesta-2128a0" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.
