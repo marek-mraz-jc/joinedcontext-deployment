@@ -314,9 +314,9 @@ pipeline:
           let r = this.row
           let labels = this.table.labels.or({})
           # "Nan" is the hub's word for a category it did not detect: no breakdown.
-          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.merge({
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.assign({
             "raw": $r.get(c.code).or("").string().trim()
-          })).map_each(c -> c.merge({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
+          })).map_each(c -> c.assign({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
             "segment": c.raw.apply("segment"),
             "label": (if c.name.or("") != "" { $r.get(c.name).or("").string().trim() } else { c.raw }).replace_all_many(["è", "č", "ò", "ň"]),
             "optional": c.optional.or(false)

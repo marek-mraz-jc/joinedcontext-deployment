@@ -484,7 +484,7 @@ def test_each_statistics_pipeline_agrees_with_an_independent_reading_of_its_tabl
 
 
 def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
-    """The four pipelines differ only in their tables, each table in the pipeline of its areas,
+    """The statistics pipelines differ only in their tables, each table in the pipeline of its areas,
     and no table twice."""
     def body(pipeline: str) -> str:
         text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
@@ -496,7 +496,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
     assert len(keys) == len(set(keys)) == 344 + 19 + 12 + 12 + 14 + 13 + 17
     for pipeline, areas in STATISTICS.items():
         # The city's pipeline also holds the two tables of the region beside Slovakia (T-5676).
-        assert {t["areas"] for t in tables(pipeline)} == ({areas, "kraj"} if areas == "city" else {areas})
+        assert {t["areas"] for t in tables(pipeline)} == ({areas, "kraj"} if pipeline == "statistics-mesto" else {areas})
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
         assert manifest["spec"]["source"]["dataSourceRef"]["name"] == "bratislava-hub"
         assert manifest["spec"]["output"] == {"type": "KeyPerformanceIndicator", "mode": "upsert"}

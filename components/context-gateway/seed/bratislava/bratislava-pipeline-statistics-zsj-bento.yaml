@@ -6,15 +6,26 @@ pipeline:
     - mapping: |
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V),
-        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city) or obec
-        # (the municipalities of the Bratislava Region); area: the area column (a zsj's 7-digit code),
-        # none for a table of the city alone; label: a zsj's name column, within: its city district's
-        # code column; year: the period column (a year or a range of years), quarter: its quarter
-        # column, spans: the range each year of it stands for (a model's 1991 is 1991-2021), or
-        # fixed: the year or range the table's title names; by: breakdown columns (age, sex,
-        # category), each one segment of the id and one part of the name; only: [column, prefix]
+        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city), obec
+        # (the municipalities of the Bratislava Region) or kraj (the Bratislava region, NUTS 3 SK010);
+        # area: the area column (a zsj's 7-digit code), none for a table of the city alone; label: a
+        # zsj's name column, within: its city district's code column; year: the period column (a
+        # year, a range of years, two ranges compared, a day or a month such as 2018-06), quarter:
+        # its quarter column, month: its month column (1 to 12), spans: the range each year of it
+        # stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's title or
+        # the item's description names; by: breakdown columns (age, sex,
+        # category), each one segment of the id and one part of the name, or {code, name, optional}:
+        # the id segment from the code column, the name part from the name column (a budget item's
+        # code and title), an optional one left out of both where its cell is empty; abs: the figure
+        # without its sign (an age pyramid writes the men's side negative); only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
+        # A table of events or bookings asks the hub for sums: group: the columns or expressions
+        # (SUBSTRING of a date) one figure stands for, in the order the hub names its answer
+        # (an expression answers as EXPR_1); stats: [statistic, column or expression, answer
+        # column]; where: the rows counted (the year-end month of a running ledger); labels: a
+        # breakdown code by its Slovak word; past: a period that starts after today is a wrong
+        # date in the ledger, dropped.
         let tables = [
           {"name": "pocet-bytov-podla-celkovej-plochy-zsj", "item": "05d7fd0e6487438fa1843d6cfa1d3fc5", "path": "Po%C4%8Det%20bytov%20pod%C4%BEa%20celkovej%20plochy%20bytu%20v%20z%C3%A1kladn%C3%BDch%20s%C3%ADdeln%C3%BDch%20jednotk%C3%A1ch", "title": "Počet bytov podľa celkovej plochy bytu v základných sídelných jednotkách", "areas": "zsj", "area": "Základná_sídelná_jednotka___kód", "label": "Základná_sídelná_jednotka___náz", "within": "Obec___kód", "fixed": "2021", "values": [["Do_40_m2", "do-40-m2", "Byty podľa celkovej plochy: Do 40 m2", 0, null], ["F41_m2_do_80_m2", "41-m2-do-80-m2", "Byty podľa celkovej plochy: 41 m2 do 80 m2", 0, null], ["F81_m2_do_120_m2", "81-m2-do-120-m2", "Byty podľa celkovej plochy: 81 m2 do 120 m2", 0, null], ["F121_m2_a_viac", "121-m2-a-viac", "Byty podľa celkovej plochy: 121 m2 a viac", 0, null], ["Spolu", "spolu", "Byty podľa celkovej plochy: Spolu", 0, null]]},
           {"name": "pocet-bytov-podla-obytnej-plochy-zsj", "item": "167a939e420a4920bcc35f7c45b4e9d7", "path": "Po%C4%8Det%20bytov%20pod%C4%BEa%20obytnej%20plochy%20bytu%20v%20z%C3%A1kladn%C3%BDch%20s%C3%ADdeln%C3%BDch%20jednotk%C3%A1ch", "title": "Počet bytov podľa obytnej plochy bytu v základných sídelných jednotkách", "areas": "zsj", "area": "Základná_sídelná_jednotka___kód", "label": "Základná_sídelná_jednotka___náz", "within": "Obec___kód", "fixed": "2021", "values": [["Do_40_m2", "do-40-m2", "Byty podľa obytnej plochy: Do 40 m2", 0, null], ["F41_m2_do_80_m2", "41-m2-do-80-m2", "Byty podľa obytnej plochy: 41 m2 do 80 m2", 0, null], ["F81_m2_do_120_m2", "81-m2-do-120-m2", "Byty podľa obytnej plochy: 81 m2 do 120 m2", 0, null], ["F121_m2_a_viac", "121-m2-a-viac", "Byty podľa obytnej plochy: 121 m2 a viac", 0, null], ["Spolu", "spolu", "Byty podľa obytnej plochy: Spolu", 0, null]]},
@@ -48,29 +59,51 @@ pipeline:
                 message: 'statistics: the hub no longer lists ${! @missing }, left out of this run'
     - unarchive: { format: json_array }
 
-    # One table a request; the path is the constant above, never text of an answer.
-    - branch:
-        request_map: |
-          meta path = this.path
-          root = ""
-        processors:
-          - sleep: { duration: '200ms' }
-          - http:
-              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2000&f=json
-              verb: GET
-              headers:
-                Accept: application/json
-                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
-              timeout: 30s
-              retries: 2
-        result_map: |
-          root.rows = if content().length() > 4194304 {
-            throw("the table answer is over 4 MiB")
-          } else if this.error.or(null) != null {
-            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
-          } else if this.exceededTransferLimit.or(false) {
-            throw("the table holds more than 2,000 rows, more than one read")
-          } else { this.features.or([]).map_each(f -> f.attributes) }
+    # One table at a time, read in pages of 1,000 rows (the hub's smallest maxRecordCount) until
+    # the hub says no more, at most 20 pages; a table with more fails instead of writing part of
+    # it. The path and the query are the constants above, never text of an answer. A table line
+    # with `group` asks the hub for its sums instead of its rows: one row a group, ordered by the
+    # group so the pages do not overlap.
+    - for_each:
+        - branch:
+            request_map: |
+              meta path = this.path
+              meta query = if this.group.or("") == "" { "where=1%3D1&outFields=*" } else {
+                "where=" + this.where.or("1=1").escape_url_query() +
+                "&groupByFieldsForStatistics=" + this.group.escape_url_query() +
+                "&orderByFields=" + this.group.escape_url_query() +
+                "&outStatistics=" + this.stats.map_each(s -> { "statisticType": s.index(0), "onStatisticField": s.index(1), "outStatisticFieldName": s.index(2) }).format_json(no_indent: true).escape_url_query()
+              }
+              root = { "rows": [], "offset": 0, "more": true }
+            processors:
+              - while:
+                  check: this.more && !errored()
+                  max_loops: 20
+                  processors:
+                    - branch:
+                        request_map: |
+                          meta offset = this.offset.string()
+                          root = ""
+                        processors:
+                          - sleep: { duration: '200ms' }
+                          - http:
+                              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?${! @query }&resultOffset=${! @offset }&resultRecordCount=1000&f=json
+                              verb: GET
+                              headers:
+                                Accept: application/json
+                                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
+                              timeout: 30s
+                              retries: 2
+                        result_map: |
+                          root.rows = if content().length() > 4194304 {
+                            throw("the table answer is over 4 MiB")
+                          } else if this.error.or(null) != null {
+                            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
+                          } else { root.rows.concat(this.features.or([]).map_each(f -> f.attributes)) }
+                          root.offset = root.offset + 1000
+                          root.more = this.exceededTransferLimit.or(false)
+            result_map: |
+              root.rows = if this.more { throw("the table holds more than 20,000 rows, more than 20 pages") } else { this.rows }
     # A table the hub refuses is logged and left out of this run; the others still write.
     - catch:
         - log: { level: WARN, message: 'statistics: ${! json("name") } not read: ${! error() }' }
@@ -105,6 +138,8 @@ pipeline:
           "bratislava 2": ["102", "Bratislava II"], "bratislava 3": ["103", "Bratislava III"], "bratislava 4": ["104", "Bratislava IV"],
           "bratislava 5": ["105", "Bratislava V"]
         }
+        # A table of the region beside Slovakia keeps the region's rows.
+        let kraje = { "bratislavsky kraj": ["sk010", "Bratislavský kraj"] }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
         # A basic settlement unit (ZSJ) by its 7-digit code, named with its city district, kept only
@@ -123,6 +158,22 @@ pipeline:
         map number {
           root = if this == null { null } else { this.string().re_replace_all("[\\s %]", "").replace_all(",", ".").number().catch(null) }
         }
+        map magnitude {
+          let n = this.apply("number")
+          root = if $n == null { null } else { $n.abs() }
+        }
+        map yearmonth {
+          let y = this.slice(0, 4).number().int64()
+          let m = this.slice(5, 7).number().int64()
+          let february = if $y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0) { "29" } else { "28" }
+          root = {
+            "from": this + "-01",
+            "to": this + "-" + ["31", $february, "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m - 1),
+            "slug": this,
+            "label": ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"].index($m - 1) + " " + $y.string(),
+            "frequency": "monthly"
+          }
+        }
         map years {
           let v = this.string().trim()
           let y = $v.re_find_all("(19|20)[0-9]{2}")
@@ -130,11 +181,20 @@ pipeline:
             { "from": $v + "-01-01", "to": $v + "-12-31", "slug": $v, "label": $v, "frequency": "yearly" }
           } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
             { "from": $y.index(0) + "-01-01", "to": $y.index(1) + "-12-31", "slug": $y.join("-"), "label": $y.join("–") }
-          } else { null }
+          } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2} a (19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
+            # Two ranges compared ("2017 – 2019 a 2000 – 2002"): the period spans both.
+            {
+              "from": $y.sort().index(0) + "-01-01", "to": $y.sort().index(3) + "-12-31", "slug": $y.join("-"),
+              "label": $y.index(0) + "–" + $y.index(1) + " a " + $y.index(2) + "–" + $y.index(3)
+            }
+          } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
+            { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
+          } else if $v.re_match("^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$") { $v.apply("yearmonth") } else { null }
         }
         map quarter {
           let y = this.index(0)
-          let q = this.index(1)
+          # "3" or the transit table's "3.Q".
+          let q = this.index(1).re_replace_all("^([1-4])\\s*\\.?\\s*[Qq]$", "$1")
           root = if $y.re_match("^(19|20)[0-9]{2}$") && $q.re_match("^[1-4]$") {
             {
               "from": $y + "-" + ["01-01", "04-01", "07-01", "10-01"].index($q.number() - 1),
@@ -145,20 +205,47 @@ pipeline:
             }
           } else { null }
         }
+        # A month column holds 1 to 12, with or without a leading zero; anything else is no period.
+        map month {
+          let y = this.index(0)
+          let m = this.index(1).trim_prefix("0")
+          root = if $y.re_match("^(19|20)[0-9]{2}$") && $m.re_match("^([1-9]|1[0-2])$") {
+            {
+              "from": "%s-%02d-01".format($y, $m.number().int64()),
+              "to": "%s-%02d-%s".format($y, $m.number().int64(), if $m == "2" && $y.number().int64() % 4 == 0 && ($y.number().int64() % 100 != 0 || $y.number().int64() % 400 == 0) { "29" } else {
+                ["31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m.number().int64() - 1)
+              }),
+              "slug": "%s-%02d".format($y, $m.number().int64()),
+              "label": "%d/%s".format($m.number().int64(), $y),
+              "frequency": "monthly"
+            }
+          } else { null }
+        }
         map period {
           let t = this.table
           let r = this.row
           root = if $t.fixed.or("") != "" { $t.fixed.apply("years") }
             else if $t.spans.or(null) != null { $t.spans.get($r.get($t.year).or("").string().trim()).or("").apply("years") }
             else if $t.quarter.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.quarter).or("").string().trim()].apply("quarter") }
+            else if $t.month.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.month).or("").string().trim()].apply("month") }
             else { $r.get($t.year).or("").apply("years") }
         }
         map areaname {
           root = if this.table.area.or("") == "" { "*" } else { this.row.get(this.table.area).or("").apply("fold") }
         }
+        # Each breakdown cell as its id segment and its label; a label read as Latin-1 from cp1250
+        # text ("Raèianska") gets its č and ň back.
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          let labels = this.table.labels.or({})
+          # "Nan" is the hub's word for a category it did not detect: no breakdown.
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.assign({
+            "raw": $r.get(c.code).or("").string().trim()
+          })).map_each(c -> c.assign({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
+            "segment": c.raw.apply("segment"),
+            "label": (if c.name.or("") != "" { $r.get(c.name).or("").string().trim() } else { c.raw }).replace_all_many(["è", "č", "ò", "ň"]),
+            "optional": c.optional.or(false)
+          })
         }
         map zsj {
           let code = this.row.get(this.table.area).or("").string().trim()
@@ -180,26 +267,28 @@ pipeline:
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "zsj" { { "table": t, "row": r, "parts": $parts }.apply("zsj") }
             else if t.areas == "obec" { { "table": t, "row": r }.apply("obec") }
+            else if t.areas == "kraj" { $kraje.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
-          "number": r.get(v.index(0)).apply("number")
+          "number": r.get(v.index(0)).apply(if t.abs.or(false) { "magnitude" } else { "number" })
         }))).flatten().flatten()
         map reason {
           let v = this.value
           root = if this.area == null {
               { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava",
-                "zsj": "not a ZSJ of the city", "obec": "no municipality" }.get(this.table.areas)
+                "zsj": "not a ZSJ of the city", "obec": "no municipality", "kraj": "not the Bratislava region" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
-            else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
+            else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
+            else if this.by.filter(b -> b.segment == "" && !b.optional).length() > 0 { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }
             else { null }
         }
         let marked = $cells.map_each(c -> c.assign({
           "_drop": c.apply("reason"),
-          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.apply("segment"))).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
+          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.segment).filter(s -> s != "")).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
         }))
         let usable = $marked.filter(c -> c._drop == null)
         let once = $usable.unique(c -> c._id)
@@ -219,7 +308,7 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
           "type": "KeyPerformanceIndicator",
-          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by).concat([this.area.index(1), this.period.label])).join(", ") },
+          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by.map_each(b -> b.label).filter(l -> l != "")).concat([this.area.index(1), this.period.label])).join(", ") },
           "description": { "type": "Property", "value": $t.title },
           "process": { "type": "Property", "value": this.value.index(2) },
           "category": { "type": "Property", "value": ["quantitative"] },
