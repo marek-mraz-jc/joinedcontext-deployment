@@ -13,7 +13,7 @@ import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 SERVERS = {
-    # project: (seed folder, members)
+    # project: (seed folder, public Endpoints the server must reach)
     # The fourth (second) member holds every other table of the body's catalogue (T-4255).
     "banskabystrica": ("banskabystrica", {"banskabystrica-verejne", "banskabystrica-otvorene-data"}),
     "bbsk": ("bbsk", {"bbsk-registre", "bbsk-kraj-verejne", "bbsk-kpi", "bbsk-otvorene-data"}),
@@ -71,18 +71,28 @@ def test_the_server_is_public_and_placed_where_the_gateway_reads_it(project):
     assert index[path.name] == f"projects/{project}/mcp/otvorene-data.yaml"
 
 
+def selected(project: str, endpoints: dict) -> bool:
+    """Whether the server of `project` selects this Endpoint (T-5367: `select`, not `members`)."""
+    select = server(project)[1]["spec"]["select"]
+    return f"{project}/{endpoints['contextSpaceRef']}" in select.get("spaces", []) or project in select.get("projects", [])
+
+
 @pytest.mark.parametrize("project", SERVERS)
-def test_the_members_are_the_publishers_own_public_endpoints(project):
+def test_the_server_selects_the_publishers_own_public_endpoints(project):
     folder, expected = SERVERS[project]
     _, doc = server(project)
-    members = doc["spec"]["members"]
-    assert 1 <= len(members) <= 10
-    assert all(m["kind"] == "Endpoint" and m.get("namespace", project) == project for m in members), members
-    assert {m["name"] for m in members} == expected
+    # Every public Endpoint of the publisher's own spaces, resolved per call (MF-55, T-5367).
+    assert "members" not in doc["spec"]
+    select = doc["spec"]["select"]
+    assert select["accessLevel"] == ["public"]
+    assert set(select) <= {"spaces", "projects", "accessLevel"}
+    assert select.get("projects", [project]) == [project], select
+    assert all(s.startswith(f"{project}/") for s in select.get("spaces", [])), select
     endpoints = {d["metadata"]["name"]: d for _, d in manifests(SEED / folder) if d["kind"] == "Endpoint"}
     for name in expected:
         assert endpoints[name]["spec"]["audience"] == "public", name
         assert endpoints[name]["spec"].get("mcp") is not False, f"{name} turns its MCP off"
+        assert selected(project, endpoints[name]["spec"]), f"{name} is outside the server's select"
 
 
 @pytest.mark.parametrize("project", SERVERS)
@@ -109,8 +119,8 @@ def test_an_anonymous_caller_of_a_member_may_read_and_never_write(project):
 
 def test_the_conformance_endpoint_is_no_member():
     """`public-air` holds what the smoke run and the ETSI suite write; it is no open data."""
-    _, doc = server("banskabystrica")
-    assert "public-air" not in {m["name"] for m in doc["spec"]["members"]}
+    endpoints = {d["metadata"]["name"]: d["spec"] for _, d in manifests(SEED / "banskabystrica") if d["kind"] == "Endpoint"}
+    assert not selected("banskabystrica", endpoints["public-air"])
 
 
 def test_every_public_grant_reads_and_discovers_and_writes_no_entity():

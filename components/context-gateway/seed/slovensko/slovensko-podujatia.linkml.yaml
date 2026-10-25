@@ -215,7 +215,7 @@ slots:
     description: >-
       The event's main category, one code of the platform's list of 16 (docs API/12-event-categories.md),
       picked by the rule table seeds/event-categories.json from the source's own word, the name or the kind of
-      body that announced it (`music`, `sport`), else by the decision model's cached answer (T-5490). A list of
+      body that announced it (`music`, `sport`), else by the decision model's cached answer. A list of
       one, as Smart Data Models' Event writes `category`; absent while neither has named the event.
     range: EventCategory
     multivalued: true
@@ -233,7 +233,7 @@ slots:
     slot_uri: jc:categorySource
     description: >-
       How `category` was picked: `rule` the rule table, `model` the decision model's cached answer for an event no
-      rule decides (scripts/events-classify.py, T-5490).
+      rule decides (scripts/events-classify.py).
     range: string
     pattern: ^(rule|model)$
     annotations:
@@ -357,7 +357,7 @@ slots:
     slot_uri: jc:locationSource
     description: >-
       Who placed `location`: `feed` the publisher, `register-adries`, `overpass`, `nominatim` or `hand` the venue
-      table's row (seeds/bbsk-events/venues.csv), `towns` the town table's office or centre (T-5490).
+      table's row (seeds/bbsk-events/venues.csv), `towns` the town table's office or centre.
     range: string
     pattern: ^(feed|register-adries|overpass|nominatim|hand|towns)$
     annotations:
@@ -765,7 +765,7 @@ enums:
               en: Community and civic life
               de: Gemeinschaft und Bürgerleben
       other:
-        description: No other code fits; only the decision model gives it (T-5490), never the rule table.
+        description: No other code fits; only the decision model gives it, never the rule table.
         annotations:
           label:
             tag: label
