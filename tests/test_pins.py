@@ -5,6 +5,7 @@ repository, so each check is fed a planted floating chart version, a tag-only im
 helmfile.lock, and must refuse each one.
 """
 
+import importlib.util
 import json
 import re
 import subprocess
@@ -239,3 +240,60 @@ def test_no_helmfile_pins_a_repository_chart_inline():
         if inline.search(f.read_text())
     ]
     assert offenders == []
+
+
+# pv- tags are never pinned (T-5547). A branch preview image is tagged pv-<slug>-<sha12> and signed
+# by the source repository's preview.yml; pin-images reads only image.yml runs, asks the registry
+# for the commit's own tag and verifies image.yml's identity on main, so no pv- image can reach a
+# components/*/images.yaml. Each test below is one of those three doors.
+PIN_IMAGES = ROOT / "scripts/pin-images.py"
+
+
+@pytest.fixture
+def pin_images():
+    spec = importlib.util.spec_from_file_location("pin_images", PIN_IMAGES)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def recorder(calls, stdout="[]", returncode=1):
+    return lambda *args, check=True: calls.append(args) or type("R", (), {"stdout": stdout, "returncode": returncode})()
+
+
+def test_pv_tags_are_never_pinned_as_a_commit(pin_images, monkeypatch):
+    monkeypatch.setenv("PIN_COMMIT", "pv-map-legend-0123456789ab")
+    monkeypatch.setattr(pin_images, "green", lambda *a: pytest.fail("a pv- tag must be refused before any lookup"))
+    with pytest.raises(SystemExit, match="full 40-hex commit"):
+        pin_images.main("portal")
+
+
+def test_pv_tags_are_never_pinned_from_a_preview_run(pin_images, monkeypatch):
+    calls = []
+    monkeypatch.setattr(pin_images, "run", recorder(calls, stdout='[{"headSha": "%s"}]' % ("c" * 40)))
+    assert pin_images.built("joinedcontext-portal") == "c" * 40
+    [args] = calls
+    assert args[args.index("--workflow") + 1] == "image.yml" and args[args.index("--branch") + 1] == "main"
+
+
+def test_pv_tags_are_never_pinned_by_their_signature(pin_images, monkeypatch):
+    calls = []
+    monkeypatch.setattr(pin_images, "run", recorder(calls))
+    assert not pin_images.signed("joinedcontext-portal", "joinedcontext-portal", "sha256:" + "a" * 64)
+    [args] = calls
+    identity = args[args.index("--certificate-identity") + 1]
+    assert identity == "https://github.com/marek-mraz-jc/joinedcontext-portal/.github/workflows/image.yml@refs/heads/main"
+
+
+def test_pv_tags_are_never_pinned_by_tag(pin_images, monkeypatch):
+    calls = []
+    monkeypatch.setattr(pin_images, "run", recorder(calls, stdout=""))
+    pin_images.published("joinedcontext-portal", "c" * 40)
+    [args] = calls
+    assert args[-1] == f"ghcr.io/marek-mraz-jc/joinedcontext-portal:{'c' * 40}"
+    tags = [
+        f"{f.relative_to(ROOT)}: {m.group(1)}"
+        for f in sorted(ROOT.glob("components/*/images.yaml"))
+        for m in re.finditer(r"^\s*tag:\s*['\"]?(pv-[^'\"\s]*)", f.read_text(), re.MULTILINE)
+    ]
+    assert tags == [], "a branch preview tag is never a deployed image"
