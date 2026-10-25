@@ -188,7 +188,7 @@ pipeline:
           let n = this.ts_parse("2006-01-02T15:04:05").ts_unix()
           let summer = if ($n - 3600).ts_format("-07:00", "Europe/Bratislava") == "+02:00" { $n - 3600 } else { null }
           let winter = if $n.ts_format("-07:00", "Europe/Bratislava") == "+01:00" { $n } else { null }
-          root = if $winter != null && $winter <= now().ts_unix() + 600 { $winter } else if $summer != null { $summer } else { throw("the SHMÚ minute %v is no Bratislava time minus one hour".format(this)) }.ts_format("2006-01-02T15:04:05Z", "UTC")
+          root = if $winter != null && $winter <= now().ts_unix() + 600 { $winter } else if $summer != null && $summer <= now().ts_unix() + 600 { $summer } else { throw("the SHMÚ minute %v is no Bratislava time minus one hour".format(this)) }.ts_format("2006-01-02T15:04:05Z", "UTC")
         }
         let rows = this.data.or([]).filter(r -> $stations.get(r.ind_kli.string()) != null && r.minuta.type() == "string")
         root = $stations.keys().sort().map_each(code -> $rows.filter(r -> r.ind_kli.string() == code).sort_by(r -> r.minuta)).filter(rs -> rs.length() > 0).map_each(rs -> rs.slice(-1).index(0).assign({

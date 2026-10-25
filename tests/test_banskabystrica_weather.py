@@ -171,7 +171,7 @@ def test_the_minute_is_bratislava_time_minus_an_hour_on_both_sides_of_each_chang
 
 
 @requires_docker
-@pytest.mark.parametrize("minute", ["2026-03-29T01:30:00", "2099-01-01T12:00:00"])
+@pytest.mark.parametrize("minute", ["2026-03-29T01:30:00", "2099-01-01T12:00:00", "2099-07-01T12:00:00"])
 def test_a_minute_no_clock_could_show_leaves_that_station_out(minute):
     """01:xx never occurs on the March change day; a minute ahead of now is no reading yet."""
     result = at_minute(minute)
