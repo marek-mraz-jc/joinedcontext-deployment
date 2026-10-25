@@ -45,7 +45,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report. |
+| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes. |
 | `pm10` | Property | `float` |  | ug/m3 | `sdm:pm10` | Particulate matter up to 10 µm, the hour's mean at the station. |
 | `pm25` | Property | `float` |  | ug/m3 | `sdm:pm25` | Particulate matter up to 2.5 µm, the hour's mean at the station. |
 | `no2` | Property | `float` |  | ug/m3 | `sdm:no2` | Nitrogen dioxide, the hour's mean at the station. |
@@ -97,7 +97,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The collection point's number in the city's waste register, such as 0022/ 001. |
+| `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The collection point's number in the city's waste register, such as 0022/ 001, or the ČHMÚ weather station's WIGOS id, such as 0-20000-0-11518. |
 | `accessRestriction` | Property | [`WasteAccess`](#wasteaccess) |  |  | `jc:accessRestriction` | Who may use the collection point. |
 | `refDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refDistrict` | The city district the record lies in. |
 | `wasteContainers` | Relationship | [`WasteContainer`](#wastecontainer) (list) |  |  | `jc:wasteContainers` | The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored. |
@@ -224,7 +224,7 @@ Specialises `Entity`.
 | `fleetVehicleId` | Property | `string` |  |  | `sdm:fleetVehicleId` | The operator's fleet number of the vehicle (9099); absent for the metro and trains, which report none. |
 | `operatorName` | Property | `string` |  |  | `jc:operatorName` | The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)). |
 | `wheelchairAccessible` | Property | `boolean` |  |  | `jc:wheelchairAccessible` | Whether the publisher states the place is reachable in a wheelchair; absent when it does not say. |
-| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, or the time of a vehicle's last position report. |
+| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -232,21 +232,26 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### Garden
+### EmissionSource
 
-One green area of the city: a park of the planning layer, a nature park, or a basic green area of the shared green register (IPR Praha), with its kind, manager and care regime.
+One stationary source of air pollution of the Prague emission register (REZZO 1 or REZZO 2): where it is, its fuel and its yearly emissions, as the Smart Data Model extension EmissionSource (PointOfInterest base). The operator is not read: some are private persons.
 
-IRI: `sdm:Garden`
+IRI: `jc:EmissionSource`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `greenspaceType` | Property | `string` |  |  | `jc:greenspaceType` | IPR Praha's word for the kind of green area: its function in the shared green register (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or přírodní park. |
-| `careRegime` | Property | `string` |  |  | `jc:careRegime` | The maintenance class the register gives it, such as Intenzitní třída údržby I. |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP). |
-| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
+| `registerCategory` | Property | [`EmissionRegister`](#emissionregister) | yes |  | `jc:registerCategory` | Which part of the Prague emission register lists the source: REZZO 1 (large stationary sources, rezzo1) or REZZO 2 (medium sources, rezzo2), as IPR Praha publishes them. |
+| `fuelType` | Property | `string` |  |  | `jc:fuelType` | The fuel group that dominates the source as the register writes it, such as zemní plyn, nafta or technologie (a process, not a fuel). |
+| `pm10Emission` | Property | `float` |  | t/a | `jc:pm10Emission` | The source's yearly emission of PM10, in tonnes a year, as the register states it. |
+| `pm25Emission` | Property | `float` |  | t/a | `jc:pm25Emission` | The source's yearly emission of PM2.5, in tonnes a year (REZZO 2 only). |
+| `so2Emission` | Property | `float` |  | t/a | `jc:so2Emission` | The source's yearly emission of sulphur dioxide, in tonnes a year. |
+| `noxEmission` | Property | `float` |  | t/a | `jc:noxEmission` | The source's yearly emission of nitrogen oxides (NOx), in tonnes a year. |
+| `coEmission` | Property | `float` |  | t/a | `jc:coEmission` | The source's yearly emission of carbon monoxide, in tonnes a year. |
+| `vocEmission` | Property | `float` |  | t/a | `jc:vocEmission` | The source's yearly emission of volatile organic compounds, in tonnes a year. |
+| `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The Smart Data Models PostalAddress: the street address as the publisher writes it, one line, in `streetAddress`, and the city and country every Prague source shares. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -254,22 +259,86 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
-### Tree
+### RadonRiskArea
 
-One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha): where it stands, its category, manager and care regime. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+One area of Prague's radon risk map and the risk category of its ground, as the Smart Data Model extension RadonRiskArea (PointOfInterest base).
 
-IRI: `jc:Tree`
+IRI: `jc:RadonRiskArea`
 
 Specialises `Entity`.
 
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `vegetationType` | Property | `string` |  |  | `jc:vegetationType` | IPR Praha's word for the vegetation element, such as Strom or Stromořadí. |
-| `treeCategory` | Property | `string` |  |  | `jc:treeCategory` | The register's category of the woody plant, such as listnatý strom (broadleaf tree). |
-| `careRegime` | Property | `string` |  |  | `jc:careRegime` | The maintenance class the register gives it, such as Intenzitní třída údržby I. |
-| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP). |
-| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
+| `radonRiskCategory` | Property | [`RadonRisk`](#radonrisk) | yes |  | `jc:radonRiskCategory` | The radon risk category of the ground in the area, as the Czech Geological Survey's radon index map gives it (transitional, low, medium, high). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### FloodZone
+
+One designated flood area of Prague: the ground a 5, 20, 50 or 100-year flood covers, or a zone of the Vltava and Berounka flood area, as the Smart Data Model extension FloodZone (PointOfInterest base).
+
+IRI: `jc:FloodZone`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `floodReturnPeriod` | Property | `integer` |  |  | `jc:floodReturnPeriod` | The return period of the flood the area is flooded by, in years: 5, 20, 50 or 100 for the designated flood areas Q5, Q20, Q50 and Q100. |
+| `floodZoneCategory` | Property | [`FloodZoneCategory`](#floodzonecategory) |  |  | `jc:floodZoneCategory` | The kind of zone of the Vltava and Berounka flood area: the active zone, where water flows through, where it stands, or ground the city or its owners protect. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### FloodDefence
+
+One line of Prague's flood defences: a fixed barrier, a mobile wall or a sandbag line, who keeps it and the flood it is designed for, as the Smart Data Model extension FloodDefence (PointOfInterest base).
+
+IRI: `jc:FloodDefence`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `defenceType` | Property | [`FloodDefenceType`](#flooddefencetype) | yes |  | `jc:defenceType` | The kind of flood defence line, a fixed barrier, a mobile wall or sandbags. |
+| `protectedBy` | Property | [`FloodDefenceKeeper`](#flooddefencekeeper) |  |  | `jc:protectedBy` | Who sets the line up and keeps it, the city or the owner of the ground behind it. |
+| `designFlood` | Property | [`FloodDesignLevel`](#flooddesignlevel) |  |  | `jc:designFlood` | The flood the line is designed to hold back, the 100-year flood (q100) or the August 2002 flood (flood2002). |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### WeatherObserved
+
+One of ČHMÚ's weather stations in Prague and the newest 10-minute values it published.
+
+IRI: `sdm:WeatherObserved`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The collection point's number in the city's waste register, such as 0022/ 001, or the ČHMÚ weather station's WIGOS id, such as 0-20000-0-11518. |
+| `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes. |
+| `temperature` | Property | `float` |  | Cel | `sdm:temperature` | The air temperature 2 m above ground, ČHMÚ's newest 10-minute value. |
+| `relativeHumidity` | Property | `float` |  | 1 | `sdm:relativeHumidity` | The relative humidity as a fraction (0.57 is 57 %), the newest 10-minute value. |
+| `atmosphericPressure` | Property | `float` |  | hPa | `sdm:atmosphericPressure` | The air pressure at the station's height (not reduced to sea level), the newest 10-minute value. |
+| `precipitation` | Property | `float` |  | mm | `sdm:precipitation` | The precipitation of the newest 10 minutes, in millimetres (litres per square metre). |
+| `windSpeed` | Property | `float` |  | m/s | `sdm:windSpeed` | The mean wind speed 10 m above ground over the newest 10 minutes. |
+| `windDirection` | Property | `float` |  | deg | `sdm:windDirection` | The mean wind direction over the newest 10 minutes, in degrees from north. |
+| `gustSpeed` | Property | `float` |  | m/s | `sdm:gustSpeed` | The strongest gust of the newest 10 minutes, 10 m above ground. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -445,6 +514,51 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### Garden
+
+One green area of the city: a park of the planning layer, a nature park, or a basic green area of the shared green register (IPR Praha), with its kind, manager and care regime.
+
+IRI: `sdm:Garden`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `greenspaceType` | Property | `string` |  |  | `jc:greenspaceType` | IPR Praha's word for the kind of green area: its function in the shared green register (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or přírodní park. |
+| `careRegime` | Property | `string` |  |  | `jc:careRegime` | The maintenance class the register gives it, such as Intenzitní třída údržby I. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP). |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### Tree
+
+One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha): where it stands, its category, manager and care regime. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+
+IRI: `jc:Tree`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `vegetationType` | Property | `string` |  |  | `jc:vegetationType` | IPR Praha's word for the vegetation element, such as Strom or Stromořadí. |
+| `treeCategory` | Property | `string` |  |  | `jc:treeCategory` | The register's category of the woody plant, such as listnatý strom (broadleaf tree). |
+| `careRegime` | Property | `string` |  |  | `jc:careRegime` | The maintenance class the register gives it, such as Intenzitní třída údržby I. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP). |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### PostalAddress
 
 The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
@@ -571,3 +685,52 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `electronics` | Small electrical appliances (elektrozařízení). |
 | `edibleOil` | Edible fats and oils (jedlé tuky a oleje). |
 | `mixedRecyclables` | Paper, plastic and cartons in one container (multikomoditní sběr). |
+
+### EmissionRegister
+
+| Value | Meaning |
+|---|---|
+| `rezzo1` | REZZO 1, a large stationary source (kategorie 1). |
+| `rezzo2` | REZZO 2, a medium stationary source (kategorie 2). |
+
+### RadonRisk
+
+| Value | Meaning |
+|---|---|
+| `transitional` | Transitional, on variable Quaternary soils (přechodná). |
+| `low` | Low (nízká). |
+| `medium` | Medium (střední). |
+| `high` | High (vysoká). |
+
+### FloodZoneCategory
+
+| Value | Meaning |
+|---|---|
+| `active` | The active zone, where a flood flows fastest (aktivní). |
+| `flowThrough` | Ground the flood flows through (průtočná). |
+| `nonFlowThrough` | Ground where the flood water stands (neprůtočná). |
+| `protectedByCity` | Ground the city's flood defences protect (určená k ochraně městem). |
+| `protectedIndividually` | Ground its owners protect themselves (určená k ochraně individuálně). |
+
+### FloodDefenceType
+
+| Value | Meaning |
+|---|---|
+| `unknown` | The register does not say (neznámo). |
+| `fixed` | A fixed barrier or wall (pevné opatření). |
+| `mobileWall` | A mobile wall put up before a flood (mobilní stěna). |
+| `sandbags` | A line of sandbags (pytle s pískem). |
+
+### FloodDefenceKeeper
+
+| Value | Meaning |
+|---|---|
+| `city` | The city sets it up and keeps it (zajišťovaná městem). |
+| `individual` | The owner of the ground behind it does (zajišťovaná individuálně). |
+
+### FloodDesignLevel
+
+| Value | Meaning |
+|---|---|
+| `q100` | The 100-year flood (Q100). |
+| `flood2002` | The level of the August 2002 flood (Q2002). |
