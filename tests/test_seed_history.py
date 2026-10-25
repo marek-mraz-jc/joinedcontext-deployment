@@ -87,6 +87,8 @@ CHOSEN = {
     ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
     # Barcelona's charging points keep a month of free ports (T-5262).
     ("barcelona/barcelona", "EVChargingStation"): "P30D",
+    # Barcelona's forecast days keep a month of Meteocat's issues (T-5413).
+    ("barcelona/barcelona", "WeatherForecast"): "P30D",
 }
 
 
