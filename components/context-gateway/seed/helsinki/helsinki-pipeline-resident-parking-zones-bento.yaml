@@ -13,7 +13,6 @@ pipeline:
         root = this.features.or([]).filter(f -> f.geometry.or(null) != null && f.properties.asukaspysakointitunnus.or("").string().re_match("^[0-9A-Za-z]{1,3}$")).map_each(f -> {
           "code": f.properties.asukaspysakointitunnus.string(),
           "name": f.properties.alueen_nimi.apply("text"),
-          "rules": "".apply("text"),
           "link": f.properties.linkki.apply("text"),
           "geometry": f.geometry
         }).map_each(z -> {
@@ -22,7 +21,6 @@ pipeline:
           "name": if z.name == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": z.name } } },
           "category": { "type": "Property", "value": ["forResidents"] },
           "zoneCode": { "type": "Property", "value": z.code },
-          "description": if z.rules == null { null } else { { "type": "LanguageProperty", "languageMap": { "fi": z.rules } } },
           "url": if z.link == null { null } else { { "type": "Property", "value": if z.link.has_prefix("http") { z.link } else { "https://" + z.link } } },
           "location": { "type": "GeoProperty", "value": z.geometry },
           "dataProvider": { "type": "Property", "value": "City of Helsinki, parking" },
