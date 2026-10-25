@@ -8,6 +8,7 @@ pipeline:
       let f = {"start": "meta.iq_dateStart", "end": "meta.iq_dateEnd", "time_start": "meta.iq_timeStart", "time_end": "meta.iq_timeEnd", "venue": "meta.iq_addressLocality", "lat": "meta.iq_coordinatesLat", "lon": "meta.iq_coordinatesLng"}
       map at {
         let d = this.date.or("").string().trim()
+        let d = if $d.re_match("^[0-9]{9,10}$") { $d.number().ts_format("2006-01-02", "UTC") } else { $d }
         let d = if $d.re_match("^[0-9]{8}$") { "%s-%s-%s".format($d.slice(0, 4), $d.slice(4, 6), $d.slice(6, 8)) } else { $d }
         let t = this.time.or("").string().re_find_all("[0-9]{1,2}:[0-9]{2}").index(0).catch(null)
         let t = $t.or($d.slice(10).catch("").re_find_all("[0-9]{1,2}:[0-9]{2}").index(0).catch(null))

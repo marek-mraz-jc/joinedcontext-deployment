@@ -110,7 +110,7 @@ TEMPLATES = {
 _PAGES = "_fields=id,link,title,modified_gmt&per_page=50"
 TRIM = {
     "wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box",
-    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info",
+    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info,event_date",
     "mec-rest": _PAGES,
     "lsvr-rest": _PAGES,
     "eventon-rest": _PAGES,
@@ -125,6 +125,8 @@ WP_FIELDS = {
     "regiontatry.sk": {"start": "more_info.datum_od", "end": "more_info.datum_do", "time_start": "more_info.cas_od",
                        "time_end": "more_info.cas_do", "venue": "more_info.miesto_konania"},
     "www.podujatiaksk.sk": {"start": "acf.podujatie_datum.podujatie_datum_od", "end": "acf.podujatie_datum.podujatie_datum_do"},
+    # The event's days as Unix seconds at 00:00 UTC; its event page holds no JSON-LD Event since 2026-10 (T-5435).
+    "www.visitbratislava.com": {"start": "event_date.start_date", "end": "event_date.end_date"},
     "www.upjs.sk": {"start": "acf.cpt_udalost_datum_konania", "end": "acf.cpt_udalost_datum_koniec",
                     "time_start": "acf.cpt_udalost_cas_konania", "venue": "acf.cpt_udalost_miesto_konania"},
 }
