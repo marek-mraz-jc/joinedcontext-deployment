@@ -15,7 +15,7 @@ metadata:
     en: 'Each road accident the Guàrdia Urbana of Barcelona handled, with its place, day and hour and the number of injured, dead and vehicles, nothing about a person; one file a year, read every week. Source: Barcelona City Council, Open Data BCN, CC BY 4.0.'
 spec:
   contextSpaceRef: barcelona
-  slug: qkv0pds2cjpmxa1sx891jcmyt24k471t
+  slug: iktky2jhufhge2pyeijyp4nhzpg2jzcc
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-accidents
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

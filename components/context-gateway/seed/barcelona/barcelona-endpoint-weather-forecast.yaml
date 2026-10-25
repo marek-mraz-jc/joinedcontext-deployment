@@ -15,7 +15,7 @@ metadata:
     en: "The Catalan weather service's forecast for Barcelonès, one record per day: highest and lowest temperature and the morning and afternoon sky, with 30 days of history. Source: Open Data BCN, CC BY 4.0."
 spec:
   contextSpaceRef: barcelona
-  slug: dlefbzh4r97o7w3a0qajlpuansdrkgw1
+  slug: c7egbq4bfj6ab752icvboemettyguj2m
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-weather-forecast
