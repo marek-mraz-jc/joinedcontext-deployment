@@ -7,8 +7,10 @@
 # from the square, and 11894 Donovaly, the resort above the city.
 #
 # Units from aws1min_metadata.json: `t` °C, `tlak` hPa, `vlh_rel` % (written 0 to 1),
-# `vie_pr_rych` m/s, `vie_vp_smer` degrees, `zra_uhrn` mm per minute. `minuta` is SEČ, UTC+1
-# all year.
+# `vie_pr_rych` m/s, `vie_vp_smer` degrees, `zra_uhrn` mm per minute. `minuta` is called SEČ, but
+# SHMÚ writes Bratislava wall time minus one hour: UTC+1 in summer, UTC in winter (T-5645: on
+# 2026-10-25, the day CEST ended, global radiation `zglo` at Zelená rose at 06:15 on 10-24 and at
+# 05:15-05:30 on 10-25, with sunrise at about 05:30 UTC both days).
 #
 # TLS: opendata.shmu.sk sends its leaf without the intermediate (`openssl s_client`: verify
 # return code 21). The intermediate is pinned below, the public certificate from the leaf's AIA
@@ -177,19 +179,26 @@ pipeline:
           "11898": { "sk": "Banská Bystrica - Zelená", "en": "Banská Bystrica - Zelená", "at": [19.115097, 48.733419] },
           "11894": { "sk": "Donovaly", "en": "Donovaly", "at": [19.223514, 48.875067] }
         }
-        # SEČ (UTC+1) to UTC, as RFC 3339.
+        # SHMÚ's minute (Bratislava wall time minus one hour) to UTC, as RFC 3339: one hour back
+        # where that instant is CEST, none where it is CET. The minutes 01:00-01:59 of the October
+        # change day name both; the later instant wins unless it is still to come. A minute that
+        # names neither (01:xx of the March change day, or one ahead of now) leaves that station out.
+        # ponytail: a file read 00:00-01:00 UTC on the October change day relies on now().
         map utc {
-          root = (this.ts_parse("2006-01-02T15:04:05").ts_unix() - 3600).ts_format("2006-01-02T15:04:05Z", "UTC")
+          let n = this.ts_parse("2006-01-02T15:04:05").ts_unix()
+          let summer = if ($n - 3600).ts_format("-07:00", "Europe/Bratislava") == "+02:00" { $n - 3600 } else { null }
+          let winter = if $n.ts_format("-07:00", "Europe/Bratislava") == "+01:00" { $n } else { null }
+          root = if $winter != null && $winter <= now().ts_unix() + 600 { $winter } else if $summer != null { $summer } else { throw("the SHMÚ minute %v is no Bratislava time minus one hour".format(this)) }.ts_format("2006-01-02T15:04:05Z", "UTC")
         }
         let rows = this.data.or([]).filter(r -> $stations.get(r.ind_kli.string()) != null && r.minuta.type() == "string")
         root = $stations.keys().sort().map_each(code -> $rows.filter(r -> r.ind_kli.string() == code).sort_by(r -> r.minuta)).filter(rs -> rs.length() > 0).map_each(rs -> rs.slice(-1).index(0).assign({
-          "_at": rs.slice(-1).index(0).minuta.apply("utc"),
+          "_at": rs.slice(-1).index(0).minuta.apply("utc").catch(null),
           # Soil temperature at the depths the station measures (`t_pod{cm}`), one instance per
           # depth, told apart by its datasetId (NGSI-LD multi-attribute, T-4557).
           "_soil": [5, 10, 20, 50, 100].filter(d -> rs.slice(-1).index(0).get("t_pod" + d.string()).type() == "number").map_each(d -> { "type": "Property", "value": rs.slice(-1).index(0).get("t_pod" + d.string()), "unitCode": "CEL", "datasetId": "urn:ngsi-ld:Dataset:shmu:soil-depth-%vcm".format(d) }),
           # The ten minutes up to the latest one, as far as the file holds them.
           "_rain": rs.filter(r -> r.minuta.ts_parse("2006-01-02T15:04:05").ts_unix() > rs.slice(-1).index(0).minuta.ts_parse("2006-01-02T15:04:05").ts_unix() - 600 && r.zra_uhrn.type() == "number").map_each(r -> r.zra_uhrn).sum()
-        })).map_each(r -> {
+        })).filter(r -> r._at != null).map_each(r -> {
           "id": "urn:ngsi-ld:%v:%v:%v:shmu-%v".format("WeatherObserved", "banskabystrica.sk", env("JC_SPACE"), r.ind_kli),
           "type": "WeatherObserved",
           "name": { "type": "LanguageProperty", "languageMap": { "sk": "Stanica SHMÚ " + $stations.get(r.ind_kli.string()).sk, "en": "SHMÚ station " + $stations.get(r.ind_kli.string()).en } },
