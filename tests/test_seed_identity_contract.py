@@ -144,6 +144,11 @@ def _shape(destination: str, name: str) -> str:
     return "/".join(shaped)
 
 
+# Kinds jc-core places at both levels (PATH_TEMPLATE and PROJECT_PATH_TEMPLATE): the org-wide
+# open-data connector sits at mcp/{name}.yaml, each publisher's at projects/{project}/mcp/ (T-5367).
+_ORG_OR_PROJECT = {"McpServer"}
+
+
 def test_every_kind_is_seeded_to_one_repository_path():
     """MF-06: a manifest lives at the path its kind declares, or the loader refuses it.
 
@@ -156,6 +161,8 @@ def test_every_kind_is_seeded_to_one_repository_path():
     shapes: dict[str, dict[str, list[str]]] = {}
     for _path, doc, destination in _index_destinations():
         shape = _shape(destination, doc.get("metadata", {}).get("name"))
+        if doc["kind"] in _ORG_OR_PROJECT:
+            shape = shape.removeprefix("projects/{namespace}/")
         shapes.setdefault(doc["kind"], {}).setdefault(shape, []).append(destination)
     assert shapes, "the seed holds manifests"
     disagreeing = {kind: paths for kind, paths in shapes.items() if len(paths) > 1}
