@@ -1097,13 +1097,14 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # statistics themes. T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city);
         # T-5673 12 more (city, daily);
         # T-5674 its 14 tables of basic settlement units and of the region's municipalities;
+        # T-5675 13 more: residents of the basic settlement units, municipalities and the sports classes;
         # T-5273 its counters, pedestrians, BAjk and MHD stops and lines.
         # T-5444 eight more tables of places.
         # T-5671 19 tables over 2,000 rows.
         # T-5672 12 statistics tables with a period from a month column or the item description.
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
         # T-5669 Helsinki's autumn traffic volumes and machine vision counts.
-        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14,
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13,
         "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 
