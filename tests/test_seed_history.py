@@ -87,6 +87,8 @@ CHOSEN = {
     ("barcelona/barcelona", "EVChargingStation"): "P30D",
     # Bratislava's pedestrian counters keep a month of days, as its cyclist counters (T-5273).
     ("bratislava/bratislava", "CrowdFlowObserved"): "P30D",
+    # Barcelona's forecast days keep a month of Meteocat's issues (T-5413).
+    ("barcelona/barcelona", "WeatherForecast"): "P30D",
 }
 
 
