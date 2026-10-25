@@ -33,3 +33,4 @@ spec:
         - type: RoadAccident
         - type: Event
         - type: PointOfInterest
+        - type: KeyPerformanceIndicator

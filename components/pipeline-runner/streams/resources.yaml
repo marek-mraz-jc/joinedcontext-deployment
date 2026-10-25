@@ -32,6 +32,13 @@ rate_limit_resources:
     local:
       count: 1
       interval: 1s
+  # barcelona statistics: Open Data BCN's CKAN API is called at most once every two seconds, one
+  # package_show and one DataStore query per table (T-5266); a burst of downloads from one host
+  # answered 403 for about an hour on 2026-10-23.
+  - label: bcn_stat
+    local:
+      count: 1
+      interval: 2s
   # barcelona traffic-state and traffic-routes: Open Data BCN (opendata-ajuntament.barcelona.cat),
   # the section and route lists once a run (T-5262).
   - label: barcelona_opendata
