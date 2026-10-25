@@ -119,6 +119,51 @@ def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write
             assert {e["type"] for e in doc["spec"]["information"][0]["entities"]} == written
 
 
+def written_attributes(bento: Path) -> set[str]:
+    """The Attributes the mapping's entity names: the top-level keys of its last `root = {...}`."""
+    text = bento.read_text()
+    block = text[text.rindex("root = {\n"):]
+    block = block[:block.index("}.filter(")]
+    indent = re.match(r'root = \{\n(\s+)"', block).group(1)
+    return set(re.findall(rf'^{indent}"(\w+)":', block, re.MULTILINE)) - {"id", "type"}
+
+
+def class_slots(classes: dict, name: str) -> set[str]:
+    """What the Portal's view lists for a type shown whole (reconciler/views.rs class_slots): the
+    class's slots and attributes through is_a and mixins, and the core Entity's `location`."""
+    cls = classes.get(name) or {}
+    slots = set(cls.get("slots") or []) | set(cls.get("attributes") or {}) | {"location"}
+    for parent in [cls.get("is_a"), *(cls.get("mixins") or [])]:
+        if parent:
+            slots |= class_slots(classes, parent)
+    return slots
+
+
+def test_every_mapping_writes_only_attributes_its_view_shows():
+    # Antares refuses a whole write naming one Attribute the Endpoint's view does not show (ADR-0023
+    # rule 7), so 516 rows of a census table failed at once (T-5718). The view lists the space model's
+    # class slots for every type the pipelines Policy grants whole.
+    for project in generate.PROJECTS:
+        classes = yaml.safe_load((SEED / project / f"{project}-otvorene-data.linkml.yaml").read_text())["classes"]
+        policy = yaml.safe_load((SEED / project / f"{project}-od-policy-pipelines-write.yaml").read_text())
+        for info in policy["spec"]["information"]:
+            assert not info.get("propertyNames") and not info.get("relationshipNames"), "a narrowed grant: check it here"
+        for pipeline in files(project, "pipeline"):
+            kind = yaml.safe_load(pipeline.read_text())["spec"]["output"]["type"]
+            bento = pipeline.with_name(pipeline.stem + "-bento.yaml")
+            hidden = written_attributes(bento) - class_slots(classes, kind)
+            assert not hidden, f"{bento.name} writes {sorted(hidden)}, which the {kind} view does not show"
+
+
+def test_an_attribute_outside_the_class_is_one_the_view_does_not_show(tmp_path):
+    bento = tmp_path / "x-bento.yaml"
+    bento.write_text('root = {\n  "id": "x",\n  "type": "T",\n  "a": 1,\n  "b": { "c": 2 },\n}.filter(e -> e)\n')
+    assert written_attributes(bento) == {"a", "b"}
+    classes = {"T": {"is_a": "Base", "slots": ["a"]}, "Base": {"mixins": ["M"]}, "M": {"attributes": {"m": {}}}}
+    assert class_slots(classes, "T") == {"a", "m", "location"}
+    assert written_attributes(bento) - class_slots(classes, "T") == {"b"}
+
+
 def test_the_index_places_every_generated_file_once():
     for project in generate.PROJECTS:
         index = yaml.safe_load((SEED / project / "index.yaml").read_text())
