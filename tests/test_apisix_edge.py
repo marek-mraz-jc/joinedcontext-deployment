@@ -403,7 +403,9 @@ def edge_objects(docs: list[dict]) -> dict[str, dict]:
     return {
         d["kind"]: d
         for d in docs
-        if d.get("kind") in kinds and d["metadata"]["name"] != "apisix-edge-staging"
+        if d.get("kind") in kinds
+        # The staging proof and the MQTT brokers' own TLSOption (T-5562) are not the edge's.
+        and d["metadata"]["name"] not in ("apisix-edge-staging", "mqtt-bsi-tr-02102")
     }
 
 
