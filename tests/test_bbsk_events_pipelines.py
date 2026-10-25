@@ -35,6 +35,8 @@ SEED = ROOT / "components/context-gateway/seed/bbsk"
 NATIONAL = ROOT / "components/context-gateway/seed/slovensko"
 EVENTS = ROOT / "seeds/bbsk-events"
 FIXTURES = Path(__file__).resolve().parent / "fixtures/bbsk-events"
+#: The runner's shared resources, events_tail among them (T-5555), loaded with -r as the runner does.
+RESOURCES = ROOT / "components/pipeline-runner/streams/resources.yaml"
 BENTO = "ghcr.io/warpstreamlabs/bento:1.22.0@sha256:ef674bebae45793c982c350d8f37c2c7661133c1dc65a5517fb977b36dc09841"
 #: 2026-10-20T00:00:00Z, the day the fixtures were recorded.
 NOW = 1792454400
@@ -96,12 +98,17 @@ def offline(steps: list, pages: dict) -> list:
     return steps
 
 
-def run(steps: list, payload: str, space: str = "bbsk-podujatia", refused: bool = False) -> list:
-    """The records the steps write; `refused` expects the run to fail with an error and write nothing."""
+def run(steps: list, payload: str, space: str = "bbsk-podujatia", refused: bool = False, now: int = NOW) -> list:
+    """The records the steps write with the runner's resources; `refused` expects the run to fail with an error and
+    write nothing."""
     with tempfile.TemporaryDirectory(dir="/tmp") as directory:
         work = Path(directory)
         work.chmod(0o777)
         (work / "in.txt").write_text(payload)
+        (work / "resources.yaml").write_text(
+            RESOURCES.read_text(encoding="utf-8").replace("let now = timestamp_unix()", f"let now = {now}"),
+            encoding="utf-8",
+        )
         (work / "cfg.yaml").write_text(
             yaml.safe_dump(
                 {
@@ -132,6 +139,8 @@ def run(steps: list, payload: str, space: str = "bbsk-podujatia", refused: bool 
                 "-e",
                 f"JC_SPACE={space}",
                 BENTO,
+                "-r",
+                "/w/resources.yaml",
                 "-c",
                 "/w/cfg.yaml",
             ],
@@ -244,6 +253,43 @@ def test_every_kept_source_names_its_licence_and_robots_reading():
         assert row["read_on"] >= "2026-10-20", row["name"]
 
 
+def test_every_events_pipeline_ends_with_its_settings_and_the_one_shared_tail():
+    """T-5555: the tail lives once in the runner's resources; a pipeline carries only its own settings."""
+    tails = [r for r in yaml.safe_load(RESOURCES.read_text())["processor_resources"] if r["label"] == generate.TAIL]
+    assert len(tails) == 1
+    tail = tails[0]["processors"]
+    assert tail[-1] == {"mutation": "meta events = deleted()\n"}
+    paths = sorted([*SEED.glob("bbsk-pipeline-podujatia-*-bento.yaml"), *NATIONAL.glob("slovensko-pipeline-podujatia-*-bento.yaml")])
+    assert len(paths) > 300
+    read = set(re.findall(r"@events\.([a-z_]+)\b(?!\()", json.dumps(tail)))
+    for path in paths:
+        steps = yaml.safe_load(path.read_text())["pipeline"]["processors"]
+        assert steps[-1] == {"resource": generate.TAIL}, path.name
+        settings = steps[-2]["mutation"]
+        assert settings.startswith("meta events = {") and 'env("JC_SPACE")' in settings, path.name
+        # Every setting the tail reads is set, and the tail is nowhere else in the file.
+        assert {k for k in read if f'"{k}": ' not in settings} == set(), path.name
+        assert "generate.py ABBREVIATIONS" not in path.read_text(), path.name
+
+
+@requires_docker
+def test_a_pipeline_writes_through_the_shared_tail_what_it_wrote_with_the_tail_inlined():
+    """T-5555: `- resource: events_tail` gives the records the copied tail gave, settings and space included."""
+    steps = offline(processors("banskabystrica"), {})
+    (tail,) = [r["processors"] for r in yaml.safe_load(RESOURCES.read_text())["processor_resources"] if r["label"] == generate.TAIL]
+    inlined = json.loads(json.dumps([*steps[:-1], *tail]).replace("let now = timestamp_unix()", f"let now = {NOW}"))
+    day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
+    feed = json.dumps([wp_event(i, day + timedelta(hours=i)) for i in range(5)])
+    shared = run(steps, feed)
+    assert len(shared) == 5 and shared == run(inlined, feed)
+    assert all(e["id"].startswith("urn:ngsi-ld:Event:bbsk-podujatia:") for e in shared)
+
+
+@requires_docker
+def test_the_shared_tail_without_its_settings_fails_the_run_and_writes_nothing():
+    assert run([{"resource": generate.TAIL}], json.dumps([{"name": "Koncert", "start": "2026-10-23"}]), refused=True) == []
+
+
 def test_every_http_input_is_https_to_its_inventory_host_with_a_timeout():
     hosts = {
         generate.urlsplit(r["check_url"]).hostname for r in generate.kept_sources()
@@ -322,8 +368,10 @@ def test_bento_lints_every_generated_stream():
             }
             (work / path.name).write_text(yaml.safe_dump(cfg, allow_unicode=True))
             (work / path.name).chmod(0o666)
+        shutil.copy(RESOURCES, work / "resources.yaml")
+        (work / "resources.yaml").chmod(0o666)
         result = subprocess.run(
-            ["docker", "run", "--rm", "-v", f"{work}:/w", BENTO, "lint", *(f"/w/{p.name}" for p in paths)],
+            ["docker", "run", "--rm", "-v", f"{work}:/w", BENTO, "lint", "/w/resources.yaml", *(f"/w/{p.name}" for p in paths)],
             capture_output=True,
             text=True,
             timeout=240,
@@ -516,11 +564,9 @@ def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regi
     for row in generate.kept_sources():
         code, name = generate.REGIONS[row["region"]]
         text = (NATIONAL / f"slovensko-pipeline-{row['name']}-bento.yaml").read_text()
-        assert (
-            f'"scope": if $town != null {{ "/SK/{code}" + "/" + $town.replace_all("-", "_") }}'
-            in text
-        ), row["name"]
-        assert f'"addressRegion": "{name}"' in text, row["name"]
+        # The shared tail writes "scope" from @events.scope and "addressRegion" from @events.region (T-5555).
+        assert f'"scope": "/SK/{code}"' in text, row["name"]
+        assert f'"region": "{name}"' in text, row["name"]
         assert ('"/SK/BB"' in text) == (row["region"] == "BBSK"), row["name"]
 
 
@@ -626,9 +672,9 @@ def test_a_printed_date_with_a_leading_zero_day_or_month_is_read():
     pages = {f"/events/{k}/": '<ul class="post__info"><li class="post__info-item post__info-item--date">'
              f'<p class="post__info-item-text">{v}</p></li></ul>' for k, v in printed.items()}
     # The clock sits before every date, so none of them is past and dropped.
-    steps = json.loads(json.dumps(offline(template("lsvr-rest", "www.casta.sk"), pages)).replace(
-        f"let now = {NOW}", f"let now = {int(datetime(2026, 8, 1, tzinfo=UTC).timestamp())}"))
-    out = {e["name"]["value"]: e["startDate"]["value"] for e in run(steps, json.dumps(items), "slovensko-podujatia")}
+    early = int(datetime(2026, 8, 1, tzinfo=UTC).timestamp())
+    steps = json.loads(json.dumps(offline(template("lsvr-rest", "www.casta.sk"), pages)).replace(f"let now = {NOW}", f"let now = {early}"))
+    out = {e["name"]["value"]: e["startDate"]["value"] for e in run(steps, json.dumps(items), "slovensko-podujatia", now=early)}
     assert out == {"Podujatie a": "2026-08-09", "Podujatie b": "2026-09-08", "Podujatie c": "2026-10-01"}
 
 
@@ -1023,7 +1069,7 @@ CATEGORISED = [
 
 def categorised(cases: list, org_type: str = "municipality") -> list:
     """The entities the shared tail writes for (source word, name) records, in the cases' order."""
-    tail = template("wp-rest-sc", "www.casta.sk", org_type=org_type)[-len(yaml.safe_load((EVENTS / "pipelines/common.yaml").read_text())):]
+    tail = template("wp-rest-sc", "www.casta.sk", org_type=org_type)[-2:]
     day = (datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)).strftime("%Y-%m-%dT18:00:00+02:00")
     records = [{"name": name, "start": day, "category": word, "url": f"https://www.casta.sk/e{i}", "sourceId": str(i)}
                for i, (word, name, *_) in enumerate(cases)]

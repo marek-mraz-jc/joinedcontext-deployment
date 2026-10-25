@@ -3,8 +3,13 @@
 # venue, streetAddress, postalCode, locality, lat, lon, url, organizer ({name, url}), category,
 # description, sourceId, modified. This tail keeps the upcoming ones, the 100 soonest, and writes each as an Event.
 #
-# generate.py fills each double-underscored placeholder with a JSON literal, never with code.
+# The runner holds it once, as the processor resource events_tail in components/pipeline-runner/streams/resources.yaml,
+# which generate.py writes from this file (T-5555); each generated pipeline names it with `- resource: events_tail`.
+# What differs per source arrives as the structured metadata `events` (@events.venues, @events.grace, ...) the
+# pipeline's step before sets, JSON literals and the space it writes, never code. generate.py fills only
+# __CATEGORY_RULES__, the same for every source. The tail removes the metadata when it is done.
 - mapping: |
+    let settings = if @events.type() != "object" { throw("events_tail reads its source's settings from the metadata `events`, which the generated step before it sets (seeds/bbsk-events/generate.py)") } else { @events }
     # The end as unix seconds: a datetime end as written, a whole-day end the next midnight
     # (CET, so up to an hour late in summer), no end the start plus a day (owner 2026-10-20).
     map unix {
@@ -23,7 +28,7 @@
     # Only upcoming events (owner 2026-10-20): one whose end (plus the store's grace, a day in the national
     # store) is past is never loaded. A record with no readable start is refused, never stored without a date
     # (owner 2026-10-22, T-5215).
-    let dated = $records.filter(r -> r._start != null && r._end + __GRACE__ >= $now).sort_by(r -> r._start)
+    let dated = $records.filter(r -> r._start != null && r._end + @events.grace >= $now).sort_by(r -> r._start)
     root = $dated.slice(0, [$dated.length(), 100].min())
 - unarchive:
     format: json_array
@@ -38,20 +43,20 @@
     map prop {
       root = if this == null { null } else { { "type": "Property", "value": this } }
     }
-    let venues = __VENUES__
+    let venues = @events.venues
     let name = this.name.apply("text")
     let venue_text = this.venue.apply("text")
     let venue_key = if $venue_text != null { $venue_text.apply("key") } else { "" }
     let place = $venues.filter(v -> v.match == $venue_key).index(0).catch(null)
     # An event that names no place, or only the town or its organizer, takes its organizer's own address
     # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
-    let home = if $place == null && ($venue_key == "" || __SELF__.contains($venue_key)) { __HOME__ } else { null }
+    let home = if $place == null && ($venue_key == "" || @events.self.contains($venue_key)) { @events.home } else { null }
     let known = $place.or($home)
     # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
     let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
-    let locality = $feed_locality.or($known.addressLocality.or(__TOWN__))
+    let locality = $feed_locality.or($known.addressLocality.or(@events.town))
     # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
-    let hit = if $locality != null { __TOWNS__.filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
+    let hit = if $locality != null { @events.towns.filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
     let area = if $known == null && $hit != null { { "town": $hit.index(1), "lat": $hit.index(2), "lon": $hit.index(3), "precision": $hit.index(4) } } else { null }
     # The municipality by its official name, on every event (DM-141): the town table's, the venue's, else the feed's.
     let municipality = if $hit != null { $hit.index(0) } else { $known.addressLocality.or($locality) }
@@ -80,7 +85,7 @@
       "streetAddress": $street.or($known.streetAddress.or(null)),
       "postalCode": this.postalCode.apply("text").or($zip_only.zip.or($glued.zip.or(null))),
       "addressLocality": $locality,
-      "addressRegion": __REGION__,
+      "addressRegion": @events.region,
       "addressCountry": "SK"
     }.filter(kv -> kv.value != null && kv.value != "")
     map link {
@@ -93,9 +98,9 @@
       root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
     }
     let named = this.organizer.name.or(null).apply("text").apply("uncontact")
-    let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { __ORGANIZER__ }
+    let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { @events.organizer }
     # The event's own page, else the organizer's page listing its events: every event carries a link a person opens.
-    let link = this.url.apply("link").or(__LISTING__)
+    let link = this.url.apply("link").or(@events.listing)
     # The main category (T-5363, docs API/12-event-categories.md): the first rule of seeds/event-categories.json
     # matching the source's own word without its audience and catch-all parts, else the name, else the whole word
     # ("akcie pre deti"), else the kind of body whose calendar it is (a theatre). No match: the decision model's
@@ -104,21 +109,21 @@
     let word = this.category.apply("text").or("").lowercase()
     let specific = $word.re_replace_all("trhy, výstavy, veľtrhy \\(ostatné\\)", "trh").re_replace_all("trhy, výstavy, veľtrhy|akcie pre [^,)]*", "")
     let title = $name.or("").lowercase()
-    let ruled = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(__CATEGORY_DEFAULT__).filter(c -> c != null).index(0).catch(null)
+    let ruled = [$specific, $title, $word].map_each(t -> $rules.filter(r -> t.re_match(r.index(1))).map_each(r -> r.index(0))).flatten().append(@events.category_default).filter(c -> c != null).index(0).catch(null)
     # No rule: the decision model's answer scripts/events-classify.py cached for this name and venue (T-5490).
-    let decided = if $ruled == null { __CATEGORY_CACHE__.get("%s|%s".format($title, $place.venue.or($venue_text).or("").lowercase()).hash("sha256").encode("hex").slice(0, 16)).catch(null) } else { null }
+    let decided = if $ruled == null { @events.category_cache.get("%s|%s".format($title, $place.venue.or($venue_text).or("").lowercase()).hash("sha256").encode("hex").slice(0, 16)).catch(null) } else { null }
     let category = $ruled.or($decided)
     let audience = if $category != "children-family" { null } else if ($word + " " + $title).re_match("deti|detsk|najmenš|škôlk") { ["children"] } else { ["family"] }
     let now = timestamp_unix()
-    let lease = __LEASE__
-    let ends = if this._end == null { null } else { this._end + __GRACE__ }
+    let lease = @events.lease
+    let ends = if this._end == null { null } else { this._end + @events.grace }
     let expires = if $lease == null { $ends } else if $ends == null { $now + $lease } else { [$ends, $now + $lease].min() }
     root = {
-      "id": "urn:ngsi-ld:Event:%s:%s".format(env("JC_SPACE"), $key.hash("sha256").encode("hex").slice(0, 16)),
+      "id": "urn:ngsi-ld:Event:%s:%s".format(@events.space, $key.hash("sha256").encode("hex").slice(0, 16)),
       "type": "Event",
       # The scope comes from the inventory row's region and town, never from the feed (T-4898). A
       # scope level is letters, digits and "_" (CIM 009 4.18): the broker refuses a hyphen (T-5051).
-      "scope": if $town != null { __SCOPE__ + "/" + $town.replace_all("-", "_") } else { __TOWN_SCOPE__ },
+      "scope": if $town != null { @events.scope + "/" + $town.replace_all("-", "_") } else { @events.town_scope },
       "name": $name.apply("prop"),
       "startDate": this.start.apply("prop"),
       "endDate": this.end.apply("prop"),
@@ -127,7 +132,7 @@
       "locationSource": if $point != null { { "type": "Property", "value": $pick.source } } else { null },
       "venue": $place.venue.or($venue_text).apply("prop"),
       # The venue table's place as its PointOfInterest, which the store's miesta-podujati pipeline writes (DM-141).
-      "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(env("JC_SPACE"), $place.poi) } } else { null },
+      "refPointOfInterest": if $place != null { { "type": "Relationship", "object": "urn:ngsi-ld:PointOfInterest:%s:%s".format(@events.space, $place.poi) } } else { null },
       "areaServed": $municipality.apply("prop"),
       "address": { "type": "Property", "value": $address },
       "eventCategory": this.category.apply("text").apply("prop"),
@@ -137,12 +142,12 @@
       # A source that states no licence gives its facts only: what, when, where and the link back
       # (integrator 2026-10-20, T-4894); its text stays on its own page.
       # Contact e-mails and phone numbers stay on the source's page: they may name a person.
-      "description": if __FACTS_ONLY__ { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
+      "description": if @events.facts_only { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
       "url": $link.apply("prop"),
       "organizer": $organizer.apply("prop"),
-      "source": { "type": "Property", "value": __SOURCE__ },
+      "source": { "type": "Property", "value": @events.source },
       "sourceId": this.sourceId.string().catch(null).apply("prop"),
-      "dataProvider": { "type": "Property", "value": __PROVIDER__ },
+      "dataProvider": { "type": "Property", "value": @events.provider },
       "dateModified": this.modified.ts_format("2006-01-02T15:04:05Z", "UTC").catch(null).apply("prop"),
       # The event leaves the space when it is over (owner 2026-10-20, DM-130), or, in a store with a lease, when
       # no run has seen it for the lease: an event its source dropped or cancelled ends too (T-5047).
@@ -150,3 +155,5 @@
     }.filter(kv -> kv.value != null)
 - archive:
     format: json_array
+- mutation: |
+    meta events = deleted()
