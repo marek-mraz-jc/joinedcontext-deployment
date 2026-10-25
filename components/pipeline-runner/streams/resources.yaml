@@ -1,12 +1,14 @@
 # Shared resources of the streams next to this file. Bento's streams mode rejects
 # `*_resources` blocks inside a stream file, so they live here and the runner loads the file
 # with `-r` (values/runner/base-values.yaml.gotmpl), which makes every label below visible to
-# every stream.
+# every stream. A cache is one project's: the Portal renders a step's `cache: { resource: gtfs }`
+# as `<project>__gtfs` (the project with `-` as `_`), so each label here carries its project's
+# prefix and no other project's stream can name it (PL-50, T-5337).
 
 cache_resources:
   # hsl-departures: an empty trip-updates feed keeps the departures already written for this
   # long, then writes every listed stop's list empty (T-3891). Every non-empty feed refreshes it.
-  - label: departures
+  - label: helsinki__departures
     memory:
       default_ttl: 5m
       compaction_interval: 60s
@@ -15,7 +17,7 @@ cache_resources:
   # vehicle to its line and next stop only when the URN is here, since the space's view refuses
   # a whole Vehicle whose relationship names an entity it does not hold (T-4052, threat model D7).
   # Three days: the space never deletes them, so two missed reads still keep every link.
-  - label: gtfs
+  - label: helsinki__gtfs
     memory:
       default_ttl: 72h
       compaction_interval: 1h

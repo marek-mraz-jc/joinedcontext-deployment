@@ -199,10 +199,12 @@ fi
 # from the ingress controller, and a missing SAN as a handshake error. Unauthenticated, the
 # edge login answers a 302 to the realm's authorization endpoint with the `edge` client and
 # the callback that client lists (ADR-N-019, AP-27); anything else means the openid-connect
-# plugin is not in front of the Portal or points at a client Keycloak will refuse.
+# plugin is not in front of the Portal or points at a client Keycloak will refuse. `/` itself
+# lets an anonymous visitor through to the catalogue (portal-home, T-5627), so the check asks a
+# page that needs a session.
 if has_route portal-ui; then
 	edge_callback=$(printf '%s' "$portal/callback" | sed 's,:,%3A,g; s,/,%2F,g')
-	location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$portal/" 2>/dev/null || true)
+	location=$(curl -sS -o /dev/null -w '%{redirect_url}' --max-time 20 "$portal/projects" 2>/dev/null || true)
 	# The query parameters come in whatever order the plugin builds them.
 	case "$location" in
 		"$idm/realms/$realm/protocol/openid-connect/auth?"*) ;;

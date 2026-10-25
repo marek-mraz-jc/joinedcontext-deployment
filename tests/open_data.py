@@ -33,7 +33,10 @@ def _bento(mapping: Path, document: bytes, space: str, domain: str, codec: str, 
     config = {
         "input": {"stdin": {"scanner": {"to_the_end": {}}}},
         "pipeline": pipeline,
-        "cache_resources": yaml.safe_load(RESOURCES.read_text())["cache_resources"],
+        # The runner's caches under the names a mapping writes: the Portal renders a step's `gtfs`
+        # as its project's `helsinki__gtfs` (T-5337), and the mapping runs here as written.
+        "cache_resources": [{**cache, "label": cache["label"].split("__", 1)[1]}
+                            for cache in yaml.safe_load(RESOURCES.read_text())["cache_resources"]],
         # The runner's shared egress limit, which a mapping that fetches further pages names.
         "rate_limit_resources": yaml.safe_load(RESOURCES.read_text())["rate_limit_resources"],
         "output": {"stdout": {"codec": codec}},
