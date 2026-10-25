@@ -65,6 +65,9 @@ bases:
       {{- fail (printf "prepare: global.serviceMesh.proxyResources.%s %q is not a Kubernetes quantity (for example 10m or 64Mi)" $key $value) }}
     {{- end }}
     {{- $proxyAnnotations = printf "%s config.linkerd.io/%s=%s" $proxyAnnotations $annotation $value }}
+  {{- else }}
+    {{- /* Emptied: remove what an earlier apply wrote, so Linkerd's own default applies again. */}}
+    {{- $proxyAnnotations = printf "%s config.linkerd.io/%s-" $proxyAnnotations $annotation }}
   {{- end }}
 {{- end }}
 {{/* Distribute the in-cluster self-signed CA as `custom-ca-cert` whenever the

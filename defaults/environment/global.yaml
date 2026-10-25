@@ -158,13 +158,16 @@ global:
     # the meshed namespace's config.linkerd.io/proxy-* annotations. Linkerd gives the same values
     # to the linkerd-network-validator init container (partials/_network-validator.tpl reads
     # proxy.resources), so both satisfy require-requests-limits. Measured on dev 2026-10-24: 35
-    # proxies use 274 MiB together, the largest 18Mi (context-broker) (T-5554). An empty value
-    # writes no annotation, which leaves Linkerd's own default. A pod needing more sets the same
-    # annotation on its pod template.
+    # proxies use 274 MiB together, the largest 18Mi (context-broker) (T-5554). The request follows
+    # that measurement so the scheduler sees the proxies; the limit is Linkerd's own values-ha
+    # proxy limit, because an OOMKilled proxy cuts its pod off, and this default reaches every
+    # environment, production included. An empty value removes the annotation an earlier apply
+    # wrote, which leaves Linkerd's own default. A pod needing more sets the same annotation on
+    # its pod template.
     proxyResources:
       cpuRequest: 10m
       memoryRequest: 24Mi
-      memoryLimit: 64Mi
+      memoryLimit: 250Mi
 
   ingress:
     # Whether this environment is published behind an ingress controller. Off by default:

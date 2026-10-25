@@ -64,7 +64,7 @@ def dev(rendered):
 # gives linkerd-network-validator the same proxy.resources, so both meet require-requests-limits.
 PROXY = (
     " config.linkerd.io/proxy-cpu-request=10m"
-    " config.linkerd.io/proxy-memory-limit=64Mi"
+    " config.linkerd.io/proxy-memory-limit=250Mi"
     " config.linkerd.io/proxy-memory-request=24Mi"
 )
 
@@ -145,7 +145,9 @@ def test_the_proxy_resources_come_from_the_global_values(hook, tmp_path):
     assert len(lines) == len(ensured(hook)), lines
     for line in lines:
         assert "config.linkerd.io/proxy-memory-limit=96Mi config.linkerd.io/proxy-memory-request=24Mi --overwrite" in line
-        assert "proxy-cpu-request" not in line, "an emptied value still writes its annotation"
+        # An emptied value removes what an earlier apply wrote (re-apply), it never keeps it.
+        assert " config.linkerd.io/proxy-cpu-request- " in line, line
+        assert "proxy-cpu-request=" not in line, "an emptied value still writes its annotation"
 
 
 @requires_helmfile
@@ -155,10 +157,14 @@ def test_an_unmeshed_namespace_gets_no_proxy_resources(hook, dev, tmp_path):
     assert hook.count("proxy-memory-limit") == len(ensured(hook))
     for line in annotations(hook):
         assert "linkerd.io/inject=enabled" in line
-    for namespace in (d for d in dev if d.get("kind") == "Namespace"):
-        meta = namespace["metadata"]
-        if (meta.get("annotations") or {}).get("linkerd.io/inject") == "disabled":
-            assert not any(k.startswith("config.linkerd.io/proxy-") for k in meta.get("annotations") or {}), meta["name"]
+    disabled = [
+        d["metadata"] for d in dev
+        if d.get("kind") == "Namespace" and (d["metadata"].get("annotations") or {}).get("linkerd.io/inject") == "disabled"
+    ]
+    assert disabled, "dev renders no unmeshed namespace: the check below would pass vacuously"
+    for meta in disabled:
+        assert meta["name"] not in ensured(hook), meta["name"]
+        assert not any(k.startswith("config.linkerd.io/proxy-") for k in meta["annotations"]), meta["name"]
     unmeshed = prepare_hook(edited(tmp_path, serviceMesh__patchNamespaces=False))
     assert "proxy-memory" not in unmeshed and "linkerd.io/inject" not in unmeshed
 

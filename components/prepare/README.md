@@ -11,7 +11,8 @@ Prepares the cluster before deployment:
   same `proxy.resources`) requests and a memory limit through the meshed namespace's
   `config.linkerd.io/proxy-cpu-request`, `proxy-memory-request` and `proxy-memory-limit`
   annotations, from `global.serviceMesh.proxyResources` (`cpuRequest`, `memoryRequest`,
-  `memoryLimit`, for example `10m`, `24Mi`, `64Mi`; an empty value writes no annotation). The
+  `memoryLimit`, for example `10m`, `24Mi`, `250Mi`; an empty value removes the annotation, so
+  Linkerd's own default applies). The
   proxy image stays tag-referenced: Linkerd injects it by version, so `require-image-checksum`
   keeps reporting it.
 
