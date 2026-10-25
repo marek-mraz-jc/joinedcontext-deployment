@@ -6,7 +6,8 @@ kind: Pipeline
 metadata:
   name: vision-counts
   namespace: helsinki
-  title: { en: 'Machine vision traffic counts per lane and day, spring 2023' }
+  title:
+    en: Machine vision traffic counts per lane and day, spring 2023
 spec:
   class: auto
   source:
