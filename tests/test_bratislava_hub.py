@@ -307,7 +307,7 @@ def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
 
 
 STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city", "statistics-zsj": "zsj",
-              "statistics-obce": "obec"}
+              "statistics-obce": "obec", "statistics-zsj-obyvatelia": "zsj", "statistics-zsj-vek": "zsj"}
 CITY_DISTRICTS = {
     "stare mesto": "528595", "podunajske biskupice": "529311", "p biskupice": "529311", "ruzinov": "529320",
     "vrakuna": "529338", "nove mesto": "529346", "raca": "529354", "vajnory": "529362", "devinska nova ves": "529371",
@@ -429,7 +429,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 341
+    assert len(keys) == len(set(keys)) == 354
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
@@ -479,3 +479,28 @@ def test_a_census_table_reads_each_basic_settlement_unit_of_the_city_and_a_model
     assert vinicne["kpiValue"]["value"] == 1.867268937 and vinicne["area"]["value"] == "Viničné"
     assert vinicne["calculationPeriod"]["value"] == {"from": "1991-01-01", "to": "2021-12-31"}
     assert "calculationFrequency" not in vinicne
+
+
+@requires_docker
+def test_the_p5_tables_read_each_zsj_column_as_a_figure_and_each_municipality_by_name():
+    """T-5675: a census table of the residents of the basic settlement units (ZSJ) writes one figure
+    per column and unit, an empty cell (a unit with nobody or an anonymised count) writes nothing; the
+    age table one figure per year of age; a table of the region's municipalities keys each by its
+    folded name, and the sports classes table of the okresy drops a row without a year."""
+    answers = fixture("statistics.json")
+    units, _ = run("bratislava-pipeline-statistics-zsj-obyvatelia-bento.yaml", fixture("services.json"), answers)
+    by_id = {i["id"]: i for i in units}
+    women = by_id[kpi("obyvatelia-zsj-pohlavie.zeny.2040640.2021")]
+    assert women["kpiValue"]["value"] == 110 and women["area"]["value"] == "Hradný svah (Staré Mesto)"
+    assert women["name"]["value"] == "Obyvatelia: Ženy, Hradný svah (Staré Mesto), 2021"
+    # The castle (Hrad) has no residents: the hub leaves its cells empty and nothing is written.
+    assert not any(".2040560." in i for i in by_id if "obyvatelia-zsj-pohlavie" in i)
+    ages, _ = run("bratislava-pipeline-statistics-zsj-vek-bento.yaml", fixture("services.json"), answers)
+    assert {i["id"] for i in ages} >= {kpi("obyvatelia-zsj-vek.vek-0.2059910.2021"), kpi("obyvatelia-zsj-vek.vek-99.2059910.2021")}
+    assert {i["id"]: i for i in ages}[kpi("obyvatelia-zsj-vek.vek-0.2059910.2021")]["kpiValue"]["value"] == 77
+    towns, _ = run("bratislava-pipeline-statistics-obce-bento.yaml", fixture("services.json"), answers)
+    flats = {i["id"]: i for i in towns}[kpi("bytovy-fond-v-obciach-bsk.pocet-bytov.rohoznik-okres-malacky.1991")]
+    assert flats["area"]["value"] == "Rohožník (Okres Malacky)" and flats["kpiValue"]["value"] == 866
+    okresy, _ = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
+    sport = [i for i in okresy if ":ziaci-sportovych-tried-podla-sportu." in i["id"]]
+    assert sport and {i["area"]["value"] for i in sport} <= {"Bratislava II", "Bratislava V"}
