@@ -31,6 +31,15 @@
     "areaServed": {
       "@id": "sdm:areaServed"
     },
+    "audience": {
+      "@id": "sdm:audience"
+    },
+    "category": {
+      "@id": "sdm:category"
+    },
+    "categorySource": {
+      "@id": "jc:categorySource"
+    },
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
@@ -61,6 +70,9 @@
         "text": "skos:notation"
       },
       "@id": "jc:locationPrecision"
+    },
+    "locationSource": {
+      "@id": "jc:locationSource"
     },
     "name": {
       "@id": "schema:name"

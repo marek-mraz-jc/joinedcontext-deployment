@@ -37,6 +37,9 @@ REFERENCES = {
     "BudgetProject": {"ParticipatoryProcess"},
     "Result": {"ParticipatoryProcess", "Result"},
     "Meeting": {"ParticipatoryProcess"},
+    # An organization's catalogue (T-5493): a Dataset names its Organization (refPublisher) and its
+    # DataServices (refDataService), jc-core ngsi_catalog.rs.
+    "Dataset": {"Organization", "DataService"},
     "Debate": {"ParticipatoryProcess"},
     "Survey": {"ParticipatoryProcess"},
 }

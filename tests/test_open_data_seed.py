@@ -1068,7 +1068,9 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # facilities; T-5262 its traffic, parking and EV charging; T-5264 its districts and barris, its
         # works on the public space and its crossings; T-5431 its street furniture; T-5417 its tourist flats.
         # T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city).
-        "banskabystrica": 13 + 7, "barcelona": 3 + 2 + 3 + 3 + 1 + 1, "bbsk": 88 + 6, "bratislava": 1 + 4 + 327, "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2, "praha": 8 + 1 + 1 + 4 + 3, "slovensko": 3 + 45, "zilina": 5 + 4}
+        # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327,
+        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1, "praha": 8 + 1 + 1 + 4 + 3 + 1, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

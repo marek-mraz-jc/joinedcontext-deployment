@@ -24,12 +24,18 @@ ENTITY_WRITES = {
 # The open-data catalogue is no dataset (Architecture/21 §10, T-4525): its door serves NGSI-LD and
 # MCP for an agent's first call, no WebSocket or OGC Features, so its public reader holds no
 # subscription operation; its one writer is the Portal reconciler, which lists what it wrote and
-# so holds retrieveOps beside its batch writes. These three files, and only these, are outside
-# the dataset rules below.
+# so holds retrieveOps beside its batch writes. These files, and only these, are outside the
+# dataset rules below. An organization's catalogue (T-5493) is a published dataset: its door and
+# public reader keep the rules, and only its Portal write is outside them.
 CATALOGUE = {
     "slovensko-endpoint-catalog.yaml",
     "slovensko-policy-catalog-public-read.yaml",
     "slovensko-policy-catalog-portal-write.yaml",
+    "bbsk-policy-catalog-portal-write.yaml",
+    "policy-catalog-portal-write.yaml",
+    "zilina-policy-catalog-portal-write.yaml",
+    "praha-policy-catalog-portal-write.yaml",
+    "helsinki-policy-catalog-portal-write.yaml",
 }
 
 

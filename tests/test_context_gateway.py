@@ -120,8 +120,9 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_spaces(seed):
     """Nothing in the project floats free of a space, and no manifest of it names a space the
     project does not seed (T-2305, T-2781)."""
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
+    # The city's own catalogue (T-5493) is the sixth.
     assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                      "banskabystrica-otvorene-data"}
+                      "banskabystrica-otvorene-data", "catalog"}
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
@@ -150,8 +151,9 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_spaces(seed):
     account = seed[("ServiceAccount", "pipelines")]
     scoped = {role["scope"]["contextSpace"] for role in account["spec"]["roles"]}
     # ovzdusie since T-3120: pipeline public-air writes the conformance space's open dataset;
-    # banskabystrica-otvorene-data since T-4255: the generated catalogue-table pipelines.
-    assert scoped == spaces, scoped
+    # banskabystrica-otvorene-data since T-4255: the generated catalogue-table pipelines. The
+    # city's catalogue (T-5493) is the Portal reconciler's alone: no pipeline writes it.
+    assert scoped == spaces - {"catalog"}, scoped
 
 
 @requires_helmfile
