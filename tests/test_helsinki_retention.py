@@ -36,14 +36,15 @@ def test_a_vehicle_is_kept_five_minutes_after_its_last_report_and_five_minutes_o
     (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
     assert {k: v for k, v in vehicle.items() if k != "attributes"} == {"entityType": "Vehicle", "current": "PT5M", "history": "PT5M"}
     # The three that say what a vehicle is, written without an observedAt, record a change (T-4844).
-    assert {name: rule["heartbeat"] for name, rule in vehicle["attributes"].items() if "minDistance" not in rule
-            and "deadband" not in rule and name not in ("route", "onRoute", "nextStop")} == {
+    assert {name: rule["heartbeat"] for name, rule in vehicle["attributes"].items()
+            if name in ("fleetVehicleId", "transportMode", "vehicleType")} == {
         "fleetVehicleId": "PT15M", "transportMode": "PT15M", "vehicleType": "PT15M"}
 
 
-def test_a_vehicle_written_every_second_keeps_one_point_in_thirty_seconds():
-    """T-5046 (owner, option A): the position lands every second, the track keeps one point in
-    thirty seconds; only a new line or next stop records a row between two heartbeats."""
+def test_a_vehicle_keeps_every_report_of_its_last_five_minutes():
+    """T-5247 (owner 2026-10-22T17:45Z): the complete history of the last five minutes. What a
+    report changes nearly every time records each newer observedAt and no exact repeat; a line,
+    next stop or load records its change and a minute's heartbeat, no band holds a change back."""
     (vehicle,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Vehicle"]
     attributes = vehicle["attributes"]
     model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
@@ -51,12 +52,10 @@ def test_a_vehicle_written_every_second_keeps_one_point_in_thirty_seconds():
     # Every attribute the mapping stamps with the report's observedAt has a rule, each a slot.
     stamped = {"location", "speed", "heading", "delay", "occupancy", "route", "onRoute", "nextStop"}
     assert stamped <= set(attributes) <= slots, set(attributes) - slots
-    for name in stamped:
-        assert attributes[name]["record"] == "onChange" and attributes[name]["heartbeat"] == "PT30S", name
-    # A real move or reading never crosses the band, so the heartbeat alone sets the rate.
-    assert attributes["location"]["minDistance"] >= 100_000
-    assert all(attributes[name]["deadband"] >= 1_000_000 for name in ("speed", "heading", "delay", "occupancy"))
-    assert not {"minDistance", "deadband"} & (set(attributes["route"]) | set(attributes["onRoute"]) | set(attributes["nextStop"]))
+    assert {name: rule for name, rule in attributes.items() if name in stamped} == {
+        **{name: {"record": "observed"} for name in ("location", "speed", "heading", "delay")},
+        **{name: {"record": "onChange", "heartbeat": "PT1M"} for name in ("occupancy", "route", "onRoute", "nextStop")},
+    }
 
 
 def test_no_vehicle_of_any_space_keeps_more_than_an_hour_of_track():
