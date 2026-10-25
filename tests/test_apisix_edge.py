@@ -400,10 +400,12 @@ def test_the_portal_may_read_the_base_and_update_the_served_file_and_nothing_els
 
 def edge_objects(docs: list[dict]) -> dict[str, dict]:
     kinds = ("Certificate", "TLSOption", "Ingress")
+    # The staging Certificate and the MQTT brokers' own TLSOption (T-5562) are not the edge's.
+    others = ("apisix-edge-staging", "mqtt-bsi-tr-02102")
     return {
         d["kind"]: d
         for d in docs
-        if d.get("kind") in kinds and d["metadata"]["name"] != "apisix-edge-staging"
+        if d.get("kind") in kinds and d["metadata"]["name"] not in others
     }
 
 
