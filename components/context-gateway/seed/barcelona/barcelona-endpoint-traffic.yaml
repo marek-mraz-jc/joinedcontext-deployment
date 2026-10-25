@@ -64,4 +64,14 @@ spec:
         description:
           ca: Els trams i el nom de cada itinerari.
           en: The sections and name of each route.
+      - url: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/aforaments-detall
+        title: { ca: Detall dels aforaments de mobilitat, en: Mobility counter readings }
+        description:
+          ca: La intensitat mitjana de cada aforament de trànsit i de bicicletes per mes i tipus de dia; el canal traffic-counters en llegeix la del dia laborable del darrer mes, cada setmana.
+          en: The mean intensity of each traffic and bicycle counter per month and day type; the pipeline traffic-counters reads the working-day one of the newest month, every week.
+      - url: https://opendata-ajuntament.barcelona.cat/data/ca/dataset/aforaments-descriptiu
+        title: { ca: Equips d'aforament de mobilitat, en: Mobility counters }
+        description:
+          ca: El nom, el tipus i el lloc de cada aforament.
+          en: The name, kind and place of each counter.
     pipelineRef: { kind: Pipeline, name: traffic-state }
