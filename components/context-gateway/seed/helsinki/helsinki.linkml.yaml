@@ -2475,7 +2475,9 @@ classes:
     class_uri: sdm:PointOfInterest
     description: >-
       One place of the city's service register a resident goes to: a library, a health station,
-      a swimming hall, a beach, a school, or any other unit of the register (`other`); or one of
+      a swimming hall, a beach, a school, a public institution by its kind (a kindergarten, a
+      hospital, a social services unit, a city office, a sports place...), or any other unit of the
+      register, a private one included (`other`); or one of
       HSL's ticket sales points (a kiosk, a service point, a ticket machine or a parking meter that
       sells tickets). The register's contact lines are left out, because they can name a person.
     is_a: Entity
@@ -2916,15 +2918,38 @@ enums:
       healthStation: { description: A health station. }
       swimmingHall: { description: An indoor swimming hall. }
       beach: { description: A public beach. }
-      school: { description: A comprehensive school. }
+      school: { description: A comprehensive or general upper secondary school. }
       other:
-        description: Any other unit of the service register, such as a youth centre, a playground or a city office.
+        description: 'Any other unit of the service register: a private one, or a public one with no point inside the city or of no kind above.'
       ticketSalesPoint: { description: An HSL ticket sales point in a shop or kiosk (Myyntipiste). }
       ticketServicePoint: { description: An HSL customer service point (Palvelupiste). }
       ticketMachine:
         description: An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).
       ticketParkingMeter:
         description: A parking meter that also sells HSL tickets (Pysäköintiautomaatti).
+      kindergarten:
+        description: A day-care centre, a family day-care area, a pre-primary group or a playpark (leikkipuisto).
+      hospital: { description: A hospital or one of its clinics. }
+      dentalCare: { description: A public dental clinic. }
+      maternityClinic: { description: A maternity and child health clinic (neuvola). }
+      healthCare:
+        description: Any other public health care unit, such as a mental health, substance abuse or rehabilitation service.
+      vocationalSchool: { description: A vocational school or an apprenticeship training office. }
+      university: { description: A university or a university of applied sciences. }
+      adultEducation: { description: An adult education centre. }
+      elderlyCare:
+        description: A service centre, home care unit or care home for the elderly.
+      socialServices:
+        description: 'A social services unit: child welfare, families, disability services or social assistance.'
+      youth: { description: A youth centre or a youth workshop. }
+      rescueStation: { description: A fire and rescue station. }
+      police: { description: A police station. }
+      publicShelter: { description: A public civil defence shelter. }
+      publicAuthority:
+        description: 'An office of the city or the state: administration, justice, taxation, planning or customs.'
+      sports: { description: A public sports facility or outdoor exercise place. }
+      culture:
+        description: A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden.
   ServiceRequestStatus:
     description: Open311's two report states, as Smart Data Models' service_requests names them.
     permissible_values:

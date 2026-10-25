@@ -178,6 +178,48 @@ Measured 2026-10-12 with Bento 1.22.0 over the recorded 1.0 MB answer, the stati
 peak resident memory 169 MB against Bento's baseline of 130 MB, about 39 MB once a day; the
 utilisations are 6 kB.
 
+## Public institutions from the Service Map (T-5689)
+
+The `services` pipeline reads every unit of the city's Service Map in Helsinki (`hel-servicemap-units`, 13 pages
+of 1 000) and, on each run, the register's service tree (`/servicemap/v2/service_node/`, 1 295 nodes, 2 pages). A
+unit keeps one of the five categories it had before for any provider (library, healthStation, swimmingHall, beach,
+school by its service codes: the city's sports halls company Urheiluhallit and several state schools carry a
+private or undisplayed `contract_type`). A public unit (`contract_type` of the city, the state, a joint or regional
+authority, the wellbeing area, a city-owned company, a bought service or a contract school) with a point inside the
+city then takes its kind from the second-level node of the services it offers. Every point is the register's own
+(`source` names the unit's record, `/servicemap/v2/unit/<id>/`); nothing is geocoded. Measured 2026-10-25T15:55Z
+with Bento 1.22.0 over the whole register (12 465 units, 12 465 entities, 0 duplicates):
+
+| serviceCategory | Entities | Service tree node |
+|---|---|---|
+| sports | 2 017 | 551 Sports and physical exercise |
+| culture | 917 | 343 Culture and leisure, 717 Art and cultural events |
+| kindergarten | 486 | 868 Day care, 2118 and 1088 Pre-primary education |
+| healthCare | 351 | any other node under 986 Health care |
+| socialServices | 314 | 787, 791, 797, 798, 810, 839, 845, 2189, 784, 860; any other under 783 |
+| publicAuthority | 279 | 171 Administration and economy, 755 Justice, 122 Entrepreneurship and taxation, 221 Planning, 1382, 1080 Customs |
+| school | 255 | service codes as before, 1097 Basic education, 1257 General upper secondary |
+| elderlyCare | 244 | 819 Service for the elderly |
+| hospital | 157 | 1009 Hospitals |
+| youth | 101 | 365 Youth, 1334 Workshops for the young |
+| publicShelter | 52 | 1083 Public shelters |
+| library | 46 | service 813 |
+| dentalCare | 37 | 995 Dental care |
+| vocationalSchool | 28 | 2179 Vocational education, 1353 Apprenticeship |
+| university | 27 | 1359 Universities, 1356 Polytechnics |
+| rescueStation | 27 | 1070 Rescue services |
+| healthStation | 26 | service 703, 991 Health stations, 2190 Health and well-being centres |
+| maternityClinic | 24 | 1004 Maternity and child health guidance |
+| swimmingHall | 17 | service 729 |
+| beach | 15 | service 731 |
+| police | 2 | 1076 Police |
+| adultEducation | 2 | 1335 Adult education |
+| other | 7 041 | private (4 362) and undisplayed (1 125) providers, and 45 units with no point inside the city (32 with none, 13 outside it) |
+
+Not taken as an institution category, with the reason: pharmacies (private), tourism (private), housing (private),
+traffic and maps (not institutions), waste and recycling points (not institutions); these units stay `other`.
+`tests/test_helsinki_open_data.py` runs the mapping over a recorded page and a recorded part of the tree.
+
 ## HSL network registers (T-5254)
 
 Four HSL registers from HSL's open data hub (`hub.arcgis.com` GeoJSON downloads, WGS84, CC BY 4.0), each read

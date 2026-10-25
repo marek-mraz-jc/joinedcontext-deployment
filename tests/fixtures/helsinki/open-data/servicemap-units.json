@@ -1,5 +1,5 @@
 {
- "count": 5,
+ "count": 8,
  "next": null,
  "previous": null,
  "results": [
@@ -46,6 +46,22 @@
      25.211632,
      60.262024
     ]
+   },
+   "service_nodes": [
+    328,
+    349
+   ],
+   "root_service_nodes": [
+    1402,
+    1403
+   ],
+   "contract_type": {
+    "id": "MUNICIPAL_SERVICE",
+    "description": {
+     "fi": "kunnallinen palvelu, Kulttuurin ja vapaa-ajan toimiala, Helsingin kaupunki",
+     "sv": "kommunal tjänst, Kultur- och fritidssektorn, Helsingfors stad",
+     "en": "municipal service, Culture and Leisure Division, City of Helsinki"
+    }
    }
   },
   {
@@ -93,6 +109,22 @@
      25.055822,
      60.178677
     ]
+   },
+   "service_nodes": [
+    992,
+    993,
+    991
+   ],
+   "root_service_nodes": [
+    986
+   ],
+   "contract_type": {
+    "id": "MUNICIPAL_SERVICE",
+    "description": {
+     "fi": "kunnallinen palvelu, Sosiaali-, terveys- ja pelastustoimiala, Helsingin kaupunki",
+     "sv": "kommunal tjänst, Social-, hälsovårds- och räddningssektorn, Helsingfors stad",
+     "en": "municipal service, The Social Services, Health Care and Rescue Services Division, City of Helsinki"
+    }
    }
   },
   {
@@ -125,6 +157,26 @@
      24.925314,
      60.17006
     ]
+   },
+   "service_nodes": [
+    2168,
+    155,
+    264,
+    511,
+    693
+   ],
+   "root_service_nodes": [
+    1400,
+    1401,
+    1403
+   ],
+   "contract_type": {
+    "id": "PRIVATE_SERVICE",
+    "description": {
+     "fi": "yksityinen palvelu",
+     "sv": "privat tjänst",
+     "en": "private service"
+    }
    }
   },
   {
@@ -174,6 +226,30 @@
      24.982311,
      60.161896
     ]
+   },
+   "service_nodes": [
+    738,
+    751,
+    155,
+    511,
+    264,
+    689,
+    2198,
+    2199
+   ],
+   "root_service_nodes": [
+    1400,
+    1401,
+    1402,
+    1403
+   ],
+   "contract_type": {
+    "id": "PRIVATE_SERVICE",
+    "description": {
+     "fi": "yksityinen palvelu",
+     "sv": "privat tjänst",
+     "en": "private service"
+    }
    }
   },
   {
@@ -209,6 +285,187 @@
     "coordinates": [
      24.900393,
      60.23882
+    ]
+   },
+   "service_nodes": [
+    1259,
+    1110,
+    1100,
+    1263,
+    1104,
+    1114
+   ],
+   "root_service_nodes": [
+    1087
+   ],
+   "contract_type": {
+    "id": "NOT_DISPLAYED",
+    "description": {
+     "fi": null,
+     "sv": null,
+     "en": null
+    }
+   }
+  },
+  {
+   "id": 80752,
+   "connections": [
+    {
+     "section_type": "OTHER_INFO",
+     "name": {
+      "fi": "Palvelut Suomi.fi-verkkopalvelussa",
+      "sv": "Tjänsterna i Suomi.fi-webbtjänsten",
+      "en": "Services in the Suomi.fi Web Service"
+     },
+     "www": {
+      "fi": "https://www.suomi.fi/palvelut/palvelupiste/xxx/30a573a1-f702-4cdd-9501-61e3909aaa71/palvelut?p=0",
+      "sv": "https://www.suomi.fi/service/servicestalle/xxx/30a573a1-f702-4cdd-9501-61e3909aaa71/service?p=0",
+      "en": "https://www.suomi.fi/services/servicepoint/xxx/30a573a1-f702-4cdd-9501-61e3909aaa71/services?p=0"
+     },
+     "email": null,
+     "phone": null,
+     "contact_person": null,
+     "tags": []
+    }
+   ],
+   "contract_type": {
+    "id": "SERVICE_BY_JOINT_MUNICIPAL_AUTHORITY",
+    "description": {
+     "fi": "kuntayhtymän palvelu",
+     "sv": "tjänst från samkommunen",
+     "en": "service by joint municipal authority"
+    }
+   },
+   "name": {
+    "fi": "Kardiologiset vastaanotot, Haartmanin sairaala",
+    "en": "Cardiology Outpatient Clinic, Haartman Hospital"
+   },
+   "street_address": {
+    "fi": "Haartmaninkatu 4",
+    "sv": "Haartmansgatan 4",
+    "en": "Haartmaninkatu 4"
+   },
+   "www": {
+    "fi": "https://www.hus.fi/potilaalle/sairaalat-ja-toimipisteet/kardiologiset-vastaanotot-haartmanin-sairaala",
+    "sv": "https://www.hus.fi/potilaalle/sairaalat-ja-toimipisteet/kardiologiset-vastaanotot-haartmanin-sairaala",
+    "en": "https://www.hus.fi/en/patient/hospitals-and-other-units/cardiology-outpatient-clinic-haartman-hospital"
+   },
+   "address_zip": "00290",
+   "last_modified_time": "2026-10-18T07:38:38.051117+03:00",
+   "root_service_nodes": [
+    986
+   ],
+   "service_nodes": [
+    1010
+   ],
+   "services": [
+    820
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.907015,
+     60.189083
+    ]
+   }
+  },
+  {
+   "id": 80964,
+   "connections": [],
+   "contract_type": {
+    "id": "MUNICIPAL_SERVICE",
+    "description": {
+     "fi": "kunnallinen palvelu, Kasvatuksen ja koulutuksen toimiala, Helsingin kaupunki",
+     "sv": "kommunal tjänst, Fostrans- och utbildningssektorn, Helsingfors stad",
+     "en": "municipal service, Education Division, City of Helsinki"
+    }
+   },
+   "name": {
+    "fi": "Leikkipuisto Lehdokki, leikkipiha",
+    "sv": "Lekparken Nattviolen, utomhusområden",
+    "en": "Playground Lehdokki, outdooor area"
+   },
+   "street_address": {
+    "fi": "Pakkamestarinkatu 4",
+    "sv": "Packmästargatan 4",
+    "en": "Pakkamestarinkatu 4"
+   },
+   "www": {
+    "fi": "https://www.hel.fi/fi/kasvatus-ja-koulutus/leikkipuisto-lehdokki",
+    "sv": "https://www.hel.fi/fi/kasvatus-ja-koulutus/leikkipuisto-lehdokki",
+    "en": "https://www.hel.fi/fi/kasvatus-ja-koulutus/leikkipuisto-lehdokki"
+   },
+   "address_zip": "00520",
+   "last_modified_time": "2026-10-14T18:09:35.269504+03:00",
+   "root_service_nodes": [
+    1405
+   ],
+   "service_nodes": [
+    976
+   ],
+   "services": [
+    86
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.944923,
+     60.198128
+    ]
+   }
+  },
+  {
+   "id": 81019,
+   "connections": [],
+   "contract_type": {
+    "id": "PRIVATE_SERVICE",
+    "description": {
+     "fi": "yksityinen palvelu",
+     "sv": "privat tjänst",
+     "en": "private service"
+    }
+   },
+   "name": {
+    "fi": "M8S Hub & Studio",
+    "sv": "M8S Hub & Studio",
+    "en": "M8S Hub & Studio"
+   },
+   "street_address": {
+    "fi": "Arielinkatu 16",
+    "sv": "Arielgatan 16",
+    "en": "Arielinkatu 16"
+   },
+   "www": {
+    "fi": "https://m8s.fi/",
+    "sv": "https://m8s.fi/",
+    "en": "https://m8s.fi/"
+   },
+   "address_zip": "00540",
+   "last_modified_time": "2026-10-25T03:16:35.177755+03:00",
+   "root_service_nodes": [
+    1400,
+    1401,
+    1403
+   ],
+   "service_nodes": [
+    737,
+    261,
+    508,
+    152,
+    507,
+    742,
+    260,
+    151
+   ],
+   "services": [
+    326,
+    214
+   ],
+   "location": {
+    "type": "Point",
+    "coordinates": [
+     24.977337,
+     60.183582
     ]
    }
   }
