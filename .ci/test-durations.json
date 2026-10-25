@@ -52,6 +52,7 @@
  "test_bratislava_counters.py": 4.9,
  "test_bratislava_gtfs.py": 5.8,
  "test_bratislava_hub.py": 35.6,
+ "test_bratislava_places_geocode.py": 0.0,
  "test_bratislava_seed.py": 15.6,
  "test_broker_token_exchange.py": 220.4,
  "test_builder_contract.py": 0.3,
@@ -212,13 +213,16 @@
  "test_postgres_recovery.py": 64.4,
  "test_postgres_tuning.py": 85.2,
  "test_praha_areas.py": 25.5,
+ "test_praha_bicycle_counters.py": 14.9,
  "test_praha_city_tables.py": 18.8,
  "test_praha_environment.py": 25.4,
+ "test_praha_golemio_mobility.py": 19.2,
  "test_praha_golemio_places.py": 6.6,
  "test_praha_green.py": 21.0,
  "test_praha_ipr_places.py": 9.8,
  "test_praha_nameless.py": 15.5,
  "test_praha_open_data.py": 21.8,
+ "test_praha_paged_areas.py": 14.2,
  "test_praha_parking.py": 30.4,
  "test_praha_pid_network.py": 22.4,
  "test_praha_vehicles.py": 6.2,
@@ -298,6 +302,5 @@
  "test_ws_isolation_audiences.py": 12.7,
  "test_zilina_opendata.py": 61.6,
  "test_zilina_pipelines.py": 29.5,
- "test_zilina_seed.py": 16.9,
- "test_praha_bicycle_counters.py": 14.9
+ "test_zilina_seed.py": 16.9
 }
