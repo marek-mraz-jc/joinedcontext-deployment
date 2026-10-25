@@ -36,10 +36,6 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
-  adresa:
-    description: The source column `Adresa`.
-    annotations:
-      ngsi_ld_kind: Property
   cisloObjednavky:
     description: The source column `Číslo_objednávky`.
     annotations:
@@ -98,7 +94,6 @@ classes:
     - dataProvider
     - source
     - isPartOf
-    - adresa
     - cisloObjednavky
     - cisloZmluvy
     - dIC

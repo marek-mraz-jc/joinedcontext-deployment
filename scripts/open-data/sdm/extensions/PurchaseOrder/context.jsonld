@@ -7,9 +7,6 @@
     "PurchaseOrder": {
       "@id": "jc:PurchaseOrder"
     },
-    "adresa": {
-      "@id": "jc:adresa"
-    },
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },

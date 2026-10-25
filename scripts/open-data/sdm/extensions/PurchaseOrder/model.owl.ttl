@@ -17,9 +17,6 @@ jc:Entity a owl:Class,
             owl:cardinality 1 ;
             owl:onProperty jc:id ],
         [ a owl:Restriction ;
-            owl:cardinality 1 ;
-            owl:onProperty jc:type ],
-        [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:location ] ;
     skos:definition "The root every NGSI-LD entity class specialises." ;
@@ -41,9 +38,6 @@ jc:PurchaseOrder a owl:Class,
             owl:onProperty jc:datumVystavenia ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:textObjednavky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:identifier ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
@@ -51,9 +45,6 @@ jc:PurchaseOrder a owl:Class,
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:predmetObjednavky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:adresa ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:objednavkaSpolu ],
@@ -110,20 +101,6 @@ jc:dataProvider a owl:ObjectProperty,
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
 
-jc:date a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:date ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
-jc:date_or_datetime a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:date_or_datetime ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:datumVystavenia a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "datumVystavenia" ;
@@ -138,26 +115,12 @@ jc:datumZverejnenia a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PurchaseOrder> ;
     jc:ngsi_ld_kind "Property" .
 
-jc:decimal a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:decimal ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:dodavatel a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "dodavatel" ;
     skos:definition "The source column `Dodávateľ`." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PurchaseOrder> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:double a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:double ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:iCO a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -183,13 +146,6 @@ jc:identifier a owl:ObjectProperty,
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
 
-jc:integer a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:integer ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:isPartOf a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "isPartOf" ;
@@ -197,20 +153,6 @@ jc:isPartOf a owl:ObjectProperty,
     skos:definition "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PurchaseOrder> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:jsonpath a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:jsonpath ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
-jc:jsonpointer a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:jsonpointer ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:location a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -288,13 +230,6 @@ jc:source a owl:ObjectProperty,
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
 
-jc:sparqlpath a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:sparqlpath ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:suma a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "suma" ;
@@ -309,13 +244,6 @@ jc:textObjednavky a owl:ObjectProperty,
     skos:definition "The source column `Text_objednávky`." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/PurchaseOrder> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:time a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:time ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:type a owl:ObjectProperty,
         linkml:SlotDefinition ;

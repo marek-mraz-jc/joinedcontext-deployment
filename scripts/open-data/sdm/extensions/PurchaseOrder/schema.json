@@ -102,10 +102,6 @@
           "format": "uri",
           "description": "Property. Model:'https://schema.org/URL'. The catalogue dataset the row belongs to, where its licence and its other rows are."
         },
-        "adresa": {
-          "type": "string",
-          "description": "Property. Model:'https://schema.org/Text'. The source column `Adresa`."
-        },
         "datumVystavenia": {
           "type": "string",
           "description": "Property. Model:'https://schema.org/Text'. The source column `Dátum_vystavenia`."

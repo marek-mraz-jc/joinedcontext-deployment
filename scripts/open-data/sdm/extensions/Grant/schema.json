@@ -266,10 +266,6 @@
           "type": "number",
           "description": "Property. Model:'https://schema.org/Number'. The source column `Skutočné_čerpanie`."
         },
-        "statutarnyZastupca": {
-          "type": "string",
-          "description": "Property. Model:'https://schema.org/Text'. The source column `Štatutárny_zástupca`."
-        },
         "stavFinanVyuctovania": {
           "type": "string",
           "description": "Property. Model:'https://schema.org/Text'. The source column `Stav_finan__vyúčtovania`."
@@ -293,10 +289,6 @@
         "typTabora": {
           "type": "string",
           "description": "Property. Model:'https://schema.org/Text'. The source column `Typ_tábora`."
-        },
-        "ulicaACislo": {
-          "type": "string",
-          "description": "Property. Model:'https://schema.org/Text'. The source column `Ulica_a_číslo`."
         },
         "vSuladeSPrioritamiPoskytovaniaDotacii": {
           "type": "string",

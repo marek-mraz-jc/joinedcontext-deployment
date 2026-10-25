@@ -36,10 +36,6 @@ slots:
     range: uri
     annotations:
       ngsi_ld_kind: Property
-  adresa:
-    description: The source column `Adresa`.
-    annotations:
-      ngsi_ld_kind: Property
   datumVystavenia:
     description: The source column `Dátum_vystavenia`.
     annotations:
@@ -102,7 +98,6 @@ classes:
     - dataProvider
     - source
     - isPartOf
-    - adresa
     - datumVystavenia
     - datumZverejnenia
     - dodavatel
