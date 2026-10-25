@@ -58,6 +58,15 @@ praha-datasource-geo-mist-showers.yaml: projects/praha/datasources/ipr-geo-mist-
 praha-datasource-geo-bathing-places.yaml: projects/praha/datasources/ipr-geo-bathing-places.yaml
 praha-datasource-geo-animal-corners.yaml: projects/praha/datasources/ipr-geo-animal-corners.yaml
 praha-datasource-geo-landmarks.yaml: projects/praha/datasources/ipr-geo-landmarks.yaml
+praha-datasource-geo-zps-sections.yaml: projects/praha/datasources/ipr-geo-zps-sections.yaml
+praha-datasource-geo-zps-segments.yaml: projects/praha/datasources/ipr-geo-zps-segments.yaml
+praha-datasource-geo-ztp-bays.yaml: projects/praha/datasources/ipr-geo-ztp-bays.yaml
+praha-datasource-geo-ztp-shared.yaml: projects/praha/datasources/ipr-geo-ztp-shared.yaml
+praha-datasource-geo-ztp-plate.yaml: projects/praha/datasources/ipr-geo-ztp-plate.yaml
+praha-datasource-geo-delivery.yaml: projects/praha/datasources/ipr-geo-delivery.yaml
+praha-datasource-geo-special.yaml: projects/praha/datasources/ipr-geo-special.yaml
+praha-datasource-geo-no-parking.yaml: projects/praha/datasources/ipr-geo-no-parking.yaml
+praha-datasource-geo-machines.yaml: projects/praha/datasources/ipr-geo-machines.yaml
 praha-pipeline-bike-stations.yaml: projects/praha/pipelines/bike-stations/pipeline.yaml
 praha-pipeline-bike-availability.yaml: projects/praha/pipelines/bike-availability/pipeline.yaml
 praha-pipeline-air-quality.yaml: projects/praha/pipelines/air-quality/pipeline.yaml
@@ -106,6 +115,15 @@ praha-pipeline-geo-mist-showers.yaml: projects/praha/pipelines/geo-mist-showers/
 praha-pipeline-geo-bathing-places.yaml: projects/praha/pipelines/geo-bathing-places/pipeline.yaml
 praha-pipeline-geo-animal-corners.yaml: projects/praha/pipelines/geo-animal-corners/pipeline.yaml
 praha-pipeline-geo-landmarks.yaml: projects/praha/pipelines/geo-landmarks/pipeline.yaml
+praha-pipeline-geo-zps-sections.yaml: projects/praha/pipelines/geo-zps-sections/pipeline.yaml
+praha-pipeline-geo-zps-segments.yaml: projects/praha/pipelines/geo-zps-segments/pipeline.yaml
+praha-pipeline-geo-ztp-bays.yaml: projects/praha/pipelines/geo-ztp-bays/pipeline.yaml
+praha-pipeline-geo-ztp-shared.yaml: projects/praha/pipelines/geo-ztp-shared/pipeline.yaml
+praha-pipeline-geo-ztp-plate.yaml: projects/praha/pipelines/geo-ztp-plate/pipeline.yaml
+praha-pipeline-geo-delivery.yaml: projects/praha/pipelines/geo-delivery/pipeline.yaml
+praha-pipeline-geo-special.yaml: projects/praha/pipelines/geo-special/pipeline.yaml
+praha-pipeline-geo-no-parking.yaml: projects/praha/pipelines/geo-no-parking/pipeline.yaml
+praha-pipeline-geo-machines.yaml: projects/praha/pipelines/geo-machines/pipeline.yaml
 praha-pipeline-pid-vehicles-bento.yaml: projects/praha/pipelines/pid-vehicles/bento.yaml
 praha-pipeline-pid-lines.yaml: projects/praha/pipelines/pid-lines/pipeline.yaml
 praha-pipeline-pid-lines-bento.yaml: projects/praha/pipelines/pid-lines/bento.yaml
@@ -137,6 +155,15 @@ praha-pipeline-geo-mist-showers-bento.yaml: projects/praha/pipelines/geo-mist-sh
 praha-pipeline-geo-bathing-places-bento.yaml: projects/praha/pipelines/geo-bathing-places/bento.yaml
 praha-pipeline-geo-animal-corners-bento.yaml: projects/praha/pipelines/geo-animal-corners/bento.yaml
 praha-pipeline-geo-landmarks-bento.yaml: projects/praha/pipelines/geo-landmarks/bento.yaml
+praha-pipeline-geo-zps-sections-bento.yaml: projects/praha/pipelines/geo-zps-sections/bento.yaml
+praha-pipeline-geo-zps-segments-bento.yaml: projects/praha/pipelines/geo-zps-segments/bento.yaml
+praha-pipeline-geo-ztp-bays-bento.yaml: projects/praha/pipelines/geo-ztp-bays/bento.yaml
+praha-pipeline-geo-ztp-shared-bento.yaml: projects/praha/pipelines/geo-ztp-shared/bento.yaml
+praha-pipeline-geo-ztp-plate-bento.yaml: projects/praha/pipelines/geo-ztp-plate/bento.yaml
+praha-pipeline-geo-delivery-bento.yaml: projects/praha/pipelines/geo-delivery/bento.yaml
+praha-pipeline-geo-special-bento.yaml: projects/praha/pipelines/geo-special/bento.yaml
+praha-pipeline-geo-no-parking-bento.yaml: projects/praha/pipelines/geo-no-parking/bento.yaml
+praha-pipeline-geo-machines-bento.yaml: projects/praha/pipelines/geo-machines/bento.yaml
 praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.yaml
 # The Golemio key of the three Golemio datasources above, SOPS-encrypted to the dev age recipient
 # (age1dwqmmfzz…3mwj55, the public half of portal-age-identity); the reconciler decrypts it at
@@ -281,3 +308,9 @@ praha-endpoint-zelen.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zel
 praha-policy-public-zelen.yaml: projects/praha/spaces/praha-mesto/policies/public-zelen.yaml
 praha-endpoint-stromy.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-stromy.yaml
 praha-policy-public-stromy.yaml: projects/praha/spaces/praha-mesto/policies/public-stromy.yaml
+praha-endpoint-parkovani.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-parkovani.yaml
+praha-policy-public-parkovani.yaml: projects/praha/spaces/praha-mesto/policies/public-parkovani.yaml
+praha-endpoint-zakazy-stani.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zakazy-stani.yaml
+praha-policy-public-zakazy-stani.yaml: projects/praha/spaces/praha-mesto/policies/public-zakazy-stani.yaml
+praha-endpoint-parkovaci-automaty.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-parkovaci-automaty.yaml
+praha-policy-public-parkovaci-automaty.yaml: projects/praha/spaces/praha-mesto/policies/public-parkovaci-automaty.yaml

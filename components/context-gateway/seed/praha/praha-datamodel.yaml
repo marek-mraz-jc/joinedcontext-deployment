@@ -30,6 +30,10 @@ spec:
     - FareZone
     - Garden
     - Tree
+    - OnStreetParking
+    - ParkingGroup
+    - RestrictedTrafficArea
+    - FareCollectionSystem
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

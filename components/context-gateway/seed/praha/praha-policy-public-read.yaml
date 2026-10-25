@@ -45,3 +45,7 @@ spec:
         - type: FareZone
         - type: Garden
         - type: Tree
+        - type: OnStreetParking
+        - type: ParkingGroup
+        - type: RestrictedTrafficArea
+        - type: FareCollectionSystem
