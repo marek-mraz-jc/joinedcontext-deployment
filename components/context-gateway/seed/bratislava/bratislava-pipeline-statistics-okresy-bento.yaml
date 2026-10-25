@@ -11,10 +11,13 @@ pipeline:
   processors:
     - mapping: |
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
-        # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
-        # or city (Bratislava as a whole); area: the area column, none for a table of the city
-        # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
+        # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V),
+        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city) or obec
+        # (the municipalities of the Bratislava Region); area: the area column (a zsj's 7-digit code),
+        # none for a table of the city alone; label: a zsj's name column, within: its city district's
+        # code column; year: the period column (a year or a range of years), quarter: its quarter
+        # column, spans: the range each year of it stands for (a model's 1991 is 1991-2021), or
+        # fixed: the year or range the table's title names; by: breakdown columns (age, sex,
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
@@ -173,6 +176,9 @@ pipeline:
         }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
+        # A basic settlement unit (ZSJ) by its 7-digit code, named with its city district, kept only
+        # inside one of the 17; a municipality of the region by its name, the hub giving no code.
+        let parts = $districts.values()
         map fold {
           root = this.string().lowercase().replace_all_many([
             "á", "a", "ä", "a", "à", "a", "â", "a", "č", "c", "ç", "c", "ď", "d", "é", "e", "ě", "e", "ë", "e", "í", "i", "ĺ", "l",
@@ -212,6 +218,7 @@ pipeline:
           let t = this.table
           let r = this.row
           root = if $t.fixed.or("") != "" { $t.fixed.apply("years") }
+            else if $t.spans.or(null) != null { $t.spans.get($r.get($t.year).or("").string().trim()).or("").apply("years") }
             else if $t.quarter.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.quarter).or("").string().trim()].apply("quarter") }
             else { $r.get($t.year).or("").apply("years") }
         }
@@ -222,6 +229,17 @@ pipeline:
           let r = this.row
           root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
         }
+        map zsj {
+          let code = this.row.get(this.table.area).or("").string().trim()
+          let name = this.row.get(this.table.label).or("").string().trim()
+          let within = this.row.get(this.table.within).or("").string().trim()
+          let part = this.parts.filter(d -> d.index(0) == $within)
+          root = if $code.re_match("^[0-9]{7}$") && $name != "" && $part.length() > 0 { [$code, $name + " (" + $part.index(0).index(1) + ")"] } else { null }
+        }
+        map obec {
+          let name = this.row.get(this.table.area).or("").string().trim()
+          root = if $name.apply("segment") != "" { [$name.apply("segment"), $name] } else { null }
+        }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
         }).map_each(r -> t.values.map_each(v -> {
@@ -229,6 +247,8 @@ pipeline:
           "value": v,
           "area": if t.areas == "district" { $districts.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
+            else if t.areas == "zsj" { { "table": t, "row": r, "parts": $parts }.apply("zsj") }
+            else if t.areas == "obec" { { "table": t, "row": r }.apply("obec") }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
@@ -237,7 +257,8 @@ pipeline:
         map reason {
           let v = this.value
           root = if this.area == null {
-              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava" }.get(this.table.areas)
+              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava",
+                "zsj": "not a ZSJ of the city", "obec": "no municipality" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
             else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }

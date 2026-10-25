@@ -729,3 +729,37 @@ bratislava-endpoint-struktura-zien-podla-najvyssieho.yaml: projects/bratislava/s
 bratislava-policy-public-struktura-zien-podla-najvyssieho.yaml: projects/bratislava/spaces/bratislava/policies/public-struktura-zien-podla-najvyssieho.yaml
 # Its public data as one read-only MCP connector (T-5367).
 bratislava-mcp-otvorene-data.yaml: projects/bratislava/mcp/otvorene-data.yaml
+# T-5674: the hub's census 2021 tables of the basic settlement units and its two growth models of
+# the region's municipalities, each table its own door and Policy.
+bratislava-pipeline-statistics-zsj.yaml: projects/bratislava/pipelines/statistics-zsj/pipeline.yaml
+bratislava-pipeline-statistics-zsj-bento.yaml: projects/bratislava/pipelines/statistics-zsj/bento.yaml
+bratislava-endpoint-pocet-bytov-podla-celkovej-plochy-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-bytov-podla-celkovej-plochy-zsj.yaml
+bratislava-policy-public-pocet-bytov-podla-celkovej-plochy-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-bytov-podla-celkovej-plochy-zsj.yaml
+bratislava-endpoint-pocet-bytov-podla-obytnej-plochy-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-bytov-podla-obytnej-plochy-zsj.yaml
+bratislava-policy-public-pocet-bytov-podla-obytnej-plochy-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-bytov-podla-obytnej-plochy-zsj.yaml
+bratislava-endpoint-pocet-bytov-podla-obyvanosti-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-bytov-podla-obyvanosti-zsj.yaml
+bratislava-policy-public-pocet-bytov-podla-obyvanosti-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-bytov-podla-obyvanosti-zsj.yaml
+bratislava-endpoint-pocet-bytov-podla-poctu-miestnosti-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-bytov-podla-poctu-miestnosti-zsj.yaml
+bratislava-policy-public-pocet-bytov-podla-poctu-miestnosti-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-bytov-podla-poctu-miestnosti-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-dovodu-pristahovania-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-dovodu-pristahovania-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-dovodu-pristahovania-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-dovodu-pristahovania-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-materinskeho-jazyka-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-materinskeho-jazyka-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-materinskeho-jazyka-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-materinskeho-jazyka-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-miesta-pobytu-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-miesta-pobytu-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-miesta-pobytu-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-miesta-pobytu-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-vzdelania-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-vzdelania-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-vzdelania-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-vzdelania-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-jazyka-na-verejnosti-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-jazyka-na-verejnosti-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-jazyka-na-verejnosti-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-jazyka-na-verejnosti-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-jazyka-v-domacnosti-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-jazyka-v-domacnosti-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-jazyka-v-domacnosti-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-jazyka-v-domacnosti-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-nabozenstva-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-nabozenstva-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-nabozenstva-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-nabozenstva-zsj.yaml
+bratislava-endpoint-obyvatelia-podla-narodnosti-zsj.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-obyvatelia-podla-narodnosti-zsj.yaml
+bratislava-policy-public-obyvatelia-podla-narodnosti-zsj.yaml: projects/bratislava/spaces/bratislava/policies/public-obyvatelia-podla-narodnosti-zsj.yaml
+bratislava-pipeline-statistics-obce.yaml: projects/bratislava/pipelines/statistics-obce/pipeline.yaml
+bratislava-pipeline-statistics-obce-bento.yaml: projects/bratislava/pipelines/statistics-obce/bento.yaml
+bratislava-endpoint-model-rastu-bytoveho-fondu-v-obciach-bsk.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-model-rastu-bytoveho-fondu-v-obciach-bsk.yaml
+bratislava-policy-public-model-rastu-bytoveho-fondu-v-obciach-bsk.yaml: projects/bratislava/spaces/bratislava/policies/public-model-rastu-bytoveho-fondu-v-obciach-bsk.yaml
+bratislava-endpoint-model-rastu-poctu-obyvatelov-v-obciach-bsk.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-model-rastu-poctu-obyvatelov-v-obciach-bsk.yaml
+bratislava-policy-public-model-rastu-poctu-obyvatelov-v-obciach-bsk.yaml: projects/bratislava/spaces/bratislava/policies/public-model-rastu-poctu-obyvatelov-v-obciach-bsk.yaml
