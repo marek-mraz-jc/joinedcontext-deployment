@@ -16,8 +16,14 @@
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "FareCollectionSystem": {
+      "@id": "sdm:FareCollectionSystem"
+    },
     "FareZone": {
       "@id": "jc:FareZone"
+    },
+    "Garden": {
+      "@id": "sdm:Garden"
     },
     "GtfsAccessPoint": {
       "@id": "sdm:GtfsAccessPoint"
@@ -28,6 +34,12 @@
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
+    "ParkingGroup": {
+      "@id": "sdm:ParkingGroup"
+    },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
@@ -36,6 +48,12 @@
     },
     "PublicTransportRoute": {
       "@id": "sdm:PublicTransportRoute"
+    },
+    "RestrictedTrafficArea": {
+      "@id": "sdm:RestrictedTrafficArea"
+    },
+    "Tree": {
+      "@id": "jc:Tree"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -71,6 +89,9 @@
       "@id": "jc:approvedAmount",
       "@type": "xsd:float"
     },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
@@ -94,6 +115,9 @@
     "capacity": {
       "@id": "jc:capacity",
       "@type": "xsd:integer"
+    },
+    "careRegime": {
+      "@id": "jc:careRegime"
     },
     "category": {
       "@context": {
@@ -137,6 +161,9 @@
     "districtCode": {
       "@id": "jc:districtCode"
     },
+    "equipmentId": {
+      "@id": "sdm:equipmentId"
+    },
     "facilityType": {
       "@id": "jc:facilityType"
     },
@@ -156,6 +183,9 @@
       "@type": "xsd:integer"
     },
     "geojson": "https://purl.org/geojson/vocab#",
+    "greenspaceType": {
+      "@id": "jc:greenspaceType"
+    },
     "heading": {
       "@id": "sdm:heading",
       "@type": "xsd:integer"
@@ -203,6 +233,13 @@
     "operatorName": {
       "@id": "jc:operatorName"
     },
+    "parkingGroups": {
+      "@id": "jc:parkingGroups",
+      "@type": "@id"
+    },
+    "parkingZone": {
+      "@id": "jc:parkingZone"
+    },
     "platformCode": {
       "@id": "jc:platformCode"
     },
@@ -220,6 +257,10 @@
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refParkingSite": {
+      "@id": "sdm:refParkingSite",
       "@type": "@id"
     },
     "refWasteContainerIsle": {
@@ -273,6 +314,9 @@
     "streetAddress": {
       "@id": "schema:streetAddress"
     },
+    "tariff": {
+      "@id": "jc:tariff"
+    },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
       "@type": "xsd:integer"
@@ -301,10 +345,16 @@
       "@id": "sdm:transportationType",
       "@type": "xsd:integer"
     },
+    "treeCategory": {
+      "@id": "jc:treeCategory"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "vegetationType": {
+      "@id": "jc:vegetationType"
     },
     "vehicleType": {
       "@context": {
