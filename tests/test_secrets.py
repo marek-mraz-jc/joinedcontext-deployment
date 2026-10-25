@@ -210,3 +210,22 @@ def test_sops_encrypted_value_reaches_the_generated_secret(tmp_path):
     assert len(secrets) == 1, out.stdout
     assert base64.b64decode(secrets[0]["data"]["password"]).decode() == "sops-supplied-password-0123456789"
     assert secrets[0]["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
+
+
+def generated_secrets(docs: list[dict]) -> list[dict]:
+    return [d for d in docs if d.get("kind") == "Secret"
+            and d["metadata"].get("labels", {}).get("helm.sh/chart", "").startswith("secrets-0.")]
+
+
+def test_a_disabled_generator_renders_no_secret(rendered, rendered_variant):
+    """T-5702 (F-DEP2-014): `enabled: false | default true` is true in sprig, so switching the
+    generator off still installed every generated Secret."""
+    assert generated_secrets(rendered("minimal")), "the generator renders Secrets when enabled"
+
+    def disable(tree: Path):
+        path = tree / "components/secrets/default-environment.yaml.gotmpl"
+        text = path.read_text()
+        assert "  generator:\n    enabled: true\n" in text
+        path.write_text(text.replace("  generator:\n    enabled: true\n", "  generator:\n    enabled: false\n", 1))
+
+    assert generated_secrets(rendered_variant("minimal", disable)) == []
