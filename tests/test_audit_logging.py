@@ -242,6 +242,18 @@ def test_a_configuration_that_would_not_meet_the_requirement_stops_the_render(ow
 GOLDEN = Path(__file__).resolve().parent.parent / ".ci" / "golden"
 
 
+def runs_the_audit_collector(environment):
+    """The golden list names objects as <namespace>/<name>; each environment has its own namespace."""
+    return any(
+        line.startswith("apps/v1/DaemonSet ") and line.endswith("/audit-logging-collector-vector")
+        for line in (GOLDEN / f"{environment}.txt").read_text().splitlines()
+    )
+
+
+def test_the_collector_matcher_finds_the_rendered_production_collector():
+    assert runs_the_audit_collector("production")
+
+
 @pytest.mark.xfail(
     strict=True,
     reason="T-5570: dev and smartcity run no audit-logging until the owner admits the "
@@ -254,5 +266,4 @@ def test_production_profiles_run_the_append_only_sink(environment):
     The golden object list is the render the gate keeps true, so the collector missing from it
     is the collector missing from the cluster.
     """
-    objects = (GOLDEN / f"{environment}.txt").read_text().splitlines()
-    assert "apps/v1/DaemonSet jc/audit-logging-collector-vector" in objects
+    assert runs_the_audit_collector(environment)
