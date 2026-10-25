@@ -20,6 +20,35 @@ bratislava.v1.md: projects/bratislava/spaces/bratislava/datamodels/bratislava.v1
 bratislava-endpoint.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava.yaml
 bratislava-policy-pipelines-write.yaml: projects/bratislava/spaces/bratislava/policies/pipelines-write.yaml
 bratislava-policy-public-read.yaml: projects/bratislava/spaces/bratislava/policies/public-read.yaml
+# T-5273: the counter sites (cyclists, motor vehicles, pedestrians) of data.bratislava.sk and the
+# Slovnaft BAjk stations of nextbike's GBFS feed, each catalogue dataset its own door and Policy.
+bratislava-datasource-counters.yaml: projects/bratislava/datasources/counters-newest.yaml
+bratislava-datasource-bike-stations.yaml: projects/bratislava/datasources/nextbike-stations.yaml
+bratislava-datasource-bike-availability.yaml: projects/bratislava/datasources/nextbike-station-status.yaml
+bratislava-pipeline-counters.yaml: projects/bratislava/pipelines/counters/pipeline.yaml
+bratislava-pipeline-counters-bento.yaml: projects/bratislava/pipelines/counters/bento.yaml
+bratislava-pipeline-pedestrian-counters.yaml: projects/bratislava/pipelines/pedestrian-counters/pipeline.yaml
+bratislava-pipeline-pedestrian-counters-bento.yaml: projects/bratislava/pipelines/pedestrian-counters/bento.yaml
+bratislava-pipeline-bike-stations.yaml: projects/bratislava/pipelines/bike-stations/pipeline.yaml
+bratislava-pipeline-bike-stations-bento.yaml: projects/bratislava/pipelines/bike-stations/bento.yaml
+bratislava-pipeline-bike-availability.yaml: projects/bratislava/pipelines/bike-availability/pipeline.yaml
+bratislava-pipeline-bike-availability-bento.yaml: projects/bratislava/pipelines/bike-availability/bento.yaml
+bratislava-endpoint-cyklisti.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-cyklisti.yaml
+bratislava-endpoint-vozidla.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-vozidla.yaml
+bratislava-endpoint-chodci.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-chodci.yaml
+bratislava-endpoint-bajk.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-bajk.yaml
+bratislava-policy-public-cyklisti.yaml: projects/bratislava/spaces/bratislava/policies/public-cyklisti.yaml
+bratislava-policy-public-vozidla.yaml: projects/bratislava/spaces/bratislava/policies/public-vozidla.yaml
+bratislava-policy-public-chodci.yaml: projects/bratislava/spaces/bratislava/policies/public-chodci.yaml
+bratislava-policy-public-bajk.yaml: projects/bratislava/spaces/bratislava/policies/public-bajk.yaml
+# T-5273: DPB's public transport network from its GTFS timetable, stops and lines as two datasets.
+bratislava-datasource-mhd-gtfs.yaml: projects/bratislava/datasources/dpb-gtfs.yaml
+bratislava-pipeline-mhd-gtfs.yaml: projects/bratislava/pipelines/mhd-gtfs/pipeline.yaml
+bratislava-pipeline-mhd-gtfs-bento.yaml: projects/bratislava/pipelines/mhd-gtfs/bento.yaml
+bratislava-endpoint-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-zastavky.yaml
+bratislava-endpoint-mhd-linky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-linky.yaml
+bratislava-policy-public-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-zastavky.yaml
+bratislava-policy-public-mhd-linky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-linky.yaml
 # The districts, places and statistics of the hub (T-5274): three pipelines over two DataSources,
 # each table of the matrix one public dataset with its own Endpoint and Policy.
 bratislava-datasource-districts.yaml: projects/bratislava/datasources/bratislava-districts.yaml
