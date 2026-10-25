@@ -16,5 +16,9 @@
 {{- fail (printf "global.securityTxt.%s is empty: a production instance serves security.txt with its own contact and expiry (RFC 9116, OPS-52, T-1721)" $key) }}
 {{- end }}
 {{- end }}
+{{- /* ADR-N-062, T-5548: branch previews run on dev alone; a production render never admits pv-* namespaces. */}}
+{{- if (dig "branchPreviews" "enabled" false .Values.global) }}
+{{- fail "global.branchPreviews.enabled is true: branch previews run only on the dev cluster, never on a production instance (ADR-N-062, T-5548)" }}
+{{- end }}
 {{- end }}
 {}
