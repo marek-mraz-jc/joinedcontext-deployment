@@ -14,7 +14,8 @@ ingress:
   namespace: traefik
   serviceAccount: traefik
 
-# The gateway's CONNECT check (PL-75), on its internal listener.
+# The gateway's CONNECT check (PL-75), on its internal listener; the publish check is the same
+# URL with its last segment `auth` replaced by `acl` (T-5560).
 authUrl: ''
 
 # The pipeline runner, the one client of the internal listener (PL-76).

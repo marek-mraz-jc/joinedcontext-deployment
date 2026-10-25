@@ -92,7 +92,14 @@ data:
     http_auth_req.method = "post"
     http_auth_req.headers = { content-type = "application/json" }
     http_auth_req.params = { clientid = "%c", username = "%u", password = "%P", ipaddr = "%a" }
-    # No http_acl_req: the ACL comes with the CONNECT answer.
+    # Every publish asks the gateway, beside the CONNECT check: the CONNECT answer carries the
+    # subscriptions only, so a device whose role, account or credential ends is refused, and
+    # with disconnect_if_pub_rejected disconnected, within the X-Cache time of the gateway's
+    # allow (10 s) instead of at its token's exp (T-5560).
+    http_acl_req.url = {{ printf "%s/acl" (trimSuffix "/auth" $root.Values.authUrl) | quote }}
+    http_acl_req.method = "post"
+    http_acl_req.headers = { content-type = "application/json" }
+    http_acl_req.params = { access = "%A", clientid = "%c", username = "%u", topic = "%t" }
   {{- if $api }}
   rmqtt-http-api.toml: |
     http_laddr = "0.0.0.0:6060"
