@@ -1,10 +1,10 @@
 # The mapping of the hsl-hfp-vehicles pipeline (PL-03): every HSL vehicle from the
-# high-frequency positioning broker at its current position, every second (owner, T-5046,
-# option A), each report a write a subscriber is notified of. The whole feed is about 1,000 frames a second in the evening and 2,000 at peak,
+# high-frequency positioning broker at its current position, every report (owner, T-5046
+# option A, T-5247), each report a write a subscriber is notified of. The whole feed is about 1,000 frames a second in the evening and 2,000 at peak,
 # one a second per vehicle. The reconciler renders the MQTT input of the hsl-hfp DataSource in
 # front, in batches of up to 1,000 frames or one second (T-5046), and the endpoint upsert
-# after, one write per batch (PL-39, PL-16). The space keeps one history point per vehicle in
-# thirty seconds (its retention rule), not one per write.
+# after, one write per batch (PL-39, PL-16). The space keeps every report of the last five
+# minutes in its history (its retention rule, T-5247).
 
 pipeline:
   processors:
@@ -33,13 +33,13 @@ pipeline:
           "_mode": meta("mode"), "_vehicle": meta("vehicle"), "_next_stop": meta("next_stop")
         } }
 
-    # Every second of every vehicle, oldest first (T-5046, owner: a subscriber gets every
-    # per-second change): two reports of one vehicle stamped in the same second are one, the
-    # newer. The broker applies the same id twice in one batch in that order (NGSI-LD 4.6.6).
+    # Every report of every vehicle, oldest first (owner 2026-10-22T17:45Z, T-5247: the live
+    # position and the complete history of the last five minutes): only an exact repeat, the
+    # same fields at the same instant (the broker resending a frame), is one. The broker
+    # applies the same id twice in one batch in that order (NGSI-LD 4.6.6).
     - archive: { format: json_array }
     - mapping: |
-        let newest = this.sort_by(v -> 0 - v.tst.ts_unix_nano().catch(0))
-        root = $newest.unique(v -> v._mode + "-" + v._vehicle + "@" + v.tst.string().slice(0, 19).catch("")).sort_by(v -> v.tst.ts_unix_nano().catch(0))
+        root = this.unique(v -> v.string()).sort_by(v -> v.tst.ts_unix_nano().catch(0))
     - unarchive: { format: json_array }
 
     # The safety valve for a feed flood (T-5046): a position waits for its token, 5,000 a

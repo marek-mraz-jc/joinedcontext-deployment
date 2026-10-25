@@ -128,20 +128,21 @@ spec:
       history: PT5M
       # Written on every run without an observedAt: one row per change and one a quarter hour,
       # not one per run (T-4844, DM-108, DM-109; scripts/temporal-audit.py).
-      # Every vehicle writes its position every second (T-5046, option A); its track keeps one
-      # point in thirty seconds (owner), about 10 rows per vehicle in the five minutes. The
-      # heartbeat records it: no real move crosses 100 km and no real speed, heading, delay or
-      # occupancy changes by a million in a second, so a change alone records no row. A new
-      # line or next stop does.
+      # Every vehicle writes every report (T-5046 option A) and its track keeps every one of them
+      # (owner 2026-10-22T17:45Z, T-5247: "complet history of the vehicles for the past 5
+      # minutes"): a newer observedAt is a row, an exact repeat (a retried batch) none. What
+      # changes in nearly every report records it; a line, next stop or load that holds records
+      # its change and a minute's heartbeat, so the state at any instant of the five minutes
+      # still reads back, at about half the rows.
       attributes:
-        location: { record: onChange, heartbeat: PT30S, minDistance: 100000 }
-        speed: { record: onChange, heartbeat: PT30S, deadband: 1000000 }
-        heading: { record: onChange, heartbeat: PT30S, deadband: 1000000 }
-        delay: { record: onChange, heartbeat: PT30S, deadband: 1000000 }
-        occupancy: { record: onChange, heartbeat: PT30S, deadband: 1000000 }
-        route: { record: onChange, heartbeat: PT30S }
-        onRoute: { record: onChange, heartbeat: PT30S }
-        nextStop: { record: onChange, heartbeat: PT30S }
+        location: { record: observed }
+        speed: { record: observed }
+        heading: { record: observed }
+        delay: { record: observed }
+        occupancy: { record: onChange, heartbeat: PT1M }
+        route: { record: onChange, heartbeat: PT1M }
+        onRoute: { record: onChange, heartbeat: PT1M }
+        nextStop: { record: onChange, heartbeat: PT1M }
         fleetVehicleId: { record: onChange, heartbeat: PT15M }
         transportMode: { record: onChange, heartbeat: PT15M }
         vehicleType: { record: onChange, heartbeat: PT15M }
