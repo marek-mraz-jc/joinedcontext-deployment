@@ -11,9 +11,9 @@
 #   1. the Policy that grants the compromised subject leaves the gateway's repository,
 #      because an access token already in an attacker's hands stays cryptographically
 #      valid until it expires — only the PDP can stop honouring it;
-#   2. the gateway replicas re-read the repository, which today means a restart: the
-#      table is read once at start-up and there is no invalidation endpoint yet
-#      (platform T-0177 adds one; until then a restart IS the invalidation);
+#   2. the gateway replicas re-read the repository on their own: the reaper polls it every
+#      second and swaps the tables (platform T-0177), so nothing restarts the gateway every
+#      tenant shares; the measurement below proves the replicas stopped honouring the grant;
 #   3. Keycloak stops minting new tokens for the subject — sessions logged out for a
 #      user, client secret rotated for a service account.
 #
@@ -33,7 +33,6 @@ verify_url=""
 verify_token_file=""
 bound=5
 namespace=""
-deployment="context-gateway-gateway"
 configmap="context-gateway"
 idm=""
 
@@ -50,7 +49,6 @@ while [ $# -gt 0 ]; do
 	--verify-url) verify_url="${2:?}"; shift 2 ;;
 	--verify-token-file) verify_token_file="${2:?}"; shift 2 ;;
 	--bound) bound="${2:?}"; shift 2 ;;
-	--deployment) deployment="${2:?}"; shift 2 ;;
 	--configmap) configmap="${2:?}"; shift 2 ;;
 	--idm) idm="${2:?}"; shift 2 ;;
 	-h | --help) sed -n '2,25p' "$0"; exit 0 ;;
@@ -90,18 +88,9 @@ if [ -n "$policy" ]; then
 	fi
 fi
 
-# 2. The replicas re-read the repository. Restart, then wait: an unfinished rollout means
-#    old pods are still answering with the old table.
-if kubectl -n "$namespace" rollout restart "deployment/$deployment" >/dev/null; then
-	step "restarting $deployment"
-	if kubectl -n "$namespace" rollout status "deployment/$deployment" --timeout="${bound}s" >/dev/null; then
-		step "$deployment is serving the repository without the policy"
-	else
-		ko "$deployment did not become ready within ${bound}s"
-	fi
-else
-	ko "$deployment could not be restarted"
-fi
+# 2. The replicas re-read the repository by themselves within a second (pdp::reaper,
+#    T-0177). Step 4 measures that at the enforcement point; a restart would only add the
+#    rollout time of the gateway every tenant shares to the bound.
 
 # 3. Keycloak stops issuing new tokens for the subject. The admin token comes from the
 #    environment (KEYCLOAK_ADMIN_TOKEN) or from the master-realm password grant with

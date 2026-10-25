@@ -22,8 +22,8 @@
 # creates it through the Keycloak admin API (KEYCLOAK_ADMIN_TOKEN, or KEYCLOAK_ADMIN_USER and
 # KEYCLOAK_ADMIN_PASSWORD) and deletes it at the end.
 #
-# Safety: nothing shared is stopped or restarted (runbook 4's emergency-revoke.sh restarts the
-# gateway, needlessly since the reaper, T-5625, so drill C revokes without it); the rate is capped at 20 requests a second, 60 s and
+# Safety: nothing shared is stopped or restarted (the reaper re-reads the repository every second,
+# T-0177, so runbook 4 restarts no gateway since T-5625); the rate is capped at 20 requests a second, 60 s and
 # fewer than 600 calls, the edge's own limit per token and address (context-endpoint limit-count);
 # the leaked key exists only in a mode 700 work directory for the drill and is rotated in it.
 # No token or secret is printed: only statuses, counts and seconds.

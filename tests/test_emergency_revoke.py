@@ -1,4 +1,4 @@
-"""T-0048: scripts/emergency-revoke.sh must revoke, restart, and then MEASURE.
+"""T-0048: scripts/emergency-revoke.sh must revoke and then MEASURE.
 
 The script talks to a cluster and to Keycloak, so the suite runs it against stub
 `kubectl` and `curl` on PATH inside a throwaway copy of `scripts/`, the way
@@ -48,9 +48,7 @@ elif "get" in args and "configmap" in args:
 elif "patch" in args:
     sys.exit(0 if spec.get("patchOk", True) else 1)
 elif "rollout" in args and "restart" in args:
-    sys.exit(0 if spec.get("restartOk", True) else 1)
-elif "rollout" in args and "status" in args:
-    sys.exit(0 if spec.get("rolloutReady", True) else 1)
+    sys.exit(0)
 else:
     sys.exit(1)
 '''
@@ -126,16 +124,17 @@ def test_nothing_to_revoke_is_refused(tmp_path):
     assert calls == [], "a refused invocation must not touch the cluster"
 
 
-def test_the_policy_leaves_the_repository_before_the_gateway_restarts(tmp_path):
+def test_the_policy_leaves_the_repository_and_the_shared_gateway_keeps_running(tmp_path):
+    # T-5625: the gateway's reaper re-reads the repository every second (platform T-0177), so a
+    # restart of the gateway every tenant shares only costs the rollout time inside the bound.
     result, calls = run(
         tmp_path, {"seededPolicy": SEEDED_POLICY},
         "--instance", "dev", "--namespace", "dev", "--policy", "public-read",
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    patch = next(i for i, c in enumerate(calls) if "patch configmap" in c)
-    restart = next(i for i, c in enumerate(calls) if "rollout restart" in c)
-    assert patch < restart, "restarting first would reload the policy that is being revoked"
-    assert '"op": "remove"' in calls[patch] and "/data/policy.yaml" in calls[patch]
+    patch = next(c for c in calls if "patch configmap" in c)
+    assert '"op": "remove"' in patch and "/data/policy.yaml" in patch
+    assert not any("rollout" in c for c in calls), "no gateway restart or rollout wait"
 
 
 def test_a_policy_the_repository_does_not_carry_fails_loudly(tmp_path):
@@ -146,15 +145,6 @@ def test_a_policy_the_repository_does_not_carry_fails_loudly(tmp_path):
     assert result.returncode == 1
     assert "is not in configmap" in result.stderr
     assert not any("patch configmap" in c for c in calls), "nothing to remove, nothing patched"
-
-
-def test_an_unfinished_rollout_is_a_failure_not_a_revocation(tmp_path):
-    result, _ = run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY, "rolloutReady": False},
-        "--instance", "dev", "--policy", "public-read", "--bound", "1",
-    )
-    assert result.returncode == 1
-    assert "did not become ready" in result.stderr
 
 
 def test_a_user_is_logged_out_and_a_service_account_secret_is_rotated(tmp_path):
@@ -182,7 +172,7 @@ def test_the_refusal_is_measured_and_passes_inside_the_bound(tmp_path):
 
 
 def test_a_credential_still_accepted_after_the_bound_fails_the_run(tmp_path):
-    result, _ = run(
+    result, calls = run(
         tmp_path, {"seededPolicy": SEEDED_POLICY, "refusedAfter": 99},
         "--instance", "dev", "--policy", "public-read", "--bound", "2",
         "--verify-url", "https://host/api/endpoint/slug/ngsi-ld/v1/entities?type=X",
@@ -191,6 +181,7 @@ def test_a_credential_still_accepted_after_the_bound_fails_the_run(tmp_path):
     assert result.returncode == 1
     assert "still answers 200" in result.stderr
     assert "OPS-45" in result.stderr
+    assert not any("rollout" in c for c in calls), "the bound is measured at the gateway, not by a restart"
 
 
 def test_no_token_or_password_is_ever_printed(tmp_path):
