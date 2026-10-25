@@ -109,3 +109,5 @@ barcelona-pipeline-equipaments.yaml: projects/barcelona/pipelines/equipaments/pi
 barcelona-pipeline-equipaments-bento.yaml: projects/barcelona/pipelines/equipaments/bento.yaml
 barcelona-endpoint-places.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-places.yaml
 barcelona-policy-public-places.yaml: projects/barcelona/spaces/barcelona/policies/public-places.yaml
+# Its public data as one read-only MCP connector (T-5367).
+barcelona-mcp-dades-obertes.yaml: projects/barcelona/mcp/dades-obertes.yaml
