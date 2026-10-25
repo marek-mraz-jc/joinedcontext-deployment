@@ -3,9 +3,9 @@ checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
 on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 327 statistics tables of the three statistics pipelines (the first 18 rows of each table the
-2026-10-24 batch added). The calls to the hub are the
-cut: each table's answer comes from the recording. The tests add the rows the owner's validation
+and the 339 statistics tables of the four statistics pipelines (the first 18 rows of each table the
+2026-10-24 batch added; the six life-expectancy tables whole and the first 18 rows of the six daily
+Free Wifi tables, recorded 2026-10-25, T-5673). The calls to the hub are the cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
 """
@@ -15,6 +15,7 @@ import json
 import re
 import subprocess
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import open_data
@@ -306,7 +307,7 @@ def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
             )
 
 
-STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city"}
+STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city", "statistics-denne": "city"}
 CITY_DISTRICTS = {
     "stare mesto": "528595", "podunajske biskupice": "529311", "p biskupice": "529311", "ruzinov": "529320",
     "vrakuna": "529338", "nove mesto": "529346", "raca": "529354", "vajnory": "529362", "devinska nova ves": "529371",
@@ -335,6 +336,13 @@ def years(value) -> str | None:
         return v
     if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
         return "-".join(m.group() for m in YEAR.finditer(v))
+    if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d a (19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
+        return "-".join(m.group() for m in YEAR.finditer(v))
+    if re.fullmatch(r"(19|20)\d\d-\d\d-\d\d", v):
+        try:
+            return date.fromisoformat(v).isoformat()
+        except ValueError:
+            return None
     return None
 
 
@@ -366,6 +374,7 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             else:
                 slug = years(r.get(t["year"]) or "")
             by = [re.sub(r"[^a-z0-9]+", "-", fold(r.get(c) or "")).strip("-") for c in t.get("by", [])]
+            by = ["" if b == "nan" else b for b in by]
             for column, segment, _, low, high in t["values"]:
                 n = number(r.get(column))
                 reason = (
@@ -411,7 +420,7 @@ def test_each_statistics_pipeline_agrees_with_an_independent_reading_of_its_tabl
 
 
 def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
-    """The three pipelines differ only in their tables, each table in the pipeline of its areas,
+    """The four pipelines differ only in their tables, each table in the pipeline of its areas,
     and no table twice."""
     def body(pipeline: str) -> str:
         text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
@@ -420,7 +429,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 327
+    assert len(keys) == len(set(keys)) == 339
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())

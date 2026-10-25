@@ -1,8 +1,8 @@
 # The mapping of the statistics-mesto pipeline (T-5274): the hub's tables of Bratislava as a whole as Smart Data Models
 # KeyPerformanceIndicator, one entity per table, figure, breakdown, area and period. One mapping
 # text for every Feature Service statistics table of the matrix (Research/bratislava-open-data.md
-# 6.4): the statistics, statistics-okresy and statistics-mesto pipelines run the same text and
-# differ only in `tables` below, split by area so that one run fits its memory quota. A table is
+# 6.4): the statistics, statistics-okresy, statistics-mesto and statistics-denne pipelines run the same text
+# and differ only in `tables` below, split by area (the daily tables apart) so that one run fits its memory quota. A table is
 # one line of `tables`, never a pipeline of its own. The bratislava-hub DataSource answers the
 # hub's list of services; a table the list no longer names is logged and left out. Each table is
 # read with one query of at most 2,000 rows; an answer that says it holds more fails that table
@@ -13,8 +13,9 @@ pipeline:
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
         # or city (Bratislava as a whole); area: the area column, none for a table of the city
-        # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
+        # alone; year: the period column (a year, a range of years, two ranges compared or a day),
+        # quarter: its quarter column, or fixed: the year or range the table's title or description
+        # names; by: breakdown columns (age, sex,
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
@@ -121,6 +122,12 @@ pipeline:
           {"name": "priemerny-vek-pristahovanych-a", "item": "cb74a482ddf24366b00941a793dbc86f", "path": "Priemern%C3%BD_vek_pris%C5%A5ahovan%C3%BDch_a_vys%C5%A5ahovan%C3%BDch_do_a_z_Bratislavy_pod%C4%BEa_pohlav%C3%AD", "title": "Priemerný vek prisťahovaných a vysťahovaných do a z Bratislavy podľa pohlaví", "areas": "city", "year": "ROK", "by": ["STAHOVANIA", "POHLAVIE"], "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek prisťahovaných a vysťahovaných do a z Bratislavy podľa pohlaví", null, null]]},
           {"name": "priemerny-vek-zien-pri-v-rokoch-2000-2021-3", "item": "bb007f73bc984be68aebacbd3f00a48a", "path": "Priemern%C3%BD_vek_%C5%BEien_pri_naroden%C3%AD_die%C5%A5a%C5%A5a_v_Bratislave_a_na_Slovensku_v_rokoch_2000_%E2%80%93_2021", "title": "Priemerný vek žien pri narodení dieťaťa v Bratislave a na Slovensku v rokoch 2000 – 2021", "areas": "city", "area": "UZEMIE", "year": "ROK", "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek žien pri narodení dieťaťa v Bratislave a na Slovensku v rokoch 2000 – 2021", null, null]]},
           {"name": "priemerny-vek-zien-pri-v-rokoch-2000-2021-4", "item": "4d68e503c3844892b32cbe31c577745a", "path": "Priemern%C3%BD_vek_%C5%BEien_pri_naroden%C3%AD_prv%C3%A9ho_die%C5%A5a%C5%A5a_v_BA_a_na_Slovensku_v_rokoch_2000_%E2%80%93_2021", "title": "Priemerný vek žien pri narodení prvého dieťaťa v BA a na Slovensku v rokoch 2000 – 2021", "areas": "city", "area": "UZEMIE", "year": "ROK", "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek žien pri narodení prvého dieťaťa v BA a na Slovensku v rokoch 2000 – 2021", null, null]]},
+          {"name": "prispevky-pricin-smrti-medzi-ba-a-sr", "item": "802e593468574473a3f8c6d9a8012eaf", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_medzi_BA_a_SR", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života medzi BA a SR", "areas": "city", "fixed": "2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY_ROKY", "prispevok-roky", "Príspevok k rozdielu strednej dĺžky života medzi Bratislavou a Slovenskom (roky)", null, null]]},
+          {"name": "prispevky-pricin-smrti-medzi-ba-a-sr-podiel", "item": "33d02f6c5f044aeeb91c1f9fb19ffd63", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_medzi_BA_a_SR_", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života medzi BA a SR (%)", "areas": "city", "fixed": "2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVOK__", "prispevok-percenta", "Príspevok k rozdielu strednej dĺžky života medzi Bratislavou a Slovenskom (%)", null, null]]},
+          {"name": "prispevky-pricin-smrti-v-ba", "item": "b4f5ab41eb3645b6b2c874e09fe0b217", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_v_BA_abs", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života v BA", "areas": "city", "fixed": "2000 – 2004 a 2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY_ROKY", "prispevok-roky", "Príspevok k rozdielu strednej dĺžky života v Bratislave medzi obdobiami (roky)", null, null]]},
+          {"name": "prispevky-pricin-smrti-v-ba-podiel", "item": "d2f13330a7d9464082956b4a9c59f221", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_v_BA_", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života v BA (%)", "areas": "city", "fixed": "2000 – 2004 a 2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY__", "prispevok-percenta", "Príspevok k rozdielu strednej dĺžky života v Bratislave medzi obdobiami (%)", null, null]]},
+          {"name": "prispevky-vekovych-skupin-muzi-v-ba", "item": "9c19e01a1905462c8b88b2ad288bb567", "path": "Pr%C3%ADspevky_vekov%C3%BDch_skup%C3%ADn_k_zmene_hodn%C3%B4t_strednej_d%C4%BA%C5%BEky_%C5%BEivota_pri_naroden%C3%AD_mu%C5%BEov_v_BA", "title": "Príspevky vekových skupín k zmene hodnôt strednej dĺžky života pri narodení mužov v BA", "areas": "city", "year": "OBDOBIE", "by": ["VEK"], "values": [["PRISPEVOK", "prispevok-roky", "Príspevok vekovej skupiny k zmene strednej dĺžky života pri narodení mužov v Bratislave (roky)", null, null]]},
+          {"name": "prispevky-vekovych-skupin-zeny-v-ba", "item": "933df5294ec0487c8f06c0befd7b36bc", "path": "Pr%C3%ADspevky_vekov%C3%BDch_skup%C3%ADn_k_zmene_hodn%C3%B4t_strednej_d%C4%BA%C5%BEky_%C5%BEivota_pri_naroden%C3%AD_%C5%BEien_v_BA", "title": "Príspevky vekových skupín k zmene hodnôt strednej dĺžky života pri narodení žien v BA", "areas": "city", "year": "OBDOBIE", "by": ["VEK"], "values": [["PRISPEVOK", "prispevok-roky", "Príspevok vekovej skupiny k zmene strednej dĺžky života pri narodení žien v Bratislave (roky)", null, null]]},
           {"name": "prognoza-poctu-obyvatelov-v-rokoch-2022-ba", "item": "2bc509db673d4e8ab492e482e35d31fd", "path": "Progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_Bratislavy_v_rokoch_2022_%E2%80%93_2050_pod%C4%BEa_scen%C3%A1rov", "title": "Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov", "areas": "city", "year": "ROK", "by": ["SCENAR"], "values": [["PROGNOZA_POCET_OBYVATELOV", "prognoza-pocet-obyvatelov", "Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov", 0, null]]},
           {"name": "prognozovana-zmena-podielu-hlavnych", "item": "74ef0a59361c4e06beb542141831e9eb", "path": "Progn%C3%B3zovan%C3%A1_zmena_podielu_hlavn%C3%BDch_vekov%C3%BDch_skup%C3%ADn_obyvate%C4%BEstva_BA_v_rokoch_2022_a_2050", "title": "Prognózovaná zmena podielu hlavných vekových skupín obyvateľstva BA v rokoch 2022 a 2050", "areas": "city", "fixed": "2022-2050", "by": ["SCENAR", "VEK"], "values": [["ZMENA__", "zmena", "Prognózovaná zmena podielu hlavných vekových skupín obyvateľstva BA v rokoch 2022 a 2050", null, null]]},
           {"name": "prognozovany-index-v-rokoch-2020-2050-ba", "item": "58d221b5c40643979d165e44383d9d95", "path": "Prognozovany_index_starnutia_obyvatelstva_Bratislavy_v_rokoch_20202_%E2%80%93_2050_", "title": "Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050", "areas": "city", "year": "ROK", "by": ["SCENAR"], "values": [["INDEX_STARNUTIA", "index-starnutia", "Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050", null, null]]},
@@ -295,6 +302,14 @@ pipeline:
             { "from": $v + "-01-01", "to": $v + "-12-31", "slug": $v, "label": $v, "frequency": "yearly" }
           } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
             { "from": $y.index(0) + "-01-01", "to": $y.index(1) + "-12-31", "slug": $y.join("-"), "label": $y.join("–") }
+          } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2} a (19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
+            # Two ranges compared ("2017 – 2019 a 2000 – 2002"): the period spans both.
+            {
+              "from": $y.sort().index(0) + "-01-01", "to": $y.sort().index(3) + "-12-31", "slug": $y.join("-"),
+              "label": $y.index(0) + "–" + $y.index(1) + " a " + $y.index(2) + "–" + $y.index(3)
+            }
+          } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
+            { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
           } else { null }
         }
         map quarter {
@@ -322,7 +337,8 @@ pipeline:
         }
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          # "Nan" is the hub's word for a category it did not detect: no breakdown.
+          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(b -> if b.lowercase() == "nan" { "" } else { b })
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
