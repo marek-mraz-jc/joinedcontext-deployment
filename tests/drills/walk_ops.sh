@@ -23,7 +23,8 @@
 # KEYCLOAK_ADMIN_PASSWORD) and deletes it at the end.
 #
 # Safety: nothing shared is stopped or restarted (runbook 4's emergency-revoke.sh restarts the
-# gateway, needlessly since the reaper, T-5625, so drill C revokes without it); the rate is capped at 20 requests a second and 60 s;
+# gateway, needlessly since the reaper, T-5625, so drill C revokes without it); the rate is capped at 20 requests a second, 60 s and
+# fewer than 600 calls, the edge's own limit per token and address (context-endpoint limit-count);
 # the leaked key exists only in a mode 700 work directory for the drill and is rotated in it.
 # No token or secret is printed: only statuses, counts and seconds.
 set -uo pipefail
@@ -40,7 +41,7 @@ org=""
 owner=""
 idm=""
 rate=20
-seconds=60
+seconds=25
 bound_a=120
 bound_c=5
 wait_merge=900
@@ -81,6 +82,8 @@ done
 # The stated load and no more: a busy node must not carry a drill's flood (T-5542 Security).
 if [ "$rate" -lt 1 ] || [ "$rate" -gt 20 ]; then die "--rate is 1..20 requests a second"; fi
 if [ "$seconds" -lt 1 ] || [ "$seconds" -gt 60 ]; then die "--seconds is 1..60"; fi
+# The edge counts 600 calls a minute per token and address: a flood that reaches it proves its limit, not the gateway's.
+if [ $((rate * seconds)) -ge 600 ]; then die "--rate x --seconds must stay under 600 calls (the edge's limit a minute)"; fi
 [ "$poll" -ge 1 ] || die "--poll is at least 1 second"
 gateway="${gateway:-$server}"
 
@@ -315,7 +318,12 @@ mint() { # $1 secret file; prints the access token, or nothing; status in $work/
 read_slug=""
 write_slug=""
 read_url=""
-call() { curl -sS --max-time 5 -o /dev/null -w '%{http_code}\n' -H @"$1" "$read_url" 2>/dev/null || echo 000; }
+# One status per line; a 429 without the gateway's RateLimit-Limit header (the edge sends only
+# X-RateLimit-*) is marked "edge", so drill B counts the gateway's 429s alone.
+call() {
+	curl -sS --max-time 5 -o /dev/null -D - -w 'code %{http_code}\n' -H @"$1" "$read_url" 2>/dev/null | tr -d '\r' |
+		awk 'tolower($0) ~ /^ratelimit-limit:/ {g = 1} /^code / {c = $2} END {print (c == "" ? "000" : c) (c == "429" && !g ? " edge" : "")}'
+}
 
 drill_b() {
 	local token second i t0 t_detect="" t_diag="" answer tries limit
@@ -331,7 +339,8 @@ drill_b() {
 		sleep 1
 	done
 	record "B flood $(wc -l <"$work/codes") calls: $(sort "$work/codes" | uniq -c | awk '{printf "%s×%s ", $1, $2}')"
-	if [ -n "$t_detect" ]; then record "B detect $((t_detect - t0))s by the callers' 429s"; else ko "B: no 429 at $rate req/s for ${seconds}s"; fi
+	if grep -q '^429 edge$' "$work/codes"; then ko "B: the edge answered 429, so its limit, not the gateway's, was reached"; fi
+	if [ -n "$t_detect" ]; then record "B detect $((t_detect - t0))s by the gateway's 429s"; else ko "B: no 429 at $rate req/s for ${seconds}s"; fi
 	tries=$((120 / poll + 1))
 	while [ "$tries" -gt 0 ]; do
 		answer=$(get "/api/v1/projects/$project/activity")

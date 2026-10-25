@@ -80,8 +80,9 @@ spec:
   slug: "@READ_SLUG@"
   audience: organization
   enabledRepresentations: [ngsi-ld]
-  # Drill B sends 20 requests a second for 60 s: 1,200 against a minute of @RPM@, so the
-  # gateway answers 429 well before the edge's own limit is near.
+  # Drill B sends 20 requests a second for 25 s: 500 calls, under the edge's 600 a minute per
+  # token and address. The bucket (@RPM@/min = 10/s, burst 60) is empty after about 6 s, so
+  # the gateway answers 429 long before the edge would.
   rateLimits:
     requestsPerMinute: @RPM@
     burst: 60

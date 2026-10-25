@@ -139,6 +139,8 @@ def handler_for(fake: Fake):
             headers = {"ratelimit-limit": str(fake.rpm())}
             if fake.calls > 3:
                 fake.flood_seen = True
+                if "edge-429" in fake.scenario:
+                    return self.send(429, {}, {"x-ratelimit-limit": "600", "retry-after": "1"})
                 return self.send(429, {}, {**headers, "retry-after": "1"})
             return self.send(200, [], headers)
 
@@ -241,6 +243,8 @@ def test_dry_by_default_prints_the_plan_and_calls_nothing(tmp_path, stubs):
     [
         (["--rate", "21"], "--rate is 1..20"),
         (["--seconds", "61"], "--seconds is 1..60"),
+        (["--rate", "20", "--seconds", "60"], "under 600 calls"),
+        (["--rate", "10", "--seconds", "60"], "under 600 calls"),
         (["--drill", "x"], "--drill takes"),
         (["--run"], "--server"),
         (["--run", "--server", "http://portal.example.org", "--org", "o", "--owner", "a",
@@ -287,6 +291,14 @@ def test_drill_b_fails_when_the_activity_does_not_name_the_caller(tmp_path, stub
     assert result.returncode == 1
     assert "B: the project's Activity never named the caller walk-caller" in result.stdout
     assert "B detect" in result.stdout
+
+
+def test_drill_b_fails_when_the_429_is_the_edge_s_and_not_the_gateway_s(tmp_path, stubs):
+    """The edge's limit-count sends X-RateLimit-* only: its 429 proves nothing about the gateway."""
+    result, _ = drill(tmp_path, stubs, {"activity-names-caller", "edge-429"}, "--drill", "b")
+    assert result.returncode == 1
+    assert "B: the edge answered 429" in result.stdout
+    assert "B: no 429 at" in result.stdout
 
 
 def test_drill_c_fails_when_the_earlier_token_still_reads(tmp_path, stubs):
