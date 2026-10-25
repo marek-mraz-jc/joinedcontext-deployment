@@ -21,11 +21,19 @@ grafana:
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
-              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP", "JC-Read-Versions",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            for name in pairs(ngx.req.get_headers(0)) do
+              local key = name:lower():gsub("_", "-")
+              for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
+                if key:sub(1, #prefix) == prefix then
+                  ngx.req.clear_header(name)
+                end
+              end
             end
           end
     # Class 1 (standard web): a dashboard refreshes its panels on a timer, so the ceiling is
