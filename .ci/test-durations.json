@@ -144,6 +144,7 @@
  "test_hook_timeouts.py": 60.4,
  "test_image_pins.py": 0.0,
  "test_image_sbom.py": 0.0,
+ "test_justfile_golden.py": 8.6,
  "test_k3d_edge_hosts.py": 0.0,
  "test_keycloak_admin_permissions.py": 253.4,
  "test_keycloak_clients.py": 22.4,
