@@ -58,12 +58,14 @@ batch/v1/CronJob dev/ckan-harvest-banskabystrica
 batch/v1/CronJob dev/ckan-harvest-bbsk
 batch/v1/CronJob dev/gitea-lane-token
 batch/v1/CronJob dev/postgres-cluster-dr-drill
+batch/v1/CronJob dev/postgres-cluster-local-backup
 batch/v1/Job dev/artifact-store-bucket
 batch/v1/Job dev/ckan-api-token
 batch/v1/Job dev/ckan-datastore-db-create-role-ckan-datastore-read-readonly
 batch/v1/Job dev/gitea-bootstrap
 batch/v1/Job dev/keycloak-admin-permissions
 batch/v1/Job dev/keycloak-config-keycloak-config-cli
+batch/v1/Job dev/postgres-cluster-local-backup-now
 batch/v1/Job dev/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate dev/apisix-edge
 kyverno.io/v1/ClusterPolicy -/disallow-host-namespaces
@@ -484,6 +486,7 @@ v1/ConfigMap dev/gitea-seed-s12-*
 v1/ConfigMap dev/gitea-seed-s13-*
 v1/ConfigMap dev/gitea-seed-s14-*
 v1/ConfigMap dev/gitea-seed-s15-*
+v1/ConfigMap dev/gitea-seed-s16-*
 v1/ConfigMap dev/gitea-seed-s2-*
 v1/ConfigMap dev/gitea-seed-s3-*
 v1/ConfigMap dev/gitea-seed-s4-*
@@ -512,6 +515,7 @@ v1/PersistentVolumeClaim dev/basemap-tiles
 v1/PersistentVolumeClaim dev/ckan-storage
 v1/PersistentVolumeClaim dev/gitea-shared-storage
 v1/PersistentVolumeClaim dev/pipeline-runner-files
+v1/PersistentVolumeClaim dev/postgres-cluster-local-backup
 v1/PersistentVolumeClaim dev/status-page-files
 v1/ResourceQuota dev-app-tests/app-tests
 v1/Secret dev/apisix-oidc-session

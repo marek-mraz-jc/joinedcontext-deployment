@@ -7,7 +7,6 @@ without branding should look like.
 
 import base64
 import datetime
-import functools
 import html
 import json
 import os
@@ -225,10 +224,6 @@ STRINGS = {
     "topic": {"en": "Topic", "sk": "Téma", "cs": "Téma", "de": "Thema", "hu": "Téma"},
     "keywords": {"en": "Keywords", "sk": "Kľúčové slová", "cs": "Klíčová slova", "de": "Schlagwörter", "hu": "Kulcsszavak"},
     "format": {"en": "Format", "sk": "Formát", "cs": "Formát", "de": "Format", "hu": "Formátum"},
-    "use_table": {"en": "Table", "sk": "Tabuľka", "cs": "Tabulka", "de": "Tabelle", "hu": "Táblázat"},
-    "use_map": {"en": "Map", "sk": "Mapa", "cs": "Mapa", "de": "Karte", "hu": "Térkép"},
-    "use_live": {"en": "Live feed", "sk": "Živé údaje", "cs": "Živá data", "de": "Live-Daten", "hu": "Élő adatok"},
-    "use_api": {"en": "API", "sk": "API", "cs": "API", "de": "API", "hu": "API"},
     "by_topic": {"en": "Browse by topic", "sk": "Podľa témy", "cs": "Podle tématu", "de": "Nach Thema", "hu": "Témák szerint"},
     "datasets_n": {"en": ("dataset", "datasets", "datasets"), "sk": ("dataset", "datasety", "datasetov"),
                    "cs": ("datová sada", "datové sady", "datových sad"), "de": ("Datensatz", "Datensätze", "Datensätze"),
@@ -1920,13 +1915,18 @@ def jc_formats(pkg):
     return out
 
 
-# What a reader can do with a dataset (T-5294): the search's Format filter and a result's chips.
-# Every dataset of the platform carries the same eleven formats, model files included, so a filter
-# by format filtered nothing; a filter by use does. Indexed as `vocab_jc_use` (CKAN's Solr schema
-# keeps any `vocab_*` as a multi-valued string), in this order.
-USES = ("table", "map", "live", "api")
-_TABLE_KINDS = {"CSV", "XLSX", "PARQUET", "ODATA"}
-_API_KINDS = {"NGSI-LD", "ODATA", "OGCFEAT", "STA", "MCP"}
+# The formats a dataset serves its data in (T-5649, owner 2026-10-25): the search's Format filter
+# and a result's chips, by their standard names, the same in every language. Only what `jcctl`
+# published for an output the Endpoint serves counts; the data model's documents and the DCAT
+# record stay on the dataset page. Indexed as `vocab_jc_format` (CKAN's Solr schema keeps any
+# `vocab_*` as a multi-valued string), by code, in this order.
+DATA_FORMATS = {"NGSI-LD": "NGSI-LD", "WEBSOCKET": "WebSocket", "OGCFEAT": "OGC API Features", "ODATA": "OData",
+                "STA": "SensorThings API", "GEOJSON": "GeoJSON", "CSV": "CSV", "JSON": "JSON", "XLSX": "Excel",
+                "XLS": "XLS", "XML": "XML", "PARQUET": "Parquet", "ICS": "iCalendar", "RSS": "RSS", "ATOM": "Atom",
+                "JSONFEED": "JSON Feed", "MCP": "MCP"}
+# A calendar or feed `jcctl` lists per output names its format by media type (a JSON Feed is "JSON").
+_MEDIA_FORMATS = {"text/calendar": "ICS", "application/atom+xml": "ATOM", "application/rss+xml": "RSS",
+                  "application/feed+json": "JSONFEED"}
 # The EU data themes (publications.europa.eu/resource/authority/data-theme) the DCAT profile writes
 # into the `theme` extra, as the search's Topic filter and the home page's tiles (T-5294), named the
 # way the EU vocabulary names them in each language. Indexed as `vocab_jc_topic`, by code.
@@ -1946,7 +1946,7 @@ TOPICS = {
     "TECH": {"en": "Science and technology", "sk": "Veda a technika", "cs": "Věda a technika", "de": "Wissenschaft und Technologie", "hu": "Tudomány és technológia"},
     "TRAN": {"en": "Transport", "sk": "Doprava", "cs": "Doprava", "de": "Verkehr", "hu": "Közlekedés"},
 }
-FACET_LABELS = {"vocab_jc_use": lambda name: jc_t("use_" + name) if name in USES else name,
+FACET_LABELS = {"vocab_jc_format": lambda name: DATA_FORMATS.get(name, name),
                 "vocab_jc_topic": lambda name: _words(TOPICS.get(name)) or name}
 
 
@@ -1954,37 +1954,19 @@ def _words(words):
     return (words or {}).get(_language()) or (words or {}).get("en") or ""
 
 
-@functools.lru_cache(maxsize=4096)
-def _has_geometry(resource_id, modified):
-    """Whether a DataStore table holds a geometry: a `{attribute}.geojson` column, or the
-    `{attribute}.value.type` and `{attribute}.value.coordinates` columns `jcctl` derives it from
-    (publish_ckan.rs). `modified` only keys the cache, so a rewritten table is asked again."""
-    try:
-        fields = toolkit.get_action("datastore_search")(
-            {"ignore_auth": True}, {"resource_id": resource_id, "limit": 0}).get("fields") or []
-    except (KeyError, toolkit.ObjectNotFound, toolkit.NotAuthorized, toolkit.ValidationError):
-        return False
-    names = [str(field.get("id") or "") for field in fields]
-    return any(name.endswith(".geojson") or (
-        name.endswith(".value.type") and any(n.startswith(name[:-len("type")] + "coordinates") for n in names))
-        for name in names)
-
-
-def jc_uses(pkg):
-    """What a reader can do with the dataset, in USES order: read a table (a DataStore table,
-    a CSV, Excel or Parquet file, OData), see it on a map (a GeoJSON file or a table with a
-    geometry), follow a live feed (WebSocket) or query an API. The data model's files offer none."""
-    resources = (pkg or {}).get("resources") or []
-    kinds = {jc_kind(r) or (r.get("format") or "").strip().upper() for r in resources}
-    tables = [r for r in resources if r.get("datastore_active") and r.get("id")]
-    found = {
-        "table": bool(tables) or bool(kinds & _TABLE_KINDS),
-        "map": "GEOJSON" in kinds or any(
-            _has_geometry(r["id"], r.get("last_modified") or r.get("metadata_modified") or "") for r in tables),
-        "live": "WEBSOCKET" in kinds,
-        "api": bool(kinds & _API_KINDS),
-    }
-    return [use for use in USES if found[use]]
+def jc_data_formats(pkg):
+    """The codes of the formats the dataset serves its data in, in DATA_FORMATS order: an
+    Endpoint's address by its path, a DataStore table as CSV, a calendar or feed by its media
+    type, any other file by its format. The model's documents, the DCAT record and the link to
+    the publisher's own page are none."""
+    found = set()
+    for resource in (pkg or {}).get("resources") or []:
+        if _section(resource) == "schema" or jc_is_source(resource, pkg):
+            continue
+        found.add("CSV" if resource.get("datastore_active") else jc_kind(resource)
+                  or _MEDIA_FORMATS.get((resource.get("mimetype") or "").strip().lower())
+                  or (resource.get("format") or "").strip().upper())
+    return [code for code in DATA_FORMATS if code in found]
 
 
 def jc_topics(pkg):
@@ -2004,15 +1986,16 @@ def jc_topics(pkg):
     return [code for code in dict.fromkeys(codes) if code in TOPICS]
 
 
-def jc_use_chips(pkg):
-    """A search result's chips: the uses in the page's language."""
-    return [jc_t("use_" + use) for use in jc_uses(pkg)]
+def jc_format_chips(pkg):
+    """A search result's chips: the formats it serves, by their standard names."""
+    return [DATA_FORMATS[code] for code in jc_data_formats(pkg)]
 
 
 def jc_facet_labels(search_results, search_params):
-    """The Format and Topic filters in the page's language, without a value every result shares:
-    that one narrows nothing (T-5294). A value the search already filters by stays, so it can be
-    taken off again."""
+    """The Format and Topic filters in the page's language. Topic leaves out a value every result
+    shares, which narrows nothing (T-5294), unless the search already filters by it, so it can be
+    taken off again. Format lists every served format (owner 2026-10-25, T-5649): NGSI-LD on
+    every dataset still tells a reader the catalogue serves it."""
     facets = search_results.get("search_facets") or {}
     total = search_results.get("count") or 0
     # CKAN's query turns `fq` into a list of clauses before this hook sees it.
@@ -2026,7 +2009,7 @@ def jc_facet_labels(search_results, search_params):
         items = []
         for item in facet.get("items") or []:
             name = item.get("name") or ""
-            if item.get("count") == total and '%s:"%s"' % (field, name) not in fq:
+            if field == "vocab_jc_topic" and item.get("count") == total and '%s:"%s"' % (field, name) not in fq:
                 continue
             item["display_name"] = label(name)
             items.append(item)
@@ -2994,7 +2977,7 @@ class JcThemePlugin(plugins.SingletonPlugin):
             "jc_number": jc_number,
             "jc_rows": jc_rows,
             "jc_formats": jc_formats,
-            "jc_use_chips": jc_use_chips,
+            "jc_format_chips": jc_format_chips,
             "jc_topic_tiles": jc_topic_tiles,
             "jc_schema_org": jc_schema_org,
             "jc_recent": jc_recent,
@@ -3080,23 +3063,23 @@ class JcThemePlugin(plugins.SingletonPlugin):
         return jc_facet_labels(search_results, search_params)
 
     def before_dataset_index(self, pkg_dict):
-        """The uses and the EU themes as filters of their own (T-5294). `data_dict` is the
+        """The served formats (T-5649) and the EU themes (T-5294) as filters of their own. `data_dict` is the
         dataset as CKAN stored it, the index fields beside it are flattened."""
         try:
             stored = json.loads(pkg_dict.get("data_dict") or "{}")
         except ValueError:
             stored = {}
-        pkg_dict["vocab_jc_use"] = jc_uses(stored)
+        pkg_dict["vocab_jc_format"] = jc_data_formats(stored)
         pkg_dict["vocab_jc_topic"] = jc_topics(stored)
         return pkg_dict
 
     def dataset_facets(self, facets_dict, package_type):
         """The search filters in plain words: Publisher, Topic, Keywords, Format, Licence. Topic
-        is the EU theme and Format what a reader can do with the data (T-5294): CKAN's groups stay
-        empty here and its file formats are the same on every dataset."""
+        is the EU theme (T-5294) and Format the formats a dataset serves its data in (T-5649):
+        CKAN's groups stay empty here and its file formats count the data model's documents."""
         names = {"organization": "publisher", "vocab_jc_topic": "topic", "tags": "keywords",
-                 "vocab_jc_use": "format", "license_id": "licence"}
-        swap = {"groups": "vocab_jc_topic", "res_format": "vocab_jc_use"}
+                 "vocab_jc_format": "format", "license_id": "licence"}
+        swap = {"groups": "vocab_jc_topic", "res_format": "vocab_jc_format"}
         renamed = type(facets_dict)()
         for field in facets_dict:
             field = swap.get(field, field)

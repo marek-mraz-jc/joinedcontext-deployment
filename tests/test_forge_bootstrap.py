@@ -335,6 +335,31 @@ def test_a_signed_in_person_lands_in_a_forge_team_that_reads(local, job, script)
 
 
 @requires_helmfile
+def test_project_visibility_is_a_setting_the_seed_spells_right(local):
+    """PF-61, T-5607: `members` (on an Organization's `projects`, or on one Project) keeps the
+    organization-wide reader out, so departments of one project stay apart. Helsinki stays
+    `organization`: DEMO.md's demo.viewer reads every project. A misspelt value would be refused
+    by the Portal and the whole seed with it."""
+    docs = [
+        doc
+        for key, text in seed_configmap(local)["data"].items()
+        if key.endswith((".yaml", ".yml"))
+        for doc in yaml.safe_load_all(text)
+        if isinstance(doc, dict)
+    ]
+    organizations = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "Organization"}
+    assert organizations["hel"]["spec"].get("projects", {}).get("visibility", "organization") == "organization"
+    for doc in docs:
+        if doc.get("kind") == "Organization":
+            value = doc["spec"].get("projects", {}).get("visibility", "organization")
+        elif doc.get("kind") == "Project":
+            value = doc["spec"].get("visibility", "organization")
+        else:
+            continue
+        assert value in ("organization", "members"), f"{doc['kind']} {doc['metadata']['name']}: {value!r}"
+
+
+@requires_helmfile
 def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
     """PF-56, PF-59, PF-61: reading is a verb, so a person with no binding reads nothing.
 

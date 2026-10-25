@@ -144,6 +144,28 @@ mcp-mobile:
     serviceAccountsEnabled: false
     attributes:
       pkce.code.challenge.method: S256
+    # A token handed to an AI vendor names the resource it is for and nothing else (T-5611).
+    # The realm's default `roles` scope would add every client the person holds a role of to
+    # `aud` (its audience-resolve mapper: `account` and each `app-*`), so this client leaves it
+    # out and maps the realm roles the Portal and the Endpoint Policies read itself.
+    defaultClientScopes: &mcp-default-scopes
+      - acr
+      - basic
+      - email
+      - profile
+    protocolMappers: &mcp-realm-roles
+      - name: realm-roles
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-realm-role-mapper
+        consentRequired: false
+        config:
+          claim.name: realm_access.roles
+          jsonType.label: String
+          multivalued: 'true'
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+          userinfo.token.claim: 'false'
+          introspection.token.claim: 'true'
     # The Portal MCP server (/api/v1/mcp) wants `aud: portal-api`; the optional realm scope
     # `mcp:portal` adds it when the app asks for it (T-0637).
     optionalClientScopes:
@@ -159,6 +181,45 @@ mcp-mobile:
       - https://claude.com/api/mcp/auth_callback
       - https://chatgpt.com/connector_platform_oauth_redirect
       - https://platform.openai.com/chatkit-oauth-callback
+
+# The identity a client on the person's own computer uses for the Portal MCP server: Claude
+# Code, an IDE, MCP Inspector (T-5611, RFC 8252).
+#
+# Such a client receives the code on a loopback port it opens for the login, so the callback is
+# http://localhost:{port}/callback or http://127.0.0.1:{port}/callback with a port that changes
+# per login. Keycloak (RedirectUtils, 26.x) ignores the port of a registered loopback URI and
+# matches scheme, host and path exactly, so the two URIs below take any port and nothing else:
+# no wildcard, and a page on any other host or path is refused. A process on the same computer
+# that grabs the port first gets a code it cannot redeem without the PKCE verifier.
+#
+# A separate client and not two more callbacks on `mcp-mobile`: a laptop token gets a short life
+# and no `offline_access`, so a token left in a terminal's config dies with the Keycloak session
+# instead of living for a month. Public, no secret, PKCE S256, no dynamic registration.
+mcp-local:
+  name: MCP connector on your computer
+  description: Public PKCE client with loopback callbacks for Claude Code and other local MCP clients
+  subdomain: ''
+  # Unused: the loopback callbacks replace the computed list, as on `mcp-mobile`.
+  redirectPath: /
+  rawValues:
+    publicClient: true
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    attributes:
+      pkce.code.challenge.method: S256
+      # Five minutes per access token, refreshed within a session of at most eight hours.
+      access.token.lifespan: '300'
+      client.session.idle.timeout: '1800'
+      client.session.max.lifespan: '28800'
+    defaultClientScopes: *mcp-default-scopes
+    protocolMappers: *mcp-realm-roles
+    optionalClientScopes:
+      - mcp:portal
+    redirectUris:
+      - http://localhost/callback
+      - http://127.0.0.1/callback
 
 # The identity a connector uses for the MCP hub at /api/mcp: one connector over several
 # Endpoints (T-2490, ADR-N-025 section 4, EP-87, EP-88).

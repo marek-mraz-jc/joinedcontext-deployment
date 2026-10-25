@@ -121,7 +121,9 @@ configMap:
         # The allow-list of OPS-48. `keep_keys` deletes every attribute not named, so a new
         # attribute anywhere upstream is invisible until somebody adds it to this list on
         # purpose. The body goes too: `summary` is an attribute, and a log body is exactly
-        # where a raw request would arrive.
+        # where a raw request would arrive. `endpoint`, `tool`, `outcome` and `count` are the
+        # context-gateway's details (`mcp.tool`, T-5322; `endpoint.rate-limited`, T-5624): a
+        # slug, a tool name, a word and a number, never a body, header or value.
         transform/allowlist:
           error_mode: ignore
           log_statements:
@@ -131,7 +133,7 @@ configMap:
             - context: log
               statements:
                 - set(body, "")
-                - keep_keys(attributes, ["project", "space", "kind", "source", "summary", "severity", "correlationId", "details"])
+                - keep_keys(attributes, ["project", "space", "kind", "source", "summary", "severity", "correlationId", "details", "endpoint", "tool", "outcome", "count"])
 
         batch:
           timeout: 5s

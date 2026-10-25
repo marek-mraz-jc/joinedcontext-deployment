@@ -34,7 +34,9 @@ IMAGE = f"{IMAGE_SPEC['repository']}:{IMAGE_SPEC['tag']}@{IMAGE_SPEC['digest']}"
 # What OPS-48 forbids, spelled out as attributes an emitter might plausibly attach to the same
 # record: a request body, a bearer token, and a pod name that says nothing about the event.
 FORBIDDEN = {"http.request.body", "authorization", "k8s.pod.name"}
-ALLOWED = {"project", "space", "kind", "source", "summary", "severity", "correlationId", "details"}
+# The event's own fields, and the context-gateway's details (T-5322, T-5624; Deployment/05 §5).
+GATEWAY_DETAILS = {"endpoint", "tool", "outcome", "count"}
+ALLOWED = {"project", "space", "kind", "source", "summary", "severity", "correlationId", "details"} | GATEWAY_DETAILS
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 
@@ -116,6 +118,8 @@ RECORD = {
                     {"key": "correlationId", "value": {"stringValue": "4bf92f3577b34da6a3ce929d0e0e4736"}},
                     {"key": "http.request.body", "value": {"stringValue": '{"citizen":"secret"}'}},
                     {"key": "authorization", "value": {"stringValue": "Bearer a-token"}},
+                    {"key": "endpoint", "value": {"stringValue": "walk-read"}},
+                    {"key": "count", "value": {"intValue": "12"}},
                 ],
             },
             {
@@ -213,6 +217,15 @@ def test_the_allow_list_drops_every_attribute_it_does_not_name(exported):
     assert keys <= ALLOWED, f"attributes reached the Portal that the allow-list does not name: {keys - ALLOWED}"
     assert not keys & FORBIDDEN
     assert "kind" in keys and "project" in keys
+
+
+@requires_docker
+def test_the_gateways_details_reach_the_portal(exported):
+    """T-5624: the gateway's `endpoint` and `count` survive, so a rate-limited row names its Endpoint
+    and how many 429s it counts on the Activity, not only in its summary."""
+    attributes = {a["key"]: a["value"] for a in _records(exported)[0].get("attributes", [])}
+    assert attributes["endpoint"] == {"stringValue": "walk-read"}
+    assert attributes["count"] == {"intValue": "12"}
 
 
 @requires_docker

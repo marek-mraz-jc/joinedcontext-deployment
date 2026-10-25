@@ -19,10 +19,21 @@ spec:
     - AdministrativeArea
     - BudgetLine
     - Vehicle
+    - EmissionSource
+    - RadonRiskArea
+    - FloodZone
+    - FloodDefence
+    - WeatherObserved
     - PublicTransportRoute
     - GtfsStop
     - GtfsAccessPoint
     - FareZone
+    - Garden
+    - Tree
+    - OnStreetParking
+    - ParkingGroup
+    - RestrictedTrafficArea
+    - FareCollectionSystem
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

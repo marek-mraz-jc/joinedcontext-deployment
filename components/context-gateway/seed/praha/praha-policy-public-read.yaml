@@ -34,7 +34,18 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: EmissionSource
+        - type: RadonRiskArea
+        - type: FloodZone
+        - type: FloodDefence
+        - type: WeatherObserved
         - type: PublicTransportRoute
         - type: GtfsStop
         - type: GtfsAccessPoint
         - type: FareZone
+        - type: Garden
+        - type: Tree
+        - type: OnStreetParking
+        - type: ParkingGroup
+        - type: RestrictedTrafficArea
+        - type: FareCollectionSystem

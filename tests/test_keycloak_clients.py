@@ -349,6 +349,45 @@ def test_mcp_mobile_lists_only_the_known_mobile_callbacks(realm_clients):
     }
 
 
+def test_mcp_local_takes_a_loopback_callback_on_any_port_and_nothing_else(realm_clients):
+    """T-5611, RFC 8252: Claude Code and IDE clients receive the code on a local port that changes
+    per login. Keycloak 26 ignores the port of a registered loopback URI and matches scheme, host
+    and path exactly (measured on 26.8.0: :42240/callback 200, :42240/other, https://localhost
+    and another host 400), so two exact URIs cover it with no wildcard."""
+    client = realm_clients["mcp-local"]
+    assert set(client["redirectUris"]) == {"http://localhost/callback", "http://127.0.0.1/callback"}
+    assert client["publicClient"] is True and "secret" not in client
+    assert client["attributes"]["pkce.code.challenge.method"] == "S256"
+    assert client["standardFlowEnabled"] is True
+    assert not (client["implicitFlowEnabled"] or client["directAccessGrantsEnabled"] or client["serviceAccountsEnabled"])
+    # A token on a laptop dies with the session: short access tokens, no offline refresh token.
+    assert int(client["attributes"]["access.token.lifespan"]) <= 300
+    assert int(client["attributes"]["client.session.max.lifespan"]) <= 8 * 3600
+    assert "offline_access" not in client["optionalClientScopes"] + client["defaultClientScopes"]
+    assert client["optionalClientScopes"] == ["mcp:portal"]
+
+
+@pytest.mark.parametrize("client_id", ["mcp-mobile", "mcp-local"])
+def test_an_mcp_connector_token_names_only_the_resource_it_asked_for(realm_clients, rendered, client_id):
+    """T-5611: the realm's default `roles` scope resolves an audience for every client whose role
+    the person holds, so demo.viewer's mcp:portal token named `account` and 15 `app-*` clients
+    beside portal-api. Without it (measured on Keycloak 26.8.0) the token's `aud` is `portal-api`
+    alone and `realm_access.roles` stays, from the client's own mapper."""
+    client = realm_clients[client_id]
+    assert client["defaultClientScopes"] == ["acr", "basic", "email", "profile"]
+    mappers = {m["name"]: m for m in client["protocolMappers"]}
+    assert set(mappers) == {"groups", "realm-roles"}, "no audience mapper on the client itself"
+    realm_roles = mappers["realm-roles"]
+    assert realm_roles["protocolMapper"] == "oidc-usermodel-realm-role-mapper"
+    assert realm_roles["config"]["claim.name"] == "realm_access.roles"
+    assert realm_roles["config"]["access.token.claim"] == "true"
+    for doc in rendered("local"):
+        if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
+            realm = json.loads(base64.b64decode(doc["data"]["local.json"]))
+    scope = {s["name"]: s for s in realm["clientScopes"]}["mcp:portal"]
+    assert [m["config"]["included.client.audience"] for m in scope["protocolMappers"]] == ["portal-api"]
+
+
 def test_mcp_hub_is_a_public_pkce_client_with_consent(realm_clients):
     """T-2490 / EP-88: the hub connector lives on a device too, so no secret and PKCE S256; its
     tokens name the hub, which the gateway accepts at /api/mcp only, and consent shows the
@@ -484,11 +523,18 @@ def test_jcctl_is_a_public_device_flow_client_for_the_portal(realm_clients):
     assert client["directAccessGrantsEnabled"] is False and client["serviceAccountsEnabled"] is False
     assert client["redirectUris"] == [] and client["webOrigins"] == []
     audiences = {
-        m["config"].get("included.client.audience")
+        m["config"].get("included.client.audience") or m["config"].get("included.custom.audience")
         for m in client["protocolMappers"]
         if m["protocolMapper"] == "oidc-audience-mapper"
     }
-    assert audiences == {"portal-api"}, audiences
+    # T-5614: `jcctl-endpoint` reaches an Endpoint only beside the `endpoint:{slug}` scope of it.
+    assert audiences == {"portal-api", "jcctl-endpoint"}, audiences
+    # T-5614: a public client proves each sign-in with RFC 7636 S256; the realm refuses a device
+    # authorization without it, and `jcctl login` sends it.
+    assert client["attributes"]["pkce.code.challenge.method"] == "S256"
+    # No default endpoint scope: a plain `jcctl login` token reaches no Endpoint.
+    assert not any(s.startswith("endpoint:") for s in client["defaultClientScopes"]), client["defaultClientScopes"]
+    assert not any(s.startswith("endpoint:") for s in client["optionalClientScopes"]), "the Job links them"
 
 
 def test_only_jcctl_offers_the_device_flow(realm_clients):

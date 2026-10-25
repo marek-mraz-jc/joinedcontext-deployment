@@ -219,6 +219,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
         "why": "the realm is the identity provider; its login pages must be reachable unauthenticated",
     },
+    "keycloak-discovery": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "SAMEORIGIN",
+        "why": "the realm's public discovery documents, read before any login; the edge drops registration_endpoint (T-5611)",
+    },
     "grafana": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "Grafana signs everyone in through the realm; anonymous access and the login form are off",
