@@ -30,6 +30,8 @@ REFERENCES = {
     # An event names its venue (T-5364, DM-141).
     "Event": {"PointOfInterest"},
     "CityWork": {"AdministrativeArea"},
+    # A street segment names the paid parking section of its tariff (T-5424, refParkingSite).
+    "ParkingGroup": {"OnStreetParking"},
     # Citizen participation (T-5065): every record names its process; a Result its parent Result.
     "Proposal": {"ParticipatoryProcess"},
     "BudgetProject": {"ParticipatoryProcess"},

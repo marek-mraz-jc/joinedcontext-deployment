@@ -56,7 +56,7 @@
                 {% set notes = h.markdown_extract(h.get_translated(pkg, 'notes'), extract_length=180) %}
                 {% if notes %}<p class="jc-card-text">{{ notes }}</p>{% endif %}
                 <div class="jc-card-foot">
-                  {% for use in h.jc_use_chips(pkg) %}<span class="jc-chip">{{ use }}</span>{% endfor %}
+                  {% for format in h.jc_format_chips(pkg) %}<span class="jc-chip">{{ format }}</span>{% endfor %}
                   {% set updated = h.jc_updated(pkg) %}
                   {% if updated %}
                     <time datetime="{{ updated.isoformat() }}">{{ h.jc_t('updated') }} {{ h.render_datetime(updated) }}</time>

@@ -13,11 +13,26 @@
     "BudgetLine": {
       "@id": "jc:BudgetLine"
     },
+    "EmissionSource": {
+      "@id": "jc:EmissionSource"
+    },
     "Entity": {
       "@id": "ngsi-ld:Entity"
     },
+    "FareCollectionSystem": {
+      "@id": "sdm:FareCollectionSystem"
+    },
     "FareZone": {
       "@id": "jc:FareZone"
+    },
+    "FloodDefence": {
+      "@id": "jc:FloodDefence"
+    },
+    "FloodZone": {
+      "@id": "jc:FloodZone"
+    },
+    "Garden": {
+      "@id": "sdm:Garden"
     },
     "GtfsAccessPoint": {
       "@id": "sdm:GtfsAccessPoint"
@@ -28,6 +43,12 @@
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
+    "ParkingGroup": {
+      "@id": "sdm:ParkingGroup"
+    },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
@@ -37,6 +58,15 @@
     "PublicTransportRoute": {
       "@id": "sdm:PublicTransportRoute"
     },
+    "RadonRiskArea": {
+      "@id": "jc:RadonRiskArea"
+    },
+    "RestrictedTrafficArea": {
+      "@id": "sdm:RestrictedTrafficArea"
+    },
+    "Tree": {
+      "@id": "jc:Tree"
+    },
     "Vehicle": {
       "@id": "sdm:Vehicle"
     },
@@ -45,6 +75,9 @@
     },
     "WasteContainerIsle": {
       "@id": "sdm:WasteContainerIsle"
+    },
+    "WeatherObserved": {
+      "@id": "sdm:WeatherObserved"
     },
     "accessRestriction": {
       "@context": {
@@ -71,6 +104,13 @@
       "@id": "jc:approvedAmount",
       "@type": "xsd:float"
     },
+    "areaServed": {
+      "@id": "sdm:areaServed"
+    },
+    "atmosphericPressure": {
+      "@id": "sdm:atmosphericPressure",
+      "@type": "xsd:float"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
@@ -95,6 +135,9 @@
       "@id": "jc:capacity",
       "@type": "xsd:integer"
     },
+    "careRegime": {
+      "@id": "jc:careRegime"
+    },
     "category": {
       "@context": {
         "description": "skos:prefLabel",
@@ -105,6 +148,10 @@
     },
     "co": {
       "@id": "sdm:co",
+      "@type": "xsd:float"
+    },
+    "coEmission": {
+      "@id": "jc:coEmission",
       "@type": "xsd:float"
     },
     "code": {
@@ -124,6 +171,14 @@
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
     },
+    "defenceType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:defenceType"
+    },
     "delay": {
       "@id": "jc:delay",
       "@type": "xsd:integer"
@@ -131,11 +186,22 @@
     "description": {
       "@id": "sdm:description"
     },
+    "designFlood": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:designFlood"
+    },
     "direction": {
       "@id": "jc:direction"
     },
     "districtCode": {
       "@id": "jc:districtCode"
+    },
+    "equipmentId": {
+      "@id": "sdm:equipmentId"
     },
     "facilityType": {
       "@id": "jc:facilityType"
@@ -151,11 +217,33 @@
     "fleetVehicleId": {
       "@id": "sdm:fleetVehicleId"
     },
+    "floodReturnPeriod": {
+      "@id": "jc:floodReturnPeriod",
+      "@type": "xsd:integer"
+    },
+    "floodZoneCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:floodZoneCategory"
+    },
     "freeSlotNumber": {
       "@id": "sdm:freeSlotNumber",
       "@type": "xsd:integer"
     },
+    "fuelType": {
+      "@id": "jc:fuelType"
+    },
     "geojson": "https://purl.org/geojson/vocab#",
+    "greenspaceType": {
+      "@id": "jc:greenspaceType"
+    },
+    "gustSpeed": {
+      "@id": "sdm:gustSpeed",
+      "@type": "xsd:float"
+    },
     "heading": {
       "@id": "sdm:heading",
       "@type": "xsd:integer"
@@ -184,6 +272,10 @@
       "@id": "sdm:no2",
       "@type": "xsd:float"
     },
+    "noxEmission": {
+      "@id": "jc:noxEmission",
+      "@type": "xsd:float"
+    },
     "o3": {
       "@id": "sdm:o3",
       "@type": "xsd:float"
@@ -203,6 +295,13 @@
     "operatorName": {
       "@id": "jc:operatorName"
     },
+    "parkingGroups": {
+      "@id": "jc:parkingGroups",
+      "@type": "@id"
+    },
+    "parkingZone": {
+      "@id": "jc:parkingZone"
+    },
     "platformCode": {
       "@id": "jc:platformCode"
     },
@@ -210,21 +309,65 @@
       "@id": "sdm:pm10",
       "@type": "xsd:float"
     },
+    "pm10Emission": {
+      "@id": "jc:pm10Emission",
+      "@type": "xsd:float"
+    },
     "pm25": {
       "@id": "sdm:pm25",
       "@type": "xsd:float"
+    },
+    "pm25Emission": {
+      "@id": "jc:pm25Emission",
+      "@type": "xsd:float"
+    },
+    "precipitation": {
+      "@id": "sdm:precipitation",
+      "@type": "xsd:float"
+    },
+    "protectedBy": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:protectedBy"
     },
     "pupilCount": {
       "@id": "jc:pupilCount",
       "@type": "xsd:integer"
     },
+    "radonRiskCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:radonRiskCategory"
+    },
     "refDistrict": {
       "@id": "jc:refDistrict",
+      "@type": "@id"
+    },
+    "refParkingSite": {
+      "@id": "sdm:refParkingSite",
       "@type": "@id"
     },
     "refWasteContainerIsle": {
       "@id": "sdm:refWasteContainerIsle",
       "@type": "@id"
+    },
+    "registerCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:registerCategory"
+    },
+    "relativeHumidity": {
+      "@id": "sdm:relativeHumidity",
+      "@type": "xsd:float"
     },
     "routeCode": {
       "@id": "sdm:routeCode"
@@ -251,6 +394,10 @@
       "@id": "sdm:so2",
       "@type": "xsd:float"
     },
+    "so2Emission": {
+      "@id": "jc:so2Emission",
+      "@type": "xsd:float"
+    },
     "source": {
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
@@ -272,6 +419,13 @@
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
+    },
+    "tariff": {
+      "@id": "jc:tariff"
+    },
+    "temperature": {
+      "@id": "sdm:temperature",
+      "@type": "xsd:float"
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
@@ -301,10 +455,16 @@
       "@id": "sdm:transportationType",
       "@type": "xsd:integer"
     },
+    "treeCategory": {
+      "@id": "jc:treeCategory"
+    },
     "type": "@type",
     "url": {
       "@id": "schema:url",
       "@type": "xsd:anyURI"
+    },
+    "vegetationType": {
+      "@id": "jc:vegetationType"
     },
     "vehicleType": {
       "@context": {
@@ -313,6 +473,10 @@
         "text": "skos:notation"
       },
       "@id": "sdm:vehicleType"
+    },
+    "vocEmission": {
+      "@id": "jc:vocEmission",
+      "@type": "xsd:float"
     },
     "wasteContainerIsles": {
       "@id": "jc:wasteContainerIsles",
@@ -333,6 +497,14 @@
     "wheelchairAccessible": {
       "@id": "jc:wheelchairAccessible",
       "@type": "xsd:boolean"
+    },
+    "windDirection": {
+      "@id": "sdm:windDirection",
+      "@type": "xsd:float"
+    },
+    "windSpeed": {
+      "@id": "sdm:windSpeed",
+      "@type": "xsd:float"
     },
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "zoneCode": {

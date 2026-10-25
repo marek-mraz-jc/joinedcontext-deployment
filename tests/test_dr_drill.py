@@ -6,6 +6,7 @@ counts and the replay lag from a fixture, records every Cluster it is asked to a
 and keeps the last result patched into the result ConfigMap.
 """
 
+import gzip
 import json
 import os
 import stat
@@ -35,6 +36,16 @@ def production(rendered):
     return rendered("production")
 
 
+@pytest.fixture(scope="module")
+def smartcity(rendered):
+    return rendered("smartcity")
+
+
+@pytest.fixture(scope="module")
+def dev(rendered):
+    return rendered("dev")
+
+
 def env_of(cronjob: dict) -> dict[str, str]:
     container = cronjob["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]
     return {e["name"]: e["value"] for e in container["env"]}
@@ -46,14 +57,22 @@ TARGET = "2026-10-21T21:00:00Z"
 def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_mib: int = 8192,
         ready: bool = True, tables: dict[str, tuple[str, str]] | None = None,
         people: str = "3", schema: tuple[str, str] = ("20261001", "20261001"),
-        **extra) -> tuple[int, dict, list[str]]:
+        dump: dict | None = None, handoff: bool = True, **extra) -> tuple[int, dict, list[str]]:
     """Runs the drill with a stub kubectl. `rows` maps a database to (source, copy) totals, a
     copy of "" meaning the database is missing from the copy; `tables` maps a database to the
     (source, point-in-time copy) per-table answers, `name|count` lines, and defaults to one
     table holding the source's total in both. `people` is what the copy's realm answers and
     `schema` the Portal's (source, copy) migration. Returns the exit code, the result the
     script patched into its ConfigMap, and the stub's log of creates and deletes; the
-    manifest of the n-th create is in `tmp_path / f"created.{n}"`."""
+    manifest of the n-th create is in `tmp_path / f"created.{n}"`.
+
+    `dump` stands for the nightly dump's volume (T-5556): `counts` the file the dump job wrote
+    beside it, `restored` the per-database `name|count` answers of the restored copy, `data` the
+    gzip bytes (a real gzip of a line by default) and `psql_error` a line the restore's psql
+    prints before it fails. With `dump`, the script first runs as the init container does
+    (`dr-drill.sh dump`, stub initdb, postgres and psql, /backup under `tmp_path`, so gzip judges
+    the file), then as the drill on its handoff. `handoff=False` drops what the init container
+    wrote."""
     script = one(docs, "ConfigMap", f"{NAME}-script")["data"]["dr-drill.sh"]
     pitr = one(docs, "ConfigMap", f"{NAME}-script")["data"]["cluster-pitr.yaml"]
     (tmp_path / "cluster-pitr.yaml").write_text(pitr)
@@ -68,6 +87,42 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
             (tmp_path / f"postgres-cluster-drill-1.{db}").write_text(copy)
             (tmp_path / f"postgres-cluster-drill-1.{db}.tables").write_text(tables[db][1])
             (tmp_path / f"postgres-cluster-drill-1.{db}.schema").write_text(schema[1])
+    backup = tmp_path / "backup"
+    backup.mkdir()
+    base = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "MEMINFO": str(tmp_path / "meminfo"),
+            "POLL_SECONDS": "0", "HANDOFF": str(tmp_path / "handoff")}
+    if dump is not None:
+        newest = backup / "2026-10-24T0230Z.sql.gz"
+        (backup / "2026-10-23T0230Z.sql.gz").write_bytes(gzip.compress(b"-- older"))
+        newest.write_bytes(dump.get("data", gzip.compress(b"SELECT 1;\n")))
+        (backup / f"{newest.name}.counts").write_text(dump["counts"])
+        for db, answer in dump.get("restored", {}).items():
+            (tmp_path / f"restored.{db}").write_text(answer)
+        fail = dump.get("psql_error")
+        stubs = {
+            # psql -X -At -d <db> -c <query> counts; psql -X -q ... -d postgres restores stdin.
+            "psql": textwrap.dedent(f"""\
+                #!/bin/sh
+                [ "$2" = -At ] && exec cat {tmp_path}/restored.$4
+                cat >/dev/null
+                {f"echo '{fail}' >&2; exit 3" if fail else ""}
+                """),
+            "initdb": "#!/bin/sh\nmkdir -p \"$2\" && echo row > \"$2/PG_VERSION\"\n",
+            "postgres": "#!/bin/sh\nexec sleep 30\n",
+            "pg_isready": "#!/bin/sh\n",
+        }
+        for name, text in stubs.items():
+            (tmp_path / name).write_text(text)
+            (tmp_path / name).chmod(0o755)
+        init = one(docs, "CronJob", NAME)["spec"]["jobTemplate"]["spec"]["template"]["spec"]["initContainers"][0]
+        assert init["command"] == ["/bin/sh", "/opt/drill/dr-drill.sh", "dump"]
+        first = subprocess.run(["sh", "-s", "dump"], input=script, text=True, capture_output=True, timeout=30,
+                               env={**base, **{e["name"]: e["value"] for e in init["env"]},
+                                    "BACKUP_DIR": str(backup), "DRILL_DATA": str(tmp_path / "drill"), **extra})
+        assert first.returncode == 0, first.stderr
+        assert not (tmp_path / "drill" / "data").exists(), "the restored copy is deleted in its container"
+        if not handoff:
+            subprocess.run(["rm", "-r", str(tmp_path / "handoff")], check=True)
     stub = tmp_path / "kubectl"
     stub.write_text(textwrap.dedent(f"""\
         #!/bin/sh
@@ -93,9 +148,7 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
         esac
         """))
     stub.chmod(stub.stat().st_mode | stat.S_IEXEC)
-    env = {**os.environ, **env_of(one(docs, "CronJob", NAME)),
-           "PATH": f"{tmp_path}:{os.environ['PATH']}", "MEMINFO": str(tmp_path / "meminfo"),
-           "POLL_SECONDS": "0", "TARGET_SETTLE_SECONDS": "0", **extra}
+    env = {**base, **env_of(one(docs, "CronJob", NAME)), "TARGET_SETTLE_SECONDS": "0", **extra}
     script = script.replace("/opt/drill/cluster-pitr.yaml", str(tmp_path / "cluster-pitr.yaml"))
     result = subprocess.run(["sh", "-"], input=script.replace("/opt/drill/cluster.yaml", "/dev/null"),
                             text=True, capture_output=True, env=env, timeout=30)
@@ -200,3 +253,144 @@ def test_the_job_is_held_to_its_own_names(production):
     pitr = yaml.safe_load(pitr)
     assert pitr["spec"]["bootstrap"]["recovery"].pop("recoveryTarget") == {"targetTime": "__TARGET_TIME__"}
     assert pitr == yaml.safe_load(copy), "the two restores differ only in their target"
+
+
+# ---- the nightly local dump (T-5556)
+
+COUNTS = "portal.public.a|100\nportal.public.b|7\nkeycloak.public.user_entity|3\n"
+
+
+def test_prod_restores_its_local_dump_and_still_says_it_has_no_off_site_backup(smartcity, tmp_path):
+    env = env_of(one(smartcity, "CronJob", NAME))
+    assert env["BACKUPS_ENABLED"] == "false" and env["LOCAL_BACKUP"] == "true"
+    restored = {"portal": "public.a|101\npublic.b|7", "keycloak": "public.user_entity|3"}
+    code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "restored": restored})
+    assert code == 0, result
+    assert result["result"] == "no-backup", "the dump is no off-site backup, the alert keeps saying so"
+    assert result["localDump"] == "local-dump-passed"
+    assert result["localDumpDetail"] == "2026-10-24T0230Z.sql.gz: 3 tables match", "the newest dump"
+    assert result["localDumpRtoSeconds"].isdigit()
+    newest = tmp_path / "backup" / "2026-10-24T0230Z.sql.gz"
+    assert result["localDumpBytes"] == str(newest.stat().st_size)
+    assert log == [], "the dump restores in the drill's own pod: nothing created, no Cluster without an archive"
+
+
+def test_dev_restores_the_dump_and_then_the_archive(dev, tmp_path):
+    restored = {"portal": "public.a|100\npublic.b|7", "keycloak": "public.user_entity|3"}
+    code, result, log = run(dev, tmp_path, {"portal": ("10", "10"), "keycloak": ("3", "3")},
+                            dump={"counts": COUNTS, "restored": restored})
+    assert code == 0, result
+    assert result["result"] == "passed" and result["localDump"] == "local-dump-passed"
+    assert log.count("create") == 2, "after the dump, the latest and the point-in-time copy"
+
+
+def test_a_dump_missing_a_table_fails_the_drill_and_names_the_table(smartcity, tmp_path):
+    restored = {"portal": "public.a|100", "keycloak": "public.user_entity|3"}
+    code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "restored": restored})
+    assert code != 0
+    assert result["result"] == "failed" and result["localDump"] == "failed"
+    assert result["localDumpDetail"] == "2026-10-24T0230Z.sql.gz short: portal.public.b(missing)"
+    assert log == []
+
+
+def test_a_truncated_dump_fails_the_drill(smartcity, tmp_path):
+    whole = gzip.compress(os.urandom(4096))
+    code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "data": whole[:2000]})
+    assert code != 0 and result["result"] == "failed" and result["localDump"] == "failed"
+    assert "did not restore: gzip:" in result["localDumpDetail"]
+    assert "unexpected end of file" in result["localDumpDetail"]
+    assert result["localDumpRtoSeconds"] == ""
+
+
+def test_a_refused_statement_fails_without_copying_a_value_into_the_result(smartcity, tmp_path):
+    error = 'psql:<stdin>:812: ERROR:  invalid input syntax for type integer: "4111 1111 1111 1111"'
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "psql_error": error})
+    assert code != 0 and result["localDump"] == "failed"
+    assert result["localDumpDetail"] == ("2026-10-24T0230Z.sql.gz did not restore: "
+                                         "psql:<stdin>:812: ERROR:  invalid input syntax for type integer: ")
+    assert "4111" not in json.dumps(result)
+
+
+def test_a_dump_without_its_counts_fails(smartcity, tmp_path):
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": ""})
+    assert code != 0 and result["localDump"] == "failed"
+    assert result["localDumpDetail"] == "no table counts beside 2026-10-24T0230Z.sql.gz"
+
+
+def test_a_dump_restore_that_left_no_verdict_fails(smartcity, tmp_path):
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": COUNTS}, handoff=False)
+    assert code != 0 and result["localDump"] == "failed"
+    assert result["localDumpDetail"] == "the dump's restore container left no verdict"
+
+
+def test_a_full_node_skips_the_dump_and_the_drill_without_waiting_twice(smartcity, tmp_path):
+    code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS}, mem_mib=900,
+                            TIMEOUT_MINUTES="0")
+    assert code != 0 and result["result"] == "skipped" and result["localDump"] == "skipped"
+    assert "900 MiB" in result["detail"] and log == []
+
+
+def test_without_the_local_dump_the_stage_is_skipped_not_failed(production, tmp_path):
+    assert env_of(one(production, "CronJob", NAME))["LOCAL_BACKUP"] == "false"
+    code, result, log = run(production, tmp_path, {"portal": ("5", "5")})
+    assert code == 0 and result["result"] == "passed"
+    assert result["localDump"] == "off" and result["localDumpDetail"] == ""
+    pod = one(production, "CronJob", NAME)["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    assert "initContainers" not in pod and "backup" not in [v["name"] for v in pod["volumes"]]
+
+
+def pod_of(docs: list[dict]) -> dict:
+    return one(docs, "CronJob", NAME)["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+
+
+@pytest.mark.parametrize("env", ["production", "smartcity"])
+def test_the_drill_creates_no_pod_and_execs_only_into_the_clusters(env, request):
+    """The integrator's review of T-5556: `pods: create` cannot be held to a name, so a drill
+    with it could start a pod as any ServiceAccount of the namespace with any Secret."""
+    docs = request.getfixturevalue(env)
+    rules = one(docs, "Role", NAME)["rules"]
+    assert not [r for r in rules if "pods" in r["resources"]], "no pod rights at all"
+    exec_names = next(r for r in rules if r["resources"] == ["pods/exec"])["resourceNames"]
+    assert sorted(exec_names) == sorted([f"postgres-cluster-{n}" for n in range(1, 10)] + ["postgres-cluster-drill-1"])
+    assert "dump-pod.yaml" not in one(docs, "ConfigMap", f"{NAME}-script")["data"]
+
+
+def test_only_the_drill_container_holds_the_api_token(smartcity):
+    pod = pod_of(smartcity)
+    assert pod["automountServiceAccountToken"] is False and pod["enableServiceLinks"] is False
+    drill, = pod["containers"]
+    init, = pod["initContainers"]
+    token = next(m for m in drill["volumeMounts"] if m["name"] == "kube-api-access")
+    assert token == {"name": "kube-api-access", "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                     "readOnly": True}
+    volume = next(v for v in pod["volumes"] if v["name"] == "kube-api-access")["projected"]["sources"]
+    assert [list(s) for s in volume] == [["serviceAccountToken"], ["configMap"], ["downwardAPI"]]
+    assert "kube-api-access" not in [m["name"] for m in init["volumeMounts"]]
+    assert not [e for e in init["env"] if "valueFrom" in e], "no Secret reaches the dump's copy"
+
+
+def test_the_dump_restores_closed_in_the_init_container(smartcity):
+    pod = pod_of(smartcity)
+    init, = pod["initContainers"]
+    image = yaml.safe_load(one(smartcity, "ConfigMap", f"{NAME}-script")["data"]["cluster.yaml"])["spec"]["imageName"]
+    assert init["image"] == image, "restored with the cluster's own Postgres"
+    assert "ports" not in init
+    sc = init["securityContext"]
+    assert sc["readOnlyRootFilesystem"] is True and sc["allowPrivilegeEscalation"] is False
+    assert sc["runAsUser"] == 26 and pod["securityContext"]["runAsNonRoot"] is True
+    backup = next(v for v in pod["volumes"] if v["name"] == "backup")
+    assert backup["persistentVolumeClaim"] == {"claimName": "postgres-cluster-local-backup", "readOnly": True}
+    assert next(m for m in init["volumeMounts"] if m["name"] == "backup")["readOnly"] is True
+    assert "emptyDir" in next(v for v in pod["volumes"] if v["name"] == "dump-data")
+    script = one(smartcity, "ConfigMap", f"{NAME}-script")["data"]["dr-drill.sh"]
+    assert "-c listen_addresses= " in script, "Postgres listens on no port"
+
+
+def test_the_dump_job_writes_the_counts_and_fails_a_dump_over_80_percent(smartcity):
+    job = one(smartcity, "Job", "postgres-cluster-local-backup-now")["spec"]["template"]["spec"]
+    container = job["containers"][0]
+    env = {e["name"]: e.get("value") for e in container["env"]}
+    assert env["VOLUME_SIZE"] == "10Gi"
+    script = container["command"][2]
+    assert script.index('"$file.counts"') < script.index('mv "$file.part" "$file"')
+    assert "over 80 % of the" in script and "-name '*.sql.gz.counts'" in script

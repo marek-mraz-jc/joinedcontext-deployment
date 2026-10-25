@@ -109,33 +109,18 @@ echo "denied $PRINCIPAL the writes on $count clients without $MANAGED_KEY: $MANA
 # reaches the hub after the next run.
 # `endpoint:*` is not one of them: the realm import writes it, unmarked, as the hub's one
 # default scope (ADR-N-025 4b), so it is left as it is (T-4459).
+# The command line's client gets the same optional links (T-5614): `jcctl token --resource` asks
+# for one of them, and the gateway admits a `jcctl` token on the one Endpoint its scope names.
+# There `endpoint:*` is unlinked like any stray, so no jcctl token names every Endpoint.
 HUB_CLIENT=${HUB_CLIENT:-mcp-hub}
+CLI_CLIENT=${CLI_CLIENT:-jcctl}
 SCOPE_PREFIX=endpoint:
-hub_id=$(client_id "$HUB_CLIENT")
-if [ -z "$hub_id" ]; then
-  echo "no client $HUB_CLIENT: no endpoint scope to link"
-  exit 0
-fi
-hub="clients/$hub_id"
-declare -A ours=() linked=()
+declare -A ours=()
 while IFS=, read -r id name mark; do
   if [ -n "$id" ] && [ "${name#"$SCOPE_PREFIX"}" != "$name" ] && [ "$mark" = "$MANAGED_VALUE" ]; then
     ours[$id]=$name
   fi
 done < <(kc get client-scopes -r "$REALM" --fields "id,name,attributes($MANAGED_KEY)" --format csv --noquotes)
-for kind in default optional; do
-  while IFS=, read -r id name; do
-    if [ -z "$id" ] || [ "${name#"$SCOPE_PREFIX"}" = "$name" ] || [ "$name" = "${SCOPE_PREFIX}*" ]; then
-      continue
-    fi
-    if [ "$kind" = optional ] && [ -n "${ours[$id]:-}" ]; then
-      linked[$id]=1
-    else
-      kc delete "$hub/$kind-client-scopes/$id" -r "$REALM"
-      echo "unlinked $name from $HUB_CLIENT ($kind)"
-    fi
-  done < <(kc get "$hub/$kind-client-scopes" -r "$REALM" --fields id,name --format csv --noquotes)
-done
 # The links themselves go over bash's /dev/tcp with the token kcadm keeps in its config: a
 # kcadm JVM per link took a second each, so a fresh realm of 10,000 Endpoints never converged
 # inside the Job's timeout, and one process does a link in milliseconds (T-4474, ADR-N-025 §4d).
@@ -164,18 +149,49 @@ put_status() {
   exec 3<&-
   echo "$status"
 }
-token=$(admin_token)
-added=0
-for id in "${!ours[@]}"; do
-  if [ -z "${linked[$id]:-}" ]; then
-    status=$(put_status "$hub/optional-client-scopes/$id")
-    if [ "$status" = 401 ]; then
-      login
-      token=$(admin_token)
-      status=$(put_status "$hub/optional-client-scopes/$id")
-    fi
-    [ "$status" = 204 ] || fail "linking ${ours[$id]} to $HUB_CLIENT answered $status"
-    added=$((added + 1))
+
+# Links every marked scope to client $1 as optional and unlinks every other `endpoint:` link;
+# with $2 = keep-star, the realm's own `endpoint:*` stays where the import put it.
+link_endpoint_scopes() {
+  local client=$1 star=$2 client_id_ path kind id name status added=0
+  client_id_=$(client_id "$client")
+  if [ -z "$client_id_" ]; then
+    echo "no client $client: no endpoint scope to link"
+    return 0
   fi
-done
-echo "linked $added of ${#ours[@]} $SCOPE_PREFIX scopes to $HUB_CLIENT"
+  path="clients/$client_id_"
+  local -A linked=()
+  for kind in default optional; do
+    while IFS=, read -r id name; do
+      if [ -z "$id" ] || [ "${name#"$SCOPE_PREFIX"}" = "$name" ]; then
+        continue
+      fi
+      if [ "$name" = "${SCOPE_PREFIX}*" ] && [ "$star" = keep-star ]; then
+        continue
+      fi
+      if [ "$kind" = optional ] && [ -n "${ours[$id]:-}" ]; then
+        linked[$id]=1
+      else
+        kc delete "$path/$kind-client-scopes/$id" -r "$REALM"
+        echo "unlinked $name from $client ($kind)"
+      fi
+    done < <(kc get "$path/$kind-client-scopes" -r "$REALM" --fields id,name --format csv --noquotes)
+  done
+  token=$(admin_token)
+  for id in "${!ours[@]}"; do
+    if [ -z "${linked[$id]:-}" ]; then
+      status=$(put_status "$path/optional-client-scopes/$id")
+      if [ "$status" = 401 ]; then
+        login
+        token=$(admin_token)
+        status=$(put_status "$path/optional-client-scopes/$id")
+      fi
+      [ "$status" = 204 ] || fail "linking ${ours[$id]} to $client answered $status"
+      added=$((added + 1))
+    fi
+  done
+  echo "linked $added of ${#ours[@]} $SCOPE_PREFIX scopes to $client"
+}
+
+link_endpoint_scopes "$HUB_CLIENT" keep-star
+link_endpoint_scopes "$CLI_CLIENT" unlink-star
