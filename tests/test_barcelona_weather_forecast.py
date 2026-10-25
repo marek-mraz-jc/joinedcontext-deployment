@@ -69,6 +69,9 @@ def test_each_day_of_the_barcelones_forecast_is_one_weather_forecast(written):
     assert day["weatherType"]["value"] == "sol i núvols alts (matí), sol (tarda)"
     assert day["areaServed"]["value"] == "Barcelonès"
     assert written[PREFIX + "2"]["validFrom"]["value"] == "2026-10-25T23:00:00Z"
+    # Observed at the issue, so a rerun over the same file adds no history row (temporal audit: duplicates-rows).
+    for attr in ("dateIssued", "validFrom", "validTo", "dayMaximum", "dayMinimum", "weatherType"):
+        assert day[attr]["observedAt"] == "2026-10-24T13:00:00Z", attr
 
 
 @requires_docker
