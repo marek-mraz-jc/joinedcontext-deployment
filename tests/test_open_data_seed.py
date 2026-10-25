@@ -1064,13 +1064,14 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
     assert set(od) <= mapped, "a converted dataset the mapping does not map"
     assert len({entry["dataset"] for entry in od.values()}) == len(od), "one entry per dataset"
     assert expected_catalogue() == {
-        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5258 the eight Helsinki statistics themes; T-5278 the heat vulnerability index and the service property energy use; T-5268 PID vehicles and T-5276 Golemio city services and T-5269 IPR city amenities, T-5423 the PID lines, stops, metro entrances and fare zones and T-5424 on-street parking, no-parking stretches and parking machines and T-5425 its parks and green areas and, as a second dataset, its trees and T-5429 its air pollution sources, natural hazards and weather in praha; T-5257 Helsinki's feedback reports.
+        # T-5047 moved "Podujatia na Slovensku" from bbsk to slovensko; T-5065 added "Participácia občanov na Slovensku"; T-5232 added Žilina's four live datasets; T-5259 Helsinki air quality; T-5253 Helsinki's cycle and traffic counts; T-5255 the Helsinki street cleaning air pilot; T-5258 the eight Helsinki statistics themes; T-5278 the heat vulnerability index and the service property energy use; T-5268 PID vehicles and T-5276 Golemio city services and T-5269 IPR city amenities, T-5423 the PID lines, stops, metro entrances and fare zones and T-5424 on-street parking, no-parking stretches and parking machines and T-5425 its parks and green areas and, as a second dataset, its trees and T-5429 its air pollution sources, natural hazards and weather in praha; T-5257 Helsinki's feedback reports; T-5273 Bratislava's counters, bike stations and public transport stops and lines.
         # T-5263 added Barcelona's air quality, weather and groundwater; T-5265 its activity agenda and its
         # facilities; T-5262 its traffic, parking and EV charging; T-5264 its districts and barris, its
         # works on the public space and its crossings; T-5431 its street furniture; T-5417 its tourist flats.
-        # T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city).
+        # T-5274 Bratislava's districts, four tables of places and 327 statistics tables (districts, okresy, city);
+        # T-5273 its counters, pedestrians, BAjk and MHD stops and lines.
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
-        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327,
+        "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2,
         "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1, "slovensko": 3 + 45, "zilina": 5 + 4 + 1}
 
 
