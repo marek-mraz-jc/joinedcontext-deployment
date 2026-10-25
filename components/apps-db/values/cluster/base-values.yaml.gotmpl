@@ -93,8 +93,8 @@ cluster:
 
   postgresql:
     parameters:
-      # Two shards of twenty connections, the Portal, and an owner login per migration run.
-      max_connections: "100"
+      # max_connections is set per profile, from the shards' pools and the memory limit
+      # (tests/test_postgres_connection_budget.py, T-5553).
       # The host sets 2 s per statement itself (AP-146); this bounds anything else.
       statement_timeout: "30s"
       idle_in_transaction_session_timeout: "60s"
