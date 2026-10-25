@@ -338,6 +338,17 @@
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
     },
+    "priceCurrency": {
+      "@id": "sdm:priceCurrency"
+    },
+    "pricePerDay": {
+      "@id": "jc:pricePerDay",
+      "@type": "xsd:float"
+    },
+    "priceRatePerMinute": {
+      "@id": "sdm:priceRatePerMinute",
+      "@type": "xsd:float"
+    },
     "protectedBy": {
       "@context": {
         "description": "skos:prefLabel",

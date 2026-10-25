@@ -8,8 +8,8 @@ metadata:
   namespace: praha
   title: { cs: Praha — městská data, en: Prague city data }
   description:
-    cs: 'Městská data Prahy: kvalita ovzduší, sdílená kola, parkoviště P+R, kontejnery a stanoviště tříděného odpadu, rozpočet, kulturní a školská zařízení, veřejné toalety, městské části, služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost, oázy chladu, parkování na ulici, parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko, záplavová území, protipovodňová ochrana a počasí. Zdroje: ČHMÚ, Golemio, ROPID, IPR Praha a hl. m. Praha.'
-    en: 'Prague city data: air quality, shared bikes, park and ride car parks, sorted-waste containers and collection points, the budget, cultural and school facilities, public toilets, city districts, municipal police stations, libraries, municipal offices, gardens, playgrounds, waste collection yards, city amenities, cool spots, on-street parking, parks, green areas and trees, air pollution sources, radon risk, flood areas, flood defences and the weather. Sources: ČHMÚ, Golemio, ROPID, IPR Praha and the City of Prague.'
+    cs: 'Městská data Prahy: kvalita ovzduší, sdílená kola, parkoviště P+R, kontejnery a stanoviště tříděného odpadu, rozpočet, kulturní a školská zařízení, veřejné toalety, městské části, služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost, oázy chladu, parkování na ulici, parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko, záplavová území, protipovodňová ochrana, počasí, garáže Mr.Parkit a volná sdílená auta. Zdroje: ČHMÚ, Golemio, ROPID, IPR Praha a hl. m. Praha.'
+    en: 'Prague city data: air quality, shared bikes, park and ride car parks, sorted-waste containers and collection points, the budget, cultural and school facilities, public toilets, city districts, municipal police stations, libraries, municipal offices, gardens, playgrounds, waste collection yards, city amenities, cool spots, on-street parking, parks, green areas and trees, air pollution sources, radon risk, flood areas, flood defences, the weather, Mr.Parkit garages and shared cars free to rent. Sources: ČHMÚ, Golemio, ROPID, IPR Praha and the City of Prague.'
 spec:
   contextSpaceRef: praha-mesto
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
@@ -149,6 +149,16 @@ spec:
         description:
           cs: Aktuální polohy a zpoždění vozidel PID, Operátor ICT, podle podmínek užití Golemio.
           en: Current positions and delays of the PID vehicles, Operátor ICT, under Golemio's terms of use.
+      - url: https://api.golemio.cz/v3/parking?primarySource=mr_parkit&limit=10000
+        title: { cs: Parkoviště – API (Golemio), en: Car parks API (Golemio) }
+        description:
+          cs: Garáže Mr.Parkit z registru parkovišť Golemio a jejich ceny z tarifů téhož registru (/v3/parking-tariffs), Operátor ICT, podle podmínek užití Golemio.
+          en: The Mr.Parkit garages of Golemio's car park register with their prices from its tariffs (/v3/parking-tariffs), Operátor ICT, under Golemio's terms of use.
+      - url: https://api.golemio.cz/v2/sharedcars?limit=10000
+        title: { cs: Sdílená auta – API (Golemio), en: Shared cars API (Golemio) }
+        description:
+          cs: Volná sdílená auta v Praze, Operátor ICT, podle podmínek užití Golemio.
+          en: The shared cars free to rent in Prague, Operátor ICT, under Golemio's terms of use.
       - url: https://api.golemio.cz/v2/municipalpolicestations?limit=10000
         title:
           cs: Služebny Městské policie – API (Golemio)

@@ -488,6 +488,9 @@ PARTS = {
     # every right (T-5428).
     "praha-cinnost-mestske-policie": "CC0", "praha-cinnost-mestske-policie-utvary": "CC0",
     "praha-cerpani-rozpoctu": "CC0", "praha-financni-vztahy-mc": "CC0", "praha-opravy-a-uzavirky": "CC0",
+    # Golemio's Mr.Parkit garages and shared cars (T-5680), under Golemio's terms as above.
+    "praha-garaze": None,
+    "praha-sdilena-auta": None,
 }
 
 

@@ -25,3 +25,6 @@ spec:
   information:
     - entities:
         - type: Vehicle
+  # The PID vehicles only: the shared cars of the same type are the dataset praha-sdilena-auta
+  # (T-5680), told apart by their kind.
+  q: vehicleType=="tram","bus","trolley","other"

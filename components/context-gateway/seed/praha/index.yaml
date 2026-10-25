@@ -40,6 +40,8 @@ praha-datasource-park-and-ride.yaml: projects/praha/datasources/ipr-park-and-rid
 praha-datasource-ticket-points.yaml: projects/praha/datasources/pid-ticket-points.yaml
 praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
 praha-datasource-park-and-ride-occupancy.yaml: projects/praha/datasources/golemio-park-and-ride.yaml
+praha-datasource-golemio-mr-parkit.yaml: projects/praha/datasources/golemio-mr-parkit.yaml
+praha-datasource-golemio-shared-cars.yaml: projects/praha/datasources/golemio-shared-cars.yaml
 praha-datasource-waste-fill.yaml: projects/praha/datasources/golemio-waste-containers.yaml
 praha-datasource-waste-containers.yaml: projects/praha/datasources/golemio-waste-all-containers.yaml
 praha-datasource-pid-vehicles.yaml: projects/praha/datasources/golemio-pid-vehicles.yaml
@@ -90,6 +92,8 @@ praha-pipeline-park-and-ride.yaml: projects/praha/pipelines/park-and-ride/pipeli
 praha-pipeline-ticket-points.yaml: projects/praha/pipelines/ticket-points/pipeline.yaml
 praha-pipeline-budget.yaml: projects/praha/pipelines/budget/pipeline.yaml
 praha-pipeline-park-and-ride-occupancy.yaml: projects/praha/pipelines/park-and-ride-occupancy/pipeline.yaml
+praha-pipeline-golemio-garages.yaml: projects/praha/pipelines/golemio-garages/pipeline.yaml
+praha-pipeline-golemio-shared-cars.yaml: projects/praha/pipelines/golemio-shared-cars/pipeline.yaml
 praha-pipeline-waste-fill.yaml: projects/praha/pipelines/waste-fill/pipeline.yaml
 praha-pipeline-waste-containers.yaml: projects/praha/pipelines/waste-containers/pipeline.yaml
 praha-pipeline-bike-stations-bento.yaml: projects/praha/pipelines/bike-stations/bento.yaml
@@ -104,6 +108,8 @@ praha-pipeline-park-and-ride-bento.yaml: projects/praha/pipelines/park-and-ride/
 praha-pipeline-ticket-points-bento.yaml: projects/praha/pipelines/ticket-points/bento.yaml
 praha-pipeline-budget-bento.yaml: projects/praha/pipelines/budget/bento.yaml
 praha-pipeline-park-and-ride-occupancy-bento.yaml: projects/praha/pipelines/park-and-ride-occupancy/bento.yaml
+praha-pipeline-golemio-garages-bento.yaml: projects/praha/pipelines/golemio-garages/bento.yaml
+praha-pipeline-golemio-shared-cars-bento.yaml: projects/praha/pipelines/golemio-shared-cars/bento.yaml
 praha-pipeline-pid-vehicles.yaml: projects/praha/pipelines/pid-vehicles/pipeline.yaml
 praha-pipeline-golemio-police.yaml: projects/praha/pipelines/golemio-police/pipeline.yaml
 praha-pipeline-golemio-libraries.yaml: projects/praha/pipelines/golemio-libraries/pipeline.yaml
@@ -225,6 +231,10 @@ praha-endpoint-mestske-casti.yaml: projects/praha/spaces/praha-mesto/endpoints/p
 praha-policy-public-mestske-casti.yaml: projects/praha/spaces/praha-mesto/policies/public-mestske-casti.yaml
 praha-endpoint-vozidla.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vozidla-pid.yaml
 praha-policy-public-vozidla.yaml: projects/praha/spaces/praha-mesto/policies/public-vozidla-pid.yaml
+praha-endpoint-garaze.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-garaze.yaml
+praha-policy-public-garaze.yaml: projects/praha/spaces/praha-mesto/policies/public-garaze.yaml
+praha-endpoint-sdilena-auta.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-sdilena-auta.yaml
+praha-policy-public-sdilena-auta.yaml: projects/praha/spaces/praha-mesto/policies/public-sdilena-auta.yaml
 praha-endpoint-sluzby.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-sluzby.yaml
 praha-policy-public-sluzby.yaml: projects/praha/spaces/praha-mesto/policies/public-sluzby.yaml
 praha-endpoint-vybavenost.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vybavenost.yaml
