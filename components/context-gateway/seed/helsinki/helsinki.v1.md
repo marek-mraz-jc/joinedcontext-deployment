@@ -607,8 +607,25 @@ IRI: `ngsi-ld:Entity`
 | `healthStation` | A health station. |
 | `swimmingHall` | An indoor swimming hall. |
 | `beach` | A public beach. |
-| `school` | A comprehensive school. |
-| `other` | Any other unit of the service register, such as a youth centre, a playground or a city office. |
+| `school` | A comprehensive or general upper secondary school. |
+| `other` | Any other unit of the service register: a private one, or a public one with no point inside the city or of no kind above. |
+| `kindergarten` | A day-care centre, a family day-care area, a pre-primary group or a playpark (leikkipuisto). |
+| `hospital` | A hospital or one of its clinics. |
+| `dentalCare` | A public dental clinic. |
+| `maternityClinic` | A maternity and child health clinic (neuvola). |
+| `healthCare` | Any other public health care unit, such as a mental health, substance abuse or rehabilitation service. |
+| `vocationalSchool` | A vocational school or an apprenticeship training office. |
+| `university` | A university or a university of applied sciences. |
+| `adultEducation` | An adult education centre. |
+| `elderlyCare` | A service centre, home care unit or care home for the elderly. |
+| `socialServices` | A social services unit: child welfare, families, disability services or social assistance. |
+| `youth` | A youth centre or a youth workshop. |
+| `rescueStation` | A fire and rescue station. |
+| `police` | A police station. |
+| `publicShelter` | A public civil defence shelter. |
+| `publicAuthority` | An office of the city or the state: administration, justice, taxation, planning or customs. |
+| `sports` | A public sports facility or outdoor exercise place. |
+| `culture` | A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden. |
 
 ### ServiceRequestStatus
 

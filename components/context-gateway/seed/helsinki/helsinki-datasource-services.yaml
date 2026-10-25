@@ -13,7 +13,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&only=id,name,location,street_address,address_zip,services,www,last_modified_time,connections&format=json
+    url: https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&only=id,name,location,street_address,address_zip,services,service_nodes,root_service_nodes,contract_type,www,last_modified_time,connections&format=json
     verb: GET
     headers: { Accept: application/json }
     timeout: 30s

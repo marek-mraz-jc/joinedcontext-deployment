@@ -32,7 +32,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures/helsinki/open-data"
 
 # pipeline -> (fixture, the type it writes, how many entities the recording holds)
 FEEDS = {
-    "services": ("servicemap-units.json", "PointOfInterest", 5),
+    "services": ("servicemap-units.json", "PointOfInterest", 8),
     "beach-water": ("uiras-beaches.json", "WaterQualityObserved", 3),
     "parking-areas": ("parking-areas.json", "OnStreetParking", 3),
     # Three areas, two of them one application: two permits.
@@ -54,7 +54,29 @@ def fixture(name: str) -> dict:
 
 
 def run(pipeline: str, document: dict) -> list[dict]:
+    if pipeline == "services":
+        return services(document)
     return open_data.run_all(HELSINKI / f"helsinki-pipeline-{pipeline}-bento.yaml", json.dumps(document).encode(), "helsinki")
+
+
+SERVICE_TREE = "api.hel.fi/servicemap/v2/service_node/"
+
+
+def services(document: dict, tree: dict | None = None) -> list[dict]:
+    """The services mapping with its two asks of the service tree answered by `tree` (by default the
+    recorded part of the tree that holds every node the recorded units name, fetched 2026-10-25).
+    A message the runner would refuse (an errored one) comes back as {"__error": ...}."""
+    tree = fixture("servicemap-tree.json") if tree is None else tree
+    answer = {"mapping": f"root = this.assign({{\"tree\": {json.dumps(tree['results'])}, \"tree_count\": {tree['count']}}})"}
+    steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-services-bento.yaml").read_text())["pipeline"]["processors"]
+    asks = [i for i, step in enumerate(steps) if SERVICE_TREE in json.dumps(step)]
+    assert len(asks) == 2, asks
+    steps = steps[:asks[0]] + [answer] + [step for i, step in enumerate(steps) if i > asks[0] and i not in asks]
+    steps.append({"mapping": 'root = if errored() { {"__error": error()} } else { this }'})
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
+        yaml.safe_dump({"pipeline": {"processors": steps}}, mapping)
+        mapping.flush()
+        return open_data.run_all(Path(mapping.name), json.dumps(document).encode(), "helsinki")
 
 
 def schema_errors(entity: dict) -> list[str]:
@@ -205,8 +227,9 @@ def test_a_unit_of_any_other_service_is_written_as_other():
     """T-5257: every unit of the register, so each Linked Events venue names a PointOfInterest."""
     recording = fixture("servicemap-units.json")
     recording["results"][0]["services"] = [9999]
+    recording["results"][0]["service_nodes"] = []
     written = run("services", recording)
-    assert len(written) == 5
+    assert len(written) == 8
     other = next(e for e in written if e["id"].endswith(f"servicemap-{recording['results'][0]['id']}"))
     assert other["serviceCategory"]["value"] == "other" and not schema_errors(other)
 
@@ -218,18 +241,81 @@ def test_a_unit_point_outside_helsinki_is_left_out_and_a_twice_listed_unit_writt
     first["location"] = {"type": "Point", "coordinates": [60.17, 24.94]}  # swapped
     recording["results"].append(json.loads(json.dumps(second)))
     written = {e["id"]: e for e in run("services", recording)}
-    assert len(written) == 5
+    assert len(written) == 8
     assert "location" not in written[f"urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-{first['id']}"]
 
 
 @requires_docker
 def test_an_empty_register_fails_the_run_and_the_pages_after_the_first_are_asked_for():
     steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-services-bento.yaml").read_text())["pipeline"]["processors"]
-    http = next(s for s in steps if "branch" in s)["branch"]["processors"][-1]["http"]
+    http = next(s for s in steps if "branch" in s and "/unit/" in json.dumps(s))["branch"]["processors"][-1]["http"]
     assert http["url"].startswith("https://api.hel.fi/servicemap/v2/unit/?municipality=helsinki&page_size=1000&")
     assert http["url"].endswith("&page=${! @page }")
-    # The thrown mapping error flags the message and nothing reaches the endpoint.
-    assert run("services", {"count": 0, "results": []}) == []
+    # The thrown mapping error flags the message: the runner refuses it and nothing reaches the endpoint.
+    refused = run("services", {"count": 0, "results": []})
+    assert len(refused) == 1 and "the Service Map lists no unit in Helsinki" in refused[0]["__error"]
+
+
+def unit_entity(written: list[dict], unit: int) -> dict:
+    return next(e for e in written if e["id"] == f"urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-{unit}")
+
+
+@requires_docker
+def test_a_public_institution_takes_its_kind_from_the_service_tree_and_its_point_from_its_record(written):
+    """T-5689: Haartman hospital's cardiology clinic (a joint municipal authority, node 1009 Hospitals)
+    and a city playpark (node 868 Day care); the five older kinds keep their service codes, the
+    private swimming hall Kellumo included."""
+    kinds = {int(e["id"].rsplit("-", 1)[1]): e["serviceCategory"]["value"] for e in written["services"]}
+    assert kinds == {10037: "library", 6247: "healthStation", 80486: "swimmingHall", 62953: "beach", 7010: "school",
+                     80752: "hospital", 80964: "kindergarten", 81019: "other"}
+    for unit in (80752, 80964):
+        entity = unit_entity(written["services"], unit)
+        assert entity["location"]["value"]["type"] == "Point"
+        assert entity["source"]["value"] == f"https://api.hel.fi/servicemap/v2/unit/{unit}/"
+        assert not schema_errors(entity)
+
+
+@requires_docker
+def test_a_private_unit_or_one_without_a_point_in_the_city_never_takes_an_institution_kind():
+    recording = fixture("servicemap-units.json")
+    hospital, playpark, coworking = (next(u for u in recording["results"] if u["id"] == i) for i in (80752, 80964, 81019))
+    hospital["contract_type"] = {"id": "PRIVATE_SERVICE"}
+    del playpark["location"]
+    coworking["contract_type"] = {"id": "MUNICIPAL_SERVICE"}
+    coworking["location"]["coordinates"] = [24.66, 60.2]  # Espoo, west of the city
+    written = services(recording)
+    assert {unit_entity(written, i)["serviceCategory"]["value"] for i in (80752, 80964, 81019)} == {"other"}
+    assert all(not schema_errors(e) for e in written)
+
+
+@requires_docker
+def test_a_public_unit_of_a_health_or_social_service_with_no_kind_above_is_health_care_or_social_services():
+    recording = fixture("servicemap-units.json")
+    hospital = next(u for u in recording["results"] if u["id"] == 80752)
+    hospital["service_nodes"] = []
+    assert unit_entity(services(recording), 80752)["serviceCategory"]["value"] == "healthCare"
+    hospital["root_service_nodes"] = [783]
+    assert unit_entity(services(recording), 80752)["serviceCategory"]["value"] == "socialServices"
+
+
+@requires_docker
+def test_a_service_tree_the_two_pages_do_not_hold_fails_the_run():
+    tree = fixture("servicemap-tree.json")
+    refused = services(fixture("servicemap-units.json"), {**tree, "count": 2001})
+    assert len(refused) == 1 and "the service tree lists 2001 nodes and 68 were read" in refused[0]["__error"]
+    assert len(services(fixture("servicemap-units.json"), {"count": 0, "results": []})) == 1
+
+
+def test_the_service_tree_is_asked_page_by_page_with_a_size_cap():
+    steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-services-bento.yaml").read_text())["pipeline"]["processors"]
+    asks = [step["branch"] for step in steps if SERVICE_TREE in json.dumps(step)]
+    assert [a["processors"][-1]["http"]["url"][-7:] for a in asks] == ["&page=1", "&page=2"]
+    for ask in asks:
+        http = ask["processors"][-1]["http"]
+        assert http["url"].startswith("https://api.hel.fi/servicemap/v2/service_node/?page_size=1000&only=id,parent,level&")
+        assert http["timeout"] == "60s" and "4194304" in ask["result_map"]
+    # The second page is asked only when the first says there is one.
+    assert "this.tree_count.or(0) > 1000" in asks[1]["request_map"]
 
 
 @requires_docker
