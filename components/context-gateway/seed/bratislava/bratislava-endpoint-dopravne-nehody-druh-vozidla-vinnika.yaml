@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-dopravne-nehody-druh-vozidla-vinnika
   namespace: bratislava
-  title: { sk: Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka), en: Road traffic accidents by the vehicle at fault }
+  title:
+    sk: Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka)
+    en: Road traffic accidents by the vehicle at fault
   description:
     sk: 'Ukazovatele tabuľky „Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka)“ z data.bratislava.sk, jeden na okres Bratislava I až V, obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Road traffic accidents by the vehicle at fault”, one per okres Bratislava I to V, period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/07c428da9c4b4fbcbdbdae9056d495e1
-        title: { sk: Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka), en: Road traffic accidents by the vehicle at fault }
+        title:
+          sk: Počet dopravných nehôd v cestnej doprave (druh vozidla vinníka)
+          en: Road traffic accidents by the vehicle at fault
     pipelineRef: { kind: Pipeline, name: statistics-okresy }

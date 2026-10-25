@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-priemerna-koncentracia-pm25
   namespace: bratislava
-  title: { sk: Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave, en: Annual mean PM2.5 concentration }
+  title:
+    sk: Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave
+    en: Annual mean PM2.5 concentration
   description:
     sk: 'Ukazovatele tabuľky „Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Annual mean PM2.5 concentration”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/7146fc000f1544309fbaef06a4a70fa3
-        title: { sk: Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave, en: Annual mean PM2.5 concentration }
+        title:
+          sk: Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave
+          en: Annual mean PM2.5 concentration
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

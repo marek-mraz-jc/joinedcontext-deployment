@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-dopravne-nehody-kategoria-cesty
   namespace: bratislava
-  title: { sk: Počet dopravných nehôd v cestnej doprave podľa kategórie cesty, en: Road traffic accidents by road category }
+  title:
+    sk: Počet dopravných nehôd v cestnej doprave podľa kategórie cesty
+    en: Road traffic accidents by road category
   description:
     sk: 'Ukazovatele tabuľky „Počet dopravných nehôd v cestnej doprave podľa kategórie cesty“ z data.bratislava.sk, jeden na okres Bratislava I až V, obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Road traffic accidents by road category”, one per okres Bratislava I to V, period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/60953eb5610d45d28464b3f6c90cd6be
-        title: { sk: Počet dopravných nehôd v cestnej doprave podľa kategórie cesty, en: Road traffic accidents by road category }
+        title:
+          sk: Počet dopravných nehôd v cestnej doprave podľa kategórie cesty
+          en: Road traffic accidents by road category
     pipelineRef: { kind: Pipeline, name: statistics-okresy }

@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-zmena-dopravneho-dopytu
   namespace: bratislava
-  title: { sk: Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %), en: Change of transport demand by the city transport master plan and the forecast }
+  title:
+    sk: Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %)
+    en: Change of transport demand by the city transport master plan and the forecast
   description:
     sk: 'Ukazovatele tabuľky „Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %)“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Change of transport demand by the city transport master plan and the forecast”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/fa81444a16434daabdc3646ae888e9c4
-        title: { sk: Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %), en: Change of transport demand by the city transport master plan and the forecast }
+        title:
+          sk: Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %)
+          en: Change of transport demand by the city transport master plan and the forecast
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

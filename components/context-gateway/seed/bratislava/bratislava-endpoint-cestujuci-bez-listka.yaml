@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-cestujuci-bez-listka
   namespace: bratislava
-  title: { sk: Cestujúci bez platného cestovného lístka v MHD v Bratislave, en: Passengers without a valid ticket on public transport }
+  title:
+    sk: Cestujúci bez platného cestovného lístka v MHD v Bratislave
+    en: Passengers without a valid ticket on public transport
   description:
     sk: 'Ukazovatele tabuľky „Cestujúci bez platného cestovného lístka v MHD v Bratislave“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Passengers without a valid ticket on public transport”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/4a8eab30e596432486f494649840c694
-        title: { sk: Cestujúci bez platného cestovného lístka v MHD v Bratislave, en: Passengers without a valid ticket on public transport }
+        title:
+          sk: Cestujúci bez platného cestovného lístka v MHD v Bratislave
+          en: Passengers without a valid ticket on public transport
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

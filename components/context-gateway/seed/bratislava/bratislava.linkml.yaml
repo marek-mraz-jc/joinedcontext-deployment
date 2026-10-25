@@ -814,8 +814,9 @@ enums:
   CoachStopCategory:
     description: The OnStreetParking `category` values the city's tourist coach stops map to, a subset of the Smart Data Model's enum.
     permissible_values:
-      shortTerm: { description: "A short-term stop: passengers get on and off." }
-      mediumTerm: { description: "A long-term stop where a coach waits (the Smart Data Model has no longer term)." }
+      shortTerm: { description: 'A short-term stop: passengers get on and off.' }
+      mediumTerm:
+        description: A long-term stop where a coach waits (the Smart Data Model has no longer term).
 
 classes:
   AirQualityObserved:
@@ -959,5 +960,4 @@ classes:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
     slots: [name, category, allowedVehicleType, totalSpotNumber, description, dataProvider, source]
     slot_usage:
-      category:
-        range: CoachStopCategory
+      category: { range: CoachStopCategory }

@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-nehody-s-nasledkom-na-zdravi
   namespace: bratislava
-  title: { sk: Počet dopravných nehôd s následkom na živote alebo zdraví, en: Traffic accidents with injury or death }
+  title:
+    sk: Počet dopravných nehôd s následkom na živote alebo zdraví
+    en: Traffic accidents with injury or death
   description:
     sk: 'Ukazovatele tabuľky „Počet dopravných nehôd s následkom na živote alebo zdraví“ z data.bratislava.sk, jeden na okres Bratislava I až V, obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Traffic accidents with injury or death”, one per okres Bratislava I to V, period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/b72dc2a2559745bdbc29a7a678b7a8e9
-        title: { sk: Počet dopravných nehôd s následkom na živote alebo zdraví, en: Traffic accidents with injury or death }
+        title:
+          sk: Počet dopravných nehôd s následkom na živote alebo zdraví
+          en: Traffic accidents with injury or death
     pipelineRef: { kind: Pipeline, name: statistics-okresy }

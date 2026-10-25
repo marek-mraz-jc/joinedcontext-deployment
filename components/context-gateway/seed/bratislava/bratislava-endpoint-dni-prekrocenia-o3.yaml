@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-dni-prekrocenia-o3
   namespace: bratislava
-  title: { sk: Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave, en: Days above the ozone target value }
+  title:
+    sk: Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave
+    en: Days above the ozone target value
   description:
     sk: 'Ukazovatele tabuľky „Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Days above the ozone target value”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/6e18d5a0c0fd466dab5bd821a744178a
-        title: { sk: Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave, en: Days above the ozone target value }
+        title:
+          sk: Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave
+          en: Days above the ozone target value
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

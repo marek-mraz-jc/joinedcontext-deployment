@@ -5,7 +5,9 @@ kind: Policy
 metadata:
   name: public-turisticke-autobusy
   namespace: bratislava
-  title: { sk: 'Verejné čítanie: zastávky turistických autobusov', en: 'Public read: tourist coach stops' }
+  title:
+    sk: 'Verejné čítanie: zastávky turistických autobusov'
+    en: 'Public read: tourist coach stops'
 spec:
   contextSpaceRef: { kind: ContextSpace, name: bratislava }
   assigner: did:web:bratislava.sk

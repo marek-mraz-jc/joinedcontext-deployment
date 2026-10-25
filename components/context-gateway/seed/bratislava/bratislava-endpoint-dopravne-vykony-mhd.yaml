@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-dopravne-vykony-mhd
   namespace: bratislava
-  title: { sk: Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave, en: Public transport output by traction }
+  title:
+    sk: Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave
+    en: Public transport output by traction
   description:
     sk: 'Ukazovatele tabuľky „Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Public transport output by traction”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/7f5b1dd29c2141489ca842a0c94e98e3
-        title: { sk: Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave, en: Public transport output by traction }
+        title:
+          sk: Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave
+          en: Public transport output by traction
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

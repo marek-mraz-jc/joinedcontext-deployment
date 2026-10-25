@@ -4,7 +4,9 @@ kind: Endpoint
 metadata:
   name: bratislava-cestovne-bez-listka-eura
   namespace: bratislava
-  title: { sk: Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách), en: Fare evasion on public transport in euros }
+  title:
+    sk: Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách)
+    en: Fare evasion on public transport in euros
   description:
     sk: 'Ukazovatele tabuľky „Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách)“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Fare evasion on public transport in euros”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -34,5 +36,7 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/544b9c8a55bf40429d542b6456d41c3a
-        title: { sk: Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách), en: Fare evasion on public transport in euros }
+        title:
+          sk: Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách)
+          en: Fare evasion on public transport in euros
     pipelineRef: { kind: Pipeline, name: statistics-mesto }
