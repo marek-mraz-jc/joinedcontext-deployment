@@ -12,15 +12,16 @@
 #   B  endpoint abuse (runbook 3): the walk ServiceAccount calls Endpoint walk-read at --rate requests
 #      a second for --seconds; the gateway answers 429; the drill passes when the project's
 #      Activity names the caller; then the limit is tightened as runbook 3 says and checked.
-#   C  a leaked ServiceAccount key (runbook 4): the walk key is treated as leaked, its secret is
-#      rotated in Keycloak and its Policy deleted; the drill passes when the leaked secret and
-#      the token minted before are refused (401/403) within --bound-c seconds (OPS-45: 5).
+#   C  a leaked ServiceAccount key (runbook 4): the walk key is treated as leaked, a person issues
+#      a new secret on the Portal and its Policy is deleted; the drill passes when the leaked
+#      secret and the token minted before are refused (401/403) within --bound-c seconds (OPS-45: 5).
 #
 # Every write is a Change proposed with the operator's token (jcctl apply/delete -f): a person
-# approves it on the Portal's approval page while the script waits. Drill B and C need a Keycloak
-# client for walk-caller, which the Portal does not create for an oauth-client account (T-5626): the script
-# creates it through the Keycloak admin API (KEYCLOAK_ADMIN_TOKEN, or KEYCLOAK_ADMIN_USER and
-# KEYCLOAK_ADMIN_PASSWORD) and deletes it at the end.
+# approves it on the Portal's approval page while the script waits. The Portal creates the Keycloak
+# client of walk-caller and deletes it with the account (T-5626); its secret is issued only from a
+# person's Portal session, so the script asks that person to issue it (and in drill C to issue a
+# new one) on the account's card and to paste it on this terminal, where it is read without echo.
+# No Keycloak administrator credential is needed.
 #
 # Safety: nothing shared is stopped or restarted (runbook 4's emergency-revoke.sh restarts the
 # gateway, needlessly since the reaper, T-5625, so drill C revokes without it); the rate is capped at 20 requests a second, 60 s and
@@ -100,8 +101,8 @@ A      wait for a good run of walk-fetch; point walk-source at a 404 path; measu
        back; measure until a run succeeds again
 EOF
 	case "$drills" in *b* | *c*) cat <<EOF ;; esac
-       create the Keycloak client $project-walk-caller (Keycloak admin), its secret into a
-       mode 700 work directory only
+       wait for the Portal's client $project-walk-caller; a person issues its secret on the
+       Portal and pastes it here (no echo), into a mode 700 work directory only
 EOF
 	case "$drills" in *b*) cat <<EOF ;; esac
 B      $rate req/s for ${seconds}s on Endpoint walk-read; count 429s; look for the
@@ -109,12 +110,13 @@ B      $rate req/s for ${seconds}s on Endpoint walk-read; count 429s; look for t
        that the gateway answers with RateLimit-Limit $tight_rpm
 EOF
 	case "$drills" in *c*) cat <<EOF ;; esac
-C      mint a token with the leaked secret; rotate the secret in Keycloak and delete Policy
-       walk-caller-read; measure until the leaked secret and the earlier token are refused
-       (bound ${bound_c}s each, OPS-45); no gateway restart
+C      mint a token with the leaked secret; a person issues a new secret on the Portal (runbook 4);
+       measure from its access.revoked event until the leaked secret is refused; delete Policy
+       walk-caller-read and measure until the earlier token is refused (bound ${bound_c}s each,
+       OPS-45); no gateway restart
 EOF
 	cat <<EOF
-down   delete every resource of the file, the Keycloak client and project $project$([ "$keep" -eq 1 ] && printf ' (skipped: --keep)')
+down   delete every resource of the file (the Portal removes the client) and project $project$([ "$keep" -eq 1 ] && printf ' (skipped: --keep)')
 EOF
 }
 
@@ -133,8 +135,6 @@ for url in "$server" "$gateway" ${idm:+"$idm"}; do
 done
 case "$drills" in *b* | *c*)
 	[ -n "$idm" ] || die "drills b and c need --idm <realm issuer url>"
-	[ -n "${KEYCLOAK_ADMIN_TOKEN:-}" ] || { [ -n "${KEYCLOAK_ADMIN_USER:-}" ] && [ -n "${KEYCLOAK_ADMIN_PASSWORD:-}" ]; } ||
-		die "drills b and c need KEYCLOAK_ADMIN_TOKEN, or KEYCLOAK_ADMIN_USER and KEYCLOAK_ADMIN_PASSWORD, in the environment"
 	;;
 esac
 command -v jcctl >/dev/null || die "jcctl is not on PATH (cargo build -p jcctl in joinedcontext-platform)"
@@ -146,8 +146,6 @@ trap 'rm -rf "${work:?}"' EXIT
 umask 077
 # A token goes into curl as a header file, never as an argument another process can read.
 printf 'Authorization: Bearer %s\n' "$(cat "$token_file")" >"$work/person.h"
-# The admin password reaches curl from a file too (--data-urlencode name@file).
-[ -z "${KEYCLOAK_ADMIN_PASSWORD:-}" ] || printf '%s' "$KEYCLOAK_ADMIN_PASSWORD" >"$work/admin.pw"
 
 started=$(date +%s)
 now() { date +%s; }
@@ -274,36 +272,23 @@ drill_a() {
 }
 
 client_id="$project-walk-caller"
-admin_api() { printf '%s/admin/realms/%s' "${idm%/realms/*}" "${idm##*/realms/}"; }
-# The admin token comes from KEYCLOAK_ADMIN_TOKEN, or from the master realm's password grant with
-# KEYCLOAK_ADMIN_USER and KEYCLOAK_ADMIN_PASSWORD, fetched per call because it lives a minute.
-admin_token() {
-	if [ -n "${KEYCLOAK_ADMIN_TOKEN:-}" ]; then printf '%s' "$KEYCLOAK_ADMIN_TOKEN"; return; fi
-	curl -sS --max-time 10 -d client_id=admin-cli -d grant_type=password \
-		--data-urlencode "username=$KEYCLOAK_ADMIN_USER" --data-urlencode "password@$work/admin.pw" \
-		"${idm%/realms/*}/realms/master/protocol/openid-connect/token" 2>/dev/null | jq -r '.access_token // empty' 2>/dev/null
+account_page="$server/projects/$project/settings/service-accounts"
+# A secret the person issued on the Portal, read from standard input (the terminal) without echo
+# into file $1.
+paste_secret() { # $1 file, $2 what to do on the Portal
+	local secret=""
+	say "$2: on $account_page open walk-caller, 'What this account may do', 'Issue new secret', then paste the secret here"
+	IFS= read -rs secret || true
+	printf '%s' "$secret" >"$1"
+	secret=""
+	[ -s "$1" ]
 }
-admin() { # method path [json]; prints body then status
-	printf 'Authorization: Bearer %s\n' "$(admin_token)" >"$work/admin.h"
-	curl -sS --max-time 15 -X "$1" -H @"$work/admin.h" -H 'content-type: application/json' \
-		${3:+--data "$3"} -w '\n%{http_code}' "$(admin_api)$2" 2>/dev/null || printf '\n000'
-}
-client_uuid() { body_of "$(admin GET "/clients?clientId=$client_id")" | jq -r '.[0].id // empty' 2>/dev/null; }
 
+# The Portal writes the client once the account is merged (T-5626); until it has, its Issue new
+# secret answers that the client does not exist yet, and the person tries again.
 make_client() {
-	local spec answer id
-	spec=$(jq -cn --arg id "$client_id" --arg slug "$read_slug" '{clientId: $id, enabled: true, publicClient: false,
-		serviceAccountsEnabled: true, standardFlowEnabled: false, directAccessGrantsEnabled: false,
-		attributes: {"managed-by": "walk-ops-drill"},
-		protocolMappers: [{name: "walk-read", protocol: "openid-connect", protocolMapper: "oidc-audience-mapper",
-			config: {"included.custom.audience": $slug, "access.token.claim": "true"}}]}')
-	[ -n "$(client_uuid)" ] || {
-		answer=$(admin POST /clients "$spec")
-		case "$(status_of "$answer")" in 201) ;; *) ko "creating Keycloak client $client_id answered $(status_of "$answer")"; return 1 ;; esac
-	}
-	id=$(client_uuid)
-	body_of "$(admin GET "/clients/$id/client-secret")" | jq -j '.value // empty' >"$work/leaked-key"
-	[ -s "$work/leaked-key" ] || { ko "Keycloak gave no secret for $client_id"; return 1; }
+	paste_secret "$work/leaked-key" "issue the first secret of $client_id" || { ko "no secret was pasted for $client_id"; return 1; }
+	[ -n "$(mint "$work/leaked-key")" ] || { ko "the pasted secret mints no token for $client_id ($(cat "$work/mint.code"))"; return 1; }
 	say "client $client_id ready (secret in the work directory only)"
 }
 
@@ -363,25 +348,31 @@ drill_b() {
 }
 
 drill_c() {
-	local before code t0 t_secret="" t_token="" tries id
+	local before code t0 t_secret="" t_token="" tries
 	before=$(mint "$work/leaked-key")
 	[ -n "$before" ] || { ko "C: no token from the walk key (token endpoint $(cat "$work/mint.code"))"; return; }
 	printf 'Authorization: Bearer %s\n' "$before" >"$work/before.h"
 	code=$(call "$work/before.h")
 	case "$code" in 200) ;; *) say "C: the walk token reads walk-read with $code before the revocation" ;; esac
-	id=$(client_uuid)
-	t0=$(now)
-	# Runbook 4 step 3 for a client the Portal made: rotate in Keycloak; the new value is dropped.
-	case "$(status_of "$(admin POST "/clients/$id/client-secret")")" in
-	200) say "C: secret of $client_id rotated" ;;
-	*) ko "C: rotating the secret of $client_id failed"; return ;;
-	esac
+	# Runbook 4 for a client the Portal made: a person issues a new secret on the Portal. The
+	# leaked one is tried every second meanwhile; the bound counts from the access.revoked event.
+	say "C: the walk key is leaked now"
+	(
+		while :; do
+			mint "$work/leaked-key" >/dev/null
+			case "$(cat "$work/mint.code")" in 400 | 401) now >"$work/refused-at"; exit 0 ;; esac
+			sleep 1
+		done
+	) &
+	local watcher=$!
+	paste_secret "$work/new-key" "C: issue a new secret of $client_id" || say "C: no new secret pasted; measuring anyway"
 	tries=$((bound_c * 4 + 1))
-	while [ "$tries" -gt 0 ]; do
-		mint "$work/leaked-key" >/dev/null
-		case "$(cat "$work/mint.code")" in 400 | 401) t_secret=$(now); break ;; esac
-		tries=$((tries - 1)); sleep 1
-	done
+	while [ "$tries" -gt 0 ] && [ ! -s "$work/refused-at" ]; do tries=$((tries - 1)); sleep 1; done
+	kill "$watcher" 2>/dev/null; wait "$watcher" 2>/dev/null
+	[ -s "$work/refused-at" ] && t_secret=$(cat "$work/refused-at")
+	t0=$(body_of "$(get "/api/v1/projects/$project/activity?kind=access.revoked&limit=1")" |
+		jq -r '.items[0].time // empty | sub("\\.[0-9]+"; "") | fromdateiso8601' 2>/dev/null)
+	[ -n "$t0" ] || { ko "C: the project's Activity has no access.revoked event for the new secret"; t0=$(now); }
 	if [ -n "$t_secret" ]; then
 		record "C revoke-to-401 $((t_secret - t0))s: the token endpoint refuses the leaked secret"
 		[ $((t_secret - t0)) -le "$bound_c" ] || ko "C: the leaked secret was refused only after $((t_secret - t0))s (bound ${bound_c}s)"
@@ -409,7 +400,6 @@ drill_c() {
 }
 
 teardown() {
-	local id
 	[ "$keep" -eq 1 ] && { say "--keep: walk-ops stays; run again without --keep to remove it"; return; }
 	render "$good_url" "$rpm"
 	jc delete -f "$work/walk-ops.yaml" || ko "down: jcctl delete refused part of walk-ops.yaml"
@@ -417,10 +407,6 @@ teardown() {
 		endpoints/walk-write datasources/walk-source contextspaces/walk; do
 		wait_resource "$r" absent || true
 	done
-	if [ -n "$idm" ] && { [ -n "${KEYCLOAK_ADMIN_TOKEN:-}" ] || [ -n "${KEYCLOAK_ADMIN_USER:-}" ]; }; then
-		id=$(client_uuid)
-		[ -z "$id" ] || case "$(status_of "$(admin DELETE "/clients/$id")")" in 204) say "Keycloak client $client_id deleted" ;; *) ko "down: Keycloak client $client_id was not deleted" ;; esac
-	fi
 	case "$(curl -sS --max-time 15 -o /dev/null -w '%{http_code}' -X DELETE -H @"$work/person.h" "$server/api/v1/projects/$project" 2>/dev/null)" in
 	20*) wait_resource "" absent || true ;;
 	*) ko "down: deleting project $project was refused; remove it on the Portal's project settings" ;;
