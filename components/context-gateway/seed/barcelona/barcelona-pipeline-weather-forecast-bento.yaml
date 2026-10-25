@@ -55,16 +55,19 @@ pipeline:
           "outsideTheForecast": $ranged.length() - $ahead.length(),
           "duplicateDay": $ahead.length() - $unique.length()
         }
+        # Each forecast value is observed at the issue: a rerun over the same file repeats that measurement
+        # (DM-104), so only a new issue adds a history row.
+        let issued = $fresh.ts_format("2006-01-02T15:04:05Z", "UTC")
         root.entities = if $unique.length() == 0 { throw("the forecast file holds no valid day for Barcelonès (comarca 13)") } else { $unique.map_each(d -> {
           "id": "urn:ngsi-ld:%v:%v:%v:barcelones-day-%v".format("WeatherForecast", env("JC_ORG_DOMAIN"), env("JC_SPACE"), d.day),
           "type": "WeatherForecast",
           "name": { "type": "Property", "value": "Predicció del Barcelonès, dia %v".format(d.day) },
-          "dateIssued": { "type": "Property", "value": $fresh.ts_format("2006-01-02T15:04:05Z", "UTC") },
-          "validFrom": { "type": "Property", "value": d.from.ts_format("2006-01-02T15:04:05Z", "UTC") },
-          "validTo": { "type": "Property", "value": d.to.ts_format("2006-01-02T15:04:05Z", "UTC") },
-          "dayMaximum": { "type": "Property", "value": { "temperature": d.max } },
-          "dayMinimum": { "type": "Property", "value": { "temperature": d.min } },
-          "weatherType": if d.morning == "" && d.afternoon == "" { deleted() } else { { "type": "Property", "value": if d.morning == d.afternoon || d.afternoon == "" { d.morning } else if d.morning == "" { d.afternoon } else { "%s (matí), %s (tarda)".format(d.morning, d.afternoon) } } },
+          "dateIssued": { "type": "Property", "value": $issued, "observedAt": $issued },
+          "validFrom": { "type": "Property", "value": d.from.ts_format("2006-01-02T15:04:05Z", "UTC"), "observedAt": $issued },
+          "validTo": { "type": "Property", "value": d.to.ts_format("2006-01-02T15:04:05Z", "UTC"), "observedAt": $issued },
+          "dayMaximum": { "type": "Property", "value": { "temperature": d.max }, "observedAt": $issued },
+          "dayMinimum": { "type": "Property", "value": { "temperature": d.min }, "observedAt": $issued },
+          "weatherType": if d.morning == "" && d.afternoon == "" { deleted() } else { { "type": "Property", "value": if d.morning == d.afternoon || d.afternoon == "" { d.morning } else if d.morning == "" { d.afternoon } else { "%s (matí), %s (tarda)".format(d.morning, d.afternoon) }, "observedAt": $issued } },
           # Plaça de Sant Jaume: the forecast is for the comarca, its point the capital's centre.
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [2.177, 41.3826] } },
           "address": { "type": "Property", "value": { "addressLocality": "Barcelona", "addressCountry": "ES" } },
