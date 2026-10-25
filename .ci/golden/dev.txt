@@ -363,6 +363,7 @@ networking.k8s.io/v1/NetworkPolicy dev/wasm-host-tokens-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy dev/wasm-host-tokens-linkerd-in
 networking.k8s.io/v1/NetworkPolicy kube-system/node-exporter
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/context-broker-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/context-gateway-internal
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/jc-wasm-host-0-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/jc-wasm-host-1-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/pipeline-runner-api
@@ -370,6 +371,7 @@ policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/pipeline-tokens-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/portal-ui-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy dev/wasm-host-tokens-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/context-broker-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/context-gateway-internal
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/jc-wasm-host-0-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/jc-wasm-host-1-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/pipeline-runner-api-clients
@@ -379,6 +381,7 @@ policy.linkerd.io/v1alpha1/MeshTLSAuthentication dev/wasm-host-tokens-api-client
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server dev/context-broker-api
+policy.linkerd.io/v1beta3/Server dev/context-gateway-internal
 policy.linkerd.io/v1beta3/Server dev/jc-wasm-host-0-api
 policy.linkerd.io/v1beta3/Server dev/jc-wasm-host-1-api
 policy.linkerd.io/v1beta3/Server dev/pipeline-runner-api
@@ -445,6 +448,7 @@ rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding dev/probe
 traefik.io/v1alpha1/TLSOption dev/bsi-tr-02102
+traefik.io/v1alpha1/TLSOption dev/mqtt-bsi-tr-02102
 v1/ConfigMap dev/ai-app
 v1/ConfigMap dev/ai-app-site
 v1/ConfigMap dev/apisix

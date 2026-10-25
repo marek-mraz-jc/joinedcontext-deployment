@@ -199,14 +199,17 @@ networking.k8s.io/v1/NetworkPolicy jc/runner-to-mqtt-brokers-linkerd
 networking.k8s.io/v1/NetworkPolicy jc/sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy jc/sandbox-reaper-linkerd-control-plane
 policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/context-broker-api
+policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/context-gateway-internal
 policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/pipeline-runner-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy jc/portal-ui-api
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/context-broker-api-clients
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/context-gateway-internal
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/pipeline-runner-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication jc/portal-ui-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
 policy.linkerd.io/v1beta3/Server jc/context-broker-api
+policy.linkerd.io/v1beta3/Server jc/context-gateway-internal
 policy.linkerd.io/v1beta3/Server jc/pipeline-runner-api
 policy.linkerd.io/v1beta3/Server jc/portal-ui-api
 policy/v1/PodDisruptionBudget jc/apisix
@@ -255,6 +258,7 @@ rbac.authorization.k8s.io/v1/RoleBinding jc/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding jc/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding jc/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding jc/postgres-operator-cloudnative-pg
+traefik.io/v1alpha1/TLSOption jc/mqtt-bsi-tr-02102
 v1/ConfigMap jc/apisix
 v1/ConfigMap jc/apisix-standalone-base
 v1/ConfigMap jc/audit-logging-collector-vector

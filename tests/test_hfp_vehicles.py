@@ -1,10 +1,11 @@
-"""hsl-hfp-vehicles writes every HSL vehicle's every second, one write per batch (T-5046).
+"""hsl-hfp-vehicles writes every report of every HSL vehicle, one write per batch (T-5046, T-5247).
 
 Run by Bento over HFP frames with the committed mapping and the runner's resources, the input
 batched as the reconciler renders an MQTT source. It once capped the fleet per mode with slots
 in a cache (T-2961, T-3893) and wrote one report in thirty seconds (T-4624); the owner asked for
-every vehicle at its current position (option A) and every per-second change for a subscriber, so a
-batch of up to a second of frames is one write holding each vehicle's reports, one per second.
+every vehicle at its current position (option A) and every per-second change for a subscriber, and then
+(T-5247) the complete history of the last five minutes, so a batch of up to a second of frames is one write
+holding each vehicle's every report, an exact repeat once.
 """
 
 import json
@@ -119,18 +120,19 @@ def errors(counters: list[dict]) -> int:
 
 
 @requires_docker
-def test_every_second_of_a_vehicle_is_written_in_order_and_a_repeat_within_a_second_once():
-    """T-5046 (owner: a subscriber gets every per-second change): four reports of one bus in one
-    batch, out of order, two of them in the same second, are three writes, oldest first, the
-    newer of the two; another bus in the same batch is its own write; no drop is an error."""
+def test_every_report_of_a_vehicle_is_written_in_order_and_an_exact_repeat_once():
+    """T-5247 (owner: the complete history of the last five minutes): five reports of one bus in
+    one batch, out of order, two of them in the same second and one sent twice, are four writes,
+    oldest first; another bus in the same batch is its own write; no drop is an error."""
     reports = [frame(7, "00", tst=tst, long=lon) for tst, lon in
                [("2026-10-21T18:00:01.100Z", 24.941), ("2026-10-21T18:00:02.900Z", 24.943),
-                ("2026-10-21T18:00:02.050Z", 24.942), ("2026-10-21T18:00:00.500Z", 24.940)]]
+                ("2026-10-21T18:00:02.050Z", 24.942), ("2026-10-21T18:00:00.500Z", 24.940),
+                ("2026-10-21T18:00:02.900Z", 24.943)]]
     written, counters = run(reports + [frame(8, "00")])
     bus = [(e["location"]["observedAt"], e["location"]["value"]["coordinates"][0])
            for e in written if e["fleetVehicleId"]["value"] == "22-7"]
     assert bus == [("2026-10-21T18:00:00.500Z", 24.940), ("2026-10-21T18:00:01.100Z", 24.941),
-                   ("2026-10-21T18:00:02.900Z", 24.943)]
+                   ("2026-10-21T18:00:02.050Z", 24.942), ("2026-10-21T18:00:02.900Z", 24.943)]
     assert [e["fleetVehicleId"]["value"] for e in written].count("22-8") == 1
     assert errors(counters) == 0, counters
 

@@ -31,6 +31,7 @@ BASE = {
     "authUrl": "http://context-gateway.jc-context-gateway.svc.cluster.local:8082/internal/mqtt/auth",
     "runner": {"namespace": "jc-pipeline-runner", "serviceAccount": "pipeline-runner"},
     "serviceMesh": {"enabled": True},
+    "gateway": {"namespace": "jc-context-gateway", "podLabels": {"app.kubernetes.io/name": "context-gateway-gateway"}},
     "brokers": [
         {"project": "helsinki", "name": "cameras"},
         {"project": "helsinki", "name": "buses", "limits": {"maxMessageBytes": 1024, "messagesPerSecond": 5, "maxConnections": 3}},
@@ -141,7 +142,7 @@ def test_hosts_differ_across_projects_and_tls_is_one_host_each(docs):
         (rule,) = spec["routes"]
         assert rule["match"] == f"HostSNI(`{hosts[release]}`)"
         assert rule["services"] == [{"name": release, "port": 1884, "proxyProtocol": {"version": 2}}]
-        assert spec["tls"] == {"secretName": f"{release}-tls"}
+        assert spec["tls"] == {"secretName": f"{release}-tls", "options": {"name": "mqtt-bsi-tr-02102"}}
 
 
 def test_no_state_on_disk_and_no_token_mounted(docs):
@@ -194,10 +195,37 @@ def test_a_collision_or_an_unbounded_name_refuses_to_render(tmp_path, brokers, m
 
 
 def test_no_broker_renders_only_the_template(tmp_path):
+    """The template and the TLSOption the routes the Portal stamps from it name (T-5562)."""
     result = helm({**BASE, "brokers": []}, tmp_path)
     assert result.returncode == 0, result.stderr
     docs = [d for d in yaml.safe_load_all(result.stdout) if d]
-    assert [(d["kind"], d["metadata"]["name"]) for d in docs] == [("ConfigMap", TEMPLATE)]
+    # The TLSOption the stamped routes name and the gateway's 8082 Server render with no broker.
+    assert sorted((d["kind"], d["metadata"]["name"]) for d in docs) == [
+        ("AuthorizationPolicy", "context-gateway-internal"), ("ConfigMap", TEMPLATE),
+        ("MeshTLSAuthentication", "context-gateway-internal"), ("Server", "context-gateway-internal"),
+        ("TLSOption", "mqtt-bsi-tr-02102")]
+
+
+def test_the_decider_port_admits_broker_identities_only(docs, tmp_path):
+    """GW25, T-5566: the gateway decides a CONNECT on the caller's `l5d-client-id`, so 8082
+    answers a meshed pod of the brokers' namespace and nobody else, whatever the NetworkPolicy
+    lets through; with no mesh there is no Server to name."""
+    gateway = {d["kind"]: d for d in docs if d["metadata"]["name"] == "context-gateway-internal"}
+    assert set(gateway) == {"Server", "MeshTLSAuthentication", "AuthorizationPolicy"}
+    for doc in gateway.values():
+        assert doc["metadata"]["namespace"] == "jc-context-gateway"
+    server = gateway["Server"]["spec"]
+    assert server == {
+        "podSelector": {"matchLabels": {"app.kubernetes.io/name": "context-gateway-gateway"}},
+        "port": 8082, "proxyProtocol": "HTTP/1", "accessPolicy": "deny",
+    }
+    assert gateway["MeshTLSAuthentication"]["spec"]["identityRefs"] == [{"kind": "Namespace", "name": "jc-mqtt"}]
+    policy = gateway["AuthorizationPolicy"]["spec"]
+    assert policy["targetRef"] == {"group": "policy.linkerd.io", "kind": "Server", "name": "context-gateway-internal"}
+    assert policy["requiredAuthenticationRefs"] == [
+        {"group": "policy.linkerd.io", "kind": "MeshTLSAuthentication", "name": "context-gateway-internal"}]
+    unmeshed = [d for d in yaml.safe_load_all(helm({**BASE, "serviceMesh": {"enabled": False}}, tmp_path).stdout) if d]
+    assert not [d for d in unmeshed if d["metadata"]["name"] == "context-gateway-internal"]
 
 
 def fill(template: str, release: str, project: str, name: str, limits: dict) -> list[dict]:
@@ -407,8 +435,30 @@ def test_the_gateway_admits_the_portals_capture_subscriber_from_its_pods_only(lo
     assert portal["metadata"]["namespace"] == namespace
 
 
-# The gateway's PUBLISH_CACHE_MS (context-gateway src/mqtt.rs): how long the broker keeps an allow.
-PUBLISH_CACHE_MS = 10_000
+def test_the_mqtts_route_uses_the_bsi_tls_option(docs):
+    """T-5562: every broker's route on 8883, rendered and in the template the Portal stamps, ends
+    TLS with the brokers' TLSOption, whose spec is the HTTP edge's BSI TR-02102-2 one."""
+    routes = [d for d in docs if d["kind"] == "IngressRouteTCP"]
+    template = of(docs, "ConfigMap") | {TEMPLATE: next(d for d in docs if d["metadata"]["name"] == TEMPLATE)}
+    stamped = [d for d in yaml.safe_load_all(template[TEMPLATE]["data"]["objects.yaml"]) if d and d["kind"] == "IngressRouteTCP"]
+    assert len(routes) == len(RELEASES) and len(stamped) == 1
+    for route in routes + stamped:
+        assert route["spec"]["tls"]["options"] == {"name": "mqtt-bsi-tr-02102"}, route["metadata"]["name"]
+    option = [d for d in docs if d["kind"] == "TLSOption"]
+    assert [(o["metadata"]["name"], o["metadata"]["namespace"]) for o in option] == [("mqtt-bsi-tr-02102", "jc-mqtt")]
+    edge = (PROJECT_ROOT / "components/apisix/charts/configuration/templates/edge-tls.yaml").read_text()
+    edge = edge[edge.index("kind: TLSOption"):]
+    edge = yaml.safe_load(edge[edge.index("spec:"):edge.index("{{- end")])
+    assert option[0]["spec"] == edge["spec"]
+
+
+def test_no_publish_is_cached_and_a_refused_one_disconnects(docs):
+    """T-5562: the gateway sends no X-Cache, so the broker asks for every publish; the plugin
+    turns a refused one into a disconnect, which is how the gateway's messagesPerSecond holds."""
+    for release in RELEASES:
+        auth = config(docs, release)["rmqtt-auth-http.toml"]
+        assert auth["disconnect_if_pub_rejected"] is True
+        assert auth["http_acl_req"]["url"].endswith("/internal/mqtt/acl")
 
 
 def free_port() -> int:
@@ -420,19 +470,25 @@ def free_port() -> int:
 class Decider(BaseHTTPRequestHandler):
     """The gateway's two internal routes as a stub: every CONNECT allowed, a watcher's with a
     subscription to the cameras, a device's with none, and every publish allowed until `deny`
-    is set, as when the repository drops the device's role."""
+    is set, as when the repository drops the device's role, or, with `rate`, until the device
+    publishes more than `rate` messages within one second, as the gateway's Rates refuse it.
+    Like the gateway, it sends no X-Cache (T-5562)."""
 
     deny = threading.Event()
+    rate: ClassVar[int | None] = None
     connects: ClassVar[list[str]] = []
     publishes: ClassVar[list[dict]] = []
+    times: ClassVar[list[float]] = []
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["content-length"])))
-        cache = False
         if self.path.endswith("/acl"):
             Decider.publishes.append(body)
-            cache = body["access"] == "2" and not Decider.deny.is_set()
-            answer = {"result": "allow" if cache else "deny"}
+            now = time.monotonic()
+            Decider.times.append(now)
+            flood = Decider.rate is not None and sum(now - t < 1 for t in Decider.times) > Decider.rate
+            allow = body["access"] == "2" and not Decider.deny.is_set() and not flood
+            answer = {"result": "allow" if allow else "deny"}
         else:
             Decider.connects.append(body["clientid"])
             watch = [{"permission": "allow", "action": "subscribe", "topic": "cameras/#", "qos": [0, 1]}]
@@ -442,8 +498,6 @@ class Decider(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(data)))
-        if cache:
-            self.send_header("x-cache", str(PUBLISH_CACHE_MS))
         self.end_headers()
         self.wfile.write(data)
 
@@ -456,82 +510,118 @@ def image() -> str:
     return f"{pinned['repository']}@{pinned['digest']}"
 
 
-@pytest.mark.xdist_group("docker-rmqtt")
-@pytest.mark.skipif(shutil.which("docker") is None or shutil.which("mosquitto_pub") is None,
-                    reason="no container runtime or no mosquitto clients, so RMQTT cannot run")
-def test_a_publish_is_checked_or_the_client_kicked_after_revocation(tmp_path):
-    """T-5560: the pinned RMQTT with the rendered configuration asks the decider for each publish
-    topic, keeps an allow for PUBLISH_CACHE_MS, and once the decider denies, delivers nothing
-    more of the device within 30 s and disconnects it at each refused publish."""
-    decider = ThreadingHTTPServer(("127.0.0.1", 0), Decider)
-    threading.Thread(target=decider.serve_forever, daemon=True).start()
-    Decider.deny.clear()
-    Decider.connects.clear()
-    Decider.publishes.clear()
-    internal, external = free_port(), free_port()
-    values = {**BASE, "brokers": [{"project": "helsinki", "name": "cameras"}],
-              "authUrl": f"http://127.0.0.1:{decider.server_port}/internal/mqtt/auth"}
-    result = helm(values, tmp_path)
-    assert result.returncode == 0, result.stderr
-    data = of([d for d in yaml.safe_load_all(result.stdout) if d], "ConfigMap")["mqtt-helsinki-cameras"]["data"]
-    (tmp_path / "plugins").mkdir()
-    (tmp_path / "rmqtt.toml").write_text(
-        data["rmqtt.toml"].replace("0.0.0.0:1883", f"127.0.0.1:{internal}")
-        .replace("0.0.0.0:1884", f"127.0.0.1:{external}"))
-    for name in ("rmqtt-auth-http.toml", "rmqtt-acl.toml"):
-        (tmp_path / "plugins" / name).write_text(data[name])
-    tmp_path.chmod(0o755)
-    name = f"t5560-rmqtt-{internal}"
-    started = subprocess.run(
-        ["docker", "run", "-d", "--rm", "--name", name, "--network", "host", "--read-only",
-         "-v", f"{tmp_path}:/etc/rmqtt:ro", image(), "-f", "/etc/rmqtt/rmqtt.toml"],
-        capture_output=True, text=True, check=False)
-    assert started.returncode == 0, started.stderr
-    clients: list[subprocess.Popen] = []
-    try:
+class Rmqtt:
+    """The pinned RMQTT with the rendered configuration of one broker on two free local ports,
+    asking a Decider stub; mosquitto clients on its internal listener."""
+
+    def __init__(self, tmp_path: Path, limits: dict | None = None, rate: int | None = None):
+        self.decider = ThreadingHTTPServer(("127.0.0.1", 0), Decider)
+        threading.Thread(target=self.decider.serve_forever, daemon=True).start()
+        Decider.deny.clear()
+        Decider.rate = rate
+        for log in (Decider.connects, Decider.publishes, Decider.times):
+            log.clear()
+        self.internal, external = free_port(), free_port()
+        broker = {"project": "helsinki", "name": "cameras"} | ({"limits": limits} if limits else {})
+        values = {**BASE, "brokers": [broker],
+                  "authUrl": f"http://127.0.0.1:{self.decider.server_port}/internal/mqtt/auth"}
+        result = helm(values, tmp_path)
+        assert result.returncode == 0, result.stderr
+        data = of([d for d in yaml.safe_load_all(result.stdout) if d], "ConfigMap")["mqtt-helsinki-cameras"]["data"]
+        (tmp_path / "plugins").mkdir()
+        (tmp_path / "rmqtt.toml").write_text(
+            data["rmqtt.toml"].replace("0.0.0.0:1883", f"127.0.0.1:{self.internal}")
+            .replace("0.0.0.0:1884", f"127.0.0.1:{external}"))
+        for name in ("rmqtt-auth-http.toml", "rmqtt-acl.toml"):
+            (tmp_path / "plugins" / name).write_text(data[name])
+        tmp_path.chmod(0o755)
+        self.name = f"t5562-rmqtt-{self.internal}"
+        self.clients: list[subprocess.Popen] = []
+        self.received: list[float] = []
+        started = subprocess.run(
+            ["docker", "run", "-d", "--rm", "--name", self.name, "--network", "host", "--read-only",
+             "-v", f"{tmp_path}:/etc/rmqtt:ro", image(), "-f", "/etc/rmqtt/rmqtt.toml"],
+            capture_output=True, text=True, check=False)
+        if started.returncode != 0:
+            self.close()
+            pytest.fail(started.stderr)
+
+    def __enter__(self):
         deadline = time.monotonic() + 60
-        while socket.socket().connect_ex(("127.0.0.1", internal)) != 0:
+        while socket.socket().connect_ex(("127.0.0.1", self.internal)) != 0:
             assert time.monotonic() < deadline, "RMQTT did not listen"
             time.sleep(0.2)
-        mqtt = ["-h", "127.0.0.1", "-p", str(internal), "-q", "1"]
-        watcher = subprocess.Popen(["mosquitto_sub", *mqtt, "-i", "watcher", "-u", "watcher", "-P", "a-token",
-                                    "-t", "cameras/#"], stdout=subprocess.PIPE, text=True)
-        clients.append(watcher)
-        received: list[float] = []
-        threading.Thread(target=lambda: [received.append(time.monotonic()) for _ in watcher.stdout],
+        watcher = self.client("mosquitto_sub", "watcher", "-t", "cameras/#", stdout=subprocess.PIPE, text=True)
+        threading.Thread(target=lambda: [self.received.append(time.monotonic()) for _ in watcher.stdout],
                          daemon=True).start()
         time.sleep(1)
-        device = subprocess.Popen(["mosquitto_pub", *mqtt, "-i", "helsinki-cam-1", "-u", "helsinki-cam-1",
-                                   "-P", "a-token", "-t", "cameras/helsinki-cam-1/frame", "-l"],
+        self.device = self.client("mosquitto_pub", "helsinki-cam-1", "-t", "cameras/helsinki-cam-1/frame", "-l",
                                   stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
-        clients.append(device)
+        return self
 
-        def send(seconds: float):
-            """A frame every 0.2 s for `seconds`; mosquitto_pub reconnects when it is cut."""
-            start = time.monotonic()
-            while time.monotonic() - start < seconds:
-                try:
-                    device.stdin.write("frame\n")
-                    device.stdin.flush()
-                except BrokenPipeError:
-                    return
-                time.sleep(0.2)
+    def client(self, tool: str, name: str, *args: str, **popen) -> subprocess.Popen:
+        process = subprocess.Popen([tool, "-h", "127.0.0.1", "-p", str(self.internal), "-q", "1",
+                                    "-i", name, "-u", name, "-P", "a-token", *args], **popen)
+        self.clients.append(process)
+        return process
 
-        send(3)
-        assert len(received) >= 10, "the allowed device's frames did not arrive"
-        # Some 15 publishes, one question: the broker keeps the allow for PUBLISH_CACHE_MS.
-        asked = [(p["access"], p["clientid"], p["topic"]) for p in Decider.publishes]
-        assert asked == [("2", "helsinki-cam-1", "cameras/helsinki-cam-1/frame")], asked
+    def send(self, seconds: float, every: float):
+        """A frame every `every` s for `seconds`; mosquitto_pub reconnects when it is cut."""
+        start = time.monotonic()
+        while time.monotonic() - start < seconds:
+            try:
+                self.device.stdin.write("frame\n")
+                self.device.stdin.flush()
+            except BrokenPipeError:
+                return
+            time.sleep(every)
+
+    def close(self):
+        for client in self.clients:
+            client.kill()
+        subprocess.run(["docker", "rm", "-f", self.name], capture_output=True, check=False)
+        self.decider.shutdown()
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+needs_rmqtt = pytest.mark.skipif(shutil.which("docker") is None or shutil.which("mosquitto_pub") is None,
+                                 reason="no container runtime or no mosquitto clients, so RMQTT cannot run")
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@needs_rmqtt
+def test_a_publish_is_checked_or_the_client_kicked_after_revocation(tmp_path):
+    """T-5560, T-5562: the pinned RMQTT with the rendered configuration asks the decider for
+    every publish (no X-Cache), and once the decider denies, delivers nothing more of the device
+    and disconnects it at each refused publish."""
+    with Rmqtt(tmp_path) as broker:
+        broker.send(3, 0.2)
+        assert len(broker.received) >= 10, "the allowed device's frames did not arrive"
+        asked = {(p["access"], p["clientid"], p["topic"]) for p in Decider.publishes}
+        assert asked == {("2", "helsinki-cam-1", "cameras/helsinki-cam-1/frame")}, asked
+        assert len(Decider.publishes) >= len(broker.received), "a publish passed without a question"
         assert Decider.connects.count("helsinki-cam-1") == 1
         revoked = time.monotonic()
         Decider.deny.set()
-        send(25)
-        last = max(received) - revoked
-        assert last < 30, f"the broker delivered the device's frames {last:.1f} s after its role ended"
-        assert last <= PUBLISH_CACHE_MS / 1000 + 2, f"{last:.1f} s exceeds the cache time"
+        broker.send(10, 0.2)
+        last = max(broker.received) - revoked
+        assert last < 1, f"the broker delivered the device's frames {last:.1f} s after its role ended"
         assert Decider.connects.count("helsinki-cam-1") > 1, "the refused device was never disconnected"
-    finally:
-        for client in clients:
-            client.kill()
-        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
-        decider.shutdown()
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@needs_rmqtt
+def test_a_flooding_publisher_is_throttled(tmp_path):
+    """T-5562: a device sending 10x its broker's messagesPerSecond is refused by the decider's
+    rate, disconnected by the pinned RMQTT at the first refusal, and the subscriber gets about
+    the rate, not the flood."""
+    rate = 5
+    with Rmqtt(tmp_path, limits={"messagesPerSecond": rate}, rate=rate) as broker:
+        seconds = 4
+        broker.send(seconds, 1 / (10 * rate))
+        time.sleep(1)
+        assert Decider.connects.count("helsinki-cam-1") > 1, "the flooding device was never disconnected"
+        delivered = len(broker.received)
+        assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
