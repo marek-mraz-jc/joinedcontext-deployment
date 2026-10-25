@@ -13,6 +13,8 @@ localBackup:
   schedule: '30 2 * * *'
   keepDays: 7
   size: 10Gi
+  # Databases left out of the dump and its counts, e.g. [antares]: what the drill then restores.
+  excludeDatabases: []
 databases:
   {}
   # Example database configuration:

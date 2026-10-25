@@ -394,3 +394,92 @@ def test_the_dump_job_writes_the_counts_and_fails_a_dump_over_80_percent(smartci
     script = container["command"][2]
     assert script.index('"$file.counts"') < script.index('mv "$file.part" "$file"')
     assert "over 80 % of the" in script and "-name '*.sql.gz.counts'" in script
+
+
+# ---- the dump job itself (T-5556 deployer hold: an hourly apply must not fill Postgres's disk)
+
+
+def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096, size: str = "1Mi",
+             disk_kib: tuple[int, int] = (10_000_000, 5_000_000), exclude: str = "") -> tuple[int, str, Path]:
+    """Runs the rendered dump script of the CronJob (mode dump) or the apply's Job (mode bind)
+    over a scratch directory: psql answers two databases, pg_dumpall writes `dump_bytes` of noise
+    and records its arguments, df reports `disk_kib` (total, available)."""
+    name = "postgres-cluster-local-backup"
+    job = one(docs, "CronJob", name)["spec"]["jobTemplate"]["spec"] if mode == "dump" else one(docs, "Job", f"{name}-now")["spec"]
+    container = job["template"]["spec"]["containers"][0]
+    env = {e["name"]: e["value"] for e in container["env"] if "value" in e}
+    assert env["MODE"] == mode
+    backup, scratch, bin_ = tmp_path / "backup", tmp_path / "tmp", tmp_path / "bin"
+    for d in (backup, scratch, bin_):
+        d.mkdir(exist_ok=True)
+    stubs = {
+        "psql": """case "$*" in *datname*) printf 'antares\\nportal\\n' ;; *) echo "public.t|3" ;; esac""",
+        "pg_dumpall": f"""echo "$*" > {tmp_path}/dumpall.args; head -c {dump_bytes} /dev/urandom""",
+        "df": f"""printf 'Filesystem 1024-blocks Used Available Capacity Mounted\\n/dev/sda3 {disk_kib[0]} 0 {disk_kib[1]} 50%% /backup\\n'""",
+    }
+    for stub, body in stubs.items():
+        (bin_ / stub).write_text(f"#!/bin/sh\n{body}\n")
+        (bin_ / stub).chmod(0o755)
+    script = container["command"][2].replace("/tmp/", f"{scratch}/").replace("/backup", str(backup))
+    env |= {"VOLUME_SIZE": size, "PATH": f"{bin_}:{os.environ['PATH']}"}
+    if exclude:
+        env["EXCLUDE_DATABASES"] = exclude
+    done = subprocess.run(["sh", "-c", script], env=env, capture_output=True, text=True, timeout=60)
+    return done.returncode, done.stdout + done.stderr, backup
+
+
+def test_the_apply_dumps_only_when_no_dump_of_the_last_20_h_is_there(smartcity, tmp_path):
+    code, log, backup = dump_job(smartcity, tmp_path, "bind")
+    assert code == 0, log
+    assert len(list(backup.glob("*.sql.gz"))) == 1 and len(list(backup.glob("*.sql.gz.counts"))) == 1
+    (tmp_path / "dumpall.args").unlink()
+    code, log, backup = dump_job(smartcity, tmp_path, "bind")
+    assert code == 0 and "none at this apply" in log, log
+    assert not (tmp_path / "dumpall.args").exists(), "the second apply wrote no dump"
+    assert len(list(backup.glob("*.sql.gz"))) == 1
+
+
+def test_the_nightly_dump_runs_although_a_recent_dump_is_there(smartcity, tmp_path):
+    (tmp_path / "backup").mkdir()
+    (tmp_path / "backup" / "2026-10-25T0230Z.sql.gz").write_bytes(b"x")
+    code, log, _ = dump_job(smartcity, tmp_path, "dump")
+    assert code == 0, log
+    assert (tmp_path / "dumpall.args").read_text().split() == ["--clean", "--if-exists"]
+
+
+def test_a_dump_that_outgrows_the_volume_stops_there_and_is_deleted(smartcity, tmp_path):
+    code, log, backup = dump_job(smartcity, tmp_path, "dump", dump_bytes=3 * 1048576, size="1Mi")
+    assert code != 0 and "outgrew the" in log and "excludeDatabases" in log, log
+    assert list(backup.iterdir()) == [], "neither the part nor its counts stay on the volume"
+
+
+def test_old_dumps_make_room_before_the_dump_and_full_volume_refuses(smartcity, tmp_path):
+    backup = tmp_path / "backup"
+    backup.mkdir()
+    old = backup / "2026-10-01T0230Z.sql.gz"
+    old.write_bytes(os.urandom(2 * 1048576))
+    os.utime(old, (0, 0))
+    code, log, _ = dump_job(smartcity, tmp_path, "dump", size="1Mi")
+    assert code == 0 and not old.exists(), log
+    recent = backup / "2026-10-25T0100Z.sql.gz"
+    recent.write_bytes(os.urandom(1048576))
+    code, log, _ = dump_job(smartcity, tmp_path, "dump", size="1Mi")
+    assert code != 0 and "fill the 1Mi of localBackup.size" in log, log
+
+
+def test_a_dump_that_would_leave_the_node_disk_under_10_percent_free_does_not_start(smartcity, tmp_path):
+    code, log, backup = dump_job(smartcity, tmp_path, "dump", size="1Mi", disk_kib=(10_000, 1_500))
+    assert code != 0 and "under 10 % free" in log, log
+    assert not (tmp_path / "dumpall.args").exists() and list(backup.iterdir()) == []
+
+
+def test_an_excluded_database_is_neither_counted_nor_dumped(dev, smartcity, tmp_path):
+    env = {e["name"]: e.get("value") for e in one(dev, "CronJob", "postgres-cluster-local-backup")
+           ["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["EXCLUDE_DATABASES"] == "antares ckan_datastore" and env["KEEP_DAYS"] == "1"
+    assert env_of(one(smartcity, "CronJob", NAME))["LOCAL_BACKUP"] == "true"
+    code, log, backup = dump_job(smartcity, tmp_path, "dump", exclude="antares")
+    assert code == 0, log
+    assert (tmp_path / "dumpall.args").read_text().split() == ["--clean", "--if-exists", "--exclude-database=antares"]
+    counts, = backup.glob("*.counts")
+    assert counts.read_text() == "portal.public.t|3\n"

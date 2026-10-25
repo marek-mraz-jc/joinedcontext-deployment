@@ -39,7 +39,11 @@ postgres:
       retentionPolicy: '7d'
   # The nightly pg_dumpall onto a node volume, on dev beside the archive above, so the monthly
   # drill rehearses restoring the only backup prod (smartcity) has today (T-5556). Dev only: prod
-  # sets it in its own global values.
+  # sets it in its own global values. Without the broker's 81 GB and CKAN's datastore (measured
+  # 2026-10-25), whose dump would not fit the 10Gi and whose counts scan every row, and kept one
+  # day: the volume sits on the disk Postgres runs on (77G of 306G free).
   databases:
     localBackup:
       enabled: true
+      keepDays: 1
+      excludeDatabases: [antares, ckan_datastore]

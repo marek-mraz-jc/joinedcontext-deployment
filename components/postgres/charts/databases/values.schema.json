@@ -37,6 +37,14 @@
         },
         "size": {
           "type": "string"
+        },
+        "excludeDatabases": {
+          "type": "array",
+          "description": "databases left out of the dump and its counts, e.g. [antares]",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_][a-z0-9_]*$"
+          }
         }
       }
     },
