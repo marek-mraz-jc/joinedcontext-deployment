@@ -298,7 +298,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateModified": {
-          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
           "format": "date-time",
           "type": [
             "string",
@@ -697,6 +697,126 @@
       "title": "FareZone",
       "type": "object"
     },
+    "Garden": {
+      "additionalProperties": false,
+      "description": "One green area of the city: a park of the planning layer, a nature park, or a basic green area of the shared green register (IPR Praha), with its kind, manager and care regime.",
+      "properties": {
+        "areaServed": {
+          "description": "Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "careRegime": {
+          "description": "The maintenance class the register gives it, such as Intenzitní třída údržby I.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "greenspaceType": {
+          "description": "IPR Praha's word for the kind of green area: its function in the shared green register (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or přírodní park.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Garden",
+      "type": "object"
+    },
     "GtfsAccessPoint": {
       "additionalProperties": false,
       "description": "One entrance of a Prague metro station: its sign, the station, the streets it leads to and the metro lines behind it.",
@@ -966,7 +1086,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateModified": {
-          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
           "format": "date-time",
           "type": [
             "string",
@@ -1101,7 +1221,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateModified": {
-          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
           "format": "date-time",
           "type": [
             "string",
@@ -1465,6 +1585,134 @@
       "title": "TransportMode",
       "type": "string"
     },
+    "Tree": {
+      "additionalProperties": false,
+      "description": "One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha): where it stands, its category, manager and care regime. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.",
+      "properties": {
+        "areaServed": {
+          "description": "Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "careRegime": {
+          "description": "The maintenance class the register gives it, such as Intenzitní třída údržby I.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateModified": {
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "treeCategory": {
+          "description": "The register's category of the woody plant, such as listnatý strom (broadleaf tree).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "vegetationType": {
+          "description": "IPR Praha's word for the vegetation element, such as Strom or Stromořadí.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Tree",
+      "type": "object"
+    },
     "Vehicle": {
       "additionalProperties": false,
       "description": "One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions).",
@@ -1716,7 +1964,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "dateModified": {
-          "description": "When the publisher's station, counter or sensor last reported the values beside it.",
+          "description": "When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.",
           "format": "date-time",
           "type": [
             "string",

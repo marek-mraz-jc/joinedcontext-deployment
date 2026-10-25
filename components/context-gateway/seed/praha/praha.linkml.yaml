@@ -6,7 +6,8 @@ description: >-
   and what they hold now, ČHMÚ's hourly air quality at the city's stations, the city districts,
   the schools, cultural venues, public toilets and sorted-waste points of the city's geoportal
   (IPR Praha), the park-and-ride car parks and how full they are now, the monitored sorted-waste
-  containers and their fill level and the PID vehicles in service (Golemio), the PID ticket points, and the city budget line by
+  containers and their fill level and the PID vehicles in service (Golemio), the PID ticket points, the parks, green
+  areas and trees of the shared green register (IPR Praha), and the city budget line by
   line. One model, one space, one public endpoint. Where Smart Data Models has the class, its
   IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -158,7 +159,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
     slot_uri: sdm:dateModified
-    description: When the publisher's station, counter or sensor last reported the values beside it.
+    description: When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.
     range: datetime
     annotations:
       label:
@@ -1047,6 +1048,78 @@ slots:
           de: Linien
       ngsi_ld_kind: Property
 
+  greenspaceType:
+    slot_uri: jc:greenspaceType
+    description: >-
+      IPR Praha's word for the kind of green area: its function in the shared green register
+      (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or
+      přírodní park.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh zelene
+          cs: Druh zeleně
+          en: Kind of green area
+          de: Art der Grünfläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  vegetationType:
+    slot_uri: jc:vegetationType
+    description: IPR Praha's word for the vegetation element, such as Strom or Stromořadí.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vegetačný prvok
+          cs: Vegetační prvek
+          en: Vegetation element
+          de: Vegetationselement
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  treeCategory:
+    slot_uri: jc:treeCategory
+    description: The register's category of the woody plant, such as listnatý strom (broadleaf tree).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória dreviny
+          cs: Kategorie dřeviny
+          en: Tree category
+          de: Gehölzkategorie
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  careRegime:
+    slot_uri: jc:careRegime
+    description: The maintenance class the register gives it, such as Intenzitní třída údržby I.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Režim starostlivosti
+          cs: Režim péče
+          en: Care regime
+          de: Pflegeregime
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: >-
+      Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a
+      department of the City of Prague (MHMP-OCP).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Správca
+          cs: Správce
+          en: Manager
+          de: Verwalter
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
+
 classes:
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
@@ -1258,6 +1331,46 @@ classes:
       - dataProvider
       - source
 
+  Garden:
+    class_uri: sdm:Garden
+    description: >-
+      One green area of the city: a park of the planning layer, a nature park, or a basic green
+      area of the shared green register (IPR Praha), with its kind, manager and care regime.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
+      label:
+        tag: label
+        value:
+          sk: Zeleň
+          cs: Zeleň
+          en: Green area
+          de: Grünfläche
+    slots: [name, greenspaceType, careRegime, areaServed, dateModified, dataProvider, source]
+  Tree:
+    class_uri: jc:Tree
+    description: >-
+      One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha):
+      where it stands, its category, manager and care regime. Smart Data Models has no tree class;
+      the closest, GreenspaceRecord, records soil and weather readings of a green area.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Strom
+          cs: Strom
+          en: Tree
+          de: Baum
+    slots:
+      - name
+      - vegetationType
+      - treeCategory
+      - careRegime
+      - areaServed
+      - dateModified
+      - dataProvider
+      - source
   PublicTransportRoute:
     class_uri: sdm:PublicTransportRoute
     description: >-
