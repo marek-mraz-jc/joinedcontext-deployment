@@ -12,6 +12,7 @@ Without a container runtime the Bento cases skip; the seed and inventory cases d
 
 import copy
 import csv
+import hashlib
 import json
 import os
 import re
@@ -955,7 +956,9 @@ def test_notices_are_never_loaded_for_any_source_kind():
                "Zámer predaja pozemku", "Komunálne voľby", "Svadba", "Rodinná oslava",
                # A hall's booking calendar (Ďurkov on dev 2026-10-24, T-5393): its slots, booked or free, are no events.
                "Oslava", "KD obsadený - súkromná akcia", "Rezervácia jedáleň ocu - J.M.", "Rezervované", "Voľné",
-               "14.11.2026 Prenájom sály KD- súkromná oslava"]
+               "14.11.2026 Prenájom sály KD- súkromná oslava",
+               # Recorded on dev 2026-10-22 under "akcie pre celú rodinu" (T-5363).
+               "Vývoz smetných nádob", "ZBERNÝ DVOR"]
     events = ["Mikuláš v obci", "Koncert skupiny FIDEM", "Zberateľská burza", "Katarínska zábava", "Oslava 800. výročia obce"]
     day = datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)
     # wp-rest-sc (feed with dates), lsvr-rest (page JSON-LD), lego-html and every other kind share common.yaml.
@@ -982,6 +985,108 @@ def test_one_event_written_by_two_sources_with_other_punctuation_or_a_minute_apa
     assert one("Korčuľovanie", "2027-10-29T10:30:00+01:00") != one("Korčuľovanie", "2027-10-29T15:00:00+01:00")
 
 
+# --- the main category (T-5363) -----------------------------------------------------------------------------
+
+#: Source words and names recorded on dev 2026-10-22 (slovensko-podujatia) with the category the rule table gives
+#: them: the source's own word first, without its audience and catch-all parts, then the name, then the whole word.
+CATEGORISED = [
+    ("hudba (tanečná zábava)", "Katarínska zábava", "music"),
+    ("ostatné (akcie pre celú rodinu)", "Svadobná veselica", "music"),
+    ("ostatné (akcie pre celú rodinu)", "Mikuláš", "festival-fair"),
+    ("trhy, výstavy, veľtrhy (výstava fotografií)", "Svet okolo nás", "exhibition-museum"),
+    ("trhy, výstavy, veľtrhy (ostatné)", "Jesenné stretnutie", "food-market"),
+    ("trhy, výstavy, veľtrhy (jarmok, trhy)", "Vianočné trhy 2026", "festival-fair"),
+    ("šport, aktívne trávenie voľného času (turistika)", "Štefanský výstup na Jahodnisko", "sport"),
+    ("cirkevný (ostatné)", "Poklona", "faith-tradition"),
+    ("kino - film (filmový festival), ostatné (prezentácia)", "SVET A MY 2026", "film"),
+    ("Kino, Pre deti", "Ovečka Shaun vo filme", "film"),
+    ("ostatné (prednáška)", "Beseda s Józsefom Demmelom", "education-talk"),
+    ("ostatné (pietna akcia)", "Pietna spomienka ukončenia 1. sv. vojny", "history-heritage"),
+    ("gastronómia (ochutnávka jedál)", "Októberfest - Kúria Beckov", "food-market"),
+    ("divadlo (ochotnícke divadlo)", "Spiknutie", "theatre-dance"),
+    ("Šport", "Korčuľovanie pre verejnosť Zimný štadión", "sport"),
+    (None, "Lampiónový sprievod Skalica", "festival-fair"),
+    (None, "Mobilná kvapka krvi v Hriňovej", "health-wellness"),
+    (None, "Jesenné modrotlačenie", "hobby-workshop"),
+    (None, "Finisáž s kurátorskou komentovanou prehliadkou – Kozmická krajina", "exhibition-museum"),
+    (None, "Turnaj v šachu o majstra mesta Turany", "sport"),
+    (None, "Knižný klub Živena", "education-talk"),
+    (None, "Music Argentum: Andrej Farkaš Trio", "music"),
+    (None, "Tradičné zabíjačkové špeciality z Hontu", "food-market"),
+    (None, "Stretnutie seniorov", "community-civic"),
+    (None, "Strašidelná noc", "festival-fair"),
+    (None, "Exkurzia po náučnom chodníku v prírode", "outdoor-nature"),
+    ("Pre deti", "Santova čarovná dielňa", "children-family"),
+    ("ostatné (akcie pre celú rodinu)", "ZDRUFF", "children-family"),
+]
+
+
+def categorised(cases: list, org_type: str = "municipality") -> list:
+    """The entities the shared tail writes for (source word, name) records, in the cases' order."""
+    tail = template("wp-rest-sc", "www.casta.sk", org_type=org_type)[-len(yaml.safe_load((EVENTS / "pipelines/common.yaml").read_text())):]
+    day = (datetime.fromtimestamp(NOW, UTC) + timedelta(days=3)).strftime("%Y-%m-%dT18:00:00+02:00")
+    records = [{"name": name, "start": day, "category": word, "url": f"https://www.casta.sk/e{i}", "sourceId": str(i)}
+               for i, (word, name, *_) in enumerate(cases)]
+    out = {e["sourceId"]["value"]: e for e in run(offline(tail, {}), json.dumps(records), "slovensko-podujatia")}
+    return [out[str(i)] for i in range(len(cases))]
+
+
+@requires_docker
+def test_each_recorded_source_word_and_name_gets_its_main_category():
+    for (word, name, code), e in zip(CATEGORISED, categorised(CATEGORISED)):
+        assert (e.get("category", {}).get("value"), e.get("categorySource", {}).get("value")) == ([code], "rule"), (word, name)
+        assert VALID.is_valid(key_values(e)), list(VALID.iter_errors(key_values(e)))
+        # The source's own word stays for traceability.
+        assert e.get("eventCategory", {}).get("value") == word
+    audience = [e.get("audience", {}).get("value") for e in categorised(CATEGORISED[-2:])]
+    assert audience == [["children"], ["family"]]
+
+
+@requires_docker
+def test_an_event_no_rule_names_has_no_category_unless_its_body_holds_one_kind():
+    cases = [("ostatné (nešpecifikované/ostatné)", "ZDRUFF"), (None, "Hriešnice")]
+    for e in categorised(cases):
+        assert {"category", "categorySource", "audience"}.isdisjoint(e), e
+    # A theatre's calendar holds plays: its title alone ("Hriešnice") is enough.
+    assert [e["category"]["value"] for e in categorised(cases, "theatre (Divadlo GUnaGU)")] == [["theatre-dance"]] * 2
+
+
+@requires_docker
+def test_an_event_no_rule_names_takes_the_decision_models_cached_answer(monkeypatch):
+    """scripts/events-classify.py caches a code per source and hash of name and venue; the pipeline reads it (T-5490)."""
+    cached = hashlib.sha256("zdruff|".encode()).hexdigest()[:16]
+    monkeypatch.setitem(generate.DECIDED, "https://www.casta.sk/", {cached: "children-family"})
+    cases = [("ostatné (nešpecifikované/ostatné)", "ZDRUFF"), (None, "Hriešnice"), (None, "Koncert skupiny FIDEM")]
+    zdruff, unknown, ruled = categorised(cases)
+    assert (zdruff["category"]["value"], zdruff["categorySource"]["value"]) == (["children-family"], "model")
+    assert zdruff["audience"]["value"] == ["family"]
+    assert VALID.is_valid(key_values(zdruff)), list(VALID.iter_errors(key_values(zdruff)))
+    # Not cached: no category until the next offline run; a rule's answer beats the cache.
+    assert {"category", "categorySource"}.isdisjoint(unknown)
+    assert (ruled["category"]["value"], ruled["categorySource"]["value"]) == (["music"], "rule")
+
+
+def test_every_category_has_four_labels_a_valid_rule_and_is_the_models_enum():
+    cats = generate.CATEGORIES
+    assert len(cats) == 16 and len({c["code"] for c in cats}) == 16
+    # `other` has no rule: only the decision model gives it (T-5490).
+    assert [c["code"] for c in cats if c["rule"] is None] == ["other"]
+    for c in cats:
+        assert set(c["label"]) == {"sk", "cs", "en", "de"} and all(c["label"].values()), c["code"]
+        if c["rule"] is None:
+            continue
+        re.compile(c["rule"])
+        # RE2 (Bento) has no look-around or back-references.
+        assert not re.search(r"\(\?[=!<]|\\[1-9]", c["rule"]), c["code"]
+    for model in (SEED / "bbsk-podujatia.linkml.yaml", NATIONAL / "slovensko-podujatia.linkml.yaml"):
+        enum = yaml.safe_load(model.read_text())["enums"]["EventCategory"]["permissible_values"]
+        assert {k: v["annotations"]["label"]["value"] for k, v in enum.items()} == {c["code"]: c["label"] for c in cats}
+    for schema in (SEED / "bbsk-podujatia.v1.schema.json", NATIONAL / "slovensko-podujatia.v1.schema.json"):
+        definitions = json.loads(schema.read_text())["definitions"]
+        assert definitions["Event"]["properties"]["category"]["items"] == {"$ref": "#/definitions/EventCategory"}
+        assert definitions["EventCategory"]["enum"] == [c["code"] for c in cats]
+
+
 # --- where an event's point comes from, and how precise it is (T-5240) ---------------------------------------
 
 
@@ -993,6 +1098,11 @@ def records(monkeypatch, items: list[dict], town: str = "Cífer", org_type: str 
                 "sourceId": str(i), **item} for i, item in enumerate(items)]
     steps = offline(template("records", "obec.example.sk", region="TT", town=town, org_type=org_type), {})
     return {e["sourceId"]["value"]: e for e in run(steps, json.dumps(payload, ensure_ascii=False), "slovensko-podujatia")}
+
+
+#: Who placed Cífer's culture house in the venue table.
+CIFER_KD = next(v["checked_by"] for v in csv.DictReader((EVENTS / "venues.csv").open(encoding="utf-8"))
+                if (v["town"], v["match"]) == ("cifer", "kultúrny dom"))
 
 
 def town_point(town: str) -> list[float]:
@@ -1015,6 +1125,8 @@ def test_each_point_says_how_precise_it_is_and_an_unplaced_venue_takes_its_towns
     assert out["2"]["locationPrecision"]["value"] == "building" and out["2"]["venue"]["value"] == "Kultúrny dom"
     assert out["2"]["location"]["value"]["coordinates"] == [17.5184876, 48.3025638]
     assert "location" not in out["3"] and "locationPrecision" not in out["3"]
+    # Who placed each point (T-5490): the town table, the feed, the venue table's checker; nobody, no source.
+    assert [out[k].get("locationSource", {}).get("value") for k in "0123"] == ["towns", "feed", CIFER_KD, None]
     # Only the venue table's place links its PointOfInterest; every event names its municipality (DM-141).
     kd = [v for v in generate.venues_for("cifer") if v["venue"] == "Kultúrny dom"][0]
     assert out["2"]["refPointOfInterest"] == {"type": "Relationship",

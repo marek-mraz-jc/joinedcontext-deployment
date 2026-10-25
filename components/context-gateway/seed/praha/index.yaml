@@ -197,3 +197,10 @@ praha-endpoint-vstupy-metra.yaml: projects/praha/spaces/praha-mesto/endpoints/pr
 praha-policy-public-vstupy-metra.yaml: projects/praha/spaces/praha-mesto/policies/public-vstupy-metra.yaml
 praha-endpoint-tarifni-pasma.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-tarifni-pasma.yaml
 praha-policy-public-tarifni-pasma.yaml: projects/praha/spaces/praha-mesto/policies/public-tarifni-pasma.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+praha-space-catalog.yaml: projects/praha/spaces/catalog/space.yaml
+praha-datamodel-catalog.yaml: projects/praha/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/praha/spaces/catalog/datamodels/catalog.linkml.yaml
+praha-endpoint-catalog.yaml: projects/praha/spaces/catalog/endpoints/catalog.yaml
+praha-policy-catalog-portal-write.yaml: projects/praha/spaces/catalog/policies/catalog-portal-write.yaml
+praha-policy-catalog-public-read.yaml: projects/praha/spaces/catalog/policies/catalog-public-read.yaml

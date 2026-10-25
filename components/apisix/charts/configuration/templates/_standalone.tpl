@@ -29,7 +29,15 @@
             max_body_size: {{ mul (int .Values.maxRequestBodyMegabytes) 1048576 }}
     {{- /* T-5119: an address no route serves. APISIX runs the global rules and then writes
            `{"error_msg":"404 Route Not Found"}` itself; a bare 404 here instead lands on the
-           server block's error page (a page or Problem Details, like every other edge error). */}}
+           server block's error page (a page or Problem Details, like every other edge error).
+           T-5594: the same function keeps the edge's own session cookies off every upstream hop.
+           `openid-connect` reads them in the route's rewrite phase, which runs before this access
+           phase, and hands the upstream the person's token instead; no upstream reads them, and the
+           Portal hop answered 431 to a steward's two-chunk 8 KB session beside its token. The names
+           are the edge's (`__Host-jc_edge`, its chunks `__Host-jc_edge2`.., `__Host-jc_edge_apps`,
+           `__Host-jc_edge_app_{name}`) and an App host's (`__Host-jc_app_{name}`); every other
+           cookie, the Portal's `__Host-jc_session` and `__Host-jc_csrf` among them, passes. One
+           rule holds both, because APISIX drops a plugin two global rules name. */}}
       - id: edge-not-found
         plugins:
           serverless-pre-function:
@@ -39,6 +47,25 @@
                 return function(conf, ctx)
                   if ctx.matched_route == nil then
                     return ngx.exit(404)
+                  end
+                  local raw = ngx.req.get_headers()["Cookie"]
+                  if raw == nil then
+                    return
+                  end
+                  if type(raw) == "table" then
+                    raw = table.concat(raw, "; ")
+                  end
+                  local kept, dropped = {}, false
+                  for pair in raw:gmatch("[^;]+") do
+                    local cookie = pair:match("^%s*(.-)%s*$")
+                    if cookie:find("^__Host%-jc_edge") or cookie:find("^__Host%-jc_app_") then
+                      dropped = true
+                    elseif cookie ~= "" then
+                      kept[#kept + 1] = cookie
+                    end
+                  end
+                  if dropped then
+                    require("apisix.core").request.set_header(ctx, "Cookie", #kept > 0 and table.concat(kept, "; ") or nil)
                   end
                 end
     {{- /* T-5107 (ZAP baseline): the floor of every answer, the edge's own 404 for an address no
