@@ -61,6 +61,8 @@ EXPECTED_ROUTES = {
     "portal-public-accessibility": {
         "uri": "/accessibility", "priority": 5, "upstream_id": "portal-public-accessibility", "host": PORTAL_HOST,
     },
+    # T-5627: the front door, exact path; the Portal sends a visitor without a session to /catalogue.
+    "portal-home": {"uri": "/", "priority": 5, "upstream_id": "portal-home", "host": PORTAL_HOST},
     # T-4063: the API and User Guide pages, edge session optional.
     "portal-public-guide": {"uri": "/docs/*", "priority": 5, "upstream_id": "portal-public-guide", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
@@ -225,7 +227,7 @@ def unauth_action_on_portal_host(parsed, path):
 
 
 @requires_helmfile
-@pytest.mark.parametrize("path", ["/glossary", "/accessibility", "/catalogue", "/catalogue/air-quality"])
+@pytest.mark.parametrize("path", ["/", "/glossary", "/accessibility", "/catalogue", "/catalogue/air-quality"])
 def test_the_public_pages_pass_a_visitor_without_a_session(apisix_config, path):
     """T-5293: every Term's link and the public footer open /glossary and /accessibility, which the
     Portal draws for a visitor; the edge must not send that visitor to Keycloak first."""
@@ -234,7 +236,7 @@ def test_the_public_pages_pass_a_visitor_without_a_session(apisix_config, path):
 
 
 @requires_helmfile
-@pytest.mark.parametrize("path", ["/", "/projects/demo/home", "/glossary/x", "/glossaryx", "/accessibility-admin"])
+@pytest.mark.parametrize("path", ["/projects/demo/home", "/home", "/projects", "/glossary/x", "/glossaryx", "/accessibility-admin"])
 def test_every_other_portal_page_keeps_the_login(apisix_config, path):
     """T-5293: the public pages are exact paths; a private page beside them still logs in first."""
     _, parsed = apisix_config

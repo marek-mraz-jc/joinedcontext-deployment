@@ -121,6 +121,19 @@ portal-public-connect:
   priority: 5
   pluginConfig: portal-public
 
+# The front door (T-5627, EP-81): `/` exactly, so a citizen who types the installation's name is
+# not sent to Keycloak. The Portal answers a visitor without a session 302 to /catalogue and a
+# signed-in person the home page; every other path stays on portal-ui's login. The plugin config
+# is portal-public's: a session is read when there is one and nobody is redirected.
+portal-home:
+  name: portal-home
+  description: The Portal's front door, edge session optional
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-public
+
 # The glossary (T-3236) and the accessibility statement (T-5108): the two pages every public page's
 # footer links and every word's hint in the catalogue opens, the same text for everyone and no
 # data. Exact paths, so nothing else of the Portal UI loses its login (T-5293). The plugin config
