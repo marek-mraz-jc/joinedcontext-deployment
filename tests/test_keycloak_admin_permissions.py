@@ -282,6 +282,55 @@ def test_the_job_links_the_marked_endpoint_scopes_to_the_hub(keycloak):
     assert again.stdout.count("updated ") == 4, again.stdout
 
 
+def test_the_job_links_the_marked_endpoint_scopes_to_jcctl_and_no_star(keycloak):
+    """T-5614, PF-46: `jcctl token --resource` asks for one Endpoint's `endpoint:{slug}` scope, so
+    the Job links every marked one to `jcctl` as optional, and unlinks a stray, a default link and
+    `endpoint:*` there too: no jcctl token names every Endpoint, and none carries a scope the
+    person did not ask for."""
+    name, base = keycloak
+    ids = realm(base)
+    admin = ids["admin"]
+    status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/clients", admin,
+                                 {"clientId": "jcctl", "publicClient": True})
+    assert status == 201, body
+    cli = headers["Location"].rsplit("/", 1)[1]
+
+    def scope(scope_name, marked):
+        attributes = {"include.in.token.scope": "true"}
+        if marked:
+            attributes["managed-by"] = "joinedcontext"
+        status, body, headers = call(base, "POST", f"/admin/realms/{REALM}/client-scopes", admin,
+                                     {"name": scope_name, "protocol": "openid-connect", "attributes": attributes})
+        assert status == 201, body
+        return headers["Location"].rsplit("/", 1)[1]
+
+    scopes = {n: scope(n, marked) for n, marked in [
+        ("endpoint:cli-ours", True), ("endpoint:cli-default", True), ("endpoint:cli-stray", False),
+        ("endpoint:*", False)]}
+    for kind, scope_name in [("default", "endpoint:cli-default"), ("optional", "endpoint:cli-stray"),
+                             ("optional", "endpoint:*")]:
+        status, body, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{cli}/{kind}-client-scopes/{scopes[scope_name]}", admin)
+        assert status == 204, body
+
+    run = sync(name)
+    assert run.returncode == 0, run.stderr
+    admin = token(base, "master", "admin-cli", user="admin")
+    links = {}
+    for kind in ["default", "optional"]:
+        status, body, _ = call(base, "GET", f"/admin/realms/{REALM}/clients/{cli}/{kind}-client-scopes", admin)
+        assert status == 200, body
+        links[kind] = sorted(s["name"] for s in body if s["name"].startswith("endpoint:"))
+    assert links["default"] == [], run.stdout
+    assert "endpoint:cli-ours" in links["optional"] and "endpoint:cli-default" in links["optional"], links
+    assert "endpoint:cli-stray" not in links["optional"] and "endpoint:*" not in links["optional"], links
+    assert "unlinked endpoint:* from jcctl (optional)" in run.stdout, run.stdout
+    assert "unlinked endpoint:cli-default from jcctl (default)" in run.stdout, run.stdout
+
+    again = sync(name)
+    assert again.returncode == 0, again.stderr
+    assert "unlinked" not in again.stdout, again.stdout
+
+
 def test_the_job_links_a_thousand_new_scopes_within_a_minute(keycloak):
     """T-4474 (ADR-N-025 §4d): one kcadm JVM per link took a second each, so a fresh realm with
     10,000 Endpoint scopes never converged inside the Job's 900 s. The links go over one bash
