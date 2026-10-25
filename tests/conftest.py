@@ -173,6 +173,11 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "xdist_group(name): run on the same xdist worker as the rest of the group")
 
 
+def demo_id(name: str) -> str:
+    """The fixed Keycloak user id the seeds name a demo person by (PF-126): `demo_id("demo.steward")`."""
+    return yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())[name]["id"]
+
+
 def seed_configmap(docs):
     """The forge seed as one ConfigMap: the bootstrap renders `gitea-bootstrap-seed` (the
     organization's files) and the gitea-seed releases one `gitea-seed-s<n>-<part>` per project

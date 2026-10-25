@@ -61,6 +61,7 @@ batch/v1/Job smartcity/ckan-datastore-db-create-role-ckan-datastore-read-readonl
 batch/v1/Job smartcity/gitea-bootstrap
 batch/v1/Job smartcity/keycloak-admin-permissions
 batch/v1/Job smartcity/keycloak-config-keycloak-config-cli
+batch/v1/Job smartcity/keycloak-user-ids
 batch/v1/Job smartcity/postgres-cluster-local-backup-now
 batch/v1/Job smartcity/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate smartcity/apisix-edge
@@ -257,6 +258,8 @@ networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-linkerd-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-linkerd-from-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-linkerd-from-functions
 networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-linkerd-from-lane-token
+networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy smartcity/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/kube-state-metrics
 networking.k8s.io/v1/NetworkPolicy smartcity/kube-state-metrics-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy smartcity/lane-token-linkerd-control-plane
@@ -479,6 +482,7 @@ v1/ConfigMap smartcity/gitea-seed-s8-*
 v1/ConfigMap smartcity/gitea-seed-s9-*
 v1/ConfigMap smartcity/keycloak-admin-permissions
 v1/ConfigMap smartcity/keycloak-theme
+v1/ConfigMap smartcity/keycloak-user-ids
 v1/ConfigMap smartcity/pipeline-runner-helsinki-streams
 v1/ConfigMap smartcity/portal-branding
 v1/ConfigMap smartcity/postgres-cluster-dr-drill

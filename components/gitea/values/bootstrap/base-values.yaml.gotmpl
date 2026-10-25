@@ -151,8 +151,13 @@ rewrites:
   # The seeds name the catalogue opendata.dev.joinedcontext.com, so the domain rule below moves it too (T-4679).
   - from: 'dev\.joinedcontext\.com'
     to: {{ .Values.global.domain | quote }}
-  - from: 'demo\.steward@[A-Za-z0-9.-]+'
-    to: {{ .Values.global.initialUserEmail | quote }}
-  - from: '(?m)^[ \t]*- user: demo\.[a-z]+@[A-Za-z0-9.-]+[ \t]*\r?\n'
+  # The demo people are named by their fixed Keycloak ids (components/keycloak/demo-users.yaml,
+  # PF-126): the steward's becomes the owner's id and every other demo member line goes.
+  - from: 'de300000-0000-4000-8000-000000000001( # demo\.steward)?'
+    to: {{ .Values.global.initialUserId | quote }}
+  - from: '(?m)^[ \t]*- user: de300000-0000-4000-8000-[0-9a-f]{12}[^\n]*\n'
     to: ''
+  # What else a demo person owns (a ServiceAccount's accountable owner) is the owner's.
+  - from: 'de300000-0000-4000-8000-[0-9a-f]{12}( # demo\.[a-z]+)?'
+    to: {{ .Values.global.initialUserId | quote }}
 {{- end }}

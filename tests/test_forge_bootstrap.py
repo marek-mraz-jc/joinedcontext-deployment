@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import seed_configmap
+from conftest import demo_id, seed_configmap
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
@@ -675,5 +675,5 @@ def test_each_organization_has_its_keycloak_subtree_and_administrator(local):
         viewers = yaml.safe_load(seed[f"users__assignments__{name}-viewers.yaml"])
         assert viewers["spec"]["subjects"] == [{"group": name, "source": "provider"}]
         admins = yaml.safe_load(seed[f"users__assignments__{name}-admins.yaml"])
-        assert admins["spec"]["subjects"] == [{"user": f"demo.{name}@hel.fi"}], "the dev realm's name of the person"
+        assert admins["spec"]["subjects"] == [{"user": demo_id(f"demo.{name}")}], "the dev realm's id of the person"
         assert admins["spec"]["scope"] == {"organization": name}

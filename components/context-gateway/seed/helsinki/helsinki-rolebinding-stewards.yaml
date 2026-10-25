@@ -8,6 +8,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.steward@hel.fi
+    - user: de300000-0000-4000-8000-000000000001 # demo.steward
   role: steward
   scope: { organization: hel }

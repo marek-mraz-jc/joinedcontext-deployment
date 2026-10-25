@@ -10,6 +10,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.editor@hel.fi
+    - user: de300000-0000-4000-8000-000000000004 # demo.editor
   role: editor
   scope: { organization: hel }

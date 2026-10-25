@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import demo_id
 
 # Reading, plus the subscriptions a WebSocket needs (T-4073); no entity write.
 READ_AND_SUBSCRIBE = ["retrieveOps", "createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"]
@@ -273,7 +274,7 @@ def test_the_zilina_bindings_end_at_its_organization_pf123():
     seed reaches both Organizations (ADR-N-058 2.4)."""
     bindings = by_name("RoleBinding")
     admins, viewers = bindings["zilina-admins"]["spec"], bindings["zilina-viewers"]["spec"]
-    assert admins == {"subjects": [{"user": "demo.zilina@hel.fi"}], "role": "org-admin", "scope": {"organization": "zilina"}}
+    assert admins == {"subjects": [{"user": demo_id("demo.zilina")}], "role": "org-admin", "scope": {"organization": "zilina"}}
     assert viewers == {
         "subjects": [{"group": "zilina", "source": "provider"}], "role": "viewer", "scope": {"organization": "zilina"},
     }
@@ -283,7 +284,7 @@ def test_the_zilina_bindings_end_at_its_organization_pf123():
         for doc in yaml.safe_load_all(path.read_text())
         if isinstance(doc, dict) and doc.get("kind") == "RoleBinding"
     ]
-    zilina_people = {"demo.zilina@hel.fi", "zilina"}
+    zilina_people = {demo_id("demo.zilina"), "zilina"}
     for spec in every:
         names = {s.get("user") or s.get("group") for s in spec["subjects"]}
         if spec.get("scope", {}).get("organization") == "hel":

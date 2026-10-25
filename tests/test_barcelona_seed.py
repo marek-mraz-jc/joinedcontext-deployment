@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import demo_id
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
@@ -181,13 +182,13 @@ def test_the_one_door_is_public_cc_by_and_credits_the_ajuntament():
 def test_the_bindings_end_at_its_organization_pf123():
     bindings = by_name("RoleBinding")
     assert bindings["barcelona-admins"]["spec"] == {
-        "subjects": [{"user": "demo.barcelona@hel.fi"}], "role": "org-admin", "scope": {"organization": "barcelona"},
+        "subjects": [{"user": demo_id("demo.barcelona")}], "role": "org-admin", "scope": {"organization": "barcelona"},
     }
     assert bindings["barcelona-viewers"]["spec"] == {
         "subjects": [{"group": "barcelona", "source": "provider"}], "role": "viewer",
         "scope": {"organization": "barcelona"},
     }
-    people = {"demo.barcelona@hel.fi", "barcelona"}
+    people = {demo_id("demo.barcelona"), "barcelona"}
     for path in sorted(SEED.glob("*/*.yaml")):
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == "RoleBinding" and path.parent != BARCELONA:

@@ -70,6 +70,7 @@ batch/v1/Job dev/ckan-datastore-db-create-role-ckan-datastore-read-readonly
 batch/v1/Job dev/gitea-bootstrap
 batch/v1/Job dev/keycloak-admin-permissions
 batch/v1/Job dev/keycloak-config-keycloak-config-cli
+batch/v1/Job dev/keycloak-user-ids
 batch/v1/Job dev/postgres-cluster-local-backup-now
 batch/v1/Job dev/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate dev/apisix-edge
@@ -279,6 +280,8 @@ networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-assistant
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-functions
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-linkerd-from-lane-token
+networking.k8s.io/v1/NetworkPolicy dev/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy dev/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/kube-state-metrics
 networking.k8s.io/v1/NetworkPolicy dev/kube-state-metrics-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy dev/lane-token-linkerd-control-plane
@@ -512,6 +515,7 @@ v1/ConfigMap dev/gitea-seed-s8-*
 v1/ConfigMap dev/gitea-seed-s9-*
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
+v1/ConfigMap dev/keycloak-user-ids
 v1/ConfigMap dev/pipeline-runner-helsinki-streams
 v1/ConfigMap dev/portal-branding
 v1/ConfigMap dev/postgres-cluster-dr-drill

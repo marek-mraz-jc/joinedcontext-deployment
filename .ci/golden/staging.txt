@@ -131,6 +131,8 @@ networking.k8s.io/v1/NetworkPolicy staging/keycloak-from-observability
 networking.k8s.io/v1/NetworkPolicy staging/keycloak-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy staging/keycloak-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy staging/keycloak-linkerd-from-observability
+networking.k8s.io/v1/NetworkPolicy staging/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy staging/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy staging/lane-token-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy staging/mail-catcher
 networking.k8s.io/v1/NetworkPolicy staging/model-tools
