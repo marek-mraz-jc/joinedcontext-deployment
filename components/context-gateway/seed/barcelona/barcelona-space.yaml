@@ -47,6 +47,16 @@ spec:
         areaServed: { record: onChange, heartbeat: P1D }
         dataProvider: { record: onChange, heartbeat: P1D }
         source: { record: onChange, heartbeat: P1D }
+    # The forecast of each day ahead: every issue is a row (twice a day), what never moves one a day.
+    - entityType: WeatherForecast
+      history: P30D
+      attributes:
+        location: { record: onChange, heartbeat: P1D }
+        name: { record: onChange, heartbeat: P1D }
+        address: { record: onChange, heartbeat: P1D }
+        areaServed: { record: onChange, heartbeat: P1D }
+        dataProvider: { record: onChange, heartbeat: P1D }
+        source: { record: onChange, heartbeat: P1D }
     # Groundwater is read by hand about once a month: 400 days keep a year's readings.
     - entityType: PhreaticObserved
       history: P400D
@@ -98,11 +108,22 @@ spec:
     # A licence register the weekly file rewrites: the current state only (T-5417).
     - entityType: TouristRental
       history: 'off'
+    # A bike lane segment is a reference layer each weekly run rewrites (it leaves by its own
+    # expiresAt); an accident is a record that never changes: current state only (T-5374).
+    - entityType: BikeLane
+      history: 'off'
+    - entityType: RoadAccident
+      history: 'off'
     # An activity is a record, not a measurement: its current state only (T-5265).
     - entityType: Event
       history: 'off'
     - entityType: PointOfInterest
       history: 'off'
+    # Official statistics, one row per period (T-5266): ten years, the longest a duration may be
+    # (DM-82); a row when a value or its period changes, never one per daily run.
+    - entityType: KeyPerformanceIndicator
+      history: P3650D
+      record: onChange
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:
@@ -126,8 +147,23 @@ spec:
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-bike-lanes
+      entityType: BikeLane
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-accidents
+      entityType: RoadAccident
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
     - name: in-area-weather
       entityType: WeatherObserved
+      kind: area
+      attribute: location
+      bbox: [2.04, 41.3, 2.24, 41.48]
+    - name: in-area-weather-forecast
+      entityType: WeatherForecast
       kind: area
       attribute: location
       bbox: [2.04, 41.3, 2.24, 41.48]
