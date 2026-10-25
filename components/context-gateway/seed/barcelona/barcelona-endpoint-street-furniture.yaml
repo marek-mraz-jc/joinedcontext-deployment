@@ -16,7 +16,7 @@ metadata:
     en: The speed reducers on Barcelona's streets (Berlin cushions and speed bands), with their kind, model, address and point.
 spec:
   contextSpaceRef: barcelona
-  slug: 9jkdlbx3byqirn0rqrn7evhg3sobqf8e
+  slug: rw5en2xocss47sdcbs6rcoadqj2gh4ce
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-street-furniture

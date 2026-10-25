@@ -180,9 +180,11 @@ def test_the_writes_are_bound_to_the_service_account_and_only_to_it(seed):
     account = seed[("ServiceAccount", "conformance")]
     assert write["spec"]["assignee"] == {"kind": "serviceAccount", "id": account["metadata"]["name"]}
     assert grants(write) & WRITE_GROUPS, grants(write)
-    # Every other account-bound policy names an account the same project seeds; nothing
+    # Every other account-bound policy names an account the same project seeds, or the account
+    # the runner derives for one of its Pipelines (pl-<pipeline>, PL-19; T-5320's pl-osm); nothing
     # grants a write to an account that does not exist.
     accounts = {(m["metadata"]["namespace"], name) for (kind, name), m in seed.items() if kind == "ServiceAccount"}
+    accounts |= {(m["metadata"]["namespace"], f"pl-{name}") for (kind, name), m in seed.items() if kind == "Pipeline"}
     for (kind, name), m in seed.items():
         if kind == "Policy" and m["spec"]["assignee"]["kind"] == "serviceAccount":
             assert (m["metadata"]["namespace"], m["spec"]["assignee"]["id"]) in accounts, name
