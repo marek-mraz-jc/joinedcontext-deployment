@@ -49,7 +49,7 @@ def run(
     for step in steps:
         if "branch" in step:
             http = step["branch"]["processors"][-1]["http"]
-            assert http["url"].startswith(HUB + "${! @path }/FeatureServer/0/query?"), (
+            assert http["url"].startswith(HUB + "${! @path }/FeatureServer/"), (
                 http["url"]
             )
             step["branch"]["processors"] = [
@@ -180,8 +180,10 @@ def test_the_recorded_tables_of_places_map_to_valid_places_and_each_bad_row_is_d
     places, log = run(
         "bratislava-pipeline-places-bento.yaml", fixture("services.json"), answers
     )
-    # The recording's own defect: Kreatívne centrum Arténa at 48.735, 19.136 is Banská Bystrica.
-    assert 'dropped by reason {\\"duplicate\\":2,\\"outside Bratislava\\":1}' in log, (
+    # The recording's own defects: Kreatívne centrum Arténa at 48.735, 19.136 is Banská Bystrica,
+    # seven animal farms of the region lie outside the city, the education table lists one school
+    # twice at one address; 79 addresses the register does not place have no position (T-5444).
+    assert 'dropped by reason {\\"duplicate\\":26,\\"no position\\":79,\\"outside Bratislava\\":8}' in log, (
         log
     )
     by_key = {}
@@ -193,7 +195,24 @@ def test_the_recorded_tables_of_places_map_to_valid_places_and_each_bad_row_is_d
         "celozivotne-vzdelavanie": 98,
         "fixpointy": 13,
         "sluzby-bez-domova": 36,
+        "veterinarne-zariadenia": 451,
+        "ochladzovacie-miesta": 25,
+        "kontaktne-miesta": 6,
+        "vzdelavacie-institucie": 457,
+        "centra-volneho-casu": 15,
+        "materske-skoly": 147,
+        "zakladne-umelecke-skoly": 93,
+        "zakladne-skoly": 109,
     }
+    # A layer's own point geometry, read in WGS 84.
+    vet = next(p for p in by_key["veterinarne-zariadenia"] if p["name"]["value"] == "Sloboda zvierat o.z.")
+    assert vet["location"]["value"]["coordinates"] == [17.061178, 48.174148]
+    # An address-only kindergarten at the register's point for "Bohrova 1" in Petržalka.
+    school = next(p for p in by_key["materske-skoly"] if p["name"]["value"] == "MŠ Bohrova")
+    assert school["location"]["value"]["coordinates"] == [17.096945, 48.130352]
+    assert school["url"]["value"] == "https://msbohrova.edupage.org/"
+    # An address the register does not hold ("Marie Curie-Sklodowskej 1") is dropped, never guessed.
+    assert not [p for p in places if p["address"]["value"].get("streetAddress") == "Marie Curie-Sklodowskej 1"]
     # The lifelong-learning table writes the latitude in X: the provider lands in Ružinov.
     provider = next(
         p
