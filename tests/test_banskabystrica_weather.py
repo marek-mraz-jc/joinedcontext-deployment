@@ -131,7 +131,7 @@ def test_each_station_reports_its_latest_minute_in_utc_and_the_models_units(stat
     rows = recorded_file()["data"]
     for code in (11898, 11894):
         row, entity = latest(code, rows), stations[f"shmu-{code}"]
-        # SEČ is UTC+1 all year: 20:30 SEČ is 19:30 UTC.
+        # A summer minute is UTC+1: 20:30 is 19:30 UTC.
         hour = int(row["minuta"][11:13]) - 1
         at = f"{row['minuta'][:11]}{hour:02d}{row['minuta'][13:]}Z"
         assert entity["dateObserved"]["value"] == at
@@ -142,6 +142,41 @@ def test_each_station_reports_its_latest_minute_in_utc_and_the_models_units(stat
         assert entity["windDirection"]["value"] == row["vie_vp_smer"]
         assert entity["precipitation"]["value"] == 0
         assert entity["dataProvider"]["value"].startswith("Slovenský hydrometeorologický ústav")
+
+
+def at_minute(minute: str) -> subprocess.CompletedProcess:
+    """The recorded file with Zelená's only row at `minute`."""
+    document = recorded_file()
+    row = dict(latest(11898, document["data"]), minuta=minute)
+    document["data"] = [r for r in document["data"] if r["ind_kli"] != 11898] + [row]
+    return pocasie({DATA + "20261015/" + FILE: json.dumps(document).encode()})
+
+
+@requires_docker
+@pytest.mark.parametrize(("minute", "utc"), [
+    ("2026-10-25T00:30:00", "2026-10-24T23:30:00Z"),  # 01:30 CEST, before the change
+    ("2026-10-25T01:30:00", "2026-10-25T01:30:00Z"),  # 02:30 CET, the repeated hour, read after it
+    ("2026-10-25T10:13:00", "2026-10-25T10:13:00Z"),  # 11:13 CET: measured on dev as 2 h behind
+    ("2026-03-29T00:30:00", "2026-03-29T00:30:00Z"),  # 01:30 CET, before the spring change
+    ("2026-03-29T02:30:00", "2026-03-29T01:30:00Z"),  # 03:30 CEST, after it
+    ("2026-07-01T12:00:00", "2026-07-01T11:00:00Z"),
+    ("2025-12-01T12:00:00", "2025-12-01T12:00:00Z"),
+])
+def test_the_minute_is_bratislava_time_minus_an_hour_on_both_sides_of_each_change(minute, utc):
+    result = at_minute(minute)
+    assert result.returncode == 0, result.stderr.decode()
+    station = next(e for e in json.loads(result.stdout) if e["id"].endswith("shmu-11898"))
+    assert station["dateObserved"]["value"] == utc
+    assert station["temperature"]["observedAt"] == utc
+
+
+@requires_docker
+@pytest.mark.parametrize("minute", ["2026-03-29T01:30:00", "2099-01-01T12:00:00", "2099-07-01T12:00:00"])
+def test_a_minute_no_clock_could_show_leaves_that_station_out(minute):
+    """01:xx never occurs on the March change day; a minute ahead of now is no reading yet."""
+    result = at_minute(minute)
+    assert result.returncode == 0, result.stderr.decode()
+    assert [e["id"].rsplit(":", 1)[1] for e in json.loads(result.stdout)] == ["shmu-11894"]
 
 
 @requires_docker
