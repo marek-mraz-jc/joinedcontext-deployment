@@ -65,6 +65,27 @@ SPACE_EXTENSIONS = {
         "description": "One line of a city budget in the national budget classification, with the approved and the adjusted amount.",
         "why": "CPSV-AP Cost is the official model of an amount a public body sets (identifier, value, currency); no subject holds a budget line",
     },
+    # Prague's environment layers (T-5429): a register entry or a mapped area, located and named.
+    "EmissionSource": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One stationary source of air pollution of a city's emission register: where it is, its fuel and its yearly emissions.",
+        "why": "Environment's AirQualityObserved and EnvironmentObserved hold concentrations measured at a station; no model holds a register entry of yearly emissions",
+    },
+    "RadonRiskArea": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One area of a radon risk map and the risk category of its ground.",
+        "why": "Environment has no model of a mapped ground property; EnvironmentObserved is a measurement at a time",
+    },
+    "FloodZone": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One designated flood area: the ground a flood of a given return period covers, or a zone of it.",
+        "why": "Environment's FloodMonitoring holds a water level measured at a gauge, not the area a flood covers",
+    },
+    "FloodDefence": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "praha/praha.linkml.yaml",
+        "description": "One line of flood defences: what it is built of, who keeps it and the flood it is designed for.",
+        "why": "no Smart Data Model holds a flood defence structure",
+    },
 }
 SDM_HEADER = ("$schema", "$schemaVersion", "$id", "modelTags", "title", "description", "derivedFrom", "license")
 JSON_TYPE = {"integer": "integer", "float": "number", "date": "string", "datetime": "string", "uri": "string", "string": "string"}
@@ -1027,6 +1048,8 @@ def extension_files(extensions: dict[str, dict], mapped: list[dict]) -> dict[Pat
             for a in model["classes"][t]["slots"]:
                 slot = model["slots"][a]
                 r = "string-list" if slot.get("multivalued") else slot.get("range", "string")
+                if r in model["classes"] and a in known:
+                    continue  # an object the base already declares (address): the base's shape holds (T-5429)
                 emitted[a] = {r if r in SCHEMA_ORG else "string"}
                 described[a] = " ".join(slot.get("description", "").split()) or f"The space model's `{a}`."
         columns: dict[str, list[str]] = {}
