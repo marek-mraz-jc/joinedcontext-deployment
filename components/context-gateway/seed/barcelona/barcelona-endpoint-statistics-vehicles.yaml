@@ -16,7 +16,7 @@ metadata:
     en: "Vehicles of the municipal vehicle register by barri, district and city: total, kind, propulsion, service and owner type, each year. One Smart Data Models KeyPerformanceIndicator per indicator and area, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (the city's two-digit code of the district or barri), divisionLevel (city, district or neighbourhood), refArea (the AdministrativeArea), statisticsTable and dimensionKey (the source dataset and breakdown). Source: Barcelona City Council (Ajuntament de Barcelona), Open Data BCN, CC BY 4.0."
 spec:
   contextSpaceRef: barcelona
-  slug: woeeq72unms2u2howqku7h8atywvjgid
+  slug: kmcoidsrupr62o5jfbwugynnhvms4tcr
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-vehicles
   # The NGSI-LD door also answers the temporal API, the series per indicator. An indicator has

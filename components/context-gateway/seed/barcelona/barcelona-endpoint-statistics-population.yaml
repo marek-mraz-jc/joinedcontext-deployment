@@ -16,7 +16,7 @@ metadata:
     en: "Population by barri, district and city from the Municipal Register of Inhabitants (Padró): total, sex, five-year age group, nationality, level of education and birthplace on 1 January; births, deaths, immigrants, emigrants, registrations by omission and cancellations of each year. One Smart Data Models KeyPerformanceIndicator per indicator and area, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (the city's two-digit code of the district or barri), divisionLevel (city, district or neighbourhood), refArea (the AdministrativeArea), statisticsTable and dimensionKey (the source dataset and breakdown). Source: Barcelona City Council (Ajuntament de Barcelona), Open Data BCN, CC BY 4.0."
 spec:
   contextSpaceRef: barcelona
-  slug: ngyq6110nmt8qll0ms4ms1jo9tocdw6s
+  slug: o45h3owqwgklqyyzqz4k77slqndnryk2
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-population
   # The NGSI-LD door also answers the temporal API, the series per indicator. An indicator has

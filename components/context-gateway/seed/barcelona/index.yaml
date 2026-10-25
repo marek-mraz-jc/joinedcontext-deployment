@@ -58,6 +58,21 @@ barcelona-pipeline-ev-charging.yaml: projects/barcelona/pipelines/ev-charging/pi
 barcelona-pipeline-ev-charging-bento.yaml: projects/barcelona/pipelines/ev-charging/bento.yaml
 barcelona-endpoint-charging.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-charging.yaml
 barcelona-policy-public-charging.yaml: projects/barcelona/spaces/barcelona/policies/public-charging.yaml
+# Transport part 2 (T-5374): the counters' working-day intensity weekly, into the traffic dataset;
+# the cycle network and the road accidents weekly, each a dataset of its own.
+barcelona-datasource-traffic-counters.yaml: projects/barcelona/datasources/bcn-traffic-counters.yaml
+barcelona-pipeline-traffic-counters.yaml: projects/barcelona/pipelines/traffic-counters/pipeline.yaml
+barcelona-pipeline-traffic-counters-bento.yaml: projects/barcelona/pipelines/traffic-counters/bento.yaml
+barcelona-datasource-bike-lanes.yaml: projects/barcelona/datasources/bcn-bike-lanes.yaml
+barcelona-pipeline-bike-lanes.yaml: projects/barcelona/pipelines/bike-lanes/pipeline.yaml
+barcelona-pipeline-bike-lanes-bento.yaml: projects/barcelona/pipelines/bike-lanes/bento.yaml
+barcelona-endpoint-bike-lanes.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-bike-lanes.yaml
+barcelona-policy-public-bike-lanes.yaml: projects/barcelona/spaces/barcelona/policies/public-bike-lanes.yaml
+barcelona-datasource-accidents.yaml: projects/barcelona/datasources/bcn-accidents.yaml
+barcelona-pipeline-accidents.yaml: projects/barcelona/pipelines/accidents/pipeline.yaml
+barcelona-pipeline-accidents-bento.yaml: projects/barcelona/pipelines/accidents/bento.yaml
+barcelona-endpoint-accidents.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-accidents.yaml
+barcelona-policy-public-accidents.yaml: projects/barcelona/spaces/barcelona/policies/public-accidents.yaml
 # Batch 3, urbanism (T-5264): the districts and barris, the works on the public space and the
 # pedestrian crossings.
 barcelona-datasource-districts.yaml: projects/barcelona/datasources/bcn-districts.yaml
@@ -120,3 +135,21 @@ barcelona-endpoint-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona
 barcelona-policy-public-statistics-population.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-population.yaml
 barcelona-policy-public-statistics-housing.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-housing.yaml
 barcelona-policy-public-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-vehicles.yaml
+# Batch 2, environment rest (T-5413): the city's dog areas, one weekly pipeline, one dataset.
+barcelona-datasource-dog-areas.yaml: projects/barcelona/datasources/bcn-dog-areas.yaml
+barcelona-pipeline-dog-areas.yaml: projects/barcelona/pipelines/dog-areas/pipeline.yaml
+barcelona-pipeline-dog-areas-bento.yaml: projects/barcelona/pipelines/dog-areas/bento.yaml
+barcelona-endpoint-dog-areas.yaml: projects/barcelona/spaces/barcelona/endpoints/dog-areas.yaml
+barcelona-policy-public-dog-areas.yaml: projects/barcelona/spaces/barcelona/policies/public-dog-areas.yaml
+# The trees of local interest (T-5413), entries of the facility register read from its DataStore.
+barcelona-datasource-local-trees.yaml: projects/barcelona/datasources/bcn-local-trees.yaml
+barcelona-pipeline-local-trees.yaml: projects/barcelona/pipelines/local-trees/pipeline.yaml
+barcelona-pipeline-local-trees-bento.yaml: projects/barcelona/pipelines/local-trees/bento.yaml
+barcelona-endpoint-local-trees.yaml: projects/barcelona/spaces/barcelona/endpoints/local-trees.yaml
+barcelona-policy-public-local-trees.yaml: projects/barcelona/spaces/barcelona/policies/public-local-trees.yaml
+# Meteocat's forecast for Barcelonès (T-5413), every half hour, one dataset.
+barcelona-datasource-weather-forecast.yaml: projects/barcelona/datasources/bcn-weather-forecast.yaml
+barcelona-pipeline-weather-forecast.yaml: projects/barcelona/pipelines/weather-forecast/pipeline.yaml
+barcelona-pipeline-weather-forecast-bento.yaml: projects/barcelona/pipelines/weather-forecast/bento.yaml
+barcelona-endpoint-weather-forecast.yaml: projects/barcelona/spaces/barcelona/endpoints/weather-forecast.yaml
+barcelona-policy-public-weather-forecast.yaml: projects/barcelona/spaces/barcelona/policies/public-weather-forecast.yaml

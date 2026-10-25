@@ -7,11 +7,17 @@
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
+    "BikeLane": {
+      "@id": "sdm:BikeLane"
+    },
     "CityWork": {
       "@id": "sdm:CityWork"
     },
     "ContactPoint": {
       "@id": "schema:ContactPoint"
+    },
+    "DayExtremes": {
+      "@id": "schema:StructuredValue"
     },
     "EVChargingStation": {
       "@id": "sdm:EVChargingStation"
@@ -43,6 +49,9 @@
     "PostalAddress": {
       "@id": "schema:PostalAddress"
     },
+    "RoadAccident": {
+      "@id": "sdm:RoadAccident"
+    },
     "StreetFurniture": {
       "@id": "jc:StreetFurniture"
     },
@@ -52,8 +61,24 @@
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
     },
+    "WeatherForecast": {
+      "@id": "sdm:WeatherForecast"
+    },
     "WeatherObserved": {
       "@id": "sdm:WeatherObserved"
+    },
+    "accidentCause": {
+      "@id": "jc:accidentCause"
+    },
+    "accidentDate": {
+      "@id": "sdm:accidentDate",
+      "@type": "xsd:dateTime"
+    },
+    "accidentKind": {
+      "@id": "jc:accidentKind"
+    },
+    "accidentType": {
+      "@id": "sdm:accidentType"
     },
     "address": {
       "@id": "schema:address"
@@ -91,6 +116,14 @@
     "awardAmount": {
       "@id": "jc:awardAmount",
       "@type": "xsd:float"
+    },
+    "bikeLaneState": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:bikeLaneState"
     },
     "blackCarbon": {
       "@id": "jc:blackCarbon",
@@ -149,9 +182,31 @@
     "dataProvider": {
       "@id": "sdm:dataProvider"
     },
+    "dateIssued": {
+      "@id": "sdm:dateIssued",
+      "@type": "xsd:dateTime"
+    },
     "dateObserved": {
       "@id": "sdm:dateObserved",
       "@type": "xsd:dateTime"
+    },
+    "dateObservedFrom": {
+      "@id": "sdm:dateObservedFrom",
+      "@type": "xsd:dateTime"
+    },
+    "dateObservedTo": {
+      "@id": "sdm:dateObservedTo",
+      "@type": "xsd:dateTime"
+    },
+    "dayMaximum": {
+      "@id": "sdm:dayMaximum"
+    },
+    "dayMinimum": {
+      "@id": "sdm:dayMinimum"
+    },
+    "deadCount": {
+      "@id": "jc:deadCount",
+      "@type": "xsd:integer"
     },
     "description": {
       "@id": "schema:description"
@@ -202,6 +257,10 @@
       "@id": "jc:indicators",
       "@type": "@id"
     },
+    "intensity": {
+      "@id": "sdm:intensity",
+      "@type": "xsd:integer"
+    },
     "investigationDepth": {
       "@id": "sdm:investigationDepth",
       "@type": "xsd:float"
@@ -211,7 +270,14 @@
       "@id": "sdm:kpiValue",
       "@type": "xsd:float"
     },
+    "laneLength": {
+      "@id": "sdm:laneLength",
+      "@type": "xsd:float"
+    },
     "linkml": "https://w3id.org/linkml/",
+    "localId": {
+      "@id": "sdm:localId"
+    },
     "location": {
       "@id": "geojson:geometry"
     },
@@ -258,6 +324,22 @@
       "@id": "sdm:nox",
       "@type": "xsd:float"
     },
+    "numPassengersDead": {
+      "@id": "sdm:numPassengersDead",
+      "@type": "xsd:integer"
+    },
+    "numPassengersInjured": {
+      "@id": "sdm:numPassengersInjured",
+      "@type": "xsd:integer"
+    },
+    "numPedestrianDead": {
+      "@id": "sdm:numPedestrianDead",
+      "@type": "xsd:integer"
+    },
+    "numPedestrianInjured": {
+      "@id": "sdm:numPedestrianInjured",
+      "@type": "xsd:integer"
+    },
     "o3": {
       "@id": "sdm:o3",
       "@type": "xsd:float"
@@ -275,9 +357,16 @@
     "organization": {
       "@id": "sdm:organization"
     },
+    "pedestrianCause": {
+      "@id": "jc:pedestrianCause"
+    },
     "pedestrianCrossings": {
       "@id": "jc:pedestrianCrossings",
       "@type": "@id"
+    },
+    "pedestriansInvolved": {
+      "@id": "sdm:pedestriansInvolved",
+      "@type": "xsd:boolean"
     },
     "piezometricLevel": {
       "@id": "jc:piezometricLevel",
@@ -330,8 +419,16 @@
       "@id": "sdm:seeAlso",
       "@type": "xsd:anyURI"
     },
+    "seriouslyInjured": {
+      "@id": "jc:seriouslyInjured",
+      "@type": "xsd:integer"
+    },
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
+    "slightlyInjured": {
+      "@id": "jc:slightlyInjured",
+      "@type": "xsd:integer"
+    },
     "so2": {
       "@id": "sdm:so2",
       "@type": "xsd:float"
@@ -401,6 +498,10 @@
       "@id": "sdm:to",
       "@type": "xsd:date"
     },
+    "totalInjured": {
+      "@id": "sdm:totalInjured",
+      "@type": "xsd:integer"
+    },
     "totalSpotNumber": {
       "@id": "sdm:totalSpotNumber",
       "@type": "xsd:integer"
@@ -430,9 +531,38 @@
       "@id": "jc:usualTravelTime",
       "@type": "xsd:integer"
     },
+    "validFrom": {
+      "@id": "sdm:validFrom",
+      "@type": "xsd:dateTime"
+    },
+    "validTo": {
+      "@id": "sdm:validTo",
+      "@type": "xsd:dateTime"
+    },
+    "vehicleCount": {
+      "@id": "jc:vehicleCount",
+      "@type": "xsd:integer"
+    },
+    "vehicleKind": {
+      "@id": "jc:vehicleKind"
+    },
+    "vehicleType": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:vehicleType"
+    },
+    "vehiclesInvolved": {
+      "@id": "sdm:vehiclesInvolved"
+    },
     "waterTable": {
       "@id": "sdm:waterTable",
       "@type": "xsd:float"
+    },
+    "weatherType": {
+      "@id": "sdm:weatherType"
     },
     "windDirection": {
       "@id": "sdm:windDirection",

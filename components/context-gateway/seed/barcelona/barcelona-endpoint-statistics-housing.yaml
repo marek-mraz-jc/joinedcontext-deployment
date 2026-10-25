@@ -16,7 +16,7 @@ metadata:
     en: "Households by size and structure from the Padró; cadastral dwellings by floor area and year of construction and estates by ownership regime on 1 January; property sales and their floor area by use from the notaries' records of each month. By barri, district and city. One Smart Data Models KeyPerformanceIndicator per indicator and area, the newest period as kpiValue and the earlier periods in its history. Properties beyond the model: districtCode (the city's two-digit code of the district or barri), divisionLevel (city, district or neighbourhood), refArea (the AdministrativeArea), statisticsTable and dimensionKey (the source dataset and breakdown). Source: Barcelona City Council (Ajuntament de Barcelona), Open Data BCN, CC BY 4.0."
 spec:
   contextSpaceRef: barcelona
-  slug: 4l3lk2okxhwynwtkrdfsqplfyr5c32v0
+  slug: 6ovnfyyzvlk542ikz37gnc2hc44b6wle
   audience: public
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-housing
   # The NGSI-LD door also answers the temporal API, the series per indicator. An indicator has
