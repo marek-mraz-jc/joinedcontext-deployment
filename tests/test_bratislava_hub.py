@@ -407,6 +407,9 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
                 y = str(r.get(t["year"]) or "").strip()
                 q = re.sub(r"^([1-4])\s*\.?\s*[Qq]$", r"\1", str(r.get(t["quarter"]) or "").strip())
                 slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
+            elif "month" in t:
+                y, m = str(r.get(t["year"]) or "").strip(), str(r.get(t["month"]) or "").strip().removeprefix("0")
+                slug = f"{y}-{int(m):02d}" if re.fullmatch(r"(19|20)\d\d", y) and re.fullmatch(r"[1-9]|1[0-2]", m) else None
             else:
                 slug = years(r.get(t["year"]) or "")
             labels = t.get("labels", {})
@@ -466,7 +469,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 344 + 19
+    assert len(keys) == len(set(keys)) == 344 + 19 + 12
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
@@ -534,3 +537,30 @@ def test_a_table_with_more_than_20_pages_or_a_refused_page_writes_nothing_of_its
     assert "autorizacie-dtmb-2019" in written and "rozpocet-2014-vydavky" in written
     assert "autorizacie-dtmb-2020-2025 not read: " in log and "more than 20 pages" in log
     assert "pocet-priestupkov-a-vyska-pokut not read: " in log and "Invalid query" in log
+
+
+@requires_docker
+def test_a_month_column_and_a_period_from_the_item_description_give_each_figure_its_period():
+    """T-5672: the quarantine facility's months become monthly indicators with the month's last day
+    (a month outside 1 to 12 is no period), a table whose description names the years carries that
+    range, and the CVČ table's 170 blank rows drop as no period instead of failing the table."""
+    answers = copy.deepcopy(fixture("statistics.json"))
+    hradska = next(v for k, v in answers.items() if k.startswith("Mestsk%C3%A9%20karant%C3%A9ne"))["features"]
+    hradska.append({"attributes": dict(hradska[0]["attributes"], Mesiac="13", Rok="2021")})
+    city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
+    by_id = {i["id"]: i for i in city}
+    feb = by_id[kpi("mestske-karantene-zariadenie-hradska.pocet-prijatych-klientov.582000.2021-02")]
+    assert feb["calculationPeriod"]["value"] == {"from": "2021-02-01", "to": "2021-02-28"}
+    assert feb["calculationFrequency"]["value"] == "monthly"
+    oct_ = by_id[kpi("mestske-karantene-zariadenie-hradska.maximalna-kapacita-mkz.582000.2020-10")]
+    assert oct_["kpiValue"]["value"] == 50 and oct_["calculationPeriod"]["value"]["to"] == "2020-10-31"
+    assert logged(log) == reading("statistics-mesto", answers)[1]
+    assert len([i for i in city if ":mestske-karantene-zariadenie-hradska." in i["id"]]) == 77
+    founders = by_id[kpi("pocet-deti-a-specialnych-skol.pocet.ss-pocet-ziakov.iny-organ-statnej-spravy.582000.2021")]
+    assert founders["kpiValue"]["value"] == 136
+    okresy, log = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
+    life = {i["id"]: i for i in okresy}[kpi("prispevky-dlzka-zivota-muzi-roky.prispevky-roky.0-19.101.2000-2019")]
+    assert life["kpiValue"]["value"] == 0.31
+    assert life["calculationPeriod"]["value"] == {"from": "2000-01-01", "to": "2019-12-31"}
+    assert "calculationFrequency" not in life
+    assert logged(log)["no period"] >= 170

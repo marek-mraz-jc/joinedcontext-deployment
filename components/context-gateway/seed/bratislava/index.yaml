@@ -825,5 +825,30 @@ bratislava-endpoint-vklady-dtmb-2019.yaml: projects/bratislava/spaces/bratislava
 bratislava-policy-public-vklady-dtmb-2019.yaml: projects/bratislava/spaces/bratislava/policies/public-vklady-dtmb-2019.yaml
 bratislava-endpoint-vklady-dtmb-2020-2025.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-vklady-dtmb-2020-2025.yaml
 bratislava-policy-public-vklady-dtmb-2020-2025.yaml: projects/bratislava/spaces/bratislava/policies/public-vklady-dtmb-2020-2025.yaml
+# P2 of the plan to 100 (T-5672): periods from a month column or the item description.
+bratislava-endpoint-pocet-podujati-a-ucastnikov.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-podujati-a-ucastnikov.yaml
+bratislava-policy-public-pocet-podujati-a-ucastnikov.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-podujati-a-ucastnikov.yaml
+bratislava-endpoint-prispevky-dlzka-zivota-muzi-roky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-prispevky-dlzka-zivota-muzi-roky.yaml
+bratislava-policy-public-prispevky-dlzka-zivota-muzi-roky.yaml: projects/bratislava/spaces/bratislava/policies/public-prispevky-dlzka-zivota-muzi-roky.yaml
+bratislava-endpoint-prispevky-dlzka-zivota-muzi-percenta.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-prispevky-dlzka-zivota-muzi-percenta.yaml
+bratislava-policy-public-prispevky-dlzka-zivota-muzi-percenta.yaml: projects/bratislava/spaces/bratislava/policies/public-prispevky-dlzka-zivota-muzi-percenta.yaml
+bratislava-endpoint-prispevky-dlzka-zivota-zeny-roky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-prispevky-dlzka-zivota-zeny-roky.yaml
+bratislava-policy-public-prispevky-dlzka-zivota-zeny-roky.yaml: projects/bratislava/spaces/bratislava/policies/public-prispevky-dlzka-zivota-zeny-roky.yaml
+bratislava-endpoint-prispevky-dlzka-zivota-zeny-percenta.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-prispevky-dlzka-zivota-zeny-percenta.yaml
+bratislava-policy-public-prispevky-dlzka-zivota-zeny-percenta.yaml: projects/bratislava/spaces/bratislava/policies/public-prispevky-dlzka-zivota-zeny-percenta.yaml
+bratislava-endpoint-rozloha-mestskych-casti.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-rozloha-mestskych-casti.yaml
+bratislava-policy-public-rozloha-mestskych-casti.yaml: projects/bratislava/spaces/bratislava/policies/public-rozloha-mestskych-casti.yaml
+bratislava-endpoint-charakter-zariadeni-materskych-skol.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-charakter-zariadeni-materskych-skol.yaml
+bratislava-policy-public-charakter-zariadeni-materskych-skol.yaml: projects/bratislava/spaces/bratislava/policies/public-charakter-zariadeni-materskych-skol.yaml
+bratislava-endpoint-charakter-zariadeni-strednych-skol.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-charakter-zariadeni-strednych-skol.yaml
+bratislava-policy-public-charakter-zariadeni-strednych-skol.yaml: projects/bratislava/spaces/bratislava/policies/public-charakter-zariadeni-strednych-skol.yaml
+bratislava-endpoint-charakter-zariadeni-zakladnych-skol.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-charakter-zariadeni-zakladnych-skol.yaml
+bratislava-policy-public-charakter-zariadeni-zakladnych-skol.yaml: projects/bratislava/spaces/bratislava/policies/public-charakter-zariadeni-zakladnych-skol.yaml
+bratislava-endpoint-mestske-karantene-zariadenie-hradska.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mestske-karantene-zariadenie-hradska.yaml
+bratislava-policy-public-mestske-karantene-zariadenie-hradska.yaml: projects/bratislava/spaces/bratislava/policies/public-mestske-karantene-zariadenie-hradska.yaml
+bratislava-endpoint-pocet-deti-a-zariadeni-dalsieho-vzdelavania.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-deti-a-zariadeni-dalsieho-vzdelavania.yaml
+bratislava-policy-public-pocet-deti-a-zariadeni-dalsieho-vzdelavania.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-deti-a-zariadeni-dalsieho-vzdelavania.yaml
+bratislava-endpoint-pocet-deti-a-specialnych-skol.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-pocet-deti-a-specialnych-skol.yaml
+bratislava-policy-public-pocet-deti-a-specialnych-skol.yaml: projects/bratislava/spaces/bratislava/policies/public-pocet-deti-a-specialnych-skol.yaml
 # Its public data as one read-only MCP connector (T-5367).
 bratislava-mcp-otvorene-data.yaml: projects/bratislava/mcp/otvorene-data.yaml

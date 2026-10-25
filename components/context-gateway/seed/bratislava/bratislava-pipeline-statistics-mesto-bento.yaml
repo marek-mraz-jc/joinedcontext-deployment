@@ -15,7 +15,8 @@ pipeline:
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
         # or city (Bratislava as a whole); area: the area column, none for a table of the city
         # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
+        # month: its month column (1 to 12), or fixed: the year or range the table's title or the
+        # item's description names; by: breakdown columns (age, sex,
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
@@ -228,7 +229,13 @@ pipeline:
           {"name": "transfer-nestatnym-skolam", "item": "2cb4b3fa5bad47028ed77fdfd4bd494e", "path": "Transfer_ne%C5%A1t%C3%A1tnym_%C5%A1kol%C3%A1m_a_%C5%A1kolsk%C3%BDm_zariadeniam_poskytnut%C3%BD_v_rokoch_2010___2023", "title": "Transfer neštátnym školám a školským zariadeniam poskytnutý v rokoch 2010 - 2023", "areas": "city", "year": "Rok", "group": "Rok", "stats": [["sum", "Suma_finančných_prostriedkov_po", "eur"], ["count", "ObjectId2", "n"]], "values": [["eur", "suma-eur", "Transfer neštátnym školám a školským zariadeniam (EUR)", 0, null], ["n", "pocet-prijimatelov", "Počet škôl a školských zariadení", 0, null]]},
           {"name": "vklady-dtmb-2018", "item": "8242daf7074541e786c619953dbdaa44", "path": "Vklady%20DTMB%202018", "title": "Vklady DTMB 2018", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum,CHAR_LENGTH(Dátum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
           {"name": "vklady-dtmb-2019", "item": "7799e1e1c69d455880b715a48fa6e619", "path": "Vklady%20DTMB%202019", "title": "Vklady DTMB 2019", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum,CHAR_LENGTH(Dátum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
-          {"name": "vklady-dtmb-2020-2025", "item": "86fb4c7fd8ed4d21b55b5f23aaccc32f", "path": "vklady_2020_2023", "title": "Vklady DTMB v rokoch 2020 - 2025", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(datum,CHAR_LENGTH(datum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]}
+          {"name": "vklady-dtmb-2020-2025", "item": "86fb4c7fd8ed4d21b55b5f23aaccc32f", "path": "vklady_2020_2023", "title": "Vklady DTMB v rokoch 2020 - 2025", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(datum,CHAR_LENGTH(datum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
+          {"name": "charakter-zariadeni-materskych-skol", "item": "140289ebf7664b8093b4a303a11a8578", "path": "Charakter_zariaden%C3%AD_matersk%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení materských škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet materských škôl podľa charakteru objektu", 0, null]]},
+          {"name": "charakter-zariadeni-strednych-skol", "item": "bf304fc534824947bad158771596062b", "path": "Charakter_zariaden%C3%AD_stredn%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení stredných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet stredných škôl podľa charakteru objektu", 0, null]]},
+          {"name": "charakter-zariadeni-zakladnych-skol", "item": "821c498081ce41fcb9e87fb8bb0d7b70", "path": "Charakter_zariaden%C3%AD_z%C3%A1kladn%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení základných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet základných škôl podľa charakteru objektu", 0, null]]},
+          {"name": "mestske-karantene-zariadenie-hradska", "item": "8ed75fd2aaca4abfaa21ff07890b759c", "path": "Mestsk%C3%A9%20karant%C3%A9ne%20zariadenie%20Hradsk%C3%A1%20-%20kr%C3%ADzov%C3%A9%20ubytovanie", "title": "Mestské karanténe zariadenie Hradská - krízové ubytovanie", "areas": "city", "year": "Rok", "month": "Mesiac", "values": [["Počet_prijatých_klientov", "pocet-prijatych-klientov", "Počet prijatých klientov", 0, null], ["Personál_TPP", "personal-tpp", "Personál TPP", 0, null], ["Obslužný_personál_dohodári", "obsluzny-personal-dohodari", "Obslužný personál (dohodári)", 0, null], ["Lekár", "lekar", "Lekár", 0, null], ["Zdravotná_sestra", "zdravotna-sestra", "Zdravotná sestra", 0, null], ["Dobrovoľníci", "dobrovolnici", "Dobrovoľníci", 0, null], ["Maximálna_kapacita_MKZ", "maximalna-kapacita-mkz", "Maximálna kapacita MKZ", 0, null]]},
+          {"name": "pocet-deti-a-zariadeni-dalsieho-vzdelavania", "item": "dd0ac1c15c244c60b35eea88634553b3", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_zariaden%C3%AD_pre_%C4%8Fal%C5%A1ie_vzdel%C3%A1vanie_pod%C4%BEa_typu_zria%C4%8Fovate%C4%BEa", "title": "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["VZDELAVACIE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie", 0, null]]},
+          {"name": "pocet-deti-a-specialnych-skol", "item": "629aae1ae9ce45bc8e521735736ed01e", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_%C5%A1peci%C3%A1lnych_%C5%A1k%C3%B4l_a_%C5%A1kolsk%C3%BDch_zariaden%C3%AD_pod%C4%BEa_typu_zria", "title": "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["SKOLSKE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -366,11 +373,28 @@ pipeline:
             }
           } else { null }
         }
+        # A month column holds 1 to 12, with or without a leading zero; anything else is no period.
+        map month {
+          let y = this.index(0)
+          let m = this.index(1).trim_prefix("0")
+          root = if $y.re_match("^(19|20)[0-9]{2}$") && $m.re_match("^([1-9]|1[0-2])$") {
+            {
+              "from": "%s-%02d-01".format($y, $m.number().int64()),
+              "to": "%s-%02d-%s".format($y, $m.number().int64(), if $m == "2" && $y.number().int64() % 4 == 0 && ($y.number().int64() % 100 != 0 || $y.number().int64() % 400 == 0) { "29" } else {
+                ["31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m.number().int64() - 1)
+              }),
+              "slug": "%s-%02d".format($y, $m.number().int64()),
+              "label": "%d/%s".format($m.number().int64(), $y),
+              "frequency": "monthly"
+            }
+          } else { null }
+        }
         map period {
           let t = this.table
           let r = this.row
           root = if $t.fixed.or("") != "" { $t.fixed.apply("years") }
             else if $t.quarter.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.quarter).or("").string().trim()].apply("quarter") }
+            else if $t.month.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.month).or("").string().trim()].apply("month") }
             else { $r.get($t.year).or("").apply("years") }
         }
         map areaname {
