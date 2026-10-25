@@ -42,6 +42,8 @@
  "test_blueprint_choices.py": 52.3,
  "test_blueprint_languages.py": 0.1,
  "test_blueprint_library_seed.py": 0.1,
+ "test_bratislava_hub.py": 35.6,
+ "test_bratislava_seed.py": 15.6,
  "test_broker_token_exchange.py": 220.4,
  "test_builder_contract.py": 0.3,
  "test_bystrica_indicators.py": 43.2,

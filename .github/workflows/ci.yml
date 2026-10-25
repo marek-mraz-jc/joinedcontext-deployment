@@ -217,8 +217,8 @@ jobs:
       # (own_tree), and each environment is rendered once for all workers (T-2895).
       # Every test file lands in exactly one shard, balanced by the seconds in .ci/test-durations.json
       # (scripts/ci/test-shard.py, T-4789: the positional split put 13.6 of 26 minutes in shard 4).
-      # Every duration goes to the log (--durations=0), so the table refreshes from a main run: the
-      # four shard logs concatenated, timestamps cut, into scripts/ci/test-shard.py --record.
+      # The slowest durations go to the log; every test's seconds go to the shard's junit report,
+      # which the test-durations job adds up into the refreshed table on main (T-5551).
       # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
       # rebuilds the standalone assistant's bundle and compares it with the committed one.
       # T-5357: tests/test_portal_pin_reads_the_seed.py holds every seed manifest to the jc-core schemas of
@@ -238,7 +238,15 @@ jobs:
             "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
           echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
-      - run: pytest -q -n auto --dist loadgroup --durations=0 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+      - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+      # Each test's seconds, for the test-durations job below (T-5551).
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: test-durations-${{ matrix.shard }}
+          path: pytest-${{ matrix.shard }}.xml
+          if-no-files-found: ignore
+          retention-days: 7
       # How each seed pipeline creates history rows, per pipeline x type x attribute, with a verdict
       # (T-4844); tests/test_temporal_audit.py fails on a row that is not ok, the report is the table.
       - name: temporal audit of the seeds
@@ -249,6 +257,27 @@ jobs:
         with:
           name: temporal-audit
           path: temporal-audit.json
+          retention-days: 30
+  test-durations:
+    # The .ci/test-durations.json the shards of this main run add up to (T-5551: the table went
+    # stale in four days and shard 1 ran 1,192 s against 544 s for shard 2). It prints the diff
+    # and keeps the table as an artifact; a person commits it when the shards drift.
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with: { pattern: test-durations-*, merge-multiple: true }
+      - run: |
+          python3 scripts/ci/test-shard.py --record pytest-*.xml
+          git diff --stat .ci/test-durations.json
+          git diff .ci/test-durations.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: test-durations
+          path: .ci/test-durations.json
           retention-days: 30
   model-datasets:
     # T-5066: each seeded model's generated valid and invalid datasets, held to its SHACL shapes and
