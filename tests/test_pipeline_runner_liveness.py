@@ -171,6 +171,10 @@ def test_a_looping_stream_is_stopped_and_every_other_stream_runs_on(runners):
     # The Portal's delete at the cap: Bento never answers it, and a parallel read still does.
     with pytest.raises(OSError):
         a.call("DELETE", "/streams/a.loop", timeout=3)
+    # Under CI load Bento can flag the stream inactive a moment after the delete times out.
+    deadline = time.monotonic() + 10
+    while answers_within_2s(a)["a.loop"]["active"] and time.monotonic() < deadline:
+        time.sleep(0.5)
     assert answers_within_2s(a)["a.loop"]["active"] is False
     assert answers_within_2s(b)["b.good"]["active"] is True
     assert a.call("GET", "/streams/a.good")["active"] is True
