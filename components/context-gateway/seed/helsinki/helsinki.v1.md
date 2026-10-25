@@ -514,7 +514,7 @@ Specialises `Entity`.
 | `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) |  |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `refArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refArea` | The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the city's register holds; a district or the whole city is named by `area` and `districtCode`. |
 | `process` | Property | `string` |  |  | `sdm:process` | The statistics table the value comes from, in the source's words. |
-| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it. |
+| `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as web-visits; `source` links it. |
 | `dimensionKey` | Property | `string` |  |  | `jc:dimensionKey` | Which cell of the table the value is: each kept dimension and its code, such as Sukupuoli=ALL;Tiedot=tyottomyysaste. |
 | `calculatedBy` | Property | `string` |  |  | `sdm:calculatedBy` | The organization that computes the value. |
 | `organization` | Property | `string` |  |  | `sdm:organization` | The organization the indicator describes. |
@@ -607,8 +607,25 @@ IRI: `ngsi-ld:Entity`
 | `healthStation` | A health station. |
 | `swimmingHall` | An indoor swimming hall. |
 | `beach` | A public beach. |
-| `school` | A comprehensive school. |
-| `other` | Any other unit of the service register, such as a youth centre, a playground or a city office. |
+| `school` | A comprehensive or general upper secondary school. |
+| `other` | Any other unit of the service register: a private one, or a public one with no point inside the city or of no kind above. |
+| `kindergarten` | A day-care centre, a family day-care area, a pre-primary group or a playpark (leikkipuisto). |
+| `hospital` | A hospital or one of its clinics. |
+| `dentalCare` | A public dental clinic. |
+| `maternityClinic` | A maternity and child health clinic (neuvola). |
+| `healthCare` | Any other public health care unit, such as a mental health, substance abuse or rehabilitation service. |
+| `vocationalSchool` | A vocational school or an apprenticeship training office. |
+| `university` | A university or a university of applied sciences. |
+| `adultEducation` | An adult education centre. |
+| `elderlyCare` | A service centre, home care unit or care home for the elderly. |
+| `socialServices` | A social services unit: child welfare, families, disability services or social assistance. |
+| `youth` | A youth centre or a youth workshop. |
+| `rescueStation` | A fire and rescue station. |
+| `police` | A police station. |
+| `publicShelter` | A public civil defence shelter. |
+| `publicAuthority` | An office of the city or the state: administration, justice, taxation, planning or customs. |
+| `sports` | A public sports facility or outdoor exercise place. |
+| `culture` | A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden. |
 
 ### ServiceRequestStatus
 
@@ -674,7 +691,12 @@ The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' 
 
 | Value | Meaning |
 |---|---|
-| `bicycle` | A bicycle, as an Eco-Counter station counts it. |
+| `bicycle` | A bicycle, as an Eco-Counter station or the machine vision pilot counts it. |
+| `car` | A car, as the machine vision pilot counts it. |
+| `bus` | A bus, as the machine vision pilot counts it. |
+| `tram` | A tram, as the machine vision pilot counts it. |
+| `motorcycle` | A motorcycle, as the machine vision pilot counts it. |
+| `lorry` | A truck or lorry, as the machine vision pilot counts it. |
 
 ### TrafficDirection
 

@@ -332,3 +332,21 @@ helsinki-agent-proxy:
           included.custom.audience: mc4hz7tkq2vbr6xna3wjd5yep2
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The traffic count files of T-5669 (seed/helsinki/helsinki-endpoint-traffic-volumes.yaml,
+      # helsinki-endpoint-vision-counts.yaml).
+      - name: helsinki-traffic-volumes-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: aav3qpok4dzxtb3og7t2t5cvn2tzfisg
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-vision-counts-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: q7gad2u6qwo6rbewizbknihhu2dt4yvd
+          access.token.claim: 'true'
+          id.token.claim: 'false'

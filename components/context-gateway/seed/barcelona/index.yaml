@@ -126,6 +126,17 @@ barcelona-endpoint-places.yaml: projects/barcelona/spaces/barcelona/endpoints/ba
 barcelona-policy-public-places.yaml: projects/barcelona/spaces/barcelona/policies/public-places.yaml
 # Its public data as one read-only MCP connector (T-5367).
 barcelona-mcp-dades-obertes.yaml: projects/barcelona/mcp/dades-obertes.yaml
+# The city's statistics (T-5266): one pipeline over the Padró, cadastre, notaries' and vehicle
+# tables of Open Data BCN, three public datasets by theme.
+barcelona-datasource-statistics.yaml: projects/barcelona/datasources/bcn-statistics-dimensions.yaml
+barcelona-pipeline-statistics.yaml: projects/barcelona/pipelines/statistics/pipeline.yaml
+barcelona-pipeline-statistics-bento.yaml: projects/barcelona/pipelines/statistics/bento.yaml
+barcelona-endpoint-statistics-population.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-population.yaml
+barcelona-endpoint-statistics-housing.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-housing.yaml
+barcelona-endpoint-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona/endpoints/statistics-vehicles.yaml
+barcelona-policy-public-statistics-population.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-population.yaml
+barcelona-policy-public-statistics-housing.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-housing.yaml
+barcelona-policy-public-statistics-vehicles.yaml: projects/barcelona/spaces/barcelona/policies/public-statistics-vehicles.yaml
 # Batch 2, environment rest (T-5413): the city's dog areas, one weekly pipeline, one dataset.
 barcelona-datasource-dog-areas.yaml: projects/barcelona/datasources/bcn-dog-areas.yaml
 barcelona-pipeline-dog-areas.yaml: projects/barcelona/pipelines/dog-areas/pipeline.yaml

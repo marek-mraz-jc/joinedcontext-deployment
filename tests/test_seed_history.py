@@ -64,6 +64,8 @@ CHOSEN = {
     ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
     # One entity per hub figure, district and period: a history would only repeat it (T-5274).
     ("bratislava/bratislava", "KeyPerformanceIndicator"): "off",
+    # Prague's city tables: one entity per figure and month or year, as Bratislava's (T-5428).
+    ("praha/praha-mesto", "KeyPerformanceIndicator"): "off",
     # A vehicle keeps five minutes of track (T-5046, owner 2026-10-21; an hour before, T-4624).
     ("helsinki/helsinki", "Vehicle"): "PT5M",
     # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).
@@ -81,6 +83,9 @@ CHOSEN = {
     # Barcelona's wells are read by hand about once a month and published months late: 400 days keep
     # a year of readings (T-5263, worker decision, owner may override); the public reads the last 30.
     ("barcelona/barcelona", "PhreaticObserved"): "P400D",
+    # Barcelona's statistics keep ten years, the longest a space keeps (DM-82): one row per
+    # published year or month (T-5266).
+    ("barcelona/barcelona", "KeyPerformanceIndicator"): "P3650D",
     # Barcelona's street sections keep a month of traffic states (T-5262, as Žilina's counters).
     ("barcelona/barcelona", "TrafficFlowObserved"): "P30D",
     # Barcelona's charging points keep a month of free ports (T-5262).
@@ -117,15 +122,16 @@ TEMPORAL = {"queryTemporal", "retrieveTemporal"}
 # cannot grant the history of some types and not of others, so it serves no history (T-4372).
 # The space's other public Endpoints serve that history.
 MIXED_BOUND = {"helsinki/public-transport", "helsinki/public-hub"}
-# Public reads of series with at most one row per month and entity (the service usage theme adds
-# one daily series, the zoo's visitors), whose whole kept history is cheaper to read than a month
-# of a sensor's: they read all of it (T-5258).
+# Public reads of series with at most one row per month and entity, whose whole kept history is
+# cheaper to read than a month of a sensor's: they read all of it (T-5258).
 WHOLE_HISTORY = {f"helsinki/public-statistics-{theme}" for theme in
                  ("population", "housing", "employment", "income", "education", "services",
                   "welfare", "environment")}
 # The heat vulnerability index (one period) and the monthly energy use of the service properties
 # are such series too (T-5278).
 WHOLE_HISTORY |= {"helsinki/public-heat-vulnerability", "helsinki/public-service-property-energy"}
+# Barcelona's statistics themes too (T-5266).
+WHOLE_HISTORY |= {f"barcelona/public-statistics-{theme}" for theme in ("population", "housing", "vehicles")}
 
 
 def public_policies():

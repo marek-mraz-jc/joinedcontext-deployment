@@ -6,7 +6,7 @@ metadata:
   namespace: bratislava
   title:
     sk: Počet základných umeleckých škôl v Bratislave
-    en: Primary art schools in Bratislava
+    en: Number of primary art schools in Bratislava
   description:
     sk: 'Ukazovatele tabuľky „Počet základných umeleckých škôl v Bratislave“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Primary art schools in Bratislava”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'

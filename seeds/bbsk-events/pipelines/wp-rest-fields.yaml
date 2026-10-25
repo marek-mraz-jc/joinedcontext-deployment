@@ -1,13 +1,15 @@
 # A WordPress REST list of an events post type whose items carry the date as a field of their own (ACF,
 # Meta Box or theme meta), each site under its own path: generate.py WP_FIELDS names, per feed host, the
 # dotted paths of start, end, their times, the venue and the GPS (T-5365). A date reads as 2026-11-23,
-# 20261123 or 2026-11-23 18:00:00; a time as 18:00 or 18:00:00; both are local time in Europe/Bratislava.
+# 20261123, 2026-11-23 18:00:00 or the day's 00:00 UTC in Unix seconds (1795392000, visitbratislava.com); a
+# time as 18:00 or 18:00:00; both are local time in Europe/Bratislava.
 - mapping: |
     root = if this.type() != "array" { throw("the events API answered no list") } else { this }
 - mapping: |
     let f = __FIELDS__
     map at {
       let d = this.date.or("").string().trim()
+      let d = if $d.re_match("^[0-9]{9,10}$") { $d.number().ts_format("2006-01-02", "UTC") } else { $d }
       let d = if $d.re_match("^[0-9]{8}$") { "%s-%s-%s".format($d.slice(0, 4), $d.slice(4, 6), $d.slice(6, 8)) } else { $d }
       let t = this.time.or("").string().re_find_all("[0-9]{1,2}:[0-9]{2}").index(0).catch(null)
       let t = $t.or($d.slice(10).catch("").re_find_all("[0-9]{1,2}:[0-9]{2}").index(0).catch(null))

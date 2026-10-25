@@ -760,6 +760,37 @@ slots:
           de: Linien
         annotations: { generated: sk cs de }
       ngsi_ld_kind: Relationship
+  allowedVehicleType:
+    slot_uri: sdm:allowedVehicleType
+    description: What may stop there; a tourist coach stop of the city's list is for coaches (bus).
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povolené vozidlá
+          cs: Povolená vozidla
+          en: Allowed vehicles
+          de: Zugelassene Fahrzeuge
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  totalSpotNumber:
+    slot_uri: sdm:totalSpotNumber
+    description: The coach places of a long-term stop as the city's list counts them.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Počet miest
+          cs: Počet míst
+          en: Parking places
+          de: Stellplätze
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
 enums:
   CountedVehicleType:
     description: The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.
@@ -780,6 +811,12 @@ enums:
       tram: { description: Tram (GTFS route type 0). }
       bus: { description: Bus (GTFS route type 3). }
       trolleybus: { description: Trolleybus (GTFS route type 11). }
+  CoachStopCategory:
+    description: The OnStreetParking `category` values the city's tourist coach stops map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      shortTerm: { description: 'A short-term stop: passengers get on and off.' }
+      mediumTerm:
+        description: A long-term stop where a coach waits (the Smart Data Model has no longer term).
 
 classes:
   AirQualityObserved:
@@ -915,3 +952,12 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.UrbanMobility
     slots: [agencyName, page, timezone, language, phone, routes, dataProvider, source]
+  OnStreetParking:
+    class_uri: sdm:OnStreetParking
+    description: One tourist coach stop of the city's list (data.bratislava.sk), placed by its name with OpenStreetMap; the list carries no coordinates.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+    slots: [name, category, allowedVehicleType, totalSpotNumber, description, dataProvider, source]
+    slot_usage:
+      category: { range: CoachStopCategory }

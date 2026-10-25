@@ -33,7 +33,7 @@ TARGET = "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-podujatia:bbsk-podujatia-zapis"
 UA = "joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public events)"
 REGION = "Banskobystrický kraj"
 #: The inventories, each with the region code of its rows' scope /SK/{code}/{town}.
-INVENTORIES = ("sources.csv", "sources-sk.csv")
+INVENTORIES = ("sources.csv", "sources-sk.csv", "sources-cz.csv")
 #: Inventory region -> (scope segment, addressRegion). BBSK rows carry the region's own name.
 REGIONS = {
     "BBSK": ("BB", "Banskobystrický kraj"),
@@ -44,7 +44,11 @@ REGIONS = {
     "ZA": ("ZA", "Žilinský kraj"),
     "PO": ("PO", "Prešovský kraj"),
     "KE": ("KE", "Košický kraj"),
+    "PHA": ("PHA", "Hlavní město Praha"),
 }
+#: The country of an inventory region outside Slovakia: the scope's first level and the address's country (T-5666).
+COUNTRIES = {"PHA": "CZ"}
+SLOVAK = tuple(r for r in REGIONS if r not in COUNTRIES)
 #: The two event stores (owner 2026-10-21, T-5047). Each lists the inventory regions it reads (None: all),
 #: its write Endpoint, its cadences and its grace. A cadence names the feed kinds it takes (None: the rest),
 #: how often a source runs, the window its runs are staggered over (minutes after 00:00 UTC) and its lease. An
@@ -69,7 +73,7 @@ STORES = (
         "ns": "slovensko",
         "domain": "joinedcontext.com",
         "space": "slovensko-podujatia",
-        "regions": None,
+        "regions": SLOVAK,
         "target": "urn:ngsi-ld:Endpoint:joinedcontext.com:slovensko-podujatia:slovensko-podujatia-zapis",
         "endpoints": ("slovensko-endpoint-podujatia.yaml",),
         # A village's calendar page (Lego, WEBY) changes rarely and every run reads each event page 1-3 s
@@ -80,6 +84,17 @@ STORES = (
                        "krupina-html"), "period": "24h", "every": 24, "window": 1440, "lease": 52 * 3600},
             {"kinds": None, "period": "3h", "every": 3, "window": 180, "lease": 8 * 3600},
         ),
+        "grace": 86400,
+    },
+    # Prague's events (T-5666): sources-cz.csv, every 6 hours, the space praha-akce of the praha project.
+    {
+        "ns": "praha",
+        "domain": "praha.eu",
+        "space": "praha-akce",
+        "regions": ("PHA",),
+        "target": "urn:ngsi-ld:Endpoint:praha.eu:praha-akce:praha-akce-zapis",
+        "endpoints": ("praha-endpoint-akce.yaml",),
+        "cadences": ({"kinds": None, "period": "6h", "every": 6, "window": 360, "lease": 14 * 3600},),
         "grace": 86400,
     },
 )
@@ -110,7 +125,7 @@ TEMPLATES = {
 _PAGES = "_fields=id,link,title,modified_gmt&per_page=50"
 TRIM = {
     "wp-rest-sc": "_fields=id,link,title,content,modified_gmt,meta_box",
-    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info",
+    "wp-rest-fields": "_fields=id,link,title,excerpt,modified_gmt,meta,acf,more_info,event_date",
     "mec-rest": _PAGES,
     "lsvr-rest": _PAGES,
     "eventon-rest": _PAGES,
@@ -125,6 +140,8 @@ WP_FIELDS = {
     "regiontatry.sk": {"start": "more_info.datum_od", "end": "more_info.datum_do", "time_start": "more_info.cas_od",
                        "time_end": "more_info.cas_do", "venue": "more_info.miesto_konania"},
     "www.podujatiaksk.sk": {"start": "acf.podujatie_datum.podujatie_datum_od", "end": "acf.podujatie_datum.podujatie_datum_do"},
+    # The event's days as Unix seconds at 00:00 UTC; its event page holds no JSON-LD Event since 2026-10 (T-5435).
+    "www.visitbratislava.com": {"start": "event_date.start_date", "end": "event_date.end_date"},
     "www.upjs.sk": {"start": "acf.cpt_udalost_datum_konania", "end": "acf.cpt_udalost_datum_koniec",
                     "time_start": "acf.cpt_udalost_cas_konania", "venue": "acf.cpt_udalost_miesto_konania"},
 }
@@ -253,6 +270,7 @@ def kept_sources() -> list[dict]:
         row["host"] = f"https://{parts.hostname}"
         row["town_slug"] = None if row["town"] == REGION else slug(row["town"])
         row["scope"], row["region_name"] = REGIONS[row["region"]]
+        row["country"] = COUNTRIES.get(row["region"], "SK")
     names = [r["name"] for r in kept]
     assert len(names) == len(set(names)), names
     return kept
@@ -413,14 +431,14 @@ def processors(row: dict, store: dict) -> list:
         ),
         # The feed's town as one whole scope literal: a bare slug can equal a project name ("zilina").
         "__TOWN_SCOPE__": json.dumps(
-            "/SK/" + row["scope"]
+            f"/{row['country']}/" + row["scope"]
             + ("" if row["town_slug"] is None else "/" + row["town_slug"].replace("-", "_"))
         ),
         "__HOME__": json.dumps(home(row), ensure_ascii=False, separators=(",", ":")),
         "__TOWNS__": json.dumps(towns_for(row), ensure_ascii=False, separators=(",", ":")),
         # A place text that is only the town's or the organizer's own name names no place of its own.
         "__SELF__": json.dumps(sorted(self_names(row)), ensure_ascii=False),
-        "__SCOPE__": json.dumps("/SK/" + row["scope"]),
+        "__SCOPE__": json.dumps(f"/{row['country']}/" + row["scope"]),
         "__REGION__": json.dumps(row["region_name"], ensure_ascii=False),
         "__SOURCE__": json.dumps(row["events_url"], ensure_ascii=False),
         "__PROVIDER__": json.dumps(provider(row), ensure_ascii=False),
@@ -607,7 +625,7 @@ def store_venues(rows: list[dict]) -> list[list]:
             first["addressLocality"],
             float(first["lat"]),
             float(first["lon"]),
-            "/SK/" + REGIONS[town["region"]][0] + "/" + first["town"].replace("-", "_"),
+            f"/{COUNTRIES.get(town['region'], 'SK')}/" + REGIONS[town["region"]][0] + "/" + first["town"].replace("-", "_"),
             town["name"],
         ])
     return out
@@ -620,7 +638,7 @@ VENUE_MAPPING = """root = {
   "scope": this.index(6),
   "name": { "type": "Property", "value": this.index(1) },
   "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [this.index(5), this.index(4)] } },
-  "address": { "type": "Property", "value": { "streetAddress": this.index(2), "addressLocality": this.index(3), "addressCountry": "SK" }.filter(kv -> kv.value != null) },
+  "address": { "type": "Property", "value": { "streetAddress": this.index(2), "addressLocality": this.index(3), "addressCountry": this.index(6).split("/").index(1) }.filter(kv -> kv.value != null) },
   "areaServed": { "type": "Property", "value": this.index(7) },
   "source": { "type": "Property", "value": if this.index(0).has_prefix("osm-") { "https://www.openstreetmap.org/" + this.index(0).trim_prefix("osm-").replace("-", "/") } else { "https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/seeds/bbsk-events/venues.csv" } },
   "dataProvider": { "type": "Property", "value": "© OpenStreetMap contributors, ODbL 1.0" }

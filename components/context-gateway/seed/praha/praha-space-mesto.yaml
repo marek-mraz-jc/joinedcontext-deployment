@@ -14,9 +14,12 @@ metadata:
       služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost, oázy chladu,
       linky, zastávky a tarifní pásma PID, vstupy do metra a parkování na ulici (zóny placeného stání, vyhrazená stání,
       zákazy stání a parkovací automaty), parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko,
-      záplavová území, protipovodňová ochrana a počasí.
+      hluková mapa, záplavová území, protipovodňová ochrana, počasí, hřbitovy, naučné stezky, vodní plochy a toky,
+      psí zóny, bilanční územní celky, cyklotrasy, pietní místa a válečné hroby, pošty, technické
+      prvky zeleně, činnost městské policie, čerpání rozpočtu, finanční vztahy s městskými částmi a
+      opravy a uzavírky ulic.
       Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
-      Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
+      Magistrát hl. m. Prahy a Městská policie hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
       otevřená data.
     en: >-
       Shared bikes, air quality, city districts, schools, culture, public toilets, sorted waste
@@ -24,9 +27,13 @@ metadata:
       the city budget, municipal police stations, libraries, municipal offices, gardens, playgrounds,
       waste collection yards, city amenities, cool spots, the PID lines, stops and fare zones, the metro entrances and
       on-street parking (paid parking zones, reserved bays, no-parking stretches and parking machines), parks, green
-      areas and trees, air pollution sources, radon risk, flood areas, flood defences and the weather.
+      areas and trees, air pollution sources, radon risk, the noise map, flood areas, flood defences, the weather,
+      cemeteries, nature trails, water areas and streams, dog zones, planning balance units,
+      cycle routes, memorials and war graves, post offices, the elements of the green spaces, the
+      municipal police's activity, the budget execution, the transfers to the city districts and the
+      road works and closures.
       Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
-      under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
+      under CC BY 4.0, the City of Prague and its municipal police with no rights reserved, Golemio (Operátor ICT, with TSK
       hl. m. Prahy's counters) as open data.
 spec:
   # The rendered segment, pinned so it cannot drift (PF-84).
@@ -64,6 +71,8 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         status: { record: onChange, heartbeat: P7D }
         totalSlotNumber: { record: onChange, heartbeat: P7D }
+    - entityType: BikeLane
+      history: 'off'
     - entityType: BudgetLine
       history: 'off'
     - entityType: EmissionSource
@@ -73,6 +82,8 @@ spec:
     - entityType: FloodDefence
       history: 'off'
     - entityType: FloodZone
+      history: 'off'
+    - entityType: NoiseZone
       history: 'off'
     - entityType: Garden
       history: 'off'
@@ -93,6 +104,12 @@ spec:
         occupiedSpotNumber: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
         totalSpotNumber: { record: onChange, heartbeat: P7D }
+        # Mr.Parkit's garages (T-5680), written once a day.
+        address: { record: onChange, heartbeat: P7D }
+        priceCurrency: { record: onChange, heartbeat: P7D }
+        pricePerDay: { record: onChange, heartbeat: P7D }
+        priceRatePerMinute: { record: onChange, heartbeat: P7D }
+        url: { record: onChange, heartbeat: P7D }
     - entityType: PointOfInterest
       history: 'off'
     - entityType: PublicTransportRoute
@@ -107,7 +124,29 @@ spec:
       history: 'off'
     - entityType: FareCollectionSystem
       history: 'off'
+    # One entity per figure and period (T-5428): a month's count or a year's drawing is its own entity,
+    # so the series needs no history of its own; a road work keeps its current state.
+    - entityType: KeyPerformanceIndicator
+      history: 'off'
+    - entityType: CityWork
+      history: 'off'
+    - entityType: TrafficFlowObserved
+      # A direction's count of its newest five minutes, a row per interval for 30 days (the count
+      # carries its observedAt); the counter's name, place and source repeat it: one row per change
+      # and one a week (T-5681).
+      history: P30D
+      attributes:
+        name: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        vehicleType: { record: onChange, heartbeat: P7D }
+        dataProvider: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        # The interval's bounds change with the count and repeat when a run reads the same interval again.
+        dateObservedFrom: { record: onChange, heartbeat: P7D }
+        dateObservedTo: { record: onChange, heartbeat: P7D }
     - entityType: Tree
+      history: 'off'
+    - entityType: GreenAsset
       history: 'off'
     - entityType: Vehicle
       # A vehicle keeps an hour of track at most, the owner's order for every live vehicle feed
@@ -121,7 +160,9 @@ spec:
     - entityType: WasteContainer
       # The sensors' fill level is a measurement series (T-5270): a week of it, one row per new
       # reading and one a week otherwise. ~7,400 containers that read a few times a day: about
-      # 0.3 million rows, at most 1.2 million if every container changed every hourly run.
+      # 0.3 million rows, at most 1.2 million if every container changed every hourly run. The
+      # ~20,600 containers without a sensor (waste-containers, daily) add one row a week per attribute
+      # and one per moved collection day, one to four a week: about 0.3 million rows more (T-5427).
       history: P7D
       attributes:
         containerCode: { record: onChange, heartbeat: P7D }
@@ -130,6 +171,7 @@ spec:
         fillingLevel: { record: onChange, heartbeat: P7D }
         location: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
+        nextActuationDeadline: { record: onChange, heartbeat: P7D }
         refWasteContainerIsle: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
         wasteKind: { record: onChange, heartbeat: P7D }

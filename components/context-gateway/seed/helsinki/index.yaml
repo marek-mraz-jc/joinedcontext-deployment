@@ -217,6 +217,9 @@ helsinki-datasource-liipi-facilities.yaml: projects/helsinki/datasources/liipi-f
 helsinki-datasource-liipi-utilizations.yaml: projects/helsinki/datasources/liipi-utilizations.yaml
 helsinki-datasource-cycle-counters.yaml: projects/helsinki/datasources/lidotiku-cycle-counters.yaml
 helsinki-datasource-traffic-counters.yaml: projects/helsinki/datasources/lidotiku-traffic-counters.yaml
+# HRI file imports of traffic counts (T-5669): the yearly autumn volume table and the 2023 vision pilot.
+helsinki-datasource-traffic-volumes.yaml: projects/helsinki/datasources/hel-traffic-volumes.yaml
+helsinki-datasource-vision-counts.yaml: projects/helsinki/datasources/fvh-vision-counts.yaml
 helsinki-pipeline-liipi-facilities.yaml: projects/helsinki/pipelines/liipi-facilities/pipeline.yaml
 helsinki-pipeline-liipi-facilities-bento.yaml: projects/helsinki/pipelines/liipi-facilities/bento.yaml
 helsinki-pipeline-liipi-utilizations.yaml: projects/helsinki/pipelines/liipi-utilizations/pipeline.yaml
@@ -225,6 +228,10 @@ helsinki-pipeline-cycle-counters.yaml: projects/helsinki/pipelines/cycle-counter
 helsinki-pipeline-cycle-counters-bento.yaml: projects/helsinki/pipelines/cycle-counters/bento.yaml
 helsinki-pipeline-traffic-counters.yaml: projects/helsinki/pipelines/traffic-counters/pipeline.yaml
 helsinki-pipeline-traffic-counters-bento.yaml: projects/helsinki/pipelines/traffic-counters/bento.yaml
+helsinki-pipeline-traffic-volumes.yaml: projects/helsinki/pipelines/traffic-volumes/pipeline.yaml
+helsinki-pipeline-traffic-volumes-bento.yaml: projects/helsinki/pipelines/traffic-volumes/bento.yaml
+helsinki-pipeline-vision-counts.yaml: projects/helsinki/pipelines/vision-counts/pipeline.yaml
+helsinki-pipeline-vision-counts-bento.yaml: projects/helsinki/pipelines/vision-counts/bento.yaml
 # The default group of Prague's waste desk (T-2786, AP-118): an organization Group, so it is seeded
 # here beside the organization's roles rather than from the praha folder, which writes its project only.
 group-praha-odpad-viewer.yaml: users/groups/praha-odpad-viewer.yaml
@@ -268,9 +275,11 @@ helsinki-policy-public-districts.yaml: projects/helsinki/spaces/helsinki/policie
 helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
 helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-cycle-counts.yaml
 helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml
+helsinki-endpoint-traffic-volumes.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-volumes.yaml
+helsinki-endpoint-vision-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-vision-counts.yaml
 helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml
 # Helsinki area statistics (T-5258): one pipeline, one Endpoint and one public Policy per theme.
-helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-subdistrict-codes.yaml
+helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-statistics-table.yaml
 helsinki-pipeline-statistics.yaml: projects/helsinki/pipelines/statistics/pipeline.yaml
 helsinki-pipeline-statistics-bento.yaml: projects/helsinki/pipelines/statistics/bento.yaml
 helsinki-endpoint-statistics-population.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-population.yaml
@@ -287,8 +296,8 @@ helsinki-endpoint-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/end
 helsinki-policy-public-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-welfare.yaml
 helsinki-endpoint-statistics-environment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-environment.yaml
 helsinki-policy-public-statistics-environment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-environment.yaml
-# Service usage (T-5258): the zoo visitor and web analytics counters, one more statistics theme.
-helsinki-datasource-zoo-visitors.yaml: projects/helsinki/datasources/hel-zoo-visitors.yaml
+# Service usage (T-5258, T-5667): the web analytics counters, one more statistics theme.
+helsinki-datasource-web-analytics-sites.yaml: projects/helsinki/datasources/hel-web-analytics-sites.yaml
 helsinki-pipeline-service-usage.yaml: projects/helsinki/pipelines/service-usage/pipeline.yaml
 helsinki-pipeline-service-usage-bento.yaml: projects/helsinki/pipelines/service-usage/bento.yaml
 helsinki-endpoint-statistics-services.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-services.yaml
@@ -307,6 +316,8 @@ helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsink
 helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
 helsinki-policy-public-cycle-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-cycle-counts.yaml
 helsinki-policy-public-traffic-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-counts.yaml
+helsinki-policy-public-traffic-volumes.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-volumes.yaml
+helsinki-policy-public-vision-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-vision-counts.yaml
 # The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
 helsinki-space-catalog.yaml: projects/helsinki/spaces/catalog/space.yaml
 helsinki-datamodel-catalog.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.yaml

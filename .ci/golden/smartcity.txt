@@ -501,6 +501,7 @@ v1/PersistentVolumeClaim smartcity/status-page-files
 v1/ResourceQuota smartcity-app-tests/app-tests
 v1/Secret smartcity/apisix-oidc-session
 v1/Secret smartcity/apisix-standalone-config
+v1/Secret smartcity/apps-db-backup-artifact-store
 v1/Secret smartcity/apps-host-0-db
 v1/Secret smartcity/apps-host-1-db
 v1/Secret smartcity/artifact-store-root

@@ -108,7 +108,20 @@ cluster:
       - hostssl apps /^app_[0-9a-f]{16}_owner$ all scram-sha-256
       - host all all all reject
 
-{{- $backups := $this.backups | default dict }}
+{{- $backups := deepCopy ($this.backups | default dict) }}
+{{- /* `target: artifact-store` archives to the platform's own store as components/postgres does
+(T-5662), under the prefix apps-db/ with a key the store's bucket Job limits to that prefix,
+and with no SSE (the store has no KMS). */}}
+{{- if eq ($backups.target | default "") "artifact-store" }}
+{{- if not (has "artifact-store" .Values.components) }}
+{{- fail "apps-db.cluster.backups.target is 'artifact-store' but the environment does not deploy the artifact-store component: add it to components, or set target '' and name an external store" }}
+{{- end }}
+{{- $store := index .Values "artifact-store" "store" }}
+{{- $_ := set $backups "endpointURL" (printf "http://artifact-store.%s.svc.cluster.local:9000" $store.namespace) }}
+{{- $_ := set $backups "destinationPath" (printf "s3://%s/" ($store.backupBucket | default dict).name) }}
+{{- $_ := set $backups "existingSecret" "apps-db-backup-artifact-store" }}
+{{- $_ := set $backups "encryption" "" }}
+{{- end }}
 backups:
   enabled: {{ $backups.enabled | default false }}
 {{- if $backups.enabled }}
@@ -123,12 +136,14 @@ backups:
   secret:
     create: false
     name: {{ $backups.existingSecret | default "apps-db-backup-s3" | quote }}
+  {{- /* Server-side encryption the store applies; '' sends none (a store without KMS refuses SSE-S3). */}}
+  {{- $sse := ternary $backups.encryption "AES256" (hasKey $backups "encryption") }}
   wal:
     compression: gzip
-    encryption: AES256
+    encryption: {{ $sse | quote }}
   data:
     compression: gzip
-    encryption: AES256
+    encryption: {{ $sse | quote }}
   scheduledBackups:
     - name: daily-backup
       schedule: {{ $backups.schedule | default "0 30 3 * * *" | quote }}

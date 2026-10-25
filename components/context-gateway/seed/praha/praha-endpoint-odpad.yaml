@@ -7,8 +7,8 @@ metadata:
   namespace: praha
   title: { cs: Tříděný odpad — Praha, en: Sorted waste — Prague }
   description:
-    cs: 'Stanoviště tříděného odpadu a jejich kontejnery se zaplněním ze senzorů. Kontejner odkazuje na své stanoviště. Zdroje: IPR Praha (CC BY 4.0), Golemio, Operátor ICT.'
-    en: 'Sorted-waste collection points and their containers with the fill level their sensors read. Each container references its collection point. Sources: IPR Praha (CC BY 4.0), Golemio, Operátor ICT.'
+    cs: 'Stanoviště tříděného odpadu a všechny jejich kontejnery s příštím dnem svozu, u kontejnerů se senzorem i se zaplněním. Kontejner odkazuje na své stanoviště. Zdroje: IPR Praha (CC BY 4.0), Golemio, Operátor ICT.'
+    en: 'Sorted-waste collection points and every container at them with its next collection day, and the fill level where a sensor reads it. Each container references its collection point. Sources: IPR Praha (CC BY 4.0), Golemio, Operátor ICT.'
 spec:
   contextSpaceRef: praha-mesto
   slug: e6sryswazw3lcgip7tngpeoampsoai6z
@@ -54,4 +54,11 @@ spec:
         description:
           cs: Stanoviště tříděného odpadu s poslední hodnotou zaplnění ze senzorů, Operátor ICT, otevřená data.
           en: Sorted-waste collection points with the last fill level their sensors read, Operátor ICT, open data.
+      - url: https://api.golemio.cz/v2/sortedwastestations
+        title:
+          cs: Kontejnery na tříděný odpad a dny jejich svozu (Golemio)
+          en: Sorted-waste containers and their collection days (Golemio)
+        description:
+          cs: Všechny kontejnery stanovišť tříděného odpadu s příštím dnem svozu z registru odpadů, Operátor ICT, otevřená data.
+          en: Every container of the sorted-waste collection points with its next collection day from the waste register, Operátor ICT, open data.
     pipelineRef: { kind: Pipeline, name: waste-fill }

@@ -28,4 +28,7 @@ spec:
   temporalQ: timerel=after;timeAt=P-30D
   information:
     - entities:
+        # The IPR car parks only: Mr.Parkit's garages of the same type are the dataset praha-garaze
+        # (T-5680).
         - type: OffStreetParking
+          idPattern: ^urn:ngsi-ld:OffStreetParking:[a-z0-9.-]+:praha-mesto:ipr-[0-9a-f-]{36}$

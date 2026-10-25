@@ -34,10 +34,12 @@ spec:
         - type: AdministrativeArea
         - type: BudgetLine
         - type: Vehicle
+        - type: TrafficFlowObserved
         - type: EmissionSource
         - type: RadonRiskArea
         - type: FloodZone
         - type: FloodDefence
+        - type: NoiseZone
         - type: WeatherObserved
         - type: PublicTransportRoute
         - type: GtfsStop
@@ -49,3 +51,7 @@ spec:
         - type: ParkingGroup
         - type: RestrictedTrafficArea
         - type: FareCollectionSystem
+        - type: BikeLane
+        - type: GreenAsset
+        - type: KeyPerformanceIndicator
+        - type: CityWork

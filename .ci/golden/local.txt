@@ -294,6 +294,7 @@ v1/PersistentVolumeClaim local/pipeline-runner-files
 v1/ResourceQuota local-app-tests/app-tests
 v1/Secret local/apisix-oidc-session
 v1/Secret local/apisix-standalone-config
+v1/Secret local/apps-db-backup-artifact-store
 v1/Secret local/artifact-store-root
 v1/Secret local/context-broker-admin-token
 v1/Secret local/context-gateway-oauth-key

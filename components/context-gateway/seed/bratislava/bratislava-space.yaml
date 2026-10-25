@@ -74,6 +74,9 @@ spec:
       history: 'off'
     - entityType: GtfsStop
       history: 'off'
+    # The tourist coach stops of the city's list: a register, its current state only (T-5435).
+    - entityType: OnStreetParking
+      history: 'off'
     # A district, a place and a figure of one period are records, not measurements: their current
     # state only; an indicator's history is its periods, one entity each (T-5274).
     - entityType: AdministrativeArea
@@ -107,6 +110,11 @@ spec:
       bbox: [16.93, 47.99, 17.3, 48.28]
     - name: in-area-gtfs-stop
       entityType: GtfsStop
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-coach-stop
+      entityType: OnStreetParking
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]

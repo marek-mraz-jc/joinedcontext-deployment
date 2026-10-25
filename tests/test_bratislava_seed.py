@@ -18,6 +18,7 @@ BRATISLAVA = SEED / "bratislava"
 TYPES = {
     "AirQualityObserved", "AdministrativeArea", "PointOfInterest", "KeyPerformanceIndicator",
     "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation", "GtfsStop", "GtfsRoute", "GtfsAgency",
+    "OnStreetParking",
 }
 # The districts pipeline checks every vertex of an outline itself; an indicator, a line and its
 # agency have no location.

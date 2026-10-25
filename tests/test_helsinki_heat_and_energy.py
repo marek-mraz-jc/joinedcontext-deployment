@@ -4,8 +4,9 @@ KeyPerformanceIndicator (T-5278, PL-03, DM-01).
 Bento runs the committed processors of the two mappings over recorded source data
 (`fixtures/helsinki/open-data/`, fetched on 2026-10-22, CC BY 4.0): ECOTEN's heat vulnerability zip
 whole, as the pipeline reads it, and the Nuuka property list with the monthly answers of three
-locations for September 2026. The calls to kartta.hel.fi and Nuuka are the steps left out: each case
-feeds the recorded answer as the branch hands it on. Every entity is checked against the space's
+locations for September 2026, and the space's sub-districts as dev's helsinki-all Endpoint answered
+the pipeline's query on 2026-10-25 (`space-subdistricts.json`, T-5667). The calls to the space and to
+Nuuka are the steps left out: each case feeds the recorded answer as the branch hands it on. Every entity is checked against the space's
 generated JSON Schema and against the vendored Smart Data Model. The edge cases are those answers
 edited in the one place they name.
 
@@ -35,8 +36,9 @@ PREFIX = "urn:ngsi-ld:KeyPerformanceIndicator:hel.fi:helsinki:"
 SDM = "dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator"
 HEAT = HELSINKI / "helsinki-pipeline-heat-vulnerability-bento.yaml"
 ENERGY = HELSINKI / "helsinki-pipeline-service-property-energy-bento.yaml"
-# Sompasaari and Suomenlinna, the two sub-districts of the recorded layer (subdistricts.json).
-REGISTER = {"113006": "0913301103", "112981": "0911102520"}
+# The space's 148 sub-districts, Finnish name (case and spaces aside) to code, as the branch builds it.
+SPACE = json.loads((FIXTURES / "space-subdistricts.json").read_text())
+REGISTER = {e["name"]["languageMap"]["fi"].strip().lower(): e["districtCode"] for e in SPACE}
 
 
 def processors(path: Path) -> list:
@@ -96,18 +98,21 @@ def test_a_zip_over_one_mebibyte_fails_before_it_is_unpacked():
 
 
 @requires_docker
-def test_a_layer_answer_over_sixteen_mebibytes_fails_the_call():
+def test_a_space_answer_over_four_mebibytes_fails_the_call():
     cap = processors(HEAT)[2]["try"][1]["branch"]["processors"][1]
-    assert bento([cap], b'{"features": []}') == [{"features": []}]
-    assert bento([cap], b'{"pad": "' + b"x" * 16777216 + b'"}') == []
+    assert bento([cap], b'[]') == [[]]
+    assert bento([cap], b'{"pad": "' + b"x" * 4194304 + b'"}') == []
 
 
 @requires_docker
-def test_the_layer_answer_becomes_an_id_to_code_register():
+def test_the_space_answer_becomes_a_name_to_code_register():
     branch = processors(HEAT)[2]["try"][1]["branch"]
-    recorded = json.loads((FIXTURES / "subdistricts.json").read_text())
-    out = bento([{"mapping": branch["result_map"]}], json.dumps(recorded).encode())
-    assert out[0]["register"] == REGISTER
+    out = bento([{"mapping": branch["result_map"]}], json.dumps(SPACE).encode())
+    assert len(out[0]["register"]) == 148 and out[0]["register"] == REGISTER
+    # An entity of another kind of area or without a Finnish name is no sub-district to link.
+    other = [{"id": "urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:district-091101", "name": {"languageMap": {"fi": "Vironniemi"}}},
+             {"id": SPACE[0]["id"], "name": {"languageMap": {"sv": "Kronohagen"}}}]
+    assert bento([{"mapping": branch["result_map"]}], json.dumps(other).encode())[0]["register"] == {}
 
 
 @requires_docker
@@ -119,8 +124,8 @@ def test_each_district_gives_six_indicators_linked_to_its_sub_district(recorded_
     uhvi = entities[PREFIX + "heat-uhvi-113006"]
     assert uhvi["area"]["value"] == "Sompasaari"
     assert uhvi["refArea"] == {"type": "Relationship",
-                               "object": "urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:subdistrict-0913301103"}
-    assert uhvi["districtCode"]["value"] == "0913301103" and uhvi["divisionLevel"]["value"] == "subDistrict"
+                               "object": "urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:subdistrict-" + REGISTER["sompasaari"]}
+    assert uhvi["districtCode"]["value"] == REGISTER["sompasaari"] and uhvi["divisionLevel"]["value"] == "subDistrict"
     assert "unitCode" not in uhvi["kpiValue"] and 0 <= uhvi["kpiValue"]["value"] <= 1
     assert "observedAt" not in uhvi["kpiValue"], "one period: the space records it on change"
     assert uhvi["calculationPeriod"]["value"] == {"from": "2018-06-01", "to": "2021-08-31"}
@@ -128,8 +133,13 @@ def test_each_district_gives_six_indicators_linked_to_its_sub_district(recorded_
     # Eira's weighted heat vulnerable population exceeds its residents in the study itself: kept.
     eira = next(e for e in entities.values() if e["area"]["value"] == "Eira" and e["id"].startswith(PREFIX + "heat-hvp-"))
     assert round(eira["kpiValue"]["value"]) == 1838
-    # Every district but the two of the recorded layer is written without its link, and counted.
-    assert out["dropped"] == {"district not in the sub-district layer (written without refArea)": 143}
+    # Each of the study's 145 names is one sub-district of the space: every indicator is linked.
+    assert out["dropped"] == {}
+    assert all("refArea" in e for e in entities.values())
+    # A name the space does not hold is written without its link, and counted.
+    partial = heat(recorded_rows, register={"sompasaari": REGISTER["sompasaari"]})
+    assert partial["dropped"] == {"district name not among the space's sub-districts (written without refArea)": 144}
+    assert sum("refArea" in e for e in partial["entities"]) == 6
 
 
 @requires_docker
@@ -147,7 +157,7 @@ def test_an_out_of_range_index_a_duplicate_and_a_row_without_id_are_dropped_with
     rows[2]["ID"] = ""
     rows.append(dict(rows[3]))
     out = heat(rows, register={})
-    assert out is None, "a layer with no sub-district fails the run"
+    assert out is None, "a space with no sub-district fails the run"
     out = heat(rows)
     assert out["dropped"]["index outside 0..1"] == 1
     assert out["dropped"]["heat vulnerable population below 0"] == 1
@@ -278,7 +288,13 @@ def test_each_dataset_is_one_public_endpoint_whose_policy_reads_only_its_own_ind
 
 def test_the_pipelines_read_only_the_named_hosts_with_timeouts_and_a_rate_limit():
     heat_text = HEAT.read_text()
-    assert "url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?" in heat_text
+    # The register comes from the space, through its public Endpoint, never from kartta.hel.fi:
+    # the cluster stopped reaching that host in October 2026 and every run wrote nothing (T-5667).
+    assert "https://kartta.hel.fi" not in heat_text
+    held = processors(HEAT)[2]["try"][1]["branch"]["processors"][0]["http"]
+    assert held["url"] == ("${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb"
+                           "/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues")
+    assert held["timeout"] == "20s" and held["rate_limit"] == "pipeline_egress" and "oauth2" not in held
     call = next(p for p in energy_steps() if "branch" in p)["branch"]["processors"][0]["http"]
     assert call["url"].startswith("https://helsinki-openapi.nuuka.cloud/api/v1.0/EnergyData/Monthly/ListByProperty?")
     assert call["timeout"] == "30s" and call["rate_limit"] == "hel_nuuka" and call["successful_on"] == [404]

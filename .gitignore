@@ -27,3 +27,5 @@ dev-deployment/.ssl/crlnumber*
 # Playwright runs of components/viz/tests (T-5129): installed browsers driver and result shots, never committed.
 node_modules/
 test-results/
+# scripts/temporal-audit.py writes its report here by default (ci.yml uploads it as an artifact)
+/temporal-audit.json

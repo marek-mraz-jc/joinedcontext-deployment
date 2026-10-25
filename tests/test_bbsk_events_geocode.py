@@ -281,14 +281,19 @@ def test_two_villages_of_one_name_in_a_kraj_count_only_for_the_source_whose_web_
     assert (row["osm"], row["unique"]) == ("node/3", "n")
 
 
-def test_every_town_row_is_one_municipality_with_a_labelled_point_in_slovakia():
+# lat and lon bounds of each country a region lies in (generate.COUNTRIES, Slovakia by default)
+COUNTRY_BOX = {"SK": (47.7, 49.7, 16.8, 22.6), "CZ": (48.5, 51.1, 12.0, 18.9)}
+
+
+def test_every_town_row_is_one_municipality_with_a_labelled_point_in_its_country():
     rows = list(csv.DictReader((EVENTS / "towns.csv").open(encoding="utf-8")))
     assert rows and len({r["town"] for r in rows}) == len(rows)
     for r in rows:
         assert r["town"] == offices.generate.slug(r["name"]) and r["region"] in offices.generate.REGIONS, r
         assert r["precision"] in ("office", "centre") and r["checked_by"] in ("overpass", "hand", "home"), r
         assert not towns.NOT_A_TOWN.search(r["name"]), r
-        assert 47.7 <= float(r["lat"]) <= 49.7 and 16.8 <= float(r["lon"]) <= 22.6, r
+        south, north, west, east = COUNTRY_BOX[offices.generate.COUNTRIES.get(r["region"], "SK")]
+        assert south <= float(r["lat"]) <= north and west <= float(r["lon"]) <= east, r
 
 
 def test_a_source_falls_back_to_its_own_town_and_an_aggregator_to_the_unique_towns_of_its_region():

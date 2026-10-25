@@ -19,10 +19,12 @@ spec:
     - AdministrativeArea
     - BudgetLine
     - Vehicle
+    - TrafficFlowObserved
     - EmissionSource
     - RadonRiskArea
     - FloodZone
     - FloodDefence
+    - NoiseZone
     - WeatherObserved
     - PublicTransportRoute
     - GtfsStop
@@ -34,6 +36,10 @@ spec:
     - ParkingGroup
     - RestrictedTrafficArea
     - FareCollectionSystem
+    - BikeLane
+    - GreenAsset
+    - KeyPerformanceIndicator
+    - CityWork
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

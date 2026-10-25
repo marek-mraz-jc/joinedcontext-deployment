@@ -108,8 +108,19 @@ spec:
               admin "add-canned-policy?name=postgres-backups" /tmp/policy.json
               admin "add-user?accessKey=$BACKUP_ACCESS_KEY_ID" /tmp/user.json
               admin "set-user-or-group-policy?policyName=postgres-backups&userOrGroup=$BACKUP_ACCESS_KEY_ID&isGroup=false" /tmp/empty
-              rm -f /tmp/root.curl /tmp/user.json
               echo "user for $backups: read, write and delete in $backups only"
+              {{- range $i, $u := .Values.backupBucket.prefixUsers }}
+              # {{ $u.prefix }} archives under {{ $u.prefix }}/ with a user that writes and deletes there only
+              # (T-5662); listing the bucket shows it object names, never their content.
+              printf '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation"],"Resource":["arn:aws:s3:::%s"]},{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject","s3:AbortMultipartUpload","s3:ListMultipartUploadParts"],"Resource":["arn:aws:s3:::%s/%s/*"]}]}' \
+                "$backups" "$backups" {{ $u.prefix | quote }} > /tmp/policy.json
+              printf '{"secretKey":"%s","status":"enabled"}' "$PREFIX_{{ $i }}_SECRET_ACCESS_KEY" > /tmp/user.json
+              admin "add-canned-policy?name=postgres-backups-{{ $u.prefix }}" /tmp/policy.json
+              admin "add-user?accessKey=$PREFIX_{{ $i }}_ACCESS_KEY_ID" /tmp/user.json
+              admin "set-user-or-group-policy?policyName=postgres-backups-{{ $u.prefix }}&userOrGroup=$PREFIX_{{ $i }}_ACCESS_KEY_ID&isGroup=false" /tmp/empty
+              echo "user for $backups/{{ $u.prefix }}/: read, write and delete under that prefix only"
+              {{- end }}
+              rm -f /tmp/root.curl /tmp/user.json
               {{- end }}
           env:
             - name: ENDPOINT
@@ -146,6 +157,18 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backupBucket.credentialsSecret | quote }}
                   key: {{ .Values.secretAccessKeyKey | quote }}
+            {{- range $i, $u := .Values.backupBucket.prefixUsers }}
+            - name: PREFIX_{{ $i }}_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $u.credentialsSecret | quote }}
+                  key: {{ $.Values.accessKeyIdKey | quote }}
+            - name: PREFIX_{{ $i }}_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $u.credentialsSecret | quote }}
+                  key: {{ $.Values.secretAccessKeyKey | quote }}
+            {{- end }}
             {{- end }}
           resources:
             requests:

@@ -1,0 +1,10 @@
+---
+# apps-db holds the server WASM Apps' schemas and rows, data no seed recreates, so dev archives it
+# beside the platform's cluster in the artifact store (T-5662), under apps-db/ with a key that
+# reaches that prefix alone. Seven days, as postgres-cluster: the store's volume is shared.
+apps-db:
+  cluster:
+    backups:
+      enabled: true
+      target: 'artifact-store'
+      retentionPolicy: '7d'

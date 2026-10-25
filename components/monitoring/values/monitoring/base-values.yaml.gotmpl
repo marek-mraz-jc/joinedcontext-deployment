@@ -277,6 +277,17 @@ alertGroups:
           severity: critical
         annotations:
           summary: 'The newest Postgres backup in {{`{{ $labels.namespace }}`}} is older than 26 hours: check the backup job and its volume'
+      # T-5662: a base backup that failed after the last good one, within minutes rather than after
+      # the 26 h of PostgresBackupStale (dev's nightly failed on 10-23 and 10-25 and the page said only "stale").
+      - alert: PostgresBackupFailed
+        expr: |
+          max by (namespace, cluster) (cnpg_collector_last_failed_backup_timestamp)
+            > max by (namespace, cluster) (cnpg_collector_last_available_backup_timestamp)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'The newest base backup of {{`{{ $labels.cluster }}`}} in {{`{{ $labels.namespace }}`}} failed: read kubectl get backups and the instance log (barman-cloud-backup), then start one with kubectl cnpg backup'
       # T-5289: the monthly restore drill, as the probe reads it from configmap/<cluster>-dr-drill.
       - alert: PostgresRestoreDrillStale
         expr: |

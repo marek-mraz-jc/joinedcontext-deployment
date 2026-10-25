@@ -57,6 +57,16 @@ apps-db-linkerd-control-plane:
           port: 8086
         - protocol: TCP
           port: 8090
+    # The in-cluster artifact store, where an environment archives apps-db to it (T-5662): its
+    # inbound proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 4143
     - to:
         - podSelector:
             matchLabels:

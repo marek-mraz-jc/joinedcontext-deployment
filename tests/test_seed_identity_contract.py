@@ -92,8 +92,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # air pilot (T-5255), and one public read per area statistics theme (T-5258), and the public read
     # of air quality (T-5259), and the service usage counters (T-5258), and the public reads of the heat vulnerability index and the service
     # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257), and its catalogue's
-    # Portal write and public read (T-5493).
-    assert len(policies) == 42
+    # Portal write and public read (T-5493), and the public reads of the autumn traffic volumes and
+    # the machine vision counts (T-5669).
+    assert len(policies) == 44
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
@@ -272,10 +273,14 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
                  "t48431-x", "newuser-policy-", "newuser-policy-A"]:
         assert not reached(name), f"{name} is not a journey's"
 
+    # The binding's scope (asserted above) bounds what it reaches: the seed of that project, and the
+    # sample apps. A year-suffixed table of another project (`bratislava-rozpocet-prijmy-2019`, T-5676)
+    # stays outside it.
     apps = SEED.parent.parent / "gitea/apps"
+    project = held[0]["spec"]["scope"]["project"]
     seeded = {
         doc["metadata"]["name"]
-        for path in [*SEED.glob("*/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
+        for path in [*SEED.glob(f"{project}/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
         if path.name != "index.yaml" and not path.name.endswith("-bento.yaml")
         for doc in documents(path)
         if isinstance(doc.get("metadata"), dict) and "name" in doc["metadata"]

@@ -162,6 +162,17 @@ spec:
         - get_entity
         - query_temporal
       timeoutSeconds: 20
+    - endpoint: praha/praha-akce
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
     - endpoint: helsinki/helsinki-weather
       tools:
         - list_types
@@ -229,6 +240,17 @@ spec:
         - query_temporal
       timeoutSeconds: 20
     - endpoint: slovensko/slovensko-podujatia
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
+    - endpoint: slovensko/slovensko-podujatia-bratislava
       tools:
         - list_types
         - get_type

@@ -1,23 +1,38 @@
 # The mapping of the statistics-mesto pipeline (T-5274): the hub's tables of Bratislava as a whole as Smart Data Models
 # KeyPerformanceIndicator, one entity per table, figure, breakdown, area and period. One mapping
 # text for every Feature Service statistics table of the matrix (Research/bratislava-open-data.md
-# 6.4): the statistics, statistics-okresy and statistics-mesto pipelines run the same text and
-# differ only in `tables` below, split by area so that one run fits its memory quota. A table is
+# 6.4): the statistics, statistics-okresy, statistics-mesto and statistics-denne pipelines run the same text
+# and differ only in `tables` below, split by area (the daily tables apart) so that one run fits its memory quota. A table is
 # one line of `tables`, never a pipeline of its own. The bratislava-hub DataSource answers the
 # hub's list of services; a table the list no longer names is logged and left out. Each table is
-# read with one query of at most 2,000 rows; an answer that says it holds more fails that table
-# instead of writing part of it. Nothing here deletes.
+# read in pages of 1,000 rows, at most 20; a table that holds more fails instead of writing part
+# of it. A table of events or bookings is read as the hub's own counts and sums per group (T-5671).
+# Nothing here deletes.
 pipeline:
   processors:
     - mapping: |
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
-        # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
-        # or city (Bratislava as a whole); area: the area column, none for a table of the city
-        # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
-        # category), each one segment of the id and one part of the name; only: [column, prefix]
+        # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V),
+        # city (Bratislava as a whole), zsj (the census's basic settlement units of the city), obec
+        # (the municipalities of the Bratislava Region) or kraj (the Bratislava region, NUTS 3 SK010);
+        # area: the area column (a zsj's 7-digit code), none for a table of the city alone; label: a
+        # zsj's name column, within: its city district's code column; year: the period column (a
+        # year, a range of years, two ranges compared, a day or a month such as 2018-06), quarter:
+        # its quarter column, month: its month column (1 to 12), spans: the range each year of it
+        # stands for (a model's 1991 is 1991-2021), or fixed: the year or range the table's title or
+        # the item's description names; by: breakdown columns (age, sex,
+        # category), each one segment of the id and one part of the name, or {code, name, optional}:
+        # the id segment from the code column, the name part from the name column (a budget item's
+        # code and title), an optional one left out of both where its cell is empty; abs: the figure
+        # without its sign (an age pyramid writes the men's side negative); only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
+        # A table of events or bookings asks the hub for sums: group: the columns or expressions
+        # (SUBSTRING of a date) one figure stands for, in the order the hub names its answer
+        # (an expression answers as EXPR_1); stats: [statistic, column or expression, answer
+        # column]; where: the rows counted (the year-end month of a running ledger); labels: a
+        # breakdown code by its Slovak word; past: a period that starts after today is a wrong
+        # date in the ledger, dropped.
         let tables = [
           {"name": "index-socialnej-a-ekonomickej-podpory-v", "item": "eb87270686ca415dbbce239b51e33cfb", "path": "Index_soci%C3%A1lnej_a_ekonomickej_podpory_v_Bratislave_v_rokoch_2022_%E2%80%93_2050", "title": "Index sociálnej a ekonomickej podpory v Bratislave v rokoch 2022 – 2050", "areas": "city", "year": "ROK", "by": ["INDEX_"], "values": [["HODNOTA_INDEXU", "hodnota-indexu", "Index sociálnej a ekonomickej podpory v Bratislave v rokoch 2022 – 2050", null, null]]},
           {"name": "investicne-vydavky-do-sportovej", "item": "4f10740a602945b687acbfef7572e3a7", "path": "Investi%C4%8Dn%C3%A9_v%C3%BDdavky_mesta_Bratislava_do_%C5%A1portovej_infra%C5%A1trukt%C3%BAry", "title": "Investičné výdavky mesta Bratislava do športovej infraštruktúry", "areas": "city", "year": "ROK", "values": [["INVESTICIE", "investicie", "Investičné výdavky mesta Bratislava do športovej infraštruktúry", null, null]]},
@@ -121,6 +136,12 @@ pipeline:
           {"name": "priemerny-vek-pristahovanych-a", "item": "cb74a482ddf24366b00941a793dbc86f", "path": "Priemern%C3%BD_vek_pris%C5%A5ahovan%C3%BDch_a_vys%C5%A5ahovan%C3%BDch_do_a_z_Bratislavy_pod%C4%BEa_pohlav%C3%AD", "title": "Priemerný vek prisťahovaných a vysťahovaných do a z Bratislavy podľa pohlaví", "areas": "city", "year": "ROK", "by": ["STAHOVANIA", "POHLAVIE"], "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek prisťahovaných a vysťahovaných do a z Bratislavy podľa pohlaví", null, null]]},
           {"name": "priemerny-vek-zien-pri-v-rokoch-2000-2021-3", "item": "bb007f73bc984be68aebacbd3f00a48a", "path": "Priemern%C3%BD_vek_%C5%BEien_pri_naroden%C3%AD_die%C5%A5a%C5%A5a_v_Bratislave_a_na_Slovensku_v_rokoch_2000_%E2%80%93_2021", "title": "Priemerný vek žien pri narodení dieťaťa v Bratislave a na Slovensku v rokoch 2000 – 2021", "areas": "city", "area": "UZEMIE", "year": "ROK", "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek žien pri narodení dieťaťa v Bratislave a na Slovensku v rokoch 2000 – 2021", null, null]]},
           {"name": "priemerny-vek-zien-pri-v-rokoch-2000-2021-4", "item": "4d68e503c3844892b32cbe31c577745a", "path": "Priemern%C3%BD_vek_%C5%BEien_pri_naroden%C3%AD_prv%C3%A9ho_die%C5%A5a%C5%A5a_v_BA_a_na_Slovensku_v_rokoch_2000_%E2%80%93_2021", "title": "Priemerný vek žien pri narodení prvého dieťaťa v BA a na Slovensku v rokoch 2000 – 2021", "areas": "city", "area": "UZEMIE", "year": "ROK", "values": [["PRIEMERNY_VEK", "priemerny-vek", "Priemerný vek žien pri narodení prvého dieťaťa v BA a na Slovensku v rokoch 2000 – 2021", null, null]]},
+          {"name": "prispevky-pricin-smrti-medzi-ba-a-sr", "item": "802e593468574473a3f8c6d9a8012eaf", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_medzi_BA_a_SR", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života medzi BA a SR", "areas": "city", "fixed": "2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY_ROKY", "prispevok-roky", "Príspevok k rozdielu strednej dĺžky života medzi Bratislavou a Slovenskom (roky)", null, null]]},
+          {"name": "prispevky-pricin-smrti-medzi-ba-a-sr-podiel", "item": "33d02f6c5f044aeeb91c1f9fb19ffd63", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_medzi_BA_a_SR_", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života medzi BA a SR (%)", "areas": "city", "fixed": "2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVOK__", "prispevok-percenta", "Príspevok k rozdielu strednej dĺžky života medzi Bratislavou a Slovenskom (%)", null, null]]},
+          {"name": "prispevky-pricin-smrti-v-ba", "item": "b4f5ab41eb3645b6b2c874e09fe0b217", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_v_BA_abs", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života v BA", "areas": "city", "fixed": "2000 – 2004 a 2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY_ROKY", "prispevok-roky", "Príspevok k rozdielu strednej dĺžky života v Bratislave medzi obdobiami (roky)", null, null]]},
+          {"name": "prispevky-pricin-smrti-v-ba-podiel", "item": "d2f13330a7d9464082956b4a9c59f221", "path": "Pr%C3%ADspevky_hlavn%C3%BDch_skup%C3%ADn_pr%C3%AD%C4%8Din_smrti_k_rozdielom_strednej_d%C4%BA%C5%BEky_%C5%BEivota_v_BA_", "title": "Príspevky hlavných skupín príčin smrti k rozdielom strednej dĺžky života v BA (%)", "areas": "city", "fixed": "2000 – 2004 a 2015 – 2019", "by": ["POHLAVIE", "PRICINA_SMRTI"], "values": [["PRISPEVKY__", "prispevok-percenta", "Príspevok k rozdielu strednej dĺžky života v Bratislave medzi obdobiami (%)", null, null]]},
+          {"name": "prispevky-vekovych-skupin-muzi-v-ba", "item": "9c19e01a1905462c8b88b2ad288bb567", "path": "Pr%C3%ADspevky_vekov%C3%BDch_skup%C3%ADn_k_zmene_hodn%C3%B4t_strednej_d%C4%BA%C5%BEky_%C5%BEivota_pri_naroden%C3%AD_mu%C5%BEov_v_BA", "title": "Príspevky vekových skupín k zmene hodnôt strednej dĺžky života pri narodení mužov v BA", "areas": "city", "year": "OBDOBIE", "by": ["VEK"], "values": [["PRISPEVOK", "prispevok-roky", "Príspevok vekovej skupiny k zmene strednej dĺžky života pri narodení mužov v Bratislave (roky)", null, null]]},
+          {"name": "prispevky-vekovych-skupin-zeny-v-ba", "item": "933df5294ec0487c8f06c0befd7b36bc", "path": "Pr%C3%ADspevky_vekov%C3%BDch_skup%C3%ADn_k_zmene_hodn%C3%B4t_strednej_d%C4%BA%C5%BEky_%C5%BEivota_pri_naroden%C3%AD_%C5%BEien_v_BA", "title": "Príspevky vekových skupín k zmene hodnôt strednej dĺžky života pri narodení žien v BA", "areas": "city", "year": "OBDOBIE", "by": ["VEK"], "values": [["PRISPEVOK", "prispevok-roky", "Príspevok vekovej skupiny k zmene strednej dĺžky života pri narodení žien v Bratislave (roky)", null, null]]},
           {"name": "prognoza-poctu-obyvatelov-v-rokoch-2022-ba", "item": "2bc509db673d4e8ab492e482e35d31fd", "path": "Progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_Bratislavy_v_rokoch_2022_%E2%80%93_2050_pod%C4%BEa_scen%C3%A1rov", "title": "Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov", "areas": "city", "year": "ROK", "by": ["SCENAR"], "values": [["PROGNOZA_POCET_OBYVATELOV", "prognoza-pocet-obyvatelov", "Prognóza počtu obyvateľov Bratislavy v rokoch 2022 – 2050 podľa scenárov", 0, null]]},
           {"name": "prognozovana-zmena-podielu-hlavnych", "item": "74ef0a59361c4e06beb542141831e9eb", "path": "Progn%C3%B3zovan%C3%A1_zmena_podielu_hlavn%C3%BDch_vekov%C3%BDch_skup%C3%ADn_obyvate%C4%BEstva_BA_v_rokoch_2022_a_2050", "title": "Prognózovaná zmena podielu hlavných vekových skupín obyvateľstva BA v rokoch 2022 a 2050", "areas": "city", "fixed": "2022-2050", "by": ["SCENAR", "VEK"], "values": [["ZMENA__", "zmena", "Prognózovaná zmena podielu hlavných vekových skupín obyvateľstva BA v rokoch 2022 a 2050", null, null]]},
           {"name": "prognozovany-index-v-rokoch-2020-2050-ba", "item": "58d221b5c40643979d165e44383d9d95", "path": "Prognozovany_index_starnutia_obyvatelstva_Bratislavy_v_rokoch_20202_%E2%80%93_2050_", "title": "Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050", "areas": "city", "year": "ROK", "by": ["SCENAR"], "values": [["INDEX_STARNUTIA", "index-starnutia", "Prognózovaný index starnutia obyvateľstva Bratislavy v rokoch 2020 – 2050", null, null]]},
@@ -195,7 +216,54 @@ pipeline:
           {"name": "struktura-ziakov-v-konzervatoriach", "item": "0c30d76b5710473db1c07f732b1d545c", "path": "%C5%A0trukt%C3%BAra_%C5%BEiakov_v_konzervat%C3%B3ri%C3%A1ch_pod%C4%BEa_zria%C4%8Fovate%C4%BEa_v_Bratislave", "title": "Štruktúra žiakov v konzervatóriách podľa zriaďovateľa v Bratislave", "areas": "city", "year": "ROK", "values": [["STATNE", "statne", "Statne", null, null], ["CIRKEVNE", "cirkevne", "Cirkevne", null, null], ["SUKROMNE", "sukromne", "Sukromne", null, null]]},
           {"name": "struktura-ziakov-v-strednych-odbornych", "item": "1d2e02a89f61459381f72f44e3966867", "path": "%C5%A0trukt%C3%BAra_%C5%BEiakov_v_stredn%C3%BDch_odborn%C3%BDch_%C5%A1kol%C3%A1ch_pod%C4%BEa_zria%C4%8Fovate%C4%BEa_v_Bratislave", "title": "Štruktúra žiakov v stredných odborných školách podľa zriaďovateľa v Bratislave", "areas": "city", "year": "ROK", "values": [["STATNE", "statne", "Statne", null, null], ["CIRKEVNE", "cirkevne", "Cirkevne", null, null], ["SUKROMNE", "sukromne", "Sukromne", null, null]]},
           {"name": "struktura-ziakov-v-zakladnych-skolach", "item": "94f02298617d47d4adfea2e36751ebf2", "path": "%C5%A0trukt%C3%BAra_%C5%BEiakov_v_z%C3%A1kladn%C3%BDch_%C5%A1kol%C3%A1ch_pod%C4%BEa_zria%C4%8Fovate%C4%BEa_v_Bratislave", "title": "Štruktúra žiakov v základných školách podľa zriaďovateľa v Bratislave", "areas": "city", "year": "ROK", "by": ["STUPEN_STUDIA"], "values": [["STATNE", "statne", "Statne", null, null], ["CIRKEVNE", "cirkevne", "Cirkevne", null, null], ["SUKROMNE", "sukromne", "Sukromne", null, null]]},
-          {"name": "struktura-zien-podla-najvyssieho", "item": "2c9911cd62d04cfaaa4dca95ad8f260d", "path": "%C5%A0trukt%C3%BAra_%C5%BEien_pod%C4%BEa_najvy%C5%A1%C5%A1ieho_dosiahnut%C3%A9ho_vzdelania_a_veku_v_BA_pod%C4%BEa_SODB_2021", "title": "Štruktúra žien podľa najvyššieho dosiahnutého vzdelania a veku v BA podľa SODB 2021", "areas": "city", "fixed": "2021", "by": ["VZDELANIE", "VEK"], "values": [["PODIEL", "podiel", "Štruktúra žien podľa najvyššieho dosiahnutého vzdelania a veku v BA podľa SODB 2021", 0, 100]]}
+          {"name": "struktura-zien-podla-najvyssieho", "item": "2c9911cd62d04cfaaa4dca95ad8f260d", "path": "%C5%A0trukt%C3%BAra_%C5%BEien_pod%C4%BEa_najvy%C5%A1%C5%A1ieho_dosiahnut%C3%A9ho_vzdelania_a_veku_v_BA_pod%C4%BEa_SODB_2021", "title": "Štruktúra žien podľa najvyššieho dosiahnutého vzdelania a veku v BA podľa SODB 2021", "areas": "city", "fixed": "2021", "by": ["VZDELANIE", "VEK"], "values": [["PODIEL", "podiel", "Štruktúra žien podľa najvyššieho dosiahnutého vzdelania a veku v BA podľa SODB 2021", 0, 100]]},
+          {"name": "cestovne-bez-listka-eura", "item": "544b9c8a55bf40429d542b6456d41c3a", "path": "Cestovanie_bez_platn%C3%A9ho_cestovn%C3%A9ho_l%C3%ADstka_v_MHD_v_Bratislave_%28v_eur%C3%A1ch%29", "title": "Cestovanie bez platného cestovného lístka v MHD v Bratislave (v eurách)", "areas": "city", "year": "ROK", "values": [["UHRADENE", "uhradene-eur", "Uhradené pokuty (€)", 0, null], ["NEUHRADENE", "neuhradene-eur", "Neuhradené pokuty (€)", 0, null], ["SPOLU", "spolu-eur", "Pokuty spolu (€)", 0, null]]},
+          {"name": "cestujuci-bez-listka", "item": "4a8eab30e596432486f494649840c694", "path": "Cestuj%C3%BAci_bez_platn%C3%A9ho_cestovn%C3%A9ho_l%C3%ADstka_v_MHD_v_Bratislave", "title": "Cestujúci bez platného cestovného lístka v MHD v Bratislave", "areas": "city", "year": "ROK", "values": [["UHRADENE_POKUTY", "uhradene", "Cestujúci bez lístka, pokuta uhradená", 0, null], ["NEUHRADENE_POKUTY", "neuhradene", "Cestujúci bez lístka, pokuta neuhradená", 0, null], ["SPOLU", "spolu", "Cestujúci bez lístka spolu", 0, null]]},
+          {"name": "dopravne-vykony-mhd", "item": "7f5b1dd29c2141489ca842a0c94e98e3", "path": "Dopravn%C3%A9_v%C3%BDkony_MHD_pod%C4%BEa_jednotliv%C3%BDch_trakci%C3%AD_v_Bratislave", "title": "Dopravné výkony MHD podľa jednotlivých trakcií v Bratislave", "areas": "city", "year": "ROK", "by": ["PROSTRIEDOK"], "values": [["VLAKOVE_KILOMETRE", "vlakove-km", "Vlakové kilometre", 0, null], ["MIESTOVE_KILOMETRE", "miestove-km", "Miestové kilometre", 0, null]]},
+          {"name": "dni-prekrocenia-o3", "item": "6e18d5a0c0fd466dab5bd821a744178a", "path": "Po%C4%8Det_dn%C3%AD_s_prekro%C4%8Den%C3%ADm_cie%C4%BEovej_hodnoty_koncentr%C3%A1cie_%C5%A1kodliv%C3%BDch_l%C3%A1tok_O3_v_ovzdu%C5%A1%C3%AD_v_BA", "title": "Počet dní s prekročením cieľovej hodnoty koncentrácie škodlivých látok O3 v ovzduší v Bratislave", "areas": "city", "year": "ROK", "by": ["MONITOROVACIA_STANICA"], "values": [["POCET_DNI_S_PREKROCENIM", "dni", "Dni s prekročením cieľovej hodnoty O3", 0, 366]]},
+          {"name": "vozidla-mhd", "item": "1f3975197baf4d5b8a29cd31ff83e63d", "path": "Po%C4%8Det_dopravn%C3%BDch_prostriedkov_MHD_v_Bratislave", "title": "Počet dopravných prostriedkov MHD v Bratislave", "areas": "city", "year": "ROK", "values": [["AUTOBUSY", "autobusy", "Autobusy MHD", 0, null], ["ELEKTRICKY", "elektricky", "Električky MHD", 0, null], ["TROLEJBUSY", "trolejbusy", "Trolejbusy MHD", 0, null]]},
+          {"name": "cestujuci-letisko", "item": "a5f1b093ad82432792ff709314a1b2f7", "path": "Po%C4%8Det%20odbaven%C3%BDch%20cestuj%C3%BAcich%20na%20letisku%20M.%20R.%20%C5%A0tef%C3%A1nika%20v%20Bratis", "title": "Počet odbavených cestujúcich na letisku M. R. Štefánika v Bratislave podľa druhu dopravy", "areas": "city", "year": "Rok", "values": [["Pravidelná_doprava", "pravidelna", "Cestujúci, pravidelná doprava", 0, null], ["Nepravidelná_doprava", "nepravidelna", "Cestujúci, nepravidelná doprava", 0, null], ["Ostatná_doprava", "ostatna", "Cestujúci, ostatná doprava", 0, null], ["Spolu", "spolu", "Cestujúci spolu", 0, null]]},
+          {"name": "prekrocenia-pm10", "item": "c560d929407e47e59793a78da0fe49bb", "path": "Po%C4%8Det_prekro%C4%8Den%C3%AD_dennej_limitnej_hodnoty_koncentr%C3%A1cie_%C5%A1kodliv%C3%BDch_l%C3%A1tok_PM10_v_ovzdu%C5%A1%C3%AD_v_BA", "title": "Počet prekročení dennej limitnej hodnoty koncentrácie škodlivých látok PM10 v ovzduší v Bratislave", "areas": "city", "year": "ROK", "by": ["MONITOROVACIA_STANICA"], "values": [["POCET_PREKROCENI", "dni", "Prekročenia dennej limitnej hodnoty PM10", 0, 366]]},
+          {"name": "prepravene-osoby-mhd", "item": "34a7ec013dcd4ba4a1bd6f7051e13a78", "path": "Po%C4%8Det_prepraven%C3%BDch_os%C3%B4b_MHD_v_Bratislave", "title": "Počet prepravených osôb MHD v Bratislave", "areas": "city", "year": "ROK", "quarter": "KVARTAL", "values": [["PREPRAVENE_OSOBY", "osoby", "Prepravené osoby MHD", 0, null]]},
+          {"name": "priemerna-koncentracia-pm10", "item": "08b4888537194726bffd6f0f5a55c21e", "path": "Priemern%C3%A1_ro%C4%8Dn%C3%A1_koncentr%C3%A1cia_%C5%A1kodliv%C3%BDch_l%C3%A1tok_PM10_v_ovzdu%C5%A1%C3%AD_v_Bratislave", "title": "Priemerná ročná koncentrácia škodlivých látok PM10 v ovzduší v Bratislave", "areas": "city", "year": "ROK", "by": ["MONITOROVACIA_STANICA"], "values": [["PM10", "ug-m3", "Priemerná ročná koncentrácia PM10 (µg/m³)", 0, null]]},
+          {"name": "priemerna-koncentracia-pm25", "item": "7146fc000f1544309fbaef06a4a70fa3", "path": "Priemern%C3%A1_ro%C4%8Dn%C3%A1_koncentr%C3%A1cia_%C5%A1kodliv%C3%BDch_l%C3%A1tok_PM2.5_v_ovzdu%C5%A1%C3%AD_v_Bratislave", "title": "Priemerná ročná koncentrácia škodlivých látok PM2.5 v ovzduší v Bratislave", "areas": "city", "year": "ROK", "by": ["MONITOROVACIA_STANICA"], "values": [["PM2_5", "ug-m3", "Priemerná ročná koncentrácia PM2.5 (µg/m³)", 0, null]]},
+          {"name": "zmena-dopravneho-dopytu", "item": "fa81444a16434daabdc3646ae888e9c4", "path": "Zmena_dopravn%C3%A9ho_dopytu_pod%C4%BEa_%C3%9AGD_hl._mesta_Bratislava_a_Progn%C3%B3zy_v_", "title": "Zmena dopravného dopytu podľa ÚGD hl. mesta Bratislava a Prognózy (v %)", "areas": "city", "year": "ROK", "by": ["POHYB"], "values": [["GENEREL", "generel", "Index dopravného dopytu podľa ÚGD (2011 = 100)", 0, null], ["PROGNOZA", "prognoza", "Index dopravného dopytu podľa prognózy (2011 = 100)", 0, null]]},
+          {"name": "pocet-priestupkov-a-vyska-pokut", "item": "d3d71db29e0c4e6ba59092ecbd3d8714", "path": "Po%C4%8Det%20priestupkov%20a%20v%C3%BD%C5%A1ka%20pok%C3%BAt%20pod%C4%BEa%20sk___", "title": "Počet priestupkov a výška pokút", "areas": "city", "year": "EXPR_1", "past": true, "by": ["Skupina_udalosti"], "group": "SUBSTRING(Dátum,1,4),Skupina_udalosti", "stats": [["count", "ObjectId", "n"], ["sum", "CAST(BP_v_EUR AS FLOAT)", "eur"]], "values": [["n", "pocet", "Počet priestupkov", 0, null], ["eur", "pokuty-eur", "Blokové pokuty (EUR)", 0, null]]},
+          {"name": "jazyk-prehliadaca-free-wifi", "item": "5d3118a2f6164600b2ba82f40c40168f", "path": "Detegovan%C3%BD%20jazyk%20prehliada%C4%8Da%20u%C5%BE%C3%ADvate%C4%BEov%20Free%20Wifi%20VisitBratislav", "title": "Detegovaný jazyk prehliadača užívateľov Free Wifi VisitBratislava", "areas": "city", "year": "EXPR_1", "past": true, "by": ["Jazyk"], "group": "SUBSTRING(Dátum,1,4),Jazyk", "stats": [["sum", "CAST(Hodnota AS FLOAT)", "n"]], "values": [["n", "pocet", "Súčet denných počtov užívateľov", 0, null]]},
+          {"name": "prenesene-data-free-wifi", "item": "1ce49beed90540f181b9224bfcfe111d", "path": "Po%C4%8Det%20prenesen%C3%BDch%20d%C3%A1t%20u%C5%BE%C3%ADvate%C4%BEov%20Free%20Wifi%20VisitBratislava%20%28v%20B%29", "title": "Počet prenesených dát užívateľov Free Wifi VisitBratislava", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum_a_čas,1,4)", "stats": [["sum", "CAST(Prichádzajúce_dáta AS FLOAT)", "i"], ["sum", "CAST(Odchádzajúce_dáta AS FLOAT)", "o"], ["sum", "CAST(Unikátne_spojenia AS FLOAT)", "u"]], "values": [["i", "prichadzajuce-b", "Prichádzajúce dáta (B)", 0, null], ["o", "odchadzajuce-b", "Odchádzajúce dáta (B)", 0, null], ["u", "unikatne-spojenia", "Súčet unikátnych spojení za záznamy", 0, null]]},
+          {"name": "autorizacie-dtmb-2019", "item": "f3a1cb09c55e45e5801afb6587bea525", "path": "Autoriz%C3%A1cie%20DTMB%202019", "title": "Autorizácie DTMB 2019", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum,1,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet autorizácií", 0, null]]},
+          {"name": "autorizacie-dtmb-2020-2025", "item": "0f06f97b939c44049cc95f9bd4e6734b", "path": "autorizacie_2020_2023", "title": "Autorizácie DTMB v rokoch 2020 - 2025", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Datum,CHAR_LENGTH(Datum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet autorizácií", 0, null]]},
+          {"name": "cerpanie-rozpoctu-2021", "item": "1607632e1f204b639dc08837b56bde79", "path": "Priebe%C5%BEn%C3%A9%20%C4%8Derpanie%20rozpo%C4%8Dtu%20Hlavn%C3%A9ho%20mesta%20SR%20Bratislavy", "title": "Priebežné čerpanie rozpočtu Hlavného mesta SR Bratislavy v roku 2021", "areas": "city", "year": "Rok", "by": ["PV", "EK2"], "labels": {"P": "príjmy", "V": "výdavky"}, "group": "Rok,PV,EK2", "where": "Mesiac='12'", "stats": [["sum", "CAST(Schválený AS FLOAT)", "a"], ["sum", "CAST(Upravený AS FLOAT)", "b"], ["sum", "CAST(Čerpanie AS FLOAT)", "c"]], "values": [["a", "schvaleny-eur", "Schválený rozpočet (EUR)", null, null], ["b", "upraveny-eur", "Upravený rozpočet (EUR)", null, null], ["c", "cerpanie-eur", "Čerpanie k 31. 12. (EUR)", null, null]]},
+          {"name": "rozpocet-2014-vydavky", "item": "c3bfa860e31e4635bc27b0c90ee27285", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202014%20-%20v%C3%BDdavky", "title": "Rozpočet Bratislavy v roku 2014 - výdavky", "areas": "city", "fixed": "2014", "by": ["Druh___názov"], "group": "Druh___názov", "stats": [["sum", "CAST(Schválený_2014 AS FLOAT)", "a"], ["sum", "CAST(Upravený_stav_k_31_12_2014 AS FLOAT)", "b"], ["sum", "CAST(Skutočnosť_stav_k_31_12_2014 AS FLOAT)", "c"]], "values": [["a", "schvalene-eur", "Schválené výdavky (EUR)", null, null], ["b", "upravene-eur", "Upravené výdavky k 31. 12. (EUR)", null, null], ["c", "skutocnost-eur", "Skutočné výdavky k 31. 12. (EUR)", null, null]]},
+          {"name": "rozpocet-2015-vydavky", "item": "7d2ffd4582fd44fc830463685b688551", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202015%20-%20v%C3%BDdavky", "title": "Rozpočet Bratislavy v roku 2015 - výdavky", "areas": "city", "fixed": "2015", "by": ["Druh___názov"], "group": "Druh___názov", "stats": [["sum", "CAST(Schválený_2015 AS FLOAT)", "a"], ["sum", "CAST(Upravený_stav_k_31_12_2015 AS FLOAT)", "b"], ["sum", "CAST(Skutočnosť_stav_k_31_12_2015 AS FLOAT)", "c"]], "values": [["a", "schvalene-eur", "Schválené výdavky (EUR)", null, null], ["b", "upravene-eur", "Upravené výdavky k 31. 12. (EUR)", null, null], ["c", "skutocnost-eur", "Skutočné výdavky k 31. 12. (EUR)", null, null]]},
+          {"name": "rozpocet-2016-vydavky", "item": "3bc1d6f7e6c64fbbbcb7d1aaac37fa20", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202016%20-%20v%C3%BDdavky", "title": "Rozpočet Bratislavy v roku 2016 - výdavky", "areas": "city", "fixed": "2016", "by": ["Druh___názov"], "group": "Druh___názov", "stats": [["sum", "CAST(Schválený_2016 AS FLOAT)", "a"], ["sum", "CAST(Upravený_stav_k_31_12_2016 AS FLOAT)", "b"], ["sum", "CAST(Skutočnosť_stav_k_31_12_2016 AS FLOAT)", "c"]], "values": [["a", "schvalene-eur", "Schválené výdavky (EUR)", null, null], ["b", "upravene-eur", "Upravené výdavky k 31. 12. (EUR)", null, null], ["c", "skutocnost-eur", "Skutočné výdavky k 31. 12. (EUR)", null, null]]},
+          {"name": "rozpocet-2017-vydavky", "item": "e77b94f37ccc4c08856cc83f7519004c", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202017%20-%20v%C3%BDdavky", "title": "Rozpočet Bratislavy v roku 2017 - výdavky", "areas": "city", "fixed": "2017", "by": ["Druh___názov"], "group": "Druh___názov", "stats": [["sum", "CAST(Schválený_2017 AS FLOAT)", "a"], ["sum", "CAST(Upravený_stav_k_31_12_2017 AS FLOAT)", "b"], ["sum", "CAST(Skutočnosť_stav_k_31_12_2017 AS FLOAT)", "c"]], "values": [["a", "schvalene-eur", "Schválené výdavky (EUR)", null, null], ["b", "upravene-eur", "Upravené výdavky k 31. 12. (EUR)", null, null], ["c", "skutocnost-eur", "Skutočné výdavky k 31. 12. (EUR)", null, null]]},
+          {"name": "rozpocet-2018-vydavky", "item": "1cbe5df2d8f2444dbea26f8a1008d913", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202018%20-%20v%C3%BDdavky", "title": "Rozpočet Bratislavy v roku 2018 - výdavky", "areas": "city", "fixed": "2018", "by": ["Druh___názov"], "group": "Druh___názov", "stats": [["sum", "CAST(Schválený_2018 AS FLOAT)", "a"], ["sum", "CAST(Upravený_stav_k_31_12_2018 AS FLOAT)", "b"], ["sum", "CAST(Skutočnosť_stav_k_31_12_2018 AS FLOAT)", "c"]], "values": [["a", "schvalene-eur", "Schválené výdavky (EUR)", null, null], ["b", "upravene-eur", "Upravené výdavky k 31. 12. (EUR)", null, null], ["c", "skutocnost-eur", "Skutočné výdavky k 31. 12. (EUR)", null, null]]},
+          {"name": "transfer-nestatnym-skolam", "item": "2cb4b3fa5bad47028ed77fdfd4bd494e", "path": "Transfer_ne%C5%A1t%C3%A1tnym_%C5%A1kol%C3%A1m_a_%C5%A1kolsk%C3%BDm_zariadeniam_poskytnut%C3%BD_v_rokoch_2010___2023", "title": "Transfer neštátnym školám a školským zariadeniam poskytnutý v rokoch 2010 - 2023", "areas": "city", "year": "Rok", "group": "Rok", "stats": [["sum", "Suma_finančných_prostriedkov_po", "eur"], ["count", "ObjectId2", "n"]], "values": [["eur", "suma-eur", "Transfer neštátnym školám a školským zariadeniam (EUR)", 0, null], ["n", "pocet-prijimatelov", "Počet škôl a školských zariadení", 0, null]]},
+          {"name": "vklady-dtmb-2018", "item": "8242daf7074541e786c619953dbdaa44", "path": "Vklady%20DTMB%202018", "title": "Vklady DTMB 2018", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum,CHAR_LENGTH(Dátum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
+          {"name": "vklady-dtmb-2019", "item": "7799e1e1c69d455880b715a48fa6e619", "path": "Vklady%20DTMB%202019", "title": "Vklady DTMB 2019", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(Dátum,CHAR_LENGTH(Dátum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
+          {"name": "vklady-dtmb-2020-2025", "item": "86fb4c7fd8ed4d21b55b5f23aaccc32f", "path": "vklady_2020_2023", "title": "Vklady DTMB v rokoch 2020 - 2025", "areas": "city", "year": "EXPR_1", "past": true, "group": "SUBSTRING(datum,CHAR_LENGTH(datum)-3,4)", "stats": [["count", "ObjectId", "n"]], "values": [["n", "pocet", "Počet vkladov", 0, null]]},
+          {"name": "charakter-zariadeni-materskych-skol", "item": "140289ebf7664b8093b4a303a11a8578", "path": "Charakter_zariaden%C3%AD_matersk%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení materských škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet materských škôl podľa charakteru objektu", 0, null]]},
+          {"name": "charakter-zariadeni-strednych-skol", "item": "bf304fc534824947bad158771596062b", "path": "Charakter_zariaden%C3%AD_stredn%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení stredných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet stredných škôl podľa charakteru objektu", 0, null]]},
+          {"name": "charakter-zariadeni-zakladnych-skol", "item": "821c498081ce41fcb9e87fb8bb0d7b70", "path": "Charakter_zariaden%C3%AD_z%C3%A1kladn%C3%BDch_%C5%A1k%C3%B4l_-_%C5%A1t%C3%A1tni_vs._s%C3%BAkromn%C3%AD_a_cirkevn%C3%AD_zria%C4%8Fovatelia_v_BA", "title": "Charakter zariadení základných škôl - štátni vs. súkromní a cirkevní zriaďovatelia v Bratislave", "areas": "city", "fixed": "2021", "by": ["ZRIADOVATEL", "CHARAKTER"], "values": [["POCET", "pocet", "Počet základných škôl podľa charakteru objektu", 0, null]]},
+          {"name": "mestske-karantene-zariadenie-hradska", "item": "8ed75fd2aaca4abfaa21ff07890b759c", "path": "Mestsk%C3%A9%20karant%C3%A9ne%20zariadenie%20Hradsk%C3%A1%20-%20kr%C3%ADzov%C3%A9%20ubytovanie", "title": "Mestské karanténe zariadenie Hradská - krízové ubytovanie", "areas": "city", "year": "Rok", "month": "Mesiac", "values": [["Počet_prijatých_klientov", "pocet-prijatych-klientov", "Počet prijatých klientov", 0, null], ["Personál_TPP", "personal-tpp", "Personál TPP", 0, null], ["Obslužný_personál_dohodári", "obsluzny-personal-dohodari", "Obslužný personál (dohodári)", 0, null], ["Lekár", "lekar", "Lekár", 0, null], ["Zdravotná_sestra", "zdravotna-sestra", "Zdravotná sestra", 0, null], ["Dobrovoľníci", "dobrovolnici", "Dobrovoľníci", 0, null], ["Maximálna_kapacita_MKZ", "maximalna-kapacita-mkz", "Maximálna kapacita MKZ", 0, null]]},
+          {"name": "pocet-deti-a-zariadeni-dalsieho-vzdelavania", "item": "dd0ac1c15c244c60b35eea88634553b3", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_zariaden%C3%AD_pre_%C4%8Fal%C5%A1ie_vzdel%C3%A1vanie_pod%C4%BEa_typu_zria%C4%8Fovate%C4%BEa", "title": "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["VZDELAVACIE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a zariadení pre ďalšie vzdelávanie", 0, null]]},
+          {"name": "pocet-deti-a-specialnych-skol", "item": "629aae1ae9ce45bc8e521735736ed01e", "path": "Po%C4%8Det_det%C3%AD_a_dospievaj%C3%BAcich_a_%C5%A1peci%C3%A1lnych_%C5%A1k%C3%B4l_a_%C5%A1kolsk%C3%BDch_zariaden%C3%AD_pod%C4%BEa_typu_zria", "title": "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení podľa typu zriaďovateľa v Bratislave", "areas": "city", "fixed": "2021", "by": ["SKOLSKE_ZARIADENIE", "ZRIADOVATEL"], "values": [["POCET", "pocet", "Počet detí a dospievajúcich a špeciálnych škôl a školských zariadení", 0, null]]},
+          {"name": "starz-navstevnici", "item": "e09c4d8e474f4d9ba784f1b7fe0c6d21", "path": "Po%C4%8Det_n%C3%A1v%C5%A1tevn%C3%ADkov_v_zariadeniach_STaRZ", "title": "Počet návštevníkov v zariadeniach STaRZ", "areas": "city", "year": "ROK", "values": [["KUPALISKA", "kupaliska", "Návštevníci kúpalísk STaRZ", 0, null], ["PLAVAREN_PASIENKY", "plavaren-pasienky", "Návštevníci plavárne Pasienky", 0, null], ["OSTATNE", "ostatne", "Návštevníci ostatných zariadení STaRZ", 0, null], ["SPOLU", "spolu", "Návštevníci zariadení STaRZ spolu", 0, null]]},
+          {"name": "bkis-ziadosti", "item": "e745d77470e04ea896e134635a4e1e3a", "path": "Po%C4%8Det_schv%C3%A1len%C3%BDch_%C5%BEiadost%C3%AD_v_r%C3%A1mci_zria%C4%8Fovanej_a_nezria%C4%8Fovanej_kult%C3%BAry_BKIS", "title": "Počet schválených žiadostí v rámci zriaďovanej a nezriaďovanej kultúry BKIS", "areas": "city", "year": "ROK", "values": [["ZRIADOVANA_KULTURA", "zriadovana", "Schválené žiadosti BKIS, zriaďovaná kultúra", 0, null], ["NEZRIADOVANA_KULTURA", "nezriadovana", "Schválené žiadosti BKIS, nezriaďovaná kultúra", 0, null]]},
+          {"name": "priestupky-ulice", "item": "f9cb0a89231b4dbb8e082e35b95707c9", "path": "Ulice_s_viac_ako_400_priestupkami_v_Bratislave", "title": "Ulice s viac ako 400 priestupkami v Bratislave", "areas": "city", "year": "ROK", "by": ["ULICA"], "values": [["POCET_PRIESTUPKOV", "pocet", "Počet priestupkov na ulici", 0, null]]},
+          {"name": "wifi-pouzivatelia", "item": "44deb37ca534488a956af5164d33ce6f", "path": "Po%C4%8Det%20u%C5%BE%C3%ADvate%C4%BEov%20Free%20Wifi%20VisitBratislava%20pod%C4%BEa%20lokality", "title": "Počet užívateľov Free Wifi VisitBratislava podľa lokality", "areas": "city", "year": "Dátum", "by": ["Lokalita"], "values": [["Počet_užívateľov", "pocet", "Počet užívateľov Free Wifi VisitBratislava", 0, null]]},
+          {"name": "vydavky-programy", "item": "0cd89fe509b649dc810880504c798b9a", "path": "Be%C5%BEn%C3%A9_a_kapit%C3%A1lov%C3%A9_v%C3%BDdavky_pod%C4%BEa_programovej_%C5%A1trukt%C3%BAry", "title": "Bežné a kapitálové výdavky mesta Bratislava podľa programovej štruktúry", "areas": "city", "year": "ROK", "values": [["MOBILITA_A_VEREJNA_DOPRAVA", "mobilita", "Bežné a kapitálové výdavky (EUR): Mobilita a verejná doprava", 0, null], ["VEREJNA_INFRASTRUKTURA", "infrastruktura", "Bežné a kapitálové výdavky (EUR): Verejná infraštruktúra", 0, null], ["PORIADOK_A_BEZPECNOST", "poriadok", "Bežné a kapitálové výdavky (EUR): Poriadok a bezpečnosť", 0, null], ["KULTURA_SPORT_PODPORA_SLUZIEB_A_CESTOVNEHO_RUCHU", "kultura", "Bežné a kapitálové výdavky (EUR): Kultúra, šport, podpora služieb a cestovného ruchu", 0, null], ["VZDELAVANIE_A_VOLNY_CAS", "vzdelavanie", "Bežné a kapitálové výdavky (EUR): Vzdelávanie a voľný čas", 0, null], ["SOCIALNA_POMOCT_A_SOCIALNE_SLUZBY", "socialna", "Bežné a kapitálové výdavky (EUR): Sociálna pomoc a sociálne služby", 0, null], ["EFEKTIVNA_A_TRANSPARENTNA_SAMOSPRAVA", "samosprava", "Bežné a kapitálové výdavky (EUR): Efektívna a transparentná samospráva", 0, null], ["SPRAVA_A_NAKLADANIE_S_MAJETKOM", "majetok", "Bežné a kapitálové výdavky (EUR): Správa a nakladanie s majetkom", 0, null]]},
+          {"name": "pzi-v-zahranici", "item": "1e4423aaeb0c47da9d39bd140d7a27ec", "path": "Objem_priamych_zahrani%C4%8Dn%C3%BDch_invest%C3%ADci%C3%AD_v_zahrani%C4%8D%C3%AD_vo_vybran%C3%BDch_rokoch_%E2%80%93_k%C3%B3pia", "title": "Objem priamych zahraničných investícií v zahraničí vo vybraných rokoch", "areas": "kraj", "area": "UZEMIE", "year": "ROK", "values": [["HODNOTA", "objem", "Objem priamych zahraničných investícií v zahraničí", 0, null]]},
+          {"name": "pzi-rast", "item": "94747ea9e72b4031b654b478c0442f0f", "path": "Medziro%C4%8Dn%C3%BD_rast_priamych_zahrani%C4%8Dn%C3%BDch_invest%C3%ADci%C3%AD_na_Slovensku_a_v_BSK_v_rokoch_2016_2019", "title": "Medziročný rast priamych zahraničných investícií v BSK v rokoch 2016 – 2019", "areas": "kraj", "area": "UZEMIE", "year": "ROK", "values": [["RAST_V__", "rast", "Medziročný rast priamych zahraničných investícií (%)", -100, null]]},
+          {"name": "rozpocet-prijmy-2014", "item": "d85797a60d184d7d87d5a9358429347a", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202014%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2014 – príjmy", "areas": "city", "fixed": "2014", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2014", "schvaleny", "Schválený rozpočet príjmov 2014 (EUR)", null, null], ["Upravený_stav_k_31_12_2014", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2014 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2014", "skutocnost", "Skutočné príjmy k 31. 12. 2014 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2015", "item": "58582ad336014a6f8f38ba6645d9a860", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202015%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2015 – príjmy", "areas": "city", "fixed": "2015", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2015", "schvaleny", "Schválený rozpočet príjmov 2015 (EUR)", null, null], ["Upravený_stav_k_31_12_2015", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2015 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2015", "skutocnost", "Skutočné príjmy k 31. 12. 2015 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2016", "item": "10bdc80617c44d39b2a1e8f9a11a4dd4", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202016%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2016 – príjmy", "areas": "city", "fixed": "2016", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická", {"code": "Typ_zdroja", "optional": true}], "values": [["Schválený_2016", "schvaleny", "Schválený rozpočet príjmov 2016 (EUR)", null, null], ["Upravený_stav_k_31_12_2016", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2016 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2016", "skutocnost", "Skutočné príjmy k 31. 12. 2016 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2017", "item": "4f1ac1ceffcd44499eb0d03f1acdcfc5", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202017%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2017 – príjmy", "areas": "city", "fixed": "2017", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická", {"code": "Typ_zdroja", "optional": true}], "values": [["Schválený_2017", "schvaleny", "Schválený rozpočet príjmov 2017 (EUR)", null, null], ["Upravený_stav_k_31_12_2017", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2017 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2017", "skutocnost", "Skutočné príjmy k 31. 12. 2017 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2018", "item": "0a5381f860e14fc09fcd53efc7780283", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202018%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2018 – príjmy", "areas": "city", "fixed": "2018", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2018", "schvaleny", "Schválený rozpočet príjmov 2018 (EUR)", null, null], ["Upravený_stav_k_31_12_2018", "upraveny", "Upravený rozpočet príjmov k 31. 12. 2018 (EUR)", null, null], ["Skutočnosť_stav_k_31_12_2018", "skutocnost", "Skutočné príjmy k 31. 12. 2018 (EUR)", null, null]]},
+          {"name": "rozpocet-prijmy-2019", "item": "0f2810963d6b4d1eb182001faf417579", "path": "Rozpo%C4%8Det%20Bratislavy%20v%20roku%202019%20-%20pr%C3%ADjmy", "title": "Rozpočet Bratislavy v roku 2019 – príjmy", "areas": "city", "fixed": "2019", "by": [{"code": "Druh___kód", "name": "Druh___názov"}, {"code": "Zdroj___kód", "name": "Zdroj___názov"}, "Ekonomická"], "values": [["Schválený_2019", "schvaleny", "Schválený rozpočet príjmov 2019 (EUR)", null, null], ["Upravený_stav_k_30_06_2019", "upraveny", "Upravený rozpočet príjmov k 30. 6. 2019 (EUR)", null, null], ["Skutočnosť_stav_k_30_06_2019", "skutocnost", "Skutočné príjmy k 30. 6. 2019 (EUR)", null, null]]},
+          {"name": "osv-cerpanie-2019-09-06", "item": "1a8a4671f65a4600aac82671c8be443e", "path": "%C4%8Cerpanie%20rozpo%C4%8Dtu%20oddelenia%20soci%C3%A1lnych%20vec%C3%AD%20k%2006.09.2019", "title": "Čerpanie rozpočtu oddelenia sociálnych vecí k 6. 9. 2019", "areas": "city", "fixed": "2019", "by": [{"code": "Program___kód", "optional": true}, "Ukazovateľ"], "values": [["Schválený_rozpočet_OSV_2019", "schvaleny", "Schválený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Upravený_rozpočet_OSV_2019", "upraveny", "Upravený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Čerpanie_k_06_09_2019", "cerpanie", "Čerpanie k 6. 9. 2019 (EUR)", 0, null], ["Zostatok", "zostatok", "Zostatok rozpočtu (EUR)", null, null], ["F__čerpania", "percento", "Čerpanie (% upraveného rozpočtu)", 0, null]]},
+          {"name": "osv-cerpanie-2019-06-30", "item": "11b7cdd27d9f446ca97c1c2913cc169a", "path": "%C4%8Cerpanie%20rozpo%C4%8Dtu%20oddelenia%20soci%C3%A1lnych%20vec%C3%AD%20k%2030.06.2019", "title": "Čerpanie rozpočtu oddelenia sociálnych vecí k 30. 6. 2019", "areas": "city", "fixed": "2019", "by": [{"code": "Program___kód", "optional": true}, "Ukazovateľ"], "values": [["Schválený_rozpočet_OSV_2019", "schvaleny", "Schválený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Upravený_rozpočet_OSV_2019", "upraveny", "Upravený rozpočet oddelenia sociálnych vecí 2019 (EUR)", 0, null], ["Čerpanie_k_30_06_2019", "cerpanie", "Čerpanie k 30. 6. 2019 (EUR)", 0, null], ["Zostatok", "zostatok", "Zostatok rozpočtu (EUR)", null, null], ["F__čerpania", "percento", "Čerpanie (% upraveného rozpočtu)", 0, null]]}
         ]
         let listed = this.services.or([]).map_each(s -> s.name.or(""))
         let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
@@ -216,29 +284,51 @@ pipeline:
                 message: 'statistics: the hub no longer lists ${! @missing }, left out of this run'
     - unarchive: { format: json_array }
 
-    # One table a request; the path is the constant above, never text of an answer.
-    - branch:
-        request_map: |
-          meta path = this.path
-          root = ""
-        processors:
-          - sleep: { duration: '200ms' }
-          - http:
-              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2000&f=json
-              verb: GET
-              headers:
-                Accept: application/json
-                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
-              timeout: 30s
-              retries: 2
-        result_map: |
-          root.rows = if content().length() > 4194304 {
-            throw("the table answer is over 4 MiB")
-          } else if this.error.or(null) != null {
-            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
-          } else if this.exceededTransferLimit.or(false) {
-            throw("the table holds more than 2,000 rows, more than one read")
-          } else { this.features.or([]).map_each(f -> f.attributes) }
+    # One table at a time, read in pages of 1,000 rows (the hub's smallest maxRecordCount) until
+    # the hub says no more, at most 20 pages; a table with more fails instead of writing part of
+    # it. The path and the query are the constants above, never text of an answer. A table line
+    # with `group` asks the hub for its sums instead of its rows: one row a group, ordered by the
+    # group so the pages do not overlap.
+    - for_each:
+        - branch:
+            request_map: |
+              meta path = this.path
+              meta query = if this.group.or("") == "" { "where=1%3D1&outFields=*" } else {
+                "where=" + this.where.or("1=1").escape_url_query() +
+                "&groupByFieldsForStatistics=" + this.group.escape_url_query() +
+                "&orderByFields=" + this.group.escape_url_query() +
+                "&outStatistics=" + this.stats.map_each(s -> { "statisticType": s.index(0), "onStatisticField": s.index(1), "outStatisticFieldName": s.index(2) }).format_json(no_indent: true).escape_url_query()
+              }
+              root = { "rows": [], "offset": 0, "more": true }
+            processors:
+              - while:
+                  check: this.more && !errored()
+                  max_loops: 20
+                  processors:
+                    - branch:
+                        request_map: |
+                          meta offset = this.offset.string()
+                          root = ""
+                        processors:
+                          - sleep: { duration: '200ms' }
+                          - http:
+                              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?${! @query }&resultOffset=${! @offset }&resultRecordCount=1000&f=json
+                              verb: GET
+                              headers:
+                                Accept: application/json
+                                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
+                              timeout: 30s
+                              retries: 2
+                        result_map: |
+                          root.rows = if content().length() > 4194304 {
+                            throw("the table answer is over 4 MiB")
+                          } else if this.error.or(null) != null {
+                            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
+                          } else { root.rows.concat(this.features.or([]).map_each(f -> f.attributes)) }
+                          root.offset = root.offset + 1000
+                          root.more = this.exceededTransferLimit.or(false)
+            result_map: |
+              root.rows = if this.more { throw("the table holds more than 20,000 rows, more than 20 pages") } else { this.rows }
     # A table the hub refuses is logged and left out of this run; the others still write.
     - catch:
         - log: { level: WARN, message: 'statistics: ${! json("name") } not read: ${! error() }' }
@@ -273,8 +363,13 @@ pipeline:
           "bratislava 2": ["102", "Bratislava II"], "bratislava 3": ["103", "Bratislava III"], "bratislava 4": ["104", "Bratislava IV"],
           "bratislava 5": ["105", "Bratislava V"]
         }
+        # A table of the region beside Slovakia keeps the region's rows.
+        let kraje = { "bratislavsky kraj": ["sk010", "Bratislavský kraj"] }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
+        # A basic settlement unit (ZSJ) by its 7-digit code, named with its city district, kept only
+        # inside one of the 17; a municipality of the region by its name, the hub giving no code.
+        let parts = $districts.values()
         map fold {
           root = this.string().lowercase().replace_all_many([
             "á", "a", "ä", "a", "à", "a", "â", "a", "č", "c", "ç", "c", "ď", "d", "é", "e", "ě", "e", "ë", "e", "í", "i", "ĺ", "l",
@@ -288,6 +383,22 @@ pipeline:
         map number {
           root = if this == null { null } else { this.string().re_replace_all("[\\s %]", "").replace_all(",", ".").number().catch(null) }
         }
+        map magnitude {
+          let n = this.apply("number")
+          root = if $n == null { null } else { $n.abs() }
+        }
+        map yearmonth {
+          let y = this.slice(0, 4).number().int64()
+          let m = this.slice(5, 7).number().int64()
+          let february = if $y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0) { "29" } else { "28" }
+          root = {
+            "from": this + "-01",
+            "to": this + "-" + ["31", $february, "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m - 1),
+            "slug": this,
+            "label": ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"].index($m - 1) + " " + $y.string(),
+            "frequency": "monthly"
+          }
+        }
         map years {
           let v = this.string().trim()
           let y = $v.re_find_all("(19|20)[0-9]{2}")
@@ -295,11 +406,20 @@ pipeline:
             { "from": $v + "-01-01", "to": $v + "-12-31", "slug": $v, "label": $v, "frequency": "yearly" }
           } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
             { "from": $y.index(0) + "-01-01", "to": $y.index(1) + "-12-31", "slug": $y.join("-"), "label": $y.join("–") }
-          } else { null }
+          } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2} a (19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
+            # Two ranges compared ("2017 – 2019 a 2000 – 2002"): the period spans both.
+            {
+              "from": $y.sort().index(0) + "-01-01", "to": $y.sort().index(3) + "-12-31", "slug": $y.join("-"),
+              "label": $y.index(0) + "–" + $y.index(1) + " a " + $y.index(2) + "–" + $y.index(3)
+            }
+          } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
+            { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
+          } else if $v.re_match("^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$") { $v.apply("yearmonth") } else { null }
         }
         map quarter {
           let y = this.index(0)
-          let q = this.index(1)
+          # "3" or the transit table's "3.Q".
+          let q = this.index(1).re_replace_all("^([1-4])\\s*\\.?\\s*[Qq]$", "$1")
           root = if $y.re_match("^(19|20)[0-9]{2}$") && $q.re_match("^[1-4]$") {
             {
               "from": $y + "-" + ["01-01", "04-01", "07-01", "10-01"].index($q.number() - 1),
@@ -310,19 +430,58 @@ pipeline:
             }
           } else { null }
         }
+        # A month column holds 1 to 12, with or without a leading zero; anything else is no period.
+        map month {
+          let y = this.index(0)
+          let m = this.index(1).trim_prefix("0")
+          root = if $y.re_match("^(19|20)[0-9]{2}$") && $m.re_match("^([1-9]|1[0-2])$") {
+            {
+              "from": "%s-%02d-01".format($y, $m.number().int64()),
+              "to": "%s-%02d-%s".format($y, $m.number().int64(), if $m == "2" && $y.number().int64() % 4 == 0 && ($y.number().int64() % 100 != 0 || $y.number().int64() % 400 == 0) { "29" } else {
+                ["31", "28", "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m.number().int64() - 1)
+              }),
+              "slug": "%s-%02d".format($y, $m.number().int64()),
+              "label": "%d/%s".format($m.number().int64(), $y),
+              "frequency": "monthly"
+            }
+          } else { null }
+        }
         map period {
           let t = this.table
           let r = this.row
           root = if $t.fixed.or("") != "" { $t.fixed.apply("years") }
+            else if $t.spans.or(null) != null { $t.spans.get($r.get($t.year).or("").string().trim()).or("").apply("years") }
             else if $t.quarter.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.quarter).or("").string().trim()].apply("quarter") }
+            else if $t.month.or("") != "" { [$r.get($t.year).or("").string().trim(), $r.get($t.month).or("").string().trim()].apply("month") }
             else { $r.get($t.year).or("").apply("years") }
         }
         map areaname {
           root = if this.table.area.or("") == "" { "*" } else { this.row.get(this.table.area).or("").apply("fold") }
         }
+        # Each breakdown cell as its id segment and its label; a label read as Latin-1 from cp1250
+        # text ("Raèianska") gets its č and ň back.
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          let labels = this.table.labels.or({})
+          # "Nan" is the hub's word for a category it did not detect: no breakdown.
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> c.assign({
+            "raw": $r.get(c.code).or("").string().trim()
+          })).map_each(c -> c.assign({ "raw": if c.raw.lowercase() == "nan" { "" } else { $labels.get(c.raw).or(c.raw) } })).map_each(c -> {
+            "segment": c.raw.apply("segment"),
+            "label": (if c.name.or("") != "" { $r.get(c.name).or("").string().trim() } else { c.raw }).replace_all_many(["è", "č", "ò", "ň"]),
+            "optional": c.optional.or(false)
+          })
+        }
+        map zsj {
+          let code = this.row.get(this.table.area).or("").string().trim()
+          let name = this.row.get(this.table.label).or("").string().trim()
+          let within = this.row.get(this.table.within).or("").string().trim()
+          let part = this.parts.filter(d -> d.index(0) == $within)
+          root = if $code.re_match("^[0-9]{7}$") && $name != "" && $part.length() > 0 { [$code, $name + " (" + $part.index(0).index(1) + ")"] } else { null }
+        }
+        map obec {
+          let name = this.row.get(this.table.area).or("").string().trim()
+          root = if $name.apply("segment") != "" { [$name.apply("segment"), $name] } else { null }
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
@@ -331,25 +490,30 @@ pipeline:
           "value": v,
           "area": if t.areas == "district" { $districts.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
+            else if t.areas == "zsj" { { "table": t, "row": r, "parts": $parts }.apply("zsj") }
+            else if t.areas == "obec" { { "table": t, "row": r }.apply("obec") }
+            else if t.areas == "kraj" { $kraje.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
-          "number": r.get(v.index(0)).apply("number")
+          "number": r.get(v.index(0)).apply(if t.abs.or(false) { "magnitude" } else { "number" })
         }))).flatten().flatten()
         map reason {
           let v = this.value
           root = if this.area == null {
-              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava" }.get(this.table.areas)
+              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava",
+                "zsj": "not a ZSJ of the city", "obec": "no municipality", "kraj": "not the Bratislava region" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
-            else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
+            else if this.table.past.or(false) && this.period.from > now().ts_format("2006-01-02") { "in the future" }
+            else if this.by.filter(b -> b.segment == "" && !b.optional).length() > 0 { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }
             else { null }
         }
         let marked = $cells.map_each(c -> c.assign({
           "_drop": c.apply("reason"),
-          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.apply("segment"))).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
+          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.segment).filter(s -> s != "")).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
         }))
         let usable = $marked.filter(c -> c._drop == null)
         let once = $usable.unique(c -> c._id)
@@ -369,7 +533,7 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
           "type": "KeyPerformanceIndicator",
-          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by).concat([this.area.index(1), this.period.label])).join(", ") },
+          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by.map_each(b -> b.label).filter(l -> l != "")).concat([this.area.index(1), this.period.label])).join(", ") },
           "description": { "type": "Property", "value": $t.title },
           "process": { "type": "Property", "value": this.value.index(2) },
           "category": { "type": "Property", "value": ["quantitative"] },
