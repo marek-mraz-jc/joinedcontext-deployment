@@ -252,11 +252,10 @@ golden-update:
 	out=$(mktemp -d -t golden.XXXXXX)
 	trap 'rm -rf "$out"' EXIT
 	mapfile -t environments < .ci/golden/ENVIRONMENTS
-	for env in "${environments[@]}"; do
-		helmfile -f deployment/helmfile.yaml -e "$env" repos >/dev/null
-		scripts/render.sh "$env" "$out/$env.yaml"
-		python3 .ci/golden/list-objects.py "$out/$env.yaml" > ".ci/golden/$env.txt"
-	done
+	# GOLDEN_JOBS renders at once (T-5552); the goldens are written only after every render passed.
+	RENDER_JOBS="${GOLDEN_JOBS:-3}" scripts/render-all.sh "$out" "${environments[@]}"
+	printf '%s\n' "${environments[@]}" | xargs -P "${GOLDEN_JOBS:-3}" -I{} \
+		sh -c 'python3 .ci/golden/list-objects.py "$1/$2.yaml" > ".ci/golden/$2.txt"' sh "$out" {}
 	for env in dev smartcity; do
 		helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "$env" template --skip-deps -q --concurrency {{helmfile_concurrency}} >"$out/demo-bbsk-$env.yaml"
 		python3 .ci/golden/list-objects.py "$out/demo-bbsk-$env.yaml" > ".ci/golden/demo-bbsk-$env.txt"
