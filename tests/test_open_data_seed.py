@@ -1109,8 +1109,9 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
         # T-5669 Helsinki's autumn traffic volumes and machine vision counts.
         # T-5666 Prague's event store praha-akce and Bratislava's events over the national store (slovensko).
+        # T-5691 Prague's health care and social services (+1 in praha).
         "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13 + 17,
-        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1}
+        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):
