@@ -200,7 +200,8 @@ DATASETS = {"bratislava-cyklisti": "public-cyklisti", "bratislava-vozidla": "pub
 
 def test_each_dataset_door_reads_through_its_own_public_policy_and_publishes_to_the_city():
     endpoints, policies = by_name("Endpoint"), by_name("Policy")
-    assert set(endpoints) == {"bratislava", *DATASETS}
+    # T-5274 adds its own doors (tests/test_bratislava_hub.py checks them); these are this batch's.
+    assert {"bratislava", *DATASETS} <= set(endpoints)
     slugs = [e["spec"]["slug"] for e in endpoints.values()]
     assert len(set(slugs)) == len(slugs) and all(len(slug) == 32 for slug in slugs)
     for name, policy in DATASETS.items():
