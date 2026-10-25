@@ -76,6 +76,16 @@ cluster:
     {{- end }}
     {{- end }}
     {{- end }}
+    {{- if (dig "branchPreviews" "enabled" false $global) }}
+    # The group every branch preview's role joins (ADR-N-062, T-5548): `just dev-preview` creates
+    # pv_{slug} IN ROLE pv_previews, and the two pg_hba lines below hold the group to its own
+    # database. It never logs in itself.
+    - name: pv_previews
+      ensure: present
+      login: false
+      superuser: false
+      inherit: false
+    {{- end }}
   {{- else }}
   roles: []
   {{- end }}
@@ -91,6 +101,13 @@ cluster:
       # reach the appended rule (BSI TR-03187 CT-9). Unix-socket clients (the instance
       # manager, the metrics exporter) match the `local ... peer` rules and are unaffected.
       - hostnossl all all all reject
+      {{- if (dig "branchPreviews" "enabled" false $global) }}
+      # A branch preview's role reaches the database of its own name and nothing else: Postgres
+      # grants CONNECT to PUBLIC on every database and the platform's never revoke it, so a grant
+      # alone would let pv_{slug} into `portal` (ADR-N-062, Deployment/17 section 1).
+      - hostssl sameuser +pv_previews all scram-sha-256
+      - host all +pv_previews all reject
+      {{- end }}
       - hostssl all all all scram-sha-256
 
 {{- $backups := deepCopy ($this.backups | default dict) }}

@@ -3,10 +3,14 @@ admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-apps-bind
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-workloads
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-workloads
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration
 apiextensions.k8s.io/v1/CustomResourceDefinition -/backups.postgresql.cnpg.io
 apiextensions.k8s.io/v1/CustomResourceDefinition -/clusterimagecatalogs.postgresql.cnpg.io
@@ -59,6 +63,7 @@ batch/v1/CronJob dev/ckan-harvest-bbsk
 batch/v1/CronJob dev/gitea-lane-token
 batch/v1/CronJob dev/postgres-cluster-dr-drill
 batch/v1/CronJob dev/postgres-cluster-local-backup
+batch/v1/CronJob dev/sandbox-reaper-reaper
 batch/v1/Job dev/artifact-store-bucket
 batch/v1/Job dev/ckan-api-token
 batch/v1/Job dev/ckan-datastore-db-create-role-ckan-datastore-read-readonly
@@ -221,6 +226,7 @@ networking.k8s.io/v1/NetworkPolicy dev/default-deny-postgres
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-probes
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-prometheus
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-runtime-policies
+networking.k8s.io/v1/NetworkPolicy dev/default-deny-sandbox-reaper
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-secrets
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-viz
 networking.k8s.io/v1/NetworkPolicy dev/default-deny-wasm-host
@@ -349,6 +355,8 @@ networking.k8s.io/v1/NetworkPolicy dev/prometheus-stack-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/role-setup-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/runner-to-mqtt-brokers
 networking.k8s.io/v1/NetworkPolicy dev/runner-to-mqtt-brokers-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/sandbox-reaper
+networking.k8s.io/v1/NetworkPolicy dev/sandbox-reaper-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/status-page
 networking.k8s.io/v1/NetworkPolicy dev/status-page-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/status-page-linkerd-control-plane
@@ -404,12 +412,14 @@ rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-view
 rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-operator
 rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-prometheus
 rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-stack-kube-state-metrics
+rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/dev-portal-namespaces
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/prometheus-operator
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/prometheus-prometheus
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/prometheus-stack-kube-state-metrics
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/Role dev-app-identities/portal-app-job-accounts
 rbac.authorization.k8s.io/v1/Role dev-app-identities/wasm-host-tokens
 rbac.authorization.k8s.io/v1/Role dev-app-tests/app-test-runner
@@ -504,6 +514,7 @@ v1/ConfigMap dev/postgres-cluster-dr-drill
 v1/ConfigMap dev/postgres-cluster-dr-drill-script
 v1/ConfigMap dev/postgres-cluster-monitoring-logical-replication
 v1/ConfigMap dev/probe
+v1/ConfigMap dev/sandbox-reaper-reaper
 v1/ConfigMap dev/status-page
 v1/ConfigMap dev/viz-renderer
 v1/ConfigMap dev/viz-renderer-site
@@ -644,6 +655,7 @@ v1/ServiceAccount dev/prometheus-alertmanager
 v1/ServiceAccount dev/prometheus-operator
 v1/ServiceAccount dev/prometheus-prometheus
 v1/ServiceAccount dev/prometheus-stack-kube-state-metrics
+v1/ServiceAccount dev/sandbox-reaper-reaper
 v1/ServiceAccount dev/status-page
 v1/ServiceAccount dev/wasm-host-tokens
 v1/ServiceAccount kube-system/node-exporter

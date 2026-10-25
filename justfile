@@ -714,6 +714,36 @@ dev-open-data-scoreboard out='../evidence/open-data-scoreboard' *cities:
 pin-portal commit:
 	./scripts/pin-portal.sh {{ commit }}
 
+# Images by digest (repository@sha256:...), our signature required; empty = dev's pinned Portal.
+# Refuses unless dev runs global.branchPreviews and the reaper, the node is under 90 % memory,
+# fewer than 2 previews run and fewer than 10 preview certificates were issued this week.
+# Start or update the code-branch preview https://preview-<slug>.<dev domain> (ADR-N-062, T-5548)
+[group('dev cluster')]
+dev-preview $slug $portal_image='' $ui_image='':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/preview.sh up "$slug" "$portal_image" "$ui_image"
+
+# Lists what is left afterwards: nothing, or it exits 1 naming it.
+# Delete the preview pv-<slug>: namespace, Certificate, database, role and Keycloak client
+[group('dev cluster')]
+dev-preview-down $slug:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/preview.sh down "$slug"
+
+# The kubectl half runs from here, the network half as a Job inside the preview; `runner` is the
+# conformance image by digest.
+# Run the isolation suite (conformance tests/security/test_preview_isolation.py) against pv-<slug>
+[group('dev cluster')]
+dev-preview-isolation $slug $runner:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/preview.sh isolation "$slug" "$runner"
+
 # Wipe the platform off the dev cluster (announce it in AI_shared_folder.md first!)
 [group('dev cluster')]
 dev-destroy:
