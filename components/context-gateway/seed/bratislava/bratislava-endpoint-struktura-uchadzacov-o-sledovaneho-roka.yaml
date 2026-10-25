@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Štruktúra uchádzačov o zamestnanie v Bratislave podľa vzdelania ku koncu sledovaného roka
           en: Jobseekers in Bratislava by education at year end
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Štruktúra uchádzačov o zamestnanie v Bratislave podľa vzdelania ku koncu sledovaného roka. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Jobseekers in Bratislava by education at year end. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

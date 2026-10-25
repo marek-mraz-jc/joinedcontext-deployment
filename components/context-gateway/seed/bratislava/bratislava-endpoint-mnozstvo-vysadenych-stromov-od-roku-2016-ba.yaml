@@ -4,9 +4,7 @@ kind: Endpoint
 metadata:
   name: bratislava-mnozstvo-vysadenych-stromov-od-roku-2016-ba
   namespace: bratislava
-  title:
-    sk: 'Množstvo vysadených stromov od roku 2016'
-    en: 'Trees planted since 2016'
+  title: { sk: Množstvo vysadených stromov od roku 2016, en: Trees planted since 2016 }
   description:
     sk: 'Ukazovatele tabuľky „Množstvo vysadených stromov od roku 2016“ z data.bratislava.sk, za mesto ako celok, jeden na obdobie a údaj, ako KeyPerformanceIndicator. Zdroj: Hlavné mesto SR Bratislava, data.bratislava.sk, CC BY 4.0.'
     en: 'The figures of the data.bratislava.sk table “Trees planted since 2016”, for the city as a whole, one per period and figure, as KeyPerformanceIndicator. Source: City of Bratislava, data.bratislava.sk, CC BY 4.0.'
@@ -20,7 +18,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -36,7 +33,8 @@ spec:
     frequency: ANNUAL
     source:
       - url: https://data.bratislava.sk/datasets/71b8150e6957474e84d171637478bfb7
-        title:
-          sk: 'Množstvo vysadených stromov od roku 2016'
-          en: 'Trees planted since 2016'
+        title: { sk: Množstvo vysadených stromov od roku 2016, en: Trees planted since 2016 }
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Množstvo vysadených stromov od roku 2016. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Trees planted since 2016. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

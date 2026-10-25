@@ -257,3 +257,22 @@ def test_the_check_names_an_endpoint_whose_type_lost_its_writer():
     lost = {name: types for name, types in gaps.items() if name not in UNFED}
     assert {"banskabystrica/endpoint-nabijanie.yaml", "banskabystrica/endpoint-verejne.yaml"} <= lost.keys()
     assert all(types == ["EVChargingStation"] for types in lost.values()), lost
+
+
+def test_every_catalogue_source_carries_what_jc_core_requires():
+    """jc-core's catalog `Source` requires `url`, `title` and `description` and refuses any other
+    field (catalog.rs, deny_unknown_fields): one source without its description makes the Portal
+    refuse the whole Endpoint, so it never publishes (T-5648: all 339 of Bratislava's)."""
+    checked = 0
+    for path, doc in docs("Endpoint"):
+        for source in (doc["spec"].get("catalog") or {}).get("source") or []:
+            checked += 1
+            assert set(source) == {"url", "title", "description"}, (
+                f"{path.name}: catalog.source {source.get('url')} has {sorted(source)}"
+            )
+            for field in ("title", "description"):
+                texts = source[field]
+                assert isinstance(texts, dict) and texts and all(
+                    isinstance(t, str) and t.strip() for t in texts.values()
+                ), f"{path.name}: catalog.source {source['url']} {field} is empty"
+    assert checked >= 300
