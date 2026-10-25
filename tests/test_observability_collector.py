@@ -127,10 +127,11 @@ RECORD = {
                 "attributes": [
                     {"key": "project", "value": {"stringValue": "helsinki"}},
                     {"key": "kind", "value": {"stringValue": "pipeline.error"}},
-                    {"key": "summary", "value": {"stringValue": "GET https://x.example/a?token=s3cr3t-one failed"}},
+                    {"key": "summary", "value": {"stringValue": "GET https://x.example/a?token=s3cr3t-one&client_secret=s3cr3t-six failed"}},
                     {"key": "details", "value": {"kvlistValue": {"values": [
                         {"key": "request", "value": {"stringValue": "Authorization: Bearer s3cr3t.two"}},
                         {"key": "url", "value": {"stringValue": "https://x.example/b?api_key=s3cr3t-three&page=2"}},
+                        {"key": "form", "value": {"stringValue": "grant_type=refresh_token&refresh_token=s3cr3t-seven"}},
                     ]}}},
                 ],
             },
@@ -140,7 +141,7 @@ RECORD = {
                     {"key": "project", "value": {"stringValue": "helsinki"}},
                     {"key": "kind", "value": {"stringValue": "pipeline.error"}},
                     {"key": "summary", "value": {"stringValue": "refused"}},
-                    {"key": "details", "value": {"stringValue": "sent password=s3cr3t-four with basic s3cr3t-five"}},
+                    {"key": "details", "value": {"stringValue": "sent password=s3cr3t-four with basic s3cr3t-five and x_api_key=s3cr3t-eight"}},
                 ],
             },
             {
@@ -266,9 +267,11 @@ def test_a_token_in_summary_or_details_is_redacted(exported):
     """CC-06, OPS-27: `summary` and `details` survive the allow-list, so a credential an emitter
     quoted in them is masked by transform/redact; the rest of the text stays readable."""
     wire = json.dumps([b["body"] for b in exported])
-    for leaked in ("s3cr3t-one", "s3cr3t.two", "s3cr3t-three", "s3cr3t-four", "s3cr3t-five"):
+    for leaked in ("s3cr3t-one", "s3cr3t.two", "s3cr3t-three", "s3cr3t-four", "s3cr3t-five", "s3cr3t-six",
+                   "s3cr3t-seven", "s3cr3t-eight"):
         assert leaked not in wire, f"{leaked!r} survived the collector"
-    for kept in ("token=***", "Bearer ***", "api_key=***&page=2", "password=***", "basic ***"):
+    for kept in ("token=***", "Bearer ***", "api_key=***&page=2", "password=***", "basic ***",
+                 "client_secret=***", "grant_type=refresh_token&refresh_token=***", "x_api_key=***"):
         assert kept in wire, f"{kept!r} missing: the redaction ate more than the credential"
 
 
