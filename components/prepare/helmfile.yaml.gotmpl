@@ -54,6 +54,19 @@ bases:
 {{- $createNamespaces := $root.global.createNamespaces | default false }}
 {{- $patchNamespaces := and ($root.global.serviceMesh.enable | default false) ($root.global.serviceMesh.patchNamespaces | default false) }}
 {{- $defaultInboundPolicy := $root.global.serviceMesh.defaultInboundPolicy | default "" }}
+{{/* The injected proxy's requests and memory limit as namespace annotations (T-5554): the
+     Linkerd control plane is the kit's, so the namespace is where this deployment sets them. */}}
+{{- $proxyResources := $root.global.serviceMesh.proxyResources | default dict }}
+{{- $proxyAnnotations := "" }}
+{{- range $key, $annotation := dict "cpuRequest" "proxy-cpu-request" "memoryRequest" "proxy-memory-request" "memoryLimit" "proxy-memory-limit" }}
+  {{- $value := index $proxyResources $key | default "" | toString }}
+  {{- if $value }}
+    {{- if not (regexMatch "^[0-9]+(\\.[0-9]+)?(m|Ki|Mi|Gi)?$" $value) }}
+      {{- fail (printf "prepare: global.serviceMesh.proxyResources.%s %q is not a Kubernetes quantity (for example 10m or 64Mi)" $key $value) }}
+    {{- end }}
+    {{- $proxyAnnotations = printf "%s config.linkerd.io/%s=%s" $proxyAnnotations $annotation $value }}
+  {{- end }}
+{{- end }}
 {{/* Distribute the in-cluster self-signed CA as `custom-ca-cert` whenever the
      self-signed issuer is in use */}}
 {{- $isSelfSignedCa := eq ($root.global.ingress.clusterIssuer | default "") "selfsigned-ca" }}
@@ -86,10 +99,10 @@ hooks:
         # Injection and the inbound policy in one write: Kyverno's
         # require-meshed-namespace-inbound-policy refuses a namespace marked for injection without
         # the policy, so injection alone first was refused on a new namespace (ci-full 36096443083).
-        kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled config.linkerd.io/default-inbound-policy={{ $defaultInboundPolicy | quote }} --overwrite
+        kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled config.linkerd.io/default-inbound-policy={{ $defaultInboundPolicy | quote }}{{ $proxyAnnotations }} --overwrite
         echo "Patched namespace {{ $ns | quote }} for Linkerd injection with default-inbound-policy={{ $defaultInboundPolicy }}."
         {{- else }}
-        kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled --overwrite
+        kubectl annotate namespace {{ $ns | quote }} linkerd.io/inject=enabled{{ $proxyAnnotations }} --overwrite
         echo "Patched namespace {{ $ns | quote }} for Linkerd injection."
         kubectl annotate namespace {{ $ns | quote }} config.linkerd.io/default-inbound-policy-
         echo "Cleared Linkerd default-inbound-policy on namespace {{ $ns | quote }}."
