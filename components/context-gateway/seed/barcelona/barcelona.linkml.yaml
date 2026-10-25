@@ -5,17 +5,20 @@ description: >-
   What the space barcelona carries (DM-01, DM-61): the open data of Barcelona City Council
   (Open Data BCN) as Smart Data Models types, their IRIs cited rather than minted (DM-04, DM-16).
   The first type is AirQualityObserved, one entity per station of the city's air-quality
-  network with the hourly mean of each pollutant it measures; each Open Data BCN batch adds its
+  network with the hourly mean of each pollutant it measures; Event holds the city's activity
   agendas (cultural, daily and sports); PointOfInterest the city's register of facilities
   (equipaments); each Open Data BCN batch adds its own classes. Transport: TrafficFlowObserved,
   the traffic state of each street section and each route of sections the city reports every
   five minutes, OnStreetParking, each regulated surface parking section (blue, green, loading
   and bus zones), and EVChargingStation, each public charging point of the Endolla Barcelona
-  network with its live socket states. Urbanism: the districts and barris as
+  network with its live socket states, BikeLane, each segment of the bike network open or under
+  construction, RoadAccident, each accident the Guàrdia Urbana handled, as counts only, and
+  each traffic counter's monthly intensity as TrafficFlowObserved. Urbanism: the districts and barris as
   AdministrativeArea, the works on the public space as CityWork and the street inventory's
   crossings as PedestrianCrossing, its speed reducers as StreetFurniture and the drinking and
   ornamental fountains as PointOfInterest. Tourism: each licensed tourist flat (habitatge d'ús
-  turístic) as TouristRental, at the building's address and point.
+  turístic) as TouristRental, at the building's address and point. Statistics: the city's
+  statistics per barri, district and city as KeyPerformanceIndicator.
 license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -711,7 +714,8 @@ slots:
       markets-shopping, information-centres, religious-services, environment, animals-plants,
       cemeteries, media, utility-companies, restaurants), then the register's own kind in
       Catalan (Biblioteques, Poliesportius); a fountain is drinking-fountain or
-      ornamental-fountain alone. An OnStreetParking's kind of regulated parking, from
+      ornamental-fountain alone; a dog area of the city's parks carries
+      animals-plants, dog-area, a tree of local interest environment, local-interest-tree. An OnStreetParking's kind of regulated parking, from
       the section type (AZL blue zone, VM green zone, VR residents, DUM loading, BUS coaches).
     multivalued: true
     annotations:
@@ -1048,7 +1052,7 @@ slots:
       ngsi_ld_kind: Property
   divisionLevel:
     slot_uri: jc:divisionLevel
-    description: Which of the city's two divisions the area belongs to.
+    description: Which of the city's two divisions the area belongs to; for a statistics indicator also the whole city.
     range: DivisionLevel
     required: true
     annotations:
@@ -1238,7 +1242,7 @@ slots:
       ngsi_ld_kind: Relationship
   description:
     slot_uri: schema:description
-    description: The work's description as the city publishes it, in Catalan.
+    description: The description as the city publishes it, in Catalan (a work, a statistics dataset).
     annotations:
       label:
         tag: label
@@ -1399,6 +1403,690 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
 
+  localId:
+    slot_uri: sdm:localId
+    description: >-
+      The source's own identifier of the record: a bike lane's segment code in the city's map
+      layer (GL4683814), an accident's police file number (2025S000001).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miestny identifikátor
+          cs: Místní identifikátor
+          en: Local identifier
+          de: Lokale Kennung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  laneLength:
+    slot_uri: sdm:laneLength
+    description: >-
+      The length of the bike lane's line in metres, summed over its points on a local plane
+      (83,550 m a degree of longitude and 111,050 m a degree of latitude at 41.4° N).
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dĺžka pruhu (m)
+          cs: Délka pruhu (m)
+          en: Lane length (m)
+          de: Spurlänge (m)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  bikeLaneState:
+    slot_uri: jc:bikeLaneState
+    description: Whether the lane is open to cycling or still under construction, from the dataset it is read from.
+    range: BikeLaneState
+    required: true
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Stav cyklopruhu
+          cs: Stav cyklopruhu
+          en: Bike lane state
+          de: Zustand des Radwegs
+        annotations: { generated: sk cs en de }
+  accidentDate:
+    slot_uri: sdm:accidentDate
+    description: >-
+      The hour of the accident, UTC: the police file gives the local day and hour only, so the
+      minutes are 00.
+    range: datetime
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Čas nehody
+          cs: Čas nehody
+          en: Accident time
+          de: Unfallzeit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  totalInjured:
+    slot_uri: sdm:totalInjured
+    description: The people injured and alive, slightly and seriously, as the police file counts them.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zranení spolu
+          cs: Zranění celkem
+          en: Injured in total
+          de: Verletzte insgesamt
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  seriouslyInjured:
+    slot_uri: jc:seriouslyInjured
+    description: The people seriously injured (lesionats greus).
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Ťažko zranení
+          cs: Těžce zranění
+          en: Seriously injured
+          de: Schwer verletzt
+        annotations: { generated: sk cs en de }
+  slightlyInjured:
+    slot_uri: jc:slightlyInjured
+    description: The people slightly injured (lesionats lleus).
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Ľahko zranení
+          cs: Lehce zranění
+          en: Slightly injured
+          de: Leicht verletzt
+        annotations: { generated: sk cs en de }
+  deadCount:
+    slot_uri: jc:deadCount
+    description: The people dead, as the police file counts them (morts).
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Mŕtvi
+          cs: Mrtví
+          en: Dead
+          de: Tote
+        annotations: { generated: sk cs en de }
+  vehicleCount:
+    slot_uri: jc:vehicleCount
+    description: The vehicles the accident involved.
+    range: integer
+    minimum_value: 1
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Počet vozidiel
+          cs: Počet vozidel
+          en: Vehicles
+          de: Anzahl der Fahrzeuge
+        annotations: { generated: sk cs en de }
+  pedestriansInvolved:
+    slot_uri: sdm:pedestriansInvolved
+    description: >-
+      True when the police file names a pedestrian's cause; absent otherwise, since the file does
+      not say whether an accident without one involved a pedestrian.
+    range: boolean
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Účasť chodca
+          cs: Účast chodce
+          en: Pedestrian involved
+          de: Fußgänger beteiligt
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  pedestrianCause:
+    slot_uri: jc:pedestrianCause
+    description: The pedestrian's cause the police file names, in Catalan (Creuar per fora pas de vianants).
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Príčina chodca
+          cs: Příčina chodce
+          en: Pedestrian cause
+          de: Ursache des Fußgängers
+        annotations: { generated: sk cs en de }
+  accidentKind:
+    slot_uri: jc:accidentKind
+    description: >-
+      The kinds of the accident the police file names, in Catalan as the city writes them
+      (Col.lisió lateral, Abast, Atropellament), from accidents-tipus-gu-bcn.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Druh nehody
+          cs: Druh nehody
+          en: Accident kind
+          de: Unfallart
+        annotations: { generated: sk cs en de }
+  accidentType:
+    slot_uri: sdm:accidentType
+    description: >-
+      The Smart Data Model codes of accidentKind where a code means the same: 1 frontal, 2
+      frontal-lateral, 3 side collision, 4 collision (Abast, Abast multiple, Encalç), 5 pedestrian
+      hit, 8 impact with an obstacle (Xoc contra element estàtic); a kind with no such code has none.
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ nehody (kód)
+          cs: Typ nehody (kód)
+          en: Accident type (code)
+          de: Unfalltyp (Code)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  accidentCause:
+    slot_uri: jc:accidentCause
+    description: >-
+      The causes the police file names, in Catalan: the mediate causes (accidents-causes-gu-bcn,
+      Alcoholèmia), then the drivers' causes (accidents_causa_conductor_gu_bcn, Gir indegut o
+      sense precaució).
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Príčina nehody
+          cs: Příčina nehody
+          en: Accident cause
+          de: Unfallursache
+        annotations: { generated: sk cs en de }
+  vehicleKind:
+    slot_uri: jc:vehicleKind
+    description: >-
+      The kind of each vehicle involved, once a vehicle, in Catalan as the city writes it
+      (Turisme, Motocicleta), from accidents-vehicles-gu-bcn; no make, model, colour or licence.
+    multivalued: true
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Druh vozidla
+          cs: Druh vozidla
+          en: Vehicle kind
+          de: Fahrzeugart
+        annotations: { generated: sk cs en de }
+  vehiclesInvolved:
+    slot_uri: sdm:vehiclesInvolved
+    description: >-
+      The Smart Data Model code of each vehicleKind where a code means the same (1 bicycle, 3 bus,
+      4 minibus, 5 car, 7 tram, 11 lorry, 12 moped, 14 motorcycle, 18 van, 20 construction or
+      maintenance vehicle); a personal mobility vehicle, an ambulance or an unreported kind has none.
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zúčastnené vozidlá (kód)
+          cs: Zúčastněná vozidla (kód)
+          en: Vehicles involved (code)
+          de: Beteiligte Fahrzeuge (Code)
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPassengersInjured:
+    slot_uri: sdm:numPassengersInjured
+    description: The passengers injured and alive, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zranení cestujúci
+          cs: Zranění cestující
+          en: Passengers injured
+          de: Verletzte Fahrgäste
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPassengersDead:
+    slot_uri: sdm:numPassengersDead
+    description: The passengers dead, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Mŕtvi cestujúci
+          cs: Mrtví cestující
+          en: Passengers dead
+          de: Tote Fahrgäste
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPedestrianInjured:
+    slot_uri: sdm:numPedestrianInjured
+    description: The pedestrians injured and alive, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zranení chodci
+          cs: Zranění chodci
+          en: Pedestrians injured
+          de: Verletzte Fußgänger
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  numPedestrianDead:
+    slot_uri: sdm:numPedestrianDead
+    description: The pedestrians dead, a count from accidents-persones-gu-bcn.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Mŕtvi chodci
+          cs: Mrtví chodci
+          en: Pedestrians dead
+          de: Tote Fußgänger
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  intensity:
+    slot_uri: sdm:intensity
+    description: >-
+      A traffic counter's mean number of vehicles (or bicycles, at a bicycle counter) a working
+      day of the month dateObservedFrom..dateObservedTo, the city's IMD.
+    range: integer
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Intenzita dopravy
+          cs: Intenzita dopravy
+          en: Traffic intensity
+          de: Verkehrsstärke
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedFrom:
+    slot_uri: sdm:dateObservedFrom
+    description: The start of the period a traffic counter's intensity covers, UTC.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Pozorované od
+          cs: Pozorováno od
+          en: Observed from
+          de: Beobachtet ab
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedTo:
+    slot_uri: sdm:dateObservedTo
+    description: The end of the period a traffic counter's intensity covers, UTC.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Pozorované do
+          cs: Pozorováno do
+          en: Observed to
+          de: Beobachtet bis
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  vehicleType:
+    slot_uri: sdm:vehicleType
+    description: bicycle at a counter of the bicycle network; absent at a counter of motor traffic, which counts every kind.
+    range: CountedVehicleType
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Typ vozidla
+          cs: Typ vozidla
+          en: Vehicle type
+          de: Fahrzeugtyp
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+
+  dateIssued:
+    slot_uri: sdm:dateIssued
+    description: When the meteorological service issued the forecast, UTC (Meteocat's datacreacio, local time in the file).
+    range: datetime
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vydané
+          cs: Vydáno
+          en: Issued
+          de: Ausgegeben
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  validFrom:
+    slot_uri: sdm:validFrom
+    description: The start of the day a forecast covers, local midnight in Europe/Madrid, as UTC.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Platné od
+          cs: Platné od
+          en: Valid from
+          de: Gültig ab
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  validTo:
+    slot_uri: sdm:validTo
+    description: The end of the day a forecast covers, the next local midnight in Europe/Madrid, as UTC.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Platné do
+          cs: Platné do
+          en: Valid to
+          de: Gültig bis
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  dayMaximum:
+    slot_uri: sdm:dayMaximum
+    description: The highest values forecast for the day (Smart Data Models' structured value); Meteocat gives the air temperature.
+    range: DayExtremes
+    inlined: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Denné maximum
+          cs: Denní maximum
+          en: Day maximum
+          de: Tagesmaximum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  dayMinimum:
+    slot_uri: sdm:dayMinimum
+    description: The lowest values forecast for the day (Smart Data Models' structured value); Meteocat gives the air temperature.
+    range: DayExtremes
+    inlined: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Denné minimum
+          cs: Denní minimum
+          en: Day minimum
+          de: Tagesminimum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+  weatherType:
+    slot_uri: sdm:weatherType
+    description: >-
+      The sky Meteocat forecasts in Catalan, morning then afternoon when they differ ("sol i
+      núvols alts (matí), sol (tarda)"), read from the symbol table of the same file.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Počasie
+          cs: Počasí
+          en: Weather
+          de: Wetter
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+
+  kpiValue:
+    slot_uri: sdm:kpiValue
+    description: >-
+      The indicator's value for its period, with the unit as `unitCode` (UN/CEFACT: C62 a count,
+      EUR euros, MTK square metres) and the period's last day as `observedAt`, so the history
+      holds one value per period.
+    range: float
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Hodnota ukazovateľa
+          cs: Hodnota ukazatele
+          en: Indicator value
+          de: Indikatorwert
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationPeriod:
+    slot_uri: sdm:calculationPeriod
+    description: The period the value covers, its first and last day.
+    range: KpiPeriod
+    inlined: true
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie výpočtu
+          cs: Období výpočtu
+          en: Calculation period
+          de: Berechnungszeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  from:
+    slot_uri: sdm:from
+    description: The first day of the period.
+    range: date
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Od
+          cs: Od
+          en: From
+          de: Von
+        annotations: { generated: sk cs en de }
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  to:
+    slot_uri: sdm:to
+    description: The last day of the period.
+    range: date
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Do
+          cs: Do
+          en: To
+          de: Bis
+        annotations: { generated: sk cs en de }
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculationFrequency:
+    slot_uri: sdm:calculationFrequency
+    description: How often the source publishes a new period.
+    range: CalculationFrequency
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Frekvencia výpočtu
+          cs: Frekvence výpočtu
+          en: Calculation frequency
+          de: Berechnungshäufigkeit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  calculatedBy:
+    slot_uri: sdm:calculatedBy
+    description: The organization that computes the value.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vypočítal
+          cs: Vypočítal
+          en: Calculated by
+          de: Berechnet von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  organization:
+    slot_uri: sdm:organization
+    description: The organization the indicator describes.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Organizácia
+          cs: Organizace
+          en: Organization
+          de: Organisation
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  process:
+    slot_uri: sdm:process
+    description: The statistics dataset the value comes from, its Open Data BCN title in Catalan.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Proces
+          cs: Proces
+          en: Process
+          de: Prozess
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  area:
+    slot_uri: sdm:area
+    description: The name of the area the value describes, a barri, a district or the whole city.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Oblasť
+          cs: Oblast
+          en: Area
+          de: Gebiet
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  refArea:
+    slot_uri: jc:refArea
+    description: >-
+      The district or barri (AdministrativeArea) the value describes; none for the whole city.
+    range: AdministrativeArea
+    inverse: indicators
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Area unit
+          de: Gebietseinheit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: restrict
+  indicators:
+    slot_uri: jc:indicators
+    description: The statistics indicators of this district or barri, computed from their refArea and never stored.
+    range: KeyPerformanceIndicator
+    multivalued: true
+    inverse: refArea
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ukazovatele
+          cs: Ukazatele
+          en: Indicators
+          de: Indikatoren
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+  statisticsTable:
+    slot_uri: jc:statisticsTable
+    description: The Open Data BCN dataset the value comes from, such as pad_mdbas, which `source` links to.
+    pattern: ^[a-z0-9_-]+$
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Štatistická tabuľka
+          cs: Statistická tabulka
+          en: Statistics table
+          de: Statistiktabelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  dimensionKey:
+    slot_uri: jc:dimensionKey
+    description: >-
+      Which breakdown of the dataset the value is: each kept column and its value as the source
+      writes it, such as SEXE=2; total when the dataset has no breakdown.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Členenie
+          cs: Členění
+          en: Breakdown
+          de: Aufschlüsselung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+
 classes:
   AirQualityObserved:
     class_uri: sdm:AirQualityObserved
@@ -1455,6 +2143,26 @@ classes:
       - areaServed
       - dataProvider
       - source
+  WeatherForecast:
+    class_uri: sdm:WeatherForecast
+    description: >-
+      Meteocat's forecast for the comarca of Barcelonès, one entity per day ahead (day-1 tomorrow,
+      day-2 the day after), as Open Data BCN republishes it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots:
+      - name
+      - dateIssued
+      - validFrom
+      - validTo
+      - dayMaximum
+      - dayMinimum
+      - weatherType
+      - address
+      - areaServed
+      - dataProvider
+      - source
   PhreaticObserved:
     class_uri: sdm:PhreaticObserved
     description: One piezometer or well of Barcelona and its newest groundwater reading.
@@ -1479,7 +2187,9 @@ classes:
     description: >-
       One street section of the city's traffic-state network with its line, its state now and
       the state forecast for 15 minutes, every five minutes (Open Data BCN trams and
-      transit-relacio-trams).
+      transit-relacio-trams); one route of sections with its travel time (itineraris); or one
+      traffic or bicycle counter with its mean working-day intensity of the newest month
+      (aforaments-descriptiu and aforaments-detall).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -1491,6 +2201,10 @@ classes:
       - trafficStateForecast
       - travelTime
       - usualTravelTime
+      - intensity
+      - dateObservedFrom
+      - dateObservedTo
+      - vehicleType
       - source
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -1544,6 +2258,7 @@ classes:
       - neighbourhoods
       - cityWorks
       - pedestrianCrossings
+      - indicators
       - dataProvider
       - source
   CityWork:
@@ -1592,6 +2307,50 @@ classes:
       they exist (location, address, dataProvider, source).
     is_a: Entity
     slots: [furnitureType, furnitureTypeLabel, address, dataProvider, source]
+  BikeLane:
+    class_uri: sdm:BikeLane
+    description: >-
+      One segment of Barcelona's bike network as the city's map layer draws it, open
+      (carril-bici) or under construction (carrils-bici-en-construccio), with its line and length.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots: [name, localId, bikeLaneState, laneLength, dataProvider, source]
+  RoadAccident:
+    class_uri: sdm:RoadAccident
+    description: >-
+      One road accident the Guàrdia Urbana handled (accidents-gu-bcn), its hour, place and the
+      people injured or dead as counts, with its kinds, causes and the kinds of vehicle involved
+      from the four detail tables joined by file number; nothing about a person.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+    slots:
+      - localId
+      - status
+      - accidentDate
+      - totalInjured
+      - seriouslyInjured
+      - slightlyInjured
+      - deadCount
+      - vehicleCount
+      - pedestriansInvolved
+      - pedestrianCause
+      - accidentKind
+      - accidentType
+      - accidentCause
+      - vehicleKind
+      - vehiclesInvolved
+      - numPassengersInjured
+      - numPassengersDead
+      - numPedestrianInjured
+      - numPedestrianDead
+      - address
+      - areaServed
+      - dataProvider
+      - source
+    slot_usage:
+      status: { range: RoadAccidentStatus, required: true }
 
   Event:
     class_uri: sdm:Event
@@ -1623,6 +2382,47 @@ classes:
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
     slots: [name, category, address, contactPoint, source]
+  KeyPerformanceIndicator:
+    class_uri: sdm:KeyPerformanceIndicator
+    description: >-
+      One indicator of the city's statistics (Departament d'Estadística, Open Data BCN) for one
+      barri, district or the whole city: the newest period's value, its history one row per
+      period. Read daily from Open Data BCN.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+    slots:
+      - name
+      - description
+      - kpiValue
+      - calculationPeriod
+      - calculationFrequency
+      - area
+      - districtCode
+      - divisionLevel
+      - refArea
+      - process
+      - statisticsTable
+      - dimensionKey
+      - calculatedBy
+      - organization
+      - dataProvider
+      - source
+    slot_usage:
+      name:
+        rank: 1
+        annotations: { summary: true }
+      kpiValue:
+        rank: 2
+        annotations: { summary: true }
+      area:
+        rank: 3
+        annotations: { summary: true }
+      districtCode: { required: false }
+  KpiPeriod:
+    class_uri: jc:KpiPeriod
+    description: The value of `calculationPeriod`, never an entity of its own.
+    slots: [from, to]
   PostalAddress:
     class_uri: schema:PostalAddress
     description: "The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema)."
@@ -1635,6 +2435,14 @@ classes:
     annotations:
       upstream_source: https://schema.org/ContactPoint
     slots: [telephone]
+  DayExtremes:
+    class_uri: schema:StructuredValue
+    description: 'The value of `dayMaximum` or `dayMinimum`: the forecast extremes of one day, never an entity of its own.'
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Weather
+    slots: [temperature]
+    slot_usage:
+      temperature: { description: The air temperature forecast as the day's highest or lowest. }
 enums:
   MeasurementType:
     description: What a PhreaticObserved measures (Smart Data Models' enum).
@@ -1685,8 +2493,13 @@ enums:
         description: DUM, urban goods distribution.
       onlyWithPermit:
         description: VR and DUM, a resident permit or the DUM app registration is needed.
+  CalculationFrequency:
+    permissible_values:
+      monthly: { description: A new value every month. }
+      yearly: { description: A new value every year. }
   DivisionLevel:
     permissible_values:
+      city: { description: The whole city (statistics only). }
       district:
         description: A district (districte), 10 of them.
       neighbourhood:
@@ -1710,3 +2523,16 @@ enums:
         description: Painted bars across the road, the zebra crossing (Pas de pastilles).
       blocks: { description: A crossing marked with painted square blocks (Pas de tacs). }
       cycle: { description: A crossing for bicycles (Pas de bicicletes). }
+  BikeLaneState:
+    description: Which of the city's two bike lane layers the segment is read from.
+    permissible_values:
+      inService: { description: Open to cycling (carril-bici). }
+      underConstruction: { description: Being built (carrils-bici-en-construccio). }
+  RoadAccidentStatus:
+    description: The Smart Data Model RoadAccident status; a police file the city publishes is closed.
+    permissible_values:
+      archived: { description: A closed police file of a past accident. }
+  CountedVehicleType:
+    description: The Smart Data Model vehicleType a counter counts, where it counts one kind only.
+    permissible_values:
+      bicycle: { description: A counter of the bicycle network (Bicis). }
