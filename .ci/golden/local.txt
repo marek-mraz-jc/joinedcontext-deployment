@@ -231,6 +231,7 @@ rbac.authorization.k8s.io/v1/RoleBinding local/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding local/postgres-operator-cloudnative-pg
+traefik.io/v1alpha1/TLSOption local/mqtt-bsi-tr-02102
 v1/ConfigMap local/apisix
 v1/ConfigMap local/apisix-standalone-base
 v1/ConfigMap local/broker-template

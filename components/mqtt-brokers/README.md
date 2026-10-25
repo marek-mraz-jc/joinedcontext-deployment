@@ -8,10 +8,13 @@ identity, and its Keycloak audience.
 A broker keeps nothing. Each CONNECT goes to the gateway's `POST /internal/mqtt/auth` on
 port 8082 (rmqtt-auth-http, `deny_if_error`); the answer carries the client's subscriptions and
 the end of its session, the token's `exp` or its credential's `expiresAt`, whichever comes
-first. Each publish topic goes to `POST /internal/mqtt/acl`, which decides it against the
-repository as it is now; the broker keeps an allow for 10 s (`X-Cache`) and disconnects a client
-whose publish is refused, so a device whose role or account is removed stops within about 10 s
-(T-5560). The broker's own last rule, `["deny", "all"]`, refuses whatever the gateway did not
+first. Each publish goes to `POST /internal/mqtt/acl`, which decides it against the
+repository as it is now and refuses a client above the broker's `messagesPerSecond` (a token
+bucket per client); the gateway sends no `X-Cache`, so the broker asks for every publish and
+disconnects a client whose publish is refused: a device whose role or account is removed, or
+that floods the broker, stops at its next publish (T-5560, T-5562). `mqueue_rate_limit` caps
+delivery to each subscriber at the same rate. TLS ends at Traefik on 8883 with the BSI
+TR-02102-2 TLSOption `mqtt-bsi-tr-02102` of the brokers' namespace, the HTTP edge's settings. The broker's own last rule, `["deny", "all"]`, refuses whatever the gateway did not
 allow. No retainer, no session or message storage, sessions end with the connection.
 
 | Port | Listener | Who reaches it |
@@ -46,5 +49,3 @@ client inside the cluster.
 
 - A dedicated `port` (18830-18849) per broker: on the node behind klipper and the Linkerd
   inbound proxy, the broker would see every such client as a loopback address.
-- A per-publisher rate: RMQTT 0.24 has none. `messagesPerSecond` caps delivery to each
-  subscriber (`mqueue_rate_limit`).
