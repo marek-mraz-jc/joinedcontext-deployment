@@ -543,52 +543,47 @@ def test_hungarian_is_offered_where_bbsk_s_catalogue_runs():
 def test_the_search_filters_are_named_in_plain_words(theme):
     facets = {"organization": "Organizations", "groups": "Groups", "tags": "Tags", "res_format": "Formats", "license_id": "Licenses"}
     renamed = theme.JcThemePlugin().dataset_facets(dict(facets), "dataset")
-    # T-5294: Topic is the EU theme and Format the use, in the places CKAN's groups and file formats held.
+    # T-5294: Topic is the EU theme; T-5649: Format the served formats, in the places of CKAN's groups and file formats.
     assert list(renamed.items()) == [("organization", "Publisher"), ("vocab_jc_topic", "Topic"), ("tags", "Keywords"),
-                                     ("vocab_jc_use", "Format"), ("license_id", "Licence")]
+                                     ("vocab_jc_format", "Format"), ("license_id", "Licence")]
 
 
 THEMES = "http://publications.europa.eu/resource/authority/data-theme/"
-GEO_FIELDS = [{"id": "_id"}, {"id": "location.value.type"}, {"id": "location.value.coordinates[0]"},
-              {"id": "location.value.coordinates[1]"}, {"id": "location.geojson"}]
+# What `jcctl` publishes for an Endpoint whose outputs are all served (dev, 2026-10-25).
+SERVED = PUBLISHED_RESOURCES + [
+    {"id": "r-ws", "format": "WebSocket", "url": ENDPOINT + "ws"},
+    {"id": "r-ogc", "format": "OGCFEAT", "url": ENDPOINT + "ogc/features/"},
+    {"id": "r-odata", "format": "OData", "url": ENDPOINT + "odata/v4/"},
+    {"id": "r-sta", "format": "STA", "url": ENDPOINT + "sta/v1.1/"},
+    {"id": "r-dcat", "format": "JSON-LD", "url": ENDPOINT},
+    {"id": "r-ics", "format": "ICS", "mimetype": "text/calendar", "url": ENDPOINT + "ical/v1/zasadnutia.ics"},
+    {"id": "r-jf", "format": "JSON", "mimetype": "application/feed+json", "url": ENDPOINT + "feed/v1/kultura/feed.json"},
+]
 
 
-def _fields(by_table):
-    def answer(data_dict):
-        return {"fields": by_table[data_dict["resource_id"]]}
-    return answer
-
-
-def test_a_dataset_is_indexed_by_what_a_reader_can_do_and_never_by_its_model_files(theme):
-    """T-5294: dev's Format filter listed eleven formats, each on 107 of 107 datasets."""
-    theme.page.actions["datastore_search"] = _fields({"r-table": GEO_FIELDS})
-    assert theme.jc_uses({"resources": PUBLISHED_RESOURCES}) == ["table", "map", "api"]
-    live = PUBLISHED_RESOURCES + [{"id": "r-ws", "format": "WebSocket", "url": ENDPOINT + "ws"}]
-    assert theme.jc_uses({"resources": live}) == ["table", "map", "live", "api"]
-    # The data model's files alone offer nothing a reader uses.
+def test_a_dataset_is_indexed_by_the_formats_it_serves_and_never_by_its_model_documents(theme):
+    """T-5649: dev's Format filter offered the uses Map and Live feed, translated; the owner wants the formats."""
+    assert theme.jc_data_formats({"resources": PUBLISHED_RESOURCES}) == ["NGSI-LD", "CSV", "MCP"]
+    assert theme.jc_data_formats({"resources": SERVED}) == [
+        "NGSI-LD", "WEBSOCKET", "OGCFEAT", "ODATA", "STA", "CSV", "ICS", "JSONFEED", "MCP"]
+    # The schema index is JSON under /schema/: a model document, like SHACL and the JSON-LD context.
     model = [r for r in PUBLISHED_RESOURCES if r["id"] in ("r-index", "r-shacl", "r-ctx")]
-    assert theme.jc_uses({"resources": model}) == [] and theme.jc_uses({}) == []
-    # A harvested GeoJSON file off the platform is a map by its format.
-    assert theme.jc_uses({"resources": [{"format": "GeoJSON", "url": "https://other.example/a.geojson"}]}) == ["map"]
+    assert theme.jc_data_formats({"resources": model}) == [] and theme.jc_data_formats({}) == []
+    # A format the Endpoint does not serve has no resource, so it is no value: no WebSocket here.
+    assert "WEBSOCKET" not in theme.jc_data_formats({"resources": PUBLISHED_RESOURCES})
+    # A harvested file off the platform counts by its format; the link to the publisher's page does not.
+    harvested = {"title": "Trees", "resources": [{"format": "GeoJSON", "url": "https://other.example/a.geojson"},
+                                                 {"name": "Trees", "format": "HTML", "url": "https://other.example/trees"}]}
+    assert theme.jc_data_formats(harvested) == ["GEOJSON"]
+    assert theme.jc_data_formats({"resources": [{"format": "PDF", "url": "https://other.example/a.pdf"}]}) == []
 
 
-@pytest.mark.parametrize("fields, has_map", [
-    (GEO_FIELDS, True),
-    ([{"id": "location.value.type"}, {"id": "location.value.coordinates"}], True),
-    ([{"id": "area.geojson"}], True),
-    # A type without coordinates is no geometry; statistics without a location draw no map.
-    ([{"id": "address.value.type"}], False),
-    ([{"id": "_id"}, {"id": "value.value"}], False),
-])
-def test_only_a_table_with_a_geometry_makes_a_map(theme, fields, has_map):
-    theme.page.actions["datastore_search"] = _fields({"t": fields})
-    table = {"id": "t", "datastore_active": True, "last_modified": repr(fields)}
-    assert ("map" in theme.jc_uses({"resources": [table]})) is has_map
-
-
-def test_a_table_the_datastore_cannot_read_draws_no_map(theme):
-    theme.page.actions["datastore_search"] = theme.toolkit.ObjectNotFound()
-    assert theme.jc_uses({"resources": [{"id": "gone", "datastore_active": True}]}) == ["table"]
+def test_a_card_names_the_formats_by_their_standard_names_in_every_language(theme):
+    chips = theme.jc_format_chips({"resources": SERVED})
+    assert chips == ["NGSI-LD", "WebSocket", "OGC API Features", "OData", "SensorThings API", "CSV", "iCalendar",
+                     "JSON Feed", "MCP"]
+    theme.page.lang = "sk"
+    assert theme.jc_format_chips({"resources": SERVED}) == chips
 
 
 def test_the_themes_are_indexed_by_eu_code_and_an_unknown_one_is_left_out(theme):
@@ -600,12 +595,11 @@ def test_the_themes_are_indexed_by_eu_code_and_an_unknown_one_is_left_out(theme)
     assert theme.jc_topics({}) == []
 
 
-def test_the_index_carries_the_uses_and_the_topics_of_the_stored_dataset(theme):
-    theme.page.actions["datastore_search"] = _fields({"r-table": GEO_FIELDS})
+def test_the_index_carries_the_formats_and_the_topics_of_the_stored_dataset(theme):
     stored = {"resources": PUBLISHED_RESOURCES, "extras": [{"key": "theme", "value": json.dumps([THEMES + "TRAN"])}]}
     indexed = theme.JcThemePlugin().before_dataset_index({"id": "d", "data_dict": json.dumps(stored)})
-    assert indexed["vocab_jc_use"] == ["table", "map", "api"] and indexed["vocab_jc_topic"] == ["TRAN"]
-    assert theme.JcThemePlugin().before_dataset_index({"id": "e"})["vocab_jc_use"] == []
+    assert indexed["vocab_jc_format"] == ["NGSI-LD", "CSV", "MCP"] and indexed["vocab_jc_topic"] == ["TRAN"]
+    assert theme.JcThemePlugin().before_dataset_index({"id": "e"})["vocab_jc_format"] == []
 
 
 def _results(count, **facets):
@@ -614,27 +608,31 @@ def _results(count, **facets):
         for field, items in facets.items()}}
 
 
-def test_the_filters_read_in_the_page_language_without_a_value_every_result_shares(theme):
+def test_the_filters_name_formats_untranslated_and_topics_in_the_page_language(theme):
     theme.page.lang = "sk"
-    results = _results(107, vocab_jc_use=[("table", 107), ("map", 98), ("live", 62), ("api", 107)],
-                       vocab_jc_topic=[("ECON", 21), ("TRAN", 21)], tags=[("Praha", 107)])
+    results = _results(140, vocab_jc_format=[("NGSI-LD", 140), ("OGCFEAT", 136), ("WEBSOCKET", 95), ("STA", 3)],
+                       vocab_jc_topic=[("ECON", 21), ("TRAN", 21), ("REGI", 140)], tags=[("Praha", 140)])
     out = theme.JcThemePlugin().after_dataset_search(results, {"fq": ""})["search_facets"]
-    assert [(i["name"], i["display_name"]) for i in out["vocab_jc_use"]["items"]] == [("map", "Mapa"), ("live", "Živé údaje")]
+    # T-5649: every served format stays, NGSI-LD on all 140 included, under its own name.
+    assert [(i["name"], i["display_name"], i["count"]) for i in out["vocab_jc_format"]["items"]] == [
+        ("NGSI-LD", "NGSI-LD", 140), ("OGCFEAT", "OGC API Features", 136), ("WEBSOCKET", "WebSocket", 95),
+        ("STA", "SensorThings API", 3)]
+    # A topic on every result narrows nothing (T-5294).
     assert [i["display_name"] for i in out["vocab_jc_topic"]["items"]] == ["Hospodárstvo a financie", "Doprava"]
     # Keywords are CKAN's own and stay as they are.
-    assert out["tags"]["items"] == [{"name": "Praha", "display_name": "Praha", "count": 107}]
+    assert out["tags"]["items"] == [{"name": "Praha", "display_name": "Praha", "count": 140}]
 
 
 def test_a_value_the_search_filters_by_stays_so_it_can_be_taken_off(theme):
-    results = _results(98, vocab_jc_use=[("table", 98), ("map", 98), ("live", 50)])
-    out = theme.JcThemePlugin().after_dataset_search(results, {"fq": 'vocab_jc_use:"map" +capacity:public'})
-    assert [i["name"] for i in out["search_facets"]["vocab_jc_use"]["items"]] == ["map", "live"]
+    results = _results(98, vocab_jc_topic=[("ECON", 98), ("TRAN", 98), ("ENVI", 50)])
+    out = theme.JcThemePlugin().after_dataset_search(results, {"fq": 'vocab_jc_topic:"TRAN" +capacity:public'})
+    assert [i["name"] for i in out["search_facets"]["vocab_jc_topic"]["items"]] == ["TRAN", "ENVI"]
     # CKAN 2.11's query hands the hook `fq` as a list of clauses (lib/search/query.py), and fq_list beside it.
-    for params in ({"fq": ['+capacity:public vocab_jc_use:"map"', "+site_id:x"]},
-                   {"fq": ["+site_id:x"], "fq_list": ['vocab_jc_use:"map"']}):
-        results = _results(98, vocab_jc_use=[("table", 98), ("map", 98), ("live", 50)])
+    for params in ({"fq": ['+capacity:public vocab_jc_topic:"TRAN"', "+site_id:x"]},
+                   {"fq": ["+site_id:x"], "fq_list": ['vocab_jc_topic:"TRAN"']}):
+        results = _results(98, vocab_jc_topic=[("ECON", 98), ("TRAN", 98), ("ENVI", 50)])
         out = theme.JcThemePlugin().after_dataset_search(results, params)
-        assert [i["name"] for i in out["search_facets"]["vocab_jc_use"]["items"]] == ["map", "live"], params
+        assert [i["name"] for i in out["search_facets"]["vocab_jc_topic"]["items"]] == ["TRAN", "ENVI"], params
 
 
 def test_the_home_page_tiles_name_each_theme_with_its_count_and_search(theme, monkeypatch):
@@ -664,10 +662,10 @@ def test_the_home_page_tiles_name_each_theme_with_its_count_and_search(theme, mo
     assert theme.jc_topic_tiles() == []
 
 
-def test_a_search_result_and_a_home_card_show_the_uses_and_no_file_format():
+def test_a_search_result_and_a_home_card_show_the_served_formats_and_no_model_document():
     for name in ("templates__snippets__package_item.html", "templates__home__index.html"):
         text = (THEME / name).read_text()
-        assert "h.jc_use_chips(" in text and "h.jc_formats(" not in text, name
+        assert "h.jc_format_chips(" in text and "h.jc_formats(" not in text, name
 
 
 def test_the_portal_link_is_on_the_installation_s_domain(theme):

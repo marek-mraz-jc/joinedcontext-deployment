@@ -794,33 +794,32 @@ def inventory(client: Client, domain: str) -> tuple[list, set]:
     return datasets, public
 
 
-# The search's Format filter names what a reader can do, and its Topic filter the EU themes
-# (T-5294): the CKAN theme indexes both, and drops a value every dataset shares.
-USES = {"table", "map", "live", "api"}
+# The search's Format filter names the formats the datasets serve (T-5649), its Topic filter the
+# EU themes (T-5294): the CKAN theme indexes both, by the codes of jc_theme/plugin.py DATA_FORMATS.
+FORMATS = {"NGSI-LD", "WEBSOCKET", "OGCFEAT", "ODATA", "STA", "GEOJSON", "CSV", "JSON", "XLSX", "XLS", "XML",
+           "PARQUET", "ICS", "RSS", "ATOM", "JSONFEED", "MCP"}
 
 
 def filters(client: Client, domain: str) -> str:
-    """The catalogue's search filters, in one package_search: a Format filter that narrows the
-    search (a use, never a file format, and no value on every dataset) and a Topic filter."""
-    query = urllib.parse.urlencode({"rows": 0, "facet.field": json.dumps(["vocab_jc_use", "vocab_jc_topic"])})
+    """The catalogue's search filters, in one package_search: a Format filter of served formats
+    (never a data model document or a use such as "map") and a Topic filter."""
+    query = urllib.parse.urlencode({"rows": 0, "facet.field": json.dumps(["vocab_jc_format", "vocab_jc_topic"])})
     answer = client.fetch(f"https://opendata.{domain}/api/3/action/package_search?{query}")
     result = (answer.json() or {}).get("result") if answer.status == 200 else None
     if not isinstance(result, dict):
         return ko(f"package_search with the filters answered {answer.why()}")
     facets = result.get("search_facets") or {}
-    uses = {i.get("name"): i.get("count") for i in (facets.get("vocab_jc_use") or {}).get("items") or []}
+    formats = {i.get("name") for i in (facets.get("vocab_jc_format") or {}).get("items") or []}
     topics = (facets.get("vocab_jc_topic") or {}).get("items") or []
     if not result.get("count"):
         return skip("no dataset")
-    if not uses:
+    if not formats:
         return ko("the Format filter offers no choice")
-    if set(uses) - USES:
-        return ko("the Format filter names " + ", ".join(sorted(set(uses) - USES)))
-    if result["count"] in uses.values():
-        return ko("a Format value is on every dataset")
+    if formats - FORMATS:
+        return ko("the Format filter names " + ", ".join(sorted(map(str, formats - FORMATS))))
     if not topics:
         return ko("the Topic filter is missing")
-    return ok(f"{len(uses)} formats, {len(topics)} topics")
+    return ok(f"{len(formats)} formats, {len(topics)} topics")
 
 
 def previous_table(out: Path, env: str) -> tuple[dict, str]:
