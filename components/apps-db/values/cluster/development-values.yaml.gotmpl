@@ -13,3 +13,10 @@ cluster:
       memory: 768Mi
   storage:
     size: 2Gi
+  postgresql:
+    parameters:
+      # T-5553: two shards of 20 (JC_WASM_DB_POOL), the Portal's 4 and an App owner login per
+      # shard: 46 x 1.2 + 3 reserved = 59. The old 100 let in more backends than
+      # 768Mi holds: 100 x 8 MiB (one backend after 300 Apps) + 128 MB shared_buffers = 928 MiB.
+      # 60 x 8 + 128 = 608 MiB.
+      max_connections: "60"
