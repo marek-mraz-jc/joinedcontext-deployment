@@ -1943,7 +1943,7 @@
     },
     "PointOfInterest": {
       "additionalProperties": false,
-      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone.",
+      "description": "One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone; or a place of health care or a social service of the national registers.",
       "properties": {
         "address": {
           "anyOf": [
@@ -2404,7 +2404,9 @@
         "waterArea",
         "dogZone",
         "warMemorial",
-        "postOffice"
+        "postOffice",
+        "healthCareProvider",
+        "socialService"
       ],
       "title": "ServiceCategory",
       "type": "string"
