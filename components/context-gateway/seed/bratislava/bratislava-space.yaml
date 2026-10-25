@@ -1,5 +1,5 @@
 # The open data of the City of Bratislava (data.bratislava.sk, CC BY 4.0) as Smart Data Models,
-# one space the city's pipelines write (T-5271). The first type is AirQualityObserved; each batch
+# one space the city's pipelines write (T-5271). T-5273 adds the counters and the bike stations; each batch
 # of the ranked matrix (T-5272) adds its types to the model, the Policies and the retention below.
 apiVersion: joinedcontext.com/v1alpha1
 kind: ContextSpace
@@ -28,6 +28,52 @@ spec:
         dateObserved: { record: onChange, heartbeat: P1D }
         location: { record: onChange, heartbeat: P1D }
         name: { record: onChange, heartbeat: P1D }
+    - entityType: TrafficFlowObserved
+      history: P30D
+      # One write a day, its intensity observed at the day's end; the site's name and place
+      # repeat it: one row per change and one a week (T-5273, DM-108).
+      attributes:
+        dataProvider: { record: onChange, heartbeat: P7D }
+        dateObserved: { record: onChange, heartbeat: P7D }
+        dateObservedFrom: { record: onChange, heartbeat: P7D }
+        dateObservedTo: { record: onChange, heartbeat: P7D }
+        laneDirection: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        vehicleType: { record: onChange, heartbeat: P7D }
+    - entityType: CrowdFlowObserved
+      history: P30D
+      # As TrafficFlowObserved: the day's counts observed at its end, the rest one row per change.
+      attributes:
+        dataProvider: { record: onChange, heartbeat: P7D }
+        dateObserved: { record: onChange, heartbeat: P7D }
+        dateObservedFrom: { record: onChange, heartbeat: P7D }
+        dateObservedTo: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+    - entityType: BikeHireDockingStation
+      history: P30D
+      # Written every five minutes without an observedAt: one row per change and one a week,
+      # not one per run (T-4844, DM-108, DM-109; scripts/temporal-audit.py).
+      attributes:
+        availableBikeNumber: { record: onChange, heartbeat: P7D }
+        dataProvider: { record: onChange, heartbeat: P7D }
+        dateModified: { record: onChange, heartbeat: P7D }
+        freeSlotNumber: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        name: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        status: { record: onChange, heartbeat: P7D }
+        totalSlotNumber: { record: onChange, heartbeat: P7D }
+    # The public transport network from DPB's GTFS: the current timetable only (T-5273).
+    - entityType: GtfsAgency
+      history: 'off'
+    - entityType: GtfsRoute
+      history: 'off'
+    - entityType: GtfsStop
+      history: 'off'
     # A district, a place and a figure of one period are records, not measurements: their current
     # state only; an indicator's history is its periods, one entity each (T-5274).
     - entityType: AdministrativeArea
@@ -39,8 +85,28 @@ spec:
   # The municipality of Bratislava (OSM relation, lon 16.946..17.285, lat 48.007..48.265) with a
   # 1 km margin (owner 2026-10-22T18:10Z); an entity outside it is flagged, never refused (DM-87).
   quality:
-    - name: in-area
+    - name: in-area-air-quality-observed
       entityType: AirQualityObserved
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-traffic-flow-observed
+      entityType: TrafficFlowObserved
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-crowd-flow-observed
+      entityType: CrowdFlowObserved
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-bike-hire-docking-station
+      entityType: BikeHireDockingStation
+      kind: area
+      attribute: location
+      bbox: [16.93, 47.99, 17.3, 48.28]
+    - name: in-area-gtfs-stop
+      entityType: GtfsStop
       kind: area
       attribute: location
       bbox: [16.93, 47.99, 17.3, 48.28]
