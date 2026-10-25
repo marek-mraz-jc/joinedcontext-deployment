@@ -22,6 +22,12 @@
     "Event": {
       "@id": "sdm:Event"
     },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "KpiPeriod": {
+      "@id": "jc:KpiPeriod"
+    },
     "OnStreetParking": {
       "@id": "sdm:OnStreetParking"
     },
@@ -68,6 +74,9 @@
     "aquifer": {
       "@id": "jc:aquifer"
     },
+    "area": {
+      "@id": "sdm:area"
+    },
     "areaServed": {
       "@id": "sdm:areaServed"
     },
@@ -86,6 +95,20 @@
     "blackCarbon": {
       "@id": "jc:blackCarbon",
       "@type": "xsd:float"
+    },
+    "calculatedBy": {
+      "@id": "sdm:calculatedBy"
+    },
+    "calculationFrequency": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:calculationFrequency"
+    },
+    "calculationPeriod": {
+      "@id": "sdm:calculationPeriod"
     },
     "capacity": {
       "@id": "sdm:capacity",
@@ -133,6 +156,9 @@
     "description": {
       "@id": "schema:description"
     },
+    "dimensionKey": {
+      "@id": "jc:dimensionKey"
+    },
     "district": {
       "@id": "sdm:district"
     },
@@ -151,6 +177,10 @@
       "@id": "schema:endDate",
       "@type": "xsd:dateTime"
     },
+    "from": {
+      "@id": "sdm:from",
+      "@type": "xsd:date"
+    },
     "furnitureType": {
       "@context": {
         "description": "skos:prefLabel",
@@ -168,11 +198,19 @@
       "@type": "xsd:float"
     },
     "id": "@id",
+    "indicators": {
+      "@id": "jc:indicators",
+      "@type": "@id"
+    },
     "investigationDepth": {
       "@id": "sdm:investigationDepth",
       "@type": "xsd:float"
     },
     "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
     "linkml": "https://w3id.org/linkml/",
     "location": {
       "@id": "geojson:geometry"
@@ -234,6 +272,9 @@
     "operator": {
       "@id": "sdm:operator"
     },
+    "organization": {
+      "@id": "sdm:organization"
+    },
     "pedestrianCrossings": {
       "@id": "jc:pedestrianCrossings",
       "@type": "@id"
@@ -256,6 +297,13 @@
     "precipitation": {
       "@id": "sdm:precipitation",
       "@type": "xsd:float"
+    },
+    "process": {
+      "@id": "sdm:process"
+    },
+    "refArea": {
+      "@id": "jc:refArea",
+      "@type": "@id"
     },
     "refDistrict": {
       "@id": "jc:refDistrict",
@@ -315,6 +363,9 @@
     "stationCode": {
       "@id": "jc:stationCode"
     },
+    "statisticsTable": {
+      "@id": "jc:statisticsTable"
+    },
     "status": {
       "@context": {
         "description": "skos:prefLabel",
@@ -345,6 +396,10 @@
     },
     "territorialArea": {
       "@id": "sdm:territorialArea"
+    },
+    "to": {
+      "@id": "sdm:to",
+      "@type": "xsd:date"
     },
     "totalSpotNumber": {
       "@id": "sdm:totalSpotNumber",

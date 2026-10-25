@@ -29,6 +29,7 @@ TYPES = {
     "PedestrianCrossing",
     "StreetFurniture",
     "TouristRental",
+    "KeyPerformanceIndicator",
 }
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
@@ -105,7 +106,8 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
     assert {row["entityType"] for row in spec["retention"]} == TYPES
     areas = {q["entityType"]: q["bbox"] for q in spec["quality"] if q["kind"] == "area"}
-    assert set(areas) == TYPES
+    # An indicator has no geometry; its refArea names a district or barri the register holds (T-5266).
+    assert set(areas) == TYPES - {"KeyPerformanceIndicator"}
     for west, south, east, north in areas.values():
         # The municipality (2.05..2.23 E, 41.32..41.47 N) with about 1 km to spare, nothing wider.
         assert 2.03 <= west <= 2.05 and 2.23 <= east <= 2.25, "longitude first, not swapped"
