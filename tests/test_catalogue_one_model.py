@@ -3,6 +3,7 @@
 relationships, serves every mandatory surface (EP-118), and is narrowed to types the space already
 grants the public, under the public role, so a split exposes nothing new."""
 
+import re
 from functools import cache
 from pathlib import Path
 
@@ -176,3 +177,83 @@ def test_every_endpoint_and_policy_of_the_split_is_in_its_seed_index():
     for path, doc, bound in published():
         index = (path.parent / "index.yaml").read_text()
         assert f"\n{path.name}:" in index, path.name
+
+
+# A type name as a quoted literal of a mapping: the osm mapping picks "EVChargingStation" or
+# "PointOfInterest" per OSM object while its Pipeline declares only the second (T-5643).
+LITERAL = re.compile(r'"([A-Z][A-Za-z0-9]*)"')
+# The Portal's catalogue sync writes each organisation's catalogue space (jc-core ngsi_catalog.rs)
+# under a Policy granting its reconciler account the batch writes.
+RECONCILER = {"kind": "user", "id": "service-account-portal-reconciler"}
+# Endpoints that advertise a type nothing feeds yet, each with its reason; an entry whose gap is
+# closed fails the test, so the list only shrinks.
+# bratislava: T-5271 seeded AirQualityObserved as the model's first class, and the Bratislava hub
+# has no air sensor feed (T-5273); a pipeline (EEA stations, as banskabystrica public-air) or
+# dropping the class closes it.
+UNFED = {"bratislava/bratislava-endpoint.yaml": ["AirQualityObserved"]}
+
+
+def fed_types() -> dict[tuple[str, str], set[str]]:
+    """What can fill each (project, space): its Pipelines' declared output types (some Helsinki
+    Pipelines declare none, their mapping names the type) and the type literals of their mappings (inline or the -bento.yaml beside the Pipeline), and the types a
+    ContextSourceRegistration federates into it."""
+    spaces = {(doc["metadata"]["namespace"], doc["metadata"]["name"]): space_of(doc["spec"])
+              for _, doc in docs("Endpoint")}
+    out: dict[tuple[str, str], set[str]] = {}
+    for path, doc in docs("Pipeline"):
+        spec, ns = doc["spec"], doc["metadata"]["namespace"]
+        outputs = spec.get("outputs") or [{**spec.get("output", {}), "targetEndpoint": spec.get("targetEndpoint")}]
+        bento = path.with_name(f"{path.stem}-bento.yaml")
+        literals = set(LITERAL.findall(path.read_text() + (bento.read_text() if bento.exists() else "")))
+        for o in outputs:
+            space = spaces.get((ns, o["targetEndpoint"].rsplit(":", 1)[1]))
+            assert space, f"{path.name}: targets {o['targetEndpoint']}, no seeded Endpoint"
+            out.setdefault((ns, space), set()).update({o.get("type")} - {None} | literals)
+    for _, doc in docs("ContextSourceRegistration"):
+        out.setdefault((doc["metadata"]["namespace"], space_of(doc["spec"])), set()).update(types_of(doc["spec"]))
+    for _, doc in docs("Policy"):
+        spec = doc["spec"]
+        if spec["assignee"] == RECONCILER and "upsertBatch" in spec["operations"]:
+            out.setdefault((doc["metadata"]["namespace"], space_of(spec)), set()).update(types_of(spec))
+    return out
+
+
+def advertised(doc: dict) -> set[str]:
+    """The types get_endpoint lists: its policyRef's Policy's, else its space's DataModel's."""
+    spec, ns = doc["spec"], doc["metadata"]["namespace"]
+    if ref := spec.get("policyRef"):
+        [policy] = [p["spec"] for _, p in docs("Policy")
+                    if (p["metadata"]["namespace"], p["metadata"]["name"]) == (ns, ref.rsplit(":", 1)[1])]
+        return types_of(policy)
+    [space] = [s["spec"] for _, s in docs("ContextSpace")
+               if (s["metadata"]["namespace"], s["metadata"]["name"]) == (ns, space_of(spec))]
+    if not (model := space.get("dataModelRef")):
+        return set()
+    return {t for _, m in docs("DataModel")
+            if (m["metadata"]["namespace"], m["metadata"]["name"]) == (ns, model["name"])
+            for t in m["spec"].get("classes", [])}
+
+
+def unfed(fed: dict[tuple[str, str], set[str]]) -> dict[str, list[str]]:
+    out = {}
+    for path, doc in docs("Endpoint"):
+        missing = advertised(doc) - fed.get((doc["metadata"]["namespace"], space_of(doc["spec"])), set())
+        if missing:
+            out[f"{path.parent.name}/{path.name}"] = sorted(missing)
+    return out
+
+
+def test_every_endpoint_type_has_something_that_writes_it_in_its_space():
+    """An Endpoint that names a type nothing of its space writes advertises an empty dataset
+    (T-5643: get_endpoint listed EVChargingStation, the space held none)."""
+    assert len(docs("Endpoint")) >= 400
+    assert unfed(fed_types()) == UNFED
+
+
+def test_the_check_names_an_endpoint_whose_type_lost_its_writer():
+    fed = fed_types()
+    fed[("banskabystrica", "banskabystrica-verejne")].discard("EVChargingStation")
+    gaps = unfed(fed)
+    lost = {name: types for name, types in gaps.items() if name not in UNFED}
+    assert {"banskabystrica/endpoint-nabijanie.yaml", "banskabystrica/endpoint-verejne.yaml"} <= lost.keys()
+    assert all(types == ["EVChargingStation"] for types in lost.values()), lost
