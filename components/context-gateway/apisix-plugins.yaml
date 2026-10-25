@@ -31,7 +31,7 @@ context-space:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end
@@ -104,7 +104,7 @@ catalog-feed:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end
@@ -183,7 +183,7 @@ context-space-portal:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end
@@ -297,7 +297,7 @@ context-endpoint:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end
@@ -393,7 +393,7 @@ context-endpoint-portal:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end
@@ -516,7 +516,7 @@ api-moved:
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
-                if key:sub(1, #prefix) == prefix then
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
                   ngx.req.clear_header(name)
                 end
               end

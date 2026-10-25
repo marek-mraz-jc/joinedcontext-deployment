@@ -58,6 +58,10 @@ TRUSTED_HEADERS = (
 # provenance it stamps (`jc-provenance-*`) and Linkerd's own (`l5d-client-id`, which the
 # gateway's MQTT decider reads). The Lua compares the lower-cased, hyphenated name.
 TRUSTED_PREFIXES = ("x-jc-", "jc-provenance-", "l5d-")
+# The one name of those families a browser writes by design: the assistant widget's visitor
+# token (API/05 §1.2.1, platform `chat::VISITOR_HEADER`), a bearer the chat route checks itself
+# and no service reads as identity. Clearing it answers every widget question 401.
+BROWSER_HEADERS = {"x-jc-visitor"}
 
 # How a caller with no token is authenticated on a route. The class is what the reviewed
 # allow-list below records, and every route carries the plugins its class names.
@@ -505,6 +509,8 @@ def test_every_route_clears_the_platform_identity_prefixes(component_plugins):
             assert f'"{prefix}"' in loop, f"{route_id} ({source}) does not clear {prefix}*"
         assert 'name:lower():gsub("_", "-")' in loop, f"{route_id} ({source}) misses X_JC_Subject"
         assert "ngx.req.clear_header(name)" in loop, f"{route_id} ({source}) names the prefixes and clears none"
+        exempt = set(re.findall(r'key ~= "([^"]+)"', loop))
+        assert exempt <= BROWSER_HEADERS, f"{route_id} ({source}) lets {exempt - BROWSER_HEADERS} through"
         loops.setdefault(loop, []).append(f"{route_id} ({source})")
     assert len(loops) == 1, "the prefix loop differs between routes:\n" + "\n\n".join(
         "--- " + ", ".join(routes) + "\n" + lua for lua, routes in loops.items()
@@ -513,9 +519,11 @@ def test_every_route_clears_the_platform_identity_prefixes(component_plugins):
 
 @pytest.mark.xdist_group("docker-apisix-sanitiser")
 @pytest.mark.skipif(not __import__("shutil").which("docker"), reason="docker not installed")
-def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(component_plugins, tmp_path):
-    """GW12, AG-38 (T-5566), played on `apache/apisix` as pinned with the Lua `portal-api`
-    ships: the upstream, APISIX itself, echoes the headers it was sent."""
+@pytest.mark.parametrize("route_id", ["portal-api", "assistant-chat"])
+def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(component_plugins, tmp_path, route_id):
+    """GW12, AG-38 (T-5566), played on `apache/apisix` as pinned with the Lua the route ships:
+    the upstream, APISIX itself, echoes the headers it was sent. The assistant's chat route
+    keeps the widget's `X-JC-Visitor`, or every widget question answers 401."""
     import json
     import subprocess
     import time
@@ -524,7 +532,7 @@ def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(com
     from test_apisix_429_contract import pinned_image
     from test_edge_csp_baseline import free_port
 
-    pre = component_plugins["portal-api"][1]["plugins"]["serverless-pre-function"]
+    pre = component_plugins[route_id][1]["plugins"]["serverless-pre-function"]
     echo = 'return function() ngx.say(require("cjson").encode(ngx.req.get_headers(0))); ngx.exit(200) end'
     routes = [
         {"id": "echo", "uri": "/echo", "plugins": {
@@ -555,7 +563,7 @@ def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(com
         "JC-Provenance-Actor": "someone-else", "L5d-Client-Id": "mqtt-a.mqtt.serviceaccount.identity",
         "X-Userinfo": "e30",
     }
-    kept = {"X-Jcx-Note": "kept", "Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}
+    kept = {"X-Jcx-Note": "kept", "X-JC-Visitor": "visitor-token", "Traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}
     request = urllib.request.Request(f"http://127.0.0.1:{port}/edge", headers={**forged, **kept})
     try:
         deadline = time.time() + 60
