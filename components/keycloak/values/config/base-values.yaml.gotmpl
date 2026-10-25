@@ -336,6 +336,9 @@ config:
       clientAuthenticationFlow: clients
       dockerAuthenticationFlow: docker auth
       attributes:
+        # T-5567: the step-up subflow's level 2 is the `acr` "mfa", which a login asks with
+        # `acr_values=mfa` and the Portal reads before every decision.
+        acr.loa.map: '{"pwd":1,"mfa":2}'
         clientOfflineSessionMaxLifespan: "0"
         clientSessionIdleTimeout: "0"
         clientSessionMaxLifespan: "0"
@@ -658,7 +661,20 @@ config:
             "id.token.claim" "true"
             "userinfo.token.claim" "true")
         }}
-        {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper) (index $rawValues "protocolMappers" | default list)) }}
+        {{- /* How the caller signed in (T-5567): `amr` lists the reference of every step the
+               login ran, `otp` for each one-time-code step ("otp reference …" configs), so the Portal
+               sees a second factor whichever subflow asked it. */}}
+        {{- $amrMapper := dict
+          "name" "amr"
+          "protocol" "openid-connect"
+          "protocolMapper" "oidc-amr-mapper"
+          "consentRequired" false
+          "config" (dict
+            "access.token.claim" "true"
+            "id.token.claim" "true"
+            "introspection.token.claim" "true")
+        }}
+        {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper $amrMapper) (index $rawValues "protocolMappers" | default list)) }}
         {{- /* The gateway alone exchanges a caller's token for the brokers' audiences
                (ADR-N-047 §2.4, T-3999): standard token exchange V2 on its client, and the
                broker scopes above optional on it, so its own client_credentials token names no
@@ -753,7 +769,45 @@ config:
       # enrols at the next login (Keycloak's CONFIGURE_TOTP required action). Everyone else is
       # asked for TOTP or WebAuthn only once they configured one. The two subflows exclude each
       # other by the same role, so nobody is asked twice.
+      # CONFIGURE_TOTP is the enrolment every REQUIRED one-time-code step falls back to; declared
+      # so the render proves it is on (T-5567).
+      requiredActions:
+        - alias: CONFIGURE_TOTP
+          name: Configure OTP
+          providerId: CONFIGURE_TOTP
+          enabled: true
+          defaultAction: false
+          priority: 10
       authenticatorConfig:
+        # Every one-time-code step tags the session with `otp`; the `oidc-amr-mapper` of each
+        # client writes it into `amr`, which the Portal reads before every decision (T-5567).
+        # One alias per step: keycloak-config-cli binds a config to one execution, and a step
+        # without its own carries no reference (Keycloak 26.8, measured on a throwaway realm).
+        - alias: "otp reference required"
+          config:
+            default.reference.value: otp
+        - alias: "otp reference step-up"
+          config:
+            default.reference.value: otp
+        - alias: "otp reference grant required"
+          config:
+            default.reference.value: otp
+        - alias: "otp reference grant"
+          config:
+            default.reference.value: otp
+        - alias: "otp reference optional"
+          config:
+            default.reference.value: otp
+        # The password, level 1, holds for the SSO session's whole lifespan (ssoSessionMaxLifespan).
+        - alias: "password level"
+          config:
+            loa-condition-level: "1"
+            loa-max-age: "36000"
+        # The step-up a decision asks for (T-5567): level 2, met for five minutes after the code.
+        - alias: "step-up level"
+          config:
+            loa-condition-level: "2"
+            loa-max-age: "300"
         - alias: "mfa required"
           config:
             condUserRole: mfa-required
@@ -793,12 +847,15 @@ config:
           topLevel: false
           builtIn: false
           authenticationExecutions:
-            - authenticator: "auth-username-password-form"
-              authenticatorFlow: false
-              requirement: "REQUIRED"
+            # Level 1 is the password: Keycloak's level conditions run every level when nothing
+            # is requested and none is reached yet, so the password must be a level of its own
+            # for the step-up subflow (level 2) to run only when a login asks for it (T-5567).
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
               priority: 10
+              flowAlias: "custom browser password"
               userSetupAllowed: false
-              autheticatorFlow: false
+              autheticatorFlow: true
             - authenticatorFlow: true
               requirement: "CONDITIONAL"
               priority: 20
@@ -809,6 +866,12 @@ config:
               requirement: "CONDITIONAL"
               priority: 30
               flowAlias: "custom browser 2fa"
+              userSetupAllowed: false
+              autheticatorFlow: true
+            - authenticatorFlow: true
+              requirement: "CONDITIONAL"
+              priority: 40
+              flowAlias: "custom browser step-up"
               userSetupAllowed: false
               autheticatorFlow: true
         - alias: "custom browser required 2fa"
@@ -826,6 +889,46 @@ config:
               autheticatorFlow: false
             - authenticator: "auth-otp-form"
               authenticatorFlow: false
+              authenticatorConfig: "otp reference required"
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+        - alias: "custom browser password"
+          description: "Level 1: username and password (T-5567)"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-level-of-authentication"
+              authenticatorFlow: false
+              authenticatorConfig: "password level"
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "auth-username-password-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
+        - alias: "custom browser step-up"
+          description: "The step-up a decision asks (acr_values=mfa): TOTP of anyone, enrolment if none (T-5567)"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "conditional-level-of-authentication"
+              authenticatorFlow: false
+              authenticatorConfig: "step-up level"
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "auth-otp-form"
+              authenticatorFlow: false
+              authenticatorConfig: "otp reference step-up"
               requirement: "REQUIRED"
               priority: 20
               userSetupAllowed: false
@@ -875,6 +978,7 @@ config:
               autheticatorFlow: false
             - authenticator: "direct-grant-validate-otp"
               authenticatorFlow: false
+              authenticatorConfig: "otp reference grant required"
               requirement: "REQUIRED"
               priority: 20
               userSetupAllowed: false
@@ -900,6 +1004,7 @@ config:
               autheticatorFlow: false
             - authenticator: "direct-grant-validate-otp"
               authenticatorFlow: false
+              authenticatorConfig: "otp reference grant"
               requirement: "REQUIRED"
               priority: 20
               userSetupAllowed: false
@@ -925,6 +1030,7 @@ config:
               autheticatorFlow: false
             - authenticator: "auth-otp-form"
               authenticatorFlow: false
+              authenticatorConfig: "otp reference optional"
               requirement: "ALTERNATIVE"
               priority: 20
               userSetupAllowed: false
@@ -958,4 +1064,51 @@ config:
       passwordPolicy: "length(20) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1)"
       # TR-03187 AR-11: Use SHA256 for OTP
       otpPolicyAlgorithm: HmacSHA256
-
+      # TR-03187 AUT-2 (T-5567): every administrator of the master realm gives a TOTP code at
+      # the browser login and enrols at the next one without a credential. The direct grant
+      # keycloak-config-cli signs in with is Keycloak's own flow and stays as it is.
+      browserFlow: master browser
+      requiredActions:
+        - alias: CONFIGURE_TOTP
+          name: Configure OTP
+          providerId: CONFIGURE_TOTP
+          enabled: true
+          defaultAction: false
+          priority: 10
+      authenticationFlows:
+        - alias: "master browser"
+          description: "Browser login of the master realm: password and TOTP"
+          providerId: "basic-flow"
+          topLevel: true
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "auth-cookie"
+              authenticatorFlow: false
+              requirement: "ALTERNATIVE"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticatorFlow: true
+              requirement: "ALTERNATIVE"
+              priority: 20
+              flowAlias: "master browser forms"
+              userSetupAllowed: false
+              autheticatorFlow: true
+        - alias: "master browser forms"
+          description: "Username/password, then TOTP"
+          providerId: "basic-flow"
+          topLevel: false
+          builtIn: false
+          authenticationExecutions:
+            - authenticator: "auth-username-password-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 10
+              userSetupAllowed: false
+              autheticatorFlow: false
+            - authenticator: "auth-otp-form"
+              authenticatorFlow: false
+              requirement: "REQUIRED"
+              priority: 20
+              userSetupAllowed: false
+              autheticatorFlow: false
