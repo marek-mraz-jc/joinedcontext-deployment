@@ -65,8 +65,9 @@ data:
     listener.ws.external.enable = false
     listener.wss.external.enable = false
     listener.quic.external.enable = false
-    # ponytail: RMQTT 0.24 has no per-publisher rate; `mqueue_rate_limit` caps delivery to each
-    # subscriber, so a publisher above messagesPerSecond loses the overflow, not its connection.
+    # RMQTT 0.24 has no per-publisher rate: `mqueue_rate_limit` caps delivery to each subscriber,
+    # and the gateway's publish check refuses a client above messagesPerSecond, which
+    # disconnect_if_pub_rejected turns into a disconnect (T-5562).
     {{- range $listener := list (dict "name" "internal" "port" 1883 "proxy" false) (dict "name" "external" "port" 1884 "proxy" true) }}
     {{- $l := printf "listener.tcp.%s" $listener.name }}
     {{ $l }}.enable = true
@@ -261,6 +262,9 @@ spec:
             version: 2
   tls:
     secretName: {{ .release }}-tls
+    # BSI TR-02102-2, as on the HTTP edge (templates/tls-option.yaml, T-5562).
+    options:
+      name: mqtt-bsi-tr-02102
 {{- if $root.Values.serviceMesh.enabled }}
 {{- range $listener := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
 {{- $server := printf "%s-%s" $.release $listener.name }}
