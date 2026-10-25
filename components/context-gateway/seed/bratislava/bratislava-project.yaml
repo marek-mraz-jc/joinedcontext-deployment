@@ -19,10 +19,11 @@ spec:
       uri: https://data.gov.sk/id/legal-subject/00603481
     contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
   # The same quotas as every demo project (T-2873, PF-73): the mechanism stays, nobody reaches it.
+  # Public Endpoints: one per hub dataset (333 since T-5274) and room for the next batches.
   quotas:
     contextSpaces: 100
     residentPipelines: 100
-    publicEndpoints: 100
+    publicEndpoints: 450
     apps: 100
     ingestEventsPerSecond: 500
     agentRunsPerDay: 2000
