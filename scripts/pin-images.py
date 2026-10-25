@@ -12,6 +12,9 @@ when the repository's `ci` and `image.yml` runs on the commit are green and `cos
 the repository's own `image.yml` made on `main`. It writes the files and prints the commit
 message; it commits nothing (`.github/workflows/pin-images.yml` renders, commits and pushes).
 Exit 0 with nothing written when the pins are current or the commit is not ready yet.
+A branch preview image (tag pv-<slug>-<sha12>, T-5547) is never pinned: preview.yml builds and
+signs it, and this script reads only image.yml runs, the commit's own tag and image.yml's identity
+(tests/test_pins.py, "pv_tags_are_never_pinned").
 
 Tiers (T-4721): `dev` (the default) pins the `dev-<N>` images ship publishes, built and
 smoke-tested. `production` pins only a digest that also carries the `full-tests/v1` attestation
