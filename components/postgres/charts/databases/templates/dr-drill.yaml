@@ -8,6 +8,7 @@ copy lives in the source's namespace, so the job needs a Role there and never a 
 {{- if .enabled }}
 {{- $name := printf "%s-dr-drill" $.Values.cluster.name }}
 {{- $drill := printf "%s-drill" $.Values.cluster.name }}
+{{- $local := $.Values.localBackup.enabled }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -50,7 +51,20 @@ rules:
       - {{ $.Values.cluster.name }}-{{ add1 $n }}
       {{- end }}
       - {{ $drill }}-1
+      {{- if $local }}
+      - {{ $drill }}-dump
+      {{- end }}
     verbs: [create]
+  {{- if $local }}
+  # The local dump's restore pod (T-5556): created like the copy, and held to its name after.
+  - apiGroups: ['']
+    resources: [pods]
+    verbs: [create]
+  - apiGroups: ['']
+    resources: [pods]
+    resourceNames: [{{ $drill }}-dump]
+    verbs: [get, delete, watch, list]
+  {{- end }}
   - apiGroups: ['']
     resources: [configmaps]
     resourceNames: [{{ $name }}]
@@ -147,6 +161,74 @@ data:
                 name: {{ $d.backups.existingSecret }}
                 key: ACCESS_SECRET_KEY
   {{- end }}
+  {{- if $local }}
+  {{- /*
+    The newest nightly dump restored with the cluster's own image (T-5556). It holds
+    production-shaped data, so Postgres listens on no port (a Unix socket in the emptyDir only,
+    reached by `kubectl exec`), no Service selects it, it gets no API token and no mesh proxy,
+    the dump volume is mounted read-only, and the drill deletes it however it ends.
+  */}}
+  dump-pod.yaml: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: {{ $drill }}-dump
+      namespace: {{ $.Release.Namespace }}
+      labels:
+        joinedcontext.com/drill: "true"
+        app.kubernetes.io/component: database-dr-drill-dump
+      annotations:
+        linkerd.io/inject: disabled
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      activeDeadlineSeconds: {{ mul (add $d.timeoutMinutes 15) 60 }}
+      securityContext:
+        {{- /* The image's postgres user: initdb refuses a uid without a passwd entry. */}}
+        {{- toYaml (merge (dict "runAsUser" 26 "runAsGroup" 26) $.Values.securityDefaults.podSecurityContext) | nindent 8 }}
+      containers:
+        - name: postgres
+          image: {{ $d.clusterImage }}
+          securityContext:
+            {{- toYaml $.Values.securityDefaults.securityContext | nindent 12 }}
+          env:
+            - name: PGHOST
+              value: /var/lib/drill/run
+            - name: PGUSER
+              value: drill
+          {{- /* A superuser of another name than the dump's: pg_dumpall --clean drops and creates
+            every role it holds, and the connected one cannot be dropped. Throwaway, so no fsync. */}}
+          command:
+            - /bin/sh
+            - -c
+            - >-
+              mkdir -p /var/lib/drill/run &&
+              initdb -D /var/lib/drill/data -U drill --auth=trust >/dev/null &&
+              exec postgres -D /var/lib/drill/data -c listen_addresses= -c unix_socket_directories=/var/lib/drill/run
+              -c fsync=off -c full_page_writes=off -c synchronous_commit=off
+          readinessProbe:
+            exec:
+              command: [pg_isready, -q]
+            periodSeconds: 2
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { cpu: "1", memory: 1Gi }
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/drill
+            - name: backup
+              mountPath: /backup
+              readOnly: true
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: {{ $d.storageSize }}
+        - name: backup
+          persistentVolumeClaim:
+            claimName: {{ $.Values.cluster.name }}-local-backup
+            readOnly: true
+  {{- end }}
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -206,6 +288,8 @@ spec:
                   value: {{ $name | quote }}
                 - name: BACKUPS_ENABLED
                   value: {{ .backups.enabled | quote }}
+                - name: LOCAL_BACKUP
+                  value: {{ $local | quote }}
                 - name: TOLERANCE_PERCENT
                   value: {{ .tolerancePercent | quote }}
                 - name: MIN_MEM_MIB
