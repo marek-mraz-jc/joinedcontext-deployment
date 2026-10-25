@@ -1816,6 +1816,21 @@ def test_the_live_preview_reads_five_rows_anonymously_from_the_platform_only(the
     assert 'credentials: "omit"' in script and "innerHTML" not in script
 
 
+def test_a_quote_in_a_resource_address_stays_inside_the_shell_word(theme):
+    """T-5701 (F-DEP1-003): every address put into a command goes through shlex.quote."""
+    import shlex
+    bad = "https://dev.example/api/endpoint/a';id;'/file.csv"
+    for kind, url in (("c", bad), ("n", bad), ("o", bad), ("w", bad.replace("https", "wss")), ("m", bad)):
+        for example in theme.jc_examples(dict(_od(theme, kind), url=url)):
+            code = (example["code"] or "").split("\n", 1)[0]
+            if not code.startswith(("curl", "websocat", "claude")):
+                continue
+            words = shlex.split(code)
+            assert any(";id;" in w for w in words) and "id" not in words, (kind, code)
+    parquet = theme.jc_examples(dict(_od(theme, "c"), url=bad))[0]["code"]
+    assert parquet == "curl -L -o data.csv " + shlex.quote(bad)
+
+
 def test_each_kind_shows_how_to_use_it_and_a_private_one_sends_the_token(theme):
     ngsi = theme.jc_examples(_od(theme, "n"))
     assert ngsi[0]["code"].startswith("curl -H 'Accept: application/ld+json' 'https://dev.example/") and "limit=5" in ngsi[0]["code"]

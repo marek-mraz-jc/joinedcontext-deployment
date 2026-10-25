@@ -817,6 +817,19 @@ def test_an_archive_without_geojson_writes_nothing():
     assert run_bytes("banskabystrica", "dtm-bb-register-adries", buf.getvalue()) == []
 
 
+@requires_docker
+def test_an_archive_past_four_times_its_measured_size_writes_nothing():
+    """T-5701: the size gate refuses the zip before it is unpacked; Bento cannot cap the inflated size."""
+    import os
+    feats = [{"type": "Feature", "geometry": {"type": "Point", "coordinates": list(CONTROL[0][0])},
+              "properties": {"ID": 10170905.0, "ULICA": "Mikuláša Kováča", "OBEC": "Banská Bystrica"}}]
+    cap = 4 * entry("bb-dtm-bb-register-adries")["source"]["bytes"]
+    assert len(run_bytes("banskabystrica", "dtm-bb-register-adries", sjtsk_archive(feats))) == 1
+    padded = sjtsk_archive(feats, {"padding.bin": os.urandom(cap)})
+    assert len(padded) > cap
+    assert run_bytes("banskabystrica", "dtm-bb-register-adries", padded) == []
+
+
 def test_an_archive_in_a_crs_no_step_reprojects_stops_the_generator():
     e = {**entry("bb-dtm-bb-register-adries")}
     e["source"] = {**e["source"], "crs": "EPSG:3035"}

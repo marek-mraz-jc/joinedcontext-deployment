@@ -668,16 +668,27 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     elif s["kind"] == "zip-geojson":
         if s["crs"] != "EPSG:5514":
             sys.exit(f"{e['name']}: no step reprojects {s['crs']}")
-        steps.append("""\
-    # The whole ZIP as it came; its one GeoJSON member, picked by its ending: the archive sets no
+        # The measured size of the archive (`bytes` in the mapping) times four caps the download (T-5701).
+        cap = 4 * int(s["bytes"])
+        steps.append(f"""\
+    # The whole ZIP as it came, its size capped before it is unpacked: {s["bytes"]} bytes when measured,
+    # four times that at most (T-5701). Bento cannot cap what a member inflates to, so this packed size is
+    # the only bound. Its one GeoJSON member, picked by its ending: the archive sets no
     # UTF-8 flag, so a name with diacritics arrives as cp437 bytes. Coordinates are S-JTSK
     # (EPSG:5514), reprojected to WGS 84 in the mapping below (T-4317).
-    - unarchive:
-        format: zip
+    - try:
+        - mapping: |
+            root = if content().length() > {cap} {{ throw("the archive holds %v bytes; more than {cap} is not this dataset".format(content().length())) }} else {{ content() }}
+        - unarchive:
+            format: zip
+    # An errored zip skipped the unpack: it goes on as a problem, never as rows.
     - mapping: |
-        root = if @archive_filename.or("").lowercase().has_suffix(".geojson") { this } else { deleted() }
+        root = if errored() {{ {{ "problem": error() }} }} else if @archive_filename.or("").lowercase().has_suffix(".geojson") {{ this }} else {{ deleted() }}
+    # A refusal fails the run and writes none of its rows.
     - mapping: |
-        root = if this.features.or(null) == null { throw("the archive's GeoJSON holds no features") } else { this.features }""")
+        root = if this.problem.or(null) != null {{ throw(this.problem) }} else if this.features.or(null) == null {{ throw("the archive's GeoJSON holds no features") }} else {{ this.features }}
+    - mapping: |
+        root = if this.type() == "array" {{ this }} else {{ [] }}""")
     elif s["kind"] == "ckan-datastore":
         steps.append("""\
     - mapping: |
