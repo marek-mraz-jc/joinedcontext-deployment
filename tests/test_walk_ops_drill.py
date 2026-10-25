@@ -12,6 +12,7 @@ import os
 import shutil
 import subprocess
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -55,7 +56,7 @@ class Fake:
         self.project = False
         self.resources: dict[str, dict] = {}
         self.secret = "first-secret"
-        self.client = False
+        self.rotated_at = ""
         self.tokens: set[str] = set()
         self.minted = 0
         self.health_reads = 0
@@ -76,6 +77,16 @@ class Fake:
         else:
             row = {"pipeline": "walk-fetch", "state": "ok", "failedRuns": 0}
         return {"items": [row]}
+
+    @property
+    def client(self) -> bool:
+        """The Portal keeps the account's Keycloak client while the account exists (T-5626)."""
+        return "serviceaccounts/walk-caller" in self.resources
+
+    def rotate(self) -> None:
+        """A person's Issue new secret on the Portal: the old one is refused, the event recorded."""
+        self.secret = "rotated-secret"
+        self.rotated_at = time.strftime("%Y-%m-%dT%H:%M:%S.123456Z", time.gmtime())
 
     def rpm(self) -> int:
         return self.resources.get("endpoints/walk-read", {}).get("spec", {}).get("rateLimits", {}).get("requestsPerMinute", 0)
@@ -114,6 +125,9 @@ def handler_for(fake: Fake):
                 return self.send(200 if fake.project else 404, {"metadata": {"name": "walk-ops"}})
             if p == "/api/v1/projects/walk-ops/pipeline-health":
                 return self.send(200, fake.health())
+            if p == "/api/v1/projects/walk-ops/activity" and parse_qs(u.query).get("kind") == ["access.revoked"]:
+                rotated = [{"kind": "access.revoked", "time": fake.rotated_at}] if fake.rotated_at else []
+                return self.send(200, {"items": rotated})
             if p == "/api/v1/projects/walk-ops/activity":
                 items = [{"kind": "endpoint.rate-limited", "actor": "serviceaccount:walk-caller"}] \
                     if fake.flood_seen and "activity-names-caller" in fake.scenario else []
@@ -123,10 +137,6 @@ def handler_for(fake: Fake):
                 return self.send(200, fake.resources[key]) if key in fake.resources else self.send(404, {})
             if p.startswith("/api/endpoint/"):
                 return self.gateway()
-            if p == "/admin/realms/dev/clients":
-                return self.send(200, [{"id": "c1"}] if fake.client else [])
-            if p == "/admin/realms/dev/clients/c1/client-secret":
-                return self.send(200, {"value": fake.secret})
             return self.send(404, {})
 
         def gateway(self):
@@ -160,18 +170,10 @@ def handler_for(fake: Fake):
                     else:
                         fake.resources.pop(key, None)
                 return self.send(200, {})
-            if p == "/admin/realms/dev/clients":
-                spec = json.loads(body)
-                assert spec["clientId"] == "walk-ops-walk-caller"
-                assert spec["serviceAccountsEnabled"] and not spec["publicClient"]
-                fake.client = True
-                return self.send(201, {})
-            if p == "/admin/realms/dev/clients/c1/client-secret":
-                fake.secret = "rotated-secret"
-                return self.send(200, {"value": fake.secret})
             if p == "/realms/dev/protocol/openid-connect/token":
                 form = parse_qs(body)
-                if form.get("client_secret") != [fake.secret] or form.get("client_id") != ["walk-ops-walk-caller"]:
+                if not fake.client or form.get("client_secret") != [fake.secret] \
+                        or form.get("client_id") != ["walk-ops-walk-caller"]:
                     return self.send(401, {"error": "unauthorized_client"})
                 fake.minted += 1
                 token = f"token-{fake.minted}"
@@ -182,9 +184,6 @@ def handler_for(fake: Fake):
         def do_DELETE(self):
             p = urlparse(self.path).path
             fake.log.append("DELETE " + p)
-            if p == "/admin/realms/dev/clients/c1":
-                fake.client = False
-                return self.send(204)
             if p == "/api/v1/projects/walk-ops":
                 fake.project = False
                 return self.send(202, {})
@@ -211,18 +210,37 @@ def drill(tmp_path, stubs, scenario, *extra):
     server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(fake))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://localhost:{server.server_address[1]}"
-    env = {**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "KEYCLOAK_ADMIN_TOKEN": "admin-token"}
-    env.pop("JC_SERVER", None)
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("JC_", "KEYCLOAK_"))}
+    env["PATH"] = f"{bin_dir}:{os.environ['PATH']}"
+    process = subprocess.Popen(
+        ["bash", str(SCRIPT), "--run", "--server", base, "--org", "example.org", "--owner", "ana",
+         "--token-file", str(token), "--idm", f"{base}/realms/dev", "--rate", "2", "--seconds", "3",
+         "--poll", "1", "--wait-merge", "5", "--bound-a", "5", "--bound-c", "3", *extra],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env,
+    )
+    lines: list[str] = []
+
+    def person() -> None:
+        """Answers each prompt as the person on the Portal would: issue, then paste."""
+        for line in process.stdout:
+            lines.append(line)
+            if "issue the first secret of" in line:
+                process.stdin.write(fake.secret + "\n")
+                process.stdin.flush()
+            elif "C: issue a new secret of" in line:
+                fake.rotate()
+                process.stdin.write(fake.secret + "\n")
+                process.stdin.flush()
+
+    reader = threading.Thread(target=person, daemon=True)
+    reader.start()
     try:
-        result = subprocess.run(
-            ["bash", str(SCRIPT), "--run", "--server", base, "--org", "example.org", "--owner", "ana",
-             "--token-file", str(token), "--idm", f"{base}/realms/dev", "--rate", "2", "--seconds", "3",
-             "--poll", "1", "--wait-merge", "5", "--bound-a", "5", "--bound-c", "3", *extra],
-            check=False, capture_output=True, text=True, env=env, timeout=120,
-        )
+        process.wait(timeout=120)
+        reader.join(timeout=10)
+        stderr = process.stderr.read()
     finally:
         server.shutdown()
-    return result, fake
+    return subprocess.CompletedProcess(process.args, process.returncode, "".join(lines), stderr), fake
 
 
 def test_dry_by_default_prints_the_plan_and_calls_nothing(tmp_path, stubs):
@@ -272,8 +290,10 @@ def test_every_drill_passes_on_the_signal_it_asserts_and_cleans_up(tmp_path, stu
     # Teardown removed everything the drill made.
     assert fake.resources == {} and not fake.client and not fake.project
     # No secret or token reached the output.
-    for secret in ("first-secret", "rotated-secret", "person-token", "admin-token", "token-1"):
+    for secret in ("first-secret", "rotated-secret", "person-token", "token-1"):
         assert secret not in out + result.stderr
+    # No Keycloak administrator was needed (T-5626).
+    assert not [line for line in fake.log if "/admin/" in line]
     # Nothing shared was restarted and no other project was touched.
     assert not [line for line in fake.log if "/projects/" in line and "walk-ops" not in line]
 
