@@ -31,6 +31,9 @@
     "KpiPeriod": {
       "@id": "jc:KpiPeriod"
     },
+    "OnStreetParking": {
+      "@id": "sdm:OnStreetParking"
+    },
     "PointOfInterest": {
       "@id": "sdm:PointOfInterest"
     },
@@ -51,6 +54,9 @@
     },
     "agencyName": {
       "@id": "sdm:agencyName"
+    },
+    "allowedVehicleType": {
+      "@id": "sdm:allowedVehicleType"
     },
     "area": {
       "@id": "sdm:area"
@@ -218,6 +224,10 @@
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
+      "@type": "xsd:integer"
+    },
+    "totalSpotNumber": {
+      "@id": "sdm:totalSpotNumber",
       "@type": "xsd:integer"
     },
     "transportMode": {

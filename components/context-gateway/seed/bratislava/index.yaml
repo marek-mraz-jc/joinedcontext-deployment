@@ -49,6 +49,11 @@ bratislava-endpoint-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/end
 bratislava-endpoint-mhd-linky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-linky.yaml
 bratislava-policy-public-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-zastavky.yaml
 bratislava-policy-public-mhd-linky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-linky.yaml
+# The tourist coach stops (T-5435).
+bratislava-pipeline-coach-stops.yaml: projects/bratislava/pipelines/coach-stops/pipeline.yaml
+bratislava-pipeline-coach-stops-bento.yaml: projects/bratislava/pipelines/coach-stops/bento.yaml
+bratislava-endpoint-turisticke-autobusy.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-turisticke-autobusy.yaml
+bratislava-policy-public-turisticke-autobusy.yaml: projects/bratislava/spaces/bratislava/policies/public-turisticke-autobusy.yaml
 # The districts, places and statistics of the hub (T-5274): three pipelines over two DataSources,
 # each table of the matrix one public dataset with its own Endpoint and Policy.
 bratislava-datasource-districts.yaml: projects/bratislava/datasources/bratislava-districts.yaml

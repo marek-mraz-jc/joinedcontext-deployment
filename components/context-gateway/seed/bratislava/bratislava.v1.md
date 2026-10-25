@@ -257,6 +257,28 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### OnStreetParking
+
+One tourist coach stop of the city's list (data.bratislava.sk), placed by its name with OpenStreetMap; the list carries no coordinates.
+
+IRI: `sdm:OnStreetParking`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` |  |  | `schema:name` | The name of the station, counter site, stop, line, district, place or indicator as its publisher writes it. |
+| `category` | Property | [`CoachStopCategory`](#coachstopcategory) (list) |  |  | `sdm:category` | The kind of place (its table's code first, then the table's own word, such as `barrier-free`, `Kultúra, kostoly`), or of indicator (`quantitative`). |
+| `allowedVehicleType` | Property | `string` (list) |  |  | `sdm:allowedVehicleType` | What may stop there; a tourist coach stop of the city's list is for coaches (bus). |
+| `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The coach places of a long-term stop as the city's list counts them. |
+| `description` | Property | `string` |  |  | `schema:description` | What the place offers or how it is reached, or the hub table an indicator comes from. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The hub page or open-data service of the dataset the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### Entity
 
 The root every NGSI-LD entity class specialises.
@@ -301,3 +323,12 @@ The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' 
 | `tram` | Tram (GTFS route type 0). |
 | `bus` | Bus (GTFS route type 3). |
 | `trolleybus` | Trolleybus (GTFS route type 11). |
+
+### CoachStopCategory
+
+The OnStreetParking `category` values the city's tourist coach stops map to, a subset of the Smart Data Model's enum.
+
+| Value | Meaning |
+|---|---|
+| `shortTerm` | A short-term stop: passengers get on and off. |
+| `mediumTerm` | A long-term stop where a coach waits (the Smart Data Model has no longer term). |

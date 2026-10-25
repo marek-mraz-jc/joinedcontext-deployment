@@ -21,6 +21,7 @@ spec:
         - type: GtfsAgency
         - type: GtfsRoute
         - type: GtfsStop
+        - type: OnStreetParking
         - type: AdministrativeArea
         - type: PointOfInterest
         - type: KeyPerformanceIndicator
