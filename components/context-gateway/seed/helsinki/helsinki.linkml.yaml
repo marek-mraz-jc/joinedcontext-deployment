@@ -1783,7 +1783,7 @@ slots:
       on_delete: set-null
   statisticsTable:
     slot_uri: jc:statisticsTable
-    description: The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as zoo-visitors-day; `source` links it.
+    description: The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as web-visits; `source` links it.
     pattern: ^([a-z]+_[a-z]+_[0-9]{3}[a-z]|[a-z]+(-[a-z]+)+)$
     annotations:
       label:

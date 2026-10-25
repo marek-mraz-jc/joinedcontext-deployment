@@ -270,7 +270,7 @@ helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints
 helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml
 helsinki-policy-public-places.yaml: projects/helsinki/spaces/helsinki/policies/public-places.yaml
 # Helsinki area statistics (T-5258): one pipeline, one Endpoint and one public Policy per theme.
-helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-subdistrict-codes.yaml
+helsinki-datasource-statistics.yaml: projects/helsinki/datasources/hel-statistics-table.yaml
 helsinki-pipeline-statistics.yaml: projects/helsinki/pipelines/statistics/pipeline.yaml
 helsinki-pipeline-statistics-bento.yaml: projects/helsinki/pipelines/statistics/bento.yaml
 helsinki-endpoint-statistics-population.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-population.yaml
@@ -287,8 +287,8 @@ helsinki-endpoint-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/end
 helsinki-policy-public-statistics-welfare.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-welfare.yaml
 helsinki-endpoint-statistics-environment.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-environment.yaml
 helsinki-policy-public-statistics-environment.yaml: projects/helsinki/spaces/helsinki/policies/public-statistics-environment.yaml
-# Service usage (T-5258): the zoo visitor and web analytics counters, one more statistics theme.
-helsinki-datasource-zoo-visitors.yaml: projects/helsinki/datasources/hel-zoo-visitors.yaml
+# Service usage (T-5258, T-5667): the web analytics counters, one more statistics theme.
+helsinki-datasource-web-analytics-sites.yaml: projects/helsinki/datasources/hel-web-analytics-sites.yaml
 helsinki-pipeline-service-usage.yaml: projects/helsinki/pipelines/service-usage/pipeline.yaml
 helsinki-pipeline-service-usage-bento.yaml: projects/helsinki/pipelines/service-usage/bento.yaml
 helsinki-endpoint-statistics-services.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-statistics-services.yaml

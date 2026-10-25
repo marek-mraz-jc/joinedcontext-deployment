@@ -3,9 +3,13 @@
 # newest period of each table. One pipeline for every table: the tables below share the PXWEB JSON
 # query API, and each one names only its own path, dimensions and the breakdown it keeps.
 #
-# The DataSource's answer is the city's sub-district register (WFS Piirijako_osaalue, codes only):
-# an indicator of a sub-district links it as `refArea` only when the register holds that code,
-# because the space refuses a whole entity whose relationship names an entity it does not hold.
+# The DataSource's answer is the description of one Aluesarjat table (alu_vaerak_004r): an answer
+# that names no variable means stat.hel.fi is not serving its API, and the run fails at once. The
+# second read is the space's own sub-districts (the helsinki-subdistricts pipeline writes them from
+# the city's layer Piirijako_osaalue): an indicator of a sub-district links it as `refArea` only when
+# the space holds that code, because the space refuses a whole entity whose relationship names an
+# entity it does not hold. kartta.hel.fi, read here before for the codes, stopped answering the
+# cluster in October 2026 and every run then ended with nothing written (T-5667).
 # Each table is then asked for its newest period over every Helsinki area (codes 091*), one call a
 # second (rate limit hel_stat) to stat.hel.fi only, 30 s and 4 MiB each.
 #
@@ -25,7 +29,24 @@ pipeline:
   processors:
     - try:
         - mapping: |
-            let register = this.features.or([]).map_each(f -> f.properties.kokotunnus.or("").string()).filter(c -> c.re_match("^091[1-8][0-9]{6}$"))
+            root = if content().length() > 4194304 || this.variables.or([]).length() == 0 { throw("stat.hel.fi described no variable of alu_vaerak_004r: its API is not answering") } else { {} }
+        - branch:
+            # The sub-districts the space holds, read through the space's public Endpoint
+            # (helsinki-all) as anybody reads it.
+            request_map: |
+              root = { "type": "Query", "entities": [{ "type": "AdministrativeArea", "idPattern": "^urn:ngsi-ld:AdministrativeArea:[^:]+:[^:]+:subdistrict-091[1-8][0-9]{6}$" }], "attrs": ["districtCode"] }
+            processors:
+              - http:
+                  url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
+                  verb: POST
+                  headers: { Content-Type: application/json }
+                  timeout: 20s
+                  rate_limit: pipeline_egress
+              - mapping: |
+                  root = if content().length() > 4194304 { throw("the space answered %v bytes for its sub-districts; more than 4 MiB is not 148 codes".format(content().length())) } else { this }
+            result_map: root.held = this.or([]).map_each(e -> e.id.or("").string().re_replace_all("^.*:subdistrict-", ""))
+        - mapping: |
+            let register = this.held.or([]).filter(c -> c.re_match("^091[1-8][0-9]{6}$"))
             # Keep codes: "*" for every value of the dimension, else the listed codes. The area and
             # time dimensions are named apart; the query asks every 091* area and the newest period.
             # The first 16 tables are the sub-district series; the rest add one breakdown to a theme
@@ -247,7 +268,7 @@ pipeline:
               {"id": "hyv_vaes_039d", "theme": "welfare", "db": "Hyvinvointitilastot", "path": "vanh/vaes/hyv_vaes_039d.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Vanhusasuntokuntatyyppi": ["*"], "Ikä": ["ALL"], "Tiedot": ["*"]}},
               {"id": "hyv_vaes_039e", "theme": "welfare", "db": "Hyvinvointitilastot", "path": "vanh/vaes/hyv_vaes_039e.px", "area": "Alue", "time": "Vuosi", "every": "yearly", "keep": {"Äidinkieli": ["ALL"], "Tiedot": ["*"]}}
             ]
-            root = if $register.length() == 0 { throw("the sub-district register (Piirijako_osaalue) listed no sub-district") } else { $tables.map_each(t -> { "table": t, "register": $register }) }
+            root = if $register.length() == 0 { throw("the space holds no sub-district (AdministrativeArea subdistrict-*): run helsinki-subdistricts first") } else { $tables.map_each(t -> { "table": t, "register": $register }) }
         - unarchive: { format: json_array }
         - branch:
             request_map: |

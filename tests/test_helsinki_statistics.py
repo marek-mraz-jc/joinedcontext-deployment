@@ -2,9 +2,11 @@
 
 Bento runs the committed processors of `helsinki-pipeline-statistics-bento.yaml` over recorded
 answers of stat.hel.fi (`fixtures/helsinki/statistics/`, PXWEB JSON-stat 2.0, fetched on 2026-10-22
-with the query the pipeline sends, CC BY 4.0) and over the recorded sub-district register. The
-call to stat.hel.fi itself is the one step left out: each case feeds the table, the register and
-the recorded answer as the branch hands them on. Every entity is checked against the space's
+with the query the pipeline sends, CC BY 4.0), over the recorded table description the DataSource
+reads, and over the space's sub-districts as dev's helsinki-all Endpoint answered the pipeline's
+query on 2026-10-25 (`fixtures/helsinki/open-data/space-subdistricts.json`, T-5667). The calls
+themselves are the steps left out: each case feeds the table, the register and the recorded answer
+as the branch hands them on. Every entity is checked against the space's
 generated JSON Schema and against the vendored Smart Data Model. The edge cases are those answers
 edited in the one place they name.
 
@@ -40,9 +42,18 @@ def steps() -> list:
     return yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"][0]["try"]
 
 
+def branches() -> list:
+    """The two reads inside the mapping: the space's sub-districts, then one table of stat.hel.fi."""
+    return [p["branch"] for p in steps() if "branch" in p]
+
+
+TABLES = 2  # the step that turns the register into one message per table
+DECIDE = 5  # the step after the table's call
+
+
 def tables() -> dict:
-    """The table list of the first step, read by running it over a one-code register."""
-    out = bento(steps()[:1], {"features": [{"properties": {"kokotunnus": "0911101010"}}]})
+    """The table list of the tables step, read by running it over a one-code register."""
+    out = bento([steps()[TABLES]], {"held": ["0911101010"]})
     return {m["table"]["id"]: m["table"] for m in out[0]}
 
 
@@ -69,7 +80,7 @@ def bento(processors: list, message: dict) -> list:
 def decode(table: dict, answer: dict, register=REGISTER) -> dict | None:
     """The step after the call, as the runner's log and writer see it: the table's summary with
     its entities, or None when the step fails the message."""
-    out = bento([steps()[3]], {"table": table, "register": register, "answer": answer})
+    out = bento([steps()[DECIDE]], {"table": table, "register": register, "answer": answer})
     return out[0] if out else None
 
 
@@ -104,11 +115,21 @@ def test_the_register_becomes_one_message_per_table_and_an_empty_register_fails_
         # Only the other databases hold city-wide tables without an area dimension.
         assert t["area"] is not None or t.get("db") in {"Hyvinvointitilastot", "Ymparistotilasto", "SDG"}, t["id"]
         assert t["keep"], t["id"]
-    assert bento(steps()[:1], {"features": []}) == []
-    # The recorded register (the subdistricts fixture) yields the codes of its sub-districts only.
-    recorded = json.loads((ROOT / "tests/fixtures/helsinki/open-data/subdistricts.json").read_text())
-    out = bento(steps()[:1], recorded)
-    assert out[0][0]["register"] == ["0913301103", "0911102520"]
+    assert bento([steps()[TABLES]], {"held": []}) == []
+    # The space's recorded answer: its 148 sub-districts become the register, codes only.
+    recorded = json.loads((ROOT / "tests/fixtures/helsinki/open-data/space-subdistricts.json").read_text())
+    held = bento([{"mapping": branches()[0]["result_map"]}], recorded)[0]
+    out = bento([steps()[TABLES]], held)
+    assert len(out[0][0]["register"]) == 148 and "0911101010" in out[0][0]["register"]
+    assert sorted(out[0][0]["register"]) == sorted(e["districtCode"] for e in recorded)
+
+
+@requires_docker
+def test_the_first_read_fails_the_run_when_stat_hel_fi_describes_no_table():
+    described = json.loads((FIXTURES / "alu_vaerak_004r-description.json").read_text())
+    assert bento(steps()[:1], described) == [{}]
+    # An error page or an empty answer stops the run before the space and the 211 tables are asked.
+    assert bento(steps()[:1], {"error": "Service unavailable"}) == []
 
 
 @requires_docker
@@ -219,7 +240,7 @@ def test_a_net_migration_keeps_its_sign_and_a_region_table_keeps_the_helsinki_ro
 
 @requires_docker
 def test_a_city_wide_table_of_another_database_has_no_area_and_a_running_year_is_never_written(table):
-    request = next(p for p in steps() if "branch" in p)["branch"]["request_map"]
+    request = branches()[1]["request_map"]
     sdg = table["sdg_sdg_037b"]
     out = bento([{"mapping": request + "\nroot.db = @stat_db"}], {"table": sdg, "register": []})
     # No area clause: the table has none. The two newest years, since the newest is still running.
@@ -282,10 +303,18 @@ def test_each_theme_is_one_public_endpoint_whose_policy_reads_only_its_own_indic
 def test_the_pipeline_reads_only_the_city_hosts_and_keeps_ten_years_of_history():
     text = MAPPING.read_text()
     assert "url: https://stat.hel.fi/api/v1/fi/${! @stat_db }/${! @stat_path }" in text
-    calls = next(p for p in steps() if "branch" in p)["branch"]["processors"]
+    calls = branches()[1]["processors"]
     assert calls[0]["http"]["timeout"] == "30s" and calls[0]["http"]["rate_limit"] == "hel_stat"
     source = yaml.safe_load((HELSINKI / "helsinki-datasource-statistics.yaml").read_text())
-    assert source["spec"]["http"]["url"].startswith("https://kartta.hel.fi/ws/geoserver/avoindata/wfs?")
+    assert source["spec"]["http"]["url"] == "https://stat.hel.fi/api/v1/fi/Aluesarjat/vrm/vaerak/alu_vaerak_004r.px"
+    assert source["spec"]["http"]["timeout"] == "30s"
+    # The register comes from the space, through its public Endpoint, never from kartta.hel.fi:
+    # the cluster stopped reaching that host in October 2026 and every run wrote nothing (T-5667).
+    held = branches()[0]["processors"]
+    assert held[0]["http"]["url"] == ("${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb"
+                                      "/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues")
+    assert held[0]["http"]["timeout"] == "20s" and "oauth2" not in held[0]["http"] and "4194304" in held[1]["mapping"]
+    assert "https://kartta.hel.fi" not in text
     rates = {r["label"]: r["local"] for r in yaml.safe_load(
         (ROOT / "components/pipeline-runner/streams/resources.yaml").read_text())["rate_limit_resources"]}
     assert rates["hel_stat"] == {"count": 1, "interval": "1s"}
