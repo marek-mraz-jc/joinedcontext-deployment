@@ -215,7 +215,8 @@ jobs:
       # (own_tree), and each environment is rendered once for all workers (T-2895).
       # Every test file lands in exactly one shard, balanced by the seconds in .ci/test-durations.json
       # (scripts/ci/test-shard.py, T-4789: the positional split put 13.6 of 26 minutes in shard 4).
-      # The slowest durations go to the log; refresh the table with --record from a --durations=0 run.
+      # The slowest durations go to the log; every test's seconds go to the shard's junit report,
+      # which the test-durations job adds up into the refreshed table on main (T-5551).
       # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
       # rebuilds the standalone assistant's bundle and compares it with the committed one.
       # T-5357: tests/test_portal_pin_reads_the_seed.py holds every seed manifest to the jc-core schemas of

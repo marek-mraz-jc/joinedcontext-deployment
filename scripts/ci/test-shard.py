@@ -28,9 +28,9 @@ ROOT = Path(__file__).resolve().parents[2]
 TABLE = ROOT / ".ci" / "test-durations.json"
 # Shard 1's own steps took 120 s of wall in run 40123797109 (kyverno apply 85, temporal audit 17,
 # docs pin 11, gitleaks 4, kyverno test 3); the table counts test seconds, and pytest -n auto
-# finishes about PARALLEL of them per wall second (the table's 9,277 s over the 3,031 s of pytest
-# wall the four shards of run 40133809806 took).
-PARALLEL = 3
+# finishes about PARALLEL of them per wall second (run 40149033966: its 10,698 s of test time, the
+# table, in 2,824 s of pytest wall over the four shards).
+PARALLEL = 3.8
 SHARD_ONE_STEPS = round(120 * PARALLEL)
 # `12.34s call     test_x.py::test_y[param]` (setup and teardown lines count too)
 DURATION = re.compile(r"^(\d+(?:\.\d+)?)s (?:call|setup|teardown)\s+(?:tests/)?(test_[\w]+\.py)::")
