@@ -215,7 +215,8 @@ jobs:
       # (own_tree), and each environment is rendered once for all workers (T-2895).
       # Every test file lands in exactly one shard, balanced by the seconds in .ci/test-durations.json
       # (scripts/ci/test-shard.py, T-4789: the positional split put 13.6 of 26 minutes in shard 4).
-      # The slowest durations go to the log; refresh the table with --record from a --durations=0 run.
+      # Every duration goes to the log (--durations=0), so the table refreshes from a main run: the
+      # four shard logs concatenated, timestamps cut, into scripts/ci/test-shard.py --record.
       # T-4694: the platform commit components/ai/bundle.lock names, so tests/test_ai_app.py
       # rebuilds the standalone assistant's bundle and compares it with the committed one.
       # T-5357: tests/test_portal_pin_reads_the_seed.py holds every seed manifest to the jc-core schemas of
@@ -235,7 +236,7 @@ jobs:
             "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
           echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
-      - run: pytest -q -n auto --dist loadgroup --durations=30 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+      - run: pytest -q -n auto --dist loadgroup --durations=0 $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
       # How each seed pipeline creates history rows, per pipeline x type x attribute, with a verdict
       # (T-4844); tests/test_temporal_audit.py fails on a row that is not ok, the report is the table.
       - name: temporal audit of the seeds

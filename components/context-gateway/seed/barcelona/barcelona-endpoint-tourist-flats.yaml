@@ -15,7 +15,7 @@ metadata:
     en: The licensed tourist flats in Barcelona with their places, their Catalan tourism register number and the building they are in (street, number, district and barri), without floor or door.
 spec:
   contextSpaceRef: barcelona
-  slug: h2mmrhmbg659m2wjwcegftzpdpd0jepk
+  slug: 7mzocysrtkfg4ncungcvui6hrvgj7usm
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-tourist-flats
