@@ -19,12 +19,17 @@ spec:
     - AdministrativeArea
     - BudgetLine
     - Vehicle
-    - Garden
-    - Tree
+    - EmissionSource
+    - RadonRiskArea
+    - FloodZone
+    - FloodDefence
+    - WeatherObserved
     - PublicTransportRoute
     - GtfsStop
     - GtfsAccessPoint
     - FareZone
+    - Garden
+    - Tree
     - OnStreetParking
     - ParkingGroup
     - RestrictedTrafficArea
