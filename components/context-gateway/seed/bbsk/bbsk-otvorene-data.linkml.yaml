@@ -9715,71 +9715,6 @@ slots:
           de: Ressort
         annotations:
           generated: cs en de
-  riaditel:
-    description: The source column `Riaditeľ`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Riaditeľ
-          cs: Ředitel
-          en: Director
-          de: Direktor
-        annotations:
-          generated: cs en de
-  riaditelEmail:
-    description: The source column `Riaditeľ___email`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Riaditeľ – e-mail
-          cs: Ředitel – e-mail
-          en: Director – e-mail
-          de: Direktor – E-Mail
-        annotations:
-          generated: sk cs en de
-  riaditelMobilnyTelefon:
-    description: The source column `Riaditeľ___mobilný_telefón`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Riaditeľ – mobilný telefón
-          cs: Ředitel – mobilní telefon
-          en: Director – mobile phone
-          de: Direktor – Mobiltelefon
-        annotations:
-          generated: sk cs en de
-  riaditelPevnaLinka:
-    description: The source column `Riaditeľ___pevná_linka`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Riaditeľ – pevná linka
-          cs: Ředitel – pevná linka
-          en: Director – landline
-          de: Direktor – Festnetz
-        annotations:
-          generated: sk cs en de
-  riaditelPracMobil:
-    description: The source column `Riaditeľ___prac__mobil`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Riaditeľ – pracovný mobil
-          cs: Ředitel – pracovní mobil
-          en: Director – work mobile
-          de: Direktor – Diensthandy
-        annotations:
-          generated: sk cs en de
   rimskokatolickaCirkev:
     description: The source column `Rímskokatolícka_cirkev`.
     range: float
@@ -10511,19 +10446,6 @@ slots:
           de: Sitz
         annotations:
           generated: cs en de
-  sidloDodavatela:
-    description: The source column `Sídlo_dodávateľa`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Sídlo dodávateľa
-          cs: Sídlo dodavatele
-          en: Supplier's seat
-          de: Sitz des Lieferanten
-        annotations:
-          generated: cs en de
   sidloObjednavatela:
     description: The source column `Sídlo_objednávateľa`.
     annotations:
@@ -11247,32 +11169,6 @@ slots:
           de: Bürgermeister – Nachname
         annotations:
           generated: sk cs en de
-  statutari:
-    description: The source column `Statutari`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Štatutári
-          cs: Statutáři
-          en: Statutory representatives
-          de: Vertretungsberechtigte
-        annotations:
-          generated: sk cs en de
-  statutarnyZastupca:
-    description: The source column `Štatutárny_zástupca`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Štatutárny zástupca
-          cs: Statutární zástupce
-          en: Statutory representative
-          de: Gesetzlicher Vertreter
-        annotations:
-          generated: cs en de
   stav:
     description: The source column `stav`.
     annotations:
@@ -12753,19 +12649,6 @@ slots:
           de: Straße
         annotations:
           generated: sk cs en de
-  ulicaACislo:
-    description: The source column `Ulica_a_cislo`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Ulica a číslo
-          cs: Ulice a číslo
-          en: Street and number
-          de: Straße und Hausnummer
-        annotations:
-          generated: sk cs en de
   ulicaACisloDomu:
     description: The source column `Ulica_a_číslo_domu`.
     annotations:
@@ -14143,7 +14026,6 @@ classes:
     - poznamka
     - priloha
     - rezort
-    - sidloDodavatela
     - sidloObjednavatela
     - sumaSpoluVEUR
     - sumaVEUR
@@ -14259,12 +14141,10 @@ classes:
     - schvalenaVyskaDotacie
     - sidlo
     - skutocneCerpanie
-    - statutarnyZastupca
     - stavFinanVyuctovania
     - stavZiadosti
     - typDotacie
     - typTabora
-    - ulicaACislo
     - vSuladeSPrioritamiPoskytovaniaDotacii
     - vZN
     - vratenaNedocerpanaCastDotacieDna
@@ -14280,7 +14160,6 @@ classes:
     - dataProvider
     - source
     - isPartOf
-    - adresa
     - cisloObjednavky
     - cisloZmluvy
     - dIC
@@ -14929,10 +14808,6 @@ classes:
     - priprNaOU
     - pripravny8Spolu
     - pripravny8Zeny
-    - riaditel
-    - riaditelEmail
-    - riaditelPevnaLinka
-    - riaditelPracMobil
     - sTAV
     - skola
     - skolskaJedalen
@@ -14940,7 +14815,6 @@ classes:
     - skupinaOdborovVzdelania
     - starostaMeno
     - starostaPriezvisko
-    - statutari
     - stupenVzdelania
     - supisneCislo
     - sustavnaPripravaNaPovolanie
@@ -14954,7 +14828,6 @@ classes:
     - typSaSZSkratka
     - typUniverzity
     - ulica
-    - ulicaACislo
     - univerzita
     - upravene
     - vydajnaSkolskaJedalen
@@ -15103,10 +14976,6 @@ classes:
     - publishedA
     - publishedB
     - rankingPer
-    - riaditel
-    - riaditelEmail
-    - riaditelMobilnyTelefon
-    - riaditelPevnaLinka
     - scitac
     - shortDescr
     - sidloPoskytovatela
@@ -15307,7 +15176,6 @@ classes:
     - dataProvider
     - source
     - isPartOf
-    - adresa
     - datumVystavenia
     - dodavatel
     - iCO

@@ -116,13 +116,7 @@ jc:Grant a owl:Class,
             owl:onProperty jc:okres ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
-            owl:onProperty jc:ulicaACislo ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
             owl:onProperty jc:pozadovaneProstriedky ],
-        [ a owl:Restriction ;
-            owl:maxCardinality 1 ;
-            owl:onProperty jc:statutarnyZastupca ],
         [ a owl:Restriction ;
             owl:maxCardinality 1 ;
             owl:onProperty jc:ePFRVSucet ],
@@ -217,13 +211,6 @@ jc:akcia a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
 
-jc:boolean a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:boolean ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:cDodavatela a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "cDodavatela" ;
@@ -238,13 +225,6 @@ jc:cZmluvy a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
 
-jc:curie a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:curie ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:dataProvider a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "dataProvider" ;
@@ -252,13 +232,6 @@ jc:dataProvider a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
-
-jc:date_or_datetime a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:date_or_datetime ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:datumDoruceniaVyuctovania a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -291,13 +264,6 @@ jc:datumZverejneniaZmluvy a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
 
-jc:decimal a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:decimal ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:denneTabory a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "denneTabory" ;
@@ -311,13 +277,6 @@ jc:dotacnyTitul a owl:ObjectProperty,
     skos:definition "The source column `Dotačný_titul`." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:double a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:double ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:druh a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -389,20 +348,6 @@ jc:isPartOf a owl:ObjectProperty,
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
 
-jc:jsonpath a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:jsonpath ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
-jc:jsonpointer a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:jsonpointer ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:kampan a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "kampan" ;
@@ -434,33 +379,12 @@ jc:name a owl:ObjectProperty,
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
 
-jc:ncname a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:ncname ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
-jc:nodeidentifier a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:nodeidentifier ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
 jc:obecPO a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "obecPO" ;
     skos:definition "The source column `Obec__PO_`." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:objectidentifier a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:objectidentifier ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:observedAt a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -644,20 +568,6 @@ jc:source a owl:ObjectProperty,
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld" .
 
-jc:sparqlpath a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:sparqlpath ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
-
-jc:statutarnyZastupca a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "statutarnyZastupca" ;
-    skos:definition "The source column `Štatutárny_zástupca`." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
-    jc:ngsi_ld_kind "Property" .
-
 jc:stavFinanVyuctovania a owl:ObjectProperty,
         linkml:SlotDefinition ;
     rdfs:label "stavFinanVyuctovania" ;
@@ -678,13 +588,6 @@ jc:stavZiadosti a owl:ObjectProperty,
     skos:definition "The source column `Stav_žiadosti`." ;
     skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
     jc:ngsi_ld_kind "Property" .
-
-jc:time a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:time ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:typ a owl:ObjectProperty,
         linkml:SlotDefinition ;
@@ -715,20 +618,6 @@ jc:type a owl:ObjectProperty,
     jc:jsonld_keyword "@type" ;
     jc:ngsi_ld_kind "Property" ;
     jc:upstream_source "ETSI NGSI-LD core context v1.8" .
-
-jc:ulicaACislo a owl:ObjectProperty,
-        linkml:SlotDefinition ;
-    rdfs:label "ulicaACislo" ;
-    skos:definition "The source column `Ulica_a_číslo`." ;
-    skos:inScheme <https://joinedcontext.com/models/sdm/extensions/Grant> ;
-    jc:ngsi_ld_kind "Property" .
-
-jc:uriorcurie a owl:Class,
-        linkml:TypeDefinition ;
-    rdfs:subClassOf [ a owl:Restriction ;
-            owl:onDataRange jc:uriorcurie ;
-            owl:onProperty linkml:topValue ;
-            owl:qualifiedCardinality 1 ] .
 
 jc:vSuladeSPrioritamiPoskytovaniaDotacii a owl:ObjectProperty,
         linkml:SlotDefinition ;

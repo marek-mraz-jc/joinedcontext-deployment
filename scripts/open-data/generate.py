@@ -986,11 +986,26 @@ def sdm_schema(e: dict) -> Path:
     return path
 
 
+# Personal data never reaches a public space (ADR-N-054, T-5697): a director's or statutory
+# representative's name, phone and e-mail, and a supplier's street (a sole trader's IČO names a
+# person, whose seat is their home); the supplier's name, IČO, town and postcode stay public.
+PERSONAL = re.compile(r"^(riaditel|statutar)", re.IGNORECASE)
+SUPPLIERS = re.compile(r"^bbsk-(dodavatelia|dotacie|faktury|objednavky|zmluvy)-")
+SUPPLIER_STREET = {"adresa", "ulicaACislo", "sidloDodavatela"}
+
+
+def impersonal(e: dict) -> None:
+    """Takes the personal columns out of a dataset's mapping before anything is written from it."""
+    street = SUPPLIER_STREET if SUPPLIERS.match(e["name"]) else set()
+    e["properties"] = {a: p for a, p in e["properties"].items() if not PERSONAL.match(a) and a not in street}
+
+
 def render() -> dict[Path, str]:
     mapping = yaml.safe_load(MAPPING.read_text())
     mapped = [e for e in mapping["datasets"] if e["status"] == "mapped"
               and (e.get("existing") or {}).get("covers") != "whole"]
     for e in mapped:
+        impersonal(e)
         sdm_schema(e)
         if e["name"] in NAMES and "name" not in e["properties"]:
             template = NAMES[e["name"]]

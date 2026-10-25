@@ -40,6 +40,9 @@ spec.loader.exec_module(generate)
 
 MAPPING = yaml.safe_load(generate.MAPPING.read_text())
 SEEDED = [e for e in MAPPING["datasets"] if e["status"] == "mapped" and (e.get("existing") or {}).get("covers") != "whole"]
+# As the generator writes them: without the columns that name or reach a person (T-5697).
+for _e in SEEDED:
+    generate.impersonal(_e)
 SLUGS = generate.slugs(SEEDED)
 
 
@@ -86,6 +89,20 @@ def sdm_errors(entity: dict, model_of: str | None = None) -> list[str]:
 def test_the_committed_seed_is_what_the_mapping_generates():
     result = subprocess.run([sys.executable, str(SCRIPT), "--check"], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_no_generated_pipeline_or_model_publishes_a_persons_contact_or_a_suppliers_street():
+    """ADR-N-054, T-5697: a director's or statutory representative's name, phone and e-mail, and a
+    supplier's street (a sole trader's home), never reach the public od spaces."""
+    personal = re.compile(r'"(riaditel\w*|statutar\w*)"\s*:|^\s*-?\s*(riaditel\w*|statutar\w*):?\s*$', re.M | re.I)
+    street = re.compile(r'"(adresa|ulicaACislo|sidloDodavatela)"\s*:')
+    found = []
+    for path in sorted(SEED.glob("*/*-od-pipeline-*-bento.yaml")) + sorted(SEED.glob("*/*-otvorene-data.linkml.yaml")):
+        text = path.read_text()
+        found += [f"{path.name}: {m.group(0).strip()}" for m in personal.finditer(text)]
+        if re.search(r"-od-pipeline-(dodavatelia|dotacie-2|faktury|objednavky|zmluvy)-bento", path.name):
+            found += [f"{path.name}: {m.group(0)}" for m in street.finditer(text)]
+    assert not found, found
 
 
 def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():

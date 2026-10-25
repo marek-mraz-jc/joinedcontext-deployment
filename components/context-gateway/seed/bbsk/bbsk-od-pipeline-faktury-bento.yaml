@@ -37,7 +37,7 @@ pipeline:
                 meta rows = this.rowCount
                 root = ""
             - http:
-                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0/query?where=I%C4%8CO%20IS%20NOT%20NULL%20AND%20I%C4%8CO%20%3C%3E%20%27%27&outFields=%C4%8C%C3%ADslo_fakt%C3%BAry,Suma,%C4%8C%C3%ADslo_zmluvy,%C4%8C%C3%ADslo_objedn%C3%A1vky,D%C3%A1tum_splatnosti,Dod%C3%A1vate%C4%BE,Adresa,DI%C4%8C,D%C3%A1tum_doru%C4%8Denia,Predmet_fakt%C3%BAry,I%C4%8CO,Rok&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
+                url: "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0/query?where=I%C4%8CO%20IS%20NOT%20NULL%20AND%20I%C4%8CO%20%3C%3E%20%27%27&outFields=%C4%8C%C3%ADslo_fakt%C3%BAry,Suma,%C4%8C%C3%ADslo_zmluvy,%C4%8C%C3%ADslo_objedn%C3%A1vky,D%C3%A1tum_splatnosti,Dod%C3%A1vate%C4%BE,DI%C4%8C,D%C3%A1tum_doru%C4%8Denia,Predmet_fakt%C3%BAry,I%C4%8CO,Rok&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=${! @offset }&resultRecordCount=1000"
                 verb: GET
                 headers:
                   Accept: application/geo+json
@@ -119,7 +119,7 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
-        let local = "faktury-" + {"Číslo_faktúry": this.properties."Číslo_faktúry", "Suma": this.properties."Suma", "Číslo_zmluvy": this.properties."Číslo_zmluvy", "Číslo_objednávky": this.properties."Číslo_objednávky", "Dátum_splatnosti": this.properties."Dátum_splatnosti", "Dodávateľ": this.properties."Dodávateľ", "Adresa": this.properties."Adresa", "DIČ": this.properties."DIČ", "Dátum_doručenia": this.properties."Dátum_doručenia", "Predmet_faktúry": this.properties."Predmet_faktúry", "IČO": this.properties."IČO", "Rok": this.properties."Rok"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
+        let local = "faktury-" + {"Číslo_faktúry": this.properties."Číslo_faktúry", "Suma": this.properties."Suma", "Číslo_zmluvy": this.properties."Číslo_zmluvy", "Číslo_objednávky": this.properties."Číslo_objednávky", "Dátum_splatnosti": this.properties."Dátum_splatnosti", "Dodávateľ": this.properties."Dodávateľ", "DIČ": this.properties."DIČ", "Dátum_doručenia": this.properties."Dátum_doručenia", "Predmet_faktúry": this.properties."Predmet_faktúry", "IČO": this.properties."IČO", "Rok": this.properties."Rok"}.format_json(no_indent: true).hash("sha256").encode("hex").slice(0, 24).re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("Invoice", "bbsk.sk", env("JC_SPACE"), $local),
           "type": "Invoice",
@@ -129,14 +129,13 @@ pipeline:
           "cisloObjednavky": this.properties."Číslo_objednávky".apply("string"),
           "datumSplatnosti": this.properties."Dátum_splatnosti".apply("date"),
           "dodavatel": this.properties."Dodávateľ".apply("string"),
-          "adresa": this.properties."Adresa".apply("string"),
           "dIC": this.properties."DIČ".apply("string"),
           "datumDorucenia": this.properties."Dátum_doručenia".apply("date"),
           "predmetFaktury": this.properties."Predmet_faktúry".apply("string"),
           "iCO": this.properties."IČO".apply("string"),
           "rok": this.properties."Rok".apply("string"),
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj (CC BY 4.0)" },
-          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0/query?where=I%C4%8CO%20IS%20NOT%20NULL%20AND%20I%C4%8CO%20%3C%3E%20%27%27&outFields=%C4%8C%C3%ADslo_fakt%C3%BAry,Suma,%C4%8C%C3%ADslo_zmluvy,%C4%8C%C3%ADslo_objedn%C3%A1vky,D%C3%A1tum_splatnosti,Dod%C3%A1vate%C4%BE,Adresa,DI%C4%8C,D%C3%A1tum_doru%C4%8Denia,Predmet_fakt%C3%BAry,I%C4%8CO,Rok&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
+          "source": { "type": "Property", "value": "https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Fakt%C3%BAry/FeatureServer/0/query?where=I%C4%8CO%20IS%20NOT%20NULL%20AND%20I%C4%8CO%20%3C%3E%20%27%27&outFields=%C4%8C%C3%ADslo_fakt%C3%BAry,Suma,%C4%8C%C3%ADslo_zmluvy,%C4%8C%C3%ADslo_objedn%C3%A1vky,D%C3%A1tum_splatnosti,Dod%C3%A1vate%C4%BE,DI%C4%8C,D%C3%A1tum_doru%C4%8Denia,Predmet_fakt%C3%BAry,I%C4%8CO,Rok&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000" },
           "isPartOf": { "type": "Property", "value": "https://opendata.dev.joinedcontext.com/dataset/bbsk-faktury-422b35" }
         }.filter(entry -> entry.value != null)
     # One request per run's batch rather than one per row.

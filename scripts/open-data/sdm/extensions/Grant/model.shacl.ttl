@@ -81,12 +81,6 @@ jc:Grant a sh:NodeShape ;
             sh:order 27 ;
             sh:path jc:pocetDeti ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Štatutárny_zástupca`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 45 ;
-            sh:path jc:statutarnyZastupca ],
-        [ sh:datatype xsd:string ;
             sh:description "The source column `Sídlo`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
@@ -122,23 +116,12 @@ jc:Grant a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 19 ;
             sh:path jc:kampan ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
         [ sh:datatype xsd:float ;
             sh:description "The source column `Rozdiel_na_vrátenie`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 38 ;
             sh:path jc:rozdielNaVratenie ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Stav_žiadosti`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 48 ;
-            sh:path jc:stavZiadosti ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `IČO`." ;
             sh:maxCount 1 ;
@@ -175,11 +158,6 @@ jc:Grant a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 29 ;
             sh:path jc:popisDotacnehoTitulu ],
-        [ sh:description "The catalogue dataset the row belongs to, where its licence and its other rows are." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 2 ;
-            sh:path jc:isPartOf ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Číslo`." ;
             sh:maxCount 1 ;
@@ -217,12 +195,6 @@ jc:Grant a sh:NodeShape ;
             sh:order 3 ;
             sh:path jc:akcia ],
         [ sh:datatype xsd:string ;
-            sh:description "The source column `Stav_vybav.`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 47 ;
-            sh:path jc:stavVybav ],
-        [ sh:datatype xsd:string ;
             sh:description "The source column `Počet_dní`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
@@ -246,18 +218,6 @@ jc:Grant a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 8 ;
             sh:path jc:datumUhradyDotacie ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Typ`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 49 ;
-            sh:path jc:typ ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Názov`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 21 ;
-            sh:path sdm:name ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Poznámky`." ;
             sh:maxCount 1 ;
@@ -324,12 +284,6 @@ jc:Grant a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 34 ;
             sh:path jc:prveDorucenie ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Vyplatená_suma_spolu___súčet`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 56 ;
-            sh:path jc:vyplatenaSumaSpoluSucet ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Dátum_realizácie_projektu`." ;
             sh:maxCount 1 ;
@@ -348,12 +302,6 @@ jc:Grant a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 60 ;
             sh:path geojson:geometry ],
-        [ sh:datatype xsd:string ;
-            sh:description "The source column `Typ_dotácie`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 50 ;
-            sh:path jc:typDotacie ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Požadované_prostriedky`." ;
             sh:maxCount 1 ;

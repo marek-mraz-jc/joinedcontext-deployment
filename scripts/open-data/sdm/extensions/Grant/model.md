@@ -66,14 +66,12 @@ Specialises `Entity`.
 | `schvalenaVyskaDotacie` | Property | `float` |  |  | `jc:schvalenaVyskaDotacie` | The source column `Schválená_výška_dotácie`. |
 | `sidlo` | Property | `string` |  |  | `jc:sidlo` | The source column `Sídlo`. |
 | `skutocneCerpanie` | Property | `float` |  |  | `jc:skutocneCerpanie` | The source column `Skutočné_čerpanie`. |
-| `statutarnyZastupca` | Property | `string` |  |  | `jc:statutarnyZastupca` | The source column `Štatutárny_zástupca`. |
 | `stavFinanVyuctovania` | Property | `string` |  |  | `jc:stavFinanVyuctovania` | The source column `Stav_finan__vyúčtovania`. |
 | `stavVybav` | Property | `string` |  |  | `jc:stavVybav` | The source column `Stav_vybav.`. |
 | `stavZiadosti` | Property | `string` |  |  | `jc:stavZiadosti` | The source column `Stav_žiadosti`. |
 | `typ` | Property | `string` |  |  | `jc:typ` | The source column `Typ`. |
 | `typDotacie` | Property | `string` |  |  | `jc:typDotacie` | The source column `Typ_dotácie`. |
 | `typTabora` | Property | `string` |  |  | `jc:typTabora` | The source column `Typ_tábora`. |
-| `ulicaACislo` | Property | `string` |  |  | `jc:ulicaACislo` | The source column `Ulica_a_číslo`. |
 | `vSuladeSPrioritamiPoskytovaniaDotacii` | Property | `string` |  |  | `jc:vSuladeSPrioritamiPoskytovaniaDotacii` | The source column `V_súlade_s_prioritami_poskytovania_dotácií`. |
 | `vZN` | Property | `string` |  |  | `jc:vZN` | The source column `VZN`. |
 | `vratenaNedocerpanaCastDotacieDna` | Property | `string` |  |  | `jc:vratenaNedocerpanaCastDotacieDna` | The source column `Vrátená_nedočerpaná_časť_dotácie_dňa`. |

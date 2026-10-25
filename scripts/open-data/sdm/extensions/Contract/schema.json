@@ -190,10 +190,6 @@
           "type": "integer",
           "description": "Property. Model:'https://schema.org/Integer'. The source column `Rok`."
         },
-        "sidloDodavatela": {
-          "type": "string",
-          "description": "Property. Model:'https://schema.org/Text'. The source column `Sídlo_dodávateľa`."
-        },
         "sidloObjednavatela": {
           "type": "string",
           "description": "Property. Model:'https://schema.org/Text'. The source column `Sídlo_objednávateľa`."
