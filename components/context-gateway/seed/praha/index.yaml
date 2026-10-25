@@ -31,6 +31,7 @@ praha-datasource-ticket-points.yaml: projects/praha/datasources/pid-ticket-point
 praha-datasource-budget.yaml: projects/praha/datasources/mhmp-budget.yaml
 praha-datasource-park-and-ride-occupancy.yaml: projects/praha/datasources/golemio-park-and-ride.yaml
 praha-datasource-waste-fill.yaml: projects/praha/datasources/golemio-waste-containers.yaml
+praha-datasource-waste-containers.yaml: projects/praha/datasources/golemio-waste-all-containers.yaml
 praha-datasource-pid-vehicles.yaml: projects/praha/datasources/golemio-pid-vehicles.yaml
 praha-datasource-pid-lines.yaml: projects/praha/datasources/ipr-pid-lines.yaml
 praha-datasource-pid-stops.yaml: projects/praha/datasources/pid-stops.yaml
@@ -80,6 +81,7 @@ praha-pipeline-ticket-points.yaml: projects/praha/pipelines/ticket-points/pipeli
 praha-pipeline-budget.yaml: projects/praha/pipelines/budget/pipeline.yaml
 praha-pipeline-park-and-ride-occupancy.yaml: projects/praha/pipelines/park-and-ride-occupancy/pipeline.yaml
 praha-pipeline-waste-fill.yaml: projects/praha/pipelines/waste-fill/pipeline.yaml
+praha-pipeline-waste-containers.yaml: projects/praha/pipelines/waste-containers/pipeline.yaml
 praha-pipeline-bike-stations-bento.yaml: projects/praha/pipelines/bike-stations/bento.yaml
 praha-pipeline-bike-availability-bento.yaml: projects/praha/pipelines/bike-availability/bento.yaml
 praha-pipeline-air-quality-bento.yaml: projects/praha/pipelines/air-quality/bento.yaml
@@ -165,6 +167,7 @@ praha-pipeline-geo-special-bento.yaml: projects/praha/pipelines/geo-special/bent
 praha-pipeline-geo-no-parking-bento.yaml: projects/praha/pipelines/geo-no-parking/bento.yaml
 praha-pipeline-geo-machines-bento.yaml: projects/praha/pipelines/geo-machines/bento.yaml
 praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.yaml
+praha-pipeline-waste-containers-bento.yaml: projects/praha/pipelines/waste-containers/bento.yaml
 # The Golemio key of the three Golemio datasources above, SOPS-encrypted to the dev age recipient
 # (age1dwqmmfzz…3mwj55, the public half of portal-age-identity); the reconciler decrypts it at
 # apply time (CC-06, Architecture/06 §1.4). Never a plaintext value here.

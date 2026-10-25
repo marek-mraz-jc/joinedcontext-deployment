@@ -100,7 +100,7 @@ Specialises `Entity`.
 | `stationCode` | Property | `string` | yes |  | `jc:stationCode` | The collection point's number in the city's waste register, such as 0022/ 001, or the ČHMÚ weather station's WIGOS id, such as 0-20000-0-11518. |
 | `accessRestriction` | Property | [`WasteAccess`](#wasteaccess) |  |  | `jc:accessRestriction` | Who may use the collection point. |
 | `refDistrict` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refDistrict` | The city district the record lies in. |
-| `wasteContainers` | Relationship | [`WasteContainer`](#wastecontainer) (list) |  |  | `jc:wasteContainers` | The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored. |
+| `wasteContainers` | Relationship | [`WasteContainer`](#wastecontainer) (list) |  |  | `jc:wasteContainers` | The containers at this collection point, computed from their refWasteContainerIsle and never stored. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -110,7 +110,7 @@ Specialises `Entity`.
 
 ### WasteContainer
 
-One sensor-monitored sorted-waste container of the city and how full it is.
+One sorted-waste container of the city with its next collection, and how full it is where a sensor reads it.
 
 IRI: `sdm:WasteContainer`
 
@@ -122,6 +122,7 @@ Specialises `Entity`.
 | `containerCode` | Property | `string` | yes |  | `jc:containerCode` | The container's number in the city's waste register (KSNKO). |
 | `wasteKind` | Property | [`WasteKind`](#wastekind) | yes |  | `jc:wasteKind` | What the container takes, as the city's waste register sorts it. |
 | `fillingLevel` | Property | `float` |  |  | `sdm:fillingLevel` | How full the container was at its sensor's last reading, 0 empty to 1 full. |
+| `nextActuationDeadline` | Property | `datetime` |  |  | `sdm:nextActuationDeadline` | The end of the day the container is next emptied, as the city's waste register plans it. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
 | `refWasteContainerIsle` | Relationship | [`WasteContainerIsle`](#wastecontainerisle) | yes |  | `sdm:refWasteContainerIsle` | The collection point the container stands at. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |

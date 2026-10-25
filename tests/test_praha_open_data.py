@@ -46,7 +46,15 @@ FEEDS = {
     "park-and-ride-occupancy": ("golemio-park-and-ride.json", "OffStreetParking", 2),
     # Two collection points, twelve containers, four of them monitored.
     "waste-fill": ("golemio-waste-containers.json", "WasteContainer", 4),
+    # The same recording read whole (T-5427): the eight containers without a sensor.
+    "waste-containers": ("golemio-waste-containers.json", "WasteContainer", 8),
 }
+
+# Mappings that answer one message per entity, which the runner batches.
+SPLIT = {"waste-containers"}
+
+# The memory a pipeline is given where 256 MiB is not enough, as measured in its manifest.
+QUOTAS = {"waste-containers": 320}
 
 # Feeds that only add live attributes to an entity another feed writes: its credit is that feed's,
 # and the gateway's upsert merges, so writing a second credit would overwrite the first.
@@ -58,6 +66,8 @@ def recorded(name: str) -> bytes:
 
 
 def run(pipeline: str, document: bytes) -> list[dict]:
+    if pipeline in SPLIT:
+        return open_data.run_all(PRAHA / f"praha-pipeline-{pipeline}-bento.yaml", document, SPACE)
     return open_data.run(PRAHA / f"praha-pipeline-{pipeline}-bento.yaml", document, SPACE)
 
 
@@ -321,9 +331,80 @@ def test_the_two_spellings_of_a_register_number_are_two_collection_points():
     assert ids == ["station-0022-001", "station-0022--001"]
 
 
+def waste_containers(document: bytes) -> tuple[list[dict], list[str]]:
+    """The waste-containers mapping over one answer: the entities written and the error of a message
+    the runner refuses (an errored message fails the run, nothing is written)."""
+    answer = open_data.run_all(PRAHA / "praha-pipeline-waste-containers-bento.yaml", document, SPACE,
+                               then=({"mapping": 'root = if errored() { {"__error": error()} } else { this }'},))
+    errors = [e["__error"] for e in answer if "__error" in e]
+    return ([], errors) if errors else (answer, [])
+
+
+@requires_docker
+def test_every_container_without_a_sensor_is_written_with_its_next_collection_at_its_point(written):
+    recording = json.loads(recorded("golemio-waste-containers.json"))
+    unmonitored = {str(c["ksnko_id"]) for f in recording["features"] for c in f["properties"]["containers"] if not c["is_monitored"]}
+    containers = {e["id"].rsplit(":ksnko-", 1)[1]: e for e in written["waste-containers"]}
+    assert set(containers) == unmonitored
+    # The sensor containers stay waste-fill's: the two pipelines never write one entity.
+    assert not {e["id"] for e in written["waste-fill"]} & {e["id"] for e in written["waste-containers"]}
+    isles = {e["stationCode"]["value"]: e["id"] for e in written["waste-stations"]}
+    paper = containers["4"]
+    assert paper["refWasteContainerIsle"]["object"] == isles["0022/ 001"]
+    assert paper["wasteKind"]["value"] == "paper" and paper["containerCode"]["value"] == "4"
+    assert paper["name"]["languageMap"]["cs"] == "Přátelství 356/61, Papír"
+    # next_pick 2026-09-27: collected during that day in Prague, summer time.
+    assert paper["nextActuationDeadline"]["value"] == "2026-09-27T23:59:59+02:00"
+    assert paper["location"]["value"] == {"type": "Point", "coordinates": recording["features"][0]["geometry"]["coordinates"]}
+    # The edible-oil container has no collection day in the register: it lands without one.
+    assert "nextActuationDeadline" not in containers["28175"]
+    # No reading time, so the collection desk (praha-odpad, q=fillingLevel|dateModified) never lists them.
+    assert not any("fillingLevel" in e or "dateModified" in e for e in containers.values())
+    for entity in containers.values():
+        assert not schema_errors(entity), schema_errors(entity)
+        assert not open_data.sdm_errors("dataModel.WasteManagement/WasteContainer", entity), entity["id"]
+
+
+@requires_docker
+def test_an_out_of_area_point_an_unknown_kind_and_a_duplicate_are_dropped_a_bad_collection_day_left_out():
+    def edit(d):
+        first, second = d["features"]
+        containers = first["properties"]["containers"]
+        containers[0]["trash_type"] = {"id": 0, "description": "neznámý"}
+        containers[1]["cleaning_frequency"]["next_pick"] = "2026-13-45"
+        containers.append(dict(containers[2]))
+        second["geometry"]["coordinates"] = [16.6068, 49.1951]
+    answer, errors = waste_containers(edited("golemio-waste-containers.json", edit))
+    assert not errors, errors
+    ids = [e["id"].rsplit(":ksnko-", 1)[1] for e in answer]
+    # 4 unknown kind, 3516 and 37541 stand in Brno, 39586 listed twice is written once.
+    assert sorted(ids) == sorted(["5", "39586", "39587", "28175", "21382"])
+    five = next(e for e in answer if e["id"].endswith(":ksnko-5"))
+    assert "nextActuationDeadline" not in five and not schema_errors(five)
+
+
+@requires_docker
+def test_a_list_where_fewer_than_half_survive_fails_the_run_instead_of_thinning_the_containers():
+    def edit(d):
+        for feature in d["features"]:
+            feature["geometry"]["coordinates"] = [0, 0]
+    answer, errors = waste_containers(edited("golemio-waste-containers.json", edit))
+    assert answer == [] and len(errors) == 1 and "only 0 of 8" in errors[0], errors
+
+
+@requires_docker
+@pytest.mark.parametrize("document,reason", [
+    (b'{"type": "FeatureCollection", "features": []}', "listed no collection point"),
+    (b'{"error_message": "Unauthorized"}', "did not answer a feature list"),
+])
+def test_an_empty_or_broken_container_list_fails_the_run(document, reason):
+    answer, errors = waste_containers(document)
+    assert answer == [] and len(errors) == 1 and reason in errors[0], errors
+
+
 def test_the_golemio_key_is_named_by_reference_and_committed_only_encrypted():
     index = yaml.safe_load((PRAHA / "index.yaml").read_text())
-    for name in ("park-and-ride-occupancy", "waste-fill"):
+    for name in ("park-and-ride-occupancy", "waste-fill", "waste-containers"):
         http = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())["spec"]["http"]
         assert http["authorization"] == {"header": "X-Access-Token", "headerRef": {"name": "golemio", "key": "token"}}
         assert not any(h.lower() in ("x-access-token", "authorization") for h in http["headers"])
@@ -348,7 +429,7 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         assert pipeline["spec"]["output"]["type"] == kind
         assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto"
-        assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
+        assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= QUOTAS.get(name, 256), name
         assert datasource["spec"]["http"]["url"].startswith("https://")
         assert kind in model["spec"]["classes"] and kind in readable
         for seeded in (f"praha-datasource-{name}.yaml", f"praha-pipeline-{name}.yaml", f"praha-pipeline-{name}-bento.yaml"):
