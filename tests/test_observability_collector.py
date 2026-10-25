@@ -124,6 +124,27 @@ RECORD = {
             },
             {
                 "timeUnixNano": "1788696000000000000",
+                "attributes": [
+                    {"key": "project", "value": {"stringValue": "helsinki"}},
+                    {"key": "kind", "value": {"stringValue": "pipeline.error"}},
+                    {"key": "summary", "value": {"stringValue": "GET https://x.example/a?token=s3cr3t-one failed"}},
+                    {"key": "details", "value": {"kvlistValue": {"values": [
+                        {"key": "request", "value": {"stringValue": "Authorization: Bearer s3cr3t.two"}},
+                        {"key": "url", "value": {"stringValue": "https://x.example/b?api_key=s3cr3t-three&page=2"}},
+                    ]}}},
+                ],
+            },
+            {
+                "timeUnixNano": "1788696000000000000",
+                "attributes": [
+                    {"key": "project", "value": {"stringValue": "helsinki"}},
+                    {"key": "kind", "value": {"stringValue": "pipeline.error"}},
+                    {"key": "summary", "value": {"stringValue": "refused"}},
+                    {"key": "details", "value": {"stringValue": "sent password=s3cr3t-four with basic s3cr3t-five"}},
+                ],
+            },
+            {
+                "timeUnixNano": "1788696000000000000",
                 "body": {"stringValue": "belongs to no project"},
                 "attributes": [{"key": "kind", "value": {"stringValue": "pipeline.error"}}],
             },
@@ -212,7 +233,7 @@ def test_the_pinned_image_accepts_the_rendered_config(collector_config, tmp_path
 @requires_docker
 def test_the_allow_list_drops_every_attribute_it_does_not_name(exported):
     records = _records(exported)
-    assert len(records) == 1, "the record naming no project should have been dropped"
+    assert len(records) == 3, "the record naming no project should have been dropped"
     keys = {a["key"] for a in records[0].get("attributes", [])}
     assert keys <= ALLOWED, f"attributes reached the Portal that the allow-list does not name: {keys - ALLOWED}"
     assert not keys & FORBIDDEN
@@ -238,6 +259,17 @@ def test_no_raw_body_or_credential_survives_the_collector(exported):
     wire = json.dumps([b["body"] for b in exported])
     for leaked in ('{"citizen":"secret"}', "Bearer a-token", "raw request body", "gateway-abc"):
         assert leaked not in wire, f"{leaked!r} survived the collector"
+
+
+@requires_docker
+def test_a_token_in_summary_or_details_is_redacted(exported):
+    """CC-06, OPS-27: `summary` and `details` survive the allow-list, so a credential an emitter
+    quoted in them is masked by transform/redact; the rest of the text stays readable."""
+    wire = json.dumps([b["body"] for b in exported])
+    for leaked in ("s3cr3t-one", "s3cr3t.two", "s3cr3t-three", "s3cr3t-four", "s3cr3t-five"):
+        assert leaked not in wire, f"{leaked!r} survived the collector"
+    for kept in ("token=***", "Bearer ***", "api_key=***&page=2", "password=***", "basic ***"):
+        assert kept in wire, f"{kept!r} missing: the redaction ate more than the credential"
 
 
 @requires_docker

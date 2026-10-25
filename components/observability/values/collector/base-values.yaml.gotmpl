@@ -134,6 +134,20 @@ configMap:
               statements:
                 - set(body, "")
                 - keep_keys(attributes, ["project", "space", "kind", "source", "summary", "severity", "correlationId", "details", "endpoint", "tool", "outcome", "count"])
+        # `summary` and `details` are free text an emitter writes. A credential typed into one (a
+        # `Bearer` header, `token=` in a URL it quotes) is masked before the Portal stores it
+        # (CC-06, OPS-27). `$$1` is the collector config's escape for the regex group `$1`.
+        transform/redact:
+          error_mode: ignore
+          log_statements:
+            - context: log
+              statements:
+                - replace_pattern(attributes["summary"], "(?i)\\b(bearer|basic)\\s+[^\\s\"',;]+", "$$1 ***") where IsString(attributes["summary"])
+                - replace_pattern(attributes["summary"], "(?i)\\b(token|access_token|password|secret|api[_-]?key)=[^\\s&\"',;]+", "$$1=***") where IsString(attributes["summary"])
+                - replace_pattern(attributes["details"], "(?i)\\b(bearer|basic)\\s+[^\\s\"',;]+", "$$1 ***") where IsString(attributes["details"])
+                - replace_pattern(attributes["details"], "(?i)\\b(token|access_token|password|secret|api[_-]?key)=[^\\s&\"',;]+", "$$1=***") where IsString(attributes["details"])
+                - replace_all_patterns(attributes["details"], "value", "(?i)\\b(bearer|basic)\\s+[^\\s\"',;]+", "$$1 ***") where IsMap(attributes["details"])
+                - replace_all_patterns(attributes["details"], "value", "(?i)\\b(token|access_token|password|secret|api[_-]?key)=[^\\s&\"',;]+", "$$1=***") where IsMap(attributes["details"])
 
         batch:
           timeout: 5s
@@ -152,7 +166,7 @@ configMap:
         pipelines:
           logs:
             receivers: [otlp]
-            processors: [memory_limiter, filter/activity, transform/allowlist, batch]
+            processors: [memory_limiter, filter/activity, transform/allowlist, transform/redact, batch]
             exporters: [otlphttp/portal]
         telemetry:
           metrics:
