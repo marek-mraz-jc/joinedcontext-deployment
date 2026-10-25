@@ -6,7 +6,8 @@ description: >-
   and what they hold now, ČHMÚ's hourly air quality at the city's stations, the city districts,
   the schools, cultural venues, public toilets and sorted-waste points of the city's geoportal
   (IPR Praha), the park-and-ride car parks and how full they are now, the monitored sorted-waste
-  containers and their fill level and the PID vehicles in service (Golemio), the PID ticket points, and the city budget line by
+  containers and their fill level and the PID vehicles in service (Golemio), the PID ticket points, the parks, green
+  areas and trees of the shared green register (IPR Praha), and the city budget line by
   line. One model, one space, one public endpoint. Where Smart Data Models has the class, its
   IRI is cited rather than minted (DM-04, DM-16).
 license: https://joinedcontext.com/licenses/cc-by-4.0
@@ -158,7 +159,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/data-models
   dateModified:
     slot_uri: sdm:dateModified
-    description: When the publisher's station, counter or sensor last reported the values beside it.
+    description: When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record.
     range: datetime
     annotations:
       label:
@@ -486,7 +487,7 @@ slots:
       on_delete: restrict
   totalSpotNumber:
     slot_uri: sdm:totalSpotNumber
-    description: The number of cars the car park holds.
+    description: The number of cars the car park, the street parking section or bay or the street segment holds.
     range: integer
     minimum_value: 0
     annotations:
@@ -751,6 +752,85 @@ slots:
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
 
+  parkingZone:
+    slot_uri: jc:parkingZone
+    description: The paid parking zone of the section as TSK codes it, RES (blue, residents), MIX (purple, mixed) or VIS (orange, visitors).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Parkovacia zóna
+          cs: Parkovací zóna
+          en: Parking zone
+          de: Parkzone
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  tariff:
+    slot_uri: jc:tariff
+    description: The section's tariff as TSK writes it, days, hours and price, such as Po-Ne 08:00-19:59 300Kč/hod (max. 75 Kč).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Tarifa
+          cs: Tarif
+          en: Tariff
+          de: Tarif
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  refParkingSite:
+    slot_uri: sdm:refParkingSite
+    description: The paid parking section (OnStreetParking) whose tariff this segment of a street follows.
+    domain: ParkingGroup
+    range: OnStreetParking
+    required: true
+    inverse: parkingGroups
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Parkovací úsek
+          cs: Parkovací úsek
+          en: Parking section
+          de: Parkabschnitt
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  parkingGroups:
+    slot_uri: jc:parkingGroups
+    description: The street segments (ParkingGroup) of this paid parking section, computed from their refParkingSite and never stored.
+    domain: OnStreetParking
+    range: ParkingGroup
+    multivalued: true
+    inverse: refParkingSite
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Úseky ulíc
+          cs: Úseky ulic
+          en: Street segments
+          de: Straßenabschnitte
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+  equipmentId:
+    slot_uri: sdm:equipmentId
+    description: The parking machine's number as TSK labels it on the machine, such as 22000004.
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo automatu
+          cs: Číslo automatu
+          en: Machine number
+          de: Automatennummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+
   vehicleType:
     slot_uri: sdm:vehicleType
     description: >-
@@ -770,7 +850,13 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   category:
     slot_uri: sdm:category
-    description: The Smart Data Models vehicle category, public and tracked for a PID vehicle in service.
+    description: >-
+      The Smart Data Models category: public and tracked for a PID vehicle in service; for an
+      OnStreetParking what the section or bay is for (forResidents and onlyWithPermit in the blue
+      resident zone RES, feeCharged and forResidents in the purple mixed zone MIX, feeCharged and
+      shortTerm in the orange visitor zone VIS, forDisabled for a ZTP/P bay, with onlyWithPermit
+      when it is reserved for one registration plate, forLoadUnload for a delivery bay and
+      onlyWithPermit for a special reserved bay).
     range: VehicleCategory
     multivalued: true
     annotations:
@@ -1047,6 +1133,78 @@ slots:
           de: Linien
       ngsi_ld_kind: Property
 
+  greenspaceType:
+    slot_uri: jc:greenspaceType
+    description: >-
+      IPR Praha's word for the kind of green area: its function in the shared green register
+      (Parky, Jiné (ostatní)), its character in the planning layer (lesopark, vnitroblok) or
+      přírodní park.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh zelene
+          cs: Druh zeleně
+          en: Kind of green area
+          de: Art der Grünfläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  vegetationType:
+    slot_uri: jc:vegetationType
+    description: IPR Praha's word for the vegetation element, such as Strom or Stromořadí.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Vegetačný prvok
+          cs: Vegetační prvek
+          en: Vegetation element
+          de: Vegetationselement
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  treeCategory:
+    slot_uri: jc:treeCategory
+    description: The register's category of the woody plant, such as listnatý strom (broadleaf tree).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Kategória dreviny
+          cs: Kategorie dřeviny
+          en: Tree category
+          de: Gehölzkategorie
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  careRegime:
+    slot_uri: jc:careRegime
+    description: The maintenance class the register gives it, such as Intenzitní třída údržby I.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Režim starostlivosti
+          cs: Režim péče
+          en: Care regime
+          de: Pflegeregime
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  areaServed:
+    slot_uri: sdm:areaServed
+    description: >-
+      Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a
+      department of the City of Prague (MHMP-OCP).
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Správca
+          cs: Správce
+          en: Manager
+          de: Verwalter
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
+
 classes:
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
@@ -1161,7 +1319,9 @@ classes:
       - source
   OffStreetParking:
     class_uri: sdm:OffStreetParking
-    description: One park-and-ride car park at the edge of the city.
+    description: >-
+      One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service
+      rents out by reservation (Golemio).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
@@ -1174,6 +1334,8 @@ classes:
           de: Parkplatz
     slots:
       - name
+      - address
+      - url
       - totalSpotNumber
       - availableSpotNumber
       - occupiedSpotNumber
@@ -1258,6 +1420,46 @@ classes:
       - dataProvider
       - source
 
+  Garden:
+    class_uri: sdm:Garden
+    description: >-
+      One green area of the city: a park of the planning layer, a nature park, or a basic green
+      area of the shared green register (IPR Praha), with its kind, manager and care regime.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
+      label:
+        tag: label
+        value:
+          sk: Zeleň
+          cs: Zeleň
+          en: Green area
+          de: Grünfläche
+    slots: [name, greenspaceType, careRegime, areaServed, dateModified, dataProvider, source]
+  Tree:
+    class_uri: jc:Tree
+    description: >-
+      One tree or tree row of the city's shared green register or its tree-row layer (IPR Praha):
+      where it stands, its category, manager and care regime. Smart Data Models has no tree class;
+      the closest, GreenspaceRecord, records soil and weather readings of a green area.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Strom
+          cs: Strom
+          en: Tree
+          de: Baum
+    slots:
+      - name
+      - vegetationType
+      - treeCategory
+      - careRegime
+      - areaServed
+      - dateModified
+      - dataProvider
+      - source
   PublicTransportRoute:
     class_uri: sdm:PublicTransportRoute
     description: >-
@@ -1339,6 +1541,77 @@ classes:
           en: Fare zone
           de: Tarifzone
     slots: [name, zoneCode, dataProvider, source]
+  OnStreetParking:
+    class_uri: sdm:OnStreetParking
+    description: >-
+      One street parking area of the city: a section of the paid parking zones (zóny placeného
+      stání) with its zone, tariff and spaces, or a reserved bay for ZTP/P card holders,
+      deliveries or a special purpose, as TSK hl. m. Prahy maps them on the IPR geoportal.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Parkovanie na ulici
+          cs: Parkování na ulici
+          en: On-street parking
+          de: Parken am Straßenrand
+    slots:
+      - name
+      - category
+      - parkingZone
+      - tariff
+      - totalSpotNumber
+      - parkingGroups
+      - dataProvider
+      - source
+    slot_usage:
+      category: { range: StreetParkingCategory }
+  ParkingGroup:
+    class_uri: sdm:ParkingGroup
+    description: >-
+      One street segment of a paid parking zone with its spaces, a group of spaces inside the
+      paid parking section whose tariff it follows.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+      label:
+        tag: label
+        value:
+          sk: Úsek parkovania
+          cs: Úsek parkování
+          en: Parking segment
+          de: Parkabschnitt
+    slots: [name, refParkingSite, totalSpotNumber, dataProvider, source]
+  RestrictedTrafficArea:
+    class_uri: sdm:RestrictedTrafficArea
+    description: One stretch of street where parking is prohibited (zákaz stání), as TSK hl. m. Prahy maps it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Zákaz státia
+          cs: Zákaz stání
+          en: No parking
+          de: Parkverbot
+    slots: [name, dataProvider, source]
+  FareCollectionSystem:
+    class_uri: sdm:FareCollectionSystem
+    description: One parking machine of the paid parking zones, its number and its street.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Parkovací automat
+          cs: Parkovací automat
+          en: Parking machine
+          de: Parkscheinautomat
+    slots: [name, equipmentId, address, dataProvider, source]
   PostalAddress:
     class_uri: schema:PostalAddress
     description: >-
@@ -1348,6 +1621,18 @@ classes:
       upstream_source: https://schema.org/PostalAddress
     slots: [streetAddress, addressLocality, addressCountry]
 enums:
+  StreetParkingCategory:
+    description: The OnStreetParking `category` values the Prague parking layers map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      forResidents:
+        description: Residents of the zone with a parking permit (RES, MIX).
+      onlyWithPermit:
+        description: A permit is needed (RES residents, a bay reserved for one plate, a special bay).
+      feeCharged:
+        description: Parking is paid by the time parked (MIX, VIS).
+      shortTerm: { description: Short-term visitor parking (VIS). }
+      forDisabled: { description: A bay for a ZTP/P card holder. }
+      forLoadUnload: { description: A delivery bay (zásobování). }
   VehicleKind:
     permissible_values:
       tram: { description: A tram. }
