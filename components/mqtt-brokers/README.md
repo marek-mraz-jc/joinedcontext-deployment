@@ -6,9 +6,13 @@ named `mqtt-{project}-{name}`. That name is also the broker's ServiceAccount, so
 identity, and its Keycloak audience.
 
 A broker keeps nothing. Each CONNECT goes to the gateway's `POST /internal/mqtt/auth` on
-port 8082 (rmqtt-auth-http, `deny_if_error`); the answer carries the client's ACL and the
-token's expiry, and the broker's own last rule, `["deny", "all"]`, refuses whatever the answer
-did not allow. No retainer, no session or message storage, sessions end with the connection.
+port 8082 (rmqtt-auth-http, `deny_if_error`); the answer carries the client's subscriptions and
+the end of its session, the token's `exp` or its credential's `expiresAt`, whichever comes
+first. Each publish topic goes to `POST /internal/mqtt/acl`, which decides it against the
+repository as it is now; the broker keeps an allow for 10 s (`X-Cache`) and disconnects a client
+whose publish is refused, so a device whose role or account is removed stops within about 10 s
+(T-5560). The broker's own last rule, `["deny", "all"]`, refuses whatever the gateway did not
+allow. No retainer, no session or message storage, sessions end with the connection.
 
 | Port | Listener | Who reaches it |
 |---|---|---|
