@@ -619,8 +619,7 @@ slots:
       ngsi_ld_kind: Relationship
   districtCode:
     slot_uri: jc:districtCode
-    description: The district's RÚIAN code, the key the national registers and the waste register use.
-    required: true
+    description: The district's RÚIAN code, the key the national registers and the waste register use; a planning balance unit has none.
     pattern: ^[0-9]{6}$
     annotations:
       label:
@@ -1605,7 +1604,8 @@ classes:
       playground, a waste collection yard, or one of the city's amenities the IPR geoportal
       maps: a health centre, a university, a place of worship, a community centre, an
       accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous
-      or bio-waste collection point or a nature trail stop.
+      or bio-waste collection point, a nature trail stop, or one of the areas and lines it
+      maps: a cemetery, a nature trail, a water area or stream, or a dog zone.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -1700,8 +1700,10 @@ classes:
   AdministrativeArea:
     class_uri: jc:AdministrativeArea
     description: >-
-      One of the 57 city districts (městské části) of Prague, its outline and its code, as the
-      Smart Data Model extension AdministrativeArea (PointOfInterest base).
+      One of the 57 city districts (městské části) of Prague, its outline and its code, or one
+      of the 120 planning balance units (bilanční územní celky) IPR Praha divides the city into,
+      its outline and its name, as the Smart Data Model extension AdministrativeArea
+      (PointOfInterest base).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
@@ -2060,6 +2062,22 @@ classes:
           en: No parking
           de: Parkverbot
     slots: [name, dataProvider, source]
+  BikeLane:
+    class_uri: sdm:BikeLane
+    description: >-
+      One stretch of a cycle route of the city's cycle route map, its route number and the kind
+      of way it runs on (a cycle lane, a shared path, a quiet street), as IPR Praha maps it.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Cyklotrasa
+          cs: Cyklotrasa
+          en: Cycle route
+          de: Radroute
+    slots: [name, facilityType, dataProvider, source]
   FareCollectionSystem:
     class_uri: sdm:FareCollectionSystem
     description: One parking machine of the paid parking zones, its number and its street.
@@ -2158,6 +2176,14 @@ enums:
       wasteCollectionPoint:
         description: A collection point for hazardous waste or bio-waste that is not a collection yard.
       trailStop: { description: A stop of a nature trail. }
+      cemetery:
+        description: A cemetery or burial ground, drawn as its area.
+      natureTrail:
+        description: A nature trail, drawn as its course.
+      waterArea:
+        description: A stream, pond or other water area, drawn as its outline.
+      dogZone:
+        description: An area where dogs may run free, must stay on a lead or may not enter, or a dog park.
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

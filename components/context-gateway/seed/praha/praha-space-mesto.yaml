@@ -14,7 +14,8 @@ metadata:
       služebny městské policie, knihovny, úřady, zahrady, dětská hřiště, sběrné dvory, občanská vybavenost, oázy chladu,
       linky, zastávky a tarifní pásma PID, vstupy do metra a parkování na ulici (zóny placeného stání, vyhrazená stání,
       zákazy stání a parkovací automaty), parky, zeleň a stromy, zdroje znečišťování ovzduší, radonové riziko,
-      záplavová území, protipovodňová ochrana a počasí.
+      záplavová území, protipovodňová ochrana, počasí, hřbitovy, naučné stezky, vodní plochy a toky,
+      psí zóny, bilanční územní celky a cyklotrasy.
       Zdroje: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) a ROPID pod CC BY 4.0,
       Magistrát hl. m. Prahy bez výhrad, Golemio (Operátor ICT, s daty TSK hl. m. Prahy) jako
       otevřená data.
@@ -24,7 +25,9 @@ metadata:
       the city budget, municipal police stations, libraries, municipal offices, gardens, playgrounds,
       waste collection yards, city amenities, cool spots, the PID lines, stops and fare zones, the metro entrances and
       on-street parking (paid parking zones, reserved bays, no-parking stretches and parking machines), parks, green
-      areas and trees, air pollution sources, radon risk, flood areas, flood defences and the weather.
+      areas and trees, air pollution sources, radon risk, flood areas, flood defences, the weather,
+      cemeteries, nature trails, water areas and streams, dog zones, planning balance units and
+      cycle routes.
       Sources: nextbike (CC0), ČHMÚ, IPR Praha (datový podklad © IPR Praha) and ROPID
       under CC BY 4.0, the City of Prague with no rights reserved, Golemio (Operátor ICT, with TSK
       hl. m. Prahy's counters) as open data.
@@ -64,6 +67,8 @@ spec:
         source: { record: onChange, heartbeat: P7D }
         status: { record: onChange, heartbeat: P7D }
         totalSlotNumber: { record: onChange, heartbeat: P7D }
+    - entityType: BikeLane
+      history: 'off'
     - entityType: BudgetLine
       history: 'off'
     - entityType: EmissionSource

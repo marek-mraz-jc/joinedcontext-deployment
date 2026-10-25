@@ -49,3 +49,4 @@ spec:
         - type: ParkingGroup
         - type: RestrictedTrafficArea
         - type: FareCollectionSystem
+        - type: BikeLane
