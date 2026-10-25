@@ -135,8 +135,9 @@ def test_the_new_spaces_are_writable_by_the_pipelines_and_reachable_by_the_publi
         space = f"{project}-otvorene-data"
         roles = yaml.safe_load((SEED / project / sa).read_text())["spec"]["roles"]
         assert {"role": "space-writer", "scope": {"contextSpace": space}} in roles
-        members = yaml.safe_load((SEED / project / mcp).read_text())["spec"]["members"]
-        assert {"kind": "Endpoint", "name": space} in members
+        # T-5367: the connector selects the publisher's public Endpoints instead of naming them.
+        select = yaml.safe_load((SEED / project / mcp).read_text())["spec"]["select"]
+        assert project in select.get("projects", []) or f"{project}/{space}" in select.get("spaces", [])
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
         assert endpoint["audience"] == "public" and "mcp" in endpoint["enabledRepresentations"]
         assert re.fullmatch(r"[a-z2-7]{26,}", endpoint["slug"])
