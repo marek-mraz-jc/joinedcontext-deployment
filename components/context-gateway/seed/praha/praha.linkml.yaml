@@ -535,6 +535,54 @@ slots:
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  priceRatePerMinute:
+    slot_uri: sdm:priceRatePerMinute
+    description: >-
+      What a minute of parking costs, in priceCurrency: the garage's hourly charge divided by 60.
+      Mr.Parkit sells at least the hours its tariff's minimum names (12 hours on 2026-10-25).
+    range: float
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Cena za minútu
+          cs: Cena za minutu
+          en: Price per minute
+          de: Preis pro Minute
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
+  pricePerDay:
+    slot_uri: jc:pricePerDay
+    description: What a day (24 hours) of parking costs, in priceCurrency, as the garage's tariff states it.
+    range: float
+    minimum_value: 0
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Cena za deň
+          cs: Cena za den
+          en: Price per day
+          de: Preis pro Tag
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  priceCurrency:
+    slot_uri: sdm:priceCurrency
+    description: The ISO 4217 code of the currency the prices are in (CZK).
+    pattern: ^[A-Z]{3}$
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Mena
+          cs: Měna
+          en: Currency
+          de: Währung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Parking
   fillingLevel:
     slot_uri: sdm:fillingLevel
     description: How full the container was at its sensor's last reading, 0 empty to 1 full.
@@ -836,8 +884,8 @@ slots:
   vehicleType:
     slot_uri: sdm:vehicleType
     description: >-
-      The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train,
-      a ferry and the funicular, which transportMode names.
+      The Smart Data Models kind of vehicle (tram, bus, trolley, car); other for a metro train, a
+      train, a ferry and the funicular, which transportMode names.
     range: VehicleKind
     annotations:
       label:
@@ -995,7 +1043,9 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
   operatorName:
     slot_uri: jc:operatorName
-    description: The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)).
+    description: >-
+      The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)), or the
+      car-sharing company that rents the car out (car4way, Anytime, Bolt).
     annotations:
       label:
         tag: label
@@ -1676,7 +1726,7 @@ classes:
     class_uri: sdm:OffStreetParking
     description: >-
       One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service
-      rents out by reservation (Golemio).
+      rents out by reservation, with its tariff (Golemio).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
@@ -1694,6 +1744,9 @@ classes:
       - totalSpotNumber
       - availableSpotNumber
       - occupiedSpotNumber
+      - priceRatePerMinute
+      - pricePerDay
+      - priceCurrency
       - dateModified
       - dataProvider
       - source
@@ -1746,7 +1799,8 @@ classes:
     class_uri: sdm:Vehicle
     description: >-
       One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its
-      line, where it heads, its next stop and how late it runs (Golemio vehicle positions).
+      line, where it heads, its next stop and how late it runs (Golemio vehicle positions); or one
+      car-sharing car free to rent and where it stands (Golemio shared cars).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Transportation
@@ -2100,6 +2154,7 @@ enums:
       tram: { description: A tram. }
       bus: { description: A bus. }
       trolley: { description: A trolleybus. }
+      car: { description: A car-sharing car. }
       other:
         description: A metro train, a train, a ferry or the funicular.
   VehicleCategory:

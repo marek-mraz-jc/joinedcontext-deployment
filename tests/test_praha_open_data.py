@@ -398,6 +398,9 @@ PARTS = {
     "praha-parkovani": "CC_BY_4_0",
     "praha-zakazy-stani": "CC_BY_4_0",
     "praha-parkovaci-automaty": "CC_BY_4_0",
+    # Golemio's Mr.Parkit garages and shared cars (T-5680), under Golemio's terms as above.
+    "praha-garaze": None,
+    "praha-sdilena-auta": None,
 }
 
 

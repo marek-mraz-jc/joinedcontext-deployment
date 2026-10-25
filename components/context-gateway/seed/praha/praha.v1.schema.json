@@ -1171,7 +1171,7 @@
     },
     "OffStreetParking": {
       "additionalProperties": false,
-      "description": "One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service rents out by reservation (Golemio).",
+      "description": "One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service rents out by reservation, with its tariff (Golemio).",
       "properties": {
         "address": {
           "anyOf": [
@@ -1269,6 +1269,33 @@
           "minimum": 0,
           "type": [
             "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "priceCurrency": {
+          "description": "The ISO 4217 code of the currency the prices are in (CZK).",
+          "pattern": "^[A-Z]{3}$",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "pricePerDay": {
+          "description": "What a day (24 hours) of parking costs, in priceCurrency, as the garage's tariff states it.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "priceRatePerMinute": {
+          "description": "What a minute of parking costs, in priceCurrency: the garage's hourly charge divided by 60. Mr.Parkit sells at least the hours its tariff's minimum names (12 hours on 2026-10-25).",
+          "minimum": 0,
+          "type": [
+            "number",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -2054,7 +2081,7 @@
     },
     "Vehicle": {
       "additionalProperties": false,
-      "description": "One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions).",
+      "description": "One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions); or one car-sharing car free to rent and where it stands (Golemio shared cars).",
       "properties": {
         "category": {
           "description": "The Smart Data Models category: public and tracked for a PID vehicle in service; for an OnStreetParking what the section or bay is for (forResidents and onlyWithPermit in the blue resident zone RES, feeCharged and forResidents in the purple mixed zone MIX, feeCharged and shortTerm in the orange visitor zone VIS, forDisabled for a ZTP/P bay, with onlyWithPermit when it is reserved for one registration plate, forLoadUnload for a delivery bay and onlyWithPermit for a special reserved bay).",
@@ -2196,7 +2223,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "operatorName": {
-          "description": "The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)).",
+          "description": "The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)), or the car-sharing company that rents the car out (car4way, Anytime, Bolt).",
           "type": [
             "string",
             "null"
@@ -2237,7 +2264,7 @@
         },
         "vehicleType": {
           "$ref": "#/definitions/VehicleKind",
-          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names.",
+          "description": "The Smart Data Models kind of vehicle (tram, bus, trolley, car); other for a metro train, a train, a ferry and the funicular, which transportMode names.",
           "x-ngsi-ld-kind": "Property"
         },
         "wheelchairAccessible": {
@@ -2271,6 +2298,7 @@
         "tram",
         "bus",
         "trolley",
+        "car",
         "other"
       ],
       "title": "VehicleKind",

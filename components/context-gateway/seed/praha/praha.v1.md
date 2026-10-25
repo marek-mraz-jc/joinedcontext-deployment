@@ -133,7 +133,7 @@ Specialises `Entity`.
 
 ### OffStreetParking
 
-One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service rents out by reservation (Golemio).
+One car park: a park-and-ride at the edge of the city, or a garage the Mr.Parkit service rents out by reservation, with its tariff (Golemio).
 
 IRI: `sdm:OffStreetParking`
 
@@ -147,6 +147,9 @@ Specialises `Entity`.
 | `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of cars the car park, the street parking section or bay or the street segment holds. |
 | `availableSpotNumber` | Property | `integer` |  |  | `sdm:availableSpotNumber` | The free spaces of the car park right now, as its entry counters report them. |
 | `occupiedSpotNumber` | Property | `integer` |  |  | `sdm:occupiedSpotNumber` | The cars parked in the car park right now, as its entry counters report them. |
+| `priceRatePerMinute` | Property | `float` |  |  | `sdm:priceRatePerMinute` | What a minute of parking costs, in priceCurrency: the garage's hourly charge divided by 60. Mr.Parkit sells at least the hours its tariff's minimum names (12 hours on 2026-10-25). |
+| `pricePerDay` | Property | `float` |  |  | `jc:pricePerDay` | What a day (24 hours) of parking costs, in priceCurrency, as the garage's tariff states it. |
+| `priceCurrency` | Property | `string` |  |  | `sdm:priceCurrency` | The ISO 4217 code of the currency the prices are in (CZK). |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
@@ -203,7 +206,7 @@ Specialises `Entity`.
 
 ### Vehicle
 
-One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions).
+One PID bus, tram, trolleybus, metro train or train in service in Prague: where it is, its line, where it heads, its next stop and how late it runs (Golemio vehicle positions); or one car-sharing car free to rent and where it stands (Golemio shared cars).
 
 IRI: `sdm:Vehicle`
 
@@ -212,7 +215,7 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
-| `vehicleType` | Property | [`VehicleKind`](#vehiclekind) |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle (tram, bus, trolley); other for a metro train, a train, a ferry and the funicular, which transportMode names. |
+| `vehicleType` | Property | [`VehicleKind`](#vehiclekind) |  |  | `sdm:vehicleType` | The Smart Data Models kind of vehicle (tram, bus, trolley, car); other for a metro train, a train, a ferry and the funicular, which transportMode names. |
 | `category` | Property | [`VehicleCategory`](#vehiclecategory) (list) |  |  | `sdm:category` | The Smart Data Models category: public and tracked for a PID vehicle in service; for an OnStreetParking what the section or bay is for (forResidents and onlyWithPermit in the blue resident zone RES, feeCharged and forResidents in the purple mixed zone MIX, feeCharged and shortTerm in the orange visitor zone VIS, forDisabled for a ZTP/P bay, with onlyWithPermit when it is reserved for one registration plate, forLoadUnload for a delivery bay and onlyWithPermit for a special reserved bay). |
 | `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What the line runs, as the GTFS route type names it (tram, metro, train, bus, ferry, funicular, trolleybus). |
 | `lineName` | Property | `string` |  |  | `jc:lineName` | The PID line the vehicle runs, its short name (17, A, S9, 331). |
@@ -222,7 +225,7 @@ Specialises `Entity`.
 | `speed` | Property | `float` |  | km/h | `sdm:speed` | Ground speed of the vehicle in km/h, as Smart Data Models states it; absent when the vehicle does not report one. |
 | `heading` | Property | `integer` |  | deg | `sdm:heading` | Where the vehicle points, degrees clockwise from north (0 to 359). |
 | `fleetVehicleId` | Property | `string` |  |  | `sdm:fleetVehicleId` | The operator's fleet number of the vehicle (9099); absent for the metro and trains, which report none. |
-| `operatorName` | Property | `string` |  |  | `jc:operatorName` | The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)). |
+| `operatorName` | Property | `string` |  |  | `jc:operatorName` | The carrier that runs the vehicle, as PID names it (DP PRAHA, ARRIVA CITY (Kladno)), or the car-sharing company that rents the car out (car4way, Anytime, Bolt). |
 | `wheelchairAccessible` | Property | `boolean` |  |  | `jc:wheelchairAccessible` | Whether the publisher states the place is reachable in a wheelchair; absent when it does not say. |
 | `dateObserved` | Property | `datetime` |  |  | `sdm:dateObserved` | When the values were observed: the start of the hour the air quality readings average, the time of a vehicle's last position report, or the end of a weather station's newest 10 minutes. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
@@ -606,6 +609,7 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `tram` | A tram. |
 | `bus` | A bus. |
 | `trolley` | A trolleybus. |
+| `car` | A car-sharing car. |
 | `other` | A metro train, a train, a ferry or the funicular. |
 
 ### VehicleCategory
