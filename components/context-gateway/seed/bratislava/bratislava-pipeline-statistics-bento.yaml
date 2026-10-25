@@ -1,8 +1,8 @@
 # The mapping of the statistics pipeline (T-5274): the hub's tables of the 17 city districts as Smart Data Models
 # KeyPerformanceIndicator, one entity per table, figure, breakdown, area and period. One mapping
 # text for every Feature Service statistics table of the matrix (Research/bratislava-open-data.md
-# 6.4): the statistics, statistics-okresy and statistics-mesto pipelines run the same text and
-# differ only in `tables` below, split by area so that one run fits its memory quota. A table is
+# 6.4): the statistics, statistics-okresy, statistics-mesto and statistics-denne pipelines run the same text
+# and differ only in `tables` below, split by area (the daily tables apart) so that one run fits its memory quota. A table is
 # one line of `tables`, never a pipeline of its own. The bratislava-hub DataSource answers the
 # hub's list of services; a table the list no longer names is logged and left out. Each table is
 # read in pages of 1,000 rows, at most 20; a table that holds more fails instead of writing part
@@ -14,9 +14,9 @@ pipeline:
         # name: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
         # hub's URL writes it; areas: district (the 17 city districts), okres (Bratislava I to V)
         # or city (Bratislava as a whole); area: the area column, none for a table of the city
-        # alone; year: the period column (a year or a range of years), quarter: its quarter column,
-        # month: its month column (1 to 12), or fixed: the year or range the table's title or the
-        # item's description names; by: breakdown columns (age, sex,
+        # alone; year: the period column (a year, a range of years, two ranges compared or a day),
+        # quarter: its quarter column, month: its month column (1 to 12), or fixed: the year or range
+        # the table's title or the item's description names; by: breakdown columns (age, sex,
         # category), each one segment of the id and one part of the name; only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
@@ -226,6 +226,14 @@ pipeline:
             { "from": $v + "-01-01", "to": $v + "-12-31", "slug": $v, "label": $v, "frequency": "yearly" }
           } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
             { "from": $y.index(0) + "-01-01", "to": $y.index(1) + "-12-31", "slug": $y.join("-"), "label": $y.join("–") }
+          } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2} a (19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
+            # Two ranges compared ("2017 – 2019 a 2000 – 2002"): the period spans both.
+            {
+              "from": $y.sort().index(0) + "-01-01", "to": $y.sort().index(3) + "-12-31", "slug": $y.join("-"),
+              "label": $y.index(0) + "–" + $y.index(1) + " a " + $y.index(2) + "–" + $y.index(3)
+            }
+          } else if $v.re_match("^(19|20)[0-9]{2}-[0-9]{2}-[0-9]{2}$") && $v.ts_parse("2006-01-02").catch(null) != null {
+            { "from": $v, "to": $v, "slug": $v, "label": $v, "frequency": "daily" }
           } else { null }
         }
         map quarter {
@@ -272,7 +280,8 @@ pipeline:
         map breakdown {
           let r = this.row
           let labels = this.table.labels.or({})
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(v -> $labels.get(v).or(v))
+          # "Nan" is the hub's word for a category it did not detect: no breakdown.
+          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim()).map_each(b -> if b.lowercase() == "nan" { "" } else { b }).map_each(v -> $labels.get(v).or(v))
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))

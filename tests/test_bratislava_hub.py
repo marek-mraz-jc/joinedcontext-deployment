@@ -17,6 +17,7 @@ from datetime import date
 import re
 import subprocess
 import tempfile
+from datetime import date
 from pathlib import Path
 
 import open_data
@@ -348,7 +349,7 @@ def test_each_dataset_has_its_endpoint_and_policy_narrowed_to_its_own_rows():
             )
 
 
-STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city"}
+STATISTICS = {"statistics": "district", "statistics-okresy": "okres", "statistics-mesto": "city", "statistics-denne": "city"}
 CITY_DISTRICTS = {
     "stare mesto": "528595", "podunajske biskupice": "529311", "p biskupice": "529311", "ruzinov": "529320",
     "vrakuna": "529338", "nove mesto": "529346", "raca": "529354", "vajnory": "529362", "devinska nova ves": "529371",
@@ -377,6 +378,13 @@ def years(value) -> str | None:
         return v
     if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
         return "-".join(m.group() for m in YEAR.finditer(v))
+    if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d a (19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
+        return "-".join(m.group() for m in YEAR.finditer(v))
+    if re.fullmatch(r"(19|20)\d\d-\d\d-\d\d", v):
+        try:
+            return date.fromisoformat(v).isoformat()
+        except ValueError:
+            return None
     return None
 
 
@@ -413,7 +421,9 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             else:
                 slug = years(r.get(t["year"]) or "")
             labels = t.get("labels", {})
-            by = [re.sub(r"[^a-z0-9]+", "-", fold(labels.get(v, v))).strip("-") for v in (str(r.get(c) or "").strip() for c in t.get("by", []))]
+            # "Nan" is the hub's word for a category it did not detect: no breakdown (T-5673).
+            raw = [str(r.get(c) or "").strip() for c in t.get("by", [])]
+            by = [re.sub(r"[^a-z0-9]+", "-", fold(labels.get(v, v))).strip("-") for v in ("" if v.lower() == "nan" else v for v in raw)]
             for column, segment, _, low, high in t["values"]:
                 n = number(r.get(column))
                 reason = (
@@ -460,7 +470,7 @@ def test_each_statistics_pipeline_agrees_with_an_independent_reading_of_its_tabl
 
 
 def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
-    """The three pipelines differ only in their tables, each table in the pipeline of its areas,
+    """The four pipelines differ only in their tables, each table in the pipeline of its areas,
     and no table twice."""
     def body(pipeline: str) -> str:
         text = (SEED / f"bratislava-pipeline-{pipeline}-bento.yaml").read_text()
@@ -469,7 +479,7 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 344 + 19 + 12
+    assert len(keys) == len(set(keys)) == 344 + 19 + 12 + 12
     for pipeline, areas in STATISTICS.items():
         assert {t["areas"] for t in tables(pipeline)} == {areas}
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
