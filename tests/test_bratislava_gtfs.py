@@ -77,7 +77,7 @@ def test_one_stop_per_platform_in_bratislava_and_the_edited_rows_are_left_out_wi
     assert f"dpb-{source[5]['stop_id']}" not in stops and f"dpb-{source[6]['stop_id']}" not in stops
     assert f"dpb-{source[-1]['stop_id']}" not in stops, "the repeat of the first platform was written"
     first = stops[f"dpb-{source[0]['stop_id']}"]
-    assert first["name"] == {"type": "LanguageProperty", "languageMap": {"sk": "Hlavná stanica"}}
+    assert first["name"] == {"type": "Property", "value": "Hlavná stanica"}
     assert first["stopCode"]["value"] == "93" and first["platformCode"]["value"] == "A" and first["zoneCode"]["value"] == "100"
     assert first["location"]["value"]["coordinates"] == [float(source[0]["stop_lon"]), float(source[0]["stop_lat"])]
     assert logs == ['warning: MHD GTFS rows left out: stops.txt {"duplicate":1,"outsideBratislava":1,"swappedCoordinates":1}']

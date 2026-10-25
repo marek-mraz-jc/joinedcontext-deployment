@@ -123,7 +123,7 @@ pipeline:
         root = $directions.filter(d -> d.reason == null).map_each(d -> {
           "id": "urn:ngsi-ld:%v:%v:%v:%v-%v-%v".format("TrafficFlowObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), d.mode, d.key, d.direction),
           "type": "TrafficFlowObserved",
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": "%v (%v)".format(d.name, d.label) } },
+          "name": { "type": "Property", "value": "%v (%v)".format(d.name, d.label) },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [d.lon, d.lat] } },
           "dateObserved": { "type": "Property", "value": $day.to },
           "dateObservedFrom": { "type": "Property", "value": $day.from },

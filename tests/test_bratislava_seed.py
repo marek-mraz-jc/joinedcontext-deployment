@@ -15,7 +15,13 @@ ROOT = Path(__file__).resolve().parent.parent
 SEED = ROOT / "components/context-gateway/seed"
 BRATISLAVA = SEED / "bratislava"
 # The types the space's model declares; the write and read Policies grant these and no other.
-TYPES = {"AirQualityObserved", "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation", "GtfsStop", "GtfsRoute", "GtfsAgency"}
+TYPES = {
+    "AirQualityObserved", "AdministrativeArea", "PointOfInterest", "KeyPerformanceIndicator",
+    "TrafficFlowObserved", "CrowdFlowObserved", "BikeHireDockingStation", "GtfsStop", "GtfsRoute", "GtfsAgency",
+}
+# The districts pipeline checks every vertex of an outline itself; an indicator, a line and its
+# agency have no location.
+LOCATED = TYPES - {"AdministrativeArea", "KeyPerformanceIndicator", "GtfsRoute", "GtfsAgency"}
 WRITES = {"upsertBatch", "createBatch", "queryBatch"}
 
 
@@ -85,14 +91,13 @@ def test_one_space_pinning_its_segment_and_its_one_model():
     assert model["contextSpaceRef"] == "bratislava" and model["lifecycle"] == "published"
     assert set(model["classes"]) == TYPES
     linkml = yaml.safe_load((BRATISLAVA / "bratislava.linkml.yaml").read_text())
-    assert set(linkml["classes"]) == TYPES
+    assert {n for n, c in linkml["classes"].items() if c.get("is_a") == "Entity"} == TYPES
     for artifact in model["artifacts"].values():
         assert (BRATISLAVA / artifact.removeprefix("./")).is_file(), artifact
     # Every type keeps a retention row and the city's area check (owner 2026-10-22T18:10Z).
     assert {row["entityType"] for row in spec["retention"]} == TYPES
     areas = {q["entityType"]: q["bbox"] for q in spec["quality"] if q["kind"] == "area"}
-    # A line and its agency have no place of their own; every type with a location is checked.
-    assert set(areas) == TYPES - {"GtfsRoute", "GtfsAgency"}
+    assert set(areas) == LOCATED
     for west, south, east, north in areas.values():
         # The municipality (16.946..17.285 E, 48.007..48.265 N, OSM) with about 1 km to spare,
         # nothing wider.
@@ -217,6 +222,6 @@ def test_every_pipeline_writes_through_the_door_with_a_type_the_write_policy_gra
     write = granted_types(by_name("Policy")["pipelines-write"])
     for name, pipeline in by_name("Pipeline").items():
         spec = pipeline["spec"]
-        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:bratislava:bratislava", name
+        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava", name
         assert spec["output"]["type"] in write and spec["output"]["mode"] == "upsert", name
         assert spec["source"]["dataSourceRef"]["name"] in by_name("DataSource"), name

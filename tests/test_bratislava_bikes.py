@@ -49,7 +49,7 @@ def test_each_station_in_bratislava_is_one_entity_and_the_edited_ones_are_left_o
     assert stations[1]["station_id"] not in entities and stations[2]["station_id"] not in entities
     assert "999000001" not in entities, "the repeat 4 m away was written"
     first = entities[stations[0]["station_id"]]
-    assert first["name"] == {"type": "LanguageProperty", "languageMap": {"sk": "TESCO Express Martinčekova"}}
+    assert first["name"] == {"type": "Property", "value": "TESCO Express Martinčekova"}
     assert first["location"]["value"]["coordinates"] == [stations[0]["lon"], stations[0]["lat"]]
     assert "totalSlotNumber" not in first, "the feed names no capacity for a virtual station"
     assert logs == ['warning: bike stations left out: {"duplicate":1,"outsideBratislava":1,"swappedCoordinates":1}']

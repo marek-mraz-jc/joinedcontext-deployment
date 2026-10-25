@@ -37,7 +37,7 @@ pipeline:
         root = $kept.map_each(s -> {
           "id": "urn:ngsi-ld:%v:%v:%v:nextbike-%v".format("BikeHireDockingStation", env("JC_ORG_DOMAIN"), env("JC_SPACE"), s.id),
           "type": "BikeHireDockingStation",
-          "name": if s.name == "" { null } else { { "type": "LanguageProperty", "languageMap": { "sk": s.name } } },
+          "name": if s.name == "" { null } else { { "type": "Property", "value": s.name } },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [s.lon, s.lat] } },
           "totalSlotNumber": if s.capacity.type() != "number" || s.capacity < 0 { null } else { { "type": "Property", "value": s.capacity } },
           "dataProvider": { "type": "Property", "value": "nextbike Czech Republic, Slovnaft BAjk (CC0 1.0)" },

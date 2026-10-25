@@ -91,7 +91,7 @@ pipeline:
         root = $directions.filter(d -> d.reason == null).map_each(d -> {
           "id": "urn:ngsi-ld:%v:%v:%v:pedestrian-%v".format("CrowdFlowObserved", env("JC_ORG_DOMAIN"), env("JC_SPACE"), d.key),
           "type": "CrowdFlowObserved",
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": "%v (%v / %v)".format(d.name, d.towardsLabel, d.awayLabel) } },
+          "name": { "type": "Property", "value": "%v (%v / %v)".format(d.name, d.towardsLabel, d.awayLabel) },
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [d.lon, d.lat] } },
           "dateObserved": { "type": "Property", "value": $day.to },
           "dateObservedFrom": { "type": "Property", "value": $day.from },

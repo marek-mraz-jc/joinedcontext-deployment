@@ -1,6 +1,9 @@
 {
   "@context": {
     "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
     "AirQualityObserved": {
       "@id": "sdm:AirQualityObserved"
     },
@@ -22,15 +25,48 @@
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
     },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "KpiPeriod": {
+      "@id": "jc:KpiPeriod"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
     },
     "agencyName": {
       "@id": "sdm:agencyName"
     },
+    "area": {
+      "@id": "sdm:area"
+    },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
       "@type": "xsd:integer"
+    },
+    "calculationFrequency": {
+      "@id": "sdm:calculationFrequency"
+    },
+    "calculationPeriod": {
+      "@id": "sdm:calculationPeriod"
+    },
+    "category": {
+      "@id": "sdm:category"
     },
     "dataProvider": {
       "@id": "sdm:dataProvider"
@@ -51,9 +87,22 @@
       "@id": "sdm:dateObservedTo",
       "@type": "xsd:dateTime"
     },
+    "description": {
+      "@id": "schema:description"
+    },
+    "district": {
+      "@id": "sdm:district"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
     "freeSlotNumber": {
       "@id": "sdm:freeSlotNumber",
       "@type": "xsd:integer"
+    },
+    "from": {
+      "@id": "sdm:from",
+      "@type": "xsd:date"
     },
     "geojson": "https://purl.org/geojson/vocab#",
     "id": "@id",
@@ -62,6 +111,10 @@
       "@type": "xsd:integer"
     },
     "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
     "laneDirection": {
       "@context": {
         "description": "skos:prefLabel",
@@ -78,7 +131,6 @@
       "@id": "geojson:geometry"
     },
     "name": {
-      "@container": "@language",
       "@id": "schema:name"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
@@ -89,6 +141,9 @@
     "operatedBy": {
       "@id": "sdm:operatedBy",
       "@type": "@id"
+    },
+    "organization": {
+      "@id": "sdm:organization"
     },
     "page": {
       "@id": "sdm:page",
@@ -115,6 +170,9 @@
     "pm10": {
       "@id": "sdm:pm10",
       "@type": "xsd:float"
+    },
+    "process": {
+      "@id": "sdm:process"
     },
     "routeColor": {
       "@id": "sdm:routeColor"
@@ -148,8 +206,15 @@
     "stopCode": {
       "@id": "jc:stopCode"
     },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
+    },
     "timezone": {
       "@id": "sdm:timezone"
+    },
+    "to": {
+      "@id": "sdm:to",
+      "@type": "xsd:date"
     },
     "totalSlotNumber": {
       "@id": "sdm:totalSlotNumber",
@@ -164,6 +229,10 @@
       "@id": "jc:transportMode"
     },
     "type": "@type",
+    "url": {
+      "@id": "schema:url",
+      "@type": "xsd:anyURI"
+    },
     "vehicleType": {
       "@context": {
         "description": "skos:prefLabel",

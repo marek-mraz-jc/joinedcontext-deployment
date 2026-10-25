@@ -13,6 +13,9 @@ spec:
   lifecycle: published
   classes:
     - AirQualityObserved
+    - AdministrativeArea
+    - PointOfInterest
+    - KeyPerformanceIndicator
     - TrafficFlowObserved
     - CrowdFlowObserved
     - BikeHireDockingStation

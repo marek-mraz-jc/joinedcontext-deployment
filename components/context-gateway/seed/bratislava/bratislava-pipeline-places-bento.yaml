@@ -1,0 +1,157 @@
+# The mapping of the places pipeline (T-5274): the hub's tables of places that carry their own
+# coordinates as Smart Data Models PointOfInterest, one table a dataset: barrier-free places,
+# lifelong-learning providers, needle drop points (fixpointy) and services for homeless people.
+# One pipeline shape for every such table: a table is one line of `tables` below. The
+# bratislava-hub DataSource answers the hub's list of services; a table the list no longer names
+# is logged and left out. Each table is read with one query of at most 2,000 rows; an answer that
+# says it holds more fails that table instead of writing part of it. Nothing here deletes.
+pipeline:
+  processors:
+    - mapping: |
+        # key: the id prefix and the dataset's Endpoint idPattern; path: the Feature Service as the
+        # hub's URL writes it; category: the code its PointOfInterest carries first; the other
+        # members name the table's columns. The lifelong-learning table writes the latitude in X
+        # and the longitude in Y; the barrier-free table writes them the other way round, both with
+        # a decimal comma or point (Research/bratislava-open-data.md, section 5).
+        let tables = [
+          { "key": "bezbarierovost", "item": "ccaa77c555054b60937d1c532ac85844", "path": "Bezbari%C3%A9rovos%C5%A5_v_meste_Bratislava", "category": "barrier-free",
+            "name": "názov", "street": "adresa", "district": "mestská_časť", "kind": "poddruh", "text": "pohyb_text", "web": "web_link_1", "lat": "Y", "lon": "X" },
+          { "key": "celozivotne-vzdelavanie", "item": "346027a40f62416aba2f5b413d5bb68c", "path": "Datab%C3%A1za_poskytovate%C4%BEov_celo%C5%BEivotn%C3%A9ho_vzdel%C3%A1vania_v_Bratislave", "category": "lifelong-learning",
+            "name": "Názov", "street": "Ulica", "number": "Číslo", "district": "Mestská_časť", "kind": "Oblasť", "web": "Web", "lat": "X", "lon": "Y" },
+          { "key": "fixpointy", "item": "a8ef3fba66c14f9aa6664ee8549dc2f7", "path": "Fixpointy_pre_%C4%BEud%C3%AD_v_n%C3%BAdzi_v_Bratislave", "category": "needle-drop-point",
+            "name": "Nazov", "street": "Adresa", "district": "mestska_cast", "text": "popis_pdf", "lat": "Latitude", "lon": "Longitude" },
+          { "key": "sluzby-bez-domova", "item": "5242099b24bc4bf68ea766ca55162a08", "path": "Slu%C5%BEby_pre_%C4%BEud%C3%AD_bez_domova_v_Bratislave", "category": "homeless-services",
+            "name": "Nazov", "street": "Adresa", "district": "Mestska_cast", "kind": "Tagy", "text": "Popis", "web": "Web", "lat": "Latitude", "lon": "Longitude" }
+        ]
+        let listed = this.services.or([]).map_each(s -> s.name.or(""))
+        let found = $tables.filter(t -> $listed.contains(t.path.unescape_url_query()))
+        meta missing = $tables.filter(t -> !$listed.contains(t.path.unescape_url_query())).map_each(t -> t.key).join(", ")
+        root = if content().length() > 1048576 {
+          throw("the hub's list of services is %d bytes, more than the 1 MiB read".format(content().length()))
+        } else if this.error.or(null) != null {
+          throw("the hub refused its list of services: %s".format(this.error.message.or("no reason given")))
+        } else if $found.length() == 0 {
+          throw("the hub lists none of the tables of places: nothing is written")
+        } else { $found }
+    - switch:
+        - check: '@missing != ""'
+          processors:
+            - log:
+                level: WARN
+                message: 'places: the hub no longer lists ${! @missing }, left out of this run'
+    - unarchive: { format: json_array }
+
+    # One table a request; the path is the constant above, never text of an answer.
+    - branch:
+        request_map: |
+          meta path = this.path
+          root = ""
+        processors:
+          - sleep: { duration: '200ms' }
+          - http:
+              url: https://services8.arcgis.com/pRlN1m0su5BYaFAS/arcgis/rest/services/${! @path }/FeatureServer/0/query?where=1%3D1&outFields=*&resultRecordCount=2000&f=json
+              verb: GET
+              headers:
+                Accept: application/json
+                User-Agent: joinedcontext-platform/1.0 (+https://dev.joinedcontext.com; public open data)
+              timeout: 30s
+              retries: 2
+        result_map: |
+          root.rows = if content().length() > 4194304 {
+            throw("the table answer is over 4 MiB")
+          } else if this.error.or(null) != null {
+            throw("the hub refused the query: %s".format(this.error.message.or("no reason given")))
+          } else if this.exceededTransferLimit.or(false) {
+            throw("the table holds more than 2,000 rows, more than one read")
+          } else { this.features.or([]).map_each(f -> f.attributes) }
+    # A table the hub refuses is logged and left out of this run; the others still write.
+    - catch:
+        - log: { level: WARN, message: 'places: ${! json("key") } not read: ${! error() }' }
+        - mapping: root = deleted()
+    - archive: { format: json_array }
+
+    # Plausibility (owner 2026-10-22T18:10Z): dropped and counted by reason, never guessed at: no
+    # position; a point outside Bratislava and 1 km around it (0,0 and swapped coordinates land
+    # there too); no name; one place twice (the same name and address, or the same name within
+    # 20 m), the first kept.
+    - mapping: |
+        map coordinate {
+          root = if this == null { null } else { this.string().trim().replace_all(",", ".").number().catch(null) }
+        }
+        map text {
+          root = if this == null { "" } else { this.string().re_replace_all("\\s+", " ").trim() }
+        }
+        let rows = this.map_each(t -> t.rows.or([]).map_each(r -> {
+          "table": t.without("rows"),
+          "name": r.get(t.name).apply("text"),
+          "street": [r.get(t.street).apply("text"), r.get(t.number.or("-")).apply("text")].filter(s -> s != "").join(" "),
+          "district": r.get(t.district).apply("text"),
+          "kind": r.get(t.kind.or("-")).apply("text"),
+          "text": r.get(t.text.or("-")).apply("text"),
+          "web": r.get(t.web.or("-")).apply("text"),
+          "lat": r.get(t.lat).apply("coordinate"),
+          "lon": r.get(t.lon).apply("coordinate")
+        })).flatten()
+        map reason {
+          root = if this.lat == null || this.lon == null { "no position" }
+            else if this.lon < 16.93 || this.lon > 17.3 || this.lat < 47.99 || this.lat > 48.28 { "outside Bratislava" }
+            else if this.name == "" { "no name" }
+            else { null }
+        }
+        # Metres at Bratislava's latitude: 111,320 m a degree north, 74,290 m a degree east.
+        map near {
+          let p = this.value
+          let pts = if this.tally.key == $p._key { this.tally.pts } else { [] }
+          let near = $pts.any(q -> (q.index(0) - $p.lat) * (q.index(0) - $p.lat) * 12392142400 + (q.index(1) - $p.lon) * (q.index(1) - $p.lon) * 5519004100 <= 400)
+          root = if $near { this.tally.assign({ "dup": this.tally.dup.append($p._id) }) } else {
+            { "key": $p._key, "pts": $pts.append([$p.lat, $p.lon]), "dup": this.tally.dup }
+          }
+        }
+        let marked = $rows.map_each(e -> e.assign({
+          "_drop": e.apply("reason"),
+          "_id": e.table.key + "." + (e.name.lowercase() + "|" + e.street.lowercase()).hash("sha256").encode("hex").slice(0, 16)
+        }))
+        let usable = $marked.filter(e -> e._drop == null)
+        let once = $usable.unique(e -> e._id)
+        let keyed = $once.map_each(e -> e.assign({ "_key": e.table.key + "|" + e.name.lowercase() })).sort_by(e -> e._key)
+        let near = $keyed.fold({ "key": "", "pts": [], "dup": [] }, item -> item.apply("near")).dup
+        let kept = $once.filter(e -> !$near.contains(e._id))
+        let tally = $marked.filter(e -> e._drop != null).fold({}, item -> item.tally.assign({ item.value._drop: item.tally.get(item.value._drop).or(0) + 1 }))
+        let dups = $usable.length() - $kept.length()
+        meta dropped = (if $dups > 0 { $tally.assign({ "duplicate": $dups }) } else { $tally }).format_json(no_indent: true)
+        meta kept = $kept.length().string()
+        root = if $kept.length() == 0 { throw("the tables of places hold no usable place: nothing is written") } else { $kept }
+    - log:
+        level: INFO
+        message: 'places: ${! @kept } places kept, dropped by reason ${! @dropped }'
+    - unarchive: { format: json_array }
+
+    - mapping: |
+        # The domain comes from the deployment, never from this file (PF-44). A web address
+        # without its scheme ("www.3ec.sk") gets https; anything else that is no web address is
+        # left out.
+        let t = this.table
+        let web = if this.web.re_match("^https?://[^\\s]+$") { this.web } else if this.web.re_match("^www\\.[^\\s/]+\\.[a-z]{2,}(/[^\\s]*)?$") { "https://" + this.web } else { null }
+        root = {
+          "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
+          "type": "PointOfInterest",
+          "name": { "type": "Property", "value": this.name },
+          "category": { "type": "Property", "value": [$t.category].concat(if this.kind == "" { [] } else { [this.kind] }) },
+          "description": if this.text == "" { null } else { { "type": "Property", "value": this.text } },
+          "location": { "type": "GeoProperty", "value": {
+            "type": "Point", "coordinates": [(this.lon * 1000000).round() / 1000000, (this.lat * 1000000).round() / 1000000]
+          } },
+          "address": { "type": "Property", "value": {
+            "streetAddress": this.street,
+            "addressLocality": "Bratislava",
+            "district": this.district,
+            "addressCountry": "SK"
+          }.filter(entry -> entry.value != "") },
+          "url": if $web == null { null } else { { "type": "Property", "value": $web } },
+          "dataProvider": { "type": "Property", "value": "Hlavné mesto SR Bratislava, data.bratislava.sk (CC BY 4.0)" },
+          "source": { "type": "Property", "value": "https://data.bratislava.sk/datasets/" + $t.item }
+        }
+        root = root.filter(entry -> entry.value != null)
+
+    - split: { size: 500 }
+    - archive: { format: json_array }

@@ -128,7 +128,7 @@ def test_each_site_direction_and_mode_is_one_observation_of_the_closed_day(traff
     # The recorded sums: Starý Most counted 454 cyclists towards the centre, 43 towards Petržalka.
     assert entities["cycle-1-forward"]["intensity"] == {"type": "Property", "value": 454, "observedAt": end}
     assert entities["cycle-1-backward"]["intensity"]["value"] == 43
-    assert entities["cycle-1-forward"]["name"]["languageMap"] == {"sk": "#1 - Starý Most (Centrum)"}
+    assert entities["cycle-1-forward"]["name"]["value"] == "#1 - Starý Most (Centrum)"
     assert entities["cycle-1-forward"]["vehicleType"]["value"] == "bicycle"
     assert "vehicleType" not in entities["vehicle-5-forward"]
     assert entities["cycle-viedenska-backward"]["laneDirection"]["value"] == "backward"
@@ -144,7 +144,7 @@ def test_one_way_sites_count_against_the_one_way_too(traffic):
     # Vajanského 1 names no second direction ("NIE JE - v mieste je jednosmerná premávka") and still
     # counted 70 cyclists and 142 vehicles against the one-way street on the recorded day.
     assert entities["cycle-13-backward"]["intensity"]["value"] == 70
-    assert entities["vehicle-13-backward"]["name"]["languageMap"] == {"sk": "#13 - Vajanského 1 (protismer)"}
+    assert entities["vehicle-13-backward"]["name"]["value"] == "#13 - Vajanského 1 (protismer)"
 
 
 def test_the_edited_records_are_left_out_with_a_counted_reason(traffic):
@@ -175,7 +175,7 @@ def test_pedestrians_are_one_crowd_flow_per_site_both_directions_apart(walkers):
     one = entities["pedestrian-1"]
     assert (one["peopleCountTowards"]["value"], one["peopleCountAway"]["value"]) == (990, 455)
     assert one["peopleCount"]["value"] == 990 + 455
-    assert one["name"]["languageMap"] == {"sk": "#1 - Starý Most (Centrum / Petržalka)"}
+    assert one["name"]["value"] == "#1 - Starý Most (Centrum / Petržalka)"
     assert entities["pedestrian-13"]["peopleCountAway"]["value"] == 1070
     assert "pedestrian-viedenska" not in entities and "pedestrian-3" not in entities
     (line,) = [log for log in logs if "left out" in log]

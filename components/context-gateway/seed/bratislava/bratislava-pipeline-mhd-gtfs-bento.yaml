@@ -79,7 +79,7 @@ pipeline:
           _ => {
             "id": $urn.format("GtfsStop", env("JC_ORG_DOMAIN"), env("JC_SPACE"), r.key),
             "type": "GtfsStop",
-            "name": { "type": "LanguageProperty", "languageMap": { "sk": r.stop_name } },
+            "name": { "type": "Property", "value": r.stop_name },
             "stopCode": if r.stop_code.or("").re_match("^[0-9A-Za-z]{1,10}$") { { "type": "Property", "value": r.stop_code } } else { null },
             "platformCode": if r.platform_code.or("").re_match("^[0-9A-Za-z]{1,4}$") { { "type": "Property", "value": r.platform_code } } else { null },
             "zoneCode": if r.zone_id.or("").re_match("^[0-9]{1,4}$") { { "type": "Property", "value": r.zone_id } } else { null },

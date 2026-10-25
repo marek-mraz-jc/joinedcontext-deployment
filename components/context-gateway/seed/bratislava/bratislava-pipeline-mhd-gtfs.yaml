@@ -12,7 +12,7 @@ spec:
   schedule: '45 3 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: dpb-gtfs }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:bratislava:bratislava
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
   output: { type: GtfsStop, mode: upsert }
   # 111 kB of CSV at most per message.
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }
