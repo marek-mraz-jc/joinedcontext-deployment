@@ -3,12 +3,14 @@ admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reape
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/staging-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/staging-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/staging-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/staging-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/staging-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/staging-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/staging-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/staging-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/staging-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/staging-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration
@@ -229,6 +231,7 @@ rbac.authorization.k8s.io/v1/ClusterRoleBinding -/staging-portal-namespaces
 rbac.authorization.k8s.io/v1/Role staging-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/Role staging/edge-file-composer
 rbac.authorization.k8s.io/v1/Role staging/gitea-bootstrap
+rbac.authorization.k8s.io/v1/Role staging/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/Role staging/portal
 rbac.authorization.k8s.io/v1/Role staging/portal-build-pods
 rbac.authorization.k8s.io/v1/Role staging/portal-mqtt-brokers
@@ -239,6 +242,7 @@ rbac.authorization.k8s.io/v1/Role staging/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding staging-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding staging/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding staging/gitea-bootstrap
+rbac.authorization.k8s.io/v1/RoleBinding staging/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding staging/portal-mqtt-brokers

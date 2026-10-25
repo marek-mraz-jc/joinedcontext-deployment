@@ -74,6 +74,8 @@ def test_the_diff_reads_live_objects_and_never_applies(monkeypatch):
     assert argv[argv.index("-e") + 1] == "smartcity" and "diff" in argv
     assert "--three-way-merge" in argv and "--suppress-secrets" in argv
     assert not {"sync", "apply", "destroy"} & set(argv)
+    # T-5702: the drift identity reads no Secret in kube-system, so no release there is diffed.
+    assert argv[argv.index("--selector") + 1] == "namespace!=kube-system" and argv.index("--selector") < argv.index("diff")
 
 
 @pytest.mark.parametrize("code,output", [(1, "Error: helm-diff plugin not installed"), (2, "changes, but no header")])
