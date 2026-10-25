@@ -182,6 +182,7 @@
  "test_pin_tiers.py": 0.0,
  "test_pins.py": 1.0,
  "test_pipeline_cronjob.py": 0.7,
+ "test_pipeline_grants.py": 10.7,
  "test_pipeline_runner_files.py": 24.3,
  "test_pipeline_runner_liveness.py": 71.3,
  "test_pipeline_runner_memory.py": 0.0,

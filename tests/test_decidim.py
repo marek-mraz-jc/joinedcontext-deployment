@@ -343,7 +343,8 @@ def test_generate_check_is_clean_and_one_row_is_one_instance():
     assert done.returncode == 0, done.stdout
     rows = (HERE / "instances.csv").read_text().strip().splitlines()[1:]
     names = sorted(p.name for p in SEED.glob("slovensko-*-decidim-*.yaml"))
-    assert len(names) == 6 * len(rows)
+    # Per instance: two DataSources, two Pipelines, two mappings and the full pass's Policy (T-5717).
+    assert len(names) == 7 * len(rows)
     index = yaml.safe_load((SEED / "index.yaml").read_text())
     for name in names:
         assert name in index, name
