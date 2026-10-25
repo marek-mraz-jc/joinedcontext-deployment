@@ -137,9 +137,16 @@ spec:
             failureThreshold: {{ .failureThreshold }}
           {{- end }}
           livenessProbe:
+            {{- with .Values.probes.liveness.exec }}
+            # A command judges liveness where an answer to HTTP does not prove it
+            # (components/pipeline-runner: a stream whose stop never ends, T-5370).
+            exec:
+              command: {{- toYaml . | nindent 16 }}
+            {{- else }}
             httpGet:
               path: {{ .Values.probes.liveness.path | default "/" }}
               port: {{ .Values.containerPort }}
+            {{- end }}
             periodSeconds: {{ .Values.probes.liveness.periodSeconds | default 15 }}
             timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds | default 3 }}
             failureThreshold: {{ .Values.probes.liveness.failureThreshold | default 3 }}

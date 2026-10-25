@@ -119,11 +119,25 @@ probes:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
+  # Liveness is a stop that ends (T-5370). A step that never returns (a recursive jq def, a
+  # range over millions) holds a core, and Bento cannot free it: DELETE /streams/{id} hangs and
+  # leaves the stream listed `"active":false` while /ping and every other stream go on
+  # (measured on 1.22.0, 2026-10-25). The Portal deletes a run past its cap and stops starting
+  # it; a stream still held stopped two probes in a row fails this one, and the restart frees
+  # the core. A finished run is deleted within the Portal's next queue tick, seconds, so it is
+  # never seen twice a minute apart; a streams API that does not answer fails it too.
   liveness:
-    path: /ping
-    periodSeconds: 15
-    timeoutSeconds: 3
-    failureThreshold: 3
+    exec:
+      - sh
+      - -c
+      - >-
+        l=$(wget -qO- -T 5 http://127.0.0.1:4195/streams) || exit 1;
+        echo "$l" | grep -o '"[^"]*":{"active":false' | cut -d'"' -f2 | sort > /tmp/stopped.now;
+        touch /tmp/stopped; held=$(comm -12 /tmp/stopped /tmp/stopped.now);
+        mv /tmp/stopped.now /tmp/stopped; test -z "$held"
+    periodSeconds: 60
+    timeoutSeconds: 10
+    failureThreshold: 2
     initialDelaySeconds: 10
 
 # Bento is Go: without a soft limit its heap grows to the kernel's hard one, and one OOMKill
