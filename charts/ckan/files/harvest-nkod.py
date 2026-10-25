@@ -358,7 +358,10 @@ def main():
         print("the catalogue listed nothing; nothing is deleted on an empty answer", file=sys.stderr)
         return 1
     if ckan("organization_show", {"id": CONFIG["organization"]}) is None:
-        ckan("organization_create", {"name": CONFIG["organization"], "title": CONFIG["publisherName"]})
+        # The harvest user edits organizations and creates none (F-DEP1-002).
+        print(f"organization {CONFIG['organization']} does not exist; the catalogue's api-token Job "
+              "creates it on the next apply", file=sys.stderr)
+        return 1
     states, problems, kept, named = {}, [], set(), names(found)
     converted = {ds["iri"]: od_standards(named[ds["iri"]]) for ds in found.values()}
     if not any(converted.values()):
