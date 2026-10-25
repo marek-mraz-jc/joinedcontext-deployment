@@ -46,6 +46,21 @@
     "authUrl": {
       "type": "string"
     },
+    "gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "type": "string"
+        },
+        "podLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "runner": {
       "type": "object",
       "additionalProperties": false,

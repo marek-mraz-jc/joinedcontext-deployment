@@ -29,7 +29,9 @@ their own priority, not by the order they appear in `apisix-plugins.yaml`:
 2. `request-id` — UUIDv4, echoed to the client.
 3. `serverless-pre-function` — drops every header a client could use to forge tenancy or
    authorization (`NGSILD-Tenant`, `X-Userinfo`, `X-Access-Token`, `X-Allowed-Scope-Ids`,
-   `X-Endpoint-Slug`, `X-Consumer-Identity`) and the proxy hints APISIX sets itself
+   `X-Endpoint-Slug`, `X-Consumer-Identity`, `JC-Read-Versions`), every header of the families
+   the platform's services write on the internal hop (`x-jc-*`, `jc-provenance-*`, `l5d-*`,
+   matched by prefix over all headers, T-5566) and the proxy hints APISIX sets itself
    (`X-Forwarded-Host/Proto/Port/Prefix/Server`, `X-Real-IP`). `X-Forwarded-For` stays:
    nginx maintains it, and it is the client-IP audit trail and the UI rate-limit key.
 4. `cors` — the endpoint surface answers browsers from `https://*.<domain>` only.

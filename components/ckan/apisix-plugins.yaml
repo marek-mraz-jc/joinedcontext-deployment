@@ -21,11 +21,19 @@ ckan:
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
-              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP", "JC-Read-Versions",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            for name in pairs(ngx.req.get_headers(0)) do
+              local key = name:lower():gsub("_", "-")
+              for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
+                  ngx.req.clear_header(name)
+                end
+              end
             end
           end
     # Data class (T-4717): 600 requests a minute per client address, 10 a second, for the
@@ -94,11 +102,19 @@ ckan-map:
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
-              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP", "JC-Read-Versions",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            for name in pairs(ngx.req.get_headers(0)) do
+              local key = name:lower():gsub("_", "-")
+              for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
+                  ngx.req.clear_header(name)
+                end
+              end
             end
           end
     # Class 1 (standard web): a catalogue is browsed and crawled, not called in a loop.
@@ -155,11 +171,19 @@ ckan-redirect:
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
-              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP", "JC-Read-Versions",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            for name in pairs(ngx.req.get_headers(0)) do
+              local key = name:lower():gsub("_", "-")
+              for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
+                  ngx.req.clear_header(name)
+                end
+              end
             end
           end
     # Class 1 (standard web), the same bucket the sibling redirect on the apex uses.
@@ -217,11 +241,19 @@ ckan-old-host:
               "NGSILD-Tenant", "X-Userinfo", "X-Access-Token", "X-Allowed-Scope-Ids",
               "X-Endpoint-Slug", "X-Consumer-Identity", "X-Forwarded-User",
               "X-Forwarded-Host", "X-Forwarded-Proto", "X-Forwarded-Port",
-              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP",
+              "X-Forwarded-Prefix", "X-Forwarded-Server", "X-Real-IP", "JC-Read-Versions",
             }
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            for name in pairs(ngx.req.get_headers(0)) do
+              local key = name:lower():gsub("_", "-")
+              for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
+                if key:sub(1, #prefix) == prefix and key ~= "x-jc-visitor" then
+                  ngx.req.clear_header(name)
+                end
+              end
             end
           end
     # Class 1 (standard web), the same bucket the sibling redirect on the apex uses.
