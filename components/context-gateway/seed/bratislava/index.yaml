@@ -1,0 +1,51 @@
+# file in this folder -> its path in the configuration repository (jc-core PATH_TEMPLATEs), read
+# by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values).
+# Hlavné mesto SR Bratislava as an Organization of its own (ADR-N-058, T-5271), its administrator
+# and its readers; the bindings end at this Organization (PF-123).
+bratislava-org.yaml: organizations/bratislava.yaml
+bratislava-rolebinding-admins.yaml: users/assignments/bratislava-admins.yaml
+bratislava-rolebinding-viewers.yaml: users/assignments/bratislava-viewers.yaml
+# The project bratislava: one space of data.bratislava.sk as Smart Data Models, its one door, the
+# pipelines' account and Policy, and the CKAN organisation its datasets publish to.
+bratislava-project.yaml: projects/bratislava/project.yaml
+bratislava-serviceaccount-pipelines.yaml: projects/bratislava/access/serviceaccounts/pipelines.yaml
+bratislava-ckan.yaml: projects/bratislava/ckan/bratislava.yaml
+bratislava-space.yaml: projects/bratislava/spaces/bratislava/space.yaml
+bratislava-datamodel.yaml: projects/bratislava/spaces/bratislava/datamodels/bratislava.yaml
+bratislava.linkml.yaml: projects/bratislava/spaces/bratislava/datamodels/bratislava.linkml.yaml
+bratislava.v1.schema.json: projects/bratislava/spaces/bratislava/datamodels/bratislava.v1.schema.json
+bratislava.v1.context.jsonld: projects/bratislava/spaces/bratislava/datamodels/bratislava.v1.context.jsonld
+bratislava.v1.example.jsonld: projects/bratislava/spaces/bratislava/datamodels/bratislava.v1.example.jsonld
+bratislava.v1.md: projects/bratislava/spaces/bratislava/datamodels/bratislava.v1.md
+bratislava-endpoint.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava.yaml
+bratislava-policy-pipelines-write.yaml: projects/bratislava/spaces/bratislava/policies/pipelines-write.yaml
+bratislava-policy-public-read.yaml: projects/bratislava/spaces/bratislava/policies/public-read.yaml
+# T-5273: the counter sites (cyclists, motor vehicles, pedestrians) of data.bratislava.sk and the
+# Slovnaft BAjk stations of nextbike's GBFS feed, each catalogue dataset its own door and Policy.
+bratislava-datasource-counters.yaml: projects/bratislava/datasources/counters-newest.yaml
+bratislava-datasource-bike-stations.yaml: projects/bratislava/datasources/nextbike-stations.yaml
+bratislava-datasource-bike-availability.yaml: projects/bratislava/datasources/nextbike-station-status.yaml
+bratislava-pipeline-counters.yaml: projects/bratislava/pipelines/counters/pipeline.yaml
+bratislava-pipeline-counters-bento.yaml: projects/bratislava/pipelines/counters/bento.yaml
+bratislava-pipeline-pedestrian-counters.yaml: projects/bratislava/pipelines/pedestrian-counters/pipeline.yaml
+bratislava-pipeline-pedestrian-counters-bento.yaml: projects/bratislava/pipelines/pedestrian-counters/bento.yaml
+bratislava-pipeline-bike-stations.yaml: projects/bratislava/pipelines/bike-stations/pipeline.yaml
+bratislava-pipeline-bike-stations-bento.yaml: projects/bratislava/pipelines/bike-stations/bento.yaml
+bratislava-pipeline-bike-availability.yaml: projects/bratislava/pipelines/bike-availability/pipeline.yaml
+bratislava-pipeline-bike-availability-bento.yaml: projects/bratislava/pipelines/bike-availability/bento.yaml
+bratislava-endpoint-cyklisti.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-cyklisti.yaml
+bratislava-endpoint-vozidla.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-vozidla.yaml
+bratislava-endpoint-chodci.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-chodci.yaml
+bratislava-endpoint-bajk.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-bajk.yaml
+bratislava-policy-public-cyklisti.yaml: projects/bratislava/spaces/bratislava/policies/public-cyklisti.yaml
+bratislava-policy-public-vozidla.yaml: projects/bratislava/spaces/bratislava/policies/public-vozidla.yaml
+bratislava-policy-public-chodci.yaml: projects/bratislava/spaces/bratislava/policies/public-chodci.yaml
+bratislava-policy-public-bajk.yaml: projects/bratislava/spaces/bratislava/policies/public-bajk.yaml
+# T-5273: DPB's public transport network from its GTFS timetable, stops and lines as two datasets.
+bratislava-datasource-mhd-gtfs.yaml: projects/bratislava/datasources/dpb-gtfs.yaml
+bratislava-pipeline-mhd-gtfs.yaml: projects/bratislava/pipelines/mhd-gtfs/pipeline.yaml
+bratislava-pipeline-mhd-gtfs-bento.yaml: projects/bratislava/pipelines/mhd-gtfs/bento.yaml
+bratislava-endpoint-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-zastavky.yaml
+bratislava-endpoint-mhd-linky.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-mhd-linky.yaml
+bratislava-policy-public-mhd-zastavky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-zastavky.yaml
+bratislava-policy-public-mhd-linky.yaml: projects/bratislava/spaces/bratislava/policies/public-mhd-linky.yaml

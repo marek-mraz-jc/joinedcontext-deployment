@@ -29,7 +29,7 @@ keycloak:
       existingSecret: keycloak-smtp
     # The root of each Organization's group subtree but the installation's (ADR-N-058 2.5): the
     # seed's organizations/{name}.yaml. Its readers' binding names the root (zilina-viewers).
-    organizations: [zilina, barcelona]
+    organizations: [zilina, barcelona, bratislava]
     # Realm users of the development profile (components/keycloak/demo-users.yaml).
     demoUsers:
       {{- if eq .Values.global.profile "development" }}
