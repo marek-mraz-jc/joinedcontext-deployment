@@ -26,6 +26,11 @@ portal-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: wasm-host-shard
           componentNamespace: wasm-host
+        # Keycloak's back-channel logout (T-5568); the Portal verifies the logout token itself.
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: keycloak-app
+          componentNamespace: keycloak
       ports:
         - port: 4143
           protocol: TCP

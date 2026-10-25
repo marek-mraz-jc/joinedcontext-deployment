@@ -30,6 +30,8 @@ portal-api:
   federated:
     release: portal.portal
     serviceAccount: portal
+  # Keycloak posts the end of every session of the Portal's own code flow to it (T-5568).
+  backchannelLogout: true
   # The reconciler creates, updates and deletes the confidential client `app-{name}` of every
   # app on demand, as this client's own service account (AP-27). It holds the read-only
   # `view-clients`, which lists and finds clients, and the write scopes come from the realm's

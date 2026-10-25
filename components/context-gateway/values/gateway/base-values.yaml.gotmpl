@@ -133,6 +133,10 @@ env:
   # Answered calls per Endpoint and surface, posted every five minutes with the same token for the
   # publishers' Usage tab (T-5118): names and numbers, no address or person.
   JC_GATEWAY_USAGE_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/usage"
+  # The subjects the Portal revoked (a person disabled, deleted or signed out, a ServiceAccount
+  # removed), polled every ten seconds with the same token: their unexpired tokens are refused on
+  # every door within one poll (T-5568, TR-03187 AR-6).
+  JC_GATEWAY_REVOCATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/revocations"
 {{- end }}
 {{- if has "assistant" .Values.components }}
   # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its

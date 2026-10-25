@@ -114,7 +114,8 @@ config:
       notBefore: 0
       # TR-03187 AR-11: Use ES256 for token signatures
       defaultSignatureAlgorithm: ES256
-      revokeRefreshToken: false
+      # TR-03187 AR-6 (T-5568): a refresh token works once; a replayed one ends the session.
+      revokeRefreshToken: true
       refreshTokenMaxReuse: 0
       accessTokenLifespan: 300
       accessTokenLifespanForImplicitFlow: 900
@@ -123,8 +124,10 @@ config:
       ssoSessionMaxLifespan: 36000
       ssoSessionIdleTimeoutRememberMe: 0
       ssoSessionMaxLifespanRememberMe: 0
+      # An offline token lapses 30 days unused and 60 days after its login however often it is
+      # used (T-5568); only the MCP connector clients may ask for one (optionalClientScopes).
       offlineSessionIdleTimeout: 2592000
-      offlineSessionMaxLifespanEnabled: false
+      offlineSessionMaxLifespanEnabled: true
       offlineSessionMaxLifespan: 5184000
       clientSessionIdleTimeout: 0
       clientSessionMaxLifespan: 0
@@ -618,13 +621,23 @@ config:
           "authorizationServicesEnabled" false
           "webOrigins" (list (printf "https://%s" $host))
           "defaultClientScopes" (list "basic" "email" "profile" "roles" "web-origins")
-          "optionalClientScopes" (list "address" "phone" "offline_access" "microprofile-jwt")
+          "optionalClientScopes" (list "address" "phone" "microprofile-jwt")
         }}
         {{- /* Redirect URIs and PKCE belong to every browser client. A public client has
                no secret to fall back on, so leaving them out of that branch left it
                unable to complete a login at all. Only the secret is confidential-only. */}}
         {{- $_ := set $clientDefaults "redirectUris" $redirectUris }}
         {{- $_ := set $clientDefaults "attributes" (dict "post.logout.redirect.uris" "+" "pkce.code.challenge.method" "S256") }}
+        {{- /* T-5568, TR-03187 AR-6: a session Keycloak ends (an administrator's logout or
+               disable, the person's own sign-out, an expiry) is posted to the Portal, which
+               refuses the person's tokens on the Portal and, through its revocation list, on
+               the gateway. Over the in-cluster Service: Keycloak's egress has no route to the
+               public host. */}}
+        {{- if and (index $client "backchannelLogout") (has "portal" $.Values.components) }}
+        {{- $portalNamespace := required (printf "%s: no namespace for portal.portal" $clientId) (index $.Values "portal" "portal" "namespace") }}
+        {{- $_ := set $clientDefaults.attributes "backchannel.logout.url" (printf "http://portal.%s.svc.cluster.local:8080/api/v1/auth/backchannel-logout" $portalNamespace) }}
+        {{- $_ := set $clientDefaults.attributes "backchannel.logout.session.required" "true" }}
+        {{- end }}
         {{- $federated := index $client "federated" }}
         {{- if and (not $isPublicClient) (not $federated) }}
         {{- $_ := set $clientDefaults "secret" (printf "$(CLIENT_SECRET_%s)" ($clientId | upper | replace "-" "_")) }}
