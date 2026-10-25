@@ -7,6 +7,7 @@ key,street,district,lat,lon,source,checked_on
 03464b938f886bec,Beňovského 1,Bratislava-Dúbravka,48.181290,17.048662,https://data.gov.sk/id/physical-address/626273A,2026-10-25
 0363d637203fd917,Vihorlatská 10,Nové Mesto,48.173634,17.159685,https://data.gov.sk/id/physical-address/6158064,2026-10-25
 0397703f284d2aa4,Tilgnerova 14,Karlova Ves,48.155190,17.056120,https://data.gov.sk/id/physical-address/6249023,2026-10-25
+039f7f8db0b101d7,"Topoľčianska 3209/15, 851 01 Bratislava - mestská časť Petržalka",,48.108910,17.110180,https://data.gov.sk/id/physical-address/35552385,2026-10-25
 041278d57e78d8da,Borská 4,Karlova Ves,48.161460,17.051064,https://data.gov.sk/id/physical-address/624799A,2026-10-25
 0473de2cfff9ab5b,Škarniclova 1,Staré Mesto,48.145050,17.099154,https://data.gov.sk/id/physical-address/5978137,2026-10-25
 055013243da7fc4a,Švantnerova 1,Dúbravka,48.181490,17.039352,https://data.gov.sk/id/physical-address/6263972,2026-10-25
@@ -23,8 +24,11 @@ key,street,district,lat,lon,source,checked_on
 0a8e8865c09281ab,Beňadická 38,Bratislava-Petržalka,48.098408,17.104523,https://data.gov.sk/id/physical-address/34988954,2026-10-25
 0ab35bd1aadcf877,Sekurisova 10,Dúbravka,48.192270,17.038086,https://data.gov.sk/id/physical-address/6266953,2026-10-25
 0abb54369d560e10,Na pántoch 9,Bratislava-Rača,48.213604,17.179434,https://data.gov.sk/id/physical-address/35552671,2026-10-25
+0afe1c93fea93461,"Viedenská cesta 2996/3, 851 01 Bratislava - mestská časť Petržalka",,48.136196,17.103490,https://data.gov.sk/id/physical-address/34988030,2026-10-25
 0b3ceb57acd7e98d,Beňovského 1,Dúbravka,48.181290,17.048662,https://data.gov.sk/id/physical-address/626273A,2026-10-25
 0c247ab8f8321eed,Čachtická 14,Rača,48.210460,17.154196,https://data.gov.sk/id/physical-address/6141927,2026-10-25
+0cd92d57dd6d073c,"Karloveská 3334/3, 841 04 Bratislava - mestská časť Karlova Ves",,48.149506,17.062370,https://data.gov.sk/id/physical-address/6244469,2026-10-25
+0d702d0fed94a12c,"Olejkárska 2357/1, 814 52 Bratislava - mestská časť Staré Mesto",,48.142000,17.122051,https://data.gov.sk/id/physical-address/34998216,2026-10-25
 0da9e4218dd45f75,Sklenárova 7,Bratislava-Ružinov,48.151670,17.146318,https://data.gov.sk/id/physical-address/6052233,2026-10-25
 0df995ebceedf4e7,Vazovova 4,Bratislava-Staré Mesto,48.154160,17.117207,https://data.gov.sk/id/physical-address/5996947,2026-10-25
 0e03e99bcc373f64,Biskupická 21,Bratislava-Podunajské Bis,48.127014,17.208954,https://data.gov.sk/id/physical-address/6027483,2026-10-25
@@ -43,6 +47,7 @@ key,street,district,lat,lon,source,checked_on
 129ec1cbd1d79769,Zochova 9,Bratislava-Staré Mesto,48.146350,17.099962,https://data.gov.sk/id/physical-address/5977158,2026-10-25
 12c9e16c0c0b2f3c,Estónska 7,Podunajské Biskupice,48.142560,17.199379,https://data.gov.sk/id/physical-address/608772A,2026-10-25
 1337e8341c572bc1,Priehradná 20B,Bratislava-Vrakuňa,48.148280,17.195623,https://data.gov.sk/id/physical-address/7002017231,2026-10-25
+13fa07503ddf0bb0,"Klariská 329/16, 814 79 Bratislava - mestská časť Staré Mesto",,48.144670,17.105082,https://data.gov.sk/id/physical-address/5973462,2026-10-25
 143c0b8ec759a2a2,Alstrova 249,,48.213722,17.151133,https://data.gov.sk/id/physical-address/6130465,2026-10-25
 1481aa4e7b4a94b7,Haburská 4,Ružinov,48.162330,17.151438,https://data.gov.sk/id/physical-address/6059053,2026-10-25
 14f530f344a7f42e,Kulíškova 8,Ružinov,48.151455,17.130903,https://data.gov.sk/id/physical-address/6047536,2026-10-25
@@ -53,6 +58,7 @@ key,street,district,lat,lon,source,checked_on
 199341c051184b2a,Ladislava Sáru 1,Bratislava-Karlova Ves,48.150290,17.060709,https://data.gov.sk/id/physical-address/6243787,2026-10-25
 19985f324a58e862,Majerníkova 11,Bratislava-Karlova Ves,48.151745,17.046824,https://data.gov.sk/id/physical-address/5110000071,2026-10-25
 19a821d7a6faa56d,Bárdošova 2724/33,Bratislava-Nové Mesto,48.167824,17.097975,https://data.gov.sk/id/physical-address/6181516,2026-10-25
+19b9f981a52268e0,"Vrbenského 2552/1, 831 53 Bratislava - mestská časť Rača",,48.198513,17.142138,https://data.gov.sk/id/physical-address/6167282,2026-10-25
 19f215f5b3df8250,Mikovíniho 1,Bratislava-Nové Mesto,48.159874,17.118084,https://data.gov.sk/id/physical-address/6172276,2026-10-25
 1a5989ee00fe732d,Vyšehradská 17,Bratislava-Petržalka,48.097435,17.104230,https://data.gov.sk/id/physical-address/34988866,2026-10-25
 1ad630d3d4700dc7,Šumavská 34,Bratislava-Ružinov,48.155365,17.131190,https://data.gov.sk/id/physical-address/6043191,2026-10-25
@@ -68,12 +74,14 @@ key,street,district,lat,lon,source,checked_on
 1d0e2fb5c330f24d,Dubová 1,Staré Mesto,48.164740,17.081924,https://data.gov.sk/id/physical-address/34999107,2026-10-25
 1dc012478b309562,Strečnianska 2,Petržalka,48.105570,17.103483,https://data.gov.sk/id/physical-address/35247157,2026-10-25
 1e1cb81cb788cc2e,Radlinského 9,Bratislava-Staré Mesto,48.150124,17.114258,https://data.gov.sk/id/physical-address/36097545,2026-10-25
+1e7f9d7678693940,"Exnárova 3124/6, 821 03 Bratislava - mestská časť Ružinov",,48.156445,17.168062,https://data.gov.sk/id/physical-address/6077346,2026-10-25
 1ee9cb16c580d1af,Pri Šajbách 14,Rača,48.201843,17.161310,https://data.gov.sk/id/physical-address/36715217,2026-10-25
 2144fbe6f314b417,Mlynské nivy 44/C,Bratislava-Ružinov,48.144245,17.137545,https://data.gov.sk/id/physical-address/7101166237,2026-10-25
 2206b1c9b9bf7858,Karadžičova 51,Bratislava-Staré Mesto,48.154568,17.125036,https://data.gov.sk/id/physical-address/6011434,2026-10-25
 224ffbad68d71dac,Železničná 14,Vrakuňa,48.145885,17.209246,https://data.gov.sk/id/physical-address/37336222,2026-10-25
 22514556b6110994,Mokrohájska 3392/3,Bratislava-Karlova Ves,48.175250,17.067226,https://data.gov.sk/id/physical-address/7001257780,2026-10-25
 22c8764fb82f5d72,Borodáčova 2,Ružinov,48.153560,17.173538,https://data.gov.sk/id/physical-address/6077005,2026-10-25
+2394413167174f02,"Viedenská cesta 3251/7, 851 01 Bratislava - mestská časť Petržalka",,48.133540,17.097652,https://data.gov.sk/id/physical-address/5110270616,2026-10-25
 239b3db7616fdd28,Tupolevova 20,Bratislava-Petržalka,48.113224,17.104046,https://data.gov.sk/id/physical-address/35956019,2026-10-25
 23c16bf5c0601c69,Nad lúčkami 4,Bratislava-Karlova Ves,48.156590,17.051310,https://data.gov.sk/id/physical-address/6104140768,2026-10-25
 24210b2140ef3f4e,Hálkova 56,Nové Mesto,48.173910,17.135948,https://data.gov.sk/id/physical-address/6149803,2026-10-25
@@ -81,6 +89,7 @@ key,street,district,lat,lon,source,checked_on
 2512d382a7040cb6,Vavilovova 18,Bratislava-Petržalka,48.126015,17.113527,https://data.gov.sk/id/physical-address/36469378,2026-10-25
 25999578d05fd412,Topoľčianska 15,Petržalka,48.108910,17.110180,https://data.gov.sk/id/physical-address/35552385,2026-10-25
 25a39872810db46a,Pankúchova 6,Bratislava-Petržalka,48.123550,17.126202,https://data.gov.sk/id/physical-address/35353010,2026-10-25
+25efb77fa724cdb2,"Panenská 659/11, 811 03 Bratislava - mestská časť Staré Mesto",,48.147793,17.102926,https://data.gov.sk/id/physical-address/5976707,2026-10-25
 262c99b2bd98a7cd,Tomášikova 20,Bratislava-Ružinov,48.159115,17.163507,https://data.gov.sk/id/physical-address/606066A,2026-10-25
 264d44c9fd646436,Gessayova 8,Petržalka,48.120910,17.113688,https://data.gov.sk/id/physical-address/6229575,2026-10-25
 2655a1499616c036,"Primaciálne námestie 429/1, Bratislava-Staré Mesto, 81101",,48.144184,17.109420,https://data.gov.sk/id/physical-address/5973836,2026-10-25
@@ -95,6 +104,7 @@ key,street,district,lat,lon,source,checked_on
 2915a0941cfb314e,Drotárska cesta 48,Staré Mesto,48.156578,17.082722,https://data.gov.sk/id/physical-address/36338775,2026-10-25
 299c270a75519d35,Račianska 105,Bratislava-Nové Mesto,48.179337,17.126451,https://data.gov.sk/id/physical-address/6164070,2026-10-25
 29e310ef7d513c85,Strečnianska 2,Bratislava-Petržalka,48.105570,17.103483,https://data.gov.sk/id/physical-address/35247157,2026-10-25
+2a97db3fe61631ae,"Príkopova 3255/6, 831 03 Bratislava - mestská časť Nové Mesto",,48.163090,17.134375,https://data.gov.sk/id/physical-address/5110098851,2026-10-25
 2b3e5ab762ce6dba,Mlynské Nivy 12,Bratislava-Ružinov,48.145737,17.125070,https://data.gov.sk/id/physical-address/7100905339,2026-10-25
 2b718456c8d1bc39,Polereckého 3,Bratislava-Petržalka,48.123180,17.127699,https://data.gov.sk/id/physical-address/6237693,2026-10-25
 2c1595a6660de0cf,Jadrová 4,Bratislava-Ružinov,48.160034,17.166758,https://data.gov.sk/id/physical-address/6081306,2026-10-25
@@ -133,14 +143,17 @@ key,street,district,lat,lon,source,checked_on
 36415a1cc4376acf,Turnianska 10,Petržalka,48.096313,17.114447,https://data.gov.sk/id/physical-address/3535289A,2026-10-25
 365c7c18a96d0a7f,Beňadická 16,Bratislava-Petržalka,48.099007,17.107594,https://data.gov.sk/id/physical-address/34989669,2026-10-25
 366a8968104df3f7,Kapitulská 26,Bratislava-Staré Mesto,48.142500,17.105082,https://data.gov.sk/id/physical-address/5972549,2026-10-25
+369fde36fd573785,"Cesta mládeže 2825/4, 831 01 Bratislava - mestská časť Nové Mesto",,48.185177,17.077482,https://data.gov.sk/id/physical-address/6183408,2026-10-25
 37d090f62343bf16,Holíčska 30,Bratislava-Petržalka,48.110050,17.103540,https://data.gov.sk/id/physical-address/35105037,2026-10-25
 38964e96008aa28f,Ševčenkova 35,Bratislava-Petržalka,48.118626,17.101645,https://data.gov.sk/id/physical-address/35956151,2026-10-25
 396196210a455d46,Gajova 21,Bratislava-Staré Mesto,48.144530,17.120037,https://data.gov.sk/id/physical-address/3658874A,2026-10-25
 3a385f0894b8052a,Holíčska 50,Petržalka,48.108850,17.102590,https://data.gov.sk/id/physical-address/35105070,2026-10-25
 3a3bae50d10d9452,Na Pántoch 9,Rača,48.213604,17.179434,https://data.gov.sk/id/physical-address/35552671,2026-10-25
 3a6544a9784431eb,Ladislava Sáru 3,Bratislava-Karlova Ves,48.151016,17.060045,https://data.gov.sk/id/physical-address/6243798,2026-10-25
+3a788c2cc5d0efb8,"Viedenská cesta 3250/5, 851 01 Bratislava - mestská časť Petržalka",,48.133823,17.098885,https://data.gov.sk/id/physical-address/10062173,2026-10-25
 3a92522f69f51fac,Tbiliská 4,Bratislava-Rača,48.215110,17.160954,https://data.gov.sk/id/physical-address/35532585,2026-10-25
 3ab21f0e607175a2,Znievska 2,Petržalka,48.104137,17.102715,https://data.gov.sk/id/physical-address/35105147,2026-10-25
+3ac825d900911ee1,"Primaciálne námestie 429/1, 814 99 Bratislava - mestská časť Staré Mesto",,48.144184,17.109420,https://data.gov.sk/id/physical-address/5973836,2026-10-25
 3b8b21d2dda2f1db,Latorická 2,Podunajské Biskupice,48.134827,17.211220,https://data.gov.sk/id/physical-address/6086135,2026-10-25
 3bab0d9c682ad8c8,Budatínska 61,Petržalka,48.102703,17.102028,https://data.gov.sk/id/physical-address/34990274,2026-10-25
 3c202cd046fe5f79,Vlastenecké námestie 1,Petržalka,48.124886,17.111814,https://data.gov.sk/id/physical-address/36637590,2026-10-25
@@ -159,6 +172,7 @@ key,street,district,lat,lon,source,checked_on
 3eefa234a96482a4,Hrušková 2D,Bratislava-Rača,48.201508,17.151075,https://data.gov.sk/id/physical-address/7001293728,2026-10-25
 3f7478fc991c3f7e,Osloboditeľská 27,Bratislava-Vajnory,48.205910,17.205997,https://data.gov.sk/id/physical-address/6123502,2026-10-25
 3f79e1ccf0ee6386,Vetvárska 7,Podunajské Biskupice,48.124440,17.210112,https://data.gov.sk/id/physical-address/6027593,2026-10-25
+3fb9ac0ccafa8285,"Junácka 3077/4, 831 04 Bratislava - mestská časť Nové Mesto",,48.166466,17.138245,https://data.gov.sk/id/physical-address/35712556,2026-10-25
 3ffcc4994003b5c8,Kostolná 1,Bratislava-Staré Mesto,48.143940,17.108923,https://data.gov.sk/id/physical-address/5974243,2026-10-25
 407d4a1c182dd892,Lachova 1,Petržalka,48.123146,17.118370,https://data.gov.sk/id/physical-address/6236494,2026-10-25
 40a2f1c7873fa813,Tabaková 10,Staré Mesto,48.156353,17.116592,https://data.gov.sk/id/physical-address/5999455,2026-10-25
@@ -177,6 +191,7 @@ key,street,district,lat,lon,source,checked_on
 45490f8ca4c6e1f2,Orenburská 31,Podunajské Biskupice,48.128990,17.216160,https://data.gov.sk/id/physical-address/6020608,2026-10-25
 455ddd945fdfd65f,Sokolíkova 2,Dúbravka,48.180830,17.037678,https://data.gov.sk/id/physical-address/6263521,2026-10-25
 45d97caae9cd6ebe,Tbiliská 2,Bratislava-Rača,48.213898,17.159346,https://data.gov.sk/id/physical-address/35261963,2026-10-25
+45fe283565c04017,"Záporožská 1165/5, 852 92 Bratislava - mestská časť Petržalka",,48.124836,17.100403,https://data.gov.sk/id/physical-address/7102070129,2026-10-25
 465baf8428526cd3,Tolstého 11,Bratislava-Staré Mesto,48.149662,17.104698,https://data.gov.sk/id/physical-address/5978753,2026-10-25
 4696984746cef8f1,Kadnárova 19,,48.198390,17.140600,https://data.gov.sk/id/physical-address/6167843,2026-10-25
 4754aa77e8827a92,Plickova 16,Bratislava-Rača,48.210495,17.150555,https://data.gov.sk/id/physical-address/6144182,2026-10-25
@@ -205,10 +220,12 @@ key,street,district,lat,lon,source,checked_on
 531ee7c5211c2b40,Karpatská 1,Staré Mesto,48.157475,17.113365,https://data.gov.sk/id/physical-address/6001149,2026-10-25
 53f323344d85d6c6,Bzovícka 6,Bratislava-Petržalka,48.098380,17.117329,https://data.gov.sk/id/physical-address/35744049,2026-10-25
 54601f5109a65482,Prokofievova 5,Petržalka,48.115810,17.100980,https://data.gov.sk/id/physical-address/36398241,2026-10-25
+54cf11c3da35068f,"Radničná 577/1, 815 18 Bratislava - mestská časť Staré Mesto",,48.143390,17.109120,https://data.gov.sk/id/physical-address/5975904,2026-10-25
 55145f983d53322d,Vietnamská 13,Ružinov,48.169716,17.170017,https://data.gov.sk/id/physical-address/6101942,2026-10-25
 5532101b9c0c3274,Karadžičova 51,Staré Mesto,48.154568,17.125036,https://data.gov.sk/id/physical-address/6011434,2026-10-25
 559313068ceeebed,Lietavská 1,Petržalka,48.099823,17.105637,https://data.gov.sk/id/physical-address/34988965,2026-10-25
 5683b1d2438fab98,Malokarpatské námestie 1,Lamač,48.195140,17.051407,https://data.gov.sk/id/physical-address/6254523,2026-10-25
+56a2c176dfd7e9c8,"Gorkého 478/17, 811 01 Bratislava - mestská časť Staré Mesto",,48.143623,17.112260,https://data.gov.sk/id/physical-address/5975046,2026-10-25
 58018f3c518850bd,Vážska 32,Bratislava-Vrakuňa,48.142567,17.211010,https://data.gov.sk/id/physical-address/6083506,2026-10-25
 586f9c3fe00abd8c,Ivana Horvátha 14,Bratislava-Ružinov,48.154690,17.175003,https://data.gov.sk/id/physical-address/6078578,2026-10-25
 592513530dc8455f,Miletičova 17B,Ružinov,48.154040,17.137037,https://data.gov.sk/id/physical-address/5110005967,2026-10-25
@@ -249,10 +266,12 @@ key,street,district,lat,lon,source,checked_on
 670d2ccd3dbda721,Svätoplukova 2,Bratislava-Ružinov,48.146410,17.131550,https://data.gov.sk/id/physical-address/6052728,2026-10-25
 676ab053789eca38,Radlinského 53,Bratislava-Staré Mesto,48.156940,17.119770,https://data.gov.sk/id/physical-address/5997442,2026-10-25
 67e5c16658782659,Dubová 1,Bratislava-Staré Mesto,48.164740,17.081924,https://data.gov.sk/id/physical-address/34999107,2026-10-25
+68ad6b3a1f701c1a,"Jankolova 1542/6, 851 04 Bratislava - mestská časť Petržalka",,48.120810,17.128044,https://data.gov.sk/id/physical-address/6228112,2026-10-25
 68d82b380c4826b7,Skalická 1,Bratislava-Nové Mesto,48.181423,17.127400,https://data.gov.sk/id/physical-address/6159615,2026-10-25
 6945583a8daa7813,Antolská 11,Petržalka,48.101048,17.117490,https://data.gov.sk/id/physical-address/7001956379,2026-10-25
 6945b6f2d3998398,Karloveská 32,Karlova Ves,48.160187,17.051840,https://data.gov.sk/id/physical-address/6248011,2026-10-25
 695b3d7626b98ef2,Cyprichova 74,Bratislava-Rača,48.198967,17.146015,https://data.gov.sk/id/physical-address/6166259,2026-10-25
+69e2afb866d4bb79,"Hanulova 1993/7A, 844 01 Bratislava - mestská časť Dúbravka",,48.177240,17.042088,https://data.gov.sk/id/physical-address/6268185,2026-10-25
 6a5d62491e27126d,Borodáčova 2,Bratislava-Ružinov,48.153560,17.173538,https://data.gov.sk/id/physical-address/6077005,2026-10-25
 6add1c346ebeb465,Gajova 8,Bratislava-Staré Mesto,48.144264,17.120157,https://data.gov.sk/id/physical-address/3608989A,2026-10-25
 6b09b85ba0685ebd,Trnková 1,Bratislava-Jarovce,48.064346,17.110125,https://data.gov.sk/id/physical-address/34986886,2026-10-25
@@ -260,6 +279,7 @@ key,street,district,lat,lon,source,checked_on
 6b649f10638c26d0,Hargašova 7,Bratislava-Záhorská Bystr,48.238842,17.040667,https://data.gov.sk/id/physical-address/6204506,2026-10-25
 6b949fe5059c3838,Námestie SNP 14,Bratislava-Staré Mesto,48.145115,17.112411,https://data.gov.sk/id/physical-address/5974969,2026-10-25
 6b95d9bd54b0f058,Bohrova 1,Bratislava-Petržalka,48.130352,17.096945,https://data.gov.sk/id/physical-address/37219886,2026-10-25
+6b9c86032a688cc1,"Batkova 1188/2, 841 01 Bratislava - mestská časť Dúbravka",,48.183876,17.045586,https://data.gov.sk/id/physical-address/6262091,2026-10-25
 6b9d7283b41dd61d,Macharova 1,Petržalka,48.127956,17.107250,https://data.gov.sk/id/physical-address/36815361,2026-10-25
 6bdbee6f62ac8596,Račianska 59,Bratislava-Nové Mesto,48.165745,17.125557,https://data.gov.sk/id/physical-address/6168789,2026-10-25
 6be066e24cd540af,Damborského 3,Bratislava-Dúbravka,48.180088,17.046877,https://data.gov.sk/id/physical-address/6262432,2026-10-25
@@ -298,6 +318,7 @@ key,street,district,lat,lon,source,checked_on
 7863b86db3ac72d8,Kostlivého 19,Bratislava-Ružinov,48.151260,17.168264,https://data.gov.sk/id/physical-address/6078886,2026-10-25
 796507371a706400,Nám. slobody 19,Bratislava-Staré Mesto,48.151170,17.110777,https://data.gov.sk/id/physical-address/5998850,2026-10-25
 79c20fc4febac186,Žehrianska 3236/6,Bratislava-Petržalka,48.095955,17.117058,https://data.gov.sk/id/physical-address/35744071,2026-10-25
+79c5c3c50e4b5913,"Istrijská 6095/22, 841 07 Bratislava - mestská časť Devínska Nová Ves",,48.209560,16.974470,https://data.gov.sk/id/physical-address/35675673,2026-10-25
 7a0ffbf5074b1a73,Radlinského 11,Bratislava-Staré Mesto,48.151150,17.115429,https://data.gov.sk/id/physical-address/5997794,2026-10-25
 7a8b40bf2d8ec65c,Jána Smreka 8,Devínska Nová Ves,48.204533,16.979786,https://data.gov.sk/id/physical-address/37227201,2026-10-25
 7b347610808c139e,Banšelova 4,Ružinov,48.174940,17.166400,https://data.gov.sk/id/physical-address/6096310,2026-10-25
@@ -336,8 +357,10 @@ key,street,district,lat,lon,source,checked_on
 84fbf91dbf1c8fdf,Javorinská 9,Bratislava-Staré Mesto,48.148758,17.091522,https://data.gov.sk/id/physical-address/35553309,2026-10-25
 850a4c0f5db76ecd,Chlumeckého 12,Bratislava-Ružinov,48.155083,17.171950,https://data.gov.sk/id/physical-address/607859A,2026-10-25
 852957630b74ac93,Blumentálska 16,Bratislava-Staré Mesto,48.153214,17.120583,https://data.gov.sk/id/physical-address/5996749,2026-10-25
+854be1ebda834eb8,"Technická 4312/6, 821 04 Bratislava - mestská časť Ružinov",,48.174930,17.175547,https://data.gov.sk/id/physical-address/6099709,2026-10-25
 856697e7604194f2,Exnárova 6,Ružinov,48.156445,17.168062,https://data.gov.sk/id/physical-address/6077346,2026-10-25
 8572b4daab54f49b,Tabaková 10,Bratislava-Staré Mesto,48.156353,17.116592,https://data.gov.sk/id/physical-address/5999455,2026-10-25
+857d44d0f7109f2a,"Sklenárova 1353/5, 821 09 Bratislava - mestská časť Ružinov",,48.150734,17.145746,https://data.gov.sk/id/physical-address/6052222,2026-10-25
 85fb0c1f837c4feb,Dudova 4,Bratislava-Petržalka,48.115460,17.119484,https://data.gov.sk/id/physical-address/34988052,2026-10-25
 86afeca81c1058dc,Kulíškova 6,Ružinov,48.150980,17.130362,https://data.gov.sk/id/physical-address/6047470,2026-10-25
 86b264c19fb309c7,Novohradská 3,Bratislava-Ružinov,48.145950,17.133862,https://data.gov.sk/id/physical-address/10435150,2026-10-25
@@ -346,13 +369,16 @@ key,street,district,lat,lon,source,checked_on
 885b2b62f00d0e67,Hargašova 5,Záhorská Bystrica,48.239574,17.040420,https://data.gov.sk/id/physical-address/34986534,2026-10-25
 886df28ecda35d02,Ožvoldíkova 15,Dúbravka,48.192665,17.031403,https://data.gov.sk/id/physical-address/6266832,2026-10-25
 88b14f1d2160cf6b,Vazovova 16,Bratislava-Staré Mesto,48.153610,17.121119,https://data.gov.sk/id/physical-address/5997013,2026-10-25
+88d0d342bd6b8442,"Vilová 332/19A, 851 01 Bratislava - mestská časť Petržalka",,48.124790,17.096910,https://data.gov.sk/id/physical-address/6217013,2026-10-25
 894bb939b0a675c2,Pod Rovnicami 1,Karlova Ves,48.155586,17.058422,https://data.gov.sk/id/physical-address/6248836,2026-10-25
 899a089e8b157e06,Majerníkova 11,Karlova Ves,48.151745,17.046824,https://data.gov.sk/id/physical-address/5110000071,2026-10-25
 8a12d63bdc8f99a2,Jozefská 4,Bratislava-Staré Mesto,48.150898,17.109903,https://data.gov.sk/id/physical-address/5999048,2026-10-25
 8a1ef9274b0819d3,Fedákova 1,Dúbravka,48.190650,17.034164,https://data.gov.sk/id/physical-address/6267701,2026-10-25
 8a814eef73b09f02,Šulekova 35,Bratislava-Staré Mesto,48.151985,17.092821,https://data.gov.sk/id/physical-address/5981569,2026-10-25
+8ae464d8b5dc6884,"Rozvodná 7688/25, 831 01 Bratislava - mestská časť Nové Mesto",,48.169674,17.093746,https://data.gov.sk/id/physical-address/6103015710,2026-10-25
 8aea19c25b2c4ed9,Novohradská 3,Ružinov,48.145950,17.133862,https://data.gov.sk/id/physical-address/10435150,2026-10-25
 8bbeb252a01fa848,Nejedlého 8,Bratislava-Dúbravka,48.193070,17.036919,https://data.gov.sk/id/physical-address/6265545,2026-10-25
+8c57fc0ff029a66c,"Ľadová 5315/11, 811 05 Bratislava - mestská časť Staré Mesto",,48.157707,17.116457,https://data.gov.sk/id/physical-address/6101020398,2026-10-25
 8c61a4f587eb3c9b,Piesočná 2,Ružinov,48.166270,17.170818,https://data.gov.sk/id/physical-address/35759383,2026-10-25
 8cacca0cb06a0f35,Žltá 13/A,Bratislava-Petržalka,48.089310,17.127506,https://data.gov.sk/id/physical-address/7101555681,2026-10-25
 8cc9dee802e30086,Sklenárova 5,Ružinov,48.150734,17.145746,https://data.gov.sk/id/physical-address/6052222,2026-10-25
@@ -360,6 +386,7 @@ key,street,district,lat,lon,source,checked_on
 8de44a1c66c8d7c3,Vlastenecké nám. 1,Bratislava-Petržalka,48.124886,17.111814,https://data.gov.sk/id/physical-address/36637590,2026-10-25
 8e2998c6ebd98c59,Adámiho 11,Karlova Ves,48.152134,17.056555,https://data.gov.sk/id/physical-address/6244172,2026-10-25
 8f1ff2b45c0cff23,Iľjušinova 1,Bratislava-Petržalka,48.112330,17.104567,https://data.gov.sk/id/physical-address/3586384A,2026-10-25
+8f2a5dfef1972aba,"Prešovská 355/48, 826 46 Bratislava - mestská časť Ružinov",,48.161310,17.146288,https://data.gov.sk/id/physical-address/6040760,2026-10-25
 8fbdec59cba593b3,Podzáhradná 51,Podunajské Biskupice,48.131977,17.206186,https://data.gov.sk/id/physical-address/37475449,2026-10-25
 8ff20cd1ee27cc67,Mudroňova 83,Staré Mesto,48.150436,17.090520,https://data.gov.sk/id/physical-address/5986750,2026-10-25
 909ee00c6eb2af75,Ušiakova 1,Bratislava-Dúbravka,48.189835,17.039307,https://data.gov.sk/id/physical-address/6266359,2026-10-25
@@ -375,18 +402,23 @@ key,street,district,lat,lon,source,checked_on
 93e65044ccab78f4,Cádrova 15,Bratislava-Nové Mesto,48.164560,17.100346,https://data.gov.sk/id/physical-address/6181989,2026-10-25
 9501e8519cb17dad,Pavla Horova 3,Devínska Nová Ves,48.205074,16.979515,https://data.gov.sk/id/physical-address/37227168,2026-10-25
 95b71fc57b69604c,Pod brehmi 6/A,Bratislava-Dúbravka,48.174480,17.060863,https://data.gov.sk/id/physical-address/7100764484,2026-10-25
+95f7c5c85694fd2b,"Primaciálne námestie 429/1, 81101 Bratislava - mestská časť Staré Mesto",,48.144184,17.109420,https://data.gov.sk/id/physical-address/5973836,2026-10-25
 9752012c9ca68914,Hargašova 7,Záhorská Bystrica,48.238842,17.040667,https://data.gov.sk/id/physical-address/6204506,2026-10-25
 97b64e04823a5a74,Limbová 12,Bratislava-Nové Mesto,48.168297,17.088387,https://data.gov.sk/id/physical-address/6181417,2026-10-25
 982af1e92de23ec7,Česká 10,Nové Mesto,48.162968,17.128054,https://data.gov.sk/id/physical-address/6148120,2026-10-25
+9834ddc533b64dd9,"Uršulínska 436/9, 811 01 Bratislava - mestská časť Staré Mesto",,48.143974,17.110323,https://data.gov.sk/id/physical-address/5973880,2026-10-25
 989176bb2a422e3b,Rostovská 13,Bratislava-Rača,48.208470,17.153593,https://data.gov.sk/id/physical-address/6140585,2026-10-25
+99a86d117e7e2b5e,"Mlynská Dolina 6079/1A, 842 27 Bratislava - mestská časť Karlova Ves",,48.156597,17.075523,https://data.gov.sk/id/physical-address/10581208,2026-10-25
 9a3420ea711d0d6c,Turnianska 10,Bratislava-Petržalka,48.096313,17.114447,https://data.gov.sk/id/physical-address/3535289A,2026-10-25
 9a57cf3b410f2016,Hlinícka 1,Bratislava-Rača,48.194800,17.138834,https://data.gov.sk/id/physical-address/6166578,2026-10-25
 9a712cea8e99ab05,Mišíkova 19,Bratislava-Staré Mesto,48.151173,17.100086,https://data.gov.sk/id/physical-address/5981360,2026-10-25
+9bb6ef10ec2b3c26,"Pri trati 10927/47, 821 06 Bratislava - mestská časť Podunajské Biskupice",,48.123352,17.219896,https://data.gov.sk/id/physical-address/6102001796,2026-10-25
 9bcc45087f4e60da,Plickova 9,Rača,48.210290,17.149422,https://data.gov.sk/id/physical-address/614415A,2026-10-25
 9c191bbb38c26399,Tbiliská 2,Rača,48.213898,17.159346,https://data.gov.sk/id/physical-address/35261963,2026-10-25
 9c7969bae98d1883,Bieloruská 1,Podunajské Biskupice,48.139970,17.201221,https://data.gov.sk/id/physical-address/6087356,2026-10-25
 9d8196547544f06c,Cabanova 44,Bratislava-Dúbravka,48.194813,17.026497,https://data.gov.sk/id/physical-address/626911A,2026-10-25
 9e00db30c776a18d,Vrbenského 1,Rača,48.198513,17.142138,https://data.gov.sk/id/physical-address/6167282,2026-10-25
+9efda3ce9d1d1a43,"Gessayova 1627/6, 851 03 Bratislava - mestská časť Petržalka",,48.121030,17.113785,https://data.gov.sk/id/physical-address/6229586,2026-10-25
 9f3858c1220e222a,Medzilaborecká 4,Bratislava-Ružinov,48.159626,17.158348,https://data.gov.sk/id/physical-address/6060263,2026-10-25
 9f9f3a4624d10a9d,J. Valašťana Dolinského 1,Bratislava-Dúbravka,48.185196,17.032282,https://data.gov.sk/id/physical-address/6269417,2026-10-25
 9fb8b9c7f22b3c2a,Ivana Bukovčana 1,Devínska Nová Ves,48.208492,16.977367,https://data.gov.sk/id/physical-address/6189513,2026-10-25
@@ -407,6 +439,7 @@ a68fcc9254100eb9,Galbavého 5,Dúbravka,48.183617,17.037100,https://data.gov.sk/
 a6eb0e3de2f6e443,Košická 8,Ružinov,48.146194,17.132933,https://data.gov.sk/id/physical-address/6055940,2026-10-25
 a763c86124cd4230,Lachova 31,Bratislava-Petržalka,48.124140,17.118374,https://data.gov.sk/id/physical-address/6229113,2026-10-25
 a79e421a00fc84f7,Stromová 18,,48.165386,17.095531,https://data.gov.sk/id/physical-address/6181087,2026-10-25
+a7f0e9400e056908,"Šafárikovo námestie 76/3, 811 02 Bratislava - mestská časť Staré Mesto",,48.141620,17.116606,https://data.gov.sk/id/physical-address/34996742,2026-10-25
 a7fb46081fda35f3,Gessayova 2,Petržalka,48.120125,17.115950,https://data.gov.sk/id/physical-address/34987205,2026-10-25
 a872c7680bc0f71f,Sibírska 39,Nové Mesto,48.164394,17.121996,https://data.gov.sk/id/physical-address/617176A,2026-10-25
 a8da0f4000abdc73,Rádiová 52,Ružinov,48.174564,17.165895,https://data.gov.sk/id/physical-address/6096937,2026-10-25
@@ -418,7 +451,9 @@ aba80bae4bb5a1ae,Exnárova 6A,Ružinov,48.156610,17.168655,https://data.gov.sk/i
 abca37bb8bbcaa4d,Kolískova 14,Karlova Ves,48.151077,17.054640,https://data.gov.sk/id/physical-address/511015845A,2026-10-25
 ac0aab7878e842ef,Istrijská 22,Devínska Nová Ves,48.209560,16.974470,https://data.gov.sk/id/physical-address/35675673,2026-10-25
 ac126c7c896a7d23,Lamačská cesta 3,,48.180760,17.058670,https://data.gov.sk/id/physical-address/6259176,2026-10-25
+acb269ac7412afe6,"Primaciálne námestie 429/1, 811 01 Bratislava - mestská časť Staré Mesto",,48.144184,17.109420,https://data.gov.sk/id/physical-address/5973836,2026-10-25
 ad69801e996f1628,Bilíkova 34,Bratislava-Dúbravka,48.188460,17.041357,https://data.gov.sk/id/physical-address/6264929,2026-10-25
+aeccca10326ee70f,"Hálkova 193/56, 831 03 Bratislava - mestská časť Nové Mesto",,48.173910,17.135948,https://data.gov.sk/id/physical-address/6149803,2026-10-25
 af6cafb23c2e894c,Drieňová 16,Ružinov,48.159573,17.151500,https://data.gov.sk/id/physical-address/6058723,2026-10-25
 af94e683c870a362,Grösslingová 52,,48.145416,17.122044,https://data.gov.sk/id/physical-address/5994956,2026-10-25
 afecc4a7e3065caf,Miletičova 37,Ružinov,48.150303,17.140877,https://data.gov.sk/id/physical-address/6042872,2026-10-25
@@ -463,6 +498,7 @@ bab1dbf04f531c98,Krásnohorská 3127/14,Bratislava-Petržalka,48.098230,17.11428
 bad956c32b5f6978,Hubeného 23,Bratislava-Rača,48.198864,17.143827,https://data.gov.sk/id/physical-address/6166468,2026-10-25
 baf37930345af31a,Dolnozemská cesta 1,Bratislava-Petržalka,48.127850,17.131927,https://data.gov.sk/id/physical-address/36967073,2026-10-25
 bc642289d1af4130,Úprkova 3,Staré Mesto,48.161846,17.087063,https://data.gov.sk/id/physical-address/6007067,2026-10-25
+bc906f2c93cee071,"Vajnorská ulica 1346/135, 831 04 Bratislava - mestská časť Nové Mesto",,48.182310,17.160273,https://data.gov.sk/id/physical-address/6161914,2026-10-25
 bcf1fb208a027fe7,Búdkova 21,Staré Mesto,48.154987,17.089066,https://data.gov.sk/id/physical-address/6005791,2026-10-25
 bd51b61a12f35eeb,Legerského 18,Bratislava-Nové Mesto,48.165386,17.121710,https://data.gov.sk/id/physical-address/6171605,2026-10-25
 bdc7400e9cd0f5b6,Pankúchova 4,Petržalka,48.123980,17.125034,https://data.gov.sk/id/physical-address/34987436,2026-10-25
@@ -504,6 +540,7 @@ c881ec34df749e5c,Karloveská 61,Karlova Ves,48.163610,17.046608,https://data.gov
 c9e5d71b51e581d7,Pifflova 10,Petržalka,48.126774,17.108465,https://data.gov.sk/id/physical-address/36404258,2026-10-25
 c9f9b66220889dbc,Milana Marečka 16,Devínska Nová Ves,48.206913,16.979733,https://data.gov.sk/id/physical-address/37227113,2026-10-25
 ca59ce8b1e78e762,Pionierska 12/A,Bratislava-Nové Mesto,48.162830,17.119513,https://data.gov.sk/id/physical-address/37786067,2026-10-25
+ca5ff847c1c7895e,"Radlinského 2786/53, 811 07 Bratislava - mestská časť Staré Mesto",,48.156940,17.119770,https://data.gov.sk/id/physical-address/5997442,2026-10-25
 ca6ba022b8a1df14,Karloveská 61,Bratislava-Karlova Ves,48.163610,17.046608,https://data.gov.sk/id/physical-address/624370A,2026-10-25
 caad3e970e9816fd,Furdekova 16,Bratislava-Petržalka,48.126290,17.123140,https://data.gov.sk/id/physical-address/36237311,2026-10-25
 cab175a11ae426d8,Záhrebská 8,,48.156063,17.116207,https://data.gov.sk/id/physical-address/6000115,2026-10-25
@@ -522,6 +559,7 @@ cfd83ce1f8d5b70f,Kvačalova 20,Bratislava-Ružinov,48.150870,17.132504,https://d
 d007ac7207465a6c,Drieňová 16,Bratislava-Ružinov,48.159573,17.151500,https://data.gov.sk/id/physical-address/6058723,2026-10-25
 d052bd90851396c1,Žehrianska 9,Bratislava-Petržalka,48.096947,17.117926,https://data.gov.sk/id/physical-address/36304521,2026-10-25
 d115cb0c48e0071c,Ivanská cesta 18,,48.167970,17.182756,https://data.gov.sk/id/physical-address/7101076664,2026-10-25
+d1171955a16a1d92,"Ivanská cesta 16030/22, 821 04 Bratislava - mestská časť Ružinov",,48.169430,17.181080,https://data.gov.sk/id/physical-address/7101162398,2026-10-25
 d19b86f80b44a761,Plickova 18,,48.210728,17.150475,https://data.gov.sk/id/physical-address/6145337,2026-10-25
 d1be1773901a1823,Majerníkova 60,Karlova Ves,48.155040,17.046951,https://data.gov.sk/id/physical-address/511005516A,2026-10-25
 d2ae3f312f3df046,Gorazdova 6,Bratislava-Staré Mesto,48.158176,17.098625,https://data.gov.sk/id/physical-address/600445A,2026-10-25
@@ -543,6 +581,7 @@ d928764fd158e19a,Šustekova 33,Petržalka,48.128223,17.126680,https://data.gov.s
 d97320088a222b80,Mierová 21,,48.149620,17.164227,https://data.gov.sk/id/physical-address/3499253A,2026-10-25
 da2736f3689c1448,Riazanská 75,Bratislava-Nové Mesto,48.172157,17.131838,https://data.gov.sk/id/physical-address/6154192,2026-10-25
 da77eb54b5b5e3db,Západná 2,Ružinov,48.159176,17.167286,https://data.gov.sk/id/physical-address/6081603,2026-10-25
+dc0ba14ebc0e2067,"Na barine 2976/5, 841 03 Bratislava - mestská časť Lamač",,48.197876,17.050510,https://data.gov.sk/id/physical-address/37589112,2026-10-25
 dc3e9f4a95015c1b,Tokajícka 24,Bratislava-Ružinov,48.161777,17.151997,https://data.gov.sk/id/physical-address/6059394,2026-10-25
 dd54448be6b96616,Vihorlatská 10,Bratislava-Nové Mesto,48.173634,17.159685,https://data.gov.sk/id/physical-address/6158064,2026-10-25
 de1aa85b422ecf9a,Röntgenova 16,Bratislava-Petržalka,48.127842,17.102480,https://data.gov.sk/id/physical-address/36869888,2026-10-25
@@ -554,6 +593,7 @@ df1c8203efd1099a,Ožvoldíkova 15,Bratislava-Dúbravka,48.192665,17.031403,https
 df8576a5479e9fd5,Javorinská 9,Staré Mesto,48.148758,17.091522,https://data.gov.sk/id/physical-address/35553309,2026-10-25
 df8a03b5c7e87bc0,Lazaretská 9,Bratislava-Staré Mesto,48.146706,17.119247,https://data.gov.sk/id/physical-address/5993735,2026-10-25
 dfabce8cace0206b,Rajčianska 3,Bratislava-Vrakuňa,48.138577,17.210010,https://data.gov.sk/id/physical-address/6086850,2026-10-25
+dfd78981e5bb6ea3,"Pri kríži 3082/26, 841 02 Bratislava - mestská časť Dúbravka",,48.195760,17.029789,https://data.gov.sk/id/physical-address/5110000115,2026-10-25
 e02fa297bb9f5c0e,Ladislava Sáru 3,Karlova Ves,48.151016,17.060045,https://data.gov.sk/id/physical-address/6243798,2026-10-25
 e07a24fdeb10a4fc,Damborského 3,Dúbravka,48.180088,17.046877,https://data.gov.sk/id/physical-address/6262432,2026-10-25
 e08f3acf4d774494,Suchohradská 3,Bratislava-Karlova Ves,48.159780,17.049305,https://data.gov.sk/id/physical-address/6245646,2026-10-25
@@ -565,6 +605,7 @@ e2828a9da990fb2f,Gelnická 34,Rača,48.213806,17.154320,https://data.gov.sk/id/p
 e31507f46be691d8,Dúbravská cesta 1,Bratislava-Karlova Ves,48.168310,17.075525,https://data.gov.sk/id/physical-address/6260232,2026-10-25
 e33a2e8f35e98384,Sibírska 39,Bratislava-Nové Mesto,48.164394,17.121996,https://data.gov.sk/id/physical-address/617176A,2026-10-25
 e3dc6284ffcf87cd,Nevädzová 12,Ružinov,48.152393,17.162138,https://data.gov.sk/id/physical-address/34993453,2026-10-25
+e427de8f8c551f9f,"Židovská 6378/1, 815 15 Bratislava - mestská časť Staré Mesto",,48.141970,17.104065,https://data.gov.sk/id/physical-address/7100859073,2026-10-25
 e5021d5ac8bfc238,Komárovská 58,Podunajské Biskupice,48.133118,17.200094,https://data.gov.sk/id/physical-address/6024964,2026-10-25
 e63bc7e4a199a79a,Lužná 19,Bratislava-Petržalka,48.129593,17.118427,https://data.gov.sk/id/physical-address/7101952781,2026-10-25
 e655ba28379f5b92,Bilíkova 1,Bratislava-Dúbravka,48.187050,17.040945,https://data.gov.sk/id/physical-address/6265941,2026-10-25
@@ -612,9 +653,11 @@ f4db85a420a79c7f,Šuňavcova 13,Bratislava-Nové Mesto,48.163960,17.120410,https
 f5365a4dd648facc,Bartókova 8,Bratislava-Staré Mesto,48.152300,17.086077,https://data.gov.sk/id/physical-address/6101037470,2026-10-25
 f53de4b772d84188,Donská 119,Bratislava-Záhorská Bystr,48.232464,17.044327,https://data.gov.sk/id/physical-address/7000137364,2026-10-25
 f5b2603f94f39e77,Za kasárňou 2,Bratislava-Nové Mesto,48.167885,17.135288,https://data.gov.sk/id/physical-address/6150408,2026-10-25
+f5ecbff07b594358,"Františkánske námestie 416/11, 815 35 Bratislava - mestská časť Staré Mesto",,48.144833,17.107853,https://data.gov.sk/id/physical-address/5973737,2026-10-25
 f5f5aa2e4c724374,Fedinova 7,Bratislava-Petržalka,48.118343,17.102674,https://data.gov.sk/id/physical-address/3650382A,2026-10-25
 f6862e6626fd8792,Kremeľská 36,Bratislava-Devín,48.173580,16.986477,https://data.gov.sk/id/physical-address/6251377,2026-10-25
 f70a84e4522afee3,Svrčia 6,Bratislava-Karlova Ves,48.149610,17.067840,https://data.gov.sk/id/physical-address/6241180,2026-10-25
+f7f5434d8627ce68,"Židovská 1, 811 01 Bratislava - mestská časť Staré Mesto",,48.141970,17.104065,https://data.gov.sk/id/physical-address/7100859073,2026-10-25
 f7fad27f61de02d8,Šalviová 5,Ružinov,48.153343,17.160168,https://data.gov.sk/id/physical-address/6062749,2026-10-25
 f840db89e01054eb,Panónska cesta 17,Bratislava-Petržalka,48.116924,17.097420,https://data.gov.sk/id/physical-address/7001996067,2026-10-25
 f912530a193646af,Bernolákova 2716/1,Bratislava-Staré Mesto,48.156013,17.121170,https://data.gov.sk/id/physical-address/5997376,2026-10-25
@@ -628,6 +671,7 @@ fc8964aa38279b81,Záhradnícka 44,Bratislava-Ružinov,48.154243,17.131100,https:
 fcab4c4397f48541,Beňadická 38,Petržalka,48.098408,17.104523,https://data.gov.sk/id/physical-address/34988954,2026-10-25
 fcbbe52ec4ecfdf0,Zadunajská 27,Petržalka,48.130280,17.103567,https://data.gov.sk/id/physical-address/6217684,2026-10-25
 fd5e5563cbe3615b,Kaméliová 10,Vrakuňa,48.138676,17.205990,https://data.gov.sk/id/physical-address/35895277,2026-10-25
+fe72f28cde0d62d5,"Polereckého 3241/2, 851 04 Bratislava - mestská časť Petržalka",,48.122334,17.128183,https://data.gov.sk/id/physical-address/35911469,2026-10-25
 feba865462bfce55,Strečnianska 20,Bratislava-Petržalka,48.104950,17.101633,https://data.gov.sk/id/physical-address/35956239,2026-10-25
 ff4705ca56852c43,Sekurisova 10,Bratislava-Dúbravka,48.192270,17.038086,https://data.gov.sk/id/physical-address/6266953,2026-10-25
 ff79278babfbfdee,Balkánska 87,Rusovce,48.053146,17.147673,https://data.gov.sk/id/physical-address/6199149,2026-10-25

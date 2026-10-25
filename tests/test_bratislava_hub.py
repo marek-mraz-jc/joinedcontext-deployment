@@ -182,8 +182,9 @@ def test_the_recorded_tables_of_places_map_to_valid_places_and_each_bad_row_is_d
     )
     # The recording's own defects: Kreatívne centrum Arténa at 48.735, 19.136 is Banská Bystrica,
     # seven animal farms of the region lie outside the city, the education table lists one school
-    # twice at one address; 79 addresses the register does not place have no position (T-5444).
-    assert 'dropped by reason {\\"duplicate\\":26,\\"no position\\":79,\\"outside Bratislava\\":8}' in log, (
+    # twice at one address; 80 rows whose address the register does not place have no position
+    # (T-5444, and one city organisation of T-5690).
+    assert 'dropped by reason {\\"duplicate\\":26,\\"no position\\":80,\\"outside Bratislava\\":8}' in log, (
         log
     )
     by_key = {}
@@ -203,6 +204,7 @@ def test_the_recorded_tables_of_places_map_to_valid_places_and_each_bad_row_is_d
         "materske-skoly": 147,
         "zakladne-umelecke-skoly": 93,
         "zakladne-skoly": 109,
+        "mestske-organizacie": 50,
     }
     # A layer's own point geometry, read in WGS 84.
     vet = next(p for p in by_key["veterinarne-zariadenia"] if p["name"]["value"] == "Sloboda zvierat o.z.")
@@ -211,6 +213,13 @@ def test_the_recorded_tables_of_places_map_to_valid_places_and_each_bad_row_is_d
     school = next(p for p in by_key["materske-skoly"] if p["name"]["value"] == "MŠ Bohrova")
     assert school["location"]["value"]["coordinates"] == [17.096945, 48.130352]
     assert school["url"]["value"] == "https://msbohrova.edupage.org/"
+    # Each place names how it got its point (T-5690): the register for an address-only table.
+    assert school["dataProvider"]["value"].endswith("GPS: Register adries (ra.synchronix.sk), by address")
+    assert vet["dataProvider"]["value"].endswith("GPS: the source's own coordinates")
+    # A city organisation's postal address is placed by its street and number.
+    library = next(p for p in by_key["mestske-organizacie"] if p["name"]["value"] == "Mestská knižnica Bratislava")
+    assert "Register adries" in library["dataProvider"]["value"] and "physical" not in library["source"]["value"]
+    assert library["category"]["value"] == ["city-organisation", "Príspevková organizácia"]
     # An address the register does not hold ("Marie Curie-Sklodowskej 1") is dropped, never guessed.
     assert not [p for p in places if p["address"]["value"].get("streetAddress") == "Marie Curie-Sklodowskej 1"]
     # The lifelong-learning table writes the latitude in X: the provider lands in Ružinov.
