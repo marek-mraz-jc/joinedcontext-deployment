@@ -114,6 +114,13 @@ binds each pipeline's derived write Policy (`pl-<pipeline>`, PL-20) there. The p
 point in the feed or in `venues.csv`; mints the id from name, start and town, so one event announced by two sources is
 one entity; writes `expiresAt` at the event's end (start + 1 day without an end) and scope `/SK/BB/<town>`.
 
+The runner holds `common.yaml` once, as the processor resource `events_tail` in
+`components/pipeline-runner/streams/resources.yaml`, which `generate.py` writes between its BEGIN and END lines (T-5555).
+A generated pipeline ends with a `mutation` that sets the source's settings as the structured metadata `events`
+(venues, towns, organizer, grace, lease, the space as `env("JC_SPACE")`, which the Portal writes in per stream) and
+`- resource: events_tail`. A change to the tail is one change of `resources.yaml` and reaches the runner when the
+pipeline-runner release is applied, not with the seed.
+
 - `venues.csv` holds venues checked by hand against OpenStreetMap (the object's id in `osm`), matched by the place
   text in lower case without parentheses and commas, per town; `regional=y` rows also serve the region's iCal feed.
   A venue nobody checked gives no point, never a town's centre; the event is kept without one (owner 2026-10-22).
