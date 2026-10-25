@@ -26,7 +26,7 @@ spec:
     projects: [slovensko]
   # The EU themes of what it reads (AG-124, T-4694): the union of its connectors' themes; the
   # context page lists them. The curated connectors stay: no selector gives exactly this set.
-  categories: [ECON, EDUC, ENVI, GOVE, HEAL, REGI, SOCI, TRAN]
+  categories: [ECON, EDUC, ENVI, GOVE, HEAL, JUST, REGI, SOCI, TRAN]
   # Its own body's data through its project's public McpServer (T-4750): the server's members
   # with the server's read tools, `endpoint` a parameter; an Endpoint added to the server joins
   # without an edit here (tests/test_public_assistant_seed.py).
