@@ -3,7 +3,7 @@
 pipeline:
   processors:
   - mapping: |
-      let paths = content().string().re_find_all_object("href=\"(?:https://krupina\\.sk)?(?P<p>/podujatia/[0-9a-f]{28})\"").map_each(m -> m.p).unique()
+      let paths = content().string().re_find_all_object("href=\"(?:https?://krupina\\.sk)?(?P<p>/podujatia/[0-9a-f]{28})\"").map_each(m -> m.p).unique()
       root = $paths.slice(0, [$paths.length(), 50].min()).map_each(p -> { "url": "https://krupina.sk" + p, "path": p, "sourceId": p })
   - unarchive:
       format: json_array
