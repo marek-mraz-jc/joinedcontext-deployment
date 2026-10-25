@@ -376,7 +376,9 @@ def test_an_mcp_connector_token_names_only_the_resource_it_asked_for(realm_clien
     client = realm_clients[client_id]
     assert client["defaultClientScopes"] == ["acr", "basic", "email", "profile"]
     mappers = {m["name"]: m for m in client["protocolMappers"]}
-    assert set(mappers) == {"groups", "realm-roles"}, "no audience mapper on the client itself"
+    # amr names how the caller signed in (T-5567, on every platform client); no audience mapper.
+    assert set(mappers) == {"groups", "realm-roles", "amr"}, "no audience mapper on the client itself"
+    assert not [m for m in mappers.values() if m["protocolMapper"] == "oidc-audience-mapper"]
     realm_roles = mappers["realm-roles"]
     assert realm_roles["protocolMapper"] == "oidc-usermodel-realm-role-mapper"
     assert realm_roles["config"]["claim.name"] == "realm_access.roles"
