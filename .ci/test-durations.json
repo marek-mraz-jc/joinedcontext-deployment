@@ -211,6 +211,7 @@
  "test_praha_environment.py": 25.4,
  "test_praha_golemio_places.py": 6.6,
  "test_praha_green.py": 21.0,
+ "test_praha_health_and_social.py": 14.3,
  "test_praha_ipr_places.py": 9.8,
  "test_praha_open_data.py": 21.8,
  "test_praha_parking.py": 30.4,

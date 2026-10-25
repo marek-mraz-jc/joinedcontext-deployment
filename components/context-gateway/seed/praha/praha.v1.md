@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point or a nature trail stop; or a place of health care or a social service of the national registers.
 
 IRI: `sdm:PointOfInterest`
 
@@ -664,6 +664,8 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `landmark` | A notable building or place of the city. |
 | `wasteCollectionPoint` | A collection point for hazardous waste or bio-waste that is not a collection yard. |
 | `trailStop` | A stop of a nature trail. |
+| `healthCareProvider` | A place of health care of the national register of health care providers (NRPZS). |
+| `socialService` | A social service at a facility of the register of social service providers (RPSS). |
 
 ### WasteAccess
 
