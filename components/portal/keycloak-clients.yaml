@@ -160,10 +160,14 @@ portal-reconciler:
 # `jcctl login` (T-2846, PF-45, MF-14): a person's token for the kubectl-shaped verbs, which call
 # the Portal resource API. RFC 8628's device flow, because a terminal has no browser to come back
 # to: no code flow and so no redirect URI anywhere, and a public client because it lives on a
-# laptop somebody can lose. Its tokens carry the one audience the Portal accepts.
+# laptop somebody can lose, with PKCE S256 from the client defaults on every sign-in (T-5614).
+# Its tokens carry the audience the Portal accepts and `jcctl-endpoint`, which the gateway admits
+# only beside the `endpoint:{slug}` scope of one Endpoint: `jcctl token --resource` asks for that
+# scope, which the admin-permissions Job links here as optional, so a person's script holds a
+# token for one Endpoint, decided by the person's Policy (PF-46, API/03 §2b).
 jcctl:
   name: jcctl
-  description: Public client of the jcctl command line; device authorization grant only, tokens for the Portal API
+  description: Public client of the jcctl command line; device authorization grant with PKCE only, tokens for the Portal API and one Endpoint at a time
   subdomain: portal
   redirectPath: /
   rawValues:
@@ -183,5 +187,13 @@ jcctl:
         consentRequired: false
         config:
           included.client.audience: portal-api
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: jcctl-endpoint-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: jcctl-endpoint
           access.token.claim: 'true'
           id.token.claim: 'false'

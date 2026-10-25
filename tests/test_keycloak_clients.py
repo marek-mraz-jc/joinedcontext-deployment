@@ -484,11 +484,18 @@ def test_jcctl_is_a_public_device_flow_client_for_the_portal(realm_clients):
     assert client["directAccessGrantsEnabled"] is False and client["serviceAccountsEnabled"] is False
     assert client["redirectUris"] == [] and client["webOrigins"] == []
     audiences = {
-        m["config"].get("included.client.audience")
+        m["config"].get("included.client.audience") or m["config"].get("included.custom.audience")
         for m in client["protocolMappers"]
         if m["protocolMapper"] == "oidc-audience-mapper"
     }
-    assert audiences == {"portal-api"}, audiences
+    # T-5614: `jcctl-endpoint` reaches an Endpoint only beside the `endpoint:{slug}` scope of it.
+    assert audiences == {"portal-api", "jcctl-endpoint"}, audiences
+    # T-5614: a public client proves each sign-in with RFC 7636 S256; the realm refuses a device
+    # authorization without it, and `jcctl login` sends it.
+    assert client["attributes"]["pkce.code.challenge.method"] == "S256"
+    # No default endpoint scope: a plain `jcctl login` token reaches no Endpoint.
+    assert not any(s.startswith("endpoint:") for s in client["defaultClientScopes"]), client["defaultClientScopes"]
+    assert not any(s.startswith("endpoint:") for s in client["optionalClientScopes"]), "the Job links them"
 
 
 def test_only_jcctl_offers_the_device_flow(realm_clients):
