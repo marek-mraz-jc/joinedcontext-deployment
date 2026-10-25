@@ -12,6 +12,7 @@ import copy
 import json
 import re
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -66,6 +67,9 @@ def recorded(name: str) -> bytes:
 
 
 def run(pipeline: str, document: bytes) -> list[dict]:
+    if pipeline == "waste-fill":
+        # Its ask of the space needs the gateway: a failed ask writes every container.
+        return waste_fill(document, "failed", [])
     if pipeline in SPLIT:
         return open_data.run_all(PRAHA / f"praha-pipeline-{pipeline}-bento.yaml", document, SPACE)
     return open_data.run(PRAHA / f"praha-pipeline-{pipeline}-bento.yaml", document, SPACE)
@@ -297,6 +301,38 @@ def test_a_monitored_container_points_at_the_collection_point_the_ipr_feed_write
     # The station's address and the waste it takes name the container (T-4745).
     assert all(c["name"]["languageMap"]["cs"] for c in containers)
     assert not schema_errors(metal)
+
+
+def waste_fill(document: bytes, asked: str, held: list[str]) -> list[dict]:
+    """The waste-fill mapping with its ask of the space answered: `asked` is "ok" or "failed",
+    `held` the collection points the space holds."""
+    steps = yaml.safe_load((PRAHA / "praha-pipeline-waste-fill-bento.yaml").read_text())["pipeline"]["processors"]
+    answer = {"mapping": f"meta asked = {json.dumps(asked)}\nmeta held = {json.dumps(' '.join(held))}"}
+    steps = [answer if "branch" in step else step for step in steps]
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
+        yaml.safe_dump({"pipeline": {"processors": steps}}, mapping)
+        mapping.flush()
+        return open_data.run(Path(mapping.name), document, SPACE)
+
+
+@requires_docker
+def test_a_container_at_a_collection_point_the_space_does_not_hold_is_left_out(written):
+    # T-5720: the view refuses a required link to an Entity it does not show (249 a run on dev).
+    isles = sorted({c["refWasteContainerIsle"]["object"] for c in written["waste-fill"]})
+    assert len(isles) == 2
+    kept = waste_fill(recorded("golemio-waste-containers.json"), "ok", isles[:1])
+    assert kept and {c["refWasteContainerIsle"]["object"] for c in kept} == {isles[0]}
+    assert len(kept) < len(written["waste-fill"])
+
+
+@requires_docker
+def test_a_failed_or_empty_ask_writes_every_container(written):
+    isles = sorted({c["refWasteContainerIsle"]["object"] for c in written["waste-fill"]})
+    # `written` is the failed ask; an empty answer and one holding every point write the same.
+    def timeless(entities):
+        return [{k: v for k, v in e.items() if k != "expiresAt"} for e in entities]
+    for held in ([], isles):
+        assert timeless(waste_fill(recorded("golemio-waste-containers.json"), "ok", held)) == timeless(written["waste-fill"]), held
 
 
 @requires_docker

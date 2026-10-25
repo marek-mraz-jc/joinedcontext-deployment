@@ -2,8 +2,11 @@
 # Golemio reports, with what it takes, how full it was at its last reading and the collection point
 # it stands at. The point's id is its number in the city's waste register, the key IPR and Golemio
 # share, so the relationship lands on the WasteContainerIsle the `waste-stations` pipeline writes.
-# A container at a point IPR does not publish (113 of 3456 on 2026-09-25) is refused on its own by
-# the gateway's relationship check, the rest of the batch lands (DM-70).
+# A container at a point IPR does not publish (113 of 3456 on 2026-09-25; 249 containers on dev
+# on 2026-10-25) cannot be written: the link is required and the broker's view refuses one to an
+# Entity it does not show. So the run asks the space which of the named points it holds, a
+# thousand ids per ask, and leaves out the containers at the others, counted in the run's log
+# (T-5720). A failed or empty ask writes every container as before, so a lookup outage loses nothing.
 # A container Golemio stops monitoring drops out of the answer, and an upsert never deletes: each
 # write carries expiresAt a week ahead, so the hourly run keeps a monitored container and one that
 # left the list goes a week after its last write instead of showing an old fill level as today's
@@ -29,3 +32,48 @@ pipeline:
           "source": { "type": "Property", "value": "https://api.golemio.cz/v2/sortedwastestations" },
           "expiresAt": (now().ts_unix() + 604800).ts_format("2006-01-02T15:04:05Z", "UTC")
         }.filter(entry -> entry.value != null))).flatten()
+
+    # Which of the named collection points the space holds: one batch query per thousand ids
+    # through the city endpoint the pipeline writes to.
+    - branch:
+        request_map: |
+          let isles = this.map_each(c -> c.refWasteContainerIsle.object).unique()
+          root = if $isles.length() == 0 { deleted() } else {
+            # Bento's range(0, n, 1000) leaves out the last part chunk: count the chunks instead.
+            range(0, (($isles.length() + 999) / 1000).floor().int64()).map_each(i -> {
+              "type": "Query",
+              "entities": $isles.slice(i * 1000, [i * 1000 + 1000, $isles.length()].min()).map_each(id -> { "id": id, "type": "WasteContainerIsle" })
+            })
+          }
+        processors:
+          - unarchive: { format: json_array }
+          - try:
+              - http:
+                  url: ${JC_GATEWAY_URL}/api/endpoint/jw7tffshzip7igmzcszgffkkkuetnc6v/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
+                  verb: POST
+                  headers: { Content-Type: application/json }
+                  oauth2:
+                    enabled: true
+                    client_key: ${JC_CLIENT_ID}
+                    client_secret: ${JC_CLIENT_SECRET}
+                    token_url: ${JC_TOKEN_URL}
+                  timeout: 20s
+                  rate_limit: pipeline_egress
+              - mapping: 'root = { "held": this.map_each(e -> e.id) }'
+          - catch:
+              - mapping: 'root = { "failed": true }'
+          - archive: { format: json_array }
+        result_map: |
+          meta asked = if this.any(r -> r.failed.or(false)) { "failed" } else { "ok" }
+          meta held = this.map_each(r -> r.held.or([])).flatten().join(" ")
+
+    - mapping: |
+        let held = @held.or("").split(" ")
+        # An answer holding no point at all is a broken ask, not a city without collection points.
+        let kept = if @asked.or("") == "ok" && @held.or("") != "" { this.filter(c -> $held.contains(c.refWasteContainerIsle.object)) } else { this }
+        meta dropped = (this.length() - $kept.length()).string()
+        meta kept = $kept.length().string()
+        root = $kept
+    - log:
+        level: INFO
+        message: 'waste-fill: ${! @kept } containers kept, ${! @dropped } left out at a collection point the space does not hold'
