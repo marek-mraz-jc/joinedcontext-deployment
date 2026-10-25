@@ -95,6 +95,13 @@ spec:
         description:
           cs: Stanoviště tříděného odpadu s poslední hodnotou zaplnění ze senzorů, Operátor ICT, otevřená data.
           en: Sorted-waste collection points with the last fill level their sensors read, Operátor ICT, open data.
+      - url: https://api.golemio.cz/v2/sortedwastestations
+        title:
+          cs: Kontejnery na tříděný odpad a dny jejich svozu (Golemio)
+          en: Sorted-waste containers and their collection days (Golemio)
+        description:
+          cs: Všechny kontejnery stanovišť tříděného odpadu s příštím dnem svozu z registru odpadů, Operátor ICT, otevřená data.
+          en: Every container of the sorted-waste collection points with its next collection day from the waste register, Operátor ICT, open data.
       - url: https://data.pid.cz/pointsOfSale/json/pointsOfSale.json
         title: { cs: Prodejní místa dokladů PID (ROPID), en: PID ticket points of sale (ROPID) }
         description:

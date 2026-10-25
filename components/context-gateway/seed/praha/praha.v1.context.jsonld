@@ -264,6 +264,10 @@
       "@container": "@language",
       "@id": "schema:name"
     },
+    "nextActuationDeadline": {
+      "@id": "sdm:nextActuationDeadline",
+      "@type": "xsd:dateTime"
+    },
     "nextStop": {
       "@id": "jc:nextStop"
     },

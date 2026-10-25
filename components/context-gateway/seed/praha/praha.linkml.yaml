@@ -552,6 +552,21 @@ slots:
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
+  nextActuationDeadline:
+    slot_uri: sdm:nextActuationDeadline
+    description: The end of the day the container is next emptied, as the city's waste register plans it.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Najbližší odvoz
+          cs: Příští svoz
+          en: Next collection
+          de: Nächste Leerung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
   wasteKind:
     slot_uri: jc:wasteKind
     description: What the container takes, as the city's waste register sorts it.
@@ -602,7 +617,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
   wasteContainers:
     slot_uri: jc:wasteContainers
-    description: The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored.
+    description: The containers at this collection point, computed from their refWasteContainerIsle and never stored.
     range: WasteContainer
     multivalued: true
     inverse: refWasteContainerIsle
@@ -1652,7 +1667,7 @@ classes:
       - source
   WasteContainer:
     class_uri: sdm:WasteContainer
-    description: One sensor-monitored sorted-waste container of the city and how full it is.
+    description: One sorted-waste container of the city with its next collection, and how full it is where a sensor reads it.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.WasteManagement
@@ -1668,6 +1683,7 @@ classes:
       - containerCode
       - wasteKind
       - fillingLevel
+      - nextActuationDeadline
       - dateModified
       - refWasteContainerIsle
       - dataProvider

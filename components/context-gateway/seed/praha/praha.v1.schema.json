@@ -2287,7 +2287,7 @@
     },
     "WasteContainer": {
       "additionalProperties": false,
-      "description": "One sensor-monitored sorted-waste container of the city and how full it is.",
+      "description": "One sorted-waste container of the city with its next collection, and how full it is where a sensor reads it.",
       "properties": {
         "containerCode": {
           "description": "The container's number in the city's waste register (KSNKO).",
@@ -2364,6 +2364,15 @@
             "null"
           ],
           "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "nextActuationDeadline": {
+          "description": "The end of the day the container is next emptied, as the city's waste register plans it.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
         },
         "observedAt": {
           "description": "When the observation the entity reports was made.",
@@ -2507,7 +2516,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "wasteContainers": {
-          "description": "The monitored containers at this collection point, computed from their refWasteContainerIsle and never stored.",
+          "description": "The containers at this collection point, computed from their refWasteContainerIsle and never stored.",
           "items": {
             "type": "string"
           },

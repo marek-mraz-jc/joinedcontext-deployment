@@ -121,7 +121,9 @@ spec:
     - entityType: WasteContainer
       # The sensors' fill level is a measurement series (T-5270): a week of it, one row per new
       # reading and one a week otherwise. ~7,400 containers that read a few times a day: about
-      # 0.3 million rows, at most 1.2 million if every container changed every hourly run.
+      # 0.3 million rows, at most 1.2 million if every container changed every hourly run. The
+      # ~20,600 containers without a sensor (waste-containers, daily) add one row a week per attribute
+      # and one per moved collection day, one to four a week: about 0.3 million rows more (T-5427).
       history: P7D
       attributes:
         containerCode: { record: onChange, heartbeat: P7D }
@@ -130,6 +132,7 @@ spec:
         fillingLevel: { record: onChange, heartbeat: P7D }
         location: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
+        nextActuationDeadline: { record: onChange, heartbeat: P7D }
         refWasteContainerIsle: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
         wasteKind: { record: onChange, heartbeat: P7D }
