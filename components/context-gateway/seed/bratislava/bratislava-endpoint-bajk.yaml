@@ -23,7 +23,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
       license: cc-zero
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The publisher is the Project's spec.catalog (T-4596). Counts and stations: no record names a person.
     personalData: does-not-contain
@@ -44,4 +43,7 @@ spec:
         title:
           sk: Slovnaft BAjk, GBFS (nextbike Bratislava)
           en: Slovnaft BAjk, GBFS (nextbike Bratislava)
+        description:
+          sk: Stanice zdieľaných bicyklov Slovnaft BAjk a ich obsadenosť vo formáte GBFS od prevádzkovateľa nextbike, CC0 1.0.
+          en: The Slovnaft BAjk shared-bike stations and what they hold, as GBFS from the operator nextbike, CC0 1.0.
     pipelineRef: { kind: Pipeline, name: bike-availability }

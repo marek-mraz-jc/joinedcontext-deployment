@@ -26,7 +26,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: barcelona }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name:
@@ -53,84 +52,147 @@ spec:
         title:
           ca: Open Data BCN pad_dom_mdbas_n-persones
           en: Open Data BCN dataset pad_dom_mdbas_n-persones
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_n-persones de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_n-persones on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_tipus-domicili
         title:
           ca: Open Data BCN pad_dom_mdbas_tipus-domicili
           en: Open Data BCN dataset pad_dom_mdbas_tipus-domicili
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_tipus-domicili de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_tipus-domicili on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-habitatges-superficie
         title:
           ca: Open Data BCN est-cadastre-habitatges-superficie
           en: Open Data BCN dataset est-cadastre-habitatges-superficie
+        description:
+          ca: Conjunt de dades est-cadastre-habitatges-superficie de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-habitatges-superficie on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-habitatges-any-const
         title:
           ca: Open Data BCN est-cadastre-habitatges-any-const
           en: Open Data BCN dataset est-cadastre-habitatges-any-const
+        description:
+          ca: Conjunt de dades est-cadastre-habitatges-any-const de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-habitatges-any-const on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-finques-regim-propietat
         title:
           ca: Open Data BCN est-cadastre-finques-regim-propietat
           en: Open Data BCN dataset est-cadastre-finques-regim-propietat
+        description:
+          ca: Conjunt de dades est-cadastre-finques-regim-propietat de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-finques-regim-propietat on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/notaris_compravendes_trans_tip_us
         title:
           ca: Open Data BCN notaris_compravendes_trans_tip_us
           en: Open Data BCN dataset notaris_compravendes_trans_tip_us
+        description:
+          ca: Conjunt de dades notaris_compravendes_trans_tip_us de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset notaris_compravendes_trans_tip_us on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/notaris_compravendes_trans_tip_us_sup
         title:
           ca: Open Data BCN notaris_compravendes_trans_tip_us_sup
           en: Open Data BCN dataset notaris_compravendes_trans_tip_us_sup
+        description:
+          ca: Conjunt de dades notaris_compravendes_trans_tip_us_sup de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset notaris_compravendes_trans_tip_us_sup on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_dones
         title:
           ca: Open Data BCN pad_dom_mdbas_dones
           en: Open Data BCN dataset pad_dom_mdbas_dones
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_dones de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_dones on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_homes
         title:
           ca: Open Data BCN pad_dom_mdbas_homes
           en: Open Data BCN dataset pad_dom_mdbas_homes
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_homes de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_homes on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_edat-0018
         title:
           ca: Open Data BCN pad_dom_mdbas_edat-0018
           en: Open Data BCN dataset pad_dom_mdbas_edat-0018
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_edat-0018 de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_edat-0018 on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_edat-1864
         title:
           ca: Open Data BCN pad_dom_mdbas_edat-1864
           en: Open Data BCN dataset pad_dom_mdbas_edat-1864
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_edat-1864 de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_edat-1864 on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_edat-6599
         title:
           ca: Open Data BCN pad_dom_mdbas_edat-6599
           en: Open Data BCN dataset pad_dom_mdbas_edat-6599
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_edat-6599 de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_edat-6599 on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/pad_dom_mdbas_nacionalitat
         title:
           ca: Open Data BCN pad_dom_mdbas_nacionalitat
           en: Open Data BCN dataset pad_dom_mdbas_nacionalitat
+        description:
+          ca: Conjunt de dades pad_dom_mdbas_nacionalitat de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset pad_dom_mdbas_nacionalitat on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-carrecs-tipus-propietari
         title:
           ca: Open Data BCN est-cadastre-carrecs-tipus-propietari
           en: Open Data BCN dataset est-cadastre-carrecs-tipus-propietari
+        description:
+          ca: Conjunt de dades est-cadastre-carrecs-tipus-propietari de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-carrecs-tipus-propietari on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-edificacions-any-const
         title:
           ca: Open Data BCN est-cadastre-edificacions-any-const
           en: Open Data BCN dataset est-cadastre-edificacions-any-const
+        description:
+          ca: Conjunt de dades est-cadastre-edificacions-any-const de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-edificacions-any-const on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-edificacions-nombre-locals
         title:
           ca: Open Data BCN est-cadastre-edificacions-nombre-locals
           en: Open Data BCN dataset est-cadastre-edificacions-nombre-locals
+        description:
+          ca: Conjunt de dades est-cadastre-edificacions-nombre-locals de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-edificacions-nombre-locals on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-edificacions-superficie
         title:
           ca: Open Data BCN est-cadastre-edificacions-superficie
           en: Open Data BCN dataset est-cadastre-edificacions-superficie
+        description:
+          ca: Conjunt de dades est-cadastre-edificacions-superficie de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-edificacions-superficie on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-finques-superficie
         title:
           ca: Open Data BCN est-cadastre-finques-superficie
           en: Open Data BCN dataset est-cadastre-finques-superficie
+        description:
+          ca: Conjunt de dades est-cadastre-finques-superficie de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-finques-superficie on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-locals-sup
         title:
           ca: Open Data BCN est-cadastre-locals-sup
           en: Open Data BCN dataset est-cadastre-locals-sup
+        description:
+          ca: Conjunt de dades est-cadastre-locals-sup de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-locals-sup on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-habitatges-valor-cadastral
         title:
           ca: Open Data BCN est-cadastre-habitatges-valor-cadastral
           en: Open Data BCN dataset est-cadastre-habitatges-valor-cadastral
+        description:
+          ca: Conjunt de dades est-cadastre-habitatges-valor-cadastral de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-habitatges-valor-cadastral on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-cadastre-locals-valors-total-unitaris
         title:
           ca: Open Data BCN est-cadastre-locals-valors-total-unitaris
           en: Open Data BCN dataset est-cadastre-locals-valors-total-unitaris
+        description:
+          ca: Conjunt de dades est-cadastre-locals-valors-total-unitaris de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-cadastre-locals-valors-total-unitaris on its open data portal Open Data BCN. Licence CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: statistics }

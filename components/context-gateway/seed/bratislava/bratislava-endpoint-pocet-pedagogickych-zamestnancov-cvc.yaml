@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Počet pedagogických zamestnancov CVČ v Bratislave
           en: Teaching staff of leisure centres in Bratislava
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Počet pedagogických zamestnancov CVČ v Bratislave. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Teaching staff of leisure centres in Bratislava. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

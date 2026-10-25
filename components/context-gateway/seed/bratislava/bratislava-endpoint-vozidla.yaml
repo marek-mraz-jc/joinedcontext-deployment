@@ -21,7 +21,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The publisher is the Project's spec.catalog (T-4596). Counts and stations: no record names a person.
     personalData: does-not-contain
@@ -42,8 +41,14 @@ spec:
         title:
           sk: Počet prejazdov vozidiel podľa sčítačov za hodinu
           en: Vehicles per counter site and hour
+        description:
+          sk: 'Vrstva ArcGIS Feature Service, ktorú data.bratislava.sk publikuje ako dataset: Počet prejazdov vozidiel podľa sčítačov za hodinu. Licencia CC BY 4.0.'
+          en: 'The ArcGIS Feature Service layer data.bratislava.sk publishes as the dataset: Vehicles per counter site and hour. Licence CC BY 4.0.'
       - url: https://data.bratislava.sk/datasets/7b5628f9234a461e8becfa37665290b3
         title:
           sk: Počet prejazdov vozidiel podľa sčítačov za hodinu (data.bratislava.sk)
           en: Vehicles per counter site and hour (data.bratislava.sk)
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Počet prejazdov vozidiel podľa sčítačov za hodinu. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Vehicles per counter site and hour. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: counters }

@@ -18,7 +18,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -35,4 +34,7 @@ spec:
     source:
       - url: https://data.bratislava.sk/datasets/06d458856da1415e8e7f238111e30321
         title: { sk: Množstvo komunálneho odpadu v Bratislave, en: Municipal waste in Bratislava }
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Množstvo komunálneho odpadu v Bratislave. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Municipal waste in Bratislava. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-mesto }
