@@ -578,6 +578,30 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### GreenAsset
+
+One technical element of the city's shared green register (IPR Praha): a bench, a fence, a path, a paved area, a wall, a water feature or a tree pit, where it is, its kind, material and surface, its manager and care regime. Smart Data Models has no class for it; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+
+IRI: `jc:GreenAsset`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `facilityType` | Property | `string` |  |  | `jc:facilityType` | The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine. |
+| `constructionMaterial` | Property | `string` |  |  | `jc:constructionMaterial` | The construction material the register gives it, such as Dřevo or Beton. |
+| `surfaceType` | Property | `string` |  |  | `jc:surfaceType` | The surface of a paved area or path as the register names it, such as Dlažba or Mlat. |
+| `careRegime` | Property | `string` |  |  | `jc:careRegime` | The maintenance class the register gives it, such as Intenzitní třída údržby I. |
+| `areaServed` | Property | `string` |  |  | `sdm:areaServed` | Who looks after it, as the register names its manager: a city district (MČ Praha 9) or a department of the City of Prague (MHMP-OCP). |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher's station, counter or sensor last reported the values beside it, or when the publisher last edited the record. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### PostalAddress
 
 The value of `address`: a postal address, never an entity of its own (Smart Data Models' common schema).
@@ -687,6 +711,8 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `natureTrail` | A nature trail, drawn as its course. |
 | `waterArea` | A stream, pond or other water area, drawn as its outline. |
 | `dogZone` | An area where dogs may run free, must stay on a lead or may not enter, or a dog park. |
+| `warMemorial` | A memorial or war grave of the IPR register of memorials and war graves. |
+| `postOffice` | A post office of the IPR layer of post offices. |
 
 ### WasteAccess
 

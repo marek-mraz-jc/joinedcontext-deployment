@@ -1529,6 +1529,32 @@ slots:
           de: Gehölzkategorie
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  constructionMaterial:
+    slot_uri: jc:constructionMaterial
+    description: The construction material the register gives it, such as Dřevo or Beton.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Konštrukčný materiál
+          cs: Konstrukční materiál
+          en: Construction material
+          de: Baumaterial
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  surfaceType:
+    slot_uri: jc:surfaceType
+    description: The surface of a paved area or path as the register names it, such as Dlažba or Mlat.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Povrch
+          cs: Povrch
+          en: Surface
+          de: Oberfläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   careRegime:
     slot_uri: jc:careRegime
     description: The maintenance class the register gives it, such as Intenzitní třída údržby I.
@@ -2004,6 +2030,29 @@ classes:
       - dateModified
       - dataProvider
       - source
+  GreenAsset:
+    class_uri: jc:GreenAsset
+    description: >-
+      One technical element of the city's shared green register (IPR Praha): a bench, a fence, a path, a paved area, a wall, a water feature or a tree pit, where it is, its kind, material and surface, its manager and care regime. Smart Data Models has no class for it; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Technický prvok zelene
+          cs: Technický prvek zeleně
+          en: Green space element
+          de: Grünflächenelement
+    slots:
+      - name
+      - facilityType
+      - constructionMaterial
+      - surfaceType
+      - careRegime
+      - areaServed
+      - dateModified
+      - dataProvider
+      - source
 
   OnStreetParking:
     class_uri: sdm:OnStreetParking
@@ -2184,6 +2233,9 @@ enums:
         description: A stream, pond or other water area, drawn as its outline.
       dogZone:
         description: An area where dogs may run free, must stay on a lead or may not enter, or a dog park.
+      warMemorial:
+        description: A memorial or war grave of the IPR register of memorials and war graves.
+      postOffice: { description: A post office of the IPR layer of post offices. }
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }

@@ -37,6 +37,9 @@
     "Garden": {
       "@id": "sdm:Garden"
     },
+    "GreenAsset": {
+      "@id": "jc:GreenAsset"
+    },
     "GtfsAccessPoint": {
       "@id": "sdm:GtfsAccessPoint"
     },
@@ -159,6 +162,9 @@
     },
     "code": {
       "@id": "sdm:code"
+    },
+    "constructionMaterial": {
+      "@id": "jc:constructionMaterial"
     },
     "containerCode": {
       "@id": "jc:containerCode"
@@ -422,6 +428,9 @@
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
+    },
+    "surfaceType": {
+      "@id": "jc:surfaceType"
     },
     "tariff": {
       "@id": "jc:tariff"
