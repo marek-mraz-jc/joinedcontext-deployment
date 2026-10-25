@@ -273,10 +273,14 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
                  "t48431-x", "newuser-policy-", "newuser-policy-A"]:
         assert not reached(name), f"{name} is not a journey's"
 
+    # The binding's scope (asserted above) bounds what it reaches: the seed of that project, and the
+    # sample apps. A year-suffixed table of another project (`bratislava-rozpocet-prijmy-2019`, T-5676)
+    # stays outside it.
     apps = SEED.parent.parent / "gitea/apps"
+    project = held[0]["spec"]["scope"]["project"]
     seeded = {
         doc["metadata"]["name"]
-        for path in [*SEED.glob("*/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
+        for path in [*SEED.glob(f"{project}/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
         if path.name != "index.yaml" and not path.name.endswith("-bento.yaml")
         for doc in documents(path)
         if isinstance(doc.get("metadata"), dict) and "name" in doc["metadata"]
