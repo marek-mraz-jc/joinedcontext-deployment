@@ -331,10 +331,12 @@ def test_the_job_links_the_marked_endpoint_scopes_to_jcctl_and_no_star(keycloak)
     assert "unlinked" not in again.stdout, again.stdout
 
 
-def test_the_job_links_a_thousand_new_scopes_within_a_minute(keycloak):
+def test_the_job_links_a_thousand_new_scopes_in_one_process(keycloak):
     """T-4474 (ADR-N-025 §4d): one kcadm JVM per link took a second each, so a fresh realm with
     10,000 Endpoint scopes never converged inside the Job's 900 s. The links go over one bash
-    process now; a thousand new ones fit in a minute."""
+    process now. T-5377: the test counts kcadm starts through a shim instead of racing the wall
+    clock, which a host at load 60 stretched past a minute: a thousand links take a fixed few
+    kcadm runs, the per-link loop a thousand."""
     name, base = keycloak
     ids = realm(base)
     admin = ids["admin"]
@@ -349,12 +351,18 @@ def test_the_job_links_a_thousand_new_scopes_within_a_minute(keycloak):
             "attributes": {"include.in.token.scope": "true", "managed-by": "joinedcontext"}})
         assert status == 201, body
 
-    started = time.monotonic()
+    bin_ = "/opt/keycloak/bin"
+    subprocess.run(["docker", "exec", "-u", "0", name, "sh", "-c",
+                    (f"mv {bin_}/kcadm.sh {bin_}/kcadm-real.sh && "
+                    f"printf '#!/bin/sh\\necho run >> /tmp/kcadm.runs\\nexec {bin_}/kcadm-real.sh \"$@\"\\n' > {bin_}/kcadm.sh && "
+                    f"chmod 755 {bin_}/kcadm.sh && : > /tmp/kcadm.runs && chmod 666 /tmp/kcadm.runs")],
+                   check=True, capture_output=True)
     run = sync(name)
-    took = time.monotonic() - started
     assert run.returncode == 0, run.stderr
     assert "linked 1000 of 1000 endpoint: scopes to mcp-hub" in run.stdout, run.stdout
-    assert took < 60, f"{took:.1f} s"
+    runs = subprocess.run(["docker", "exec", name, "wc", "-l", "/tmp/kcadm.runs"], check=True,
+                          capture_output=True, text=True).stdout.split()[0]
+    assert 0 < int(runs) < 50, f"{runs} kcadm runs for 1000 links"
     admin = token(base, "master", "admin-cli", user="admin")
     status, body, _ = call(base, "GET", f"/admin/realms/{REALM}/clients/{hub}/optional-client-scopes", admin)
     assert status == 200, body
