@@ -10,6 +10,9 @@ import yaml
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 OD_DATASETS = SEED.parent.parent.parent / "charts/ckan/files/od-datasets.json"
 WRITES = {"create", "update", "upsert", "delete", "append", "merge", "replace", "purge"}
+# An organization's catalogue is a published dataset with a WebSocket surface (T-5493): its public
+# reader subscribes, which writes no entity.
+SUBSCRIPTIONS = {"createSubscription", "retrieveSubscription", "updateSubscription", "deleteSubscription"}
 
 
 def manifests():
@@ -28,23 +31,59 @@ def space_of(spec):
 
 def test_one_catalog_endpoint_public_on_the_catalog_space_and_placed_in_the_index():
     doors = [(p, d) for p, d in manifests() if d["kind"] == "Endpoint" and d["metadata"]["name"] == "catalog"]
-    assert len(doors) == 1, [str(p) for p, _ in doors]
-    path, door = doors[0]
-    assert space_of(door["spec"]) == "catalog" and door["spec"]["audience"] == "public"
-    assert {"ngsi-ld", "mcp"} <= set(door["spec"]["enabledRepresentations"])
-    index = yaml.safe_load((path.parent / "index.yaml").read_text())
-    placed = {name for name in index if "catalog" in name}
-    assert {p.name for p, d in manifests() if d.get("metadata", {}).get("namespace") == "slovensko"
-            and ("catalog" in d["metadata"]["name"])} <= placed
+    for path, door in doors:
+        assert space_of(door["spec"]) == "catalog" and door["spec"]["audience"] == "public", path
+        assert {"ngsi-ld", "mcp"} <= set(door["spec"]["enabledRepresentations"]), path
+        project = door["metadata"]["namespace"]
+        index = yaml.safe_load((path.parent / "index.yaml").read_text())
+        placed = {name for name in index if "catalog" in name}
+        assert {p.name for p, d in manifests() if d.get("metadata", {}).get("namespace") == project
+                and p.parent == path.parent and "catalog" in d["metadata"]["name"]} <= placed, project
+        assert "catalog.linkml.yaml" in placed, project
+
+
+def segments() -> dict[str, str]:
+    """The `catalog` space's urnSegment, by project."""
+    return {d["metadata"]["namespace"]: d["spec"]["urnSegment"] for _, d in manifests()
+            if d["kind"] == "ContextSpace" and d["metadata"]["name"] == "catalog"}
+
+
+def test_the_installation_has_one_whole_catalogue_and_each_organization_its_slice():
+    # T-5493 (T-4746 owner addendum): the Portal writes all projects to the one Endpoint
+    # `catalog` whose space has the segment `catalog`, and a project's own slice to one whose
+    # segment is `{project}-catalog`; two whole catalogues stop the wave (reconciler/catalog.rs).
+    seg = segments()
+    assert [p for p, s in seg.items() if s == "catalog"] == ["slovensko"]
+    for project in ["bbsk", "banskabystrica", "zilina", "praha", "helsinki"]:
+        assert seg.get(project) == f"{project}-catalog", project
+    assert all(s in {"catalog", f"{p}-catalog"} for p, s in seg.items()), seg
+    doors = {d["metadata"]["namespace"]: d for _, d in manifests() if d["kind"] == "Endpoint"
+             and d["metadata"]["name"] == "catalog"}
+    assert set(doors) == set(seg)
+
+
+def test_each_organizations_catalogue_publishes_to_its_own_ckan_organization():
+    ckan = {d["metadata"]["namespace"]: d["metadata"]["name"] for _, d in manifests() if d["kind"] == "CkanInstance"}
+    for project, seg in segments().items():
+        if seg == "catalog":
+            continue
+        door = next(d for _, d in manifests() if d["kind"] == "Endpoint" and d["metadata"]["name"] == "catalog"
+                    and d["metadata"]["namespace"] == project)
+        assert door["spec"]["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": ckan[project]}
+        # No policyRef: the Portal's write and the public read are both its space's Policies.
+        assert "policyRef" not in door["spec"], project
+        titles = door["metadata"]["title"]
+        assert titles["en"].endswith(" – data catalogue"), titles
+        assert any(t.endswith((" – katalóg dát", " – katalog dat", " – datakatalogi")) for t in titles.values()), titles
 
 
 def test_anyone_reads_the_catalogue_and_only_the_portal_reconciler_writes_it():
     policies = [d for _, d in manifests() if d["kind"] == "Policy" and space_of(d["spec"]) == "catalog"]
     writers = {(d["spec"]["assignee"]["kind"], d["spec"]["assignee"]["id"]) for d in policies
-               if any(any(w in op.lower() for w in WRITES) for op in d["spec"]["operations"])}
+               if any(any(w in op.lower() for w in WRITES) for op in set(d["spec"]["operations"]) - SUBSCRIPTIONS)}
     assert writers == {("user", "service-account-portal-reconciler")}
     public = [d for d in policies if d["spec"]["assignee"] == {"kind": "role", "id": "public"}]
-    assert public and all(op.startswith("retrieve") for d in public for op in d["spec"]["operations"])
+    assert public and all(op.startswith("retrieve") or op in SUBSCRIPTIONS for d in public for op in d["spec"]["operations"])
     for d in policies:
         assert {e["type"] for i in d["spec"]["information"] for e in i["entities"]} == {"Dataset", "DataService", "Organization"}
 
