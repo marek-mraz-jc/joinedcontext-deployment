@@ -4,7 +4,7 @@ stopgap while an instance has no object store for CNPG's base backups and WAL ar
 (smartcity until the owner's S3 keys exist, T-4678): it survives a dropped table or a broken
 migration, not the loss of the node, so an instance with it still has no off-site backup.
 */ -}}
-{{- /* The dump Job's spec, for the CronJob and the Job of the apply: (dict "root" $ "keepDays" n). */}}
+{{- /* The dump Job's spec, for the CronJob and the Job of the apply: (dict "root" $ "keepDays" n "size" q). */}}
 {{- define "database.localBackupJob" -}}
 {{- $r := .root }}
 {{- $name := printf "%s-local-backup" $r.Values.cluster.name }}
@@ -56,18 +56,41 @@ template:
             key: password
       - name: KEEP_DAYS
         value: {{ .keepDays | quote }}
+      - name: VOLUME_SIZE
+        value: {{ .size | quote }}
       command:
       - /bin/sh
       - -c
       - |
         set -eu
         file=/backup/$(date -u +%Y-%m-%dT%H%MZ).sql.gz
+        # Every table's rows just before the dump, `database.schema.table|rows`: the monthly
+        # drill restores the dump and holds its tables to these (dr-drill.sh, T-5556).
+        tables="SELECT schemaname || '.' || relname, (xpath('/row/c/text()', query_to_xml(format('SELECT count(*) AS c FROM %I.%I', schemaname, relname), false, true, '')))[1]::text FROM pg_stat_user_tables ORDER BY 1"
+        for db in $(psql -X -At -d postgres -c "SELECT datname FROM pg_database WHERE NOT datistemplate AND datname <> 'postgres' ORDER BY 1"); do
+          psql -X -At -d "$db" -c "$tables" | sed "s|^|$db.|"
+        done > /tmp/counts
         # pipefail is not POSIX: a failed pg_dumpall would hide behind gzip's exit 0.
         { pg_dumpall --clean --if-exists || echo FAILED > /tmp/failed; } | gzip > "$file.part"
         if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
+        cp /tmp/counts "$file.counts"
         mv "$file.part" "$file"
-        find /backup -name '*.sql.gz' -mtime +"$KEEP_DAYS" -delete
+        find /backup \( -name '*.sql.gz' -o -name '*.sql.gz.counts' \) -mtime +"$KEEP_DAYS" -delete
         ls -l /backup
+        # One dump over 80 % of the volume leaves no room for the next night's: the job fails
+        # (PostgresBackupStale) while this dump is still whole.
+        case "$VOLUME_SIZE" in
+          *Ti) max=$((${VOLUME_SIZE%Ti} * 1099511627776)) ;;
+          *Gi) max=$((${VOLUME_SIZE%Gi} * 1073741824)) ;;
+          *Mi) max=$((${VOLUME_SIZE%Mi} * 1048576)) ;;
+          *[!0-9]*) echo "localBackup.size $VOLUME_SIZE: give it in Mi, Gi or Ti, e.g. 10Gi" >&2; exit 1 ;;
+          *) max=$VOLUME_SIZE ;;
+        esac
+        bytes=$(wc -c < "$file")
+        if [ $((bytes * 100)) -gt $((max * 80)) ]; then
+          echo "the dump is $bytes bytes, over 80 % of the $VOLUME_SIZE volume: raise localBackup.size" >&2
+          exit 1
+        fi
 {{- end }}
 {{- with .Values.localBackup }}
 {{- if .enabled }}
@@ -104,7 +127,7 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
-      {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays) | nindent 6 }}
+      {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays "size" .size) | nindent 6 }}
 ---
 # The first dump, at every apply: local-path binds the volume only for a pod that mounts it, so
 # without one the PVC stays Pending until the night and `helm --wait` fails the release. Gone
@@ -119,6 +142,6 @@ metadata:
     app.kubernetes.io/component: database-local-backup
 spec:
   ttlSecondsAfterFinished: 600
-  {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays) | nindent 2 }}
+  {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays "size" .size) | nindent 2 }}
 {{- end }}
 {{- end }}
