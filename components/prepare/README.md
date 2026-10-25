@@ -7,6 +7,13 @@ Prepares the cluster before deployment:
   - `global.serviceMesh.patchNamespaces` is true
   - `global.serviceMesh.enabled` is true
   - `global.serviceMesh.type` is `linkerd`
+- Gives the injected `linkerd-proxy` (and `linkerd-network-validator`, which Linkerd gives the
+  same `proxy.resources`) requests and a memory limit through the meshed namespace's
+  `config.linkerd.io/proxy-cpu-request`, `proxy-memory-request` and `proxy-memory-limit`
+  annotations, from `global.serviceMesh.proxyResources` (`cpuRequest`, `memoryRequest`,
+  `memoryLimit`, for example `10m`, `24Mi`, `64Mi`; an empty value writes no annotation). The
+  proxy image stays tag-referenced: Linkerd injects it by version, so `require-image-checksum`
+  keeps reporting it.
 
 Next steps:
 1. Configure helm charts in `components/prepare/charts.yaml`
