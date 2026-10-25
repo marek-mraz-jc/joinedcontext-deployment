@@ -14,6 +14,7 @@ import json
 import shutil
 import subprocess
 import threading
+import typing
 import urllib.parse
 import zipfile
 from pathlib import Path
@@ -182,7 +183,10 @@ class Recorded(http.server.BaseHTTPRequestHandler):
     fourteen), and the address register's file for Žilina, cut to the buildings the monuments name
     and forty others."""
 
+    requested: typing.ClassVar[list[str]] = []
+
     def do_GET(self):
+        Recorded.requested.append(self.path)
         url = urllib.parse.urlsplit(self.path)
         query = urllib.parse.parse_qs(url.query)
         if url.path.endswith("/discover/search/objects") and query.get("size") == ["100"]:
@@ -302,6 +306,21 @@ def test_an_empty_library_and_a_missing_page_fail_the_run():
     assert b"page 3 did not come" in missing.stdout + missing.stderr
 
 
+@requires_docker
+def test_a_page_count_past_four_times_the_librarys_fails_the_run_with_no_request():
+    """T-5701: DREPO had 14 pages on 2026-10-25, the cap is 56; a page 0 naming 100000 fetches nothing
+    and writes none of its own items either."""
+    page = json.loads((FIXTURES / "drepo-page0.json").read_text())
+    page["_embedded"]["searchResult"]["page"]["totalPages"] = 100000
+    Recorded.requested.clear()
+    result = drepo(json.dumps(page).encode())
+    assert b"the library names 100000 pages; more than 56" in result.stderr
+    assert json.loads(result.stdout or b"[]") == []
+    assert Recorded.requested == []
+    page["_embedded"]["searchResult"]["page"]["totalPages"] = 3
+    assert len(json.loads(drepo(json.dumps(page).encode()).stdout)) == 251
+
+
 VLAKY = SEED / "zilina-pipeline-vlaky-bento.yaml"
 GTFS = FIXTURES / "zsr-gtfs.zip"
 CITY_STATIONS = {"Žilina", "Žilina-zariečie", "Žilina-Solinky", "Bytčica", "Brodno"}
@@ -376,6 +395,19 @@ def test_an_expired_timetable_and_a_zip_without_the_city_fail_the_run():
         archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\n1,Košice,48.7,21.2\n")
     elsewhere = vlaky(buffer.getvalue(), "2026-10-07")
     assert b"the timetable names none of the city's stations" in elsewhere.stdout + elsewhere.stderr
+
+
+@requires_docker
+def test_a_timetable_zip_past_four_times_its_measured_size_writes_no_station():
+    """T-5701: 290550 bytes on 2026-10-25, the cap four times that; the zip is refused before the unpack."""
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(GTFS) as recorded, zipfile.ZipFile(buffer, "w", zipfile.ZIP_STORED) as archive:
+        for name in recorded.namelist():
+            archive.writestr(name, recorded.read(name))
+        archive.writestr("padding.txt", "x" * 1162200)
+    result = vlaky(buffer.getvalue(), "2026-10-07")
+    assert json.loads(result.stdout) == []
+    assert b"more than 1162200 is not the national GTFS feed" in result.stderr
 
 
 PAMIATKY = SEED / "zilina-pipeline-pamiatky-bento.yaml"

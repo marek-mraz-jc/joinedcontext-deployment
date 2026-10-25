@@ -1522,6 +1522,7 @@ slovensko-policy-participacia-read.yaml: projects/slovensko/spaces/slovensko-par
 slovensko-datasource-decidim-tvormespolu.yaml: projects/slovensko/datasources/decidim-tvormespolu.yaml
 slovensko-pipeline-decidim-tvormespolu.yaml: projects/slovensko/pipelines/decidim-tvormespolu/pipeline.yaml
 slovensko-pipeline-decidim-tvormespolu-bento.yaml: projects/slovensko/pipelines/decidim-tvormespolu/bento.yaml
+slovensko-policy-decidim-tvormespolu-account.yaml: projects/slovensko/spaces/slovensko-participacia/policies/decidim-tvormespolu-account.yaml
 slovensko-datasource-decidim-tvormespolu-hlasovanie.yaml: projects/slovensko/datasources/decidim-tvormespolu-hlasovanie.yaml
 slovensko-pipeline-decidim-tvormespolu-hlasovanie.yaml: projects/slovensko/pipelines/decidim-tvormespolu-hlasovanie/pipeline.yaml
 slovensko-pipeline-decidim-tvormespolu-hlasovanie-bento.yaml: projects/slovensko/pipelines/decidim-tvormespolu-hlasovanie/bento.yaml

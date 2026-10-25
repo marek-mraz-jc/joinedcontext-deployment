@@ -42,6 +42,8 @@ helsinki-policy-public-air-quality.yaml: projects/helsinki/spaces/helsinki/polic
 helsinki-policy-public-alerts.yaml: projects/helsinki/spaces/helsinki/policies/public-alerts.yaml
 helsinki-policy-public-feedback.yaml: projects/helsinki/spaces/helsinki/policies/public-feedback.yaml
 helsinki-policy-pipelines-write.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-write.yaml
+helsinki-policy-gtfs-routes-account.yaml: projects/helsinki/spaces/helsinki/policies/gtfs-routes-account.yaml
+helsinki-policy-transit-stops-account.yaml: projects/helsinki/spaces/helsinki/policies/transit-stops-account.yaml
 helsinki-policy-pipelines-delete-alerts.yaml: projects/helsinki/spaces/helsinki/policies/pipelines-delete-alerts.yaml
 helsinki-kpi-space.yaml: projects/helsinki/spaces/helsinki-kpi/space.yaml
 helsinki-kpi-datamodel.yaml: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.yaml

@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Štatistický prehľad priestupkov na úseku občianskych preukazov
           en: Offences concerning identity cards
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Štatistický prehľad priestupkov na úseku občianskych preukazov. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Offences concerning identity cards. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-okresy }

@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Výmera územia podľa druhu pozemku v mestských častiach Bratislavy
           en: Land area by land type and city district of Bratislava
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Výmera územia podľa druhu pozemku v mestských častiach Bratislavy. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Land area by land type and city district of Bratislava. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics }

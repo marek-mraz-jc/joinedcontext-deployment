@@ -66,6 +66,8 @@ praha-datasource-geo-drinking-fountains.yaml: projects/praha/datasources/ipr-geo
 praha-datasource-geo-fountains.yaml: projects/praha/datasources/ipr-geo-fountains.yaml
 praha-datasource-geo-springs.yaml: projects/praha/datasources/ipr-geo-springs.yaml
 praha-datasource-geo-trail-stops.yaml: projects/praha/datasources/ipr-geo-trail-stops.yaml
+praha-datasource-nrpzs-health-care.yaml: projects/praha/datasources/nrpzs-health-care.yaml
+praha-datasource-rpss-social-services.yaml: projects/praha/datasources/rpss-social-services.yaml
 praha-datasource-geo-waste-points.yaml: projects/praha/datasources/ipr-geo-waste-points.yaml
 praha-datasource-geo-water-pumps.yaml: projects/praha/datasources/ipr-geo-water-pumps.yaml
 praha-datasource-geo-mist-showers.yaml: projects/praha/datasources/ipr-geo-mist-showers.yaml
@@ -129,6 +131,8 @@ praha-pipeline-geo-drinking-fountains.yaml: projects/praha/pipelines/geo-drinkin
 praha-pipeline-geo-fountains.yaml: projects/praha/pipelines/geo-fountains/pipeline.yaml
 praha-pipeline-geo-springs.yaml: projects/praha/pipelines/geo-springs/pipeline.yaml
 praha-pipeline-geo-trail-stops.yaml: projects/praha/pipelines/geo-trail-stops/pipeline.yaml
+praha-pipeline-nrpzs-health-care.yaml: projects/praha/pipelines/nrpzs-health-care/pipeline.yaml
+praha-pipeline-rpss-social-services.yaml: projects/praha/pipelines/rpss-social-services/pipeline.yaml
 praha-pipeline-geo-waste-points.yaml: projects/praha/pipelines/geo-waste-points/pipeline.yaml
 praha-pipeline-geo-water-pumps.yaml: projects/praha/pipelines/geo-water-pumps/pipeline.yaml
 praha-pipeline-geo-mist-showers.yaml: projects/praha/pipelines/geo-mist-showers/pipeline.yaml
@@ -170,6 +174,8 @@ praha-pipeline-geo-drinking-fountains-bento.yaml: projects/praha/pipelines/geo-d
 praha-pipeline-geo-fountains-bento.yaml: projects/praha/pipelines/geo-fountains/bento.yaml
 praha-pipeline-geo-springs-bento.yaml: projects/praha/pipelines/geo-springs/bento.yaml
 praha-pipeline-geo-trail-stops-bento.yaml: projects/praha/pipelines/geo-trail-stops/bento.yaml
+praha-pipeline-nrpzs-health-care-bento.yaml: projects/praha/pipelines/nrpzs-health-care/bento.yaml
+praha-pipeline-rpss-social-services-bento.yaml: projects/praha/pipelines/rpss-social-services/bento.yaml
 praha-pipeline-geo-waste-points-bento.yaml: projects/praha/pipelines/geo-waste-points/bento.yaml
 praha-pipeline-geo-water-pumps-bento.yaml: projects/praha/pipelines/geo-water-pumps/bento.yaml
 praha-pipeline-geo-mist-showers-bento.yaml: projects/praha/pipelines/geo-mist-showers/bento.yaml
@@ -244,6 +250,8 @@ praha-endpoint-sluzby.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-sl
 praha-policy-public-sluzby.yaml: projects/praha/spaces/praha-mesto/policies/public-sluzby.yaml
 praha-endpoint-vybavenost.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-vybavenost.yaml
 praha-policy-public-vybavenost.yaml: projects/praha/spaces/praha-mesto/policies/public-vybavenost.yaml
+praha-endpoint-zdravotni-a-socialni-sluzby.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-zdravotni-a-socialni-sluzby.yaml
+praha-policy-public-zdravotni-a-socialni-sluzby.yaml: projects/praha/spaces/praha-mesto/policies/public-zdravotni-a-socialni-sluzby.yaml
 praha-datasource-geo-rezzo1.yaml: projects/praha/datasources/ipr-geo-rezzo1.yaml
 praha-pipeline-geo-rezzo1.yaml: projects/praha/pipelines/geo-rezzo1/pipeline.yaml
 praha-pipeline-geo-rezzo1-bento.yaml: projects/praha/pipelines/geo-rezzo1/bento.yaml

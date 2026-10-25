@@ -248,18 +248,18 @@ portal:
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
-    digest: 'sha256:e385b098cb1cb874a16e42b6ee75e1b5fc5828f76f49aad2d85afa0805cbd145'
+    digest: 'sha256:24dfc5becd2280316171aa322f02cf3735201cddf430a614ea15e91e38bfa7b8'
     # The Portal commit this digest is the image of, and the docs commit its /docs pages are
     # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
     # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
-    commit: '23cdc3653cf50a5d48a3eae2e3dc7b4fe5ff3880'
-    docs: 'b16b1c729a5e198b89ea5daf88d4ec568509b372'
+    commit: '374cfc627498d878a54a61aaebc739317e8ee925'
+    docs: '1dcfbe1bbdce1170c9a6b5ac9d53363047b51704'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
-    # The platform commit the pinned Portal's jc-core is built from: portal 23cdc36's Cargo.toml rev,
-    # 8d9a369 (on top of 9358512, T-5295's datacube step, which the susr-* pipelines use since T-5382).
-    platform: '8d9a36973b31b18e3e41611f1bada3f6e44bd7e1'
+    # The platform commit the pinned Portal's jc-core is built from: portal 374cfc6's Cargo.toml rev,
+    # 207bf9b (carries 9358512, T-5295's datacube step, which the susr-* pipelines use since T-5382).
+    platform: '207bf9bd1e4518469a77356c8789667a4e04ece3'
   # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
   # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, so `commit` is the
   # newest such commit at or before portal.commit; scripts/pin-portal.sh moves both together and
@@ -267,8 +267,8 @@ portal:
   ui:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
     tag: 'main'
-    digest: 'sha256:416d23db85c9ab194a38ed1f0ea3c530295e2ec50d09c0d950ecf4a36571ce39'
-    commit: 'fca645d400b780b6635a3428bc366eba3a77fce1'
+    digest: 'sha256:0bdad8f50d6cc20232b18505f0052765a1747a5206820500e7949881766df074'
+    commit: '374cfc627498d878a54a61aaebc739317e8ee925'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:

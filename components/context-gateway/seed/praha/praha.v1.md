@@ -61,7 +61,7 @@ Specialises `Entity`.
 
 ### PointOfInterest
 
-One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone.
+One place a resident goes to: a school, a cultural venue, a public toilet, a public transport ticket point, a library, a municipal office or police station, a garden, a playground, a waste collection yard, or one of the city's amenities the IPR geoportal maps: a health centre, a university, a place of worship, a community centre, an accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous or bio-waste collection point, a nature trail stop, or one of the areas and lines it maps: a cemetery, a nature trail, a water area or stream, or a dog zone; or a place of health care or a social service of the national registers.
 
 IRI: `sdm:PointOfInterest`
 
@@ -814,6 +814,8 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 | `dogZone` | An area where dogs may run free, must stay on a lead or may not enter, or a dog park. |
 | `warMemorial` | A memorial or war grave of the IPR register of memorials and war graves. |
 | `postOffice` | A post office of the IPR layer of post offices. |
+| `healthCareProvider` | A place of health care of the national register of health care providers (NRPZS). |
+| `socialService` | A social service at a facility of the register of social service providers (RPSS). |
 
 ### WasteAccess
 

@@ -119,6 +119,51 @@ def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write
             assert {e["type"] for e in doc["spec"]["information"][0]["entities"]} == written
 
 
+def written_attributes(bento: Path) -> set[str]:
+    """The Attributes the mapping's entity names: the top-level keys of its last `root = {...}`."""
+    text = bento.read_text()
+    block = text[text.rindex("root = {\n"):]
+    block = block[:block.index("}.filter(")]
+    indent = re.match(r'root = \{\n(\s+)"', block).group(1)
+    return set(re.findall(rf'^{indent}"(\w+)":', block, re.MULTILINE)) - {"id", "type"}
+
+
+def class_slots(classes: dict, name: str) -> set[str]:
+    """What the Portal's view lists for a type shown whole (reconciler/views.rs class_slots): the
+    class's slots and attributes through is_a and mixins, and the core Entity's `location`."""
+    cls = classes.get(name) or {}
+    slots = set(cls.get("slots") or []) | set(cls.get("attributes") or {}) | {"location"}
+    for parent in [cls.get("is_a"), *(cls.get("mixins") or [])]:
+        if parent:
+            slots |= class_slots(classes, parent)
+    return slots
+
+
+def test_every_mapping_writes_only_attributes_its_view_shows():
+    # Antares refuses a whole write naming one Attribute the Endpoint's view does not show (ADR-0023
+    # rule 7), so 516 rows of a census table failed at once (T-5718). The view lists the space model's
+    # class slots for every type the pipelines Policy grants whole.
+    for project in generate.PROJECTS:
+        classes = yaml.safe_load((SEED / project / f"{project}-otvorene-data.linkml.yaml").read_text())["classes"]
+        policy = yaml.safe_load((SEED / project / f"{project}-od-policy-pipelines-write.yaml").read_text())
+        for info in policy["spec"]["information"]:
+            assert not info.get("propertyNames") and not info.get("relationshipNames"), "a narrowed grant: check it here"
+        for pipeline in files(project, "pipeline"):
+            kind = yaml.safe_load(pipeline.read_text())["spec"]["output"]["type"]
+            bento = pipeline.with_name(pipeline.stem + "-bento.yaml")
+            hidden = written_attributes(bento) - class_slots(classes, kind)
+            assert not hidden, f"{bento.name} writes {sorted(hidden)}, which the {kind} view does not show"
+
+
+def test_an_attribute_outside_the_class_is_one_the_view_does_not_show(tmp_path):
+    bento = tmp_path / "x-bento.yaml"
+    bento.write_text('root = {\n  "id": "x",\n  "type": "T",\n  "a": 1,\n  "b": { "c": 2 },\n}.filter(e -> e)\n')
+    assert written_attributes(bento) == {"a", "b"}
+    classes = {"T": {"is_a": "Base", "slots": ["a"]}, "Base": {"mixins": ["M"]}, "M": {"attributes": {"m": {}}}}
+    assert class_slots(classes, "T") == {"a", "m", "location"}
+    assert written_attributes(bento) - class_slots(classes, "T") == {"b"}
+
+
 def test_the_index_places_every_generated_file_once():
     for project in generate.PROJECTS:
         index = yaml.safe_load((SEED / project / "index.yaml").read_text())
@@ -772,6 +817,19 @@ def test_an_archive_without_geojson_writes_nothing():
     assert run_bytes("banskabystrica", "dtm-bb-register-adries", buf.getvalue()) == []
 
 
+@requires_docker
+def test_an_archive_past_four_times_its_measured_size_writes_nothing():
+    """T-5701: the size gate refuses the zip before it is unpacked; Bento cannot cap the inflated size."""
+    import os
+    feats = [{"type": "Feature", "geometry": {"type": "Point", "coordinates": list(CONTROL[0][0])},
+              "properties": {"ID": 10170905.0, "ULICA": "Mikuláša Kováča", "OBEC": "Banská Bystrica"}}]
+    cap = 4 * entry("bb-dtm-bb-register-adries")["source"]["bytes"]
+    assert len(run_bytes("banskabystrica", "dtm-bb-register-adries", sjtsk_archive(feats))) == 1
+    padded = sjtsk_archive(feats, {"padding.bin": os.urandom(cap)})
+    assert len(padded) > cap
+    assert run_bytes("banskabystrica", "dtm-bb-register-adries", padded) == []
+
+
 def test_an_archive_in_a_crs_no_step_reprojects_stops_the_generator():
     e = {**entry("bb-dtm-bb-register-adries")}
     e["source"] = {**e["source"], "crs": "EPSG:3035"}
@@ -1109,8 +1167,9 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5493 added each body's own catalogue (+1 in banskabystrica, bbsk, hel-fi, praha and zilina).
         # T-5669 Helsinki's autumn traffic volumes and machine vision counts.
         # T-5666 Prague's event store praha-akce and Bratislava's events over the national store (slovensko).
+        # T-5691 Prague's health care and social services (+1 in praha).
         "banskabystrica": 13 + 7 + 1, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13 + 17,
-        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1}
+        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

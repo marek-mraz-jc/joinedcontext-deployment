@@ -21,7 +21,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The publisher is the Project's spec.catalog (T-4596). A timetable network: no record names a person.
     personalData: does-not-contain
@@ -43,4 +42,7 @@ spec:
         title:
           sk: Cestovné poriadky MHD vo formáte GTFS (data.bratislava.sk)
           en: Bratislava public transport timetables as GTFS (data.bratislava.sk)
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Cestovné poriadky MHD vo formáte GTFS. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Bratislava public transport timetables as GTFS. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: mhd-gtfs }

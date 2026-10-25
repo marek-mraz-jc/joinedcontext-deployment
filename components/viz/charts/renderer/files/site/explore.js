@@ -122,8 +122,6 @@
     return "https://api." + String(hostname).replace(/^viz\./, "") + "/api/endpoint/" + slug + "/";
   }
 
-  // The kind of each attribute, read from a normalized sample: what a filter on it may compare.
-  // Geometry, relationships and structured values get no filter (null).
   function params(map) {
     return Object.keys(map)
       .filter(function (k) { return map[k] !== undefined && map[k] !== null && map[k] !== ""; })

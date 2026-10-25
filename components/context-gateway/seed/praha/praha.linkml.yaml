@@ -1998,7 +1998,8 @@ classes:
       maps: a health centre, a university, a place of worship, a community centre, an
       accommodation, a grocery store, a cool spot, an animal corner, a landmark, a hazardous
       or bio-waste collection point, a nature trail stop, or one of the areas and lines it
-      maps: a cemetery, a nature trail, a water area or stream, or a dog zone.
+      maps: a cemetery, a nature trail, a water area or stream, or a dog zone; or a place of
+      health care or a social service of the national registers.
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.PointOfInterest
@@ -2709,6 +2710,10 @@ enums:
       warMemorial:
         description: A memorial or war grave of the IPR register of memorials and war graves.
       postOffice: { description: A post office of the IPR layer of post offices. }
+      healthCareProvider:
+        description: A place of health care of the national register of health care providers (NRPZS).
+      socialService:
+        description: A social service at a facility of the register of social service providers (RPSS).
   WasteAccess:
     permissible_values:
       public: { description: Anyone may use it (volně). }
