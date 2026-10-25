@@ -14,7 +14,7 @@ spec:
   period: 24h
   schedule: '35 5 * * *'
   source:
-    dataSourceRef: { kind: DataSource, name: hel-subdistrict-codes }
+    dataSourceRef: { kind: DataSource, name: hel-statistics-table }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
   output: { type: KeyPerformanceIndicator, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

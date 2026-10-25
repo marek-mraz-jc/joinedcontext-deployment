@@ -1,17 +1,17 @@
-# The city's sub-district register (osa-alueet) as codes only, the first read of the statistics
-# pipeline (T-5258): an indicator of a sub-district links its AdministrativeArea only when this
-# register holds the code. The same open WFS layer as `hel-subdistricts`, without the outlines.
-# No key. CC-BY-4.0, read from the HRI catalogue (package helsingin-piirijako).
+# The description of one Aluesarjat table (alu_vaerak_004r: its variables, areas and years), the
+# first read of the statistics pipeline (T-5258, T-5667): an answer that names no variable means
+# stat.hel.fi is not serving its API, so the run fails before it asks the tables. 15 KB, no key.
+# CC-BY-4.0, City of Helsinki Urban Research and Statistics (stat.hel.fi PXWEB).
 apiVersion: joinedcontext.com/v1alpha1
 kind: DataSource
 metadata:
-  name: hel-subdistrict-codes
+  name: hel-statistics-table
   namespace: helsinki
-  title: { en: City sub-district codes (osa-alueet), fi: Osa-alueiden tunnukset }
+  title: { en: Helsinki area statistics table description, fi: Aluesarjat-taulukon kuvaus }
 spec:
   type: http
   http:
-    url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&typeNames=avoindata:Piirijako_osaalue&propertyName=kokotunnus
+    url: https://stat.hel.fi/api/v1/fi/Aluesarjat/vrm/vaerak/alu_vaerak_004r.px
     verb: GET
     headers: { Accept: application/json }
     timeout: 30s
