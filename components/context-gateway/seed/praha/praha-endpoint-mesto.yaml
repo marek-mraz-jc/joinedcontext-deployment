@@ -159,6 +159,10 @@ spec:
         description:
           cs: Volná sdílená auta v Praze, Operátor ICT, podle podmínek užití Golemio.
           en: The shared cars free to rent in Prague, Operátor ICT, under Golemio's terms of use.
+      - url: https://api.golemio.cz/v2/bicyclecounters
+        title: { cs: Sčítače cyklistů – API (Golemio), en: Cycle counters API (Golemio) }
+          cs: Sčítače cyklistů v Praze a jejich pětiminutové počty, Operátor ICT, podle podmínek užití Golemio.
+          en: The cycle counters of Prague and their five-minute counts, Operátor ICT, under Golemio's terms of use.
       - url: https://api.golemio.cz/v2/municipalpolicestations?limit=10000
         title:
           cs: Služebny Městské policie – API (Golemio)

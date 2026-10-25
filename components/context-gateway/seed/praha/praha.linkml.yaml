@@ -899,7 +899,8 @@ slots:
     slot_uri: sdm:vehicleType
     description: >-
       The Smart Data Models kind of vehicle (tram, bus, trolley, car); other for a metro train, a
-      train, a ferry and the funicular, which transportMode names.
+      train, a ferry and the funicular, which transportMode names; bicycle for what a cycle counter
+      counts.
     range: VehicleKind
     annotations:
       label:
@@ -1650,6 +1651,56 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
 
+  intensity:
+    slot_uri: sdm:intensity
+    description: >-
+      Bicycles a Golemio cycle counter saw going one way in its newest five-minute interval
+      (dateObservedFrom to dateObservedTo).
+    range: integer
+    minimum_value: 0
+    maximum_value: 2000
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Počet bicyklov
+          cs: Počet kol
+          en: Bicycles
+          de: Fahrräder
+        annotations: { generated: sk de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedFrom:
+    slot_uri: sdm:dateObservedFrom
+    description: The start of the interval the count covers.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Od
+          cs: Od
+          en: From
+          de: Von
+        annotations: { generated: sk de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  dateObservedTo:
+    slot_uri: sdm:dateObservedTo
+    description: The end of the interval the count covers.
+    range: datetime
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Do
+          cs: Do
+          en: To
+          de: Bis
+        annotations: { generated: sk de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+
   dataSet:
     slot_uri: jc:dataSet
     description: >-
@@ -2153,6 +2204,24 @@ classes:
           en: Flood defence
           de: Hochwasserschutz
     slots: [name, defenceType, protectedBy, designFlood, dataProvider, source]
+  TrafficFlowObserved:
+    class_uri: sdm:TrafficFlowObserved
+    description: >-
+      One direction of a Golemio cycle counter in Prague and the bicycles it counted in its newest
+      five-minute interval (Golemio bicycle counters, Camea).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Sčítanie cyklistov
+          cs: Sčítání cyklistů
+          en: Cycle count
+          de: Radverkehrszählung
+        annotations: { generated: sk de }
+    slots: [name, vehicleType, intensity, dateObservedFrom, dateObservedTo, dataProvider, source]
+
   WeatherObserved:
     class_uri: sdm:WeatherObserved
     description: One of ČHMÚ's weather stations in Prague and the newest 10-minute values it published.
@@ -2503,6 +2572,7 @@ enums:
       bus: { description: A bus. }
       trolley: { description: A trolleybus. }
       car: { description: A car-sharing car. }
+      bicycle: { description: A bicycle as a cycle counter counts it. }
       other:
         description: A metro train, a train, a ferry or the funicular.
   VehicleCategory:

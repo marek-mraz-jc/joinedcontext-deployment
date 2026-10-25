@@ -128,6 +128,20 @@ spec:
       history: 'off'
     - entityType: CityWork
       history: 'off'
+    - entityType: TrafficFlowObserved
+      # A direction's count of its newest five minutes, a row per interval for 30 days (the count
+      # carries its observedAt); the counter's name, place and source repeat it: one row per change
+      # and one a week (T-5681).
+      history: P30D
+      attributes:
+        name: { record: onChange, heartbeat: P7D }
+        location: { record: onChange, heartbeat: P7D }
+        vehicleType: { record: onChange, heartbeat: P7D }
+        dataProvider: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        # The interval's bounds change with the count and repeat when a run reads the same interval again.
+        dateObservedFrom: { record: onChange, heartbeat: P7D }
+        dateObservedTo: { record: onChange, heartbeat: P7D }
     - entityType: Tree
       history: 'off'
     - entityType: GreenAsset

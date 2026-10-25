@@ -298,5 +298,6 @@
  "test_ws_isolation_audiences.py": 12.7,
  "test_zilina_opendata.py": 61.6,
  "test_zilina_pipelines.py": 29.5,
- "test_zilina_seed.py": 16.9
+ "test_zilina_seed.py": 16.9,
+ "test_praha_bicycle_counters.py": 14.9
 }
