@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Priemerný vek žien pri narodení prvého dieťaťa v mestských č. BA vo vybraných obdobiach
           en: Average age of women at first childbirth in Bratislava's city districts in selected periods
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Priemerný vek žien pri narodení prvého dieťaťa v mestských č. BA vo vybraných obdobiach. Licencia CC BY 4.0.'
+          en: "A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Average age of women at first childbirth in Bratislava's city districts in selected periods. Licence CC BY 4.0."
     pipelineRef: { kind: Pipeline, name: statistics }

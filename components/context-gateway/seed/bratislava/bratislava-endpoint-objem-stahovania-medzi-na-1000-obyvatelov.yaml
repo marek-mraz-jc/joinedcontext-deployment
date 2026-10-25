@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Objem sťahovania medzi mestskými časťami v rámci jedného okresu na 1000 obyvateľov
           en: Moves between city districts within one district per 1,000 inhabitants
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Objem sťahovania medzi mestskými časťami v rámci jedného okresu na 1000 obyvateľov. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Moves between city districts within one district per 1,000 inhabitants. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-okresy }
