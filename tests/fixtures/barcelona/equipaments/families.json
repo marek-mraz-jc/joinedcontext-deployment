@@ -17,7 +17,10 @@
      "lat": "41.39786016772367",
      "district": "Sant Martí",
      "main": "True",
-     "id": "1029210328"
+     "id": "1029210328",
+     "kinds": [
+      ""
+     ]
     },
     {
      "town": "Barcelona",
@@ -33,7 +36,12 @@
      "lat": "41.37845545369519",
      "district": "Eixample",
      "main": "True",
-     "id": "1057133310"
+     "id": "1057133310",
+     "kinds": [
+      "Instal·lacions esportives",
+      "Natació",
+      "Altres esports"
+     ]
     },
     {
      "town": "BARCELONA",
@@ -49,7 +57,10 @@
      "lat": "41.407371351841434",
      "district": "Sant Martí",
      "main": "True",
-     "id": "1108125041"
+     "id": "1108125041",
+     "kinds": [
+      ""
+     ]
     }
    ]
   }
@@ -72,7 +83,10 @@
      "lat": "41.43809175061317",
      "district": "Sant Andreu",
      "main": "True",
-     "id": "1003125537"
+     "id": "1003125537",
+     "kinds": [
+      "Parcs i jardins"
+     ]
     },
     {
      "town": "BARCELONA",
@@ -88,7 +102,10 @@
      "lat": "41.38450415759101",
      "district": "Eixample",
      "main": "True",
-     "id": "1033142110"
+     "id": "1033142110",
+     "kinds": [
+      "Bars i pubs musicals"
+     ]
     },
     {
      "town": "BARCELONA",
@@ -104,7 +121,30 @@
      "lat": "41.397576792774",
      "district": "Sarrià-Sant Gervasi",
      "main": "True",
-     "id": "1080145330"
+     "id": "1080145330",
+     "kinds": [
+      "Parcs i jardins"
+     ]
+    },
+    {
+     "town": "Barcelona",
+     "kind": "Biblioteques",
+     "num": "8",
+     "name": "Biblioteca La Barceloneta -  La Fraternitat",
+     "zip": "08003",
+     "lon": "2.1888716402624535",
+     "modified": "2026-10-09T12:05:23",
+     "phone": "932253574",
+     "street": "Carrer de Felícia Fuster i Viladecans",
+     "lat": "41.379232628875926",
+     "kinds": [
+      "Biblioteques",
+      "Sales d'estudi",
+      "Biblioteques municipals"
+     ],
+     "district": "Ciutat Vella",
+     "main": "True",
+     "id": "1138134103"
     }
    ]
   }
@@ -127,7 +167,10 @@
      "lat": "-0.0010942582961042412",
      "district": "",
      "main": "True",
-     "id": "157123350"
+     "id": "157123350",
+     "kinds": [
+      ""
+     ]
     },
     {
      "town": "BARCELONA",
@@ -143,7 +186,10 @@
      "lat": "-0.0010942582961042412",
      "district": "",
      "main": "True",
-     "id": "157142119"
+     "id": "157142119",
+     "kinds": [
+      ""
+     ]
     },
     {
      "town": "BARCELONA",
@@ -159,7 +205,10 @@
      "lat": "-0.0010942582961042412",
      "district": "",
      "main": "True",
-     "id": "207122733"
+     "id": "207122733",
+     "kinds": [
+      ""
+     ]
     }
    ]
   }
@@ -182,7 +231,10 @@
      "lat": "41.381917074465356",
      "district": "Eixample",
      "main": "True",
-     "id": "1031123107"
+     "id": "1031123107",
+     "kinds": [
+      ""
+     ]
     },
     {
      "town": "BARCELONA",
@@ -198,7 +250,11 @@
      "lat": "41.41216981869672",
      "district": "Horta-Guinardó",
      "main": "True",
-     "id": "1047164651"
+     "id": "1047164651",
+     "kinds": [
+      "Informàtica",
+      "Idiomes"
+     ]
     },
     {
      "town": "Barcelona",
@@ -214,7 +270,10 @@
      "lat": "41.38657708352391",
      "district": "Eixample",
      "main": "True",
-     "id": "1066143504"
+     "id": "1066143504",
+     "kinds": [
+      "Universitats"
+     ]
     }
    ]
   }

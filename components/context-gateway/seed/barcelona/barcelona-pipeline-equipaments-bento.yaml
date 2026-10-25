@@ -6,7 +6,8 @@
 # loading zones), pharmacies, hospitals and primary care, hotels, public toilets, beach showers,
 # tourist information points and climate shelters. The bcn-equipaments DataSource answers Open
 # Data BCN's list of those packages; each one's DataStore resource is then read with one SQL
-# query, one row per facility (main address first, a telephone where it lists one). Skipped:
+# query, one row per facility (main address first, a telephone where it lists one, every kind
+# the register gives it: a municipal library is also a library and a study room). Skipped:
 # equipament-associacions (8,165 associations, many at a member's home address) and
 # equipament-sanitat (no change since 2024-01-02 and no geo_epgs_4326_lat/lon; its pharmacies
 # and hospitals come live from sanitat-farmacies and sanitat-hospitals-atencio-primaria).
@@ -66,7 +67,7 @@ pipeline:
     # goes into the query, so no text of the portal's answer reaches the SQL.
     - branch:
         request_map: |
-          let columns = "replace(register_id, U&'\\FEFF', '') AS id, name, to_char(modified, 'YYYY-MM-DD\"T\"HH24:MI:SS') AS modified, addresses_road_name AS street, addresses_start_street_number::text AS num, to_char(addresses_zip_code, 'FM00000') AS zip, addresses_town AS town, addresses_district_name AS district, addresses_main_address AS main, geo_epgs_4326_lat::text AS lat, geo_epgs_4326_lon::text AS lon, " + (if this.kind { "secondary_filters_name" } else { "NULL::text" }) + " AS kind, CASE WHEN values_category = 'Telèfons' AND values_value ~ '[0-9]' THEN values_value END AS phone"
+          let columns = "replace(register_id, U&'\\FEFF', '') AS id, name, to_char(modified, 'YYYY-MM-DD\"T\"HH24:MI:SS') AS modified, addresses_road_name AS street, addresses_start_street_number::text AS num, to_char(addresses_zip_code, 'FM00000') AS zip, addresses_town AS town, addresses_district_name AS district, addresses_main_address AS main, geo_epgs_4326_lat::text AS lat, geo_epgs_4326_lon::text AS lon, " + (if this.kind { "secondary_filters_name AS kind, array_agg(secondary_filters_name) OVER (PARTITION BY register_id)" } else { "NULL::text AS kind, ARRAY[]::text[]" }) + " AS kinds, CASE WHEN values_category = 'Telèfons' AND values_value ~ '[0-9]' THEN values_value END AS phone"
           meta sql = ("SELECT DISTINCT ON (id) * FROM (SELECT " + $columns + " FROM \"" + this.resource + "\") t ORDER BY id, main = 'True' DESC, phone IS NULL, kind LIMIT 20000").escape_url_query()
           root = ""
         processors:
@@ -108,7 +109,8 @@ pipeline:
     # Plausibility (owner 2026-10-22T18:10Z): dropped and counted by reason, never guessed at: no
     # position; a point outside Barcelona and 1 km around it (the register's missing geometry
     # converts to a point near 0,0); no name; one facility under two ids (same name, same place
-    # within 20 m); a facility listed in a second family is kept once.
+    # within 20 m); a facility listed in a second family is kept once, with the families and
+    # kinds of every listing (T-5692: one kind a facility hid 51 of 52 municipal libraries).
     - mapping: |
         # Two rows are one place when their names match and they lie within 20 m (owner
         # 2026-10-22T18:10Z): rows sorted by name, each compared with the kept points of its name.
@@ -136,14 +138,16 @@ pipeline:
         let once = $usable.unique(e -> e.id)
         let keyed = $once.map_each(e -> e.assign({ "_key": e.name.trim().lowercase() })).sort_by(e -> e._key)
         let dup = $keyed.fold({ "name": "", "pts": [], "dup": [] }, item -> item.apply("near")).dup
-        let kept = $once.filter(e -> !$dup.contains(e.id))
+        # squash concatenates the arrays of one id's listings: every family and kind it has.
+        let listed = $usable.map_each(e -> { (e.id): { "families": [e.family], "kinds": e.kinds.or([]) } }).squash()
+        let kept = $once.filter(e -> !$dup.contains(e.id)).map_each(e -> e.assign({ "_listed": $listed.get(e.id) }))
         let tally = $rows.filter(e -> e._drop != null).fold({}, item -> item.tally.assign({ item.value._drop: item.tally.get(item.value._drop).or(0) + 1 }))
         let second = $usable.length() - $once.length()
         let dups = $once.length() - $kept.length()
         let counted = if $second > 0 { $tally.assign({ "listed in a second family": $second }) } else { $tally }
         meta dropped = (if $dups > 0 { $counted.assign({ "duplicate": $dups }) } else { $counted }).format_json(no_indent: true)
         meta kept = $kept.length().string()
-        root = $kept.map_each(e -> e.without("_drop"))
+        root = $kept.map_each(e -> e.without("_drop", "kinds"))
     - log:
         level: INFO
         message: 'equipaments: ${! @kept } facilities kept, dropped by reason ${! @dropped }'
@@ -156,13 +160,14 @@ pipeline:
         let street = [this.street.or("").trim(), this.num.or("").trim()].filter(s -> s != "" && s != "9999").join(" ")
         let town = this.town.or("").trim()
         let phone = this.phone.or("").trim()
-        let kind = this.kind.or("").trim()
+        let kinds = this._listed.kinds.filter(k -> k != null).map_each(k -> k.string().trim()).filter(k -> k != "").unique().sort()
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this.id),
           "type": "PointOfInterest",
           "name": { "type": "Property", "value": this.name.trim() },
-          # The family's code first, then the register's own kind in Catalan ("Biblioteques").
-          "category": { "type": "Property", "value": [this.family].concat(if $kind == "" { [] } else { [$kind] }) },
+          # The first family's code, the other families' codes, then the register's own kinds in
+          # Catalan ("Biblioteques", "Biblioteques municipals").
+          "category": { "type": "Property", "value": [this.family].concat(this._listed.families).concat($kinds).unique() },
           "location": { "type": "GeoProperty", "value": {
             "type": "Point", "coordinates": [(this.lon.number() * 1000000).round() / 1000000, (this.lat.number() * 1000000).round() / 1000000]
           } },
