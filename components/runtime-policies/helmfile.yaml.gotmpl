@@ -25,6 +25,9 @@ bases:
        enabled component that declares one. The Pod Security policies are scoped to these,
        so they never reach the namespaces the cluster distribution owns. */}}
 {{- $podSecurityNamespaces := list }}
+{{- /* The namespaces of the enabled parts alone: prepare creates exactly these before this
+       release, so the drift reader's Roles below have a namespace to land in. */}}
+{{- $releaseNamespaces := list $namespace }}
 {{- range $componentName := ($root.components | default list) }}
   {{- $componentData := index $root $componentName | default dict }}
   {{- if not $componentData }}
@@ -40,10 +43,18 @@ bases:
   {{- range $partKey, $partData := $componentData }}
     {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") }}
       {{- $podSecurityNamespaces = append $podSecurityNamespaces (index $partData "namespace") }}
+      {{- if or (not (hasKey $partData "enabled")) (index $partData "enabled") }}
+        {{- $releaseNamespaces = append $releaseNamespaces (index $partData "namespace") }}
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
 {{- $podSecurityNamespaces = $podSecurityNamespaces | uniq | sortAlpha }}
+{{- /* The namespaces this deployment holds that exist only at runtime, so no component names
+       them (T-5702): each project's App namespace the Portal creates ({instance}-{project}-apps),
+       each preview (pv-{slug}) and each demo (demo-bbsk). They run the least-trusted code; Kyverno
+       matches these wildcards. Only after the release namespaces, which the drift reader binds. */}}
+{{- $runtimeNamespaces := list (printf "%s-*-apps" $root.global.instanceSlug) "pv-*" "demo-*" }}
 
 releases:
   {{- if or (eq $layer "") (eq $layer "operators") }}
@@ -59,9 +70,16 @@ releases:
         linkerd:
           enabled: {{ $linkerdEnabled }}
         failureAction: {{ $failureAction }}
+        driftReader:
+          # The legacy all-in-one layer only: in the operators layer the instance namespaces
+          # do not exist yet, and `just drift` runs on dev and smartcity, both legacy.
+          secretNamespaces:
+            {{- range $ns := ternary ($releaseNamespaces | uniq | sortAlpha) (list $namespace) (eq $layer "") }}
+            - {{ $ns | quote }}
+            {{- end }}
         podSecurity:
           namespaces:
-            {{- range $ns := $podSecurityNamespaces }}
+            {{- range $ns := concat $podSecurityNamespaces $runtimeNamespaces }}
             - {{ $ns | quote }}
             {{- end }}
   {{- end }}

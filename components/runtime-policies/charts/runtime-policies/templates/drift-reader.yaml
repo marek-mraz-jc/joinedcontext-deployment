@@ -5,8 +5,11 @@
   no long-lived token: `just drift` mints one with `kubectl create token --duration 30m`.
   Resources are named, never '*': a wildcard also grants subresources such as nodes/proxy (the
   kubelet API, exec over a GET websocket) and pods/log. The list holds each kind in
-  .ci/golden/*.txt (secrets for Helm's release records); tests/test_runtime_policies.py fails
-  when a rendered kind is missing here or a wildcard or subresource comes back.
+  .ci/golden/*.txt; tests/test_runtime_policies.py fails when a rendered kind is missing here or
+  a wildcard or subresource comes back. Secrets are not in the ClusterRole (T-5702): Helm's release
+  records and the charts' own Secrets live in the release namespaces, so a Role per namespace in
+  driftReader.secretNamespaces reads them there, and kube-system and every App namespace stay
+  out of reach.
 */}}
 {{- if .Values.driftReader.enabled }}
 apiVersion: v1
@@ -22,7 +25,7 @@ metadata:
   name: jc-drift-reader
 rules:
   - apiGroups: ['']
-    resources: [configmaps, limitranges, namespaces, persistentvolumeclaims, resourcequotas, secrets, serviceaccounts, services]
+    resources: [configmaps, limitranges, namespaces, persistentvolumeclaims, resourcequotas, serviceaccounts, services]
     verbs: [get, list]
   - apiGroups: [admissionregistration.k8s.io]
     resources: [mutatingwebhookconfigurations, validatingadmissionpolicies, validatingadmissionpolicybindings, validatingwebhookconfigurations]
@@ -82,4 +85,30 @@ subjects:
   - kind: ServiceAccount
     name: jc-drift-reader
     namespace: {{ .Release.Namespace }}
+{{- range $ns := .Values.driftReader.secretNamespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: jc-drift-reader-secrets
+  namespace: {{ $ns }}
+rules:
+  - apiGroups: ['']
+    resources: [secrets]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jc-drift-reader-secrets
+  namespace: {{ $ns }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: jc-drift-reader-secrets
+subjects:
+  - kind: ServiceAccount
+    name: jc-drift-reader
+    namespace: {{ $.Release.Namespace }}
+{{- end }}
 {{- end }}
