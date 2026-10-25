@@ -45,10 +45,21 @@ appsBucket:
   retiredExpiryDays: 90
 {{- end }}
 {{- $pgBackups := dig "postgres" "cluster" "backups" dict .Values }}
+{{- $appsBackups := dig "apps-db" "cluster" "backups" dict .Values }}
+{{- $pgToStore := and (has "postgres" .Values.components) ($pgBackups.enabled | default false) (eq ($pgBackups.target | default "") "artifact-store") }}
+{{- $appsToStore := and (has "apps-db" .Values.components) ($appsBackups.enabled | default false) (eq ($appsBackups.target | default "") "artifact-store") }}
 backupBucket:
-  enabled: {{ and (has "postgres" .Values.components) ($pgBackups.enabled | default false) (eq ($pgBackups.target | default "") "artifact-store") }}
+  enabled: {{ or $pgToStore $appsToStore }}
   name: {{ ($this.backupBucket | default dict).name | default "postgres-backups" | quote }}
   credentialsSecret: postgres-backup-artifact-store
+  # apps-db archives under its own prefix with a key that reaches that prefix only (T-5662):
+  # it serves tenant Apps, so it never holds the key to the platform database's backups.
+  prefixUsers:
+  {{- if $appsToStore }}
+    - prefix: {{ index .Values "apps-db" "cluster" "name" | quote }}
+      credentialsSecret: apps-db-backup-artifact-store
+  {{- else }} []
+  {{- end }}
 {{- $fileCache := $this.fileCache | default dict }}
 fileCache:
   prefix: {{ $fileCache.prefix | default "filecache/" | quote }}

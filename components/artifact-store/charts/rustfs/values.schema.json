@@ -96,6 +96,24 @@
         "credentialsSecret": {
           "type": "string",
           "minLength": 1
+        },
+        "prefixUsers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["prefix", "credentialsSecret"],
+            "properties": {
+              "prefix": {
+                "type": "string",
+                "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
+              },
+              "credentialsSecret": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         }
       }
     },
