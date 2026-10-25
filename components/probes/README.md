@@ -28,7 +28,10 @@ address), paced evenly:
 
 The public Endpoints come from the catalogue's `endpoint` extra; each Endpoint's record lists the
 surfaces it serves (`dcat:distribution`), and `ngsi-ld/v1/types` gives the type `{T}`. A record is
-read again every `discoverySeconds` (900). Each surface kind probes its next Endpoints round robin:
+read again every `discoverySeconds` (900). A `types` read that fails (an error status, a timeout, a
+body that is no JSON object) keeps the type learned before and is asked again the next round; an
+Endpoint with no type learned yet is left out of `{T}` surfaces until one answers, and only a `200`
+listing no usable type fails them (T-5660). Each surface kind probes its next Endpoints round robin:
 every kind gets at least one probe each round even when the budget is smaller than the kinds, and at
 least one record is refreshed each round (T-5184); a kind broken everywhere is red in the first
 minute; one Endpoint's surface within
