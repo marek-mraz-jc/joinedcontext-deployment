@@ -199,7 +199,7 @@ def test_no_broker_renders_only_the_template(tmp_path):
     result = helm({**BASE, "brokers": []}, tmp_path)
     assert result.returncode == 0, result.stderr
     docs = [d for d in yaml.safe_load_all(result.stdout) if d]
-    # The TLSOption the stamped routes name (T-5562) and the gateway's 8082 Server renders with no broker: the Portal stamps brokers at runtime.
+    # The TLSOption the stamped routes name and the gateway's 8082 Server render with no broker.
     assert sorted((d["kind"], d["metadata"]["name"]) for d in docs) == [
         ("AuthorizationPolicy", "context-gateway-internal"), ("ConfigMap", TEMPLATE),
         ("MeshTLSAuthentication", "context-gateway-internal"), ("Server", "context-gateway-internal"),
