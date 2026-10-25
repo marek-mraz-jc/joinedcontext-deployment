@@ -27,6 +27,7 @@
  "test_barcelona_equipaments.py": 3.9,
  "test_barcelona_events.py": 7.6,
  "test_barcelona_seed.py": 12.0,
+ "test_barcelona_statistics.py": 20.6,
  "test_barcelona_street_inventory.py": 8.7,
  "test_barcelona_tourism.py": 5.1,
  "test_barcelona_transport.py": 25.7,
