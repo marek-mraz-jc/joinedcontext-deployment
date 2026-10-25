@@ -255,6 +255,65 @@ def test_an_endpoint_gone_from_the_catalogue_leaves_the_results():
     assert {r["endpoint"] for r in prober.snapshot()} == {None}
 
 
+def types_answer(get, answer):
+    """`get` with /types answering `answer` (status, body)."""
+    def typed(url, data=None, headers=None, cap=probe.BODY_CAP):
+        if url.endswith("/ngsi-ld/v1/types"):
+            return answer[0], JSON, answer[1], 10.1
+        return get(url, data, headers, cap)
+    return typed
+
+
+def typed_results(prober):
+    return {r["surface"]: r for r in prober.snapshot() if r["endpoint"] == SLUG and r["surface"] in probe.TYPED}
+
+
+def test_a_503_on_types_after_a_good_discovery_keeps_the_type_and_retries_next_round(capsys):
+    """T-5660: one slow /types read on dev marked ngsi-ld, odata and ogc failed for the 15 min of discoverySeconds."""
+    clock = FakeClock()
+    get, ws, calls = recorded_internet()
+    prober = probe.Prober([TARGET], 30, 60, clock=clock, sleep=clock.sleep, get=get, ws=ws)
+    prober.round(TARGET)
+    clock.now += 120
+    prober.get = types_answer(get, (503, b"down"))
+    prober.round(TARGET)
+    assert {s: r["ok"] for s, r in typed_results(prober).items()} == {s: True for s in probe.TYPED}
+    assert json.loads(capsys.readouterr().err.splitlines()[-1]) == {"target": "dev", "endpoint": SLUG, "discovery": "status 503"}
+
+    prober.get = get
+    calls.clear()
+    prober.round(TARGET)  # well inside the 60 s discovery period: only a failed discovery is asked again
+    assert sum(c.endswith("/ngsi-ld/v1/types") for c in calls) == 1
+    calls.clear()
+    prober.round(TARGET)
+    assert sum(c.endswith("/ngsi-ld/v1/types") for c in calls) == 0
+    assert all(r["ok"] for r in typed_results(prober).values())
+
+
+@pytest.mark.parametrize("answer", [(503, b"down"), (0, b""), (200, b"<html>")])
+def test_a_failed_types_read_with_no_type_learned_records_nothing_for_the_typed_surfaces(answer):
+    clock = FakeClock()
+    get, ws, _ = recorded_internet()
+    prober = probe.Prober([TARGET], 30, 900, clock=clock, sleep=clock.sleep, get=types_answer(get, answer), ws=ws)
+    prober.round(TARGET)
+    assert typed_results(prober) == {}
+    assert {r["surface"] for r in prober.snapshot() if r["endpoint"] == SLUG} == set(probe.SURFACES.values()) - probe.TYPED
+
+    prober.get = get
+    prober.round(TARGET)
+    assert {s: r["ok"] for s, r in typed_results(prober).items()} == {s: True for s in probe.TYPED}
+
+
+@pytest.mark.parametrize("body", [{"typeList": []}, {"typeList": ["bad type!"]}, {"typeList": "Address"}, {}])
+def test_a_200_listing_no_usable_type_still_fails_the_typed_surfaces(body):
+    clock = FakeClock()
+    get, ws, _ = recorded_internet()
+    prober = probe.Prober([TARGET], 30, 900, clock=clock, sleep=clock.sleep, get=types_answer(get, (200, j(body))), ws=ws)
+    prober.round(TARGET)
+    reasons = {s: r["reason"] for s, r in typed_results(prober).items()}
+    assert reasons == {s: "the Endpoint lists no entity type" for s in probe.TYPED}
+
+
 def test_healthz_fails_when_a_target_misses_its_rounds():
     clock = FakeClock()
     prober = probe.Prober([TARGET], 30, 900, clock=clock, sleep=clock.sleep)

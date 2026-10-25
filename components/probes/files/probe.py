@@ -557,12 +557,22 @@ class Prober:
                 status, _, body, _ = self._paced(
                     self.get, f"{api}/api/endpoint/{slug}/ngsi-ld/v1/types", None, {"Accept": "application/json"})
                 spent += 1
-                types = (_json(body) or {}).get("typeList") if status == 200 and isinstance(_json(body), dict) else None
-                entity_type = next((t for t in types or [] if isinstance(t, str) and TYPE.match(t)), None)
+                doc = _json(body)
+                if status != 200 or not isinstance(doc, dict):
+                    # A failed read is no answer about the Endpoint (T-5660): keep the type the last good one
+                    # learned (None: not probed yet) and the old `at`, so the next round asks again.
+                    print(json.dumps({"target": name, "endpoint": slug, "discovery": f"status {status}"}), file=sys.stderr, flush=True)
+                    known[slug] = {**known[slug], "surfaces": surfaces}
+                    continue
+                types = doc.get("typeList")
+                # "" (not None): the Endpoint answered and lists no usable type, a failure of its typed surfaces.
+                entity_type = next((t for t in types if isinstance(t, str) and TYPE.match(t)), "") if isinstance(types, list) else ""
             known[slug] = {"surfaces": surfaces, "type": entity_type, "at": self.clock()}
         holders = {}
         for slug in sorted(known):
             for kind in known[slug]["surfaces"]:
+                if kind in TYPED and known[slug]["type"] is None:
+                    continue  # no type learned yet: neither up nor down until a discovery answers
                 holders.setdefault(kind, []).append(slug)
         for kind, slug in plan(self.budget - spent, sorted(holders), self.cursors[name], holders):
             entity_type = known[slug]["type"]
