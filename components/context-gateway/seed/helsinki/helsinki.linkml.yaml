@@ -2977,7 +2977,17 @@ enums:
     description: The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' vehicleType.
     permissible_values:
       bicycle:
-        description: A bicycle, as an Eco-Counter station counts it.
+        description: A bicycle, as an Eco-Counter station or the machine vision pilot counts it.
+      car:
+        description: A car, as the machine vision pilot counts it.
+      bus:
+        description: A bus, as the machine vision pilot counts it.
+      tram:
+        description: A tram, as the machine vision pilot counts it.
+      motorcycle:
+        description: A motorcycle, as the machine vision pilot counts it.
+      lorry:
+        description: A truck or lorry, as the machine vision pilot counts it.
   TrafficDirection:
     description: The direction a city counter names, in English.
     permissible_values:

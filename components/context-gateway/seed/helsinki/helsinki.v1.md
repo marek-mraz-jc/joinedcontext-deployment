@@ -674,7 +674,12 @@ The kinds of vehicle a city counter tells apart, a subset of Smart Data Models' 
 
 | Value | Meaning |
 |---|---|
-| `bicycle` | A bicycle, as an Eco-Counter station counts it. |
+| `bicycle` | A bicycle, as an Eco-Counter station or the machine vision pilot counts it. |
+| `car` | A car, as the machine vision pilot counts it. |
+| `bus` | A bus, as the machine vision pilot counts it. |
+| `tram` | A tram, as the machine vision pilot counts it. |
+| `motorcycle` | A motorcycle, as the machine vision pilot counts it. |
+| `lorry` | A truck or lorry, as the machine vision pilot counts it. |
 
 ### TrafficDirection
 
