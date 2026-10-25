@@ -31,6 +31,7 @@ BASE = {
     "authUrl": "http://context-gateway.jc-context-gateway.svc.cluster.local:8082/internal/mqtt/auth",
     "runner": {"namespace": "jc-pipeline-runner", "serviceAccount": "pipeline-runner"},
     "serviceMesh": {"enabled": True},
+    "gateway": {"namespace": "jc-context-gateway", "podLabels": {"app.kubernetes.io/name": "context-gateway-gateway"}},
     "brokers": [
         {"project": "helsinki", "name": "cameras"},
         {"project": "helsinki", "name": "buses", "limits": {"maxMessageBytes": 1024, "messagesPerSecond": 5, "maxConnections": 3}},
@@ -198,7 +199,33 @@ def test_no_broker_renders_only_the_template(tmp_path):
     result = helm({**BASE, "brokers": []}, tmp_path)
     assert result.returncode == 0, result.stderr
     docs = [d for d in yaml.safe_load_all(result.stdout) if d]
-    assert sorted((d["kind"], d["metadata"]["name"]) for d in docs) == [("ConfigMap", TEMPLATE), ("TLSOption", "mqtt-bsi-tr-02102")]
+    # The TLSOption the stamped routes name (T-5562) and the gateway's 8082 Server renders with no broker: the Portal stamps brokers at runtime.
+    assert sorted((d["kind"], d["metadata"]["name"]) for d in docs) == [
+        ("AuthorizationPolicy", "context-gateway-internal"), ("ConfigMap", TEMPLATE),
+        ("MeshTLSAuthentication", "context-gateway-internal"), ("Server", "context-gateway-internal"),
+        ("TLSOption", "mqtt-bsi-tr-02102")]
+
+
+def test_the_decider_port_admits_broker_identities_only(docs, tmp_path):
+    """GW25, T-5566: the gateway decides a CONNECT on the caller's `l5d-client-id`, so 8082
+    answers a meshed pod of the brokers' namespace and nobody else, whatever the NetworkPolicy
+    lets through; with no mesh there is no Server to name."""
+    gateway = {d["kind"]: d for d in docs if d["metadata"]["name"] == "context-gateway-internal"}
+    assert set(gateway) == {"Server", "MeshTLSAuthentication", "AuthorizationPolicy"}
+    for doc in gateway.values():
+        assert doc["metadata"]["namespace"] == "jc-context-gateway"
+    server = gateway["Server"]["spec"]
+    assert server == {
+        "podSelector": {"matchLabels": {"app.kubernetes.io/name": "context-gateway-gateway"}},
+        "port": 8082, "proxyProtocol": "HTTP/1", "accessPolicy": "deny",
+    }
+    assert gateway["MeshTLSAuthentication"]["spec"]["identityRefs"] == [{"kind": "Namespace", "name": "jc-mqtt"}]
+    policy = gateway["AuthorizationPolicy"]["spec"]
+    assert policy["targetRef"] == {"group": "policy.linkerd.io", "kind": "Server", "name": "context-gateway-internal"}
+    assert policy["requiredAuthenticationRefs"] == [
+        {"group": "policy.linkerd.io", "kind": "MeshTLSAuthentication", "name": "context-gateway-internal"}]
+    unmeshed = [d for d in yaml.safe_load_all(helm({**BASE, "serviceMesh": {"enabled": False}}, tmp_path).stdout) if d]
+    assert not [d for d in unmeshed if d["metadata"]["name"] == "context-gateway-internal"]
 
 
 def fill(template: str, release: str, project: str, name: str, limits: dict) -> list[dict]:
