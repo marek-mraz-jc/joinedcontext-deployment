@@ -93,8 +93,9 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # of air quality (T-5259), and the service usage counters (T-5258), and the public reads of the heat vulnerability index and the service
     # property energy use (T-5278), and the public reads of the cycle and traffic counts (T-5253), and of feedback reports (T-5257), and its catalogue's
     # Portal write and public read (T-5493), and the public reads of the autumn traffic volumes and
-    # the machine vision counts (T-5669).
-    assert len(policies) == 44
+    # the machine vision counts (T-5669), and the own-account writes of the two pipelines that
+    # write several types (T-5717).
+    assert len(policies) == 46
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 

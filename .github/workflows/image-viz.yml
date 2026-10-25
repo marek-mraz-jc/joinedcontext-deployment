@@ -27,7 +27,7 @@ jobs:
           file: images/viz/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/joinedcontext-viz:1.30.4
+            ghcr.io/${{ github.repository_owner }}/joinedcontext-viz:1.30.6
             ghcr.io/${{ github.repository_owner }}/joinedcontext-viz:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -67,6 +67,6 @@ jobs:
           echo "pin this in components/viz/images.yaml:" >> "$GITHUB_STEP_SUMMARY"
           echo '```yaml' >> "$GITHUB_STEP_SUMMARY"
           echo "    repository: 'ghcr.io/${{ github.repository_owner }}/joinedcontext-viz'" >> "$GITHUB_STEP_SUMMARY"
-          echo "    tag: '1.30.4'" >> "$GITHUB_STEP_SUMMARY"
+          echo "    tag: '1.30.6'" >> "$GITHUB_STEP_SUMMARY"
           echo "    digest: '${{ steps.push.outputs.digest }}'" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

@@ -257,9 +257,9 @@ portal:
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
-    # The platform commit the pinned Portal's jc-core is built from: portal 23cdc36's Cargo.toml rev,
-    # 8d9a369 (on top of 9358512, T-5295's datacube step, which the susr-* pipelines use since T-5382).
-    platform: '8d9a36973b31b18e3e41611f1bada3f6e44bd7e1'
+    # The platform commit the pinned Portal's jc-core is built from: portal 374cfc6's Cargo.toml rev,
+    # 207bf9b (carries 9358512, T-5295's datacube step, which the susr-* pipelines use since T-5382).
+    platform: '207bf9bd1e4518469a77356c8789667a4e04ece3'
   # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
   # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, so `commit` is the
   # newest such commit at or before portal.commit; scripts/pin-portal.sh moves both together and
