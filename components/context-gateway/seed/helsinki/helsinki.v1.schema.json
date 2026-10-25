@@ -1012,6 +1012,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "description": {
           "additionalProperties": {
             "type": "string"

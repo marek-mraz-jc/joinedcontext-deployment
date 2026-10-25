@@ -117,6 +117,9 @@ pipeline:
         let site = [this.info_url.fi.or(null), this.info_url.en.or(null), this.info_url.sv.or(null)].filter(u -> u != null && u.type() == "string" && u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000).index(0).or(null)
         let parent = this.super_event."@id".or("").re_find_all_submatch("/event/([A-Za-z0-9_:.-]{1,200})/?$").index(0).index(1).or(null)
         let place = this.location.id.or("").re_find_all_submatch("^tprek:([0-9]{1,12})$").index(0).index(1).or(null)
+        # The register's publisher (an organization id such as `ahjo:u480400`): one source of the
+        # city's events inventory, so each publisher's count can be read back (T-5666).
+        let publisher = this.publisher.or("").re_find_all("^[A-Za-z0-9_:.-]{1,100}$").index(0).or(null)
         root = {
           "id": $id,
           "type": "Event",
@@ -158,6 +161,7 @@ pipeline:
           "contactPoint": if $contact == null || $contact == "" { null } else {
             { "type": "Property", "value": $contact }
           },
+          "dataProvider": if $publisher == null { null } else { { "type": "Property", "value": $publisher } },
           "source": { "type": "Property", "value": "https://api.hel.fi/linkedevents/v1/" }
         }
         # The register writes a field it does not have as null or as an empty string in every

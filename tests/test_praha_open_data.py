@@ -494,7 +494,9 @@ PARTS = {
 def _parts():
     docs = [yaml.safe_load(p.read_text()) for p in PRAHA.glob("praha-endpoint-*.yaml")]
     # The city's own catalogue (T-5493) publishes too, from its own space: no part of this one.
-    return {d["metadata"]["name"]: d for d in docs if d["spec"].get("publish") and d["metadata"]["name"] != "catalog"}
+    # Prague's events (T-5666) are a space of their own, praha-akce: no part of this one either.
+    return {d["metadata"]["name"]: d for d in docs if d["spec"].get("publish") and d["metadata"]["name"] != "catalog"
+            and d["spec"]["contextSpaceRef"] == SPACE}
 
 
 def test_the_space_is_public_and_published_one_model_per_dataset_with_its_sources_licence():
@@ -544,8 +546,10 @@ def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_p
     for name in FEEDS:
         datasource = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())
         assert _dataset_of(datasource["spec"]["http"]["url"]) in named, name
+    # The events sources (seeds/bbsk-events/generate.py, T-5666) feed praha-akce, whose Endpoint lists them.
     assert named == {
         _dataset_of(yaml.safe_load(p.read_text())["spec"]["http"]["url"]) for p in PRAHA.glob("praha-datasource-*.yaml")
+        if not p.name.startswith(("praha-datasource-podujatia-", "praha-datasource-miesta-podujati"))
     }, "a source the space does not read"
     for source in catalog["source"]:
         assert set(source["title"]) == set(source["description"]) == {"cs", "en"}, source["url"]
