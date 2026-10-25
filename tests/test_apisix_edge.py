@@ -254,6 +254,10 @@ def test_space_reads_and_writes_count_apart(rendered):
             limit = route["plugins"]["limit-conn"]
             assert (limit["conn"], limit["burst"], limit["key"]) == (50, 0, "$remote_addr"), route["id"]
             assert route["enable_websocket"] is True, route["id"]
+        elif route["id"] == "keycloak-discovery":
+            # T-5611: the realm's discovery documents drop registration_endpoint and keep the
+            # config's headers (tests/test_keycloak_discovery.py).
+            assert "labels" not in route and set(route["plugins"]) == {"response-rewrite"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
