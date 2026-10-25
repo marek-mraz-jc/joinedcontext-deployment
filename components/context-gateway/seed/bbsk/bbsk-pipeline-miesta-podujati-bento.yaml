@@ -13,7 +13,7 @@ pipeline:
         "scope": this.index(6),
         "name": { "type": "Property", "value": this.index(1) },
         "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [this.index(5), this.index(4)] } },
-        "address": { "type": "Property", "value": { "streetAddress": this.index(2), "addressLocality": this.index(3), "addressCountry": "SK" }.filter(kv -> kv.value != null) },
+        "address": { "type": "Property", "value": { "streetAddress": this.index(2), "addressLocality": this.index(3), "addressCountry": this.index(6).split("/").index(1) }.filter(kv -> kv.value != null) },
         "areaServed": { "type": "Property", "value": this.index(7) },
         "source": { "type": "Property", "value": if this.index(0).has_prefix("osm-") { "https://www.openstreetmap.org/" + this.index(0).trim_prefix("osm-").replace("-", "/") } else { "https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/seeds/bbsk-events/venues.csv" } },
         "dataProvider": { "type": "Property", "value": "© OpenStreetMap contributors, ODbL 1.0" }

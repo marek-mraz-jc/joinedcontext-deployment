@@ -69,7 +69,8 @@ def template(kind: str, host: str, store: str = "slovensko", region: str = "BA",
     row = {"feed_kind": kind, "host": f"https://{host}", "town": town, "town_slug": generate.slug(town),
            "org_type": org_type, "site": f"https://{host}",
            "region": region, "events_url": f"https://{host}/", "check_url": f"https://{host}{path}", "licence_terms": "no licence stated",
-           "scope": generate.REGIONS[region][0], "region_name": generate.REGIONS[region][1]}
+           "scope": generate.REGIONS[region][0], "region_name": generate.REGIONS[region][1],
+           "country": generate.COUNTRIES.get(region, "SK")}
     return generate.processors(row, next(s for s in generate.STORES if s["ns"] == store))
 
 
@@ -241,7 +242,8 @@ def test_every_kept_source_with_a_template_has_its_pipeline_and_the_rest_are_nam
 def test_the_national_store_reads_at_least_100_sources_from_all_eight_regions():
     rows = generate.store_rows(generate.STORES[1])
     assert len(rows) >= 100
-    by_region = {code: sum(r["region"] == code for r in rows) for code in generate.REGIONS}
+    by_region = {code: sum(r["region"] == code for r in rows) for code in generate.SLOVAK}
+    assert not any(r["region"] in generate.COUNTRIES for r in rows)
     assert all(n >= 6 for n in by_region.values()), by_region
     assert len(list(p for p in NATIONAL.glob("slovensko-pipeline-podujatia-*.yaml") if not p.name.endswith("-bento.yaml"))) == len(rows)
 
@@ -563,6 +565,10 @@ def test_every_source_writes_its_own_region_and_only_bbsk_sources_reach_the_regi
     assert bbsk == {f"bbsk-pipeline-{r['name']}-bento.yaml" for r in generate.kept_sources() if r["region"] == "BBSK"}
     for row in generate.kept_sources():
         code, name = generate.REGIONS[row["region"]]
+        if row["region"] in generate.COUNTRIES:
+            # A source outside Slovakia never reaches the national store (T-5666).
+            assert not (NATIONAL / f"slovensko-pipeline-{row['name']}-bento.yaml").exists(), row["name"]
+            continue
         text = (NATIONAL / f"slovensko-pipeline-{row['name']}-bento.yaml").read_text()
         # The shared tail writes "scope" from @events.scope and "addressRegion" from @events.region (T-5555).
         assert f'"scope": "/SK/{code}"' in text, row["name"]
@@ -603,7 +609,9 @@ def test_each_dataset_lists_its_sources_with_their_licence():
         spec = yaml.safe_load((SEED / file).read_text())["spec"]
         return {s["url"]: s for s in spec["catalog"]["source"]}
 
-    kept = generate.kept_sources()
+    kept = [r for r in generate.kept_sources() if r["region"] in generate.SLOVAK]
+    prague = {s["url"] for s in yaml.safe_load((PRAHA / "praha-endpoint-akce.yaml").read_text())["spec"]["catalog"]["source"]}
+    assert prague == {r["events_url"] for r in generate.kept_sources() if r["region"] == "PHA"}
     national = {s["url"]: s for s in yaml.safe_load((NATIONAL / "slovensko-endpoint-podujatia.yaml").read_text())["spec"]["catalog"]["source"]}
     region = listed("bbsk-endpoint-podujatia.yaml")
     assert set(national) == {r["events_url"] for r in kept}
@@ -1390,3 +1398,63 @@ def test_krupina_events_read_the_summary_list_with_a_date_range_and_the_town_las
     assert harp["venue"]["value"] == "Lobby bar v Liečebnom dome Rubín" and harp["organizer"]["value"] == {"name": "Kúpele Dudince"}
     blood = out["Mobilná kvapka krvi 2026-11-02"]
     assert blood["location"]["value"]["coordinates"] == [19.065536, 48.352837]
+
+
+# --- Prague (T-5666) -------------------------------------------------------------------------------------------------
+
+PRAHA = ROOT / "components/context-gateway/seed/praha"
+
+
+def prague(kind: str, fixture: str, host: str, path: str = "/", org_type: str = "cinema (Kino Aero)") -> list:
+    """A Prague source's steps for a made-up row over a recorded feed, written into praha-akce."""
+    steps = template(kind, host, store="praha", region="PHA", town="Hlavní město Praha", path=path, org_type=org_type)
+    return run(offline(steps, {}), (FIXTURES / fixture).read_text(), "praha-akce")
+
+
+def test_every_prague_source_writes_praha_akce_under_cz_pha_and_runs_every_6_hours():
+    rows = [r for r in generate.kept_sources() if r["region"] == "PHA"]
+    assert len(rows) >= 10
+    for row in rows:
+        bento = (PRAHA / f"praha-pipeline-{row['name']}-bento.yaml").read_text()
+        assert '"scope": "/CZ/PHA"' in bento and '"town_scope": "/CZ/PHA/hlavni_mesto_praha"' in bento, row["name"]
+        spec = yaml.safe_load((PRAHA / f"praha-pipeline-{row['name']}.yaml").read_text())["spec"]
+        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:praha.eu:praha-akce:praha-akce-zapis"
+        assert spec["period"] == "6h" and spec["schedule"].split()[1].endswith("-23/6")
+    index = (PRAHA / "index.yaml").read_text()
+    assert all(f"praha-pipeline-{r['name']}.yaml:" in index for r in rows)
+
+
+@requires_docker
+def test_a_prague_cinema_page_gives_events_in_czechia_at_the_city_office_point():
+    events = prague("jsonld", "kinoaero-jsonld.html", "www.kinoaero.cz")
+    assert [e["name"]["value"] for e in events] == ["Macbeth | Giuseppe Verdi", "Fjord"]
+    for e in events:
+        assert e["scope"] == "/CZ/PHA/hlavni_mesto_praha"
+        assert e["address"]["value"]["addressCountry"] == "CZ"
+        assert e["address"]["value"]["streetAddress"] == "Biskupcova 31"
+        # "Prague, Czechia" is Praha; the venue nobody placed takes the city office, labelled approximate.
+        assert e["location"]["value"]["coordinates"] == [14.41783, 50.08711]
+        assert e["locationPrecision"]["value"] == "office" and VALID.is_valid(key_values(e))
+
+
+@requires_docker
+def test_a_prague_borough_ical_and_a_conservatory_events_calendar_are_read():
+    ical = prague("ical", "pocernice.ics", "www.pocernice.cz", "/?ical=1", "city district (Praha 20)")
+    assert {e["name"]["value"] for e in ical} == {"RADKA FOLPRECHTOVÁ: TANEC KVĚTIN", "Dýňobraní"}
+    assert {e["scope"] for e in ical} == {"/CZ/PHA/hlavni_mesto_praha"}
+    tribe = prague("tribe-rest", "prazskakonzervator-tribe.json", "prazskakonzervator.cz",
+                   "/wp-json/tribe/events/v1/events?per_page=50&start_date=now", "theatre (Divadlo Na Rejdišti)")
+    first = next(e for e in tribe if e["name"]["value"] == "Koncert pěveckého oddělení")
+    assert first["startDate"]["value"] == "2026-10-26T18:30:00+01:00"
+    # "Praha 1" is a borough of Praha, so the event takes the city's point and never a Slovak one.
+    assert first["address"]["value"]["addressCountry"] == "CZ" and first["location"]["value"]["coordinates"][1] > 50
+
+
+@requires_docker
+def test_a_point_outside_the_country_of_the_store_is_dropped():
+    page = (FIXTURES / "kinoaero-jsonld.html").read_text().replace(
+        '"streetAddress": "Biskupcova 31"', '"streetAddress": "Biskupcova 31"}, "geo": {"latitude": 48.15, "longitude": 17.11')
+    steps = template("jsonld", "www.kinoaero.cz", store="praha", region="PHA", town="Hlavní město Praha", org_type="cinema (Kino Aero)")
+    events = run(offline(steps, {}), page, "praha-akce")
+    # Bratislava's point is outside Czechia: the event is kept without a point, never with the wrong one.
+    assert len(events) == 2 and all("location" not in e for e in events)

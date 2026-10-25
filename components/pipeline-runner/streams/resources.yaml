@@ -115,8 +115,10 @@ processor_resources:
           # (homes.csv, owner 2026-10-22: "or the institution's address"); its venue stays as the source wrote it.
           let home = if $place == null && ($venue_key == "" || @events.self.contains($venue_key)) { @events.home } else { null }
           let known = $place.or($home)
-          # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava").
-          let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else { l })
+          # The feed's town, unless it names a district or a region (geocode pilot 2026-10-22: "okres Myjava"); a Prague
+          # borough or the city in English ("Praha 3", "Praha – Horní Počernice", "Prague, Czechia") is the city, by its legal
+          # name "Hlavní město Praha" (law 131/2000 Sb.; its slug "praha" would be the project's name, T-5666).
+          let feed_locality = this.locality.apply("text").(l -> if l != null && l.re_match("(?i)^okres\\s|\\skraj$") { null } else if l != null && l.re_match("(?i)^(praha|prague)([\\s,–-].*)?$") { "Hlavní město Praha" } else { l })
           let locality = $feed_locality.or($known.addressLocality.or(@events.town))
           # An event with no known venue takes its town's office, else the town's centre (towns.csv, T-5240), labelled so.
           let hit = if $locality != null { @events.towns.filter(t -> t.index(0).lowercase() == $locality.lowercase()).index(0).catch(null) } else { null }
@@ -131,7 +133,11 @@ processor_resources:
           let pick = if $feed_lat != null && $feed_lon != null { { "lat": $feed_lat, "lon": $feed_lon, "precision": "source", "source": "feed" } } else if $place != null { $place.merge({ "precision": "building", "source": $place.checked_by }) } else if $home != null { $home.merge({ "precision": "office", "source": $home.checked_by }) } else if $area != null { $area.merge({ "source": "towns" }) } else { null }
           let lat = $pick.lat.or(null)
           let lon = $pick.lon.or(null)
-          let point = if $lat != null && $lon != null && $lat >= 47.7 && $lat <= 49.7 && $lon >= 16.8 && $lon <= 22.6 { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
+          # The store's country is the scope's first level (/SK/..., /CZ/... since T-5666); a point outside it with a margin
+          # is a wrong point, never written.
+          let country = @events.scope.split("/").index(1)
+          let box = if $country == "CZ" { [12.0, 48.5, 18.9, 51.1] } else { [16.8, 47.7, 22.6, 49.7] }
+          let point = if $lat != null && $lon != null && $lat >= $box.index(1) && $lat <= $box.index(3) && $lon >= $box.index(0) && $lon <= $box.index(2) { { "type": "Point", "coordinates": [$lon, $lat] } } else { null }
           let town = $known.town.or($area.town.or(null))
           # One event announced by two sources is one entity: the id hashes the name (letters and digits only, so
           # "Kintsugi – japonské umenie" and "Kintsugi: japonské umenie" agree), the start (to the hour in UTC, so
@@ -140,7 +146,7 @@ processor_resources:
           let key = if $name != null { "%s|%s|%s".format($name.lowercase().re_replace_all("[^\\p{L}\\p{N}]+", " ").trim(), $start_key, $locality.or("").lowercase()) } else { "source|" + this.url.or(this.sourceId).or("").string() }
           # A street with the postcode glued on ("Bečov 96/6976 63" is 96/6 and 976 63) or written after it, or a postcode
           # alone ("976 63 Predajná"): the postcode moves to its own field and the country is dropped (T-5240).
-          let street_text = this.streetAddress.apply("text").(s -> if s != null { s.re_replace_all("(?i)[,\\s]*(slovensko|slovakia|slovenská republika)$", "") } else { null })
+          let street_text = this.streetAddress.apply("text").(s -> if s != null { s.re_replace_all("(?i)[,\\s]*(slovensko|slovakia|slovenská republika|česká republika|česko|czech republic|czechia)$", "") } else { null })
           let glued = if $street_text != null { $street_text.re_find_object("^(?P<street>.*?\\d[a-zA-Z]?)[,\\s]*(?P<zip>\\d{3} \\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
           let zip_only = if $street_text != null { $street_text.re_find_object("^(?P<zip>\\d{3} ?\\d{2})(?:[,\\s]+[^\\d,]+)?$") } else { {} }
           let street = if $zip_only.zip != null { null } else { $glued.street.or($street_text) }
@@ -149,7 +155,7 @@ processor_resources:
             "postalCode": this.postalCode.apply("text").or($zip_only.zip.or($glued.zip.or(null))),
             "addressLocality": $locality,
             "addressRegion": @events.region,
-            "addressCountry": "SK"
+            "addressCountry": $country
           }.filter(kv -> kv.value != null && kv.value != "")
           map link {
             root = if this == null { null } else { this.string().trim().(u -> if u.re_match("^https?://[^\\s/@]+(/\\S*)?$") && u.length() <= 2000 { u } else { null }) }

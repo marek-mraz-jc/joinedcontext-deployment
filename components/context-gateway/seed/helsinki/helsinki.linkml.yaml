@@ -1938,6 +1938,7 @@ classes:
       - subEvent
       - contactPoint
       - source
+      - dataProvider
     attributes:
       # Its own slot, because the shared refPointOfInterest is already WaterQualityObserved's end of
       # another relationship; the attribute name and IRI are Smart Data Models' all the same. No

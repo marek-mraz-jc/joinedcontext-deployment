@@ -40,6 +40,7 @@ GENERATED = {
         "*/*-pipeline-miesta-podujati*",
         # A hand-written Endpoint whose `source:` list the generator writes between its markers.
         "*/*-endpoint-podujatia*",
+        "praha/praha-endpoint-akce.yaml",
     ],
     "seeds/decidim/generate.py": [
         "slovensko/slovensko-*-decidim-*",

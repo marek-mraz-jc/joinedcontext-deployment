@@ -76,11 +76,14 @@ def test_the_recorded_page_maps_to_valid_events_and_drops_each_bad_row_by_reason
     assert dance["thematic"]["value"][0] == "dance (performing arts)"
     assert dance["isAccessibleForFree"]["value"] is True
     assert "webSite" not in dance, "an empty info_url is no website"
+    assert "dataProvider" not in dance, "a publisher that is no organization id is dropped"
     # A sub-event names its recurring parent by the parent's own URN.
     assert dance["superEvent"]["object"] == URN.format("Event", "helsinki-agpg4hzprq")
     museum = by_id[URN.format("Event", "hkm-3466")]
     assert museum["webSite"]["value"] == "https://www.helsinginkaupunginmuseo.fi/nayttelyt/lasten-kaupunki/"
     assert museum["thematic"]["value"][0] == "everyday"
+    # The publisher is the source a per-source count reads back (T-5666).
+    assert museum["dataProvider"] == {"type": "Property", "value": "ahjo:u4804001010"}
 
 
 @requires_docker
