@@ -17,7 +17,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Places only: the layer names no buried person.
     personalData: does-not-contain

@@ -20,7 +20,6 @@ spec:
       instanceRef: { kind: CkanInstance, name: zilina }
       # ShareAlike: the indicators are derived from CC BY-SA 4.0 cubes.
       license: cc-by-sa
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name:

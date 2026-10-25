@@ -20,7 +20,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: barcelona }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name:

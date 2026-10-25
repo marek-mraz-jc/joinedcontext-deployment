@@ -23,7 +23,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: hel-fi }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
