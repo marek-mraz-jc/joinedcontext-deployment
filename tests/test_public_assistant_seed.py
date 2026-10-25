@@ -127,6 +127,27 @@ def test_the_assistant_reads_its_bodys_data_through_its_public_mcp_server(public
     assert {c["endpoint"] for c in spec["connectors"]} == NATIONAL
 
 
+def selected(server: dict, project: str) -> list[str]:
+    """The Endpoints of `project` a server's `select` takes as the gateway does (MF-55): public, serving MCP, of a
+    selected project or space. The seed's own Endpoints; the Apps' public ones carry no themes."""
+    select = server.get("select")
+    if select is None:
+        return []
+    names = []
+    for name, endpoint in manifests("Endpoint", project).items():
+        spec = endpoint["spec"]
+        space = spec["contextSpaceRef"]
+        space = space if isinstance(space, str) else space["name"]
+        if spec["audience"] != "public" or "mcp" not in spec.get("enabledRepresentations", []):
+            continue
+        if "projects" in select and project not in select["projects"]:
+            continue
+        if "spaces" in select and f"{project}/{space}" not in select["spaces"]:
+            continue
+        names.append(name)
+    return sorted(names)
+
+
 def test_the_public_mcp_servers_list_members_that_serve_mcp():
     # The gateway drops a member that does not serve MCP, so a server whose members lack it
     # lists no tool at all (T-4141's `otvorene-data` before T-4167).
@@ -481,7 +502,8 @@ def test_the_categories_are_the_themes_of_what_it_reads(public_id):
     read = set()
     # the members of its McpServer (T-4750) beside its own connectors
     server = manifests("McpServer", own)[spec["mcpServer"].split("/")[1]]["spec"]
-    named = [c["endpoint"] for c in spec["connectors"]] + [m["name"] for m in server["members"]]
+    named = [c["endpoint"] for c in spec["connectors"]] + [m.get("namespace", own) + "/" + m["name"] for m in server.get("members", [])]
+    named += [f"{own}/{name}" for name in selected(server, own)]
     for full in named:
         project, _, name = full.rpartition("/")
         endpoint = manifests("Endpoint", project or own)[name]
