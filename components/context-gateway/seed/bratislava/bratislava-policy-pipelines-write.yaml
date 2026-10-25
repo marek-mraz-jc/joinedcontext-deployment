@@ -15,6 +15,12 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
+        - type: TrafficFlowObserved
+        - type: CrowdFlowObserved
+        - type: BikeHireDockingStation
+        - type: GtfsAgency
+        - type: GtfsRoute
+        - type: GtfsStop
         - type: AdministrativeArea
         - type: PointOfInterest
         - type: KeyPerformanceIndicator
