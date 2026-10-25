@@ -314,3 +314,10 @@ praha-endpoint-zakazy-stani.yaml: projects/praha/spaces/praha-mesto/endpoints/pr
 praha-policy-public-zakazy-stani.yaml: projects/praha/spaces/praha-mesto/policies/public-zakazy-stani.yaml
 praha-endpoint-parkovaci-automaty.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-parkovaci-automaty.yaml
 praha-policy-public-parkovaci-automaty.yaml: projects/praha/spaces/praha-mesto/policies/public-parkovaci-automaty.yaml
+# The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
+praha-space-catalog.yaml: projects/praha/spaces/catalog/space.yaml
+praha-datamodel-catalog.yaml: projects/praha/spaces/catalog/datamodels/catalog.yaml
+catalog.linkml.yaml: projects/praha/spaces/catalog/datamodels/catalog.linkml.yaml
+praha-endpoint-catalog.yaml: projects/praha/spaces/catalog/endpoints/catalog.yaml
+praha-policy-catalog-portal-write.yaml: projects/praha/spaces/catalog/policies/catalog-portal-write.yaml
+praha-policy-catalog-public-read.yaml: projects/praha/spaces/catalog/policies/catalog-public-read.yaml
