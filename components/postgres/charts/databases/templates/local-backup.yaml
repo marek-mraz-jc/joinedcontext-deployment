@@ -4,7 +4,8 @@ stopgap while an instance has no object store for CNPG's base backups and WAL ar
 (smartcity until the owner's S3 keys exist, T-4678): it survives a dropped table or a broken
 migration, not the loss of the node, so an instance with it still has no off-site backup.
 */ -}}
-{{- /* The dump Job's spec, for the CronJob and the Job of the apply: (dict "root" $ "keepDays" n "size" q). */}}
+{{- /* The dump Job's spec, for the CronJob (mode "dump") and the Job of the apply (mode "bind"):
+(dict "root" $ "mode" m "keepDays" n "size" q "exclude" list). */}}
 {{- define "database.localBackupJob" -}}
 {{- $r := .root }}
 {{- $name := printf "%s-local-backup" $r.Values.cluster.name }}
@@ -58,27 +59,24 @@ template:
         value: {{ .keepDays | quote }}
       - name: VOLUME_SIZE
         value: {{ .size | quote }}
+      - name: MODE
+        value: {{ .mode }}
+      - name: EXCLUDE_DATABASES
+        value: {{ join " " .exclude | quote }}
       command:
       - /bin/sh
       - -c
       - |
         set -eu
-        file=/backup/$(date -u +%Y-%m-%dT%H%MZ).sql.gz
-        # Every table's rows just before the dump, `database.schema.table|rows`: the monthly
-        # drill restores the dump and holds its tables to these (dr-drill.sh, T-5556).
-        tables="SELECT schemaname || '.' || relname, (xpath('/row/c/text()', query_to_xml(format('SELECT count(*) AS c FROM %I.%I', schemaname, relname), false, true, '')))[1]::text FROM pg_stat_user_tables ORDER BY 1"
-        for db in $(psql -X -At -d postgres -c "SELECT datname FROM pg_database WHERE NOT datistemplate AND datname <> 'postgres' ORDER BY 1"); do
-          psql -X -At -d "$db" -c "$tables" | sed "s|^|$db.|"
-        done > /tmp/counts
-        # pipefail is not POSIX: a failed pg_dumpall would hide behind gzip's exit 0.
-        { pg_dumpall --clean --if-exists || echo FAILED > /tmp/failed; } | gzip > "$file.part"
-        if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
-        cp /tmp/counts "$file.counts"
-        mv "$file.part" "$file"
-        find /backup \( -name '*.sql.gz' -o -name '*.sql.gz.counts' \) -mtime +"$KEEP_DAYS" -delete
-        ls -l /backup
-        # One dump over 80 % of the volume leaves no room for the next night's: the job fails
-        # (PostgresBackupStale) while this dump is still whole.
+        # The Job of the apply is there to bind the volume (below): it dumps only when the
+        # volume holds no dump of the last 20 h, so an hourly apply writes no dump of its own.
+        if [ "$MODE" = bind ] && [ -n "$(find /backup -name '*.sql.gz' -mmin -1200)" ]; then
+          echo "a dump of the last 20 h is on the volume: none at this apply"
+          ls -l /backup
+          exit 0
+        fi
+        # Retention first, so tonight's dump has the room the old ones leave.
+        find /backup \( -name '*.sql.gz' -o -name '*.sql.gz.counts' -o -name '*.part' \) -mtime +"$KEEP_DAYS" -delete
         case "$VOLUME_SIZE" in
           *Ti) max=$((${VOLUME_SIZE%Ti} * 1099511627776)) ;;
           *Gi) max=$((${VOLUME_SIZE%Gi} * 1073741824)) ;;
@@ -86,7 +84,44 @@ template:
           *[!0-9]*) echo "localBackup.size $VOLUME_SIZE: give it in Mi, Gi or Ti, e.g. 10Gi" >&2; exit 1 ;;
           *) max=$VOLUME_SIZE ;;
         esac
-        bytes=$(wc -c < "$file")
+        # local-path does not enforce the volume's size, and the volume sits on the disk
+        # Postgres runs on: the dump stops at what is left of localBackup.size, and does not
+        # start when that much would leave the node's disk under 10 % free.
+        room=$((max - $(du -sk /backup | cut -f1) * 1024))
+        if [ "$room" -le 0 ]; then
+          echo "the dumps on the volume fill the $VOLUME_SIZE of localBackup.size: raise it or lower localBackup.keepDays" >&2
+          exit 1
+        fi
+        df -Pk /backup | awk 'NR == 2 { print $2, $4 }' > /tmp/df
+        read -r disk free < /tmp/df
+        if [ $(((free * 1024 - room) * 10)) -lt $((disk * 1024)) ]; then
+          echo "a dump of up to $room bytes would leave the node's disk under 10 % free ($((free / 1024)) MiB free): free the disk or lower localBackup.size" >&2
+          exit 1
+        fi
+        file=/backup/$(date -u +%Y-%m-%dT%H%MZ).sql.gz
+        # Every table's rows just before the dump, `database.schema.table|rows`: the monthly
+        # drill restores the dump and holds its tables to these (dr-drill.sh, T-5556).
+        tables="SELECT schemaname || '.' || relname, (xpath('/row/c/text()', query_to_xml(format('SELECT count(*) AS c FROM %I.%I', schemaname, relname), false, true, '')))[1]::text FROM pg_stat_user_tables ORDER BY 1"
+        set --
+        for db in $EXCLUDE_DATABASES; do set -- "$@" "--exclude-database=$db"; done
+        for db in $(psql -X -At -d postgres -c "SELECT datname FROM pg_database WHERE NOT datistemplate AND datname <> 'postgres' ORDER BY 1"); do
+          case " $EXCLUDE_DATABASES " in *" $db "*) continue ;; esac
+          psql -X -At -d "$db" -c "$tables" | sed "s|^|$db.|"
+        done > /tmp/counts
+        # pipefail is not POSIX: a failed pg_dumpall would hide behind gzip's exit 0.
+        { pg_dumpall --clean --if-exists "$@" || echo FAILED > /tmp/failed; } | gzip | head -c $((room + 1)) > "$file.part"
+        bytes=$(wc -c < "$file.part")
+        if [ "$bytes" -gt "$room" ]; then
+          rm -f "$file.part"
+          echo "the dump outgrew the $room bytes left of the $VOLUME_SIZE volume and was deleted: raise localBackup.size or name the large databases in localBackup.excludeDatabases" >&2
+          exit 1
+        fi
+        if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
+        cp /tmp/counts "$file.counts"
+        mv "$file.part" "$file"
+        ls -l /backup
+        # One dump over 80 % of the volume leaves no room for the next night's: the job fails
+        # (PostgresBackupStale) while this dump is still whole.
         if [ $((bytes * 100)) -gt $((max * 80)) ]; then
           echo "the dump is $bytes bytes, over 80 % of the $VOLUME_SIZE volume: raise localBackup.size" >&2
           exit 1
@@ -95,6 +130,8 @@ template:
 {{- with .Values.localBackup }}
 {{- if .enabled }}
 {{- $name := printf "%s-local-backup" $.Values.cluster.name }}
+{{- /* values.schema.json holds each name to [a-z_][a-z0-9_]*: the script splits on spaces. */}}
+{{- $exclude := .excludeDatabases | default list }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -127,11 +164,12 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
-      {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays "size" .size) | nindent 6 }}
+      {{- include "database.localBackupJob" (dict "root" $ "mode" "dump" "keepDays" .keepDays "size" .size "exclude" $exclude) | nindent 6 }}
 ---
 # The first dump, at every apply: local-path binds the volume only for a pod that mounts it, so
 # without one the PVC stays Pending until the night and `helm --wait` fails the release. Gone
 # 10 min after it finishes, so the next apply creates it again (a Job's template is immutable).
+# It dumps only when no dump of the last 20 h is on the volume (MODE bind).
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -142,6 +180,6 @@ metadata:
     app.kubernetes.io/component: database-local-backup
 spec:
   ttlSecondsAfterFinished: 600
-  {{- include "database.localBackupJob" (dict "root" $ "keepDays" .keepDays "size" .size) | nindent 2 }}
+  {{- include "database.localBackupJob" (dict "root" $ "mode" "bind" "keepDays" .keepDays "size" .size "exclude" $exclude) | nindent 2 }}
 {{- end }}
 {{- end }}
