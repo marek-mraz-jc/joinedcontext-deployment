@@ -183,6 +183,29 @@ def test_workflows_take_tool_versions_from_tools_env():
         assert not written, f"{workflow.name}: {written} belongs in tools.env"
 
 
+def test_reusable_workflow_defaults_match_tools_env():
+    """F-DEP1-034: a reusable workflow's default tool version and checksum are the ones ci.yml
+    installs from tools.env, so a caller that keeps the defaults runs the same binary."""
+    tools = dict(
+        line.split("=", 1)
+        for line in TOOLS.read_text().splitlines()
+        if "=" in line and not line.startswith("#")
+    )
+    checked = 0
+    for workflow in WORKFLOWS.glob("reusable-*.yml"):
+        on = yaml.safe_load(workflow.read_text()).get(True) or {}
+        inputs = (on.get("workflow_call") or {}).get("inputs") or {}
+        for name, spec in inputs.items():
+            match = re.fullmatch(r"(?:(.+)-)?(version|checksum)", name)
+            if not match or match.group(1) == "kubernetes":
+                continue
+            tool = match.group(1) or workflow.stem.removeprefix("reusable-")
+            key = f"{tool.upper()}_{match.group(2).upper()}"
+            assert str(spec.get("default")) == tools.get(key), f"{workflow.name}: {name} != {key}"
+            checked += 1
+    assert checked >= 6
+
+
 def test_just_comes_from_tools_env():
     """T-5237: setup-just resolved its version through the GitHub API and failed whole shards when
     the answer came back empty; .github/actions/tools installs the pinned, checksummed release."""

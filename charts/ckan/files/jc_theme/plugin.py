@@ -795,8 +795,9 @@ def _is_url(value):
 
 
 def _sources(value):
-    """(address, title) of each http source in a `source` extra: a JSON list of `{url, title}`
-    (T-4436) or of addresses, or one address; a source without a title shows its address."""
+    """(address, title, description) of each http source in a `source` extra jcctl writes: a JSON
+    list of `{url, title, description}` (T-4436) or of addresses, or one address. A source without
+    a title is titled by its address, one without a description described by its title."""
     try:
         items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
     except ValueError:
@@ -804,9 +805,12 @@ def _sources(value):
     out = []
     for item in items if isinstance(items, list) else []:
         url = item.get("url") if isinstance(item, dict) else item
-        if _is_url(url):
-            title = item.get("title") if isinstance(item, dict) else None
-            out.append((url, title if isinstance(title, str) and title else url))
+        if not _is_url(url):
+            continue
+        title = item.get("title") if isinstance(item, dict) else None
+        title = title if isinstance(title, str) and title else url
+        description = item.get("description") if isinstance(item, dict) else None
+        out.append((url, title, description if isinstance(description, str) and description else title))
     return out
 
 
@@ -894,7 +898,7 @@ def jc_about(pkg):
     # (T-4417): `source` is the JSON list of IRIs ckanext-dcat reads as dct:source.
     if extras.get("rights"):
         rows.append((jc_t("attribution"), extras["rights"], None))
-    for url, title in _sources(extras.get("source")):
+    for url, title, _ in _sources(extras.get("source")):
         rows.append((jc_t("source"), title, url))
     groups = [g.get("display_name") or g.get("title") or g.get("name") for g in pkg.get("groups") or []]
     if groups:
@@ -978,6 +982,12 @@ def jc_extra(key, value):
     return label, text, text if _is_url(text) else None
 
 
+def _on_platform(host):
+    """Whether `host` is the platform's domain or a subdomain of it; never without a domain."""
+    domain = BRANDING.get("domain") or ""
+    return bool(domain) and (host == domain or host.endswith("." + domain))
+
+
 def jc_live(pkg):
     """The dataset's live NGSI-LD address and an example query, or None.
 
@@ -985,11 +995,9 @@ def jc_live(pkg):
     the publisher, and a page must never point a reader at an internal service address.
     """
     endpoint = _extras(pkg).get("endpoint")
-    domain = BRANDING.get("domain") or ""
-    if not (isinstance(endpoint, str) and endpoint.startswith("https://") and domain):
+    if not (isinstance(endpoint, str) and endpoint.startswith("https://")):
         return None
-    host = endpoint[len("https://"):].split("/", 1)[0]
-    if host != domain and not host.endswith("." + domain):
+    if not _on_platform(endpoint[len("https://"):].split("/", 1)[0]):
         return None
     base = endpoint if endpoint.endswith("/") else endpoint + "/"
     # `types` answers without a filter; a query for entities needs a type the reader learns here.
@@ -1105,12 +1113,10 @@ def _shown(text):
     the publisher's, and a page must never show an internal service address or a token."""
     if _CREDENTIAL.search(text):
         return False
-    domain = BRANDING.get("domain") or ""
     docs = _docs_base()
     docs_host = docs[len("https://"):].split("/", 1)[0] if docs else None
     for host in _ADDRESS.findall(text):
-        on_platform = domain and (host == domain or host.endswith("." + domain))
-        if not (on_platform or host == docs_host):
+        if not (_on_platform(host) or host == docs_host):
             return False
     return True
 
@@ -1222,8 +1228,7 @@ def _off_platform(resource):
         host = urlsplit(resource.get("url") or "").hostname or ""
     except ValueError:
         return False
-    domain = BRANDING.get("domain") or ""
-    return bool(host) and not (domain and (host == domain or host.endswith("." + domain)))
+    return bool(host) and not _on_platform(host)
 
 
 def jc_entity_type(resource):
@@ -1327,9 +1332,8 @@ def jc_preview(resource):
     without rows to show (MCP, WebSocket, a file) or an address elsewhere."""
     kind = jc_kind(resource)
     url = (resource or {}).get("url") or ""
-    domain = BRANDING.get("domain") or ""
     host = urlsplit(url).hostname or "" if url else ""
-    if not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
+    if not (url.startswith("https://") and _on_platform(host)):
         return None
     path = urlsplit(url).path
     if kind == "NGSI-LD" and "/entities" in path:
@@ -1663,14 +1667,13 @@ def jc_map(pkg, resource_id=None):
     pkg = pkg or {}
     if not os.path.isdir(VENDOR):
         return None
-    domain = BRANDING.get("domain") or ""
     resources = pkg.get("resources") or []
     bases = []
     for resource in resources:
         url = resource.get("url") or ""
         parts = urlsplit(url)
         host = parts.hostname or ""
-        if jc_kind(resource) != "OGCFEAT" or not (url.startswith("https://") and domain and (host == domain or host.endswith("." + domain))):
+        if jc_kind(resource) != "OGCFEAT" or not (url.startswith("https://") and _on_platform(host)):
             continue
         bases.append(parts)
     layers = []

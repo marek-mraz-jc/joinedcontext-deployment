@@ -9,7 +9,6 @@ controlled-vocabulary IRI the shapes ask for. Everything it adds comes from the 
 from the deployment's branding block; nothing here is a value of its own.
 """
 
-import json
 import re
 
 from rdflib import BNode, Literal, Namespace, URIRef
@@ -18,7 +17,7 @@ from rdflib.namespace import RDF, RDFS, SKOS, XSD
 from ckanext.dcat.profiles import DCAT, DCT, FOAF, SPDX, VCARD, CleanedURIRef, RDFProfile
 from ckanext.dcat.utils import resource_uri
 
-from ckanext_jc_theme.plugin import BRANDING
+from ckanext_jc_theme.plugin import BRANDING, _sources
 
 PROV = Namespace("http://www.w3.org/ns/prov#")
 EU = "http://publications.europa.eu/resource/authority/"
@@ -105,26 +104,6 @@ def _media_type(value):
         if key.strip().lower() == "profile" and _iri(val) and not re.search(r'[\s"<>]', val):
             profile = val
     return bare, profile
-
-
-def _sources(value):
-    """(IRI, title, description) of each original dataset in the `source` extra jcctl writes: a
-    JSON list of `{url, title, description}` (T-4436) or of bare IRIs, or one IRI alone. A source
-    without a title is titled by its IRI."""
-    try:
-        items = json.loads(value) if isinstance(value, str) and value.startswith("[") else [value]
-    except ValueError:
-        return []
-    out = []
-    for item in items if isinstance(items, list) else []:
-        url = item.get("url") if isinstance(item, dict) else item
-        if not _iri(url):
-            continue
-        title = item.get("title") if isinstance(item, dict) else None
-        title = title if isinstance(title, str) and title else url
-        description = item.get("description") if isinstance(item, dict) else None
-        out.append((url, title, description if isinstance(description, str) and description else title))
-    return out
 
 
 class JcDcatApProfile(RDFProfile):

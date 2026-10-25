@@ -18,8 +18,6 @@ pipeline:
     - mapping: |
         let kind = "excavation"
         let lease = now().ts_unix() + 86400
-        let start_fields = ["tyo_alkaa", "tyo_alkaa"]
-        let end_fields = ["tyo_paattyy", "tyo_paattyy"]
         let statuses = { "Tuleva": "upcoming", "Käynnissä": "ongoing", "Rakentaminen käynnissä": "setup", "Purkaminen käynnissä": "teardown" }
         # The WFS writes a field it has no value for as the string "None".
         map text {
@@ -35,8 +33,8 @@ pipeline:
           "polygons": areas.map_each(f -> if f.geometry.type == "MultiPolygon" { f.geometry.coordinates } else { [f.geometry.coordinates] }).flatten()
         }).map_each(p -> p.assign({
           "status": $statuses.get(p.props.status.or("")).or(null),
-          "start": p.props.get($start_fields.index(0)).apply("day").or(p.props.get($start_fields.index(1)).apply("day")),
-          "end": p.props.get($end_fields.index(0)).apply("day").or(p.props.get($end_fields.index(1)).apply("day")),
+          "start": p.props.tyo_alkaa.apply("day"),
+          "end": p.props.tyo_paattyy.apply("day"),
           # A permit the register leaves unnamed is named by its address, else its number (T-4745).
           "name": p.props.nimi.apply("text").or(p.props.osoite.apply("text")).or(p.props.hakemustunnus),
           "purpose": p.props.tyon_tarkoitus.apply("text"),
