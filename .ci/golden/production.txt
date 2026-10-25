@@ -284,6 +284,7 @@ v1/PersistentVolumeClaim jc/pipeline-runner-files
 v1/ResourceQuota jc-app-tests/app-tests
 v1/Secret jc/apisix-oidc-session
 v1/Secret jc/apisix-standalone-config
+v1/Secret jc/apps-db-backup-artifact-store
 v1/Secret jc/artifact-store-root
 v1/Secret jc/context-broker-admin-token
 v1/Secret jc/context-gateway-oauth-key

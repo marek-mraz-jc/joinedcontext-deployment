@@ -397,6 +397,7 @@ postgresql.cnpg.io/v1/Database dev/ckan-datastore
 postgresql.cnpg.io/v1/Database dev/gitea
 postgresql.cnpg.io/v1/Database dev/keycloak
 postgresql.cnpg.io/v1/Database dev/portal
+postgresql.cnpg.io/v1/ScheduledBackup dev/apps-db-daily-backup
 postgresql.cnpg.io/v1/ScheduledBackup dev/postgres-cluster-daily-backup
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-apps
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-namespaces
@@ -524,6 +525,7 @@ v1/PersistentVolumeClaim dev/status-page-files
 v1/ResourceQuota dev-app-tests/app-tests
 v1/Secret dev/apisix-oidc-session
 v1/Secret dev/apisix-standalone-config
+v1/Secret dev/apps-db-backup-artifact-store
 v1/Secret dev/apps-host-0-db
 v1/Secret dev/apps-host-1-db
 v1/Secret dev/artifact-store-root

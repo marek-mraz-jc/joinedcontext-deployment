@@ -119,3 +119,44 @@ def test_every_embedded_database_has_a_role_to_own_it(rendered, env):
         and d["spec"]["owner"] not in roles.get(d["spec"]["cluster"]["name"], set())
     )
     assert not missing, f"{env} declares databases owned by {missing} with no managed role"
+
+
+@pytest.fixture(scope="module")
+def dev(rendered):
+    return rendered("dev")
+
+
+def test_every_dev_cluster_that_holds_data_has_a_daily_backup(dev):
+    """T-5662: apps-db on dev had no backup at all while postgres-cluster archived nightly."""
+    clusters = {d["metadata"]["name"]: d for d in dev if d.get("kind") == "Cluster"}
+    assert {"postgres-cluster", "apps-db"} <= set(clusters)
+    scheduled = {d["spec"]["cluster"]["name"] for d in dev if d.get("kind") == "ScheduledBackup"}
+    assert scheduled == set(clusters)
+    for name, cluster in clusters.items():
+        store = cluster["spec"]["backup"]["barmanObjectStore"]
+        assert store["endpointURL"].startswith("http://artifact-store."), name
+        # RustFS has no KMS and refuses SSE-S3 (T-5289).
+        assert "encryption" not in store["wal"] or not store["wal"]["encryption"], name
+
+
+def test_apps_db_archives_with_a_key_that_reaches_its_own_prefix_alone(dev):
+    """apps-db serves tenant Apps: it must not hold the key that can delete the platform's backups."""
+    apps = next(d for d in dev if d.get("kind") == "Cluster" and d["metadata"]["name"] == "apps-db")
+    creds = apps["spec"]["backup"]["barmanObjectStore"]["s3Credentials"]
+    assert creds["accessKeyId"]["name"] == creds["secretAccessKey"]["name"] == "apps-db-backup-artifact-store"
+    job = next(d for d in dev if d.get("kind") == "Job" and d["metadata"]["name"] == "artifact-store-bucket")
+    container = job["spec"]["template"]["spec"]["containers"][0]
+    script = "\n".join(container.get("command", []) + container.get("args", []))
+    assert '"$backups" "$backups" "apps-db" > /tmp/policy.json' in script
+    assert "arn:aws:s3:::%s/%s/*" in script
+    readers = {e["valueFrom"]["secretKeyRef"]["name"] for e in container["env"] if "valueFrom" in e}
+    assert "apps-db-backup-artifact-store" in readers
+
+
+def test_apps_db_and_the_store_let_the_archive_through_on_dev(dev):
+    policies = {d["metadata"]["name"]: d["spec"] for d in dev if d.get("kind") == "NetworkPolicy"}
+    store_peers = [p["podSelector"]["matchLabels"] for p in policies["artifact-store"]["ingress"][0]["from"]]
+    assert {"cnpg.io/cluster": "apps-db"} in store_peers
+    egress = [r for r in policies["apps-db"]["egress"]
+              if any(t.get("podSelector", {}).get("matchLabels") == {"app.kubernetes.io/component": "store"} for t in r["to"])]
+    assert [p["port"] for r in egress for p in r["ports"]] == [9000]

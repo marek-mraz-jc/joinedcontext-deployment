@@ -30,6 +30,15 @@ apps-db:
       ports:
         - protocol: TCP
           port: 5432
+    # The in-cluster artifact store, where an environment archives apps-db to it (T-5662).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
     # The kube-apiserver (6443 on k3s) and WAL archiving to the object store (443), as for the
     # platform's cluster; neither is a pod a selector can name.
     - to:

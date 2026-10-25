@@ -40,6 +40,11 @@ artifact-store:
             matchLabels:
               cnpg.io/cluster: postgres-cluster-drill
           componentNamespace: postgres
+        # apps-db archiving under its own prefix with its own key (T-5662).
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
       ports:
         - protocol: TCP
           port: 9000

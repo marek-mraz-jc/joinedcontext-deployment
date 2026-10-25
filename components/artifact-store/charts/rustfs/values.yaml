@@ -46,6 +46,10 @@ backupBucket:
   enabled: false
   name: postgres-backups
   credentialsSecret: postgres-backup-artifact-store
+  # Further clusters archiving to the same bucket (T-5662), each under its own prefix with a user
+  # whose key reaches that prefix alone: [{prefix: apps-db, credentialsSecret: ...}]. The key
+  # above reaches the whole bucket, so it stays with the platform's own cluster.
+  prefixUsers: []
 
 fileCache:
   # `filecache/` is the gateway's own cache of file downloads: 24 hours, then gone (PF-33).

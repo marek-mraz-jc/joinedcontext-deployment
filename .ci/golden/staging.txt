@@ -269,6 +269,7 @@ v1/PersistentVolumeClaim staging/pipeline-runner-files
 v1/ResourceQuota staging-app-tests/app-tests
 v1/Secret staging/apisix-oidc-session
 v1/Secret staging/apisix-standalone-config
+v1/Secret staging/apps-db-backup-artifact-store
 v1/Secret staging/artifact-store-root
 v1/Secret staging/context-broker-admin-token
 v1/Secret staging/context-gateway-oauth-key
