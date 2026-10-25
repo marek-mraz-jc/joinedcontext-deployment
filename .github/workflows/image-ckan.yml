@@ -6,10 +6,12 @@ on:
   push: { branches: [main], paths: ["images/ckan/**", ".github/workflows/image-ckan.yml"] }
   schedule: [{ cron: "0 4 1 * *" }]
   workflow_dispatch:
-permissions: { contents: read, packages: write, id-token: write }
+permissions: { contents: read }
 concurrency: { group: "image-ckan", cancel-in-progress: true }
 jobs:
   build:
+    # the one job that pushes and signs (keyless) holds the two publish grants (T-5564)
+    permissions: { contents: read, packages: write, id-token: write }
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 25  # nine environments since T-4956, about 30 s each
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # every action is a commit and every publish grant sits on its job (T-5564)
+      - run: python3 scripts/ci/check-workflow-pins.py --selftest && python3 scripts/ci/check-workflow-pins.py
       - uses: ./.github/actions/tools
       - name: kubeconform, conftest, gitleaks
         run: |
