@@ -76,6 +76,25 @@ deny contains msg if {
 	msg := sprintf("MeshTLSAuthentication/%s: the broker admits %s/%s, outside the gateway and the Portal", [input.metadata.name, object.get(ref, "namespace", ""), ref.name])
 }
 
+# A caller's ServiceAccount counts only in its component's own namespace (T-5702): a
+# ServiceAccount named portal in an App namespace is not the Portal. The broker shares one
+# namespace with both on a single-namespace install; otherwise each sits in
+# {instance}-{component}, as jc.namespace names them.
+broker_instance := trim_suffix(input.metadata.namespace, "-context-broker")
+
+caller_namespace_ok(ref) if object.get(ref, "namespace", input.metadata.namespace) == input.metadata.namespace
+
+caller_namespace_ok(ref) if ref.namespace == sprintf("%s-%s", [broker_instance, ref.name])
+
+deny contains msg if {
+	input.kind == "MeshTLSAuthentication"
+	startswith(input.metadata.name, "context-broker")
+	some ref in input.spec.identityRefs
+	broker_callers[ref.name]
+	not caller_namespace_ok(ref)
+	msg := sprintf("MeshTLSAuthentication/%s: the broker admits %s only from its own namespace %s, not %s", [input.metadata.name, ref.name, sprintf("%s-%s", [broker_instance, ref.name]), object.get(ref, "namespace", "")])
+}
+
 deny contains msg if {
 	input.kind == "MeshTLSAuthentication"
 	startswith(input.metadata.name, "context-broker")
