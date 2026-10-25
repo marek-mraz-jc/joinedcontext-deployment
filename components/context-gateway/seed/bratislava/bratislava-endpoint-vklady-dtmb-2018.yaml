@@ -20,7 +20,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: bratislava }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
@@ -39,4 +38,7 @@ spec:
         title:
           sk: Vklady DTMB 2018
           en: Deposits into the digital technical map of Bratislava, 2018
+        description:
+          sk: 'Dataset Hlavného mesta SR Bratislava na portáli otvorených dát data.bratislava.sk: Vklady DTMB 2018. Licencia CC BY 4.0.'
+          en: 'A dataset of the City of Bratislava on its open data portal data.bratislava.sk: Deposits into the digital technical map of Bratislava, 2018. Licence CC BY 4.0.'
     pipelineRef: { kind: Pipeline, name: statistics-mesto }

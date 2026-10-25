@@ -26,7 +26,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: barcelona }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name:
@@ -53,32 +52,56 @@ spec:
         title:
           ca: Open Data BCN est-vehicles-tipologia-parc-vehicles
           en: Open Data BCN dataset est-vehicles-tipologia-parc-vehicles
+        description:
+          ca: Conjunt de dades est-vehicles-tipologia-parc-vehicles de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-vehicles-tipologia-parc-vehicles on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est_vehicles_propulsio
         title:
           ca: Open Data BCN est_vehicles_propulsio
           en: Open Data BCN dataset est_vehicles_propulsio
+        description:
+          ca: Conjunt de dades est_vehicles_propulsio de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est_vehicles_propulsio on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est_vehicles_servei
         title:
           ca: Open Data BCN est_vehicles_servei
           en: Open Data BCN dataset est_vehicles_servei
+        description:
+          ca: Conjunt de dades est_vehicles_servei de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est_vehicles_servei on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est_vehicles_evolucio_total
         title:
           ca: Open Data BCN est_vehicles_evolucio_total
           en: Open Data BCN dataset est_vehicles_evolucio_total
+        description:
+          ca: Conjunt de dades est_vehicles_evolucio_total de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est_vehicles_evolucio_total on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-vehicles-tipus-propietari
         title:
           ca: Open Data BCN est-vehicles-tipus-propietari
           en: Open Data BCN dataset est-vehicles-tipus-propietari
+        description:
+          ca: Conjunt de dades est-vehicles-tipus-propietari de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-vehicles-tipus-propietari on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-vehicles-cilindrada-motos
         title:
           ca: Open Data BCN est-vehicles-cilindrada-motos
           en: Open Data BCN dataset est-vehicles-cilindrada-motos
+        description:
+          ca: Conjunt de dades est-vehicles-cilindrada-motos de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-vehicles-cilindrada-motos on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-vehicles-nacionalitat-propietari
         title:
           ca: Open Data BCN est-vehicles-nacionalitat-propietari
           en: Open Data BCN dataset est-vehicles-nacionalitat-propietari
+        description:
+          ca: Conjunt de dades est-vehicles-nacionalitat-propietari de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-vehicles-nacionalitat-propietari on its open data portal Open Data BCN. Licence CC BY 4.0.
       - url: https://opendata-ajuntament.barcelona.cat/data/dataset/est-vehicles-potencia-fiscal-turismes
         title:
           ca: Open Data BCN est-vehicles-potencia-fiscal-turismes
           en: Open Data BCN dataset est-vehicles-potencia-fiscal-turismes
+        description:
+          ca: Conjunt de dades est-vehicles-potencia-fiscal-turismes de l'Ajuntament de Barcelona al portal Open Data BCN. Llicència CC BY 4.0.
+          en: The City of Barcelona's dataset est-vehicles-potencia-fiscal-turismes on its open data portal Open Data BCN. Licence CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: statistics }
