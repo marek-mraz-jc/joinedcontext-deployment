@@ -205,7 +205,7 @@ def test_the_ckan_organisation_is_titled_ajuntament_de_barcelona():
 
 def test_keycloak_makes_the_subtree_root_and_the_administrator():
     environment = (ROOT / "components/keycloak/default-environment.yaml.gotmpl").read_text()
-    assert "organizations: [zilina, barcelona]" in environment
+    assert "organizations: [zilina, barcelona, bratislava]" in environment
     users = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
     assert users["demo.barcelona"]["groups"] == ["barcelona"]
     assert users["demo.barcelona"]["realmRoles"] == ["portal-approver"]

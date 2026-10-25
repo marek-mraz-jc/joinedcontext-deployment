@@ -1,0 +1,117 @@
+{
+  "@context": {
+    "@vocab": "https://smartdatamodels.org/",
+    "AdministrativeArea": {
+      "@id": "jc:AdministrativeArea"
+    },
+    "AirQualityObserved": {
+      "@id": "sdm:AirQualityObserved"
+    },
+    "Entity": {
+      "@id": "ngsi-ld:Entity"
+    },
+    "KeyPerformanceIndicator": {
+      "@id": "sdm:KeyPerformanceIndicator"
+    },
+    "KpiPeriod": {
+      "@id": "jc:KpiPeriod"
+    },
+    "PointOfInterest": {
+      "@id": "sdm:PointOfInterest"
+    },
+    "PostalAddress": {
+      "@id": "schema:PostalAddress"
+    },
+    "address": {
+      "@id": "schema:address"
+    },
+    "addressCountry": {
+      "@id": "schema:addressCountry"
+    },
+    "addressLocality": {
+      "@id": "schema:addressLocality"
+    },
+    "area": {
+      "@id": "sdm:area"
+    },
+    "calculationFrequency": {
+      "@id": "sdm:calculationFrequency"
+    },
+    "calculationPeriod": {
+      "@id": "sdm:calculationPeriod"
+    },
+    "category": {
+      "@id": "sdm:category"
+    },
+    "dataProvider": {
+      "@id": "sdm:dataProvider"
+    },
+    "dateObserved": {
+      "@id": "sdm:dateObserved",
+      "@type": "xsd:dateTime"
+    },
+    "description": {
+      "@id": "schema:description"
+    },
+    "district": {
+      "@id": "sdm:district"
+    },
+    "districtCode": {
+      "@id": "jc:districtCode"
+    },
+    "from": {
+      "@id": "sdm:from",
+      "@type": "xsd:date"
+    },
+    "geojson": "https://purl.org/geojson/vocab#",
+    "id": "@id",
+    "jc": "https://joinedcontext.com/models/",
+    "kpiValue": {
+      "@id": "sdm:kpiValue",
+      "@type": "xsd:float"
+    },
+    "linkml": "https://w3id.org/linkml/",
+    "location": {
+      "@id": "geojson:geometry"
+    },
+    "name": {
+      "@id": "schema:name"
+    },
+    "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "observedAt": {
+      "@id": "ngsi-ld:observedAt",
+      "@type": "xsd:dateTime"
+    },
+    "organization": {
+      "@id": "sdm:organization"
+    },
+    "pm10": {
+      "@id": "sdm:pm10",
+      "@type": "xsd:float"
+    },
+    "process": {
+      "@id": "sdm:process"
+    },
+    "schema": "http://schema.org/",
+    "sdm": "https://smartdatamodels.org/",
+    "shex": "http://www.w3.org/ns/shex#",
+    "source": {
+      "@id": "sdm:source",
+      "@type": "xsd:anyURI"
+    },
+    "streetAddress": {
+      "@id": "schema:streetAddress"
+    },
+    "to": {
+      "@id": "sdm:to",
+      "@type": "xsd:date"
+    },
+    "type": "@type",
+    "url": {
+      "@id": "schema:url",
+      "@type": "xsd:anyURI"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "x-generator-version": "linkml-1.12.0"
+}
