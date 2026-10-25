@@ -13,7 +13,7 @@ import subprocess
 import pytest
 import yaml
 
-from conftest import PROJECT_ROOT, TREE_IGNORE, set_global
+from conftest import PROJECT_ROOT, TREE_IGNORE, load_yaml_all, set_global
 
 EXAMPLE = [{"name": "example-city", "subDomain": "mesto"}]
 DEFAULT, OTHER = "ckan-catalogue", "ckan-example-city"
@@ -45,7 +45,7 @@ def rendered_file(tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def docs(rendered_file):
-    return [d for d in yaml.safe_load_all(rendered_file.read_text()) if isinstance(d, dict)]
+    return [d for d in load_yaml_all(rendered_file.read_text()) if isinstance(d, dict)]
 
 
 def instance_of(doc):

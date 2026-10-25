@@ -12,7 +12,8 @@ from pathlib import Path
 
 import pytest
 import yaml
-from test_public_assistant_seed import READ_ONLY, deployment, general, manifests
+from conftest import load_yaml_all
+from test_public_assistant_seed import deployment, general, manifests
 
 ROOT = Path(__file__).resolve().parent.parent
 HOSTS = {"dev": "bbsk-demo.apps.dev.joinedcontext.com", "smartcity": "bbsk.smartcity.joinedcontext.com"}
@@ -27,7 +28,7 @@ def render(env: str) -> list[dict]:
         cwd=ROOT, capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stderr
-    return [d for d in yaml.safe_load_all(result.stdout) if isinstance(d, dict)]
+    return [d for d in load_yaml_all(result.stdout) if isinstance(d, dict)]
 
 
 @pytest.fixture(scope="module", params=sorted(HOSTS))

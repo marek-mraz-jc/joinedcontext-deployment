@@ -11,7 +11,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-import yaml
+from conftest import load_yaml_all
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,7 +28,7 @@ def hook():
         cwd=PROJECT_ROOT, capture_output=True, text=True,
     )
     assert built.returncode == 0, built.stderr
-    states = [s for s in yaml.safe_load_all(built.stdout) if isinstance(s, dict)]
+    states = [s for s in load_yaml_all(built.stdout) if isinstance(s, dict)]
     (prepare,) = [s for s in states if (s.get("commonLabels") or {}).get("component") == "prepare"]
     (only,) = prepare["hooks"]
     assert only["events"] == ["prepare"] and only["command"] == "sh"

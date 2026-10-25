@@ -9,7 +9,7 @@ alert was written, and no site was linked to its station.
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-import yaml
+from conftest import seed_documents
 
 SEED = Path(__file__).resolve().parents[1] / "components/context-gateway/seed"
 WINDOW = {"limit", "offset", "count", "options", "format", "local"}
@@ -29,10 +29,9 @@ def urls(node):
 
 def test_every_seed_batch_query_url_names_only_its_window():
     asked = {}
-    for path in sorted(SEED.rglob("*.yaml")):
-        for document in yaml.safe_load_all(path.read_text()):
-            for url in urls(document):
-                if "/entityOperations/query" in url:
-                    asked[f"{path.relative_to(SEED)}: {url}"] = set(parse_qs(urlsplit(url).query)) - WINDOW
+    for path, document in seed_documents():
+        for url in urls(document):
+            if "/entityOperations/query" in url:
+                asked[f"{path.relative_to(SEED)}: {url}"] = set(parse_qs(urlsplit(url).query)) - WINDOW
     assert asked, "the Helsinki lookups ask the space through a batch query"
     assert {where: extra for where, extra in asked.items() if extra} == {}

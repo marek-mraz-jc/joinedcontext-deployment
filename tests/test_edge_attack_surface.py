@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import load_yaml_all
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -390,7 +391,7 @@ def _component_documents(name: str) -> dict[str, tuple[str, dict]]:
     found: dict[str, tuple[str, dict]] = {}
     for path in sorted(glob.glob(str(PROJECT_ROOT / "components/*" / f"apisix-{name}.yaml"))):
         relative = str(Path(path).relative_to(PROJECT_ROOT))
-        for document in yaml.safe_load_all(Path(path).read_text()):
+        for document in load_yaml_all(Path(path).read_text()):
             for entry_id, body in (document or {}).items():
                 assert entry_id not in found, f"{entry_id} is defined twice: {found[entry_id][0]} and {relative}"
                 found[entry_id] = (relative, body)
