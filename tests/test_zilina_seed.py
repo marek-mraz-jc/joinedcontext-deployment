@@ -43,6 +43,10 @@ def manifests(kind: str):
     for path in sorted(ZILINA.glob("*.yaml")):
         if path.name == "index.yaml" or path.name.endswith((".linkml.yaml", "-bento.yaml")):
             continue
+        # The city's slice of the catalogue is the Portal's to write, as every body's is
+        # (tests/test_catalog_seed.py, T-5493): none of the city's data spaces.
+        if "-catalog" in path.name:
+            continue
         for doc in yaml.safe_load_all(path.read_text()):
             if isinstance(doc, dict) and doc.get("kind") == kind:
                 yield doc
