@@ -15,7 +15,11 @@ pipeline:
         # or city (Bratislava as a whole); area: the area column, none for a table of the city
         # alone; year: the period column (a year or a range of years), quarter: its quarter column,
         # or fixed: the year or range the table's title names; by: breakdown columns (age, sex,
-        # category), each one segment of the id and one part of the name; only: [column, prefix]
+        # category), each one segment of the id and one part of the name, or {code, name, optional}:
+        # the id segment from the code column, the name part from the name column (a budget item's
+        # code and title), an optional one left out of both where its cell is empty; abs: the figure
+        # without its sign (an age pyramid writes the men's side negative); a period column may hold
+        # a month (2018-06); areas kraj: the Bratislava region (NUTS 3 SK010); only: [column, prefix]
         # keeps the rows of one breakdown (all school founders, not the districts' own schools);
         # values: [column, id segment, Slovak label, minimum, maximum], null where no bound holds.
         let tables = [
@@ -171,6 +175,8 @@ pipeline:
           "bratislava 2": ["102", "Bratislava II"], "bratislava 3": ["103", "Bratislava III"], "bratislava 4": ["104", "Bratislava IV"],
           "bratislava 5": ["105", "Bratislava V"]
         }
+        # A table of the region beside Slovakia keeps the region's rows.
+        let kraje = { "bratislavsky kraj": ["sk010", "Bratislavský kraj"] }
         # A table without an area column ("*") is the city's, and so is its row named after the city.
         let city = ["582000", "Bratislava"]
         map fold {
@@ -186,6 +192,22 @@ pipeline:
         map number {
           root = if this == null { null } else { this.string().re_replace_all("[\\s %]", "").replace_all(",", ".").number().catch(null) }
         }
+        map magnitude {
+          let n = this.apply("number")
+          root = if $n == null { null } else { $n.abs() }
+        }
+        map month {
+          let y = this.slice(0, 4).number().int64()
+          let m = this.slice(5, 7).number().int64()
+          let february = if $y % 4 == 0 && ($y % 100 != 0 || $y % 400 == 0) { "29" } else { "28" }
+          root = {
+            "from": this + "-01",
+            "to": this + "-" + ["31", $february, "31", "30", "31", "30", "31", "31", "30", "31", "30", "31"].index($m - 1),
+            "slug": this,
+            "label": ["január", "február", "marec", "apríl", "máj", "jún", "júl", "august", "september", "október", "november", "december"].index($m - 1) + " " + $y.string(),
+            "frequency": "monthly"
+          }
+        }
         map years {
           let v = this.string().trim()
           let y = $v.re_find_all("(19|20)[0-9]{2}")
@@ -193,7 +215,7 @@ pipeline:
             { "from": $v + "-01-01", "to": $v + "-12-31", "slug": $v, "label": $v, "frequency": "yearly" }
           } else if $v.re_match("^(19|20)[0-9]{2}\\s*[–-]\\s*(19|20)[0-9]{2}$") {
             { "from": $y.index(0) + "-01-01", "to": $y.index(1) + "-12-31", "slug": $y.join("-"), "label": $y.join("–") }
-          } else { null }
+          } else if $v.re_match("^(19|20)[0-9]{2}-(0[1-9]|1[0-2])$") { $v.apply("month") } else { null }
         }
         map quarter {
           let y = this.index(0)
@@ -218,9 +240,15 @@ pipeline:
         map areaname {
           root = if this.table.area.or("") == "" { "*" } else { this.row.get(this.table.area).or("").apply("fold") }
         }
+        # Each breakdown cell as its id segment and its label; a label read as Latin-1 from cp1250
+        # text ("Raèianska") gets its č and ň back.
         map breakdown {
           let r = this.row
-          root = this.table.by.or([]).map_each(c -> $r.get(c).or("").string().trim())
+          root = this.table.by.or([]).map_each(c -> if c.type() == "string" { { "code": c } } else { c }).map_each(c -> {
+            "segment": $r.get(c.code).or("").apply("segment"),
+            "label": $r.get(c.name.or(c.code)).or("").string().trim().replace_all_many(["è", "č", "ò", "ň"]),
+            "optional": c.optional.or(false)
+          })
         }
         let cells = this.map_each(t -> t.rows.or([]).filter(r -> if t.only.or(null) == null { true } else {
           r.get(t.only.index(0)).or("").string().has_prefix(t.only.index(1))
@@ -229,25 +257,26 @@ pipeline:
           "value": v,
           "area": if t.areas == "district" { $districts.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if t.areas == "okres" { $okresy.get({ "table": t, "row": r }.apply("areaname")).or(null) }
+            else if t.areas == "kraj" { $kraje.get({ "table": t, "row": r }.apply("areaname")).or(null) }
             else if ["*", $city.index(1).lowercase()].contains({ "table": t, "row": r }.apply("areaname")) { $city } else { null },
           "by": { "table": t, "row": r }.apply("breakdown"),
           "period": { "table": t, "row": r }.apply("period"),
-          "number": r.get(v.index(0)).apply("number")
+          "number": r.get(v.index(0)).apply(if t.abs.or(false) { "magnitude" } else { "number" })
         }))).flatten().flatten()
         map reason {
           let v = this.value
           root = if this.area == null {
-              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava" }.get(this.table.areas)
+              { "district": "not a city district", "okres": "not a Bratislava okres", "city": "not Bratislava", "kraj": "not the Bratislava region" }.get(this.table.areas)
             }
             else if this.period == null { "no period" }
-            else if this.by.map_each(b -> b.apply("segment")).contains("") { "no breakdown" }
+            else if this.by.filter(b -> b.segment == "" && !b.optional).length() > 0 { "no breakdown" }
             else if this.number == null { "no number" }
             else if ($v.index(3) != null && this.number < $v.index(3)) || ($v.index(4) != null && this.number > $v.index(4)) { "out of range" }
             else { null }
         }
         let marked = $cells.map_each(c -> c.assign({
           "_drop": c.apply("reason"),
-          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.apply("segment"))).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
+          "_id": ([c.table.name, c.value.index(1)].concat(c.by.map_each(b -> b.segment).filter(s -> s != "")).concat([c.area.index(0).or(""), c.period.slug.or("")])).join(".")
         }))
         let usable = $marked.filter(c -> c._drop == null)
         let once = $usable.unique(c -> c._id)
@@ -267,7 +296,7 @@ pipeline:
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", env("JC_ORG_DOMAIN"), env("JC_SPACE"), this._id),
           "type": "KeyPerformanceIndicator",
-          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by).concat([this.area.index(1), this.period.label])).join(", ") },
+          "name": { "type": "Property", "value": ([this.value.index(2)].concat(this.by.map_each(b -> b.label).filter(l -> l != "")).concat([this.area.index(1), this.period.label])).join(", ") },
           "description": { "type": "Property", "value": $t.title },
           "process": { "type": "Property", "value": this.value.index(2) },
           "category": { "type": "Property", "value": ["quantitative"] },

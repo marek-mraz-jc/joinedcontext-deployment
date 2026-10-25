@@ -2,9 +2,9 @@
 checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
-on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 327 statistics tables of the three statistics pipelines (the first 18 rows of each table the
-2026-10-24 batch added). The calls to the hub are the
+from 2026-10-23 to 2026-10-25 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
+and the 344 statistics tables of the three statistics pipelines (the first 18 rows of each table the
+2026-10-24 batch added, the 17 tables of T-5676 likewise, two budgets whole). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
@@ -315,6 +315,7 @@ CITY_DISTRICTS = {
     "petrzalka": "529460", "rusovce": "529494",
 }
 OKRESY = {f"bratislava {n}": str(100 + i) for i, ns in enumerate([("i", "1"), ("ii", "2"), ("iii", "3"), ("iv", "4"), ("v", "5")], 1) for n in ns}
+KRAJ = {"bratislavsky kraj": "sk010"}
 FOLDED = str.maketrans("áäàâčçďéěëíĺľňóôöőŕřšťúüűůýžèò", "aaaaccdeeeillnoooorrstuuuuyzcn", ".")
 YEAR = re.compile(r"(19|20)\d\d")
 
@@ -331,7 +332,7 @@ def tables(pipeline: str) -> list[dict]:
 
 def years(value) -> str | None:
     v = str(value).strip()
-    if re.fullmatch(r"(19|20)\d\d", v):
+    if re.fullmatch(r"(19|20)\d\d", v) or re.fullmatch(r"(19|20)\d\d-(0[1-9]|1[0-2])", v):
         return v
     if re.fullmatch(r"(19|20)\d\d\s*[–-]\s*(19|20)\d\d", v):
         return "-".join(m.group() for m in YEAR.finditer(v))
@@ -355,7 +356,7 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
             if "only" in t and not str(r.get(t["only"][0]) or "").startswith(t["only"][1]):
                 continue
             name = fold(r.get(t["area"]) or "") if t.get("area") else "bratislava"
-            code = {"district": CITY_DISTRICTS.get(name), "okres": OKRESY.get(name)}.get(
+            code = {"district": CITY_DISTRICTS.get(name), "okres": OKRESY.get(name), "kraj": KRAJ.get(name)}.get(
                 t["areas"], "582000" if name == "bratislava" else None
             )
             if "fixed" in t:
@@ -365,14 +366,16 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
                 slug = f"{y}-q{q}" if re.fullmatch(r"(19|20)\d\d", y) and q in {"1", "2", "3", "4"} else None
             else:
                 slug = years(r.get(t["year"]) or "")
-            by = [re.sub(r"[^a-z0-9]+", "-", fold(r.get(c) or "")).strip("-") for c in t.get("by", [])]
+            by = [b if isinstance(b, dict) else {"code": b} for b in t.get("by", [])]
+            cells = [(re.sub(r"[^a-z0-9]+", "-", fold(r.get(b["code"]) or "")).strip("-"), b.get("optional", False)) for b in by]
             for column, segment, _, low, high in t["values"]:
                 n = number(r.get(column))
+                n = abs(n) if n is not None and t.get("abs") else n
                 reason = (
-                    {"district": "not a city district", "okres": "not a Bratislava okres"}.get(t["areas"], "not Bratislava")
+                    {"district": "not a city district", "okres": "not a Bratislava okres", "kraj": "not the Bratislava region"}.get(t["areas"], "not Bratislava")
                     if code is None
                     else "no period" if slug is None
-                    else "no breakdown" if "" in by
+                    else "no breakdown" if ("", False) in cells
                     else "no number" if n is None
                     else "out of range" if (low is not None and n < low) or (high is not None and n > high)
                     else None
@@ -381,7 +384,7 @@ def reading(pipeline: str, answers: dict) -> tuple[dict, dict]:
                     dropped[reason] = dropped.get(reason, 0) + 1
                     continue
                 seen += 1
-                figures.setdefault(kpi(".".join([t["name"], segment, *by, code, slug])), n)
+                figures.setdefault(kpi(".".join([t["name"], segment, *(c for c, _ in cells if c), code, slug])), n)
     if seen > len(figures):
         dropped["duplicate"] = seen - len(figures)
     return figures, dropped
@@ -420,9 +423,10 @@ def test_the_statistics_pipelines_run_one_mapping_text_split_by_area():
 
     assert len({body(p) for p in STATISTICS}) == 1
     keys = [t["name"] for p in STATISTICS for t in tables(p)]
-    assert len(keys) == len(set(keys)) == 327
+    assert len(keys) == len(set(keys)) == 344
     for pipeline, areas in STATISTICS.items():
-        assert {t["areas"] for t in tables(pipeline)} == {areas}
+        # The city's pipeline also holds the two tables of the region beside Slovakia (T-5676).
+        assert {t["areas"] for t in tables(pipeline)} == ({areas, "kraj"} if areas == "city" else {areas})
         manifest = yaml.safe_load((SEED / f"bratislava-pipeline-{pipeline}.yaml").read_text())
         assert manifest["spec"]["source"]["dataSourceRef"]["name"] == "bratislava-hub"
         assert manifest["spec"]["output"] == {"type": "KeyPerformanceIndicator", "mode": "upsert"}
@@ -435,9 +439,43 @@ def test_a_city_table_keeps_bratislava_beside_slovakia_and_a_region_table_its_ow
     answers = fixture("statistics.json")
     city, log = run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)
     assert logged(log)["not Bratislava"] > 0
-    assert {i["area"]["value"] for i in city} == {"Bratislava"}
+    assert {i["area"]["value"] for i in city} == {"Bratislava", "Bratislavský kraj"}
     assert all(":582000." not in i["id"] or i["id"].count(".582000.") == 1 for i in city)
     okresy, log = run("bratislava-pipeline-statistics-okresy-bento.yaml", fixture("services.json"), answers)
     assert {i["area"]["value"] for i in okresy} == {f"Bratislava {n}" for n in ("I", "II", "III", "IV", "V")}
     drivers = kpi("pocet-evidovanych-vodicov.pocet-evidovanych-vodicov.101.2013")
     assert {i["id"]: i for i in okresy}[drivers]["kpiValue"]["value"] == 22038
+
+
+@requires_docker
+def test_a_named_breakdown_a_month_the_region_and_an_age_pyramid_land_as_the_source_writes_them():
+    """T-5676: a budget line's id from its codes and its name from their titles, an optional code
+    left out where empty; a street's cp1250 name repaired; a Wi-Fi month with its own last day;
+    the region's row beside Slovakia's; the men's side of an age pyramid without its sign."""
+    answers = fixture("statistics.json")
+    city = {i["id"]: i for i in run("bratislava-pipeline-statistics-mesto-bento.yaml", fixture("services.json"), answers)[0]}
+    budget = city[kpi("rozpocet-prijmy-2014.skutocnost.81.111.312001.582000.2014")]
+    assert budget["kpiValue"]["value"] == 8106948.78
+    assert budget["name"]["value"] == (
+        "Skutočné príjmy k 31. 12. 2014 (EUR), Bežné príjmy, Príjmy zo štátneho rozpočtu, 312001, Bratislava, 2014"
+    )
+    # 2016 tells two lines of one code apart by the source type (R, M) and leaves it empty elsewhere.
+    assert kpi("rozpocet-prijmy-2016.schvaleny.81.41.222003.r.582000.2016") in city
+    assert kpi("rozpocet-prijmy-2016.schvaleny.81.41.222003.m.582000.2016") in city
+    assert kpi("rozpocet-prijmy-2016.schvaleny.81.11e1.453.582000.2016") in city
+    assert len([i for i in city if i.startswith(kpi("rozpocet-prijmy-2016.schvaleny."))]) == 95
+    street = next(v for k, v in city.items() if k.startswith(kpi("priestupky-ulice.pocet.racianska-ulica.")))
+    assert street["name"]["value"].startswith("Počet priestupkov na ulici, Račianska ulica,")
+    wifi = city[kpi("wifi-pouzivatelia.pocet.pamv-oblast-pamatnika-vitazstva-a-pred-snd.582000.2019-02")]
+    assert wifi["calculationPeriod"]["value"] == {"from": "2019-02-01", "to": "2019-02-28"}
+    assert wifi["calculationFrequency"]["value"] == "monthly"
+    region = city[kpi("pzi-rast.rast.sk010.2016")]
+    assert region["kpiValue"]["value"] == 7.1 and region["area"]["value"] == "Bratislavský kraj"
+    assert not [i for i in city if i.startswith(kpi("pzi-")) and ".sk010." not in i]
+    social = city[kpi("osv-cerpanie-2019-09-06.cerpanie.bezne-vydavky-spolu.582000.2019")]
+    assert social["kpiValue"]["value"] == 646340.35
+    assert kpi("osv-cerpanie-2019-09-06.cerpanie.6111.noclaharen-mea-culpa.582000.2019") in city
+    districts = {i["id"]: i for i in run("bratislava-pipeline-statistics-bento.yaml", fixture("services.json"), answers)[0]}
+    men = districts[kpi("vekove-zlozenie-pocet.pocet.muzi.0.529419.2021")]
+    assert men["kpiValue"]["value"] == 46 and men["name"]["value"] == "Počet obyvateľov, muži, 0, Lamač, 2021"
+    assert districts[kpi("vekove-zlozenie-podiel.podiel.muzi.0.529419.2021")]["kpiValue"]["value"] == 0.0128
