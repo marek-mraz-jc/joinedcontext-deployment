@@ -16,6 +16,7 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CHART = PROJECT_ROOT / "components/portal/charts/namespaces"
 PORTAL = "system:serviceaccount:dev:portal"
+CRDS = Path(__file__).resolve().parent / "fixtures/crds/cert-manager-certificate.yaml"
 
 requires_kyverno = pytest.mark.skipif(shutil.which("kyverno") is None, reason="kyverno CLI not installed")
 requires_helm = pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
@@ -65,7 +66,8 @@ def judged(policy: Path, resource: dict, tmp_path: Path, username: str = PORTAL,
         """))
     result = subprocess.run(
         ["kyverno", "apply", str(policy), "--resource", str(tmp_path / "resource.yaml"),
-         "--userinfo", str(tmp_path / "userinfo.yaml"), "--values-file", str(tmp_path / "values.yaml")],
+         "--userinfo", str(tmp_path / "userinfo.yaml"), "--values-file", str(tmp_path / "values.yaml"),
+         "--crd-paths", str(CRDS)],
         capture_output=True, text=True, check=False,
     )
     summary = next(line for line in result.stdout.splitlines() if line.startswith("pass:"))
@@ -250,7 +252,7 @@ def secret(name: str, ns: str = "dev", kind: str = "Opaque") -> dict:
 @pytest.mark.parametrize(
     "name",
     ["pipeline-secrets", "artifact-store-reader-hel", "build-bikes-42", "apps-host-1-store", "apisix-standalone-config",
-     "personal-data-keys"],
+     "personal-data-keys", "agent-run-0f3a9c2e"],
 )
 @pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
 def test_the_portal_may_write_the_secrets_it_hands_over(secrets_policy, tmp_path, name, operation):
@@ -288,3 +290,70 @@ def test_in_a_projects_apps_namespace_secrets_are_not_the_policys_business(secre
 def test_someone_elses_secret_is_not_the_policys_business(secrets_policy, tmp_path):
     resource = secret("keycloak-admin")
     assert judged(secrets_policy, resource, tmp_path, username="system:serviceaccount:dev:someone") == "skip"
+
+
+@pytest.fixture(scope="module")
+def edge_policy(tmp_path_factory):
+    return rendered(tmp_path_factory, "edge-policy.yaml")
+
+
+def app_ingress(name: str = "app-bikes", component: str = "app-host", service: str = "apisix-gateway",
+                secret_name: str | None = None, labelled: bool = True) -> dict:
+    """An Ingress as joinedcontext-portal reconciler/app_hosts.rs named_ingress() writes it."""
+    labels = {"app.kubernetes.io/managed-by": "joinedcontext-portal", "app.kubernetes.io/component": component,
+              "joinedcontext.com/app": "bikes"} if labelled else {}
+    host = "bikes.apps.city.example"
+    return {"apiVersion": "networking.k8s.io/v1", "kind": "Ingress",
+            "metadata": {"name": name, "namespace": "dev-apisix", "labels": labels},
+            "spec": {"ingressClassName": "traefik",
+                     "tls": [{"hosts": [host], "secretName": secret_name or f"{name}-tls"}],
+                     "rules": [{"host": host, "http": {"paths": [{
+                         "path": "/", "pathType": "ImplementationSpecific",
+                         "backend": {"service": {"name": service, "port": {"number": 80}}}}]}}]}}
+
+
+def app_certificate(name: str = "app-bikes", secret_name: str | None = None) -> dict:
+    return {"apiVersion": "cert-manager.io/v1", "kind": "Certificate",
+            "metadata": {"name": name, "namespace": "dev-apisix",
+                         "labels": {"app.kubernetes.io/managed-by": "joinedcontext-portal",
+                                    "app.kubernetes.io/component": "app-host", "joinedcontext.com/app": "bikes"}},
+            "spec": {"secretName": secret_name or f"{name}-tls", "dnsNames": ["bikes.apps.city.example"],
+                     "issuerRef": {"name": "letsencrypt-prod", "kind": "ClusterIssuer"}}}
+
+
+@pytest.mark.parametrize("resource", [app_ingress(), app_ingress("app-bikes-at-x7", component="app-hostname"),
+                                      app_certificate()], ids=["host-ingress", "hostname-ingress", "certificate"])
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+def test_the_portal_may_write_an_apps_edge_objects(edge_policy, tmp_path, resource, operation):
+    assert judged(edge_policy, resource, tmp_path, operation=operation) == "pass"
+
+
+@pytest.mark.parametrize(
+    "resource",
+    [app_ingress(service="keycloak"), app_ingress(labelled=False), app_ingress(name="apisix"),
+     app_ingress(secret_name="apisix-edge-tls"), app_certificate(secret_name="apisix-edge-tls"),
+     app_ingress(component="portal")],
+    ids=["backend-keycloak", "unlabelled", "edge-name", "edge-tls-secret", "certificate-into-edge-secret",
+         "other-component"],
+)
+def test_an_edge_object_beyond_an_apps_host_is_refused_to_the_portal(edge_policy, tmp_path, resource):
+    """T-5702 (F-DEP1-001): RBAC lets the Portal create any Ingress and Certificate in the APISIX
+    namespace; an Ingress straight to another Service would skip the edge, and a Certificate
+    naming a platform Secret would overwrite it."""
+    assert judged(edge_policy, resource, tmp_path) == "fail"
+
+
+def test_in_a_projects_apps_namespace_ingresses_are_not_the_policys_business(edge_policy, tmp_path):
+    resource = app_ingress(service="app-web")
+    resource["metadata"]["namespace"] = "dev-helsinki-apps"
+    assert judged(edge_policy, resource, tmp_path) == "skip"
+
+
+def test_someone_elses_ingress_is_not_the_policys_business(edge_policy, tmp_path):
+    resource = app_ingress(service="keycloak", labelled=False)
+    assert judged(edge_policy, resource, tmp_path, username="system:serviceaccount:dev:someone") == "skip"
+
+
+def test_the_portal_deletes_only_the_edge_objects_it_labelled(edge_policy, tmp_path):
+    assert judged(edge_policy, app_ingress(), tmp_path, operation="DELETE") == "pass"
+    assert judged(edge_policy, app_ingress(name="apisix", labelled=False), tmp_path, operation="DELETE") == "fail"
