@@ -23,22 +23,32 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(scope="module")
-def policy(tmp_path_factory):
-    out = tmp_path_factory.mktemp("policy") / "policy.yaml"
+def template(tmp_path_factory, name: str) -> Path:
+    out = tmp_path_factory.mktemp("policy") / name
     out.write_text(
         subprocess.run(
             ["helm", "template", "sandbox-reaper", str(CHART), "--namespace", "ops",
-             "--show-only", "templates/policy.yaml"],
+             "--show-only", f"templates/{name}"],
             capture_output=True, text=True, check=True,
         ).stdout
     )
     return out
 
 
-def judged(policy: Path, labels: dict, tmp_path: Path, username: str = REAPER) -> str:
-    """"pass", "fail" or "skip": what admission does with a DELETE of a namespace with these labels."""
-    resource = {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": "target", "labels": labels}}
+@pytest.fixture(scope="module")
+def policy(tmp_path_factory):
+    return template(tmp_path_factory, "policy.yaml")
+
+
+@pytest.fixture(scope="module")
+def preview_names(tmp_path_factory):
+    return template(tmp_path_factory, "preview-names.yaml")
+
+
+def judged(policy: Path, labels: dict, tmp_path: Path, username: str = REAPER,
+           name: str = "target", operation: str = "DELETE") -> str:
+    """"pass", "fail" or "skip": what admission does with `operation` on a namespace with these labels."""
+    resource = {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": name, "labels": labels}}
     (tmp_path / "resource.yaml").write_text(yaml.safe_dump(resource))
     (tmp_path / "userinfo.yaml").write_text(textwrap.dedent(f"""\
         apiVersion: cli.kyverno.io/v1alpha1
@@ -53,8 +63,8 @@ def judged(policy: Path, labels: dict, tmp_path: Path, username: str = REAPER) -
         kind: Values
         metadata: {name: values}
         globalValues:
-          request.operation: DELETE
-        """))
+          request.operation: OPERATION
+        """).replace("OPERATION", operation))
     result = subprocess.run(
         ["kyverno", "apply", str(policy), "--resource", str(tmp_path / "resource.yaml"),
          "--userinfo", str(tmp_path / "userinfo.yaml"), "--values-file", str(tmp_path / "values.yaml")],
@@ -84,3 +94,22 @@ def test_the_reaper_may_not_delete_any_other_namespace(policy, tmp_path, labels)
 
 def test_someone_else_is_not_the_policys_business(policy, tmp_path):
     assert judged(policy, {}, tmp_path, username="system:serviceaccount:ops:someone") == "skip"
+
+
+@pytest.mark.parametrize("name", ["pv-fix-login", "pv-a", "pv-" + "a" * 40])
+def test_a_preview_namespace_may_carry_the_preview_label(preview_names, tmp_path, name):
+    assert judged(preview_names, {LABEL: "preview"}, tmp_path, username="admin", name=name, operation="CREATE") == "pass"
+
+
+@pytest.mark.parametrize("name", ["dev-city-apps", "dev", "pv-", "pv-Bad", "pv-" + "a" * 41, "xpv-a"])
+def test_no_other_namespace_may_carry_the_preview_label(preview_names, tmp_path, name):
+    """T-5548: the label opens Keycloak and Postgres on dev, so the Portal's apps namespaces and
+    every other name are refused it, on create and on a later relabel."""
+    for operation in ("CREATE", "UPDATE"):
+        assert judged(preview_names, {LABEL: "preview"}, tmp_path, username="system:serviceaccount:dev:portal",
+                      name=name, operation=operation) == "fail"
+
+
+def test_other_lifecycles_keep_any_name(preview_names, tmp_path):
+    assert judged(preview_names, {LABEL: "unmanaged"}, tmp_path, username="admin", name="sandbox-x",
+                  operation="CREATE") == "pass"

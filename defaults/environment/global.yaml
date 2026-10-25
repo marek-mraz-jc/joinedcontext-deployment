@@ -248,6 +248,14 @@ global:
     enabled: true
     failureAction: Enforce
 
+  # Code-branch previews in namespaces pv-{slug} (ADR-N-062, Deployment/17, T-5548). On, the
+  # postgres cluster refuses every pv_* role on any database but its own (pg_hba) and Keycloak
+  # and Postgres admit the preview namespaces' pods; `just dev-preview` refuses to start a
+  # preview where it is off. Only dev may turn it on, and the production guard refuses it; dev
+  # keeps it off while its Postgres has no room for the previews' connections (T-5548).
+  branchPreviews:
+    enabled: false
+
 # Which set of components to deploy (T-4856): `full` deploys the `components` list below (or
 # the environment's own); `minimal` and `broker-only` deploy their list in `componentProfiles`
 # instead, so a small node gets a small platform without an edited list. Measured footprints:

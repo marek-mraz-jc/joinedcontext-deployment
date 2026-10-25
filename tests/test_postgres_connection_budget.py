@@ -152,6 +152,9 @@ CLIENTS = {
     "assistant": compiled("assistant"),
     "ckan": ckan,
     "jc_apps_admin": compiled("jc_apps_admin"),
+    # The branch previews' group never logs in; each member pv_{slug} has CONNECTION LIMIT 5, the
+    # preview Portal's pool, and scripts/preview.sh starts at most PREVIEW_MAX = 2 of them (T-5548).
+    "pv_previews": lambda docs: 2 * COMPILED["portal"][1],
 }
 
 

@@ -73,6 +73,9 @@ components:
   - viz
   # The standalone assistant (T-4694): ai.{domain}/{publicId}, a static copy of the widget.
   - ai
+  # Deletes sandbox and branch-preview namespaces past their TTL (OPS-44, PF-19): a preview lives
+  # 48 hours (T-5548, Deployment/17 section 5).
+  - sandbox-reaper
   # Synthetic probes of every public surface through the public hosts, every minute (T-5103).
   - probes
   # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
@@ -150,6 +153,11 @@ global:
   securityTxt:
     contact: mailto:contact@marek-mraz.com
     expires: "2027-09-24T00:00:00Z"
+
+  # Code-branch previews (global.branchPreviews, ADR-N-062, T-5548) stay off here: dev's Postgres
+  # has no room for their connections. Two previews need max_connections 67, whose worst case is
+  # 1905MiB, over 80 % of the pod's 2Gi (tests/test_postgres_memory_budget.py), and the node has no
+  # memory to raise that limit. `just dev-preview` refuses while it is off.
 
   serviceMesh:
     # Traefik is installed by the kit outside the mesh and has no Linkerd identity,
