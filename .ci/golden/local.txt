@@ -344,6 +344,7 @@ v1/Service local/artifact-store
 v1/Service local/cnpg-webhook-service
 v1/Service local/context-broker
 v1/Service local/context-gateway
+v1/Service local/context-gateway-pods
 v1/Service local/gitea-http
 v1/Service local/gitea-ssh
 v1/Service local/keycloak-app-keycloakx-headless
