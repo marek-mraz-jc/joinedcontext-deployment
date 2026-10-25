@@ -2,10 +2,10 @@
 checked and counted (T-5274).
 
 Bento runs each committed mapping over answers recorded from data.bratislava.sk's Feature Services
-on 2026-10-23 and 2026-10-24 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
-and the 363 statistics tables of the three statistics pipelines (the first 18 rows of each table or
-of each page of the 19 T-5671 read in pages or as the hub's sums; the first 18 rows of each table the
-2026-10-24 batch and the 2026-10-25 batch T-5435 added). The calls to the hub are the
+from 2026-10-23 to 2026-10-25 (`fixtures/bratislava/hub/`): the 17 districts, four tables of places
+and the 431 statistics tables of the eight statistics pipelines (the first 18 rows of each table, or
+of each page of the tables T-5671 reads in pages or as the hub's sums; some tables of the 2026-10-25
+batches T-5435 and T-5671 to T-5676 whole). The calls to the hub are the
 cut: each table's answer comes from the recording. The tests add the rows the owner's validation
 asks for (2026-10-22T18:10Z): a point outside the city, a value out of range and a duplicate, each
 dropped with a counted reason. Without a container runtime the Bento cases skip.
