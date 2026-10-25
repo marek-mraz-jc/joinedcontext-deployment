@@ -46,12 +46,13 @@ role_of() { echo "pv_${1//-/_}"; }
 # ---- guards ---------------------------------------------------------------------------------
 
 check() {
-	local slug="$1" roles nodes over others certs
+	local slug="$1" roles cronjobs nodes over others certs
 	valid_slug "$slug"
 	roles=$(kubectl -n "$DEV_NS" get clusters.postgresql.cnpg.io postgres-cluster -o 'jsonpath={.spec.managed.roles[*].name}')
 	[[ " $roles " == *" pv_previews "* ]] ||
 		die "branch previews are off on this cluster: postgres-cluster has no role pv_previews. Apply dev with global.branchPreviews.enabled (just dev-apply) first."
-	kubectl get cronjobs -A -o name | grep -q '/sandbox-reaper-reaper$' ||
+	cronjobs=$(kubectl get cronjobs -A -o name)
+	[[ $'\n'"$cronjobs"$'\n' == *$'/sandbox-reaper-reaper\n'* ]] ||
 		die "the sandbox reaper is not deployed, so nothing would delete the preview after its TTL. Apply dev (sandbox-reaper is in its components) first."
 	nodes=$(kubectl top nodes --no-headers)
 	[ -n "$nodes" ] || die "kubectl top nodes answered nothing: without the node's memory a preview does not start"
