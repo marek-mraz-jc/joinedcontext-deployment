@@ -20,6 +20,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+pytestmark = pytest.mark.xdist_group("docker-pipeline-runner")
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
 
 
