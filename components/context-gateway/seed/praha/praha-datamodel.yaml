@@ -36,6 +36,8 @@ spec:
     - FareCollectionSystem
     - BikeLane
     - GreenAsset
+    - KeyPerformanceIndicator
+    - CityWork
   artifacts:
     jsonSchema: ./praha.v1.schema.json
     context: ./praha.v1.context.jsonld

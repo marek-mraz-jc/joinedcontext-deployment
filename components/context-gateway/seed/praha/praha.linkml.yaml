@@ -1600,6 +1600,207 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/dataModel.ParksAndGardens
 
+  dataSet:
+    slot_uri: jc:dataSet
+    description: >-
+      The series the figure belongs to, the same for every year's file of one publication, such as
+      `mp-cinnost` for the monthly activity reports of the municipal police.
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Séria
+          cs: Řada
+          en: Series
+          de: Reihe
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  indicator:
+    slot_uri: jc:indicator
+    description: >-
+      What the figure counts, as the publisher's own headings joined by ` / `, such as
+      `Odtahy vozidel / Celkem`, or the budget line's function and item codes.
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ukazovateľ
+          cs: Ukazatel
+          en: Indicator
+          de: Indikator
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  refArea:
+    slot_uri: jc:refArea
+    description: >-
+      The territory the figure describes: `CZ010` for the whole city, or a city district's
+      identification number (IČO) and name, such as `00063410 HMP-MČ PRAHA 1`.
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Územie
+          cs: Území
+          en: Area
+          de: Gebiet
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  refPeriod:
+    slot_uri: jc:refPeriod
+    description: The period the figure covers, a month (`2025-09`) or a budget year to date (`2026`).
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Obdobie
+          cs: Období
+          en: Period
+          de: Zeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  dimensionKey:
+    slot_uri: jc:dimensionKey
+    description: >-
+      The further breakdown beyond area and period: the police unit (`OŘ1`, `Hlídkový útvar`), the
+      budget area of a budget line (`09 Školství`) or where a district's transfer comes from
+      (`Státní rozpočet`); absent when the series has none.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Ďalšie členenie
+          cs: Další členění
+          en: Further breakdown
+          de: Weitere Gliederung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  kpiValue:
+    slot_uri: sdm:kpiValue
+    description: >-
+      The figure as published: a count (unitCode C62), a share in percent (P1), or an amount of money
+      drawn so far, in the unit the budget publishes (thousands of CZK), named by `unitText`.
+    range: float
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Hodnota
+          cs: Hodnota
+          en: Value
+          de: Wert
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+  unitText:
+    slot_uri: jc:unitText
+    description: The unit in words, such as `Kč` or `tis. Kč`, kept because a UN/CEFACT code has no currency.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Jednotka
+          cs: Jednotka
+          en: Unit
+          de: Einheit
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  startDate:
+    slot_uri: schema:startDate
+    description: When the work on the street starts, as the opravujeme.to record gives it in Europe/Prague time.
+    range: datetime
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum začiatku
+          cs: Datum začátku
+          en: Start date
+          de: Beginndatum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  endDate:
+    slot_uri: schema:endDate
+    description: When the work on the street is planned to end, in Europe/Prague time.
+    range: datetime
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dátum konca
+          cs: Datum konce
+          en: End date
+          de: Enddatum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  workState:
+    slot_uri: sdm:workState
+    description: Where the work stands, in the Smart Data Model's terms (planned, open, completed).
+    range: WorkState
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Stav stavby
+          cs: Stav stavby
+          en: Work state
+          de: Baustatus
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  workCategory:
+    slot_uri: jc:workCategory
+    description: What occupies the street, as opravujeme.to classes it (construction, cultural, sport, others).
+    range: WorkCategory
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh stavby
+          cs: Druh stavby
+          en: Work category
+          de: Bauart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  trafficImpact:
+    slot_uri: jc:trafficImpact
+    description: How hard the work restricts traffic, opravujeme.to's colour as a word (minor green, moderate yellow, severe red).
+    range: TrafficImpact
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dopad na dopravu
+          cs: Dopad na dopravu
+          en: Traffic impact
+          de: Verkehrsbeeinträchtigung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  contractingAuthority:
+    slot_uri: sdm:contractingAuthority
+    description: >-
+      The work's investor, a public body, utility or company; left out when it does not read as an
+      organisation, because a private investor is a person.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Investor
+          cs: Investor
+          en: Contracting authority
+          de: Auftraggeber
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
 classes:
   BikeHireDockingStation:
     class_uri: sdm:BikeHireDockingStation
@@ -2157,6 +2358,70 @@ classes:
           en: Parking machine
           de: Parkscheinautomat
     slots: [name, equipmentId, address, dataProvider, source]
+  KeyPerformanceIndicator:
+    class_uri: sdm:KeyPerformanceIndicator
+    description: >-
+      One figure of one city table for one period: a count of the municipal police's monthly
+      activity report, city-wide or per police unit, or what the city has drawn of a budget line or
+      of a transfer to a city district so far this year. Each year's file adds periods to the same
+      series (`dataSet`).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.KeyPerformanceIndicator
+      label:
+        tag: label
+        value:
+          sk: Ukazovateľ
+          cs: Ukazatel
+          en: Key performance indicator
+          de: Kennzahl
+    slots:
+      - name
+      - dataSet
+      - indicator
+      - refArea
+      - refPeriod
+      - dimensionKey
+      - kpiValue
+      - unitText
+      - approvedAmount
+      - adjustedAmount
+      - dataProvider
+      - source
+    slot_usage:
+      approvedAmount: { required: false }
+      adjustedAmount: { required: false }
+
+  CityWork:
+    class_uri: sdm:CityWork
+    description: >-
+      One work or event that occupies a Prague street, as the city's opravujeme.to service lists
+      it for drivers: what and where, from when until when, its state, how hard it restricts
+      traffic and who invests in it. The responsible people, their phones and e-mails and
+      the contractor are left out, and so are the free-text restrictions, which name contact people.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Práce na ulici
+          cs: Práce na ulici
+          en: City work
+          de: Baustelle
+    slots:
+      - name
+      - address
+      - startDate
+      - endDate
+      - workState
+      - workCategory
+      - trafficImpact
+      - contractingAuthority
+      - dataProvider
+      - source
+    slot_usage:
+      location: { required: true }
   PostalAddress:
     class_uri: schema:PostalAddress
     description: >-
@@ -2306,3 +2571,23 @@ enums:
     permissible_values:
       q100: { description: The 100-year flood (Q100). }
       flood2002: { description: The level of the August 2002 flood (Q2002). }
+  WorkState:
+    description: The CityWork `workState` values opravujeme.to's states map to, a subset of the Smart Data Model's enum.
+    permissible_values:
+      planned: { description: Announced and not started yet (FUTURE). }
+      open: { description: Under way now (ACTIVE). }
+      completed: { description: Finished (DONE). }
+  WorkCategory:
+    permissible_values:
+      construction: { description: Construction or repair work (CONSTRUCTION). }
+      cultural: { description: A cultural event on the street (CULTURAL). }
+      sport: { description: A sports event on the street (SPORT). }
+      other: { description: Anything else (OTHERS). }
+  TrafficImpact:
+    permissible_values:
+      minor:
+        description: Little restriction, opravujeme.to's green.
+      moderate:
+        description: Lanes or turns closed, opravujeme.to's yellow.
+      severe:
+        description: A street or ramp closed, opravujeme.to's red.

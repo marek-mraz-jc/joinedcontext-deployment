@@ -550,3 +550,34 @@ spec:
         description:
           cs: Technické prvky (plochy) ze sdílených dat o zeleni z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: Technical elements (areas) of the shared green register from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mppraha.cz/opendata/cinnost/mesicni_zpravy_za_rok_2025.json
+        title:
+          cs: Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025
+          en: Monthly activity reports of the Prague municipal police for 2025
+        description:
+          cs: Měsíční zprávy o činnosti Městské policie hl. m. Prahy za celé město, CC0.
+          en: The municipal police of Prague's monthly activity reports for the whole city, CC0.
+      - url: https://mppraha.cz/opendata/cinnost/mesicni_zpravy_za_rok_podle_utvaru_2025.json
+        title:
+          cs: Měsíční zprávy o činnosti Městské policie hl. m. Prahy za rok 2025 podle útvarů
+          en: Monthly activity reports of the Prague municipal police for 2025 by unit
+        description:
+          cs: Měsíční zprávy o činnosti Městské policie hl. m. Prahy podle útvarů, CC0.
+          en: The municipal police of Prague's monthly activity reports per unit, CC0.
+      - url: https://opendata-storage.praha.eu/UCT_cerpani_rozpoctu/cerpani_rozpoctu/Zdroje/2026/Cerpani_rozpoctu_MHMP_2026.json
+        title: { cs: Čerpání rozpočtu hl. m. Prahy 2026, en: City of Prague budget execution 2026 }
+        description:
+          cs: Čerpání rozpočtu hlavního města Prahy na rok 2026 po řádcích, bez omezení práv.
+          en: The execution of the City of Prague's 2026 budget, line by line, free of rights.
+      - url: https://opendata-storage.praha.eu/ROZ_rozpocet_finance/financni_vztahy/Zdroje/2026/Financni_vztahy_mezi_HMP_a_MC_HMP_2026.json
+        title:
+          cs: Finanční vztahy mezi HMP a MČ HMP 2026
+          en: Transfers between the City of Prague and its districts 2026
+        description:
+          cs: Převody mezi hlavním městem Prahou a městskými částmi v roce 2026, bez omezení práv.
+          en: The transfers between the City of Prague and its city districts in 2026, free of rights.
+      - url: https://opravujeme.to/api/action?limit=101
+        title: { cs: Data z aplikace opravujeme.to, en: Data of the opravujeme.to service }
+        description:
+          cs: Stavby, opravy a uzavírky na pražských ulicích ze služby opravujeme.to, bez omezení práv.
+          en: The works, repairs and closures on Prague's streets from the opravujeme.to service, free of rights.

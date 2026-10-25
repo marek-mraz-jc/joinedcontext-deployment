@@ -64,6 +64,8 @@ CHOSEN = {
     ("slovensko/ovzdusie-sk", "AirQualityObserved"): "P7D",
     # One entity per hub figure, district and period: a history would only repeat it (T-5274).
     ("bratislava/bratislava", "KeyPerformanceIndicator"): "off",
+    # Prague's city tables: one entity per figure and month or year, as Bratislava's (T-5428).
+    ("praha/praha-mesto", "KeyPerformanceIndicator"): "off",
     # A vehicle keeps five minutes of track (T-5046, owner 2026-10-21; an hour before, T-4624).
     ("helsinki/helsinki", "Vehicle"): "PT5M",
     # Žilina's buses keep an hour of track (T-4624) and its counters a month of hours (T-5232).

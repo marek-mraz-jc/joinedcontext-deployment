@@ -51,3 +51,5 @@ spec:
         - type: FareCollectionSystem
         - type: BikeLane
         - type: GreenAsset
+        - type: KeyPerformanceIndicator
+        - type: CityWork
