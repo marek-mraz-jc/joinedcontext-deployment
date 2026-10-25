@@ -19,6 +19,7 @@ spec:
     - entities:
         - type: AirQualityObserved
         - type: WeatherObserved
+        - type: WeatherForecast
         - type: PhreaticObserved
         - type: TrafficFlowObserved
         - type: OnStreetParking
@@ -28,5 +29,8 @@ spec:
         - type: PedestrianCrossing
         - type: StreetFurniture
         - type: TouristRental
+        - type: BikeLane
+        - type: RoadAccident
         - type: Event
         - type: PointOfInterest
+        - type: KeyPerformanceIndicator
