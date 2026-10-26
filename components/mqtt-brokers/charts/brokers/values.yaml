@@ -11,6 +11,9 @@ clusterIssuer: letsencrypt-prod
 # The ingress controller's TCP entrypoint for MQTT over TLS, and the identity it calls 1884 with.
 entryPoint: mqtts
 ingress:
+  # The ingress controller (global.ingress.ingressClass): the mqtts routes and their TLSOption
+  # are Traefik objects, so on any other controller the TLSOption is not rendered (T-4709).
+  className: traefik
   namespace: traefik
   serviceAccount: traefik
 

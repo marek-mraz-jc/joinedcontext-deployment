@@ -206,6 +206,15 @@ def test_no_broker_renders_only_the_template(tmp_path):
         ("TLSOption", "mqtt-bsi-tr-02102")]
 
 
+def test_no_traefik_renders_no_tls_option(tmp_path):
+    """T-4709: TLSOption is a Traefik kind; on another ingress controller (the k3d variants run
+    nginx) helm refused the whole release over it, so it renders only where the edge's does."""
+    result = helm({**BASE, "ingress": {"className": "nginx"}}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    kinds = {d["kind"] for d in yaml.safe_load_all(result.stdout) if d}
+    assert "TLSOption" not in kinds and "ConfigMap" in kinds
+
+
 def test_the_decider_port_admits_broker_identities_only(docs, tmp_path):
     """GW25, T-5566: the gateway decides a CONNECT on the caller's `l5d-client-id`, so 8082
     answers a meshed pod of the brokers' namespace and nobody else, whatever the NetworkPolicy
