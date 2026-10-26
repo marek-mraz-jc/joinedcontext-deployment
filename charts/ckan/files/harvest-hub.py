@@ -272,8 +272,9 @@ def harvest(ckan, source, items):
         raise SourceError(f"the hub listed {len(items)} items and none to keep; nothing is withdrawn")
     counts = {"created": 0, "updated": 0, "unchanged": 0, "withdrawn": 0}
     if ckan.show("organization_show", source["organization"]) is None:
-        ckan.call("organization_create", {"name": source["organization"], "title": source["publisherName"],
-                                          "description": source.get("publisherDescription", "")})
+        # The harvest user edits organizations and creates none (F-DEP1-002).
+        raise SourceError(f"organization {source['organization']} does not exist; the catalogue's "
+                          "api-token Job creates it on the next apply")
     existing = harvested(ckan, source)
     packages = []
     for item, title in kept:

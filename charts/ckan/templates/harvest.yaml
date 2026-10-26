@@ -3,8 +3,9 @@
   publisher's datasets from the national catalogue into a CKAN organization with
   `files/harvest-<kind>.py` (`nkod` unless the entry names `kind`; `hub` reads an ArcGIS Hub,
   T-4152). It writes through the Action API on the catalogue's own Service with
-  the publisher token the api-token Job keeps, so it needs no Kubernetes API access and mounts no
-  ServiceAccount token. Its egress is the catalogue and public 443 (networkpolicies.yaml).
+  the harvest user's token the api-token Job keeps (an editor of the harvested organizations, never
+  the site administrator: F-DEP1-002), so it needs no Kubernetes API access and mounts no
+  ServiceAccount token. The api-token Job creates the organizations; a harvest cannot. Its egress is the catalogue and public 443 (networkpolicies.yaml).
   A run takes minutes, so it is never a Helm hook: the first run after an install is
   `kubectl create job --from=cronjob/ckan-harvest-<name> ckan-harvest-<name>-now`.
 */}}
@@ -64,7 +65,7 @@ spec:
                 - name: CKAN_API_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: {{ $.Values.apiToken.secret }}
+                      name: {{ $.Values.apiToken.harvestSecret }}
                       key: token
                 # The converted datasets and the base their Endpoints answer under (T-4279).
                 # The generated file names the catalogue it was generated against; each instance's

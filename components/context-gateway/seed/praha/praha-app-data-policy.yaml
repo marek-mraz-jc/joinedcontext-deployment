@@ -58,6 +58,7 @@ spec:
         - budgetPurpose
         - approvedAmount
         - adjustedAmount
+        - location
       relationshipNames:
         - name
         - serviceCategory
@@ -96,4 +97,5 @@ spec:
         - budgetPurpose
         - approvedAmount
         - adjustedAmount
+        - location
   operations: [queryEntity, retrieveEntity]

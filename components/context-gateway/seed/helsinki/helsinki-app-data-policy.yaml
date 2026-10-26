@@ -54,6 +54,7 @@ spec:
         - windSpeed
         - windDirection
         - precipitation
+        - location
       relationshipNames:
         - name
         - serviceCategory
@@ -87,4 +88,5 @@ spec:
         - windSpeed
         - windDirection
         - precipitation
+        - location
   operations: [queryEntity, retrieveEntity]

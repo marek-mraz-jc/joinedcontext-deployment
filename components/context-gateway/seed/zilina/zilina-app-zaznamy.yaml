@@ -50,6 +50,7 @@ spec:
         - o3
         - co
         - dateObserved
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]
     - contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }

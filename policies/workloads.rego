@@ -26,7 +26,12 @@ subject := sprintf("%s/%s", [input.kind, object.get(input, ["metadata", "name"],
 #    most upstream images is uid 0.
 non_root(container) if container.securityContext.runAsNonRoot == true
 
-non_root(_) if pod_spec.securityContext.runAsNonRoot == true
+# The pod's value holds for a container that does not set its own: Kubernetes lets the container's
+# runAsNonRoot override the pod's, so a container saying false runs as root under a pod saying true.
+non_root(container) if {
+	object.get(container, ["securityContext", "runAsNonRoot"], null) == null
+	pod_spec.securityContext.runAsNonRoot == true
+}
 
 deny contains msg if {
 	not helm_test_hook

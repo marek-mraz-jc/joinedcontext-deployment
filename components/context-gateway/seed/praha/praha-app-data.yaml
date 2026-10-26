@@ -79,5 +79,6 @@ spec:
         - budgetPurpose
         - approvedAmount
         - adjustedAmount
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, csv, ogc-features]

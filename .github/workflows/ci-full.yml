@@ -83,15 +83,19 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: ./.github/actions/tools
-      - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+      - name: k3d cli
+        run: |
+          curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-amd64"
+          echo "${K3D_CHECKSUM}  ${RUNNER_TEMP}/k3d" | sha256sum --check --status
+          sudo install -m 0755 "${RUNNER_TEMP}/k3d" /usr/local/bin/k3d
       - name: linkerd cli
         # Four of the eight variants enable the mesh and the script installs the control
         # plane with this binary, so without it the whole job stops at the tool check.
-        # Keep in step with the chart version in .ci/linkerd/helmfile.yaml.gotmpl.
-        env: { LINKERD2_VERSION: edge-26.9.1 }
+        # Version and checksum in tools.env, in step with .ci/linkerd/helmfile.yaml.gotmpl.
         run: |
-          curl --fail --retry 3 --retry-all-errors --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
-          echo "$HOME/.linkerd2/bin" >> "$GITHUB_PATH"
+          curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/linkerd" "https://github.com/linkerd/linkerd2/releases/download/${LINKERD2_VERSION}/linkerd2-cli-${LINKERD2_VERSION}-linux-amd64"
+          echo "${LINKERD2_CHECKSUM}  ${RUNNER_TEMP}/linkerd" | sha256sum --check --status
+          sudo install -m 0755 "${RUNNER_TEMP}/linkerd" /usr/local/bin/linkerd
       - run: ./scripts/test-deployment-variants.sh ${{ matrix.variant }}
   deployment-profiles:
     # The two small component profiles (T-4856), each installed into its own k3d cluster: single
@@ -114,7 +118,11 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: ./.github/actions/tools
-      - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+      - name: k3d cli
+        run: |
+          curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-amd64"
+          echo "${K3D_CHECKSUM}  ${RUNNER_TEMP}/k3d" | sha256sum --check --status
+          sudo install -m 0755 "${RUNNER_TEMP}/k3d" /usr/local/bin/k3d
       - name: resolve the test domain to the k3d edge
         run: echo "127.0.0.1 joinedcontext.test idm.joinedcontext.test portal.joinedcontext.test" | sudo tee -a /etc/hosts
       - run: ./scripts/test-deployment-variants.sh --components ${{ matrix.components }} --footprint footprint-${{ matrix.components }}.md 0,0,0
@@ -148,7 +156,11 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: ./.github/actions/tools
-      - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+      - name: k3d cli
+        run: |
+          curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-amd64"
+          echo "${K3D_CHECKSUM}  ${RUNNER_TEMP}/k3d" | sha256sum --check --status
+          sudo install -m 0755 "${RUNNER_TEMP}/k3d" /usr/local/bin/k3d
       # No linkerd CLI: the mesh axis is 0 here, and the harness only demands the binary for
       # a variant that enables it. The pull-through image caches are the script's default.
       # rotate-secret.sh measures each rotation from the runner, at the edge k3d maps to the
@@ -205,8 +217,12 @@ jobs:
             /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
           df -h / | tail -1
       - uses: ./.github/actions/tools
-      - run: curl --fail --retry 3 --retry-all-errors -sSL https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
-      - run: pip install --quiet pyyaml
+      - name: k3d cli
+        run: |
+          curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/k3d" "https://github.com/k3d-io/k3d/releases/download/${K3D_VERSION}/k3d-linux-amd64"
+          echo "${K3D_CHECKSUM}  ${RUNNER_TEMP}/k3d" | sha256sum --check --status
+          sudo install -m 0755 "${RUNNER_TEMP}/k3d" /usr/local/bin/k3d
+      - run: pip install --quiet --require-hashes --no-deps -r .github/requirements-pyyaml.txt
       # The script points every host the edge serves at the k3d edge itself (k3d-edge-hosts.sh).
       - run: ./scripts/ci-upgrade-e2e.sh
       - name: collect what the cluster looked like when it failed

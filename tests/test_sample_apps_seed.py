@@ -681,3 +681,18 @@ def test_no_app_endpoint_policy_grants_a_write_to_everyone_it_admits_or_a_viewer
             assert group not in projects and not group.endswith("-viewer"), f"{name}: {role} is held by {group}"
         checked += 1
     assert checked >= 5, checked
+
+
+def test_every_app_offering_a_map_download_is_granted_the_geometry():
+    """An App naming ogc-features or geojson among its downloads serves features without geometry
+    unless its grant names `location`: the city data Apps promised GeoJSON and sent none (F-BNT1-018)."""
+    paths = sorted((ROOT / "components/context-gateway/seed").glob("*/*.yaml"))
+    apps = [doc for path in paths for doc in yaml.safe_load_all(path.read_text())
+            if isinstance(doc, dict) and doc.get("kind") == "App"]
+    checked = 0
+    for app in apps:
+        for need in app["spec"].get("dataNeeds") or []:
+            if {"ogc-features", "geojson"} & set(need.get("representations") or []) and need.get("attrs"):
+                assert "location" in need["attrs"], app["metadata"]["name"]
+                checked += 1
+    assert checked >= 2

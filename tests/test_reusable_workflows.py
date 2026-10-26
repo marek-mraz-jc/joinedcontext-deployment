@@ -13,6 +13,7 @@ exactly like a clean repository. The secret shapes are built at test time and ne
 so this file adds nothing for the scanner to find.
 """
 
+import re
 import shutil
 import subprocess
 import tempfile
@@ -289,6 +290,21 @@ def test_a_workload_that_declares_all_four_passes(conftest_binary):
     assert policy_check(conftest_binary, FIXTURES / "compliant.yaml").returncode == 0
 
 
+
+def test_a_container_saying_root_is_refused_under_a_pod_saying_non_root(conftest_binary, tmp_path):
+    """Kubernetes takes the container's runAsNonRoot over the pod's: pod true and container false runs
+    as root, and the gate read the pod's value alone (F-DEP2-008)."""
+    manifest = yaml.safe_load((FIXTURES / "compliant.yaml").read_text())
+    pod = manifest["spec"]["template"]["spec"]
+    pod.setdefault("securityContext", {})["runAsNonRoot"] = True
+    pod["containers"][0]["securityContext"]["runAsNonRoot"] = False
+    (tmp_path / "root.yaml").write_text(yaml.safe_dump(manifest))
+    result = policy_check(conftest_binary, tmp_path / "root.yaml")
+    assert result.returncode == 1 and "does not set runAsNonRoot" in result.stdout, result.stdout
+    del pod["containers"][0]["securityContext"]["runAsNonRoot"]
+    (tmp_path / "inherits.yaml").write_text(yaml.safe_dump(manifest))
+    assert policy_check(conftest_binary, tmp_path / "inherits.yaml").returncode == 0
+
 def test_a_workload_that_declares_none_of_them_is_refused(conftest_binary):
     """One manifest, every rule: a policy that fires on nothing reads like a clean cluster."""
     result = policy_check(conftest_binary, FIXTURES / "violating.yaml")
@@ -357,3 +373,15 @@ def test_an_sdm_commit_pin_is_no_leak_and_nothing_else_shaped_like_it_is_let_thr
     assert scan(gitleaks, '{"apiKey": "%s"}\n' % pin, PINS) == 1, "a commit-shaped value under another key"
     assert scan(gitleaks, '{"apiKey": "%s"}\n' % key, PINS) == 1
     assert scan(gitleaks, f"secret: {LEAKS['jwt']}\n", PINS) == 1
+
+
+def test_no_workflow_or_recipe_runs_an_install_script_or_an_unpinned_package():
+    """A script piped from a branch or an unpinned pip install runs whatever its host serves today,
+    in jobs that hold contents: write (F-DEP1-005, F-DEP1-006, F-DEP2-012): every tool comes as a
+    release asset checked against its sha256, every package by hash."""
+    texts = {p: p.read_text() for p in [*sorted((ROOT / ".github").rglob("*.yml")), ROOT / "justfile"]}
+    for path, text in texts.items():
+        assert not re.search(r"\|\s*(ba)?sh\b", text), path
+        for line in re.findall(r"pip install[^\n]*", text):
+            # ci.yml's test jobs hold contents: read only; their pins are its own follow-up.
+            assert "--require-hashes" in line or path.name == "ci.yml", (path, line)

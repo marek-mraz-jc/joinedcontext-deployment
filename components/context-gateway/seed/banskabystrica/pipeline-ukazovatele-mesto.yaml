@@ -38,8 +38,8 @@ spec:
       let year = if $water == null { 0 } else { $water.refPeriod.value.number() }
       let days = if ($year % 4 == 0 && $year % 100 != 0) || $year % 400 == 0 { 366 } else { 365 }
 
-      # Thousands of cubic metres to litres: x1000 for the thousands, x1000 for m3 to litres.
-      let litres_per_person_day = if $water == null || $people == 0 { null } else { ($water.kpiValue.value * 1000000) / $people / $days }
+      # Cubic metres to litres: the voda mapping already scales the cube's thousands to m3 (F-BNT1-015).
+      let litres_per_person_day = if $water == null || $people == 0 { null } else { ($water.kpiValue.value * 1000) / $people / $days }
 
       root = [{
         "id": "urn:ngsi-ld:KeyPerformanceIndicator:%v:%v:spotreba-vody-obyvatel-mesto".format($domain, $space),
@@ -51,8 +51,8 @@ spec:
         },
         "calculationPeriod": { "type": "Property", "value": if $water == null { { "start": $ran, "end": $ran } } else {
           { "start": "%v-01-01T00:00:00Z".format($water.refPeriod.value), "end": "%v-12-31T23:59:59Z".format($water.refPeriod.value) } } },
-        "calculationFormula": { "type": "Property", "value": if $water == null { "vh5003rr/U03084 x 1000000 / the city register's total / the days of the year; no published value for any year" } else {
-          "vh5003rr/U03084 for %v (%v thousand m3 of invoiced water) x 1000000 / %v inhabitants in the city register of %v / %v days".format($water.refPeriod.value, $water.kpiValue.value, $people, $register_day, $days) } },
+        "calculationFormula": { "type": "Property", "value": if $water == null { "vh5003rr/U03084 x 1000 / the city register's total / the days of the year; no published value for any year" } else {
+          "vh5003rr/U03084 for %v (%v m3 of invoiced water) x 1000 / %v inhabitants in the city register of %v / %v days".format($water.refPeriod.value, $water.kpiValue.value, $people, $register_day, $days) } },
         "derivedFrom": { "type": "Property", "value": $source_endpoint },
         "computedBy": { "type": "Property", "value": $pipeline },
         "updatedAt": { "type": "Property", "value": { "@type": "DateTime", "@value": $ran } }

@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/nosic_info_odpoc_WGS_ML/FeatureServer/0/query?where=1%3D1&outFields=mal_znac,stlp_ex,stlp_mat,stlp_stav,nedost_typ,trasa_spr,typ,zdroj,name,id,Pozn,nedost,trasa_no,trasa_farb,dopln_stp,stn,obtiazmost,nedostatok&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/nosic_info_odpoc_WGS_ML/FeatureServer/0/query?where=1%3D1&outFields=mal_znac,stlp_ex,stlp_mat,stlp_stav,nedost_typ,trasa_spr,typ,zdroj,name,id,Pozn,nedost,trasa_no,trasa_farb,dopln_stp,stn,obtiazmost,nedostatok&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

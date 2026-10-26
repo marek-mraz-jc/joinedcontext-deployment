@@ -19,6 +19,7 @@ import subprocess
 import threading
 import time
 import urllib.parse
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import open_data
@@ -158,6 +159,9 @@ def test_every_record_is_one_entity_the_gateway_and_the_sdm_accept(written):
             assert entity["id"].startswith(f"urn:ngsi-ld:{kind}:praha.eu:{SPACE}:green-{layer_set(name)}-")
             assert entity["source"]["value"] == f"https://geoportalpraha.cz/data-a-sluzby/{item}"
             assert entity["dataProvider"]["value"] == "datový podklad © IPR Praha (CC BY 4.0)"
+            # A geometry-hash id never comes back once redrawn: it expires four weekly runs on (F-BNT3-019).
+            left = datetime.fromisoformat(entity["expiresAt"]) - datetime.now(timezone.utc)
+            assert timedelta(days=27) < left <= timedelta(days=28), entity["id"]
             assert not open_data.schema_errors(PRAHA / "praha.v1.schema.json", entity), entity["id"]
             if kind == "Garden":
                 assert not open_data.sdm_errors("dataModel.ParksAndGardens/Garden", entity), entity["id"]
