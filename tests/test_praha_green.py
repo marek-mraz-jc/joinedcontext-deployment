@@ -262,7 +262,8 @@ def test_a_woody_category_is_written_only_on_a_tree_since_the_view_holds_it_for_
     entities, errors, _ = outcome(name, edited(name, edit))
     assert not errors, errors
     first = by_guid(name, entities)[guid(RECORDED[layer_set(name)]["features"][0])]
-    allowed = set(json.loads((PRAHA / "praha.v1.schema.json").read_text())["definitions"][kind]["properties"])
+    schema = json.loads((PRAHA / "praha.v1.schema.json").read_text())["definitions"][kind]["properties"]
+    allowed = set(schema) | open_data.SYSTEM_MEMBERS
     for entity in entities:
         assert set(entity) <= allowed, (entity["id"], set(entity) - allowed)
     assert ("treeCategory" in first) == (kind == "Tree")
