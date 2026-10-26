@@ -2370,6 +2370,146 @@
       "title": "RestrictedTrafficArea",
       "type": "object"
     },
+    "RoadClass": {
+      "description": "",
+      "enum": [
+        "NATIONAL_HIGHWAY",
+        "STATE_HIGHWAY",
+        "MAJOR_DISTRICT_ROAD",
+        "OTHER_DISTRICT_ROAD",
+        "MAJOR_CITY_ROAD",
+        "MINOR_CITY_ROAD"
+      ],
+      "title": "RoadClass",
+      "type": "string",
+      "x-enum-descriptions": {
+        "NATIONAL_HIGHWAY": "A motorway (dálnice).",
+        "STATE_HIGHWAY": "A road of class I (silnice I. třídy).",
+        "MAJOR_DISTRICT_ROAD": "A road of class II (silnice II. třídy).",
+        "OTHER_DISTRICT_ROAD": "A road of class III (silnice III. třídy).",
+        "MAJOR_CITY_ROAD": "A local road of class 1 or 2, an expressway or a collector (rychlostní, sběrná místní komunikace).",
+        "MINOR_CITY_ROAD": "A local road of class 3 or 4, an access road or a non-motorised way (obslužná, nemotoristická místní komunikace)."
+      }
+    },
+    "RoadSegment": {
+      "additionalProperties": false,
+      "description": "One street section of TSK hl. m. Prahy's road register, its name, the kind of way and its road class, or one street area of TSK's summer street cleaning and its cleaning dates. TSK publishes no road register to point refRoad at, so it is absent.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "facilityType": {
+          "description": "The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language, as the publisher writes it.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "roadClass": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RoadClass"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The Smart Data Models road class of the section, read from TSK's Czech classes: a motorway (dálnice) NATIONAL_HIGHWAY, a road of class I, II or III (silnice I., II., III. třídy) STATE_HIGHWAY, MAJOR_DISTRICT_ROAD or OTHER_DISTRICT_ROAD, a local road of class 1 or 2 (rychlostní, sběrná místní komunikace) MAJOR_CITY_ROAD, of class 3 or 4 (obslužná, nemotoristická) MINOR_CITY_ROAD; absent on a section TSK leaves unclassified.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "streetCleaningDates": {
+          "description": "The days of the year TSK cleans the street (blokové čištění), earliest first; a car parked in the marked area on such a day is towed.",
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "RoadSegment",
+      "type": "object"
+    },
     "ServiceCategory": {
       "description": "",
       "enum": [

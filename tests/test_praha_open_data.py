@@ -522,6 +522,8 @@ PARTS = {
     "praha-stromy": "CC_BY_4_0",
     "praha-parkovani": "CC_BY_4_0",
     "praha-zakazy-stani": "CC_BY_4_0",
+    # TSK's street sections and summer street cleaning dates as RoadSegment (T-5677).
+    "praha-ulicni-useky": "CC_BY_4_0", "praha-letni-udrzba": "CC_BY_4_0",
     "praha-parkovaci-automaty": "CC_BY_4_0",
     # The city tables and road works, one dataset per file family; the city and its police waive
     # every right (T-5428).

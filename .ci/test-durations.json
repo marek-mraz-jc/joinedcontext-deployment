@@ -227,6 +227,7 @@
  "test_praha_paged_areas.py": 14.2,
  "test_praha_parking.py": 30.4,
  "test_praha_pid_network.py": 22.4,
+ "test_praha_tsk_roads.py": 21.9,
  "test_praha_vehicles.py": 6.2,
  "test_prepare.py": 226.9,
  "test_preview.py": 159.9,
