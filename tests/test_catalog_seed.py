@@ -125,3 +125,47 @@ def test_every_public_endpoint_is_a_catalogue_dataset_or_a_door_the_feeds_leave_
             contradictions.append(str(path.relative_to(SEED)))
     assert not gaps, f"public, in the harvest feeds, and no catalogue dataset names it: {gaps}"
     assert not contradictions, f"harvest: false beside spec.publish.ckan: {contradictions}"
+
+
+def own_slots(model, name):
+    """The Attributes the Portal lists for a class shown whole (reconciler views.rs class_slots):
+    its slots and attributes and those of the classes it extends inside the model, less the id."""
+    classes, slots, seen, todo = model.get("classes") or {}, set(), set(), [name]
+    while todo:
+        current = todo.pop()
+        definition = classes.get(current)
+        if current in seen or not isinstance(definition, dict):
+            continue
+        seen.add(current)
+        slots.update(definition.get("slots") or [], definition.get("attributes") or {})
+        todo.extend([definition["is_a"]] if definition.get("is_a") else [])
+        todo.extend(definition.get("mixins") or [])
+    identifiers = {s for s, d in (model.get("slots") or {}).items() if isinstance(d, dict) and d.get("identifier")}
+    return slots - identifiers - {"id", "type"}
+
+
+def test_every_type_a_policy_shows_whole_has_attributes_in_its_space_model():
+    # T-5752: a Policy naming a type without propertyNames shows it whole, and the Portal lists
+    # that type's Attributes from the class in the space's model. A class with no slot shows no
+    # Attribute, the Portal refuses the Endpoint's view, and the broker answers every read and
+    # write of the Endpoint 404: the six catalog Endpoints served nothing on dev.
+    linkml = {path.resolve(): doc for path, doc in seed_documents() if path.name.endswith(".linkml.yaml")}
+    models = {}
+    for path, doc in manifests():
+        if doc["kind"] == "DataModel" and doc["spec"].get("linkml"):
+            model = linkml.get((path.parent / doc["spec"]["linkml"]).resolve())
+            models[(doc["metadata"]["namespace"], space_of(doc["spec"]))] = model
+    empty = []
+    for path, doc in manifests():
+        spec = doc.get("spec") or {}
+        if doc["kind"] != "Policy" or spec.get("effect") == "prohibition":
+            continue
+        model = models.get((doc["metadata"]["namespace"], space_of(spec)))
+        for information in spec.get("information") or []:
+            if information.get("propertyNames") or information.get("relationshipNames") or model is None:
+                continue
+            for entity in information.get("entities") or []:
+                kind = entity.get("type")
+                if kind in (model.get("classes") or {}) and not own_slots(model, kind):
+                    empty.append(f"{path.relative_to(SEED)}: {kind}")
+    assert not empty, f"shown whole, and the space's model gives the class no Attribute: {empty}"
