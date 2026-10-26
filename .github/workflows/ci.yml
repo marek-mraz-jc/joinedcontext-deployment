@@ -298,7 +298,7 @@ jobs:
     # its JSON Schema by the platform's Model Tools at the commit .ci/model-tools.lock names:
     # gen_datasets exits 1 on a valid record either refuses or an invalid one both accept, and SHACL
     # must name the broken slot. Left out: the models with no Entity class (nothing to test) and
-    # the two generated catalogue models whose bare `label: {sk: ...}` annotations linkml_runtime
+    # the two generated open-data models whose bare `label: {sk: ...}` annotations linkml_runtime
     # cannot load (/workspace/chyby.md, scripts/open-data/generate.py).
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -318,7 +318,7 @@ jobs:
           MODEL_TOOLS_MODELS: ${{ runner.temp }}/platform/tools/model-tools/models
         run: |
           mapfile -t models < <(find components -path '*seed*' -name '*.linkml.yaml' \
-            -not -name mobility.linkml.yaml -not -name sharing-bikes.linkml.yaml -not -name catalog.linkml.yaml \
+            -not -name mobility.linkml.yaml -not -name sharing-bikes.linkml.yaml \
             -not -name banskabystrica-otvorene-data.linkml.yaml -not -name bbsk-otvorene-data.linkml.yaml | sort)
           python3 "$RUNNER_TEMP/platform/tools/model-tools/src/gen_datasets.py" "${models[@]}"
   renovate:
