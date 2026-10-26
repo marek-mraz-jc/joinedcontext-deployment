@@ -29,7 +29,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OWNER = "marek-mraz-jc"
 ISSUER = "https://token.actions.githubusercontent.com"
-IDENTITY = rf"^https://github\.com/{OWNER}/"
+# The workflows that sign what an environment pins, read off the pinned digests' certificates
+# (2026-10-26: image.yml of platform and portal, image-viz/image-ckan of deployment, Antares
+# ship.yml on dev) plus the other signers of the same images (promote.yml, the deployment's
+# image-gitops and reusable-container-sign, Antares image-jc.yml and full.yml on a tag). A
+# preview.yml or any branch build signs too and is refused here (F-DEP2-005).
+IDENTITY = (
+    rf"^https://github\.com/{OWNER}/("
+    r"(joinedcontext-platform|joinedcontext-portal)/\.github/workflows/(image|promote)\.yml@refs/heads/main"
+    r"|joinedcontext-deployment/\.github/workflows/(image-[a-z]+|reusable-container-sign)\.yml@refs/heads/main"
+    r"|Antares-NGSI-LD-Context-Broker/\.github/workflows/(ship|image-jc)\.yml@refs/heads/dev"
+    r"|Antares-NGSI-LD-Context-Broker/\.github/workflows/full\.yml@refs/tags/v[0-9][0-9a-z.+-]*"
+    r")$"
+)
 
 
 def references(render: str, registry: str):

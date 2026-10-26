@@ -122,6 +122,11 @@ global:
   #       subDomain: opendata
   catalogues: []
 
+  # The Kubernetes API server's addresses as NetworkPolicy CIDRs (`kubectl get endpoints
+  # kubernetes`, one /32 per address): what a workload that calls the API on 6443 may reach.
+  # The default opens 6443 everywhere; an environment that knows its API server narrows it.
+  kubeApiCidrs: [0.0.0.0/0]
+
   # Service mesh configuration
   serviceMesh:
     enable: true

@@ -694,3 +694,22 @@ def test_a_namespace_from_typo_in_a_deployed_component_aborts_the_render(tmp_pat
     )
     assert result.returncode != 0, "a namespaceFrom typo into a deployed component rendered fine"
     assert "names no value" in result.stderr + result.stdout
+
+
+def _token_service_api_cidrs(docs):
+    groups = egress_rules_by_selector(docs)
+    tokens = next((rules for selector, rules in groups.items()
+                   if dict(selector).get("app.kubernetes.io/name") == "pipeline-runner-tokens"), None)
+    assert tokens is not None, "the token service has no egress policy"
+    return sorted(peer["ipBlock"]["cidr"]
+                  for rule in tokens
+                  if 6443 in {p.get("port") for p in rule.get("ports") or []}
+                  for peer in rule.get("to") or [] if "ipBlock" in peer)
+
+
+@pytest.mark.parametrize(("env", "cidrs"), [("dev", ["0.0.0.0/0"]), ("smartcity", ["10.255.0.1/32"])])
+def test_the_token_service_reaches_the_api_server_at_the_environment_s_addresses(rendered, env, cidrs):
+    """The token service asks the Kubernetes API for a pipeline's ServiceAccount token on 6443.
+    `global.kubeApiCidrs` names the API server's addresses where an environment knows them
+    (smartcity), so the rule opens 6443 there only; the default keeps it open (F-BNT3-003)."""
+    assert _token_service_api_cidrs(rendered(env)) == cidrs
