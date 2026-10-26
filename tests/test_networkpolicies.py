@@ -349,6 +349,9 @@ def test_a_meshed_egress_to_a_pod_peer_also_allows_that_peer_s_inbound_proxy(ren
 # The ranges a delivery must never reach: the pod and service networks, the node's own
 # addresses, and the link-local address every cloud puts its metadata service on.
 PRIVATE_RANGES = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8"}
+# No public feed lives here either, and a typed DataSource URL must not reach a node on a CGNAT
+# overlay or a multicast group (F-BNT3-004).
+RESERVED_RANGES = {"100.64.0.0/10", "0.0.0.0/8", "198.18.0.0/15", "224.0.0.0/4"}
 
 
 @pytest.mark.parametrize("env", ENVIRONMENTS)
@@ -414,7 +417,7 @@ def test_the_pipeline_runner_reaches_public_addresses_and_the_ingress_controller
     for rule in ranges:
         for peer in rule["to"]:
             excepted = set(peer["ipBlock"].get("except") or [])
-            assert excepted >= PRIVATE_RANGES, f"the runner reaches {PRIVATE_RANGES - excepted}"
+            assert excepted >= PRIVATE_RANGES | RESERVED_RANGES, f"the runner reaches {(PRIVATE_RANGES | RESERVED_RANGES) - excepted}"
     https = {443, 8443}
     for rule in runner:
         if not https & {p.get("port") for p in rule.get("ports") or []}:

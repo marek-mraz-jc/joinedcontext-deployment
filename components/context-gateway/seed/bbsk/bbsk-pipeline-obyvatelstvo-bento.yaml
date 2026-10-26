@@ -14,6 +14,9 @@ pipeline:
         let key_dims = []
         let unit_code = "C62"
         let unit_text = "osoby"
+        # A cell times this is in the unit unitCode names: 1000 for a cube stated in thousands
+        # ("v tis. m3"), else 1 (F-BNT1-015).
+        let scale = 1
         let source_url = "https://data.statistics.sk/api/v2/dataset/om7102rr/SK032,SK0321,SK0322,SK0323,SK0324,SK0325,SK0326,SK0327,SK0328,SK0329,SK032A,SK032B,SK032C,SK032D/*/IN010115/SPOLU?lang=sk&type=json"
         let domain = "bbsk.sk"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
@@ -45,7 +48,7 @@ pipeline:
           # in silence (T-2445). A cube that states no update time gets no `observedAt` at all.
           # A unit with no UN/CEFACT code (a currency) and a cube with no update time leave their
           # term out rather than write a null the broker refuses.
-          "kpiValue": { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
+          "kpiValue": { "type": "Property", "value": c.cell * $scale, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
           "unitText": { "type": "Property", "value": $unit_text },
           "source": { "type": "Property", "value": $source_url },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }

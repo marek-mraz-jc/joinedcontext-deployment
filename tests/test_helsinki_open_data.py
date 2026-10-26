@@ -426,6 +426,19 @@ def test_a_zone_link_without_a_scheme_is_written_as_https(written):
     assert "4 euroa tunnilta" in fee["description"]["languageMap"]["fi"]
 
 
+
+@requires_docker
+@pytest.mark.parametrize("pipeline, recording", [("fee-parking-zones", "payment-zones.json"),
+                                                 ("resident-parking-zones", "resident-zones.json")])
+def test_a_zone_link_that_is_no_single_address_writes_no_url(pipeline, recording):
+    """Two links or a space in `linkki` is no IRI, and the broker refuses the whole zone over it
+    (F-BNT3-018); the zone stays, without its url."""
+    document = fixture(recording)
+    document["features"] = document["features"][:1]
+    document["features"][0]["properties"]["linkki"] = "www.hel.fi/a www.hel.fi/b"
+    (zone,) = run(pipeline, document)
+    assert "url" not in zone and zone["zoneCode"]["value"]
+
 @requires_docker
 def test_a_line_lists_its_stops_in_order_whatever_order_its_rows_come_in(written):
     recording = fixture("hsl-routes.json")

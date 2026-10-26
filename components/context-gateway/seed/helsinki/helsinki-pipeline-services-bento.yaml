@@ -168,7 +168,7 @@ pipeline:
           "names": unit.name.apply("texts"),
           "hours": unit.connections.or([]).filter(c -> c.section_type == "OPENING_HOURS").index(0).or({}).name.apply("texts"),
           "street": unit.street_address.or({}).fi.or(null),
-          "www": [unit.www.or({}).fi.or(null), unit.www.or({}).en.or(null), unit.www.or({}).sv.or(null)].filter(u -> u != null && u.has_prefix("http")).index(0).or(null)
+          "www": [unit.www.or({}).fi.or(null), unit.www.or({}).en.or(null), unit.www.or({}).sv.or(null)].filter(u -> u != null && u.string().re_match("^https?://[^\\s/]+\\.[^\\s]+$")).index(0).or(null)
         }).filter(u -> u.names.length() > 0).map_each(u -> {
           "id": "urn:ngsi-ld:%v:%v:%v:servicemap-%v".format("PointOfInterest", env("JC_ORG_DOMAIN"), env("JC_SPACE"), u.unit.id),
           "type": "PointOfInterest",

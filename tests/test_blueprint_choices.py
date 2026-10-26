@@ -68,3 +68,17 @@ def test_the_app_builder_picks_its_endpoint_and_space_and_takes_prose():
     assert props["endpoint"]["x-jc-options"] == {"plural": "endpoints"}
     assert props["contextSpace"]["x-jc-widget"] == "resourcePicker"
     assert props["contextSpace"]["x-jc-options"] == {"plural": "spaces"}
+
+
+def test_the_json_feed_pipeline_writes_the_type_its_card_names():
+    """`entityType` reached only the title: the Pipeline had no output type, so the card did not write
+    "entities of one type" as it says (F-BNT2-012)."""
+    import jinja2
+
+    path = ROOT / "context-gateway/seed/helsinki/helsinki-blueprint-http-json-feed.yaml"
+    spec = yaml.safe_load(path.read_text())["spec"]
+    defaults = {k: v.get("default") for k, v in spec["parameterSchema"]["properties"].items()}
+    parameters = {**defaults, "name": "bus-stops", "url": "https://example.org/stops.json", "entityType": "GtfsStop", "period": "30m"}
+    template = next(t["template"] for t in spec["templates"] if t["name"] == "pipeline")
+    pipeline = yaml.safe_load(jinja2.Template(template).render(**parameters))
+    assert pipeline["spec"]["output"] == {"type": "GtfsStop", "mode": "upsert"}

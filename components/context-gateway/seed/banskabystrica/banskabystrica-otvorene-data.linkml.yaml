@@ -461,19 +461,17 @@ slots:
         annotations:
           generated: sk cs en de
   name:
-    description: The source column `title`.
+    description: The entity's name.
     annotations:
       ngsi_ld_kind: Property
-      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
       label:
         tag: label
         value:
-          sk: Miesto
-          cs: Místo
-          en: Place
-          de: Ort
-        annotations:
-          generated: sk cs en de
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
+      upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: https://smartdatamodels.org/name
   narodenych:
     description: The source column `Narodených`.

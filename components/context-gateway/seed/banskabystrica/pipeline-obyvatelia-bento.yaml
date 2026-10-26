@@ -5,7 +5,9 @@
 # "Počet_mužov", "Počet_žien" }`, with the counts padded with spaces and a non-breaking space as
 # the thousands separator. **The register declares no period at all** — it is "as of now" — so
 # `refPeriod` is the day the row was fetched and not a year the publisher never stated. A year
-# invented here would be a figure dated to a year nobody published it for.
+# invented here would be a figure dated to a year nobody published it for. The id is the age
+# alone, so each run updates the same 105 entities and the space's history keeps the past counts
+# (F-BNT1-014: an id with the day in it minted 105 new entities every night).
 
 pipeline:
   processors:
@@ -22,7 +24,7 @@ pipeline:
         let count = this."Počet_občanov_v_danom_veku".or("").string().re_replace_all("[^0-9]", "")
         root = if $age == "" || $count == "" { deleted() } else {
           {
-            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "banskabystrica.sk", env("JC_SPACE"), "%v-SK0321508438-%v-POCET-%v".format($cube, $today, $age)),
+            "id": "urn:ngsi-ld:%v:%v:%v:%v".format("KeyPerformanceIndicator", "banskabystrica.sk", env("JC_SPACE"), "%v-SK0321508438-POCET-%v".format($cube, $age)),
             "type": "KeyPerformanceIndicator",
             "dataSet": { "type": "Property", "value": $cube },
             "indicator": { "type": "Property", "value": "POCET" },

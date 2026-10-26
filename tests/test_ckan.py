@@ -496,7 +496,8 @@ def test_the_api_token_job_writes_one_secret_and_reaches_two_things(rendered):
 
     role = by_name(docs, "Role", "ckan-api-token")
     named = [r for r in role["rules"] if r.get("resourceNames")]
-    assert named == [{"apiGroups": [""], "resources": ["secrets"], "resourceNames": ["ckan-api-token"],
+    assert named == [{"apiGroups": [""], "resources": ["secrets"],
+                      "resourceNames": ["ckan-api-token", "ckan-api-token-harvest"],
                       "verbs": ["get", "update"]}]
     unnamed = [r for r in role["rules"] if not r.get("resourceNames")]
     assert [r["verbs"] for r in unnamed] == [["create"]], "the Job may do more than create its Secret"
@@ -520,7 +521,8 @@ def test_the_harvest_writes_with_the_token_and_reaches_only_public_443(rendered)
     container = pod["containers"][0]
     assert container["image"] == ckan_container(docs)["image"]
     env = {e["name"]: e for e in container["env"]}
-    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
+    # F-DEP1-002: the harvest user's token, never the site administrator's
+    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token-harvest", "key": "token"}
     config = json.loads(env["HARVEST_CONFIG"]["value"])
     assert config["source"] == "nkod-banskabystrica" and config["organization"] == "banskabystrica"
     assert config["requireColumn"]["Objednávky BB"] == "IČO"

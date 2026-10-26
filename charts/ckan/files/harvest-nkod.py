@@ -223,6 +223,11 @@ def table(body, title):
     return rows, dropped
 
 
+# States a later run can clear by itself: a distribution host that did not answer or answered an
+# error, or served an HTML page where its file was.
+TRANSIENT = {"dead", "html"}
+
+
 def assess(ds):
     """Decides one dataset: (state, reason, resources, tables). Only `ingested` is written."""
     skip = CONFIG.get("skip", {}).get(ds["title"])
@@ -358,7 +363,10 @@ def main():
         print("the catalogue listed nothing; nothing is deleted on an empty answer", file=sys.stderr)
         return 1
     if ckan("organization_show", {"id": CONFIG["organization"]}) is None:
-        ckan("organization_create", {"name": CONFIG["organization"], "title": CONFIG["publisherName"]})
+        # The harvest user edits organizations and creates none (F-DEP1-002).
+        print(f"organization {CONFIG['organization']} does not exist; the catalogue's api-token Job "
+              "creates it on the next apply", file=sys.stderr)
+        return 1
     states, problems, kept, named = {}, [], set(), names(found)
     converted = {ds["iri"]: od_standards(named[ds["iri"]]) for ds in found.values()}
     if not any(converted.values()):
@@ -372,6 +380,10 @@ def main():
             continue
         state, reason, _, tables = assess(ds)
         states.setdefault(state, []).append((ds["title"], reason))
+        if state in TRANSIENT:
+            # A host down or a maintenance page tonight is no withdrawal: the dataset published
+            # before stays until NKOD stops listing it or it is no longer converted (F-DEP1-013).
+            kept.add(named[ds["iri"]])
         if state != "ingested":
             continue
         tables = [t for t in tables if len(json.dumps(t["rows"], ensure_ascii=False).encode()) <= OD_MAX_SHEET_BYTES]

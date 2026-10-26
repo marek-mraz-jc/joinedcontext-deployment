@@ -2142,18 +2142,16 @@ slots:
         annotations:
           generated: sk cs en de
   description:
-    description: The source column `Názov_VZN`.
+    description: A description of the entity.
     annotations:
       ngsi_ld_kind: Property
       label:
         tag: label
         value:
-          sk: Názov VZN
-          cs: Název VZN
-          en: Regulation title
-          de: Titel der Verordnung
-        annotations:
-          generated: cs en de
+          sk: Popis
+          cs: Popis
+          en: Description
+          de: Beschreibung
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.CPSV-AP/a05d1663475fc0f79361bc9bc2550c3f24df1ba0/context.jsonld
     slot_uri: http://purl.org/dc/terms/description
   designatio:
@@ -5938,18 +5936,16 @@ slots:
         annotations:
           generated: sk cs en de
   legalName:
-    description: The source column `Nazov`.
+    description: The organisation's registered name.
     annotations:
       ngsi_ld_kind: Property
       label:
         tag: label
         value:
-          sk: Nazov
-          cs: Název
-          en: Name
-          de: Name
-        annotations:
-          generated: cs en de
+          sk: Úradný názov
+          cs: Úřední název
+          en: Legal name
+          de: Rechtlicher Name
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/dataModel.Organization/legalName
   legislativnyStav:
@@ -6680,18 +6676,16 @@ slots:
         annotations:
           generated: cs en de
   name:
-    description: The source column `Miesto`.
+    description: The entity's name.
     annotations:
       ngsi_ld_kind: Property
       label:
         tag: label
         value:
-          sk: Miesto
-          cs: Místo
-          en: Place
-          de: Ort
-        annotations:
-          generated: sk cs en de
+          sk: Názov
+          cs: Název
+          en: Name
+          de: Name
       upstream_source: https://raw.githubusercontent.com/smart-data-models/dataModel.Organization/77a4911e7cbc72bf87bf202ade282c1bc41a36a4/context.jsonld
     slot_uri: https://smartdatamodels.org/name
   nameLangua:

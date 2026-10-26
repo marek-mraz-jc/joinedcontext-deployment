@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_povrchy_ML/FeatureServer/0/query?where=1%3D1&outFields=name,alps,farba,spravca,zdroj,id,f_nazov,povrch,dlzka&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/2019_linie_povrchy_ML/FeatureServer/0/query?where=1%3D1&outFields=name,alps,farba,spravca,zdroj,id,f_nazov,povrch,dlzka&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

@@ -49,7 +49,10 @@ pipeline:
         let exceptions = $t.calendar_dates.or([]).filter(e -> e.date == $today)
         let removed = $exceptions.filter(e -> e.exception_type == "2").fold({}, acc -> acc.tally.assign({ acc.value.service_id: true }))
         let services = $t.calendar.or([]).filter(c -> c.get($weekday) == "1" && c.start_date <= $today && c.end_date >= $today && $removed.get(c.service_id) == null).map_each(c -> c.service_id).concat($exceptions.filter(e -> e.exception_type == "1").map_each(e -> e.service_id)).fold({}, acc -> acc.tally.assign({ acc.value: true }))
-        let running = $t.trips.filter(trip -> $services.get(trip.service_id) != null).fold({}, acc -> acc.tally.assign({ acc.value.trip_id: true }))
+        # Only the trains that call in the city are folded: a fold with assign copies its map at
+        # every row, and over the national tables that peaked at 201 MiB (F-BNT3-022).
+        let here = $t.stop_times.filter(st -> $wanted.get(st.stop_id) != null).map_each(st -> st.trip_id).unique().fold({}, acc -> acc.tally.assign({ acc.value: true }))
+        let running = $t.trips.filter(trip -> $here.get(trip.trip_id) != null && $services.get(trip.service_id) != null).fold({}, acc -> acc.tally.assign({ acc.value.trip_id: true }))
 
         # A train leaves a station it calls at unless the station ends its run.
         let calls = $t.stop_times.filter(st -> $running.get(st.trip_id) != null)

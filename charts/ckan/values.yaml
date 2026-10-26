@@ -143,6 +143,10 @@ apiToken:
   secret: ckan-api-token
   # The token's name in CKAN, so the administrator's token list says who holds it.
   name: jcctl
+  # The harvest CronJobs' token (F-DEP1-002): the same Job keeps it, for a CKAN user that is an
+  # editor of the harvested organizations only and never a site administrator.
+  harvestSecret: ckan-api-token-harvest
+  harvestUser: harvest
 
 # Catalogue harvests (T-4151): a CronJob per source that copies one publisher's datasets from
 # the national catalogue (NKOD) into a CKAN organization, corrected, with the API token above.

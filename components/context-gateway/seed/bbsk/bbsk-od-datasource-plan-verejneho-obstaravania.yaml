@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pl%C3%A1n_verejn%C3%A9ho_obstar%C3%A1vania/FeatureServer/0/query?where=1%3D1&outFields=%C3%9Atvar_OvZP,Predmet_z%C3%A1kazky,Druh_komod%C3%ADt_alebo_slu%C5%BEieb,Typ_komodity,PHZ,Financovanie,Typ_v%C3%BDdavku,Rok,id&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pl%C3%A1n_verejn%C3%A9ho_obstar%C3%A1vania/FeatureServer/0/query?where=1%3D1&outFields=%C3%9Atvar_OvZP,Predmet_z%C3%A1kazky,Druh_komod%C3%ADt_alebo_slu%C5%BEieb,Typ_komodity,PHZ,Financovanie,Typ_v%C3%BDdavku,Rok,id&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
     verb: GET
     headers:
       Accept: application/geo+json, application/json
