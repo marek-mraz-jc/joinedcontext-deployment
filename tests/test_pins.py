@@ -108,7 +108,8 @@ def test_every_tool_version_is_exact_and_every_download_has_a_checksum():
     pinned = tools()
     for key, value in pinned.items():
         if key.endswith("_VERSION"):
-            assert re.fullmatch(r"v?\d+\.\d+\.\d+", value), f"{key}={value}"
+            # Linkerd ships stable releases as edge-YY.M.P only (F-DEP1-005 pins one).
+            assert re.fullmatch(r"(v|edge-)?\d+\.\d+\.\d+", value), f"{key}={value}"
     downloaded = {
         "KUBECONFORM",
         "CONFTEST",
