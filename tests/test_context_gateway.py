@@ -110,9 +110,32 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     kinds = sorted(kind for kind, _ in ovzdusie)
     # No App reads it: the city's air-quality screen reads the live EEA readings in
     # banskabystrica-verejne, not the conformance suite's seeded stations (T-2916, T-2949). The
-    # third Policy is the pipelines' write, which pipeline public-air and its expiry sweep need
-    # (T-3120, PL-64).
-    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy", "Policy", "ServiceAccount"], kinds
+    # second Policy is the pipelines' write, which pipeline public-air and its expiry sweep need
+    # (T-3120, PL-64). The conformance account writes in its own space (F-BNT1-002).
+    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy"], kinds
+
+
+@requires_helmfile
+def test_the_conformance_account_writes_only_where_nothing_is_published(seed):
+    """F-BNT1-002: the smoke run and the ETSI suite create and delete fixtures. Their account is
+    scoped to the `conformance` space alone, whose one Endpoint is neither public nor published
+    and whose only other grant is the steward's read (T-2456)."""
+    account = seed[("ServiceAccount", "conformance")]
+    assert {role["scope"]["contextSpace"] for role in account["spec"]["roles"]} == {"conformance"}
+    space = {key: m for key, m in seed.items() if space_of(m) == "conformance"}
+    endpoints = [m for (kind, _), m in space.items() if kind == "Endpoint"]
+    assert len(endpoints) == 1
+    assert endpoints[0]["spec"]["audience"] != "public"
+    assert "publish" not in endpoints[0]["spec"] and "catalog" not in endpoints[0]["spec"]
+    policies = {name: m["spec"] for (kind, name), m in space.items() if kind == "Policy"}
+    assert policies["conformance-write"]["assignee"] == {"kind": "serviceAccount", "id": "conformance"}
+    assert policies["conformance-steward-read"]["operations"][0] == "retrieveOps"
+    assert not {"createBatch", "upsertBatch", "deleteBatch", "redirectionOps"} & set(policies["conformance-steward-read"]["operations"])
+    assert set(policies) == {"conformance-write", "conformance-steward-read"}, sorted(policies)
+    # and no published space grants it anything
+    for (kind, name), m in seed.items():
+        if kind == "Policy" and m["spec"]["assignee"].get("id") == "conformance":
+            assert space_of(m) == "conformance", name
 
 
 @requires_helmfile
@@ -120,8 +143,8 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_spaces(seed):
     """Nothing in the project floats free of a space, and no manifest of it names a space the
     project does not seed (T-2305, T-2781)."""
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
-    # The city's own catalogue (T-5493) is the sixth.
-    assert spaces == {"ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
+    # The city's own catalogue (T-5493) is the sixth, the conformance suite's own (F-BNT1-002) the seventh.
+    assert spaces == {"ovzdusie", "conformance", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
                       "banskabystrica-otvorene-data", "catalog"}
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
@@ -153,7 +176,7 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_spaces(seed):
     # ovzdusie since T-3120: pipeline public-air writes the conformance space's open dataset;
     # banskabystrica-otvorene-data since T-4255: the generated catalogue-table pipelines. The
     # city's catalogue (T-5493) is the Portal reconciler's alone: no pipeline writes it.
-    assert scoped == spaces - {"catalog"}, scoped
+    assert scoped == spaces - {"catalog", "conformance"}, scoped
 
 
 @requires_helmfile
@@ -206,7 +229,8 @@ def test_the_keycloak_client_is_the_account_the_gateway_resolves_azp_to(seed, re
 @requires_helmfile
 def test_the_token_names_the_seeded_endpoint_as_its_audience(seed, realm_clients):
     """The gateway accepts a token only when `aud` names the slug it is called on (PF-45)."""
-    slug = seed[("Endpoint", "public-air")]["spec"]["slug"]
+    # The conformance account's door is its own space's Endpoint (F-BNT1-002).
+    slug = seed[("Endpoint", "conformance")]["spec"]["slug"]
     mappers = realm_clients["banskabystrica-conformance"]["protocolMappers"]
     audiences = {m["config"].get("included.custom.audience") for m in mappers if m["protocolMapper"] == "oidc-audience-mapper"}
     assert slug in audiences, (slug, audiences)

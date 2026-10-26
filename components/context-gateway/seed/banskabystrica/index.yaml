@@ -2,7 +2,7 @@
 # by the forge bootstrap's seed (components/gitea/values/bootstrap/development-values). The
 # conformance project: one space, its published model with the artifacts beside it, one public
 # endpoint, the anonymous reader's policy and the writing account with its policy (T-0263,
-# T-0277, T-0278). The smoke run and the ETSI suite write through `public-air`.
+# T-0277, T-0278). The smoke run and the ETSI suite write through `conformance` (F-BNT1-002).
 project.yaml: projects/banskabystrica/project.yaml
 space.yaml: projects/banskabystrica/spaces/ovzdusie/space.yaml
 datamodel.yaml: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.yaml
@@ -13,7 +13,18 @@ bb-air-quality.v1.example.jsonld: projects/banskabystrica/spaces/ovzdusie/datamo
 bb-air-quality.v1.md: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.md
 endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
 policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
-policy-conformance-write.yaml: projects/banskabystrica/spaces/ovzdusie/policies/conformance-write.yaml
+# The conformance suite's own space (F-BNT1-002): the smoke run and the ETSI suite write their
+# fixtures there through `conformance`, never into ovzdusie's published readings.
+space-conformance.yaml: projects/banskabystrica/spaces/conformance/space.yaml
+datamodel-conformance.yaml: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.yaml
+conformance-air-quality.linkml.yaml: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.linkml.yaml
+conformance-air-quality.v1.schema.json: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.v1.schema.json
+conformance-air-quality.v1.context.jsonld: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.v1.context.jsonld
+conformance-air-quality.v1.example.jsonld: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.v1.example.jsonld
+conformance-air-quality.v1.md: projects/banskabystrica/spaces/conformance/datamodels/conformance-air-quality.v1.md
+endpoint-conformance.yaml: projects/banskabystrica/spaces/conformance/endpoints/conformance.yaml
+policy-conformance-write.yaml: projects/banskabystrica/spaces/conformance/policies/conformance-write.yaml
+policy-conformance-steward-read.yaml: projects/banskabystrica/spaces/conformance/policies/conformance-steward-read.yaml
 # The city's air quality (T-2916): a public static bundle the Portal image ships, reading the
 # EEA stations' PM10 and PM2.5 in banskabystrica-verejne through its own endpoint and nothing else.
 app-ovzdusie.yaml: projects/banskabystrica/apps/banskabystrica-ovzdusie/app.yaml

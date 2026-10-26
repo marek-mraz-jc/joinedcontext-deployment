@@ -397,8 +397,9 @@ def test_public_air_is_the_spaces_one_writer_and_expires_what_it_stops_renewing(
     audiences = {m["config"]["included.custom.audience"] for m in clients["banskabystrica-pipelines"]["rawValues"]["protocolMappers"]}
     assert AIR_SLUG in audiences
     # No person may delete there: the space's other grants name a role and a workload, never a user.
-    for name in ("policy-public-read.yaml", "policy-conformance-write.yaml"):
-        assert manifest(name)["spec"]["assignee"]["kind"] != "user", name
+    assert manifest("policy-public-read.yaml")["spec"]["assignee"]["kind"] != "user"
+    # The conformance suite writes its fixtures in its own space, not among the readings (F-BNT1-002).
+    assert manifest("policy-conformance-write.yaml")["spec"]["contextSpaceRef"]["name"] == "conformance"
 
 
 def test_the_dataset_says_how_often_it_changes_and_where_it_comes_from():

@@ -6,7 +6,7 @@ count the writes it lost.
     scripts/chaos-recovery.py --check      # resolves every pod and credential, deletes nothing
 
 Reads (`--read-rate`, 50/s) and writes (`--write-rate`, 5/s) go through the banskabystrica
-public-air Endpoint on the api host while the test deletes, one target after the other, the
+conformance Endpoint (its own space, F-BNT1-002) on the api host while the test deletes, one target after the other, the
 broker pod, the gateway pod, the Portal's reconciling leader, the primary of postgres-cluster and
 the pipeline-runner pod (grace period 1 s: a crash, not a drain). Per target it records:
 
@@ -213,7 +213,7 @@ class Load:
         self.pool = ThreadPoolExecutor(max_workers=640)  # 64 a second for the 10 s a dead part holds each
 
     def urn(self, n: int) -> str:
-        return f"urn:ngsi-ld:AirQualityObserved:{self.org}:ovzdusie:chaos-{self.run}-{n:06d}"
+        return f"urn:ngsi-ld:AirQualityObserved:{self.org}:conformance:chaos-{self.run}-{n:06d}"
 
     def read(self, n: int) -> None:
         token = self.readers[n % len(self.readers)].get()
@@ -387,10 +387,10 @@ def main() -> int:
     seed = next((n.split("/", 1)[1] for n in kubectl("get", "configmaps", "-n", NAMESPACE, "-o", "name").split()
                  if n.split("/", 1)[1].startswith("gitea-seed-") and n.endswith("banskabystrica")), "")
     manifest = kubectl("get", "configmap", seed, "-n", NAMESPACE, "-o",
-                       r"jsonpath={.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}") if seed else ""
+                       r"jsonpath={.data.projects__banskabystrica__spaces__conformance__endpoints__conformance\.yaml}") if seed else ""
     slug = next((line.split(":", 1)[1].strip() for line in manifest.splitlines() if line.strip().startswith("slug:")), "")
     if not org or not slug:
-        raise RuntimeError("the gateway's org domain or the public-air Endpoint's slug is not on dev")
+        raise RuntimeError("the gateway's org domain or the conformance Endpoint's slug is not on dev")
     writer_form = {"grant_type": "client_credentials", "client_id": WRITER,
                    "client_secret": secret(f"keycloak-client-{WRITER}", "client-secret")}
     readers = [Token(token_url, dict(writer_form)) for _ in range(math.ceil(args.read_rate / EDGE_PER_TOKEN))]

@@ -528,13 +528,16 @@ if has_route context-endpoint; then
 	# slug written into this script would drift from the seed, and a made-up one cannot exist
 	# (slugs are 26+ base32 characters). A seed key is the repository path with `/` as `__`.
 	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap "$(seed_cm banskabystrica)" -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	# The writes go to the conformance space's own Endpoint (F-BNT1-002), never to public-air,
+	# whose space holds the published EEA readings; public-air is read below, anonymously.
+	cep="${JC_SMOKE_WRITE_ENDPOINT:-$(kubectl get configmap "$(seed_cm banskabystrica)" -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__conformance__endpoints__conformance\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
 	# Writes are bound to the conformance ServiceAccount (GW22): its client_credentials token
 	# carries the slug as audience and an azp the gateway resolves to the manifest (PF-45, PF-46).
 	# The apisix-gateway token above is minted for the Portal and names no account here.
 	ep_client="${JC_SMOKE_ENDPOINT_CLIENT_ID:-banskabystrica-conformance}"
 	ep_secret="${JC_SMOKE_ENDPOINT_CLIENT_SECRET:-$(kubectl get secret "keycloak-client-$ep_client" -n "$slug" -o jsonpath='{.data.client-secret}' 2>/dev/null | base64 -d 2>/dev/null || true)}"
 	ep_token=""
-	if [ -z "$ep" ]; then
+	if [ -z "$ep" ] || [ -z "$cep" ]; then
 		skip "endpoint round trip (no Endpoint seeded on the gateway in this instance)"
 	elif [ -n "${JC_SMOKE_NO_TEST_WRITER:-}" ]; then
 		# A production instance holds no test account (T-4678): its pipelines' writes are what the
@@ -553,44 +556,35 @@ if has_route context-endpoint; then
 		# application/json, so the core @context applies; application/ld+json without an @context
 		# member is a 400 (CIM 009 6.3.5), which masked every write check as "passing".
 		# The first create also creates the tenant on Antares (5.5.10); reads before it are 404.
-		urn="urn:ngsi-ld:AirQualityObserved:${org}:ovzdusie:smoke-1"
+		urn="urn:ngsi-ld:AirQualityObserved:${org}:conformance:smoke-1"
 		body='{"id":"'"$urn"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 201 "entity create through the endpoint" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d "$body" "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
-		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
+			-H "Authorization: Bearer $ep_token" -d "$body" "$api/api/endpoint/$cep/ngsi-ld/v1/entities"
+		status 200 "entity read back" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$cep/ngsi-ld/v1/entities/$urn"
 		# An id that is no NGSI-LD URN is refused by the gateway, not stored (PF-43).
 		bad='{"id":"smoke-not-a-urn","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}'
 		status 400 "write with an id that is no NGSI-LD URN is refused" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d "$bad" "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
+			-H "Authorization: Bearer $ep_token" -d "$bad" "$api/api/endpoint/$cep/ngsi-ld/v1/entities"
 		# A URN naming another organization is an id like any other since ADR-N-041: it lands in
 		# this endpoint's space and is removed again, so dev keeps nothing (a run before the rule
 		# changed may have left it: it is deleted first).
 		# A delete names why (JC-Reason, T-4666): without one the gateway answers 400.
 		why="JC-Reason: smoke%20test%20cleanup"
-		other="urn:ngsi-ld:AirQualityObserved:someone-else.sk:ovzdusie:smoke-2"
+		other="urn:ngsi-ld:AirQualityObserved:someone-else.sk:conformance:smoke-2"
 		curl -sS -o /dev/null --max-time 20 -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" \
-			"$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
+			"$api/api/endpoint/$cep/ngsi-ld/v1/entities/$other" 2>/dev/null || true
 		status 201 "an id naming another organization lands in this space (ADR-N-041)" -X POST -H 'Content-Type: application/json' \
-			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$api/api/endpoint/$ep/ngsi-ld/v1/entities"
-		status 204 "and is deleted again" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$other"
-		status 204 "entity delete" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$urn"
-
-		# T-4109: a hand probe an earlier debugging session left in this space; a visitor of the
-		# demo dataset sees it beside the real station. Removed when present, named when removed.
-		# Never eea-SK0263A: that is the station itself, minted by pipeline-public-air with the
-		# instance's JC_ORG_DOMAIN (hel.fi on dev), and the ogc star row reads it (T-4116).
-		for stale in urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe; do
-			got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 -X DELETE \
-				-H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$ep/ngsi-ld/v1/entities/$stale" 2>/dev/null) || got=""
-			[ "$got" = "204" ] && ok "removed the stale test entity $stale"
-		done
+			-H "Authorization: Bearer $ep_token" -d '{"id":"'"$other"'","type":"AirQualityObserved","dateObserved":{"type":"Property","value":"2026-01-01T00:00:00Z"}}' "$api/api/endpoint/$cep/ngsi-ld/v1/entities"
+		status 204 "and is deleted again" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$cep/ngsi-ld/v1/entities/$other"
+		status 204 "entity delete" -X DELETE -H "$why" -H "Authorization: Bearer $ep_token" "$api/api/endpoint/$cep/ngsi-ld/v1/entities/$urn"
 
 		# T-0945: what the space lists, the space serves. An entity whose URN carries another
 		# organization's domain lists (the broker holds it) and answers 400 on retrieve (the
 		# gateway checks the prefix, GW20), so a steward can neither read nor correct it. A
 		# round trip of the script's own entity would never see that: the rows that drift are
-		# the ones somebody else wrote.
-		listed=$(curl -sS --max-time 20 -H "Authorization: Bearer $ep_token" \
+		# the ones somebody else wrote. Read as the public reads public-air: the conformance token
+		# is bound to its own Endpoint alone (F-BNT1-002).
+		listed=$(curl -sS --max-time 20 \
 			"$api/api/endpoint/$ep/ngsi-ld/v1/entities?type=AirQualityObserved&limit=50" 2>/dev/null |
 			tr ',' '\n' | sed -n 's/.*"id":"\(urn:ngsi-ld:[^"]*\)".*/\1/p' | sort -u)
 		if [ -z "$listed" ]; then
@@ -599,7 +593,6 @@ if has_route context-endpoint; then
 			unreadable=""
 			for one in $listed; do
 				got=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 \
-					-H "Authorization: Bearer $ep_token" \
 					"$api/api/endpoint/$ep/ngsi-ld/v1/entities/$one" 2>/dev/null) || got="curl-error"
 				[ "$got" = "200" ] || unreadable="$unreadable $one($got)"
 			done

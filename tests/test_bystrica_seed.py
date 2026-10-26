@@ -84,9 +84,9 @@ def test_each_projects_quotas_hold_what_it_declares_with_room_for_the_demo():
         # and fifth the city map's and the data grids' (T-2782), then the public space's events,
         # schools and weather as their own datasets (T-4344), and OpenStreetMap's health places
         # and charging stations (T-4514), and the cadastre's parcels (T-4697), and the city's own
-        # catalogue (T-5493).
+        # catalogue (T-5493). The conformance suite's space (F-BNT1-002) has no public Endpoint.
         (CITY, "banskabystrica", ["ovzdusie", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                                  "banskabystrica-otvorene-data", "catalog"], 13),
+                                  "banskabystrica-otvorene-data", "catalog", "conformance"], 13),
     ):
         quotas = one(folder, "Project", project)["spec"]["quotas"]
         declared = {doc["metadata"]["name"] for _, doc in manifests(folder, "ContextSpace")}
@@ -142,7 +142,9 @@ def test_no_service_account_can_write_into_the_other_bodys_space():
         for path, policy in manifests(folder, "Policy"):
             if policy["spec"].get("assignee", {}).get("kind") != "serviceAccount":
                 continue
-            assert policy["spec"]["contextSpaceRef"]["name"] in own | {"ovzdusie"}, path.name
+            # The city's conformance account writes its fixtures in its own space (F-BNT1-002).
+            suite = {"conformance"} if project == "banskabystrica" else set()
+            assert policy["spec"]["contextSpaceRef"]["name"] in own | suite, path.name
 
 
 def test_every_endpoint_slug_is_unguessable_and_unique():
