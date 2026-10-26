@@ -55,7 +55,11 @@ for (const name of Object.keys(EXPECT)) {
           await expect(f.locator("html")).toHaveAttribute("lang", lang);
           expect(requests.filter((r) => ![VIZ, CATALOGUE, API, `tiles.${DOMAIN}`].includes(r.url.hostname)).map((r) => String(r.url))).toEqual([]);
           expect(errors).toEqual([]);
-          if (e.map) await page.waitForTimeout(500);
+          if (e.map) {
+            await f.locator("#map").scrollIntoViewIfNeeded();
+            await expect(f.locator("#map .maplibregl-canvas")).toHaveCount(1, { timeout: 20000 });
+            await page.waitForTimeout(500);
+          }
           await shot(page, `${name}-${width}-${theme}-${lang}`);
         });
       }
@@ -162,12 +166,49 @@ test("the map asks the grid's query within its view as GeoJSON", async ({ page, 
   await expect.poll(() => apiCalls(requests).some((r) => r.headers.accept === "application/geo+json" && r.url.searchParams.get("georel") === "within" && r.url.searchParams.get("q") === 'status=="working"')).toBe(true);
 });
 
+test("MapLibre and its tiles load only once the map is in the reader's window (T-5794)", async ({ page, context }) => {
+  const requests = await serve(context);
+  // A phone: the table's page fills the window, the map starts below the fold.
+  await open(page, "point", { width: 400 });
+  const f = frame(page);
+  await expect(rows(f)).toHaveCount(EXPECT.point.rows, { timeout: 20000 });
+  await expect(f.locator("#map-section")).toBeVisible();
+  // The frame takes its content's height from the frame's message.
+  await expect.poll(() => page.locator("#explore").evaluate((e) => e.getBoundingClientRect().height), { timeout: 20000 }).toBeGreaterThan(1000);
+  const outerTop = await page.locator("#explore").evaluate((e) => e.getBoundingClientRect().top);
+  const mapTop = await f.locator("#map").evaluate((m) => m.getBoundingClientRect().top);
+  expect(outerTop + mapTop).toBeGreaterThan(900);
+  const mapLib = () => requests.filter((r) => /maplibre-gl.*\.mjs$/.test(r.url.pathname) || r.url.hostname === `tiles.${DOMAIN}`);
+  await page.waitForTimeout(1500);
+  expect(mapLib().map((r) => String(r.url))).toEqual([]);
+  await expect(f.locator("#map .maplibregl-canvas")).toHaveCount(0);
+  // The reader scrolls down to the map.
+  await page.evaluate((y) => window.scrollTo(0, y), outerTop + mapTop - 100);
+  await expect(f.locator("#map .maplibregl-canvas")).toHaveCount(1, { timeout: 20000 });
+  expect(mapLib().length).toBeGreaterThan(0);
+});
+
+test("a row's \"Show on the map\" before the map loaded opens the map at the place (T-5794)", async ({ page, context }) => {
+  await serve(context);
+  await open(page, "point", { width: 400 });
+  const f = frame(page);
+  await expect(rows(f)).toHaveCount(EXPECT.point.rows, { timeout: 20000 });
+  await expect(f.locator("#map-section")).toBeVisible();
+  await f.getByRole("button", { name: /^Open.*: Station 1$/ }).first().click();
+  await expect(f.locator("#detail-title")).toHaveText("Station 1");
+  await f.locator("#detail-onmap").click();
+  await expect(f.locator("#map .maplibregl-canvas")).toHaveCount(1, { timeout: 20000 });
+  const inner = page.frame({ url: /explore\.html/ });
+  await expect.poll(() => inner.evaluate(() => (self.jcExploreMap ? self.jcExploreMap.getZoom() : 0)), { timeout: 20000 }).toBeGreaterThanOrEqual(15);
+});
+
 test("past 1000 in view the map draws the type's vector tiles; a point opens its entity (T-5189)", async ({ page, context }) => {
   for (const width of [1440, 400]) {
     const requests = await serve(context);
     await open(page, "tiled", { width });
     const f = frame(page);
     await expect(f.locator("#map-section")).toBeVisible({ timeout: 20000 });
+    await f.locator("#map").scrollIntoViewIfNeeded();
     const tiles = () => apiCalls(requests).filter((r) => /\/tiles\/WebMercatorQuad\/\d+\/\d+\/\d+$/.test(r.url.pathname));
     await expect.poll(tiles, { timeout: 20000 }).not.toHaveLength(0);
     const inner = page.frame({ url: /explore\.html/ });
@@ -254,6 +295,7 @@ test("a point opens the same card; the fold holds the id and the API links; the 
   await open(page, "point", { lang: "sk" });
   const f = frame(page);
   await expect(f.locator("#map-section")).toBeVisible({ timeout: 20000 });
+  await f.locator("#map").scrollIntoViewIfNeeded();
   const inner = page.frame({ url: /explore\.html/ });
   await expect.poll(() => inner.evaluate(() => (self.jcExploreMap && self.jcExploreMap.getLayer("jc-point") ? self.jcExploreMap.queryRenderedFeatures({ layers: ["jc-point"] }).length : 0)), { timeout: 20000 }).toBeGreaterThan(0);
   const at = await inner.evaluate(() => {

@@ -8,9 +8,12 @@ import { shots, CATALOGUE, serve } from "./explore-hosts.mjs";
 
 const frame = (page) => page.frameLocator("#explore");
 const inner = (page) => page.frame({ url: /explore\.html/ });
+const seeMap = (f) => f.locator("#map").scrollIntoViewIfNeeded({ timeout: 20000 });
 const open = async (page, { lang = "sk", theme, width = 1440, extra = "" } = {}) => {
   await page.setViewportSize({ width, height: 900 });
   await page.goto(`https://${CATALOGUE}/dataset/stations?lang=${lang}${theme ? "&theme=" + theme : ""}${extra ? "&extra=" + encodeURIComponent(extra) : ""}`);
+  // The map loads once it is in view (T-5794): the reader scrolls to it.
+  await seeMap(frame(page));
 };
 const shot = (page, name) => page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: true });
 const points = (page) => inner(page).evaluate(() => (self.jcExploreMap && self.jcExploreMap.getLayer("jc-point") ? self.jcExploreMap.queryRenderedFeatures({ layers: ["jc-point"] }).map((f) => f.geometry.coordinates[0]) : []));
@@ -97,6 +100,7 @@ test("the publisher's map defaults start the map, and the reader's reset returns
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`https://${CATALOGUE}/dataset/publishedmap?lang=sk`);
     const f = frame(page);
+    await seeMap(f);
     await expect(f.locator("#map-count")).toHaveText(/z 12/, { timeout: 20000 });
     await expect(f.locator("#map-legend")).toContainText("Áno", { timeout: 20000 });
     await expect(f.locator("#map-legend")).toContainText("Nie");
