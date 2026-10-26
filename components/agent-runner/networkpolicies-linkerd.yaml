@@ -13,6 +13,12 @@ agent-proxy-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # A workspace is meshed, so its calls land here (F-PLT1-008).
+        - podSelector:
+            matchExpressions:
+              - key: joinedcontext.com/run-id
+                operator: Exists
+          componentNamespace: portal
       ports:
         - port: 4143
           protocol: TCP
@@ -99,6 +105,24 @@ portal-linkerd-to-agent-proxy:
             matchLabels:
               app.kubernetes.io/name: agent-runner-proxy
           componentNamespace: agent-runner
+      ports:
+        - protocol: TCP
+          port: 4143
+
+# The Portal's calls to a meshed workspace land on its inbound proxy (F-PLT1-008).
+portal-linkerd-to-agent-workspaces:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: joinedcontext.com/run-id
+                operator: Exists
+          componentNamespace: portal
       ports:
         - protocol: TCP
           port: 4143
