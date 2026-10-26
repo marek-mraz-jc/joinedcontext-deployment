@@ -679,14 +679,16 @@ def test_the_citys_air_quality_is_a_public_static_app_on_its_own_endpoint():
 CLEARED = {
     ("banskabystrica", "public-air"), ("banskabystrica", "banskabystrica-podujatia"),
     ("banskabystrica", "banskabystrica-skoly"), ("banskabystrica", "banskabystrica-pocasie"),
-    ("banskabystrica", "banskabystrica-zdravie"), ("banskabystrica", "banskabystrica-nabijanie"),
+    ("banskabystrica", "banskabystrica-zdravie"),
     ("banskabystrica", "banskabystrica-kataster"),
     ("bbsk", "bbsk-kpi"), ("bbsk", "bbsk-hranice"), ("bbsk", "bbsk-organizacie"), ("bbsk", "bbsk-zariadenia"),
     ("bbsk", "bbsk-mosty"),
     # The events, cleared by the owner (2026-10-20): the region's and Slovakia's (T-4895).
     ("bbsk", "bbsk-podujatia"),
     # Each body's own catalogue of what it publishes (owner 2026-10-19, T-4746 addendum, T-5493).
-    ("banskabystrica", "catalog"), ("bbsk", "catalog"),
+    ("bbsk", "catalog"),
+    # Off the catalogue while empty on dev (T-5767, owner 2026-10-26): banskabystrica-nabijanie
+    # (every charging station refused) and banskabystrica catalog (no Dataset record written).
 }
 
 

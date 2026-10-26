@@ -69,7 +69,11 @@ def test_each_organizations_catalogue_publishes_to_its_own_ckan_organization():
             continue
         door = next(d for _, d in manifests() if d["kind"] == "Endpoint" and d["metadata"]["name"] == "catalog"
                     and d["metadata"]["namespace"] == project)
-        assert door["spec"]["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": ckan[project]}
+        # A door that holds no record yet stays off the catalogue (T-5767): it publishes nowhere.
+        if door["spec"].get("catalog", {}).get("harvest", True) is not False:
+            assert door["spec"]["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": ckan[project]}
+        else:
+            assert "publish" not in door["spec"], project
         # No policyRef: the Portal's write and the public read are both its space's Policies.
         assert "policyRef" not in door["spec"], project
         titles = door["metadata"]["title"]

@@ -17,11 +17,11 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:nabijanie-read
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: banskabystrica }
-      license: odc-odbl
   catalog:
+    # Off the catalogue (T-5767, owner order 2026-10-26T06:33Z: an empty dataset leaves it): on dev
+    # the broker refuses every one of the 22 charging stations OpenStreetMap maps (403, T-5717).
+    # The harvest feeds leave it out (EP-139); publish it again once it holds data.
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain

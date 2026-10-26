@@ -165,8 +165,9 @@ PUBLIC_SPACES = {"zilina-verejne", "zilina-uniza", "zilina-kpi", "zilina-doprava
 # The public space's three types are three datasets (T-4344); its own Endpoint stays for the Apps.
 PUBLISHED = {"zilina-uniza", "zilina-kpi", "zilina-ovzdusie", "zilina-pamiatky", "zilina-zeleznicne-stanice",
              # The city portal's four kinds of thing, one dataset each (T-5232).
-             "zilina-parkoviska", "zilina-mhd", "zilina-scitace", "zilina-svietidla"}
-PUBLIC = PUBLISHED | {"zilina-verejne", "zilina-doprava"}
+             "zilina-parkoviska", "zilina-scitace", "zilina-svietidla"}
+# zilina-mhd stays public for its readers but leaves the catalogue while empty on dev (T-5767).
+PUBLIC = PUBLISHED | {"zilina-verejne", "zilina-doprava", "zilina-mhd"}
 
 
 def test_every_public_space_is_published_to_the_projects_catalogue_with_its_record():
