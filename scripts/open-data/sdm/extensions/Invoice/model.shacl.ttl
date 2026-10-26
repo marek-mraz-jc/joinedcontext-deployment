@@ -26,23 +26,12 @@ jc:Invoice a sh:NodeShape ;
             sh:nodeKind sh:Literal ;
             sh:order 11 ;
             sh:path <https://smartdatamodels.org/dataModel.CPSV-AP/identifier> ],
-        [ sh:datatype xsd:float ;
-            sh:description "The source column `Suma`." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:Literal ;
-            sh:order 14 ;
-            sh:path jc:suma ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Rok`." ;
             sh:maxCount 1 ;
             sh:nodeKind sh:Literal ;
             sh:order 13 ;
             sh:path jc:rok ],
-        [ sh:description "The service the row was read from." ;
-            sh:maxCount 1 ;
-            sh:nodeKind sh:IRI ;
-            sh:order 1 ;
-            sh:path sdm:source ],
         [ sh:datatype xsd:string ;
             sh:description "The source column `Predmet_faktúry`." ;
             sh:maxCount 1 ;

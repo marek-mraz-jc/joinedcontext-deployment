@@ -47,7 +47,6 @@ Specialises `Entity`.
 | `priloha` | Property | `string` |  |  | `jc:priloha` | The source column `Príloha`. |
 | `rezort` | Property | `string` |  |  | `jc:rezort` | The source column `Rezort`. |
 | `rok` | Property | `integer` |  |  | `jc:rok` | The source column `Rok`. |
-| `sidloDodavatela` | Property | `string` |  |  | `jc:sidloDodavatela` | The source column `Sídlo_dodávateľa`. |
 | `sidloObjednavatela` | Property | `string` |  |  | `jc:sidloObjednavatela` | The source column `Sídlo_objednávateľa`. |
 | `sumaSpoluVEUR` | Property | `string` |  |  | `jc:sumaSpoluVEUR` | The source column `Suma_spolu_v_EUR`. |
 | `sumaVEUR` | Property | `string` |  |  | `jc:sumaVEUR` | The source column `Suma_v_EUR`. |

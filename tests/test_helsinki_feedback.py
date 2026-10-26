@@ -76,7 +76,7 @@ def test_recorded_reports_map_to_valid_service_requests_and_bad_rows_are_counted
     assert "<" not in answer and "&nbsp;" not in answer and answer.startswith("Hei!\nKyseinen kohta")
     private = reports[URN.format("9000006")]
     text, notes = private["description"]["languageMap"]["@none"], private["status_notes"]["value"]
-    assert text == "Katuvalo rikki.\nSoittakaa [phone removed], [phone removed] tai [phone removed], [email removed]\nHavaittu 2026-10-19.", text
+    assert text == "Katuvalo rikki.\nSoittakaa [phone removed], [phone removed] tai [phone removed], [email removed]\nHavaittu 2026-10-19. Auto [plate removed] ja [plate removed] esteenä, ei ABCD-1234.", text
     assert notes == "Hei!\nKorjattu 22.10.2026. Lisätietoja: [email removed], puh. [phone removed].", notes
     unknown = reports[URN.format("9000005")]
     assert unknown["service_code"]["value"] == "9999" and "service_name" not in unknown

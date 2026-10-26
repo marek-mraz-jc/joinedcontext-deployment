@@ -2638,21 +2638,6 @@
     "rezort": {
       "@id": "jc:rezort"
     },
-    "riaditel": {
-      "@id": "jc:riaditel"
-    },
-    "riaditelEmail": {
-      "@id": "jc:riaditelEmail"
-    },
-    "riaditelMobilnyTelefon": {
-      "@id": "jc:riaditelMobilnyTelefon"
-    },
-    "riaditelPevnaLinka": {
-      "@id": "jc:riaditelPevnaLinka"
-    },
-    "riaditelPracMobil": {
-      "@id": "jc:riaditelPracMobil"
-    },
     "rimskokatolickaCirkev": {
       "@id": "jc:rimskokatolickaCirkev",
       "@type": "xsd:float"
@@ -2857,9 +2842,6 @@
     "sidlo": {
       "@id": "jc:sidlo"
     },
-    "sidloDodavatela": {
-      "@id": "jc:sidloDodavatela"
-    },
     "sidloObjednavatela": {
       "@id": "jc:sidloObjednavatela"
     },
@@ -3056,12 +3038,6 @@
     },
     "status": {
       "@id": "ngsi-ld:status"
-    },
-    "statutari": {
-      "@id": "jc:statutari"
-    },
-    "statutarnyZastupca": {
-      "@id": "jc:statutarnyZastupca"
     },
     "stav": {
       "@id": "jc:stav"
@@ -3449,9 +3425,6 @@
     },
     "ulica": {
       "@id": "jc:ulica"
-    },
-    "ulicaACislo": {
-      "@id": "jc:ulicaACislo"
     },
     "ulicaACisloDomu": {
       "@id": "jc:ulicaACisloDomu"

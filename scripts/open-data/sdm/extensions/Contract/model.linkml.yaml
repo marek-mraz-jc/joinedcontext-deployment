@@ -137,10 +137,6 @@ slots:
     range: integer
     annotations:
       ngsi_ld_kind: Property
-  sidloDodavatela:
-    description: The source column `Sídlo_dodávateľa`.
-    annotations:
-      ngsi_ld_kind: Property
   sidloObjednavatela:
     description: The source column `Sídlo_objednávateľa`.
     annotations:
@@ -201,7 +197,6 @@ classes:
     - priloha
     - rezort
     - rok
-    - sidloDodavatela
     - sidloObjednavatela
     - sumaSpoluVEUR
     - sumaVEUR

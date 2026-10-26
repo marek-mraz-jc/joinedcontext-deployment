@@ -224,10 +224,6 @@ slots:
     range: float
     annotations:
       ngsi_ld_kind: Property
-  statutarnyZastupca:
-    description: The source column `Štatutárny_zástupca`.
-    annotations:
-      ngsi_ld_kind: Property
   stavFinanVyuctovania:
     description: The source column `Stav_finan__vyúčtovania`.
     annotations:
@@ -250,10 +246,6 @@ slots:
       ngsi_ld_kind: Property
   typTabora:
     description: The source column `Typ_tábora`.
-    annotations:
-      ngsi_ld_kind: Property
-  ulicaACislo:
-    description: The source column `Ulica_a_číslo`.
     annotations:
       ngsi_ld_kind: Property
   vSuladeSPrioritamiPoskytovaniaDotacii:
@@ -328,14 +320,12 @@ classes:
     - schvalenaVyskaDotacie
     - sidlo
     - skutocneCerpanie
-    - statutarnyZastupca
     - stavFinanVyuctovania
     - stavVybav
     - stavZiadosti
     - typ
     - typDotacie
     - typTabora
-    - ulicaACislo
     - vSuladeSPrioritamiPoskytovaniaDotacii
     - vZN
     - vratenaNedocerpanaCastDotacieDna

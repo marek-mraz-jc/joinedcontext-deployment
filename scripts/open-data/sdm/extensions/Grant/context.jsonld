@@ -175,9 +175,6 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
-    "statutarnyZastupca": {
-      "@id": "jc:statutarnyZastupca"
-    },
     "stavFinanVyuctovania": {
       "@id": "jc:stavFinanVyuctovania"
     },
@@ -197,9 +194,6 @@
       "@id": "jc:typTabora"
     },
     "type": "@type",
-    "ulicaACislo": {
-      "@id": "jc:ulicaACislo"
-    },
     "vSuladeSPrioritamiPoskytovaniaDotacii": {
       "@id": "jc:vSuladeSPrioritamiPoskytovaniaDotacii"
     },
