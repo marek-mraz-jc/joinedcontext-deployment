@@ -11,9 +11,10 @@ counted by its reason. Without a container runtime the Bento cases skip.
 import copy
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
+from zoneinfo import ZoneInfo
 
 import pytest
 import yaml
@@ -28,6 +29,7 @@ BARCELONA = ROOT / "components/context-gateway/seed/barcelona"
 MAPPING = BARCELONA / "barcelona-pipeline-agenda-bento.yaml"
 FIXTURE = Path(__file__).resolve().parent / "fixtures/barcelona/agenda/agenda-sql.json"
 URN = "urn:ngsi-ld:Event:barcelona.cat:barcelona:{}"
+MADRID = ZoneInfo("Europe/Madrid")
 
 
 def answer(modified: str | None = None, records: list | None = None) -> dict:
@@ -137,12 +139,62 @@ def test_the_pipeline_runs_daily_through_the_one_door_and_the_endpoint_publishes
     assert not {"upsertBatch", "createBatch", "deleteBatch", "createEntity"} & set(policy["operations"])
 
 
+def madrid_day_end(day: date) -> datetime:
+    """The local midnight after `day` in Barcelona, at the offset that midnight has."""
+    return datetime.combine(day + timedelta(days=1), datetime.min.time(), MADRID).astimezone(timezone.utc)
+
+
+def expected_expiry(ends: date | None, now: int) -> int:
+    """The mapping's expiry rule, written again: the end of the last day or three days after the
+    run, whichever comes first, and an hour after the run at least."""
+    lease = now + 259200
+    end = lease if ends is None else min(int(madrid_day_end(ends).timestamp()), lease)
+    return max(end, now + 3600)
+
+
+def expiry_map() -> str:
+    """The `map expiry` definition, verbatim from the agenda mapping."""
+    text = next(step["mapping"] for step in yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]
+                if "map expiry {" in step.get("mapping", ""))
+    start = text.index("map expiry {")
+    return text[start:text.index("\n}\n", start) + 2]
+
+
+def at(stamp: str) -> int:
+    return int(datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
+
+
+@requires_docker
+@pytest.mark.parametrize(("ends", "now", "expires"), [
+    # 2026-03-29 turns to summer time at 01:00Z: the day before ends at its +01:00 midnight,
+    # the day itself at the next day's +02:00 midnight.
+    ("2026-03-28", "2026-03-28T10:00:00Z", "2026-03-28T23:00:00Z"),
+    ("2026-03-29", "2026-03-29T10:00:00Z", "2026-03-29T22:00:00Z"),
+    # 2026-10-25 turns back at 01:00Z: the day before ends at +02:00, the day itself at +01:00.
+    ("2026-10-24", "2026-10-24T10:00:00Z", "2026-10-24T22:00:00Z"),
+    ("2026-10-25", "2026-10-25T10:00:00Z", "2026-10-25T23:00:00Z"),
+    # Within the last hour before that midnight the one-hour floor wins (run 40238119240's case).
+    ("2026-10-25", "2026-10-25T22:05:09Z", "2026-10-25T23:05:09Z"),
+    # An activity ending in a week, or with no end, leaves three days after the run.
+    ("2026-11-01", "2026-10-25T10:00:00Z", "2026-10-28T10:00:00Z"),
+    (None, "2026-03-29T00:30:00Z", "2026-04-01T00:30:00Z"),
+])
+def test_an_event_expires_at_the_madrid_midnight_after_its_last_day_on_both_summer_time_changes(ends, now, expires):
+    assert expected_expiry(None if ends is None else date.fromisoformat(ends), at(now)) == at(expires)
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", BENTO, "blobl", expiry_map() + '\nroot = this.apply("expiry")'],
+        input=json.dumps({"ends": ends, "now": at(now)}).encode() + b"\n", capture_output=True, timeout=60)
+    assert result.returncode == 0, result.stderr.decode()
+    assert int(result.stdout.decode().strip()) == at(expires), (result.stdout, result.stderr)
+
+
 @requires_docker
 def test_one_place_within_20_m_is_one_event_and_each_event_expires_by_itself():
-    from datetime import timedelta
-    from zoneinfo import ZoneInfo
     base = answer()["result"]["records"][1]
-    today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+    # Bento reads its own clock inside the run: the expiry it writes lies between the rule at
+    # the second before the run and at the second after it.
+    before = int(datetime.now(timezone.utc).timestamp())
+    today = datetime.fromtimestamp(before, MADRID).date()
 
     def row(rid, lat, name="Mercat de prova", ends="2027-01-04"):
         return dict(base, id=rid, name=name, lat=str(lat), lon="2.17335", ends=ends)
@@ -151,19 +203,15 @@ def test_one_place_within_20_m_is_one_event_and_each_event_expires_by_itself():
     events, log, code = run(answer(records=[
         row("11", 41.38004), row("12", 41.38013), row("13", 41.38049),
         dict(row("14", 41.39, name="Taller d'avui", ends=today.isoformat()), starts=today.isoformat())]))
+    after = int(datetime.now(timezone.utc).timestamp()) + 1
     assert code == 0, log
     by_id = {e["id"].rsplit(":", 1)[1]: e for e in events}
     assert len({"11", "12"} & set(by_id)) == 1 and {"13", "14"} <= set(by_id), sorted(by_id)
     assert '{\\"duplicate\\":1}' in log, log
-    now = datetime.now(timezone.utc)
-    for event in events:
-        expires = datetime.strptime(event["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-        assert now < expires <= now + timedelta(days=3, minutes=1), event
-    midnight = datetime.combine(today + timedelta(days=1), datetime.min.time(), ZoneInfo("Europe/Madrid"))
-    # Within the last hour before midnight the one-hour floor wins over the end of the day.
-    floor = max(midnight, now + timedelta(hours=1)).astimezone(timezone.utc).replace(microsecond=0)
-    expires = datetime.strptime(by_id["14"]["expiresAt"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    assert floor <= expires <= max(midnight, floor + timedelta(minutes=1)), (expires, midnight, now)
+    for rid, event in by_id.items():
+        ends = date.fromisoformat(today.isoformat() if rid == "14" else "2027-01-04")
+        expires = at(event["expiresAt"])
+        assert expected_expiry(ends, before) <= expires <= expected_expiry(ends, after), (event, before, after)
 
 
 @requires_docker
