@@ -216,6 +216,17 @@ def identities(path: str, method: str, call: dict, state: dict) -> tuple[int, st
         branches = state.setdefault("queued", {}).get(runs.group(2), [])
         listed = [{"id": i + 1, "head_branch": b, "status": "queued"} for i, b in enumerate(branches)]
         return 200, json.dumps({"total_count": len(listed), "workflow_runs": listed}, separators=(",", ":"))
+    # The newest run of a repository (T-5774): `runs` is {name: {"head_sha", "conclusion"}}, in
+    # Gitea 1.27's field order, the conclusion after the nested repository it carries.
+    newest = re.fullmatch(r"/api/v1/repos/([^/]+)/([^/]+)/actions/runs\?limit=1", path)
+    if newest and method == "GET":
+        run = state.setdefault("runs", {}).get(newest.group(2))
+        listed = [] if run is None else [{
+            "id": 1, "head_sha": run["head_sha"], "head_branch": "main", "status": run.get("status", "completed"),
+            "repository": {"id": 7, "name": newest.group(2), "default_branch": "main"},
+            "conclusion": run["conclusion"],
+        }]
+        return 200, json.dumps({"total_count": len(listed), "workflow_runs": listed})
     dispatch = re.fullmatch(r"/api/v1/repos/([^/]+)/([^/]+)/actions/workflows/build\.yml/dispatches", path)
     if dispatch and method == "POST":
         ref = json.loads(call["data"])["ref"]

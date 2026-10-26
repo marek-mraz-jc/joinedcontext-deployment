@@ -284,6 +284,7 @@
  "test_smoke_catalogue.py": 2.1,
  "test_smoke_edge_wave.py": 2.5,
  "test_smoke_forge_login_script.py": 18.2,
+ "test_smoke_public_apps.py": 17.3,
  "test_smoke_script.py": 1261.7,
  "test_smoke_source_links.py": 0.0,
  "test_smoke_ws.py": 0.0,
