@@ -325,6 +325,27 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### HeritageArea
+
+One area of the city's cultural heritage maps, its outline and its kind: a strongpoint of the First World War land fortifications, or an area of the landscape culture map (a park, a boulevard, a manor or villa environment, a residential ensemble...), as the Smart Data Model extension HeritageArea (PointOfInterest base).
+
+IRI: `jc:HeritageArea`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `heritageCategory` | Property | [`HeritageCategory`](#heritagecategory) | yes |  | `jc:heritageCategory` | What kind of protected or valued cultural landscape the area is: a strongpoint of the First World War land fortifications, or one of the kinds of the city's landscape culture map. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record, or the station last reported. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### GtfsStop
 
 One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -626,6 +647,7 @@ IRI: `ngsi-ld:Entity`
 | `publicAuthority` | An office of the city or the state: administration, justice, taxation, planning or customs. |
 | `sports` | A public sports facility or outdoor exercise place. |
 | `culture` | A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden. |
+| `waterfrontSite` | A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025). |
 
 ### ServiceRequestStatus
 
@@ -722,3 +744,26 @@ Where an event stands, schema.org's EventStatusType values as Linked Events publ
 | `EventPostponed` | Moved to a date not yet known. |
 | `EventRescheduled` | Moved to the new date the event now gives. |
 | `EventMovedOnline` | Held online instead of at its place. |
+
+### HeritageCategory
+
+The kinds of the fortification and landscape culture maps a HeritageArea is one of.
+
+| Value | Meaning |
+|---|---|
+| `fortification` | A strongpoint (tukikohta) of the First World War land fortifications. |
+| `park` | A park or a small park (puisto, puistikko). |
+| `boulevard` | A tree-lined park street (puistokatu). |
+| `square` | A square (aukio). |
+| `cemetery` | A cemetery (hautausmaa). |
+| `peoplesPark` | A people's park (kansanpuisto). |
+| `sportsPark` | A sports or exercise park. |
+| `allotmentGarden` | An allotment garden (siirtolapuutarha). |
+| `holidayArea` | A holiday or recreation area (loma-alue). |
+| `otherGreenArea` | Any other green area of the map. |
+| `villaPark` | A villa park or villa area (huvilapuisto). |
+| `manorPark` | A manor park (kartanopuisto). |
+| `manorEnvironment` | The cultural environment of a manor or an estate centre. |
+| `residentialEnsemble` | A residential area kept as an ensemble. |
+| `publicBuildingGrounds` | The grounds of a public building. |
+| `courtyard` | A courtyard (piha). |

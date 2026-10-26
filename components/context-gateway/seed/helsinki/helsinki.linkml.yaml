@@ -924,6 +924,23 @@ slots:
           de: Gliederungsebene
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  heritageCategory:
+    slot_uri: jc:heritageCategory
+    description: >-
+      What kind of protected or valued cultural landscape the area is: a strongpoint of the First
+      World War land fortifications, or one of the kinds of the city's landscape culture map.
+    range: HeritageCategory
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh pamiatky
+          cs: Druh památky
+          en: Heritage category
+          de: Denkmalart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   stewardNote:
     slot_uri: jc:stewardNote
     description: >-
@@ -2622,6 +2639,24 @@ classes:
       - source
       - publicAreaPermits
       - areaIndicators
+  HeritageArea:
+    class_uri: jc:HeritageArea
+    description: >-
+      One area of the city's cultural heritage maps, its outline and its kind: a strongpoint of the
+      First World War land fortifications, or an area of the landscape culture map (a park, a
+      boulevard, a manor or villa environment, a residential ensemble...), as the Smart Data Model
+      extension HeritageArea (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/HeritageArea
+      label:
+        tag: label
+        value:
+          sk: Kultúrne dedičstvo
+          cs: Kulturní dědictví
+          en: Heritage area
+          de: Kulturerbe
+    slots: [name, heritageCategory, description, dateModified, dataProvider, source]
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -2952,6 +2987,8 @@ enums:
       sports: { description: A public sports facility or outdoor exercise place. }
       culture:
         description: A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden.
+      waterfrontSite:
+        description: A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025).
   ServiceRequestStatus:
     description: Open311's two report states, as Smart Data Models' service_requests names them.
     permissible_values:
@@ -3083,3 +3120,102 @@ enums:
               fi: Siirretty verkkoon
               en: Moved online
               de: Online verlegt
+  HeritageCategory:
+    description: The kinds of the fortification and landscape culture maps a HeritageArea is one of.
+    permissible_values:
+      fortification:
+        description: A strongpoint (tukikohta) of the First World War land fortifications.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Linnoituksen tukikohta, en: Fortification strongpoint }
+      park:
+        description: A park or a small park (puisto, puistikko).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Puisto, en: Park }
+      boulevard:
+        description: A tree-lined park street (puistokatu).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Puistokatu, en: Boulevard }
+      square:
+        description: A square (aukio).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Aukio, en: Square }
+      cemetery:
+        description: A cemetery (hautausmaa).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Hautausmaa, en: Cemetery }
+      peoplesPark:
+        description: A people's park (kansanpuisto).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Kansanpuisto, en: People's park }
+      sportsPark:
+        description: A sports or exercise park.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Urheilu- tai liikuntapuisto, en: Sports park }
+      allotmentGarden:
+        description: An allotment garden (siirtolapuutarha).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Siirtolapuutarha, en: Allotment garden }
+      holidayArea:
+        description: A holiday or recreation area (loma-alue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Loma-alue, en: Holiday area }
+      otherGreenArea:
+        description: Any other green area of the map.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Muu viheralue, en: Other green area }
+      villaPark:
+        description: A villa park or villa area (huvilapuisto).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Huvilapuisto, en: Villa park }
+      manorPark:
+        description: A manor park (kartanopuisto).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Kartanopuisto, en: Manor park }
+      manorEnvironment:
+        description: The cultural environment of a manor or an estate centre.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Kartanon kulttuuriympäristö, en: Manor environment }
+      residentialEnsemble:
+        description: A residential area kept as an ensemble.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Asuinalueen kokonaisuus, en: Residential ensemble }
+      publicBuildingGrounds:
+        description: The grounds of a public building.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Julkisen rakennuksen ympäristö, en: Public building grounds }
+      courtyard:
+        description: A courtyard (piha).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Piha, en: Courtyard }

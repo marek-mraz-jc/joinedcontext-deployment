@@ -40,6 +40,9 @@
     "GtfsStop": {
       "@id": "sdm:GtfsStop"
     },
+    "HeritageArea": {
+      "@id": "jc:HeritageArea"
+    },
     "KeyPerformanceIndicator": {
       "@id": "sdm:KeyPerformanceIndicator"
     },
@@ -222,6 +225,14 @@
     },
     "headsign": {
       "@id": "jc:headsign"
+    },
+    "heritageCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:heritageCategory"
     },
     "id": "@id",
     "identifier": {

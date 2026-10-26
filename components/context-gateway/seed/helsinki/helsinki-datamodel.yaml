@@ -7,7 +7,7 @@ metadata:
 spec:
   contextSpaceRef: helsinki
   linkml: ./helsinki.linkml.yaml
-  version: 1.10.1
+  version: 1.11.0
   lifecycle: published
   classes:
     - Event
@@ -22,6 +22,7 @@ spec:
     - OnStreetParking
     - CityWork
     - AdministrativeArea
+    - HeritageArea
     - GtfsStop
     - PublicTransportRoute
     - GtfsStation

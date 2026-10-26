@@ -91,6 +91,12 @@ SPACE_EXTENSIONS = {
         "description": "One line of flood defences: what it is built of, who keeps it and the flood it is designed for.",
         "why": "no Smart Data Model holds a flood defence structure",
     },
+    # Helsinki's cultural heritage maps (T-5670): the WWI fortification strongpoints and the landscape culture areas.
+    "HeritageArea": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "helsinki/helsinki.linkml.yaml",
+        "description": "One area of a city's cultural heritage map: its outline and its kind, such as a fortification or a historic park.",
+        "why": "PointOfInterest's category lists services and amenities, not the kinds of a heritage map, and no Smart Data Model holds a heritage area",
+    },
 }
 SDM_HEADER = ("$schema", "$schemaVersion", "$id", "modelTags", "title", "description", "derivedFrom", "license")
 JSON_TYPE = {"integer": "integer", "float": "number", "date": "string", "datetime": "string", "uri": "string", "string": "string"}
