@@ -25,7 +25,6 @@ spec:
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: barcelona }
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name:

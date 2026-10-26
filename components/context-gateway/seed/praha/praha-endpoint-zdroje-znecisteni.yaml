@@ -21,7 +21,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Sources by address; the operator, its company number and the source's name are not read: some
     # operators are sole traders, private persons (T-5429).

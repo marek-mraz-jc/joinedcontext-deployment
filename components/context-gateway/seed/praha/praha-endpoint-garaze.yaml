@@ -23,7 +23,6 @@ spec:
       # too, but grant no sublicence: the record claims no licence of its own and names the source
       # and its terms (owner 2026-10-22T18:40Z).
       license: other-at
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Garages of a company: no record names a person.
     personalData: does-not-contain

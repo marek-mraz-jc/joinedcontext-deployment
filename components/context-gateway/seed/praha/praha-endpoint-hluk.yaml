@@ -20,7 +20,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Computed areas of a sound level: no record names a person.
     personalData: does-not-contain

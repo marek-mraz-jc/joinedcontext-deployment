@@ -19,7 +19,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # The public transport network; no record names a person.
     personalData: does-not-contain

@@ -21,7 +21,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Places of legal persons and social service facilities by address; a sole trader's place, a
     # secret address, the facility head and every phone and e-mail are never read (T-5691).

@@ -19,7 +19,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
       license: cc-by-sa
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { sk: Banskobystrický samosprávny kraj, en: Banská Bystrica Self-Governing Region }

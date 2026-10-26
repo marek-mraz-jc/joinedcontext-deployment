@@ -21,7 +21,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Areas with their manager, a city district or a city department: no person.
     personalData: does-not-contain

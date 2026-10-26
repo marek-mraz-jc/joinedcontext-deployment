@@ -20,7 +20,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: zilina }
       license: odc-odbl
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Public facilities, counts and vehicle positions: no record names a person.
     personalData: does-not-contain

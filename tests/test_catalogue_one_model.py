@@ -190,7 +190,13 @@ RECONCILER = {"kind": "user", "id": "service-account-portal-reconciler"}
 # bratislava: T-5271 seeded AirQualityObserved as the model's first class, and the Bratislava hub
 # has no air sensor feed (T-5273); a pipeline (EEA stations, as banskabystrica public-air) or
 # dropping the class closes it.
-UNFED = {"bratislava/bratislava-endpoint.yaml": ["AirQualityObserved"]}
+UNFED = {
+    "bratislava/bratislava-endpoint.yaml": ["AirQualityObserved"],
+    # The legacy uploads whose one copy was the CKAN DataStore, filled back from this Endpoint (T-4742):
+    # their entities stay in the Endpoint and no Pipeline reads the catalogue for them (T-5060, T-5729).
+    "banskabystrica/banskabystrica-od-endpoint.yaml": ["Contract", "CouncilMeeting", "Grant", "KeyPerformanceIndicator",
+                                                       "PurchaseOrder"],
+}
 
 
 def fed_types() -> dict[tuple[str, str], set[str]]:

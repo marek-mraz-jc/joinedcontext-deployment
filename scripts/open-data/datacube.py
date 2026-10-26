@@ -114,10 +114,9 @@ TOPICS = [
     {"name": "susr-od", "theme": "od", "title": {"sk": "Mzdy vo vybraných odvetviach", "en": "Wages in selected branches"}, "cubes": ["od0008ms"]},
     {"name": "susr-og", "theme": "og", "title": {"sk": "Ekonomické subjekty podľa právnej formy", "en": "Business units by legal form"}, "cubes": ["og2019qs"]},
     {"name": "susr-om", "theme": "om", "title": {"sk": "Stav obyvateľstva", "en": "Population"}, "cubes": ["om2019rs"]},
-    # 136,202 rows: its file.csv is over the Endpoint's download cap (413), so no DataStore mirror, and the
-    # national monthly table, summed per year, is its chart (T-5089).
+    # 136,202 rows: the national monthly table, summed per year, is its chart (T-5089).
     {"name": "susr-om-pohyb", "theme": "om", "title": {"sk": "Pohyb obyvateľstva", "en": "Population change"}, "cubes": ["om2801ms", "om7104rr"],
-     "mirror": False, "chart": "om2801ms"},
+     "chart": "om2801ms"},
     {"name": "susr-pl", "theme": "pl", "title": {"sk": "Hospodárske zvieratá", "en": "Livestock"}, "cubes": ["pl2016rs"]},
     {"name": "susr-pm", "theme": "pm", "title": {"sk": "Priemyselná produkcia", "en": "Industrial production"}, "cubes": ["pm0043ms"]},
     {"name": "susr-pm-ceny", "theme": "pm", "title": {"sk": "Ceny priemyselných výrobcov", "en": "Industrial producer prices"}, "cubes": ["pm0048ms"]},
@@ -395,8 +394,8 @@ def source_names(d: dict, parts: dict[str, list[tuple[str, int]]]) -> list[str]:
 def chart(topic: dict) -> str:
     """The topic's declared chart: each indicator of one table for the whole country, summed per year.
 
-    jcctl draws a chart by itself only from the DataStore mirror's model, and over a history these
-    spaces do not keep (history off), so a topic without a mirror declares its chart here (T-5089).
+    The catalogue holds no DataStore table to chart (T-5060), and these spaces keep no history
+    (history off), so a topic that wants a chart declares it here (T-5089).
     """
     cube = topic.get("chart")
     if not cube:
@@ -442,7 +441,6 @@ def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, in
     # The topic's most frequent cadence.
     sources_ = "\n".join(source(d) for d in ds)
     frequency = next((FREQUENCY[c] for c in "mqr" if any(d["code"][6] == c for d in ds)), "ANNUAL")
-    mirror = "      datastore: { representation: csv, refresh: onReconcile }\n" if topic.get("mirror", True) else ""
     files = {
         "space.yaml": f"""{BEGIN}
 # ŠÚ SR's DATAcube {tables} (theme `{theme}`), every cell a KeyPerformanceIndicator.
@@ -502,7 +500,7 @@ spec:
     ckan:
       instanceRef: {{ kind: CkanInstance, name: slovensko }}
       license: cc-by-sa
-{mirror}  catalog:
+  catalog:
     publisher: {{ name: {{ sk: "Platforma joinedcontext", en: "The joinedcontext platform" }}, uri: "https://dev.joinedcontext.com/" }}
     contactPoint: {{ name: {q(CONTACT["name"])}, email: {CONTACT["email"]} }}
     license: CC_BYSA_4_0
