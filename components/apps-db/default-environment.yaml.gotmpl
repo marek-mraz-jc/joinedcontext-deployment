@@ -24,3 +24,16 @@ apps-db:
       existingSecret: 'apps-db-backup-s3'
       retentionPolicy: '30d'
       schedule: '0 30 3 * * *'
+  backup:
+    # The release is the dump (and the chart's stat-statements Job); an instance whose apps-db
+    # archives to an object store (cluster.backups above) leaves it off.
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "apps-db") }}
+    # As postgres.databases.localBackup. apps-db held 30 MB on smartcity (2026-10-25), so 1Gi
+    # keeps a week of dumps; 15 min after the platform cluster's dump.
+    localBackup:
+      enabled: true
+      schedule: '45 2 * * *'
+      keepDays: 7
+      size: 1Gi
+      excludeDatabases: []

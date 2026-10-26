@@ -49,12 +49,15 @@ apps/v1/Deployment smartcity/wasm-host-tokens
 apps/v1/StatefulSet smartcity/artifact-store
 apps/v1/StatefulSet smartcity/ckan-solr
 apps/v1/StatefulSet smartcity/keycloak-app-keycloakx
+batch/v1/CronJob smartcity/apps-db-local-backup
 batch/v1/CronJob smartcity/basemap-tiles
 batch/v1/CronJob smartcity/ckan-harvest-banskabystrica
 batch/v1/CronJob smartcity/ckan-harvest-bbsk
 batch/v1/CronJob smartcity/gitea-lane-token
 batch/v1/CronJob smartcity/postgres-cluster-dr-drill
 batch/v1/CronJob smartcity/postgres-cluster-local-backup
+batch/v1/Job smartcity/apps-db-local-backup-now
+batch/v1/Job smartcity/apps-db-stat-statements
 batch/v1/Job smartcity/artifact-store-bucket
 batch/v1/Job smartcity/ckan-api-token
 batch/v1/Job smartcity/ckan-datastore-db-create-role-ckan-datastore-read-readonly
@@ -150,6 +153,8 @@ networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-project-apps
 networking.k8s.io/v1/NetworkPolicy smartcity/apps-db
 networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-backup
+networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-backup-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-operator-egress
 networking.k8s.io/v1/NetworkPolicy smartcity/apps-db-operator-linkerd
@@ -492,6 +497,7 @@ v1/LimitRange smartcity-app-tests/app-tests
 v1/Namespace -/smartcity-app-identities
 v1/Namespace -/smartcity-app-tests
 v1/Namespace -/smartcity-pipeline-identities
+v1/PersistentVolumeClaim smartcity/apps-db-local-backup
 v1/PersistentVolumeClaim smartcity/basemap-tiles
 v1/PersistentVolumeClaim smartcity/ckan-storage
 v1/PersistentVolumeClaim smartcity/gitea-shared-storage

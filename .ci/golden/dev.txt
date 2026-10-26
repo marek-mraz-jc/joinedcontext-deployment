@@ -163,6 +163,8 @@ networking.k8s.io/v1/NetworkPolicy dev/apisix-linkerd-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy dev/apisix-project-apps
 networking.k8s.io/v1/NetworkPolicy dev/apps-db
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/apps-db-backup
+networking.k8s.io/v1/NetworkPolicy dev/apps-db-backup-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-operator-egress
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-operator-linkerd

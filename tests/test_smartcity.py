@@ -154,6 +154,37 @@ def test_postgres_is_dumped_nightly_and_the_dump_job_may_reach_it(smartcity):
 
 
 
+def test_apps_db_is_dumped_nightly_and_only_its_dump_job_reaches_it(smartcity):
+    """apps-db has no object store either: the same nightly dump, of apps-db, through a policy
+    that names apps-db alone (F-DEP1-018)."""
+    jobs = [d for d in smartcity if d.get("kind") == "CronJob" and d["metadata"]["name"] == "apps-db-local-backup"]
+    assert len(jobs) == 1
+    pod = jobs[0]["spec"]["jobTemplate"]["spec"]["template"]
+    env = {e["name"]: e for e in pod["spec"]["containers"][0]["env"]}
+    assert env["PGHOST"]["value"].startswith("apps-db-rw.")
+    assert env["PGPASSWORD"]["valueFrom"]["secretKeyRef"]["name"] == "apps-db-superuser"
+    labels = pod["metadata"]["labels"]
+    policies = [d for d in smartcity if d.get("kind") == "NetworkPolicy"]
+
+    def selects(d):
+        return (d["spec"]["podSelector"].get("matchLabels") or {}).items() <= labels.items()
+
+    egress = [peer["podSelector"]["matchLabels"]
+              for d in policies if selects(d) and "Egress" in d["spec"].get("policyTypes", [])
+              for rule in d["spec"].get("egress", []) for peer in rule.get("to", []) if "podSelector" in peer]
+    assert {"cnpg.io/cluster": "apps-db"} in egress
+    assert not any(peer.get("cnpg.io/cluster") == "postgres-cluster" for peer in egress), \
+        "the apps-db dump job may reach the platform's cluster"
+    admitted = [d for d in policies
+                if d["spec"]["podSelector"].get("matchLabels") == {"cnpg.io/cluster": "apps-db"}
+                and any(peer.get("podSelector", {}).get("matchLabels", {}).items() <= labels.items()
+                        and peer.get("podSelector", {}).get("matchLabels")
+                        for rule in d["spec"].get("ingress", []) for peer in rule.get("from", []))]
+    assert admitted, "apps-db admits no connection from its dump job"
+    now = [d for d in smartcity if d.get("kind") == "Job" and d["metadata"]["name"] == "apps-db-local-backup-now"]
+    assert len(now) == 1
+
+
 def test_the_portal_syncs_every_2_minutes(smartcity):
     """Each run republishes the catalogue through the public edge (T-4717), and the timer is the
     only sync on this instance (no forge webhook secret), so neither 60 s nor 15 min."""

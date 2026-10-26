@@ -79,6 +79,12 @@ apps-db:
             matchLabels:
               app.kubernetes.io/name: wasm-host-shard
           componentNamespace: wasm-host
+        # The nightly dump and the stat-statements Job of the `backup` part (F-DEP1-018).
+        - podSelector:
+            matchLabels:
+              joinedcontext.com/psql-client: "true"
+              app.kubernetes.io/name: apps-db-backup
+          componentNamespace: apps-db.backup
       ports:
         - protocol: TCP
           port: 5432
@@ -112,5 +118,35 @@ apps-db-operator-egress:
       ports:
         - protocol: TCP
           port: 8000
+        - protocol: TCP
+          port: 5432
+
+# The `backup` part's Jobs (F-DEP1-018): the nightly dump and stat-statements connect to the -rw
+# service with the superuser and exit; DNS and apps-db's 5432, nothing else.
+apps-db-backup:
+  podSelector:
+    joinedcontext.com/psql-client: "true"
+    app.kubernetes.io/name: apps-db-backup
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
         - protocol: TCP
           port: 5432

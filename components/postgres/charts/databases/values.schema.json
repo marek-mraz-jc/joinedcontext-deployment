@@ -52,6 +52,11 @@
       "type": "object",
       "description": "one entry per database: name, user, additionalRoles, extensions"
     },
+    "nameOverride": {
+      "type": "string",
+      "pattern": "^[a-z]([-a-z0-9]{0,61}[a-z0-9])?$",
+      "description": "app.kubernetes.io/name of the pods, e.g. apps-db-backup: a second release keeps out of the first one's NetworkPolicies"
+    },
     "statStatements": {
       "type": "object",
       "additionalProperties": false,
