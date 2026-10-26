@@ -359,3 +359,21 @@ helsinki-agent-proxy:
           included.custom.audience: xtmpry6uo6sswne5bnnqoikpfvfyjihr
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The noise survey of T-5378 (seed/helsinki/helsinki-endpoint-noise.yaml).
+      - name: helsinki-noise-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: dh54wtluwvyhzmdsaosg3xpmgdadyoxg
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      # The tree register of T-5378 (seed/helsinki/helsinki-endpoint-trees.yaml).
+      - name: helsinki-trees-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: xwl3gxuwwqw3gqqxlme2wz2rwsvhqdx4
+          access.token.claim: 'true'
+          id.token.claim: 'false'

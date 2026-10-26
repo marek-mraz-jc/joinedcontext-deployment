@@ -59,12 +59,15 @@ MODELS = {
     "Article": ("extension", "Article"),
     "AdministrativeArea": ("extension", "AdministrativeArea"),
     "HeritageArea": ("extension", "HeritageArea"),
+    "NoiseZone": ("extension", "NoiseZone"),
 }
 
 EXTENSIONS = Path(__file__).resolve().parents[2] / "scripts/open-data/sdm/extensions"
 
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
-EXCEPTIONS: dict[str, str] = {}
+EXCEPTIONS: dict[str, str] = {
+    "Tree": "Smart Data Models has no tree model; GreenspaceRecord records soil and weather readings of a green area (T-5378)",
+}
 
 #: Attributes of a validated type that knowingly differ from the SDM schema, and why. A failure on
 #: one is reported as excepted and does not fail the run.

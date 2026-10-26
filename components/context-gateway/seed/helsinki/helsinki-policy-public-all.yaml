@@ -44,6 +44,9 @@ spec:
         - type: AdministrativeArea
         # The cultural heritage maps (T-5670).
         - type: HeritageArea
+        # The noise survey and the tree register (T-5378).
+        - type: NoiseZone
+        - type: Tree
         # The reports the city published in its feedback system (T-5257): the reporter's name, contact
         # details and photos are never written.
         - type: ServiceRequest

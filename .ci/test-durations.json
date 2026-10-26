@@ -135,6 +135,7 @@
  "test_helsinki_heritage.py": 7.8,
  "test_helsinki_hsl_network.py": 14.9,
  "test_helsinki_kartta_fixtures.py": 0.1,
+ "test_helsinki_noise_and_trees.py": 11.2,
  "test_helsinki_open_data.py": 26.6,
  "test_helsinki_park_and_ride.py": 10.9,
  "test_helsinki_plausible.py": 0.0,

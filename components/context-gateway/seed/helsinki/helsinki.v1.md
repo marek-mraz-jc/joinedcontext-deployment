@@ -346,6 +346,51 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### NoiseZone
+
+One area of the city's 2022 noise survey: the ground where the day or the night sound level of one traffic source falls into one 5 dB band, as the Smart Data Model extension NoiseZone (PointOfInterest base).
+
+IRI: `jc:NoiseZone`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `noiseLevelLow` | Property | `float` |  | dB | `jc:noiseLevelLow` | The lower bound of the area's 5 dB noise band, the A-weighted equivalent sound level (LAeq) the city's 2022 noise survey computes 2 m above ground, in decibels. |
+| `noiseLevelHigh` | Property | `float` |  | dB | `jc:noiseLevelHigh` | The upper bound of the area's 5 dB noise band, in decibels; the loudest band has none. |
+| `assessmentPeriod` | Property | [`NoiseAssessmentPeriod`](#noiseassessmentperiod) | yes |  | `jc:assessmentPeriod` | The part of the day the noise level holds for, as the Finnish guideline values count it: the day, 07:00 to 22:00, or the night, 22:00 to 07:00. |
+| `noiseSource` | Property | [`NoiseSource`](#noisesource) | yes |  | `jc:noiseSource` | The traffic whose noise the area's band computes: streets and roads, the main railway, the metro or the tram. A custom property: the NoiseZone extension holds one source per map. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### Tree
+
+One tree of the city's street and park tree register (puurekisteri): where it stands, its species and Finnish name, its trunk class and planting year. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+
+IRI: `jc:Tree`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `species` | Property | `string` |  |  | `jc:species` | The tree's scientific name, genus and species as the register writes them (Tilia x vulgaris, Betula pendula); `sp.` stands for a species the register leaves open. |
+| `trunkDiameterClass` | Property | [`TrunkDiameterClass`](#trunkdiameterclass) |  |  | `jc:trunkDiameterClass` | The class of the trunk's diameter at breast height the register gives the tree. |
+| `plantingYear` | Property | `integer` |  |  | `jc:plantingYear` | The year the tree was planted, when the register knows it. |
+| `treeSetting` | Property | [`TreeSetting`](#treesetting) |  |  | `jc:treeSetting` | Whether the tree stands along a street or in a park, as the register files it. |
+| `treeSite` | Property | `string` |  |  | `jc:treeSite` | The street or the park the tree stands in, as the register names it. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### GtfsStop
 
 One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -767,3 +812,45 @@ The kinds of the fortification and landscape culture maps a HeritageArea is one 
 | `residentialEnsemble` | A residential area kept as an ensemble. |
 | `publicBuildingGrounds` | The grounds of a public building. |
 | `courtyard` | A courtyard (piha). |
+
+### NoiseAssessmentPeriod
+
+The parts of the day a noise band of the 2022 survey holds for.
+
+| Value | Meaning |
+|---|---|
+| `day` | The day, 07:00 to 22:00 (LAeq 7-22). |
+| `night` | The night, 22:00 to 07:00 (LAeq 22-7). |
+
+### NoiseSource
+
+The traffic sources the 2022 noise survey computes one map each for.
+
+| Value | Meaning |
+|---|---|
+| `roadTraffic` | Streets and roads (kadut ja maantiet). |
+| `railway` | The main railway (juna). |
+| `metro` | The metro. |
+| `tram` | The tram (raitiovaunu). |
+
+### TrunkDiameterClass
+
+The trunk diameter classes of the tree register, at breast height.
+
+| Value | Meaning |
+|---|---|
+| `cm0to10` | Up to 10 cm. |
+| `cm10to20` | 10 to 20 cm. |
+| `cm20to30` | 20 to 30 cm. |
+| `cm30to50` | 30 to 50 cm. |
+| `cm50to70` | 50 to 70 cm. |
+| `cm70plus` | 70 cm or more. |
+
+### TreeSetting
+
+Where a tree of the register stands.
+
+| Value | Meaning |
+|---|---|
+| `street` | Along a street (katu). |
+| `park` | In a park (puisto). |
