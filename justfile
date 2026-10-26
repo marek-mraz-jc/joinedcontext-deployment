@@ -519,6 +519,10 @@ _smoke domain namespace:
 	# Rows of every public Endpoint x type link the dataset of their space and type (T-4802).
 	echo "source links"
 	python3 scripts/smoke-source-links.py "{{ domain }}" "{{ namespace }}" || rc=1
+	# Every public App of the seeds on its own host (T-5774): prod's Gitea-built Apps had no bundle
+	# for a week, and nothing read their hosts.
+	echo "public apps"
+	python3 scripts/smoke-public-apps.py "{{ domain }}" $([ "{{ namespace }}" = dev ] && echo --development) || rc=1
 	# A CronJob whose newest run failed (T-4385): a harvest dead since the night is no green smoke.
 	echo "cron jobs"
 	kubectl -n "{{ namespace }}" get jobs -o json | python3 scripts/failed-jobs.py || rc=1
