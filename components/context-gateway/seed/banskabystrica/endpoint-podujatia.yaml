@@ -14,7 +14,23 @@ spec:
   slug: l3nomvl5q7kikgdhhy4xiq5ofwjp4mfk
   audience: public
   policyRef: urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:podujatia-read
-  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
+  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
+  # representations.ical (EP-125, EP-159).
+  enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]
+  representations:
+    ical:
+      - name: vsetky
+        title: { sk: Všetky podujatia v Banskej Bystrici, en: All events in Banská Bystrica }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping:
+              SUMMARY:
+                firstOf: [name, type]
+              LAST-MODIFIED: dateModified
+              CATEGORIES: eventCategory
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: banskabystrica }

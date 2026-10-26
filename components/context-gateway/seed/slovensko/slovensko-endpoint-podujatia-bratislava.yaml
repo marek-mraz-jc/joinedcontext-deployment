@@ -15,8 +15,19 @@ spec:
   slug: g7hot6lsrwn3gjes5flpm4en6dosssxf
   audience: public
   policyRef: urn:ngsi-ld:Policy:joinedcontext.com:slovensko-podujatia:podujatia-bratislava-read
-  # ical: the calendar a person subscribes to, /api/endpoint/{slug}/ical/v1/events.ics (EP-125).
+  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
+  # representations.ical (EP-125, EP-159).
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]
+  representations:
+    ical:
+      - name: vsetky
+        title: { sk: Všetky podujatia v Bratislave, en: All events in Bratislava }
+        lang: sk
+        timezone: Europe/Bratislava
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping: { LAST-MODIFIED: dateModified, CATEGORIES: eventCategory }
   publish:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }

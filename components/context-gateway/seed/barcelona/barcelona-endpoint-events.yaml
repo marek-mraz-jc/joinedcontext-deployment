@@ -19,7 +19,24 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-events
-  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
+  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
+  # representations.ical (EP-125, EP-159).
+  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata, ical]
+  representations:
+    ical:
+      - name: vsetky
+        title:
+          ca: Totes les activitats de Barcelona
+          es: Todas las actividades de Barcelona
+          en: All activities in Barcelona
+        lang: ca
+        timezone: Europe/Madrid
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping:
+              SUMMARY:
+                firstOf: [name, type]
   # The catalogue entry (EP-62..EP-65): one dataset in the Barcelona catalogue, one resource per
   # representation, and a DataStore mirror of the CSV rows reloaded on every publish run.
   publish:
