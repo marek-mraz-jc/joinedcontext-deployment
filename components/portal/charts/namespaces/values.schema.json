@@ -19,6 +19,16 @@
         }
       }
     },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gatewayService": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+        }
+      }
+    },
     "appTests": {
       "type": "object",
       "additionalProperties": false,

@@ -601,17 +601,27 @@ def test_the_drift_reader_reads_each_rendered_kind_and_nothing_beyond_objects():
     # T-4956 review: resources '*' also grants nodes/proxy (kubelet exec over GET), services/proxy
     # and pods/log. The role names each kind the environments render, get and list only.
     rendered = subprocess.run(
-        ["helm", "template", "runtime-policies", str(CHART), "--namespace", "dev"],
+        ["helm", "template", "runtime-policies", str(CHART), "--namespace", "dev",
+         "--set", "driftReader.secretNamespaces={dev,dev-portal}"],
         capture_output=True, text=True, check=True,
     ).stdout
-    role = next(d for d in yaml.safe_load_all(rendered)
-                if d and d["kind"] == "ClusterRole" and d["metadata"]["name"] == "jc-drift-reader")
-    granted = set()
+    docs = [d for d in yaml.safe_load_all(rendered) if d]
+    role = next(d for d in docs if d["kind"] == "ClusterRole" and d["metadata"]["name"] == "jc-drift-reader")
+    # T-5702 (F-DEP2-001): Secrets only in the release namespaces, never cluster-wide.
+    secret_roles = {d["metadata"]["namespace"]: d for d in docs
+                    if d["kind"] == "Role" and d["metadata"]["name"] == "jc-drift-reader-secrets"}
+    assert set(secret_roles) == {"dev", "dev-portal"}
+    for ns, secret_role in secret_roles.items():
+        assert secret_role["rules"] == [{"apiGroups": [""], "resources": ["secrets"], "verbs": ["get", "list"]}]
+        binding = next(d for d in docs if d["kind"] == "RoleBinding" and d["metadata"]["namespace"] == ns)
+        assert binding["roleRef"]["kind"] == "Role" and binding["subjects"][0]["name"] == "jc-drift-reader"
+    granted = {("", "secrets")}
     for rule in role["rules"]:
         assert rule["verbs"] == ["get", "list"], rule
         assert "*" not in rule["apiGroups"] and "*" not in rule["resources"], rule
         assert "resourceNames" not in rule and "nonResourceURLs" not in rule, rule
         for resource in rule["resources"]:
+            assert resource != "secrets", "cluster-wide Secrets read every credential of every namespace"
             assert "/" not in resource, f"subresource {resource} (proxy, exec, attach, portforward, log)"
             granted |= {(group, resource) for group in rule["apiGroups"]}
     rendered_kinds = set()
@@ -623,3 +633,53 @@ def test_the_drift_reader_reads_each_rendered_kind_and_nothing_beyond_objects():
     assert rendered_kinds, "no golden render to compare with"
     assert rendered_kinds - granted == set(), "kinds helm diff must read"
     assert granted - rendered_kinds == set(), "grants no environment renders"
+
+
+@requires_kyverno
+@requires_helm
+def test_a_meshed_namespace_must_name_an_authenticated_inbound_policy(tmp_path):
+    """T-5702 (F-DEP2-009): the annotation used to pass with any value, all-unauthenticated
+    included, the very state the policy exists to prevent."""
+    rendered = subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
+         "--set", "failureAction=Enforce", "--set", "operators.enabled=false", "--namespace", "dev"],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    policy = tmp_path / "policy.yaml"
+    policy.write_text(yaml.safe_dump(next(
+        d for d in yaml.safe_load_all(rendered)
+        if d and d["metadata"]["name"] == "require-meshed-namespace-inbound-policy")))
+
+    def refused(inbound):
+        annotations = {"linkerd.io/inject": "enabled"}
+        if inbound is not None:
+            annotations["config.linkerd.io/default-inbound-policy"] = inbound
+        resource = tmp_path / "namespace.yaml"
+        resource.write_text(yaml.safe_dump({"apiVersion": "v1", "kind": "Namespace",
+                                            "metadata": {"name": "dev-x", "annotations": annotations}}))
+        return "inbound-policy-required" in failed_rules(policy, resource, "kubernetes-admin", tmp_path)
+
+    for value in ("cluster-authenticated", "all-authenticated", "deny"):
+        assert not refused(value), value
+    for value in (None, "", "all-unauthenticated", "cluster-unauthenticated", "audit"):
+        assert refused(value), value
+
+
+def test_runtime_namespaces_get_the_pod_rules_and_the_drift_reader_only_release_secrets(rendered):
+    """T-5702 (F-DEP2-003, F-DEP2-001): App, preview and demo namespaces exist only at runtime,
+    so no component names them; the Pod Security and signature policies match them by wildcard.
+    The drift reader reads Secrets in the release namespaces alone."""
+    docs = rendered("dev")
+    policies = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "ClusterPolicy"}
+    for name in ("require-run-as-nonroot", "require-ro-rootfs", "verify-platform-images"):
+        assert name in policies, name
+        for rule in policies[name]["spec"]["rules"]:
+            for matcher in rule["match"]["any"]:
+                assert {"dev-*-apps", "pv-*", "demo-*"} <= set(matcher["resources"]["namespaces"]), (name, rule["name"])
+    secret_roles = {d["metadata"]["namespace"] for d in docs
+                    if d.get("kind") == "Role" and d["metadata"]["name"] == "jc-drift-reader-secrets"}
+    portal = next(d["metadata"]["namespace"] for d in docs
+                  if d.get("kind") == "Deployment" and d["metadata"]["name"] == "portal")
+    assert portal in secret_roles
+    assert not {"kube-system", "default"} & secret_roles
+    assert not any(ns.endswith("-apps") or "*" in ns for ns in secret_roles), secret_roles

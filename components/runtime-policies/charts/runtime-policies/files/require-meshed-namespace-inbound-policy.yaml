@@ -14,7 +14,8 @@ metadata:
       namespace falls back to the cluster default (all-unauthenticated), so
       plaintext / unmeshed inbound traffic is silently accepted and the mesh
       provides no enforcement. This catches namespaces that were injected but
-      never hardened.
+      never hardened, and those that set an unauthenticated or audit-only value
+      (T-5702): only cluster-authenticated, all-authenticated and deny pass.
 spec:
   background: true
   rules:
@@ -32,12 +33,13 @@ spec:
       validate:
         failureAction: KYVERNO_FAILURE_ACTION
         message: >-
-          Namespace is marked for Linkerd injection but does not set
-          config.linkerd.io/default-inbound-policy. Without it the namespace
-          defaults to all-unauthenticated (plaintext inbound accepted).
+          Namespace is marked for Linkerd injection but its
+          config.linkerd.io/default-inbound-policy is missing or admits
+          unauthenticated traffic. Set it to cluster-authenticated,
+          all-authenticated or deny.
         deny:
           conditions:
             all:
               - key: '{{ request.object.metadata.annotations."config.linkerd.io/default-inbound-policy" || '''' }}'
-                operator: Equals
-                value: ''
+                operator: AnyNotIn
+                value: [cluster-authenticated, all-authenticated, deny]
