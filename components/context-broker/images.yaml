@@ -183,5 +183,10 @@ context-broker:
     # Antares dev ae822e8 (dev-73, over 6a2e3d5: T-5661 id-prefix probes by byte range; same FEATURES). Migration
     # 0027 (CREATE INDEX i_entities_id_bytes, blocks entity writes seconds per million rows), rollback = "compatible";
     # no new runtime key. Rollback: dev-71. Signed by ship.yml on dev at ae822e8 (run 40310437461).
-    tag: 'dev-73'
-    digest: 'sha256:a035baf7770e0f8fa328f560976d0d02471a1fd3079c9c0986236fed0aacee7d'
+    # Antares dev 93c3bbc (dev-77, over ae822e8: T-5787 view id-prefix ranges for the Bratislava KPI datasets, T-5777
+    # temporal window caps, lastN newest rows, F-ANT1 MCP fixes, request memory bounds, zstd for RUSTSEC-2026-0391/0398/
+    # 0403/0410 (T-5793); same FEATURES). Migration 0028 (ADD COLUMN temporal_entities.offset_until with a stable
+    # default: catalog only, no rewrite), rollback = "compatible". New runtime key ANTARES_WS_QUEUE_BYTES keeps its
+    # default. Rollback: dev-73. Signed by ship.yml on dev at 93c3bbc (run 40379008655).
+    tag: 'dev-77'
+    digest: 'sha256:12b1d2df994739fb7f45608dd79c5aca28f701fa129c0bd6c6e4c21a6f385d45'
