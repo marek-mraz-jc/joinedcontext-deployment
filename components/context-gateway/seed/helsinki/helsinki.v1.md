@@ -315,8 +315,8 @@ Specialises `Entity`.
 | Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
-| `districtCode` | Property | `string` | no |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its `fareZone`. |
-| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
+| `districtCode` | Property | `string` | no |  | `jc:districtCode` | The city's own code of the area: the district number, for a sub-district the full ten-digit code the city's statistics use for it, for a quarter the register's ten-digit quarter code, for a voting district the district number and a letter (049A). An HSL fare zone has none; its letter is its `fareZone`. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) | yes |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district, sub-district, quarter or voting district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `publicAreaPermits` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:publicAreaPermits` | The public-area permits that lie in this district, computed from their refDistrict and never stored. |
@@ -532,7 +532,7 @@ Specialises `Entity`.
 | `calculationFrequency` | Property | [`CalculationFrequency`](#calculationfrequency) |  |  | `sdm:calculationFrequency` | How often the source publishes a new period. |
 | `area` | Property | `string` |  |  | `sdm:area` | The name of the area the value describes, a sub-district, district or the whole city. |
 | `districtCode` | Property | `string` |  |  | `jc:districtCode` | The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. |
-| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) |  |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
+| `divisionLevel` | Property | [`DivisionLevel`](#divisionlevel) |  |  | `jc:divisionLevel` | Which of the city's divisions the area belongs to: a district, sub-district, quarter or voting district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs. |
 | `refArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refArea` | The sub-district (AdministrativeArea) the value describes. Set only for a sub-district the city's register holds; a district or the whole city is named by `area` and `districtCode`. |
 | `process` | Property | `string` |  |  | `sdm:process` | The statistics table the value comes from, in the source's words. |
 | `statisticsTable` | Property | `string` |  |  | `jc:statisticsTable` | The source's own table code, such as alu_vamuu_010h, or the series of a usage counter, such as web-visits; `source` links it. |
@@ -696,6 +696,8 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 | `district` | A district (kaupunginosa), 60 of them. |
 | `subDistrict` | A sub-district (osa-alue), the unit the city's statistics use. |
 | `fareZone` | An HSL fare zone (A, B, C or D), the area a ticket is valid in. |
+| `quarter` | A quarter (kortteli), the block a detailed plan names, about 6,000 of them. |
+| `votingDistrict` | A voting district (äänestysalue), about 165 of them. |
 
 ### TransportMode
 

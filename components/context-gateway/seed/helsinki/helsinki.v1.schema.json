@@ -16,14 +16,14 @@
           "x-ngsi-ld-kind": "Property"
         },
         "districtCode": {
-          "description": "The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its `fareZone`. The districts and sub-districts mappings write no area without it.",
-          "pattern": "^[0-9]{1,10}$",
+          "description": "The city's own code of the area: the district number, for a sub-district the full ten-digit code the city's statistics use for it, for a quarter the register's ten-digit quarter code, for a voting district the district number and a letter (049A). An HSL fare zone has none; its letter is its `fareZone`. The districts, sub-districts, quarters and voting-districts mappings write no area without it.",
+          "pattern": "^[0-9]{1,10}[A-Z]?$",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
         },
         "divisionLevel": {
           "$ref": "#/definitions/DivisionLevel",
-          "description": "Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
+          "description": "Which of the city's divisions the area belongs to: a district, sub-district, quarter or voting district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
           "x-ngsi-ld-kind": "Property"
         },
         "fareZone": {
@@ -925,7 +925,9 @@
         "cityPart",
         "district",
         "subDistrict",
-        "fareZone"
+        "fareZone",
+        "quarter",
+        "votingDistrict"
       ],
       "title": "DivisionLevel",
       "type": "string",
@@ -936,7 +938,9 @@
         "district": "A district (kaupunginosa), 60 of them.",
         "fareZone": "An HSL fare zone (A, B, C or D), the area a ticket is valid in.",
         "majorDistrict": "A major district (suurpiiri), 8 of them (statistics only).",
-        "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use."
+        "quarter": "A quarter (kortteli), the block a detailed plan names, about 6,000 of them.",
+        "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use.",
+        "votingDistrict": "A voting district (\u00e4\u00e4nestysalue), about 165 of them."
       }
     },
     "Entity": {
@@ -2040,7 +2044,7 @@
         },
         "districtCode": {
           "description": "The city's own code of the area: the district number, or for a sub-district the full ten-digit code the city's statistics use for it.",
-          "pattern": "^[0-9]{1,10}$",
+          "pattern": "^[0-9]{1,10}[A-Z]?$",
           "type": [
             "string",
             "null"
@@ -2049,7 +2053,7 @@
         },
         "divisionLevel": {
           "$ref": "#/definitions/DivisionLevel",
-          "description": "Which of the city's divisions the area belongs to: a district or sub-district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
+          "description": "Which of the city's divisions the area belongs to: a district, sub-district, quarter or voting district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or the inner city or the suburbs.",
           "x-ngsi-ld-kind": "Property"
         },
         "id": {

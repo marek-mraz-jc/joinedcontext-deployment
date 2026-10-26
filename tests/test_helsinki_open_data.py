@@ -42,6 +42,9 @@ FEEDS = {
     # Two features, one of them the territorial sea, which has no district number.
     "districts": ("districts.json", "AdministrativeArea", 1),
     "subdistricts": ("subdistricts.json", "AdministrativeArea", 2),
+    # T-5256: the three smallest outlines of each layer, fetched 2026-10-26; one quarter carries a name of its own.
+    "voting-districts": ("voting-districts.json", "AdministrativeArea", 3),
+    "quarters": ("quarters.json", "AdministrativeArea", 3),
     "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
     "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
@@ -419,6 +422,46 @@ def test_districts_read_as_a_person_writes_them_and_sub_districts_keep_the_stati
 
 
 @requires_docker
+def test_voting_districts_keep_the_code_the_voting_card_prints(written):
+    """T-5256: 052A is voting district A of district 52."""
+    by_code = {e["districtCode"]["value"]: e for e in written["voting-districts"]}
+    assert set(by_code) == {"052A", "031F", "014C"}
+    area = by_code["052A"]
+    assert area["id"] == "urn:ngsi-ld:AdministrativeArea:hel.fi:helsinki:voting-district-052A"
+    assert area["divisionLevel"]["value"] == "votingDistrict"
+    # The layer leaves the Swedish name empty: no empty text is written.
+    assert area["name"]["languageMap"] == {"fi": "Suomenlinna"}
+
+
+@requires_docker
+def test_a_quarter_is_named_by_its_plan_number_unless_the_register_names_it(written):
+    names = {e["districtCode"]["value"]: e["name"]["languageMap"] for e in written["quarters"]}
+    assert names["0910470363"] == {"fi": "Kortteli 47363", "sv": "Kvarter 47363"}
+    assert names["0910100671"]["fi"] != "Kortteli 10671" and names["0910100671"]["sv"]
+    for e in written["quarters"]:
+        assert e["divisionLevel"]["value"] == "quarter"
+        assert e["id"].endswith(":quarter-" + e["districtCode"]["value"])
+        assert e["location"]["value"]["type"] == "MultiPolygon"
+
+
+@requires_docker
+@pytest.mark.parametrize("feed, code", [("voting-districts", "tunnus"), ("quarters", "korttelitunnus")])
+def test_an_area_without_an_outline_or_with_an_unknown_code_is_dropped_and_a_repeat_is_one_area(feed, code):
+    """T-5256: a record with no geometry, one whose code is not the layer's code shape, one of another
+    municipality and one listed twice: the first three write nothing, the repeat writes one id."""
+    recording = fixture(f"{feed}.json")
+    first, second, third = recording["features"]
+    second["geometry"] = None
+    third["properties"][code] = "X" + str(third["properties"][code])
+    # Espoo (049): a quarter code of another municipality, or a voting district the layer marks as Espoo's.
+    other = copy.deepcopy(first)
+    other["properties"].update({"kunta": "049", code: "0490010001" if feed == "quarters" else "001A"})
+    recording["features"].extend([copy.deepcopy(first), other])
+    ids = [e["id"] for e in run(feed, recording)]
+    assert len(set(ids)) == 1 and ids[0].endswith(str(first["properties"][code]))
+
+
+@requires_docker
 def test_a_zone_link_without_a_scheme_is_written_as_https(written):
     fee = written["fee-parking-zones"][0]
     assert fee["category"]["value"] == ["feeCharged"] and fee["zoneCode"]["value"] == "1"
@@ -545,7 +588,7 @@ def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_
 def test_every_district_and_sub_district_is_the_administrative_area_extension(written):
     """T-4338: no official model holds a city district; it is the extension AdministrativeArea
     (PointOfInterest base, which requires `name`)."""
-    for name in ("districts", "subdistricts"):
+    for name in ("districts", "subdistricts", "voting-districts", "quarters"):
         for entity in written[name]:
             assert open_data.sdm_errors("extensions/AdministrativeArea", entity) == [], (name, entity["id"])
 
