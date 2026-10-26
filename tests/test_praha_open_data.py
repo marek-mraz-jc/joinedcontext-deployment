@@ -529,9 +529,7 @@ PARTS = {
     # every right (T-5428).
     "praha-cinnost-mestske-policie": "CC0", "praha-cinnost-mestske-policie-utvary": "CC0",
     "praha-cerpani-rozpoctu": "CC0", "praha-financni-vztahy-mc": "CC0", "praha-opravy-a-uzavirky": "CC0",
-    # Golemio's Mr.Parkit garages and shared cars (T-5680), under Golemio's terms as above.
-    "praha-garaze": None,
-    "praha-sdilena-auta": None,
+    # Golemio's Mr.Parkit garages and shared cars (T-5680) left the catalogue while empty on dev (T-5767).
 }
 
 
@@ -583,7 +581,10 @@ def test_the_catalogue_names_every_source_the_space_reads_under_the_licence_it_p
     named = {source["url"] for source in catalog["source"]}
     # The datasets on the catalogue name every source between them, each as the space does.
     by_url = {source["url"]: source for source in catalog["source"]}
-    parted = [s for part in _parts().values() for s in part["spec"]["catalog"].get("source", [])]
+    # A part off the catalogue while empty (harvest: false, T-5767) still names its source in its own record.
+    parts = list(_parts().values()) + [d for d in (yaml.safe_load(p.read_text()) for p in PRAHA.glob("praha-endpoint-*.yaml"))
+                                       if d["spec"]["contextSpaceRef"] == SPACE and d["spec"].get("catalog", {}).get("harvest") is False]
+    parted = [s for part in parts for s in part["spec"]["catalog"].get("source", [])]
     assert {s["url"] for s in parted} == named
     for source in parted:
         assert source == by_url[source["url"]], source["url"]

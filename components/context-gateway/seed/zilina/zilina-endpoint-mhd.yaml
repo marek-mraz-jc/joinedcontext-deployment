@@ -16,11 +16,11 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:mhd-read
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: zilina }
-      license: odc-odbl
   catalog:
+    # Off the catalogue (T-5767, owner order 2026-10-26T06:33Z: an empty dataset leaves it): on dev
+    # none of the 63 vehicles the city portal lists reached the broker.
+    # The harvest feeds leave it out (EP-139); publish it again once it holds data.
+    harvest: false
     # Public facilities, counts and vehicle positions: no record names a person.
     personalData: does-not-contain
     publisher:

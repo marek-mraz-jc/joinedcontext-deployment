@@ -16,11 +16,11 @@ spec:
   slug: igqvnatmdmjqppc2yd7jjgjcrh4y4j7q
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: banskabystrica }
-      license: cc-zero
   catalog:
+    # Off the catalogue (T-5767, owner order 2026-10-26T06:33Z: an empty dataset leaves it): on dev
+    # the Portal wrote no Dataset record into it.
+    # The harvest feeds leave it out (EP-139); publish it again once it holds data.
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Records of public datasets and Endpoints only: no record names a person.
     personalData: does-not-contain
