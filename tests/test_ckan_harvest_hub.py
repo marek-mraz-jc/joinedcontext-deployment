@@ -137,13 +137,18 @@ class FakeCkan:
             found = [p for p in self.packages.values() if p["owner_org"] == org and p["state"] == "active"]
             return ok({"count": len(found), "results": found[body["start"]:body["start"] + body["rows"]]})
         if action == "package_show":
-            if body["id"] in self.packages:
-                return ok(self.packages[body["id"]])
+            found = self.packages.get(body["id"]) or next(
+                (p for p in self.packages.values() if p["name"] == body["id"]), None)
+            if found:
+                return ok(found)
             return 404, {"success": False, "error": {"__type": "Not Found Error", "message": "Not found"}}
         if action == "package_create":
+            # The harvest token is an editor (F-DEP1-002): CKAN takes an `id` from a sysadmin only,
+            # and keeps a deleted dataset's name in its unique column.
+            if "id" in body:
+                return 409, {"success": False, "error": {"__type": "Validation Error", "id": ["Unexpected field"]}}
             assert body["name"] not in {p["name"] for p in self.packages.values()}, "name already in use"
-            assert body["id"] not in self.packages
-            package = dict(body, state="active")
+            package = dict(body, state="active", id=f"pkg-{len(self.packages)}")
             self.packages[package["id"]] = package
             return ok(package)
         if action == "package_update":
@@ -426,6 +431,19 @@ def test_a_dataset_whose_rows_are_not_converted_is_withdrawn_and_named(ckan, con
     converted(SUPPLIERS)
     counts, _, _ = harvest.harvest(client, dev_source(), items())
     assert counts["updated"] == 1 and ckan.packages[withdrawn["id"]]["state"] == "active"
+
+
+def test_a_dataset_a_sysadmin_withdrew_is_found_by_its_fixed_id_and_revived(ckan, converted):
+    """Datasets the sysadmin token created carry the uuid5 id (before F-DEP1-002); a withdrawn one
+    is found by that id, so the editor never creates it twice."""
+    converted(CULTURE)
+    item, title = next((i, t) for i, t in harvest.select(items(), dev_source())[0] if i["id"] == CULTURE)
+    legacy = harvest.dataset(item, title, dev_source(), name_of(CULTURE))
+    ckan.packages[legacy["id"]] = dict(legacy, state="deleted")
+    client = harvest.Ckan(ckan.host, "token-1")
+    counts, _, _ = harvest.harvest(client, dev_source(), items())
+    assert counts["created"] == 0 and counts["updated"] == 1
+    assert ckan.packages[legacy["id"]]["state"] == "active" and len(ckan.packages) == 1
 
 
 def test_no_dataset_converted_at_all_withdraws_nothing(ckan, converted):

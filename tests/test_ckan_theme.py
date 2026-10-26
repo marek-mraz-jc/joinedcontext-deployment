@@ -1880,8 +1880,37 @@ def test_a_hidden_package_leaves_search_and_its_page_for_all_but_a_sysadmin(them
     plugin.after_dataset_show({}, {"name": "bb-dotacie", "resources": []})
 
     toolkit.g = types.SimpleNamespace(userobj=types.SimpleNamespace(sysadmin=True))
-    assert "fq" not in plugin.before_dataset_search({"q": ""}), "the harvests still see what they wrote"
+    assert "fq" not in plugin.before_dataset_search({"q": ""}), "a sysadmin still sees every package"
     plugin.after_dataset_show({}, {"name": "bb-adresy", "resources": []})
+
+
+def test_an_editor_keeps_the_hidden_packages_of_its_own_organizations(theme, tmp_path):
+    """The harvests write as an editor of their organizations (F-DEP1-002): a hidden package they
+    wrote must stay findable to them, or the next run creates it again and CKAN answers 409."""
+    hidden = tmp_path / "hidden.json"
+    hidden.write_text(json.dumps({"bb-adresy": "accurate"}))
+    theme.HIDDEN_FILE = str(hidden)
+    theme.HIDDEN = theme._hidden()
+    toolkit = sys.modules["ckan.plugins.toolkit"]
+    plugin = theme.JcThemePlugin()
+    asked = []
+    theme.page.actions["organization_list_for_user"] = lambda data: asked.append(data) or [
+        {"id": "org-bb"}, {"id": 'x") OR name:(*'}]
+    toolkit.g = types.SimpleNamespace(userobj=types.SimpleNamespace(id="u-harvest", sysadmin=False))
+
+    params = plugin.before_dataset_search({"q": "", "fq": "organization:banskabystrica"})
+    assert params["fq"] == 'organization:banskabystrica -(+name:("bb-adresy") -owner_org:("org-bb"))', \
+        "only its own organizations' hidden packages, and no id that is not one goes into Solr"
+    assert asked == [{"id": "u-harvest", "permission": "update_dataset"}]
+    plugin.after_dataset_show({}, {"name": "bb-adresy", "owner_org": "org-bb", "resources": []})
+    with pytest.raises(toolkit.ObjectNotFound):
+        plugin.after_dataset_show({}, {"name": "bb-adresy", "owner_org": "org-other", "resources": []})
+
+    theme.page.actions["organization_list_for_user"] = lambda data: []
+    params = plugin.before_dataset_search({"q": ""})
+    assert params["fq"] == '-name:("bb-adresy")', "a member who edits nothing sees what the public sees"
+    with pytest.raises(toolkit.ObjectNotFound):
+        plugin.after_dataset_show({}, {"name": "bb-adresy", "owner_org": "org-bb", "resources": []})
 
 
 def test_without_a_hidden_list_nothing_is_filtered(theme, tmp_path):

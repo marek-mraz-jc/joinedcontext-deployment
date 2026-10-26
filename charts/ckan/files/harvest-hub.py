@@ -170,8 +170,10 @@ def dataset(item, title, source, name=None):
     }
     name = name or f"{source['organization']}-{slug(title)[:70].strip('-')}-{item['id'][:6]}"
     package = {
-        # A fixed id per source item, so a dataset withdrawn earlier (which search no longer
-        # shows) is found again by `package_show` and revived instead of clashing on its name.
+        # A fixed id per source item, so a dataset a sysadmin token created and withdrew earlier
+        # (which search no longer shows) is found again by `package_show` and revived instead of
+        # clashing on its name. The editor token cannot set it (F-DEP1-002), so `harvest` sends it
+        # only in the hash and finds a later withdrawn dataset by its name.
         "id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{source['hub']}/datasets/{item['id']}")),
         "name": name,
         "title": title,
@@ -250,6 +252,17 @@ def harvested(ckan, source):
             return found
 
 
+def withdrawn(ckan, item, proposed):
+    """The dataset of `item` that search misses, a withdrawn one: by the fixed id, or by the
+    proposed name when it holds this item. CKAN keeps a deleted dataset's name, so creating it
+    again would clash."""
+    for ident in (proposed["id"], proposed["name"]):
+        old = ckan.show("package_show", ident)
+        if old and all(extra(old, k) == extra(proposed, k) for k in ("harvest_source", "source_id")):
+            return old
+    return None
+
+
 def hub_items(source):
     items, url = [], f"{source['hub']}/api/search/v1/collections/dataset/items?limit=100"
     matched = None
@@ -279,7 +292,7 @@ def harvest(ckan, source, items):
     packages = []
     for item, title in kept:
         proposed = dataset(item, title, source)
-        old = existing.pop(item["id"], None) or ckan.show("package_show", proposed["id"])
+        old = existing.pop(item["id"], None) or withdrawn(ckan, item, proposed)
         package = dataset(item, title, source, old["name"]) if old else proposed
         if package["resources"]:
             packages.append((item, title, package, old))
@@ -298,7 +311,7 @@ def harvest(ckan, source, items):
             tables = [sheet]
         carried = od_datastore_resources(old, tables) if old else []
         if old is None:
-            live = ckan.call("package_create", package)
+            live = ckan.call("package_create", {k: v for k, v in package.items() if k != "id"})
             counts["created"] += 1
         elif (extra(old, "harvest_hash") == extra(package, "harvest_hash") and old.get("state") == "active"
               and len(carried) == len(tables)):

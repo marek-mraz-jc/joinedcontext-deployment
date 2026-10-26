@@ -145,10 +145,13 @@ def _organizations():
 ORGANIZATIONS = _organizations()
 
 # The packages the publish gate hides (T-4318): `{name: reason}` from the chart's `hidden` value.
-# Hidden is not deleted: a sysadmin (the harvests' token) still finds, reads and updates them, so
-# the next harvest keeps them current and a package comes back by leaving the list.
+# Hidden is not deleted: a sysadmin, and an editor of the package's organization (the harvests'
+# token, F-DEP1-002), still finds, reads and updates them, so the next harvest keeps them current
+# and a package comes back by leaving the list.
 HIDDEN_FILE = os.environ.get("JC_HIDDEN_FILE", os.path.join(os.path.dirname(BRANDING_FILE), "hidden.json"))
 PACKAGE_NAME = re.compile(r"^[a-z0-9_-]{2,100}$")
+# An organization id, before it goes into a Solr query.
+PACKAGE_ID = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 
 
 def _hidden():
@@ -164,19 +167,33 @@ def _hidden():
 HIDDEN = _hidden()
 
 
-def jc_sees_hidden():
-    """Whether the caller is a sysadmin; outside a request nobody is."""
+def jc_hidden_reach():
+    """The organization ids whose hidden packages the caller still sees: those it may update
+    datasets in (the harvests' editor token, F-DEP1-002). None for a sysadmin, who sees every one;
+    nothing for an anonymous caller or outside a request."""
     try:
-        return bool(getattr(toolkit.g.userobj, "sysadmin", False))
+        user = toolkit.g.userobj
     except (AttributeError, RuntimeError, TypeError):
-        return False
+        return frozenset()
+    if not user:
+        return frozenset()
+    if getattr(user, "sysadmin", False):
+        return None
+    orgs = toolkit.get_action("organization_list_for_user")(
+        {"ignore_auth": True}, {"id": user.id, "permission": "update_dataset"})
+    return frozenset(o["id"] for o in orgs if PACKAGE_ID.match(o.get("id") or ""))
 
 
 def jc_hide(search_params):
-    """The search without the hidden packages, on the page, the API and the DCAT feed alike."""
-    if HIDDEN and not jc_sees_hidden():
-        clause = "-name:(" + " OR ".join(f'"{name}"' for name in sorted(HIDDEN)) + ")"
-        search_params["fq"] = f"{search_params.get('fq') or ''} {clause}".strip()
+    """The search without the hidden packages, on the page, the API and the DCAT feed alike; an
+    editor keeps those of its own organizations."""
+    reach = jc_hidden_reach() if HIDDEN else None
+    if reach is not None:
+        names = "-name:(" + " OR ".join(f'"{name}"' for name in sorted(HIDDEN)) + ")"
+        if reach:
+            orgs = " OR ".join(f'"{org}"' for org in sorted(reach))
+            names = f"-(+{names[1:]} -owner_org:({orgs}))"
+        search_params["fq"] = f"{search_params.get('fq') or ''} {names}".strip()
     return search_params
 
 
@@ -3064,8 +3081,10 @@ class JcThemePlugin(plugins.SingletonPlugin):
         return search_params
 
     def after_dataset_show(self, context, pkg_dict):
-        if pkg_dict.get("name") in HIDDEN and not jc_sees_hidden():
-            raise toolkit.ObjectNotFound("Dataset not found")
+        if pkg_dict.get("name") in HIDDEN:
+            reach = jc_hidden_reach()
+            if reach is not None and pkg_dict.get("owner_org") not in reach:
+                raise toolkit.ObjectNotFound("Dataset not found")
         jc_clean_dataset(pkg_dict)
 
     def after_dataset_search(self, search_results, search_params):
