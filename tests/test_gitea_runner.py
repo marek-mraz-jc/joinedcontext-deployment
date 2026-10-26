@@ -278,8 +278,8 @@ def test_a_build_pod_runs_under_its_class_label_with_the_shared_runners_walls(re
 @pytest.mark.parametrize("environment", ["dev", "production"])
 def test_the_portal_may_start_build_jobs_in_the_runner_namespace_and_nothing_else(rendered, environment):
     """AP-130: the Portal's rights in the runner's namespace are a Job, its token Secret and the
-    App's cache claim, by server-side apply, bound to the Portal's ServiceAccount alone. No pods,
-    no exec, no logs, and no list of Secrets. The Portal is told that namespace and the two runner
+    App's cache claim, by server-side apply, bound to the Portal's ServiceAccount alone; Jobs are
+    listed to run one build at a time (T-5815). No pods, no exec, no logs, and no list of Secrets. The Portal is told that namespace and the two runner
     images, each pinned by digest."""
     docs = rendered(environment)
     namespace = one(docs, "ConfigMap", "gitea-runner")["metadata"]["namespace"]
@@ -287,7 +287,7 @@ def test_the_portal_may_start_build_jobs_in_the_runner_namespace_and_nothing_els
     assert role["metadata"]["namespace"] == namespace
     rules = {(tuple(r["apiGroups"]), tuple(r["resources"])): set(r["verbs"]) for r in role["rules"]}
     assert rules == {
-        (("batch",), ("jobs",)): {"get", "create", "patch", "delete"},
+        (("batch",), ("jobs",)): {"get", "list", "create", "patch", "delete"},
         (("",), ("secrets",)): {"create", "patch"},
         (("",), ("persistentvolumeclaims",)): {"get", "list", "create", "patch", "delete"},
     }

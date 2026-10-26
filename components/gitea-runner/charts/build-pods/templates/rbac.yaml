@@ -3,8 +3,9 @@
   What the Portal writes in the runner's namespace to start an App's build (AP-130): the Job,
   the Secret holding that one job's registration token, which the Job owns, and the App's cache
   claim. Server-side apply is create + patch. Jobs and claims are deleted by the Portal (a Job
-  whose token never arrived, the claim of a retired App); a token Secret goes with its Job. No
-  pods, no exec, no logs: the Portal never reaches into a build.
+  whose token never arrived, the claim of a retired App); a token Secret goes with its Job. Jobs
+  are listed to count the running builds, so only one runs at a time (T-5815). No pods, no
+  exec, no logs: the Portal never reaches into a build.
 
   No `get` on Secrets (T-4798): this namespace holds the forge's and, on a single-namespace
   installation, the whole platform's credentials. The Portal tells a Job that holds its token
@@ -23,7 +24,7 @@ metadata:
 rules:
   - apiGroups: ["batch"]
     resources: ["jobs"]
-    verbs: ["get", "create", "patch", "delete"]
+    verbs: ["get", "list", "create", "patch", "delete"]
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["create", "patch"]
