@@ -39,7 +39,7 @@ SUPERUSER_RESERVED_DEFAULT = 3
 # Ceilings compiled into the programs (sqlx PgPoolOptions::max_connections):
 # joinedcontext-portal src/db.rs and joinedcontext-platform crates/assistant/src/bin/jc-assistant.rs.
 # joinedcontext-portal src/state.rs: the Portal's apps admin pool in apps-db, 4.
-COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 4), "jc_apps_admin": ("portal", 4)}
+COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 10), "jc_apps_admin": ("portal", 4)}
 # Drivers' own defaults, used when the render sets nothing.
 ANTARES_DEFAULT = 20  # antares-broker main.rs parse_pg_pool
 KEYCLOAK_DEFAULT = 100  # Quarkus/Agroal KC_DB_POOL_MAX_SIZE
