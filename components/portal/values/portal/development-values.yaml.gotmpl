@@ -25,6 +25,11 @@ env:
   # glibc keeps up to 8 malloc arenas per core, and a tokio service holds freed memory in them;
   # two arenas trade a little allocation contention for that memory (T-4351, measured on dev).
   MALLOC_ARENA_MAX: "2"
+  # Batch-lane pipeline runs the runner holds at once (PL-78). The seed asks about 5,400 batch
+  # runs a day of about 670 pipelines; one lane at a time left slovensko's 350 queued last
+  # by name, and none ran on dev or prod for a day (T-5778). Three fit the runner's 3Gi limit:
+  # events and statistics runs ask 128-512 MB each, beside the resident streams.
+  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
 {{- if and (has "keycloak" .Values.components) (eq $global.profile "development") }}
   # The live journeys sign in as the demo people and mark the assistant runs they start as
   # test runs (AG-93, T-2816). The Portal accepts the mark only from the users named here and

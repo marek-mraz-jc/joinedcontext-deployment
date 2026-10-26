@@ -1,5 +1,8 @@
 """The pipeline runner's Go soft memory limit follows its container limit (T-3537)."""
 
+import pathlib
+import re
+
 import pytest
 
 ENVIRONMENTS = ("local", "dev", "production")
@@ -43,3 +46,12 @@ def test_the_runner_keeps_only_the_series_the_portal_reads(rendered, environment
         assert family in mapping, family
     assert '@label.or("").re_match("^(.*_)?write_[0-9]+$")' in mapping
     assert "@stream != null" in mapping, "series outside a stream (resources, http) stay whole"
+
+
+def test_the_seeded_profile_runs_three_batch_pipelines_at_once():
+    # One batch run at a time for about 5,400 a day left slovensko's pipelines, queued last by
+    # name, without a run on dev or prod for a day (T-5778); the runner's 3Gi holds three runs
+    # beside its resident streams. The development values reach prod (valuesProfile).
+    values = pathlib.Path(__file__).resolve().parent.parent / "components/portal/values/portal/development-values.yaml.gotmpl"
+    found = re.findall(r'^  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "(\d+)"$', values.read_text(), re.M)
+    assert found == ["3"], found
