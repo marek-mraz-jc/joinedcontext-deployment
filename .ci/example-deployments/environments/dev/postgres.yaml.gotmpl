@@ -32,11 +32,15 @@ postgres:
             pg_stat_statements.max: "5000"
     # Base backups and the WAL archive in the artifact store on the same node (T-5289): point-in-time
     # recovery, the monthly restore drill and upgrade.py's pre-upgrade backup, none of which ran
-    # before. Seven days, not 30: the store's volume is 10Gi and holds the artifacts too.
+    # before. Two days, not 30 (T-5772): the store's volume sits on the node disk Postgres runs on,
+    # and the pipelines write about 40 G of WAL a day (2026-10-26: 98 G of WAL in two days, the disk
+    # at 88 %). Seven days would hold about 280 G of a 306 G disk. Dev's data comes back from the
+    # seeds; the drill restores to its own run's time, so two days of bases and WAL cover it.
+    # Prod (smartcity) and the production profile keep their own values (test_postgres_backup.py).
     backups:
       enabled: true
       target: 'artifact-store'
-      retentionPolicy: '7d'
+      retentionPolicy: '2d'
   # The nightly pg_dumpall onto a node volume, on dev beside the archive above, so the monthly
   # drill rehearses restoring the only backup prod (smartcity) has today (T-5556). Dev only: prod
   # sets it in its own global values. Without the broker's 81 GB and CKAN's datastore (measured
