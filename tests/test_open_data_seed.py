@@ -18,6 +18,7 @@ import sys
 import threading
 import urllib.parse
 from collections import Counter
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -596,6 +597,32 @@ def test_every_article_has_a_name_from_its_title_or_else_its_slug():
     assert valid("banskabystrica", entities)
 
 
+
+@requires_docker
+def test_a_feed_of_more_posts_than_a_page_is_read_page_by_page():
+    """WordPress answers at most 100 posts a request, and the run replaces the whole set: one page
+    a night deleted every article past the newest 100 of 1558 (F-BNT1-011)."""
+    post = json.loads((FIXTURES / "aktuality.json").read_text())[0]
+    posts = [{**post, "id": 1000 + i, "slug": f"post-{i}"} for i in range(250)]
+    asked: list[dict] = []
+
+    def answer(query: dict) -> tuple[bytes | None, dict]:
+        asked.append(query)
+        if query["per_page"] == ["1"]:
+            return json.dumps([{"id": 1}]).encode(), {"X-WP-Total": "250", "X-WP-TotalPages": "250"}
+        page = int(query["page"][0])
+        return json.dumps(posts[(page - 1) * 100:page * 100]).encode(), {}
+
+    first = json.dumps(posts[:100]).encode()
+    out = written(stubbed("banskabystrica", "aktuality", first, "https://www.banskabystrica.sk", answer))
+    assert sorted(e["identifier"]["value"] for e in out) == sorted(str(p["id"]) for p in posts)
+    assert sorted(q.get("page", ["count"])[0] for q in asked) == ["2", "3", "count"]
+
+    def no_total(query: dict) -> tuple[bytes | None, dict]:
+        return json.dumps([{"id": 1}]).encode(), {}
+    failed = stubbed("banskabystrica", "aktuality", first, "https://www.banskabystrica.sk", no_total)
+    assert b"the feed did not say how many posts it holds" in failed.stdout + failed.stderr
+
 def test_every_built_name_reads_columns_its_dataset_has():
     """A NAMES template names a mapped dataset without a name column, and each `{column}` is one its rows
     carry (T-4745); a typo would name every row by the template's text alone."""
@@ -624,25 +651,34 @@ def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | N
     """The mapping over `document`, its further pages answered on this machine by `resultOffset`:
     `pages[offset]` is the answer, None a 500, and an offset it does not name an empty page. The
     layer's row count answers `count`, a 500 when None."""
-    class Layer(http.server.BaseHTTPRequestHandler):
+    def answer(query: dict) -> tuple[bytes | None, dict]:
+        if query.get("returnCountOnly") == ["true"]:
+            return (None if count is None else json.dumps({"count": count}).encode()), {}
+        return pages.get(int(query["resultOffset"][0]), b'{"type": "FeatureCollection", "features": []}'), {}
+    return stubbed(project, slug, document, "https://services-eu1.arcgis.com", answer)
+
+
+def stubbed(project: str, slug: str, document: bytes, origin: str,
+            answer: Callable[[dict], tuple[bytes | None, dict]]) -> subprocess.CompletedProcess:
+    """The mapping over `document`, every request it makes to `origin` answered on this machine by
+    `answer(query)`: a body (None is a 500) and its headers."""
+    class Source(http.server.BaseHTTPRequestHandler):
         def do_GET(self):
-            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
-            if query.get("returnCountOnly") == ["true"]:
-                body = None if count is None else json.dumps({"count": count}).encode()
-            else:
-                body = pages.get(int(query["resultOffset"][0]), b'{"type": "FeatureCollection", "features": []}')
+            body, headers = answer(urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query))
             self.send_response(500 if body is None else 200)
+            for k, v in headers.items():
+                self.send_header(k, v)
             self.end_headers()
             self.wfile.write(body or b"")
 
         def log_message(self, *_):
             pass
 
-    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Layer)
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Source)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     try:
         text = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
-        text = text.replace("https://services-eu1.arcgis.com", f"http://127.0.0.1:{server.server_port}")
+        text = text.replace(origin, f"http://127.0.0.1:{server.server_port}")
         config = {
             "input": {"stdin": {"scanner": {"to_the_end": {}}}},
             "pipeline": yaml.safe_load(text)["pipeline"],
@@ -724,6 +760,23 @@ def test_every_esri_layer_counts_its_rows_with_its_filter_and_caps_a_run():
         assert f"$rows > {generate.esri_cap(e['source'])}" in bento, e["name"]
         assert generate.esri_cap(e["source"]) >= 2 * e["source"]["rows"]
 
+
+
+def test_every_esri_page_is_asked_in_object_id_order():
+    """resultOffset pages without an order are any slice the server likes: a row can come twice or
+    never, and a row never read is deleted by the replace-mode run (F-BNT1-012)."""
+    layers = [x for x in SEEDED if x["source"]["kind"] == "esri-featureserver" and x["source"].get("objectIdField")]
+    assert len(layers) > 80
+    for e in layers:
+        slug, project = SLUGS[e["name"]], e["org"]
+        bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
+        page = yaml.safe_load(bento)["pipeline"]["processors"]
+        urls = [generate.source_url(e)] + [p["http"]["url"] for step in page if "switch" in step
+                                           for case in step["switch"] for p in case["processors"] if "http" in p]
+        assert len(urls) == 2, e["name"]
+        for u in urls:
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(u).query)
+            assert q["orderByFields"] == [e["source"]["objectIdField"]], (e["name"], u)
 
 @requires_docker
 def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_shows():
@@ -1222,3 +1275,16 @@ def test_every_seed_model_writes_an_annotation_map_as_a_tag_and_a_value():
     assert models
     found = [w for m in models for w in bare(yaml.safe_load(m.read_text()), m.relative_to(SEED).as_posix())]
     assert not found, found[:5]
+
+
+def test_a_slot_many_classes_map_reads_as_the_model_term_not_one_column():
+    """`name` is one slot for every class of a space, each mapping it from a column of its own: the
+    text of the first one ("Miesto") labelled every Organization's name (F-BNT2-010)."""
+    for project in generate.PROJECTS:
+        slots = yaml.safe_load((SEED / project / f"{project}-otvorene-data.linkml.yaml").read_text())["slots"]
+        columns = {p["column"] for e in SEEDED if e["org"] == project for p in e["properties"].values()}
+        for a, (description, texts) in generate.GENERIC.items():
+            if a not in slots:
+                continue
+            assert slots[a]["description"] == description, (project, a)
+            assert slots[a]["annotations"]["label"]["value"] == texts, (project, a)

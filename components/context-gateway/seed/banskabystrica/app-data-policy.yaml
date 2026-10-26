@@ -34,6 +34,7 @@ spec:
         - dateObserved
         - pm10
         - pm25
+        - location
       relationshipNames:
         - name
         - startDate
@@ -53,4 +54,5 @@ spec:
         - dateObserved
         - pm10
         - pm25
+        - location
   operations: [queryEntity, retrieveEntity]

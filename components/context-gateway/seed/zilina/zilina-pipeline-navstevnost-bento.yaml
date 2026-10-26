@@ -19,6 +19,9 @@ pipeline:
         let key_dims = ["cr3803mr_mes", "cr3803mr_dim3"]
         let unit_code = "C62"
         let unit_text = "počet"
+        # A cell times this is in the unit unitCode names: 1000 for a cube stated in thousands
+        # ("v tis. m3"), else 1 (F-BNT1-015).
+        let scale = 1
         let source_url = "https://data.statistics.sk/api/v2/dataset/cr3803mr/SK031B517402/*/1.,2.,3.,4.,5.,6.,7.,8.,9.,10.,11.,12./U_CR_0005,U_CR_0008/VISIT_TOTAL,VISIT_DOM,VISIT_FOR?lang=sk&type=json"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
         # row-major over `size`; the position of a code inside a dimension is
@@ -49,7 +52,7 @@ pipeline:
           # in silence (T-2445). A cube that states no update time gets no `observedAt` at all.
           # A unit with no UN/CEFACT code (a currency) and a cube with no update time leave their
           # term out rather than write a null the broker refuses.
-          "kpiValue": { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
+          "kpiValue": { "type": "Property", "value": c.cell * $scale, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
           "unitText": { "type": "Property", "value": $unit_text },
           "source": { "type": "Property", "value": $source_url },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }

@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_stav_project/FeatureServer/1/query?where=1%3D1&outFields=FID_rieky_bbsk_join,POZNAMKA,NAZOV_VU,NAZOV_VU_D,POVODIE,SUB_UNIT,POZN_1,KOD_VU_202,rkm_od_1,rkm_do_1,dlzka_VU_1,kod,typ,skupina,nazov_VU_1,charakter,celk_chem_stav,ekologicky_stav,FID_kraj_0,DOW,AUT,ACH,SOI,FACC,IDN2,NM2,VYMERA,potencial,charakter_1&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Eko_stav_project/FeatureServer/1/query?where=1%3D1&outFields=FID_rieky_bbsk_join,POZNAMKA,NAZOV_VU,NAZOV_VU_D,POVODIE,SUB_UNIT,POZN_1,KOD_VU_202,rkm_od_1,rkm_do_1,dlzka_VU_1,kod,typ,skupina,nazov_VU_1,charakter,celk_chem_stav,ekologicky_stav,FID_kraj_0,DOW,AUT,ACH,SOI,FACC,IDN2,NM2,VYMERA,potencial,charakter_1&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=OBJECTID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

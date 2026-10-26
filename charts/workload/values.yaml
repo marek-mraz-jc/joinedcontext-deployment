@@ -53,8 +53,10 @@ rbac:
 
 podAnnotations: {}
 podLabels: {}
-podSecurityContext: {}     # filled from .Values.securityDefaults.podSecurityContext
-securityContext: {}        # filled from .Values.securityDefaults.securityContext
+# Empty by default and set by each component; policies/workloads.rego refuses a render without
+# runAsNonRoot, drop ALL and a memory limit, so a component that forgets them fails CI.
+podSecurityContext: {}
+securityContext: {}
 
 resources:
   requests:

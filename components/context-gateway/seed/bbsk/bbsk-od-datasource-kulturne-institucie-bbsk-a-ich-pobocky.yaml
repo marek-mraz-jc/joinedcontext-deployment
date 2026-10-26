@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_view/FeatureServer/7/query?where=1%3D1&outFields=Typ_1,In%C5%A1tit%C3%BAcia_1,I%C4%8CO,DI%C4%8C,Adresa,Riadite%C4%BE,Riadite%C4%BE___email,Riadite%C4%BE___mobiln%C3%BD_telef%C3%B3n,Riadite%C4%BE___pevn%C3%A1_linka,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Logo&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_view/FeatureServer/7/query?where=1%3D1&outFields=Typ_1,In%C5%A1tit%C3%BAcia_1,I%C4%8CO,DI%C4%8C,Adresa,Riadite%C4%BE,Riadite%C4%BE___email,Riadite%C4%BE___mobiln%C3%BD_telef%C3%B3n,Riadite%C4%BE___pevn%C3%A1_linka,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Logo&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=OBJECTID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

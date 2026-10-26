@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_2018_2040/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,F2020,F2025,F2030,F2035,F2040,Okres,K%C3%B3d_okresu_,Kraj,abs___2018_2040_,F___2018_2040_,F__rozdiel___zaporny&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Mapa_progn%C3%B3za_po%C4%8Dtu_obyvate%C4%BEov_2018_2040/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN3,NM3,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE,LAU1,LAU1_CODE,F2020,F2025,F2030,F2035,F2040,Okres,K%C3%B3d_okresu_,Kraj,abs___2018_2040_,F___2018_2040_,F__rozdiel___zaporny&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=ObjectId
     verb: GET
     headers:
       Accept: application/geo+json, application/json

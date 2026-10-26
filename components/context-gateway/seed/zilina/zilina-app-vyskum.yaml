@@ -32,6 +32,6 @@ spec:
     # The works of the pipeline drepo, read only; the licence is shown in the source line.
     - contextSpaceRef: { kind: ContextSpace, name: zilina-uniza }
       types: [Article]
-      attrs: [name, workType, yearPublished, isPartOf, collectionName, license, url]
+      attrs: [name, workType, yearPublished, isPartOf, collectionName, license, url, location]
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]

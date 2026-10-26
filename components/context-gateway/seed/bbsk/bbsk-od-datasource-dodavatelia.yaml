@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pokus_dodavatelia/FeatureServer/0/query?where=ICO%20IS%20NOT%20NULL%20AND%20ICO%20%3C%3E%20%27%27&outFields=ICO,Nazov,Adresa,Obec,PSC,Ulica_a_cislo&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Pokus_dodavatelia/FeatureServer/0/query?where=ICO%20IS%20NOT%20NULL%20AND%20ICO%20%3C%3E%20%27%27&outFields=ICO,Nazov,Adresa,Obec,PSC,Ulica_a_cislo&returnGeometry=false&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
     verb: GET
     headers:
       Accept: application/geo+json, application/json
