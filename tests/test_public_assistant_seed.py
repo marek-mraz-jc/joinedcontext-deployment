@@ -257,27 +257,21 @@ def test_the_sources_and_the_deployment_are_seeded_at_their_kinds_paths(public_i
 
 def test_the_region_is_indexed_once():
     # T-4281 item 2: bbsk.sk is crawled in the bbsk project alone; the city's project holds no
-    # second copy, and the eval copies read the region's as `bbsk/{source}`.
+    # second copy.
     for doc in manifests("KnowledgeSource", "banskabystrica").values():
         hosts = {urlsplit(url).hostname for url in doc["spec"].get("startUrls", [])}
         assert "www.bbsk.sk" not in hosts, doc["metadata"]["name"]
         assert "bbsk" not in doc["spec"].get("organizations", []), doc["metadata"]["name"]
-    for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini"):
-        spec = manifests("AssistantDeployment", "banskabystrica")[name]["spec"]
-        assert {"bbsk/web", "bbsk/data-portal"} <= set(spec["sources"]), name
-        assert spec["scope"]["projects"] == ["bbsk"], name
 
 
-def test_the_eval_copies_offer_one_tool_list_with_history():
-    # T-4183: the copies compare models, so each one reaches the same Endpoints with the same tools;
-    # bb-eval-gemini kept the two-tool list of before T-4294 and could not answer a history question.
-    lists = {name: {c["endpoint"]: c["tools"] for c in manifests("AssistantDeployment", "banskabystrica")[name]["spec"]["connectors"]}
-             for name in ("bb-eval-haiku", "bb-eval-deepseek", "bb-eval-gemini")}
-    assert lists["bb-eval-gemini"] == lists["bb-eval-haiku"] == lists["bb-eval-deepseek"], lists
-    assert all("query_temporal" in tools for tools in lists["bb-eval-gemini"].values())
-    # Owner 2026-10-16: the haiku copy runs Claude Haiku 5.5 on the router and the answer alike.
-    model = manifests("AssistantDeployment", "banskabystrica")["bb-eval-haiku"]["spec"]["model"]
-    assert model == {"router": "anthropic/claude-haiku-5.5", "answer": "anthropic/claude-haiku-5.5"}
+def test_no_assistant_reads_a_planted_eval_page():
+    # F-BNT1-009: the T-4183/T-4688 eval copies and their planted injection page outlived their
+    # runs as public assistants anyone with the publicId could ask; the copies and the page are gone.
+    for project in [p.name for p in SEED.iterdir() if p.is_dir()]:
+        assert "eval-uploads" not in manifests("KnowledgeSource", project), project
+        for name, doc in manifests("AssistantDeployment", project).items():
+            assert "eval-uploads" not in doc["spec"].get("sources", []), (project, name)
+            assert not name.startswith(("bb-eval-", "web-eval-")), (project, name)
 
 
 def general() -> dict:
@@ -494,22 +488,6 @@ def test_the_open_data_eval_copies_are_data_with_another_model():
         assert {**spec["budget"], "costPerDayUsd": base["budget"]["costPerDayUsd"],
                 "costPerConversationUsd": base["budget"]["costPerConversationUsd"]} == base["budget"], name
         assert base["budget"]["costPerDayUsd"] <= day <= 4, name
-
-
-def test_the_website_eval_copy_is_the_regions_assistant_over_its_website_alone():
-    # T-4688: the 50 bbsk.sk questions ask a copy of `bbsk` with the visitors' prompt and model,
-    # whose only sources are the website and the planted injection page, on its own day.
-    spec = manifests("AssistantDeployment", "bbsk")["web-eval-gemini"]["spec"]
-    base = deployment("bbsk")["spec"]
-    assert spec["publicId"] == "bbsk-web-eval-gemini" and "eval" in spec["publicId"].split("-")
-    assert spec["sources"] == ["web", "eval-uploads"]
-    assert "connectors" not in spec and "scope" not in spec
-    assert spec["systemPrompt"] == base["systemPrompt"] and spec["model"] == base["model"]
-    # Its own day (T-4286); $3 so the 25-question rerun of T-4729 fits one address's tenth.
-    assert spec["budget"]["costPerDayUsd"] <= 3
-    planted = manifests("KnowledgeSource", "bbsk")["eval-uploads"]["spec"]
-    assert planted == {"source": "upload", "languages": ["sk"], "visibility": "public"}
-    assert "eval-uploads" not in base["sources"], "visitors never read the planted page"
 
 
 # The EU data themes in their table's order (platform jc-core DataTheme::ALL).

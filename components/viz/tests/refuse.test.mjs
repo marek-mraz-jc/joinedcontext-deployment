@@ -58,6 +58,8 @@ test("an href or a url that can name a host outside ours", () => {
   assert.deepEqual(at({ href: { value: "https://dev.joinedcontext.com.evil.example/" } }), ["/encoding/href a href only as a literal on our hosts"]);
   assert.deepEqual(at({ href: { value: "https://user@dev.joinedcontext.com/" } }), ["/encoding/href a href only as a literal on our hosts"]);
   assert.deepEqual(at({ href: { value: "http://dev.joinedcontext.com/" } }), ["/encoding/href a href only as a literal on our hosts"]);
+  // F-DEP2-011: an App's page runs untrusted code, so a link to it is not on our hosts
+  assert.deepEqual(at({ href: { value: "https://x.apps.dev.joinedcontext.com/" } }), ["/encoding/href a href only as a literal on our hosts"]);
   assert.ok(at({ href: { value: "javascript:alert(1)" } }).includes("/encoding/href a href only as a literal on our hosts"));
   assert.deepEqual(rules({ $schema: VEGA, marks: [{ type: "symbol", encode: { update: { href: { signal: "'https://evil.example/'" } } } }] }),
     ["/marks/0/encode/update/href a href only as a literal on our hosts"]);

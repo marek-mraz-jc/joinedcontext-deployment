@@ -794,9 +794,9 @@ spec:
   allowedOrigins:
     - https://opendata.dev.joinedcontext.com
   # The city assistants' limits (T-4149 item 1, T-4286: 300 questions per visitor a month by
-  # default); $1 a day, inside the key's $5 with the four city assistants. One data question
-  # over five publishers measured 33,744 tokens on dev (2026-10-16, 5 model calls), so a
-  # conversation gets twice the cities' 40,000; the day's cost cap still binds first.
+  # default); $1 a day of its own. One data question over five publishers measured 33,744
+  # tokens on dev (2026-10-16, 5 model calls); an eval run asks many in one conversation, so it
+  # holds 3,000,000 tokens (tests/test_public_assistant_seed.py) and the day's cost cap binds first.
   rateLimit:
     requestsPerMinute: 30
     perClientPerMinute: 10
