@@ -132,6 +132,7 @@
  "test_helsinki_feedback.py": 1.0,
  "test_helsinki_gtfs.py": 20.3,
  "test_helsinki_heat_and_energy.py": 29.7,
+ "test_helsinki_heritage.py": 7.8,
  "test_helsinki_hsl_network.py": 14.9,
  "test_helsinki_kartta_fixtures.py": 0.1,
  "test_helsinki_open_data.py": 26.6,

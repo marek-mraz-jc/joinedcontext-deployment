@@ -7,8 +7,8 @@ metadata:
   namespace: helsinki
   title: { fi: Kaupungin palvelut — Helsinki, en: City services — Helsinki }
   description:
-    fi: 'Palvelukartan kaikki Helsingin toimipisteet: kirjastot, terveysasemat, uimahallit, uimarannat, koulut, julkiset laitokset lajeittain (päiväkodit, sairaalat, sosiaalipalvelut, viranomaiset, liikunta- ja kulttuuripaikat...) ja muut (other), sekä HSL:n lipunmyyntipisteet: myyntipisteet, palvelupisteet, lippuautomaatit ja pysäköintiautomaatit (serviceCategory ticket…, vyöhyke kentässä fareZone, maksutavat kentässä description). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
-    en: "Every unit of the Service Map in Helsinki: libraries, health stations, swimming halls, beaches, schools, public institutions by kind (kindergartens, hospitals, social services, public authorities, sports and culture venues...) and the rest (other), and HSL's ticket sales points: kiosks, service points, ticket machines and parking meters (serviceCategory ticket…, the zone in fareZone, the payment methods in description). Sources: City of Helsinki and HSL, CC BY 4.0."
+    fi: 'Palvelukartan kaikki Helsingin toimipisteet: kirjastot, terveysasemat, uimahallit, uimarannat, koulut, julkiset laitokset lajeittain (päiväkodit, sairaalat, sosiaalipalvelut, viranomaiset, liikunta- ja kulttuuripaikat...) ja muut (other), sekä HSL:n lipunmyyntipisteet: myyntipisteet, palvelupisteet, lippuautomaatit ja pysäköintiautomaatit (serviceCategory ticket…, vyöhyke kentässä fareZone, maksutavat kentässä description), sekä rantareitin paikat uusille palveluille, kuten saunoille ja kahviloille (serviceCategory waterfrontSite). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
+    en: "Every unit of the Service Map in Helsinki: libraries, health stations, swimming halls, beaches, schools, public institutions by kind (kindergartens, hospitals, social services, public authorities, sports and culture venues...) and the rest (other), and HSL's ticket sales points: kiosks, service points, ticket machines and parking meters (serviceCategory ticket…, the zone in fareZone, the payment methods in description), and the sites the city offers for new services such as saunas and cafes along its shore route (serviceCategory waterfrontSite). Sources: City of Helsinki and HSL, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: zq6avaaqv3d7ma2avz7rvkwtxelaxkc4
@@ -53,4 +53,11 @@ spec:
         description:
           fi: HSL:n avoimen datan palvelun taso, GeoJSON (WGS84), CC BY 4.0. Luetaan päivittäin (putki sales-points).
           en: A layer of HSL's open data hub, as GeoJSON (WGS84), CC BY 4.0. Read daily (pipeline sales-points).
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:rantareitin_uusien_toimintojen_paikat_2025
+        title:
+          fi: Uusien toimintojen paikat Helsingin rantareitillä
+          en: Sites for new services on the Helsinki shore route
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki waterfront-sites, serviceCategory waterfrontSite).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline waterfront-sites, serviceCategory waterfrontSite).
     pipelineRef: { kind: Pipeline, name: services }

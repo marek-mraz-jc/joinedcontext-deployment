@@ -42,6 +42,8 @@ spec:
         - type: OnStreetParking
         - type: CityWork
         - type: AdministrativeArea
+        # The cultural heritage maps (T-5670).
+        - type: HeritageArea
         # The reports the city published in its feedback system (T-5257): the reporter's name, contact
         # details and photos are never written.
         - type: ServiceRequest
