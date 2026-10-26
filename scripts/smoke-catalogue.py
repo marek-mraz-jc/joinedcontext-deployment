@@ -5,10 +5,12 @@
     scripts/smoke-catalogue.py <domain> <env> [out-dir]
 
 Reads only public data, anonymously: CKAN's package_search and the gateway's DCAT feed for the
-inventory, then per dataset NGSI-LD, MCP, OData, OGC API Features, the data model, a sample of
+inventory, then the entity count of every dataset (6 in parallel, T-5768), then per dataset NGSI-LD, MCP, OData, OGC API Features, the data model, a sample of
 rows against it with its relationships, and the CKAN views (every run), and the datastore count,
 WebSocket, map and CSV (rotating, least recently checked first).
-One request at a time, at most 50 a minute, 500 a run and 10 minutes (owner limit, T-4716).
+After the count pass, one request at a time, at most 50 a minute, 500 a run and 10 minutes (owner
+limit, T-4716). A dataset with 0 entities is a ko: under the owner's order of
+2026-10-26 an empty dataset leaves the catalogue, so no allow-list exists.
 Writes `<out-dir>/smoke-catalogue-<env>-<time>.tsv` (default out-dir `.smoke`) and exits 1
 on any ko. Testing/05 §4.1 is the contract.
 """
@@ -23,11 +25,13 @@ import re
 import signal
 import socket
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -44,9 +48,16 @@ RETRIES = 3
 # The tables stay where an apply leaves them: _dev-assemble deletes deployment/, and the
 # rotation reads the previous table (gitignored).
 DEFAULT_OUT = ".smoke"
+# The count pass (T-5768): every dataset every run, in parallel, before the budgeted checks. The
+# owner's sweep of 2026-10-26 read 633 datasets this way in about 5 minutes.
+COUNT_WORKERS = 6
+COUNT_SLOW = 2  # requests at once for COUNT_COOL seconds after a 429 or a 503
+COUNT_COOL = 60.0
+COUNT_DEADLINE = 600.0
+COUNT_TYPES = 3  # types of an untyped dataset tried, the first with an entity wins
 CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model", "data", "views"]
 ROTATING = ["datastore", "websocket", "map", "csv"]
-COLUMNS = ["inventory", *CORE, *ROTATING]
+COLUMNS = ["inventory", "count", *CORE, *ROTATING]
 MCP_LIST = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}).encode()
 NOT_THIS_RUN = re.compile(r"not this run \(last: (\S+) (\w+)\)")
 # Members of a row that no model defines (NGSI-LD's own and the system times).
@@ -79,6 +90,7 @@ class Answer:
     seconds: float = 0.0
     error: str = ""
     retry_after: str = ""
+    results: str = ""  # NGSILD-Results-Count of a count=true query
 
     def json(self):
         try:
@@ -107,7 +119,12 @@ class Overtime(Exception):
 def cut_at(seconds: float):
     """Interrupt whatever runs inside after `seconds` of wall time. urllib's own timeout is per
     connect and per read, so a slow handshake, a slow first byte and a trickle each got it whole
-    (dev runs 2 and 3 overran 10 minutes by 40 s). Main thread only; the script has no other."""
+    (dev runs 2 and 3 overran 10 minutes by 40 s). Signals reach the main thread only.
+    ponytail: off it (the count pass) urllib's per-read timeout is the cut; a trickle can outlast it."""
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
     def expire(signum, frame):
         raise Overtime()
 
@@ -129,7 +146,8 @@ def send(method: str, url: str, headers: dict, body: bytes | None, limit: int = 
             try:
                 with OPENER.open(request, timeout=TIMEOUT) as response:
                     return Answer(response.status, response.headers.get("Content-Type", ""),
-                                  response.read(limit), time.monotonic() - started)
+                                  response.read(limit), time.monotonic() - started,
+                                  results=response.headers.get("NGSILD-Results-Count", ""))
             except urllib.error.HTTPError as error:
                 # Its body is read inside the same timer as the rest of the request.
                 return Answer(error.code, error.headers.get("Content-Type", ""), error.read(limit),
@@ -443,6 +461,92 @@ def series(schema: dict) -> bool:
                for p in properties.values() if isinstance(p, dict))
 
 
+class Gate:
+    """At most COUNT_WORKERS requests at once, COUNT_SLOW for COUNT_COOL seconds after a 429 or 503."""
+
+    def __init__(self, clock):
+        self.clock, self.active, self.until = clock, 0, None
+        self.cond = threading.Condition()
+
+    def __enter__(self):
+        with self.cond:
+            while self.active >= (COUNT_SLOW if self.until and self.clock() < self.until else COUNT_WORKERS):
+                self.cond.wait(1)
+            self.active += 1
+
+    def __exit__(self, *exc):
+        with self.cond:
+            self.active -= 1
+            self.cond.notify_all()
+
+    def slow_down(self):
+        with self.cond:
+            self.until = self.clock() + COUNT_COOL
+
+
+class Counts:
+    """One count=true&limit=1 read per dataset, all of them, in parallel (T-5768): the cell `count`."""
+
+    def __init__(self, domain: str, send=send, clock=time.monotonic, sleep=time.sleep):
+        self.domain = domain
+        self._send, self._clock, self._sleep = send, clock, sleep
+        self.gate, self.count, self.lock = Gate(clock), 0, threading.Lock()
+        self.start = clock()
+
+    def get(self, url: str) -> Answer:
+        """One read; a 429 or 503 slows the pass and is retried after its Retry-After."""
+        for attempt in range(RETRIES + 1):
+            with self.gate:
+                answer = self._send("GET", url, {"User-Agent": "jc-smoke-catalogue", "Accept": "application/json"},
+                                    None, MAX_BODY)
+            with self.lock:
+                self.count += 1
+            if answer.status not in (429, 503) or attempt == RETRIES:
+                return answer
+            self.gate.slow_down()
+            self._sleep(min(float(answer.retry_after) if answer.retry_after.isdigit() else 5.0, 60.0))
+        return answer
+
+    def cell(self, data: Dataset):
+        """The dataset's verdict; None when the pass ran out of time or a rate limit lasted."""
+        if not data.slug:
+            return skip("the dataset lists no Endpoint")
+        if self._clock() - self.start > COUNT_DEADLINE:
+            return None
+        base = f"https://api.{self.domain}/api/endpoint/{data.slug}/"
+        types = [data.type] if data.type else None
+        if not types:
+            # The models first: ngsi-ld/v1/types can take the gateway's whole 10 s (dev Praha 503s).
+            answer = self.get(base + "schema/index.json")
+            models = (answer.json() or {}).get("models") if answer.status == 200 else None
+            types = list(dict.fromkeys(t for m in models if isinstance(m, dict) for t in m.get("types") or []
+                                       if t != "Any")) if isinstance(models, list) else None
+        if not types:
+            answer = self.get(base + "ngsi-ld/v1/types")
+            types = (answer.json() or {}).get("typeList") if answer.status == 200 else None
+            if not isinstance(types, list):
+                return None if answer.status == 429 else ko(f"types answered {answer.why()}")
+        total = 0
+        for typ in types[:COUNT_TYPES]:
+            query = {**sample_query(data, 1), "type": typ, "count": "true"}
+            answer = self.get(base + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(query))
+            if answer.status == 429:
+                return None
+            # The header first: one entity can outgrow MAX_BODY (a flood zone's polygon on dev).
+            body = answer.json() if answer.status == 200 and not answer.results.isdigit() else []
+            if answer.status != 200 or not isinstance(body, list):
+                return ko(f"the count of {typ} answered {answer.why()}")
+            total = int(answer.results) if answer.results.isdigit() else len(body)
+            if total:
+                break
+        return ok(f"{total} entities") if total else ko(f"0 entities of {', '.join(types[:COUNT_TYPES]) or 'any type'}")
+
+    def cells(self, datasets: list) -> dict:
+        with ThreadPoolExecutor(COUNT_WORKERS) as pool:
+            found = dict(zip((d.name for d in datasets), pool.map(self.cell, datasets)))
+        return {name: cell for name, cell in found.items() if cell is not None}
+
+
 class Run:
     def __init__(self, client: Client, domain: str, previous: dict, previous_at: str, now: str):
         self.client, self.domain = client, domain
@@ -712,11 +816,13 @@ class Run:
         at, was = self.last(name, column)
         return f"not this run (last: {at} {was})" if at else "not this run (never)"
 
-    def table(self, datasets: list, public: set) -> list:
+    def table(self, datasets: list, public: set, counts: dict | None = None) -> list:
         rows = {}
         self.datasets, self.public = datasets, public
         for data in datasets:
             row = rows[data.name] = {"dataset": data.name, "endpoint": data.slug}
+            if data.name in (counts or {}):
+                row["count"] = counts[data.name]
             if not data.slug:
                 row["inventory"] = ko("the dataset lists no Endpoint distribution")
             elif data.foreign:
@@ -836,9 +942,13 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
     now = now or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     previous, previous_at = previous_table(out, env)
     datasets, public = inventory(client, domain)
+    # Every dataset's count, outside the request budget and before it starts (T-5768).
+    counter = Counts(domain, client._send, client._clock, client._sleep)
+    counts = counter.cells(datasets)
+    client.deadline += client._clock() - counter.start
     # Before the rotating checks: they spend the request budget, and the filters run every time.
     catalogue = filters(client, domain)
-    rows = Run(client, domain, previous, previous_at, now).table(datasets, public)
+    rows = Run(client, domain, previous, previous_at, now).table(datasets, public, counts)
     rows.append({"dataset": "(catalogue)", "endpoint": "-", "inventory": catalogue,
                  **{c: "-" for c in COLUMNS[1:]}})
     out.mkdir(parents=True, exist_ok=True)
@@ -862,7 +972,8 @@ def run(domain: str, env: str, out: Path, client: Client | None = None, now: str
     seconds = client.elapsed()
     summary = (f"catalogue: {len(named)} datasets, {complete} complete, {len(named) - complete} ko, "
                f"{sum(r['dataset'] == '(no dataset)' for r in rows)} public Endpoints without a dataset; "
-               f"{client.count} requests in {int(seconds // 60)} min {int(seconds % 60)} s; {path}")
+               f"{client.count} requests in {int(seconds // 60)} min {int(seconds % 60)} s "
+               f"after {counter.count} count reads; {path}")
     print(f"  {'FAIL' if bad else 'ok  '}  {summary}")
     return 1 if bad else 0
 

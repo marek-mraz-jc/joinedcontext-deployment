@@ -59,6 +59,10 @@ def model(typ, *attrs, required=()):
                                   **({"required": list(required)} if required else {})}}}
 
 
+def count_query(data):
+    return {**smoke.sample_query(data, 1), "type": data.type, "count": "true"}
+
+
 FILTERS = f"{CKAN}/api/3/action/package_search?" + urllib.parse.urlencode(
     {"rows": 0, "facet.field": json.dumps(["vocab_jc_format", "vocab_jc_topic"])})
 
@@ -88,6 +92,8 @@ def world(packages, public, rows=10, datastore_total=10, overrides=None):
             base + "schema/v1/model.schema.json": answer(body=model(t)),
             base + "ngsi-ld/v1/types": answer(body={"typeList": [t]}),
             base + "file.csv?" + urllib.parse.urlencode(smoke.sample_query(data, 1)): answer(body=b"id,type\nurn:1,T\n", ctype=CSV),
+            base + "ngsi-ld/v1/entities?" + urllib.parse.urlencode(count_query(data)):
+                answer(body=[row(t)], ctype="application/ld+json", results=str(rows)),
         })
         if "OGCFEAT" in data.formats:  # CKAN's /map/ is a 404 without one (jc_map_page)
             answers[f"{CKAN}/map/{p['name']}"] = answer(body=b"<div data-jc-map='{&#34;layers&#34;: [{}]}'>",
@@ -133,7 +139,9 @@ def table(answers, sockets=None, tmp_path=None, now="20261019T060000Z", **kw):
     client = fake.client(**kw)
     previous, at = smoke.previous_table(tmp_path, "prod") if tmp_path else ({}, "")
     datasets, public = smoke.inventory(client, DOMAIN)
-    rows = smoke.Run(client, DOMAIN, previous, at, now).table(datasets, public)
+    # The count pass reads through a Fake of its own: `fake.sent` stays the budgeted client's.
+    counts = smoke.Counts(DOMAIN, Fake(answers).send).cells(datasets)
+    rows = smoke.Run(client, DOMAIN, previous, at, now).table(datasets, public, counts)
     return {r["dataset"] + ("" if r["dataset"] != "(no dataset)" else " " + r["endpoint"]): r for r in rows}, fake
 
 
@@ -782,3 +790,85 @@ def test_a_spent_budget_still_writes_the_filters_row(tmp_path, capsys):
     answers[FILTERS] = answer(body={"result": {"count": 5, "search_facets": {}}})
     smoke.run(DOMAIN, "dev", tmp_path, Fake(answers).client(budget=12), "20261023T090000Z")
     assert "catalogue (catalogue) (-): inventory the Format filter offers no choice" in capsys.readouterr().out
+
+
+def count_world(packages, public, empty=()):
+    """world() of 4 entities a dataset, the `empty` ones none."""
+    answers = world(packages, public, rows=4)
+    for p in packages:
+        if p["name"] in empty:
+            data = smoke.describe(p, DOMAIN)
+            answers[f"{API}/{data.slug}/ngsi-ld/v1/entities?" + urllib.parse.urlencode(count_query(data))] = answer(
+                body=[], ctype="application/ld+json", results="0")
+    return answers
+
+
+def counted(answers):
+    fake = Fake(answers)
+    datasets, _ = smoke.inventory(fake.client(), DOMAIN)
+    counter = smoke.Counts(DOMAIN, fake.send, fake.clock, fake.sleep)
+    return counter.cells(datasets), fake, counter
+
+
+def test_an_empty_dataset_fails_the_count_and_a_full_one_passes():
+    cells, _, _ = counted(count_world([package("air", "a1", "AirQualityObserved"),
+                                       package("kpi", "k1", "KeyPerformanceIndicator")], ["a1", "k1"], empty={"kpi"}))
+    assert cells["air"] == "ok: 4 entities"
+    assert cells["kpi"] == "ko: 0 entities of KeyPerformanceIndicator"
+
+
+def test_a_429_backs_off_the_count_pass_and_the_retry_counts():
+    p = package("air", "a1", "AirQualityObserved")
+    answers = count_world([p], ["a1"])
+    url = next(u for u in answers if "&count=true" in u)
+    answers[url] = [answer(429, retry_after="7"), answers[url]]
+    cells, fake, counter = counted(answers)
+    assert cells["air"] == "ok: 4 entities"
+    assert 7 in fake.pauses and counter.count == 2
+    assert counter.gate.until == fake.now - 7 + smoke.COUNT_COOL  # 2 at once for the next minute
+
+
+def test_a_429_that_lasts_leaves_the_count_not_this_run_and_a_503_that_lasts_is_a_ko():
+    a, b = package("air", "a1", "AirQualityObserved"), package("park", "p1", "OnStreetParking")
+    answers = count_world([a, b], ["a1", "p1"])
+    urls = {n: next(u for u in answers if "&count=true" in u and f"/{s}/" in u) for n, s in (("air", "a1"), ("park", "p1"))}
+    answers[urls["air"]], answers[urls["park"]] = answer(429, retry_after="1"), answer(503)
+    cells, _, _ = counted(answers)
+    assert "air" not in cells
+    assert cells["park"].startswith("ko: the count of OnStreetParking answered 503")
+
+
+def test_an_untyped_dataset_counts_the_endpoint_s_types_first_with_entities_wins():
+    p = package("cat", "c1", "Thing")
+    p["resources"] = [{"format": "NGSI-LD", "url": f"{API}/c1/ngsi-ld/v1/entities", "name": "NGSI-LD API"}]
+    base = f"{API}/c1/ngsi-ld/v1/"
+    cells, _, _ = counted({
+        f"{CKAN}/api/3/action/package_search?rows=1000&start=0": answer(body={"result": {"count": 1, "results": [p]}}),
+        f"https://api.{DOMAIN}/catalog.jsonld": answer(body={"dcat:dataset": []}),
+        base + "types": answer(body={"typeList": ["A", "B"]}),
+        base + "entities?type=A&limit=1&count=true": answer(body=[], results="0"),
+        base + "entities?type=B&limit=1&count=true": answer(body=[{}], results="12"),
+    })
+    assert cells["cat"] == "ok: 12 entities"
+
+
+def test_an_untyped_dataset_takes_its_types_from_the_models_before_the_slow_types_read():
+    p = package("cat", "c1", "Thing")
+    p["resources"] = [{"format": "NGSI-LD", "url": f"{API}/c1/ngsi-ld/v1/entities", "name": "NGSI-LD API"}]
+    answers = {
+        f"{CKAN}/api/3/action/package_search?rows=1000&start=0": answer(body={"result": {"count": 1, "results": [p]}}),
+        f"https://api.{DOMAIN}/catalog.jsonld": answer(body={"dcat:dataset": []}),
+        f"{API}/c1/schema/index.json": answer(body={"models": [{"types": ["Any", "Garden"]}]}),
+        f"{API}/c1/ngsi-ld/v1/types": answer(503),
+        f"{API}/c1/ngsi-ld/v1/entities?type=Garden&limit=1&count=true": answer(body=b"[{\"cut", results="3"),
+    }
+    cells, fake, _ = counted(answers)
+    assert cells["cat"] == "ok: 3 entities", "the count header holds when the body outgrew MAX_BODY"
+    assert f"{API}/c1/ngsi-ld/v1/types" not in [u for _, u in fake.sent]
+
+
+def test_a_run_goes_red_on_an_empty_dataset_and_green_once_it_holds_data(tmp_path, capsys):
+    p = package("kpi", "k1", "KeyPerformanceIndicator")
+    assert smoke.run(DOMAIN, "prod", tmp_path, Fake(count_world([p], ["k1"], empty={"kpi"})).client(), "t1") == 1
+    assert "  FAIL  catalogue kpi (k1): count 0 entities of KeyPerformanceIndicator" in capsys.readouterr().out
+    assert smoke.run(DOMAIN, "prod", tmp_path, Fake(count_world([p], ["k1"])).client(), "t2") == 0

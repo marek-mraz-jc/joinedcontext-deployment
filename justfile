@@ -511,8 +511,9 @@ _smoke domain namespace:
 	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
-	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only,
-	# 50 requests a minute, 10 minutes at most; its table lands in .smoke/.
+	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only; the
+	# entity count of every dataset first, 6 at once (T-5768), then 50 requests a minute for
+	# 10 minutes at most; its table lands in .smoke/.
 	echo "catalogue"
 	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# Rows of every public Endpoint x type link the dataset of their space and type (T-4802).
