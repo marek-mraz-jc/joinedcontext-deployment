@@ -10,6 +10,7 @@ import re
 from pathlib import Path
 
 import yaml
+from conftest import demo_id
 
 HELSINKI = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/helsinki"
 POLICY = HELSINKI / "helsinki-policy-steward-row-journey.yaml"
@@ -19,7 +20,7 @@ def test_the_journey_grant_is_seeded_for_the_steward_alone_and_only_creates_and_
     index = yaml.safe_load((HELSINKI / "index.yaml").read_text())
     assert index[POLICY.name] == "projects/helsinki/spaces/helsinki/policies/steward-row-journey.yaml"
     spec = yaml.safe_load(POLICY.read_text())["spec"]
-    assert spec["assignee"] == {"kind": "user", "id": "demo.steward@hel.fi"}
+    assert spec["assignee"] == {"kind": "user", "id": demo_id("demo.steward")}
     assert spec["operations"] == ["createEntity", "deleteEntity"]
     assert spec["information"] == [{"entities": [{"type": "Alert"}]}]
     assert spec.get("effect", "permission") == "permission"

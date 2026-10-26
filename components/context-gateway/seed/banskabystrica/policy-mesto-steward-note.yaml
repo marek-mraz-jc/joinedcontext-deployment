@@ -15,7 +15,7 @@ spec:
   assigner: did:web:banskabystrica.sk
   assignee:
     kind: user
-    id: demo.steward@{orgDomain}
+    id: de300000-0000-4000-8000-000000000001 # demo.steward
   operations: [updateAttrs]
   information:
     - entities:

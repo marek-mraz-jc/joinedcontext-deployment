@@ -30,6 +30,7 @@ apps/v1/StatefulSet minimal/keycloak-app-keycloakx
 batch/v1/CronJob minimal/postgres-cluster-dr-drill
 batch/v1/Job minimal/keycloak-admin-permissions
 batch/v1/Job minimal/keycloak-config-keycloak-config-cli
+batch/v1/Job minimal/keycloak-user-ids
 batch/v1/Job minimal/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate minimal/apisix-edge
 kyverno.io/v1/ClusterPolicy -/disallow-host-namespaces
@@ -77,6 +78,8 @@ networking.k8s.io/v1/NetworkPolicy minimal/keycloak-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/keycloak-config-cli
 networking.k8s.io/v1/NetworkPolicy minimal/keycloak-config-cli-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/keycloak-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy minimal/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy minimal/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy minimal/mail-catcher
 networking.k8s.io/v1/NetworkPolicy minimal/portal
 networking.k8s.io/v1/NetworkPolicy minimal/portal-allow-linkerd
@@ -136,6 +139,7 @@ v1/ConfigMap minimal/cnpg-controller-manager-config
 v1/ConfigMap minimal/cnpg-default-monitoring
 v1/ConfigMap minimal/keycloak-admin-permissions
 v1/ConfigMap minimal/keycloak-theme
+v1/ConfigMap minimal/keycloak-user-ids
 v1/ConfigMap minimal/portal-branding
 v1/ConfigMap minimal/postgres-cluster-dr-drill
 v1/ConfigMap minimal/postgres-cluster-dr-drill-script

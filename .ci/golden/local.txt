@@ -45,6 +45,7 @@ batch/v1/Job local/artifact-store-bucket
 batch/v1/Job local/gitea-bootstrap
 batch/v1/Job local/keycloak-admin-permissions
 batch/v1/Job local/keycloak-config-keycloak-config-cli
+batch/v1/Job local/keycloak-user-ids
 batch/v1/Job local/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate local/apisix-edge
 kyverno.io/v1/ClusterPolicy -/disallow-host-namespaces
@@ -130,6 +131,8 @@ networking.k8s.io/v1/NetworkPolicy local/keycloak-from-observability
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy local/keycloak-linkerd-from-observability
+networking.k8s.io/v1/NetworkPolicy local/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy local/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy local/lane-token-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy local/mail-catcher
 networking.k8s.io/v1/NetworkPolicy local/model-tools
@@ -284,6 +287,7 @@ v1/ConfigMap local/gitea-seed-s8-*
 v1/ConfigMap local/gitea-seed-s9-*
 v1/ConfigMap local/keycloak-admin-permissions
 v1/ConfigMap local/keycloak-theme
+v1/ConfigMap local/keycloak-user-ids
 v1/ConfigMap local/observability-collector-config
 v1/ConfigMap local/pipeline-runner-helsinki-streams
 v1/ConfigMap local/portal-branding

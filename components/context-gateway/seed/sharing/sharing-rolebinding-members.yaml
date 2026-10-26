@@ -6,7 +6,7 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.member@hel.fi
-    - user: demo.author@hel.fi
+    - user: de300000-0000-4000-8000-00000000000c # demo.member
+    - user: de300000-0000-4000-8000-00000000000d # demo.author
   role: viewer
   scope: { project: sharing }

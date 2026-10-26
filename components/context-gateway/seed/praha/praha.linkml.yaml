@@ -1307,6 +1307,43 @@ slots:
           de: Beurteilungszeitraum
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  roadClass:
+    slot_uri: sdm:roadClass
+    description: >-
+      The Smart Data Models road class of the section, read from TSK's Czech classes: a motorway
+      (dálnice) NATIONAL_HIGHWAY, a road of class I, II or III (silnice I., II., III. třídy)
+      STATE_HIGHWAY, MAJOR_DISTRICT_ROAD or OTHER_DISTRICT_ROAD, a local road of class 1 or 2
+      (rychlostní, sběrná místní komunikace) MAJOR_CITY_ROAD, of class 3 or 4 (obslužná,
+      nemotoristická) MINOR_CITY_ROAD; absent on a section TSK leaves unclassified.
+    range: RoadClass
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Trieda cesty
+          cs: Třída komunikace
+          en: Road class
+          de: Straßenklasse
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+  streetCleaningDates:
+    slot_uri: jc:streetCleaningDates
+    description: >-
+      The days of the year TSK cleans the street (blokové čištění), earliest first; a car parked
+      in the marked area on such a day is towed.
+    range: date
+    multivalued: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Termíny blokového čistenia
+          cs: Termíny blokového čištění
+          en: Street cleaning dates
+          de: Termine der Straßenreinigung
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   defenceType:
     slot_uri: jc:defenceType
     description: The kind of flood defence line, a fixed barrier, a mobile wall or sandbags.
@@ -2535,6 +2572,23 @@ classes:
           en: Cycle route
           de: Radroute
     slots: [name, facilityType, dataProvider, source]
+  RoadSegment:
+    class_uri: sdm:RoadSegment
+    description: >-
+      One street section of TSK hl. m. Prahy's road register, its name, the kind of way and its
+      road class, or one street area of TSK's summer street cleaning and its cleaning dates. TSK
+      publishes no road register to point refRoad at, so it is absent.
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/smart-data-models/dataModel.Transportation
+      label:
+        tag: label
+        value:
+          sk: Úsek komunikácie
+          cs: Úsek komunikace
+          en: Road segment
+          de: Straßenabschnitt
+    slots: [name, facilityType, roadClass, streetCleaningDates, dataProvider, source]
   FareCollectionSystem:
     class_uri: sdm:FareCollectionSystem
     description: One parking machine of the paid parking zones, its number and its street.
@@ -2647,6 +2701,16 @@ enums:
     permissible_values:
       public: { description: A public transport vehicle. }
       tracked: { description: A vehicle whose position its operator tracks. }
+  RoadClass:
+    permissible_values:
+      NATIONAL_HIGHWAY: { description: A motorway (dálnice). }
+      STATE_HIGHWAY: { description: A road of class I (silnice I. třídy). }
+      MAJOR_DISTRICT_ROAD: { description: A road of class II (silnice II. třídy). }
+      OTHER_DISTRICT_ROAD: { description: A road of class III (silnice III. třídy). }
+      MAJOR_CITY_ROAD:
+        description: A local road of class 1 or 2, an expressway or a collector (rychlostní, sběrná místní komunikace).
+      MINOR_CITY_ROAD:
+        description: A local road of class 3 or 4, an access road or a non-motorised way (obslužná, nemotoristická místní komunikace).
   TransportMode:
     permissible_values:
       tram: { description: Tram (GTFS route type 0). }

@@ -8,6 +8,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.zilina@hel.fi
+    - user: de300000-0000-4000-8000-000000000005 # demo.zilina
   role: org-admin
   scope: { organization: zilina }

@@ -66,3 +66,15 @@ kubectl exec -it -n <slug> deploy/keycloak-app-keycloakx -- /opt/keycloak/bin/kc
 
 Each step is in the admin event log (`adminEventsEnabled`); name the person and the reason in the
 task or incident that needed it.
+
+## People under fixed ids (PF-126)
+
+Manifests name a person by their Keycloak user id, never by e-mail (ADR-N-061). The seeds name
+the demo people of the development profile by the fixed ids in `demo-users.yaml`, and a
+production realm's owner by `global.initialUserId`. keycloak-config-cli drops an id it is given,
+so the `people` part (`charts/people`) runs before the realm import and creates each of them
+through the realm's partial import, which keeps it. A demo person under another id is deleted
+and created again under theirs (the import then sets their password and second factor from
+their Secrets again); an owner under another id is never deleted: the Job fails and names the id
+to set in `global.initialUserId`. `tests/test_keycloak_people.py` runs the script in the pinned
+Keycloak.

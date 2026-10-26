@@ -9,6 +9,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.approver@hel.fi
+    - user: de300000-0000-4000-8000-000000000003 # demo.approver
   role: approver
   scope: { organization: hel }

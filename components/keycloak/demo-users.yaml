@@ -3,7 +3,13 @@
 # other identity is a ServiceAccount client. Each user's password is generated per cluster
 # into Secret keycloak-user-<name> (defaults/environment/secrets.yaml.gotmpl) and reaches
 # keycloak-config-cli through the environment, never through Git.
+#
+# `id` is the person's Keycloak user id, fixed so the seeds can name them by it (PF-126,
+# ADR-N-061): a manifest names a person by id and never by e-mail. keycloak-config-cli drops an
+# id it is given, so the people Job (charts/people) creates each person with theirs before
+# the realm import. The `de300000-` prefix marks a demo person: production renders refuse it.
 demo.steward:
+  id: de300000-0000-4000-8000-000000000001
   firstName: Demo
   lastName: Steward
   # A realm role names the person only; what they may do is the RoleBinding under users/
@@ -24,6 +30,7 @@ demo.steward:
 # so the Portal opens both projects to each of them; their groups say the same to the gateway,
 # or every project-list read is a 403 the Portal cannot explain (T-2672, EP-14).
 demo.viewer:
+  id: de300000-0000-4000-8000-000000000002
   firstName: Demo
   lastName: Viewer
   realmRoles: []
@@ -31,6 +38,7 @@ demo.viewer:
 # A second approver, so a change one demo person proposes can be approved by another on
 # camera: the Portal refuses an approval of one's own proposal (CC-34).
 demo.approver:
+  id: de300000-0000-4000-8000-000000000003
   firstName: Demo
   lastName: Approver
   realmRoles: [portal-approver]
@@ -40,6 +48,7 @@ demo.approver:
 # refusal and not the PF-58 administrator exception the steward gets. No `portal-approver`
 # realm role, because the refusal is the point.
 demo.editor:
+  id: de300000-0000-4000-8000-000000000004
   firstName: Demo
   lastName: Editor
   realmRoles: []
@@ -50,6 +59,7 @@ demo.editor:
 # The group is the Organization's subtree root, which also makes them one of project zilina's
 # own to the gateway and the forge. `portal-approver` because an org admin approves (CC-70).
 demo.zilina:
+  id: de300000-0000-4000-8000-000000000005
   firstName: Žilina
   lastName: Admin
   realmRoles: [portal-approver]
@@ -58,6 +68,7 @@ demo.zilina:
 # Organization `barcelona` alone (seed/barcelona/barcelona-rolebinding-admins.yaml), as demo.zilina
 # is of Žilina; the group is the Organization's subtree root and project barcelona's own.
 demo.barcelona:
+  id: de300000-0000-4000-8000-000000000006
   firstName: Barcelona
   lastName: Admin
   realmRoles: [portal-approver]
@@ -66,6 +77,7 @@ demo.barcelona:
 # Organization `bratislava` alone (seed/bratislava/bratislava-rolebinding-admins.yaml), as
 # demo.zilina is of Žilina; the group is the Organization's subtree root and project bratislava's own.
 demo.bratislava:
+  id: de300000-0000-4000-8000-000000000007
   firstName: Bratislava
   lastName: Admin
   realmRoles: [portal-approver]
@@ -74,6 +86,7 @@ demo.bratislava:
 # journey- and take-named resources of helsinki. No realm role and no project group, so the
 # gateway admits it to no context data.
 demo.janitor:
+  id: de300000-0000-4000-8000-000000000008
   firstName: Demo
   lastName: Janitor
   realmRoles: []
@@ -83,6 +96,7 @@ demo.janitor:
 # (components/gitea/apps/*/grants/users/groups/*-viewer.yaml) to a `roles` App, and the realm's
 # default `platform-readers` makes it a viewer like everyone; it proposes and approves nothing.
 demo.probe:
+  id: de300000-0000-4000-8000-000000000009
   firstName: Demo
   lastName: Probe
   realmRoles: []
@@ -93,30 +107,35 @@ demo.probe:
 # the matrix measures. What each may do is the binding or group the seed gives them, on the public
 # city-bike stations only; none holds a realm role.
 demo.outsider:
+  id: de300000-0000-4000-8000-00000000000a
   firstName: Sharing
   lastName: Outsider
   realmRoles: []
   groups: []
   platformReaders: false
 demo.neighbour:
+  id: de300000-0000-4000-8000-00000000000b
   firstName: Sharing
   lastName: Neighbour
   realmRoles: []
   groups: [sharing-other]
   platformReaders: false
 demo.member:
+  id: de300000-0000-4000-8000-00000000000c
   firstName: Sharing
   lastName: Member
   realmRoles: []
   groups: [sharing]
   platformReaders: false
 demo.author:
+  id: de300000-0000-4000-8000-00000000000d
   firstName: Sharing
   lastName: Author
   realmRoles: []
   groups: [sharing]
   platformReaders: false
 demo.bearer:
+  id: de300000-0000-4000-8000-00000000000e
   firstName: Sharing
   lastName: Bearer
   realmRoles: []

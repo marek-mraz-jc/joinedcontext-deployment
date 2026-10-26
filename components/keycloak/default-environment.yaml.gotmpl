@@ -43,12 +43,19 @@ keycloak:
       {{- if and (eq .Values.global.profile "production") .Values.global.valuesProfile }}
       {{- $steward := index (readFile "../../components/keycloak/demo-users.yaml" | fromYaml) "demo.steward" }}
       email: {{ .Values.global.initialUserEmail | quote }}
+      # The id the seeds' steward grants name on this instance (PF-126): the keycloak people Job creates
+      # the owner with it, or fails naming the id the owner holds when it is another.
+      id: {{ .Values.global.initialUserId | quote }}
       realmRoles: {{ $steward.realmRoles | toJson }}
       groups: {{ $steward.groups | toJson }}
       {{- else }}
       {}
       {{- end }}
   # The Portal administers the clients it manages and no other (T-2725, AP-27).
+  # Before the realm import: the seeded people under the fixed ids the manifests name (PF-126).
+  people:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}
   adminPermissions:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "keycloak") }}

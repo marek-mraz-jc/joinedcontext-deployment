@@ -7,9 +7,14 @@ parts:
   - name: app
     needs:
       - keycloak.theme
-  - name: config
+  # The seeded people under the fixed Keycloak ids the manifests name them by (PF-126):
+  # keycloak-config-cli drops a user's id, so they are created before the realm import.
+  - name: people
     needs:
       - keycloak.app
+  - name: config
+    needs:
+      - keycloak.people
   # After the realm import: it narrows the Portal's client administration with the realm's
   # fine-grained admin permissions, which the import switches on (T-2725).
   # Its post-upgrade Job links every endpoint: scope to mcp-hub (T-3324), one kcadm JVM each:

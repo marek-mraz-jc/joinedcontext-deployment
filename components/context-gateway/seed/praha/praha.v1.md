@@ -560,6 +560,27 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### RoadSegment
+
+One street section of TSK hl. m. Prahy's road register, its name, the kind of way and its road class, or one street area of TSK's summer street cleaning and its cleaning dates. TSK publishes no road register to point refRoad at, so it is absent.
+
+IRI: `sdm:RoadSegment`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language, as the publisher writes it. |
+| `facilityType` | Property | `string` |  |  | `jc:facilityType` | The publisher's own word for the kind of place, such as Mateřská škola or ticketMachine. |
+| `roadClass` | Property | [`RoadClass`](#roadclass) |  |  | `sdm:roadClass` | The Smart Data Models road class of the section, read from TSK's Czech classes: a motorway (dálnice) NATIONAL_HIGHWAY, a road of class I, II or III (silnice I., II., III. třídy) STATE_HIGHWAY, MAJOR_DISTRICT_ROAD or OTHER_DISTRICT_ROAD, a local road of class 1 or 2 (rychlostní, sběrná místní komunikace) MAJOR_CITY_ROAD, of class 3 or 4 (obslužná, nemotoristická) MINOR_CITY_ROAD; absent on a section TSK leaves unclassified. |
+| `streetCleaningDates` | Property | `date` (list) |  |  | `jc:streetCleaningDates` | The days of the year TSK cleans the street (blokové čištění), earliest first; a car parked in the marked area on such a day is towed. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### FareCollectionSystem
 
 One parking machine of the paid parking zones, its number and its street.
@@ -758,6 +779,17 @@ The OnStreetParking `category` values the Prague parking layers map to, a subset
 |---|---|
 | `public` | A public transport vehicle. |
 | `tracked` | A vehicle whose position its operator tracks. |
+
+### RoadClass
+
+| Value | Meaning |
+|---|---|
+| `NATIONAL_HIGHWAY` | A motorway (dálnice). |
+| `STATE_HIGHWAY` | A road of class I (silnice I. třídy). |
+| `MAJOR_DISTRICT_ROAD` | A road of class II (silnice II. třídy). |
+| `OTHER_DISTRICT_ROAD` | A road of class III (silnice III. třídy). |
+| `MAJOR_CITY_ROAD` | A local road of class 1 or 2, an expressway or a collector (rychlostní, sběrná místní komunikace). |
+| `MINOR_CITY_ROAD` | A local road of class 3 or 4, an access road or a non-motorised way (obslužná, nemotoristická místní komunikace). |
 
 ### TransportMode
 

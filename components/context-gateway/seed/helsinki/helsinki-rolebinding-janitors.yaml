@@ -8,6 +8,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.janitor@hel.fi
+    - user: de300000-0000-4000-8000-000000000008 # demo.janitor
   role: janitor
   scope: { project: helsinki }

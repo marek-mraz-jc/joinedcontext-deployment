@@ -10,7 +10,7 @@ metadata:
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
-  assignee: { kind: user, id: demo.steward@hel.fi }
+  assignee: { kind: user, id: de300000-0000-4000-8000-000000000001 } # demo.steward
   operations:
     - retrieveOps
     - updateAttrs

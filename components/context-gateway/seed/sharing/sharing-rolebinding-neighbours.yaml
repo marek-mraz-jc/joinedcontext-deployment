@@ -6,6 +6,6 @@ metadata:
   namespace: org
 spec:
   subjects:
-    - user: demo.neighbour@hel.fi
+    - user: de300000-0000-4000-8000-00000000000b # demo.neighbour
   role: viewer
   scope: { project: sharing-other }

@@ -101,6 +101,8 @@ networking.k8s.io/v1/NetworkPolicy addons/keycloak-config-cli-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-from-grafana
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-linkerd-from-grafana
+networking.k8s.io/v1/NetworkPolicy addons/keycloak-user-ids
+networking.k8s.io/v1/NetworkPolicy addons/keycloak-user-ids-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/kube-state-metrics
 networking.k8s.io/v1/NetworkPolicy addons/kube-state-metrics-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy addons/postgres

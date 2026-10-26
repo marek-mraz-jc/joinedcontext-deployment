@@ -83,6 +83,9 @@ global:
   instanceSlug: smartcity
   # The API server's endpoint (prod-deployer, kubectl get endpoints kubernetes, 2026-10-25).
   kubeApiCidrs: [10.255.0.1/32]
+  # The owner's existing Keycloak user in realm smartcity (prod-deployer, keycloak DB user_entity,
+  # 2026-10-25): the keycloak people Job keeps it and the seeds grant it (T-5712, PF-126).
+  initialUserId: fc3b55df-5fd4-4679-af5e-bb9dca22b0d7
 
   # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
   # the gateway checks it on every write (PF-42), the realm's demo users carry it as their

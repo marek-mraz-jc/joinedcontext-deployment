@@ -631,6 +631,20 @@ spec:
         description:
           cs: Výpočtová hluková mapa povrchové dopravy pro noční dobu z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha.
           en: The computed noise map of surface transport for the night from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/DOP_CUR_DOP_TSK_ULICUSPAKOM_L/FeatureServer/0?f=json
+        title:
+          cs: Uliční úseky TSK včetně zatřídění komunikací (IPR Praha)
+          en: TSK street sections with their road class (IPR Praha)
+        description:
+          cs: Uliční úseky TSK včetně zatřídění komunikací z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha, TSK hl. m. Prahy.
+          en: The TSK street sections with their road class from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha, TSK hl. m. Prahy.
+      - url: https://mp.iprpraha.cz/arcgis/rest/services/Hosted/DOP_CUR_DOP_TSK_LU_TERMINY_P/FeatureServer/0?f=json
+        title:
+          cs: Letní údržba komunikací TSK (IPR Praha)
+          en: TSK summer street cleaning dates (IPR Praha)
+        description:
+          cs: Termíny letní údržby (blokového čištění) komunikací TSK z geoportálu IPR Praha, CC BY 4.0, datový podklad © IPR Praha, TSK hl. m. Prahy.
+          en: The TSK summer street cleaning dates from the IPR Praha geoportal, CC BY 4.0, data © IPR Praha, TSK hl. m. Prahy.
       - url: https://datanzis.uzis.gov.cz/data/NR-01-NRPZS/NR-01-06/Otevrena-data-NR-01-06-nrpzs-mista-poskytovani-zdravotnich-sluzeb.csv
         title:
           cs: Místa poskytování zdravotních služeb (NRPZS, ÚZIS ČR)
