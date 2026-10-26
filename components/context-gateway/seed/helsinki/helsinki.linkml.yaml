@@ -892,10 +892,12 @@ slots:
   districtCode:
     slot_uri: jc:districtCode
     description: >-
-      The city's own code of the area: the district number, or for a sub-district the full
-      ten-digit code the city's statistics use for it. An HSL fare zone has none; its letter is its
-      `fareZone`. The districts and sub-districts mappings write no area without it.
-    pattern: ^[0-9]{1,10}$
+      The city's own code of the area: the district number, for a sub-district the full ten-digit
+      code the city's statistics use for it, for a quarter the register's ten-digit quarter code, for
+      a voting district the district number and a letter (049A). An HSL fare zone has none; its letter
+      is its `fareZone`. The districts, sub-districts, quarters and voting-districts mappings write no
+      area without it.
+    pattern: ^[0-9]{1,10}[A-Z]?$
     annotations:
       label:
         tag: label
@@ -909,8 +911,8 @@ slots:
   divisionLevel:
     slot_uri: jc:divisionLevel
     description: >-
-      Which of the city's divisions the area belongs to: a district or sub-district for an
-      AdministrativeArea; for a statistics indicator also the city, a major or basic district, or
+      Which of the city's divisions the area belongs to: a district, sub-district, quarter or voting
+      district for an AdministrativeArea; for a statistics indicator also the city, a major or basic district, or
       the inner city or the suburbs.
     range: DivisionLevel
     required: true
@@ -3027,6 +3029,10 @@ enums:
         description: A district (kaupunginosa), 60 of them.
       subDistrict:
         description: A sub-district (osa-alue), the unit the city's statistics use.
+      quarter:
+        description: A quarter (kortteli), the block a detailed plan names, about 6,000 of them.
+      votingDistrict:
+        description: A voting district (äänestysalue), about 165 of them.
       fareZone:
         description: An HSL fare zone (A, B, C or D), the area a ticket is valid in.
   TransportMode:

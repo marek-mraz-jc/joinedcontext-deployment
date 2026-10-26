@@ -153,6 +153,8 @@ helsinki-datasource-traffic-arrangements.yaml: projects/helsinki/datasources/hel
 helsinki-datasource-area-events.yaml: projects/helsinki/datasources/hel-allu-area-events.yaml
 helsinki-datasource-districts.yaml: projects/helsinki/datasources/hel-districts.yaml
 helsinki-datasource-subdistricts.yaml: projects/helsinki/datasources/hel-subdistricts.yaml
+helsinki-datasource-voting-districts.yaml: projects/helsinki/datasources/hel-voting-districts.yaml
+helsinki-datasource-quarters.yaml: projects/helsinki/datasources/hel-quarters.yaml
 helsinki-datasource-fortifications.yaml: projects/helsinki/datasources/hel-fortifications.yaml
 helsinki-datasource-landscape-culture.yaml: projects/helsinki/datasources/hel-landscape-culture.yaml
 helsinki-datasource-waterfront-sites.yaml: projects/helsinki/datasources/hel-waterfront-sites.yaml
@@ -166,6 +168,8 @@ helsinki-pipeline-traffic-arrangements.yaml: projects/helsinki/pipelines/traffic
 helsinki-pipeline-area-events.yaml: projects/helsinki/pipelines/area-events/pipeline.yaml
 helsinki-pipeline-districts.yaml: projects/helsinki/pipelines/districts/pipeline.yaml
 helsinki-pipeline-subdistricts.yaml: projects/helsinki/pipelines/subdistricts/pipeline.yaml
+helsinki-pipeline-voting-districts.yaml: projects/helsinki/pipelines/voting-districts/pipeline.yaml
+helsinki-pipeline-quarters.yaml: projects/helsinki/pipelines/quarters/pipeline.yaml
 helsinki-pipeline-fortifications.yaml: projects/helsinki/pipelines/fortifications/pipeline.yaml
 helsinki-pipeline-landscape-culture.yaml: projects/helsinki/pipelines/landscape-culture/pipeline.yaml
 helsinki-pipeline-waterfront-sites.yaml: projects/helsinki/pipelines/waterfront-sites/pipeline.yaml
@@ -179,6 +183,8 @@ helsinki-pipeline-traffic-arrangements-bento.yaml: projects/helsinki/pipelines/t
 helsinki-pipeline-area-events-bento.yaml: projects/helsinki/pipelines/area-events/bento.yaml
 helsinki-pipeline-districts-bento.yaml: projects/helsinki/pipelines/districts/bento.yaml
 helsinki-pipeline-subdistricts-bento.yaml: projects/helsinki/pipelines/subdistricts/bento.yaml
+helsinki-pipeline-voting-districts-bento.yaml: projects/helsinki/pipelines/voting-districts/bento.yaml
+helsinki-pipeline-quarters-bento.yaml: projects/helsinki/pipelines/quarters/bento.yaml
 helsinki-pipeline-fortifications-bento.yaml: projects/helsinki/pipelines/fortifications/bento.yaml
 helsinki-pipeline-landscape-culture-bento.yaml: projects/helsinki/pipelines/landscape-culture/bento.yaml
 helsinki-pipeline-waterfront-sites-bento.yaml: projects/helsinki/pipelines/waterfront-sites/bento.yaml

@@ -6,11 +6,11 @@ metadata:
   name: helsinki-districts
   namespace: helsinki
   title:
-    fi: Kaupunginosat ja HSL-vyöhykkeet — Helsinki
-    en: City districts and HSL fare zones — Helsinki
+    fi: Kaupunginosat, korttelit, äänestysalueet ja HSL-vyöhykkeet — Helsinki
+    en: City districts, quarters, voting districts and HSL fare zones — Helsinki
   description:
-    fi: 'Kaupunginosat ja osa-alueet rajoineen sekä HSL:n taksavyöhykkeet A–D (divisionLevel fareZone, kirjain kentässä fareZone). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
-    en: "The city districts and sub-districts with their boundaries, and HSL's fare zones A to D (divisionLevel fareZone, the letter in fareZone). Sources: City of Helsinki and HSL, CC BY 4.0."
+    fi: 'Kaupunginosat, osa-alueet, korttelit ja äänestysalueet rajoineen sekä HSL:n taksavyöhykkeet A–D. Mallin ulkopuoliset ominaisuudet: divisionLevel (district, subDistrict, quarter, votingDistrict tai fareZone), districtCode (kaupungin oma tunnus: kaupunginosan numero, osa-alueen tai korttelin kymmennumeroinen tunnus, äänestysalueen tunnus kuten 049A) ja fareZone (vyöhykkeen kirjain). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
+    en: "The city districts, sub-districts, quarters and voting districts with their boundaries, and HSL's fare zones A to D. Properties beyond the model: divisionLevel (district, subDistrict, quarter, votingDistrict or fareZone), districtCode (the city's own code: the district number, the ten-digit code of a sub-district or quarter, a voting district's code such as 049A) and fareZone (the zone letter). Sources: City of Helsinki and HSL, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: s3luopgog5nkxcpykwxdvhw22iis5n7e
@@ -35,9 +35,9 @@ spec:
       en: 'Sources: City of Helsinki and Helsinki Region Transport (HSL), CC BY 4.0'
     themes: [REGI, TRAN]
     keywords:
-      fi: [kaupunginosat, osa-alueet, taksavyöhykkeet]
-      sv: [stadsdelar, delområden, taxezoner]
-      en: [districts, sub-districts, fare zones]
+      fi: [kaupunginosat, osa-alueet, korttelit, äänestysalueet, taksavyöhykkeet]
+      sv: [stadsdelar, delområden, kvarter, röstningsområden, taxezoner]
+      en: [districts, sub-districts, quarters, voting districts, fare zones]
     spatial:
       - FI1B1
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
@@ -55,6 +55,16 @@ spec:
         description:
           fi: Helsingin karttapalvelun WFS-taso, GeoJSON.
           en: A WFS layer of the city's map service, as GeoJSON.
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Helsingin_korttelit
+        title: { fi: Helsingin korttelit, en: City quarters }
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki quarters).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline quarters).
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Halke_aanestysalue
+        title: { fi: Äänestysaluejako, en: Voting districts }
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki voting-districts).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline voting-districts).
       - url: https://hri.fi/data/en_GB/dataset/hsl-n-taksavyohykkeet
         title:
           fi: HSL:n taksavyöhykkeet
