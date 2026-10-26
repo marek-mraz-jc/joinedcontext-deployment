@@ -453,6 +453,20 @@ def test_weby_feeds_read_each_event_page_and_place_it_by_the_venue_table():
 
 
 @requires_docker
+def test_a_weby_feed_that_links_its_pages_over_http_still_reads_each_page():
+    # Kysucké Nové Mesto's Atom feed links every event as http://: the run read no page, so no event had a date and
+    # every run sent 0 (T-5721). The page itself is still fetched from the fixed https host.
+    recorded = json.loads((FIXTURES / "pages" / "weby.json").read_text())
+    events = run(
+        offline(processors("kysuckenovemesto", "slovensko"), recorded),
+        (FIXTURES / "kysuckenovemesto-atom.xml").read_text(),
+        "slovensko-podujatia",
+    )
+    assert [(e["name"]["value"], e["startDate"]["value"]) for e in events] == [("Patranie po tekvičkách", "2026-10-30")]
+    assert events[0]["venue"]["value"] == "Mestská knižnica Kysucké Nové Mesto"
+
+
+@requires_docker
 def test_mec_events_take_their_dates_from_the_pages_json_ld():
     by_name = {
         e["name"]["value"]: e

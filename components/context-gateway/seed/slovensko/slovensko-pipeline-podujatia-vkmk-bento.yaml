@@ -15,7 +15,7 @@ pipeline:
       format: json_array
   - branch:
       request_map: |
-        let path = this.url.or("").re_find_object("^https://www\\.vkmk\\.sk/akcia/(?P<p>[A-Za-z0-9._-]{1,200}\\.html)$").p.or(null)
+        let path = this.url.or("").re_find_object("^https?://www\\.vkmk\\.sk/akcia/(?P<p>[A-Za-z0-9._-]{1,200}\\.html)$").p.or(null)
         root = if $path == null { deleted() } else { "" }
         meta event_path = $path
       processors:

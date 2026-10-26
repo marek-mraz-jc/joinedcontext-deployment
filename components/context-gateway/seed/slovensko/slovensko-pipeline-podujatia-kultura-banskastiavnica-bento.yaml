@@ -3,7 +3,7 @@
 pipeline:
   processors:
   - mapping: |
-      let found = content().string().re_find_all_object("href=\"(?:https://www\\.kultura\\.banskastiavnica\\.sk)?(?P<p>/event/(?P<id>[0-9]{1,9})/[a-z0-9-]{0,200})\"")
+      let found = content().string().re_find_all_object("href=\"(?:https?://www\\.kultura\\.banskastiavnica\\.sk)?(?P<p>/event/(?P<id>[0-9]{1,9})/[a-z0-9-]{0,200})\"")
       let events = $found.unique(m -> m.id)
       root = $events.slice(0, [$events.length(), 50].min()).map_each(m -> { "url": "https://www.kultura.banskastiavnica.sk" + m.p, "path": m.p, "sourceId": "/event/" + m.id + "/" })
   - unarchive:
