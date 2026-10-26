@@ -72,6 +72,7 @@ for (const width of [1440, 400]) {
           await expect(link).toHaveAttribute("href", /^https:\/\//);
           // The frame is as tall as its content: the map shows and nothing scrolls inside.
           await expect(f.locator("#map-section")).toBeVisible();
+          await f.locator("#map").scrollIntoViewIfNeeded();
           await expect(f.locator("#map .maplibregl-canvas")).toHaveCount(1);
           await expect.poll(async () => {
             const outer = await page.locator("#explore").evaluate((e) => e.getBoundingClientRect().height);

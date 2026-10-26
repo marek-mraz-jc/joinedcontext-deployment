@@ -9,6 +9,7 @@
 
   var MAPLIBRE = "/vendor/maplibre-gl-6.14.0.mjs";
   var WORKER = "/vendor/maplibre-gl-worker-6.14.0.mjs";
+  var MAP_DWELL = 500;
   var SLUG = /^[a-z0-9]{16,64}$/;
   var NAME = /^[A-Za-z][A-Za-z0-9_]{0,127}$/;
   var DATE = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/;
@@ -541,11 +542,13 @@
       if (geo) { at = geo.coordinates; while (Array.isArray(at[0])) at = at[0]; }
       var ok = !!at && typeof at[0] === "number" && typeof at[1] === "number" && Math.abs(at[0]) <= 180 && Math.abs(at[1]) <= 90;
       box.hidden = !ok;
-      go.hidden = !ok || $("map-section").hidden || !state.map;
+      go.hidden = !ok || $("map-section").hidden || !state.mapLoading;
       go.onclick = ok ? function () {
         $("detail").close();
         $("map-section").scrollIntoView({ block: "center" });
-        state.map.jumpTo({ center: [at[0], at[1]], zoom: Math.max(state.map.getZoom(), 15) });
+        // A map still waiting for the scroll opens at the place once it has drawn its first view.
+        if (state.map) state.map.jumpTo({ center: [at[0], at[1]], zoom: Math.max(state.map.getZoom(), 15) });
+        else state.mapAt = [at[0], at[1]];
       } : null;
       if (!ok) return;
       import(MAPLIBRE).then(function (maplibre) {
@@ -623,6 +626,21 @@
       // One map: a second call while MapLibre still loads waits for the first (T-5192 drew two).
       if (state.mapLoading) return;
       state.mapLoading = true;
+      // MapLibre and its tiles cost seconds of a phone's main thread (T-5794: 6.5 s of a dataset
+      // page's blocking time): they load once the map has stayed in view for MAP_DWELL ms. Inside a
+      // frame the observer judges by the reader's window, so a map below the page's fold waits for
+      // the scroll; the dwell lets the table's first page push the map down before it counts.
+      if (typeof IntersectionObserver !== "function") return loadMap();
+      var timer = null;
+      var seen = new IntersectionObserver(function (entries) {
+        var inView = entries[entries.length - 1].isIntersecting;
+        clearTimeout(timer);
+        if (inView) timer = setTimeout(function () { seen.disconnect(); loadMap(); }, MAP_DWELL);
+      });
+      seen.observe($("map"));
+    }
+
+    function loadMap() {
       import(MAPLIBRE).then(function (maplibre) {
         maplibre.setWorkerUrl(WORKER);
         if (root.pmtiles) maplibre.addProtocol("pmtiles", new root.pmtiles.Protocol().tile);
@@ -682,7 +700,10 @@
             map.on("mouseleave", layer, function () { map.getCanvas().style.cursor = ""; });
           });
           map.on("moveend", mapMoved);
-          fitFirst().then(mapMoved);
+          fitFirst().then(function () {
+            if (state.mapAt) map.jumpTo({ center: state.mapAt, zoom: 15 });
+            state.mapAt = null;
+          }).then(mapMoved);
         });
       }, function () { $("map-note").textContent = failure(null); });
     }
