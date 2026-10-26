@@ -11,6 +11,7 @@ password in a component file fails here instead of quietly weakening a credentia
 """
 
 import base64
+import json
 import re
 import sys
 from pathlib import Path
@@ -27,7 +28,8 @@ DERIVED_KEYS = {"client-secret": 32}
 # component `secrets.yaml`. The names are read, not matched by prefix: a generated
 # `keycloak-user-*` Secret for a user that file does not name still fails.
 DEMO_USER_KEYS = {"password": 32}
-# A demo person whose realm role carries `mfa-required` has a TOTP seed beside it (T-5120).
+# A demo person whose realm role carries `mfa-required` has a TOTP seed beside it (T-5120). The
+# roles are read from the rendered realm (dev's approvers carry none, T-5776); these when it has none.
 MFA_ROLES = {"portal-approver", "platform-admin"}
 MFA_SEED_KEYS = {"totp": 32}
 # The owner's login of a production realm with dev's seeds (T-4678): declared in
@@ -61,7 +63,20 @@ def declarations(components_dir: Path) -> dict[str, dict[str, int]]:
     return out
 
 
-def demo_user_declarations(components_dir: Path) -> dict[str, dict[str, int]]:
+def mfa_roles(docs: list[dict]) -> set[str]:
+    """The realm roles carrying `mfa-required` in the rendered keycloak-config-cli realm."""
+    for doc in docs:
+        if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
+            for name, text in (doc.get("data") or {}).items():
+                if name == "master.json":
+                    continue
+                roles = json.loads(base64.b64decode(text)).get("roles", {}).get("realm", [])
+                return {r["name"] for r in roles
+                        if "mfa-required" in ((r.get("composites") or {}).get("realm") or [])}
+    return MFA_ROLES
+
+
+def demo_user_declarations(components_dir: Path, roles: set[str] = MFA_ROLES) -> dict[str, dict[str, int]]:
     """secret name -> {key: declared length} for the demo realm logins."""
     path = components_dir / "keycloak" / "demo-users.yaml"
     if not path.exists():
@@ -69,7 +84,7 @@ def demo_user_declarations(components_dir: Path) -> dict[str, dict[str, int]]:
     users = yaml.safe_load(path.read_text()) or {}
     return {
         f"keycloak-user-{name.replace('.', '-')}": DEMO_USER_KEYS
-        | (MFA_SEED_KEYS if MFA_ROLES & set((user or {}).get("realmRoles") or []) else {})
+        | (MFA_SEED_KEYS if roles & set((user or {}).get("realmRoles") or []) else {})
         for name, user in users.items()
     }
 
@@ -77,9 +92,8 @@ def demo_user_declarations(components_dir: Path) -> dict[str, dict[str, int]]:
 def main() -> int:
     rendered = Path(sys.argv[1])
     components = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("components")
-    declared = declarations(components) | demo_user_declarations(components) | OWNER_ACCOUNT
-
     docs = [d for d in yaml.safe_load_all(rendered.read_text()) if isinstance(d, dict)]
+    declared = declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT
     generated = [
         d for d in docs
         if d.get("kind") == "Secret"

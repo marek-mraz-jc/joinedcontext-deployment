@@ -25,6 +25,11 @@ global:
   # exists under another id sets that one here; the Job fails naming it until then.
   initialUserId: 0a000000-0000-4000-8000-000000000001
 
+  # Whether `portal-approver` carries `mfa-required`, so every approver signs in with a one-time
+  # code (T-5120, AUT-2). `platform-admin` keeps it regardless. Only dev turns it off, by the
+  # owner's order of 2026-10-26 (T-5776); a production instance never does.
+  approverMfa: true
+
   # RFC 9116 security.txt, served by the edge at /.well-known/security.txt on every host
   # (T-1721, OPS-52): where a vulnerability is reported (`mailto:` or `https:`) and when the
   # file stops being valid (RFC 3339, at most a year ahead). A production instance must set both.
