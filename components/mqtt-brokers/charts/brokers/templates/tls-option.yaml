@@ -3,8 +3,10 @@
   TLSOption (components/apisix edge-tls.yaml), here in the brokers' namespace because Traefik
   reads a TLSOption of another namespace only with allowCrossNamespace; named apart from the
   edge's, which shares the namespace on dev.
-  tests/test_mqtt_brokers.py holds the two specs equal.
+  tests/test_mqtt_brokers.py holds the two specs equal. Gated like the edge's: a cluster
+  without Traefik has no TLSOption kind, and helm refuses the whole release over it (T-4709).
 */}}
+{{- if eq .Values.ingress.className "traefik" }}
 apiVersion: traefik.io/v1alpha1
 kind: TLSOption
 metadata:
@@ -23,3 +25,4 @@ spec:
   curvePreferences:
     - CurveP384
     - CurveP256
+{{- end }}

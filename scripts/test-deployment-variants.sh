@@ -664,10 +664,18 @@ smoke_platform() {
 # one entity, and a never-created id is a 404 with a problem body (ETSI GS CIM 009 6.3.2,
 # 6.4.3.1, 6.5.3.1, 6.8.3.1). With JC_ETSI_SMOKE_DIR naming the conformance repository's
 # tests/etsi folder, its smoke.robot runs against the same URL afterwards.
+# The broker answers a request without a subject only with its admin bearer token (T-3642), so
+# the smoke sends the profile's generated one, read from its Secret into a header file curl
+# reads, never onto a command line.
 smoke_broker_ngsild() {
-  local ns port=18080 pf base id code body
+  local ns port=18080 pf base id code body auth
   ns="$(kubectl get svc -A --field-selector metadata.name=context-broker -o jsonpath='{.items[0].metadata.namespace}')"
   [[ -n "$ns" ]] || { err "no context-broker Service found"; return 1; }
+  auth="$(mktemp)"
+  chmod 600 "$auth"
+  printf 'Authorization: Bearer %s\n' \
+    "$(kubectl -n "$ns" get secret context-broker-admin-token -o jsonpath='{.data.token}' | base64 -d)" > "$auth"
+  grep -q 'Bearer .' "$auth" || { err "no admin token in Secret ${ns}/context-broker-admin-token"; rm -f "$auth"; return 1; }
   kubectl -n "$ns" port-forward svc/context-broker "${port}:8080" >/dev/null 2>&1 &
   pf=$!
   base="http://127.0.0.1:${port}/ngsi-ld/v1"
@@ -677,26 +685,27 @@ smoke_broker_ngsild() {
   expect() { # want got what
     if [[ "$2" == "$1" ]]; then ok "NGSI-LD $3: $2"; else err "NGSI-LD $3: want $1, got $2"; rc=1; fi
   }
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -X POST "$base/entities" \
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -H "@$auth" -X POST "$base/entities" \
     -H 'Content-Type: application/json' \
     -d "{\"id\":\"$id\",\"type\":\"SmokeProbe\",\"reading\":{\"type\":\"Property\",\"value\":21.5}}")"
   expect 201 "$code" "create entity"
-  body="$(curl -s --max-time 10 "$base/entities/$id")"
+  body="$(curl -s --max-time 10 -H "@$auth" "$base/entities/$id")"
   [[ "$body" == *"\"$id\""* && "$body" == *21.5* ]] && ok "NGSI-LD retrieve entity: body names it" \
     || { err "NGSI-LD retrieve entity: ${body:0:300}"; rc=1; }
-  body="$(curl -s --max-time 10 "$base/entities?type=SmokeProbe")"
+  body="$(curl -s --max-time 10 -H "@$auth" "$base/entities?type=SmokeProbe")"
   [[ "$body" == *"\"$id\""* ]] && ok "NGSI-LD query by type: finds it" \
     || { err "NGSI-LD query by type: ${body:0:300}"; rc=1; }
-  body="$(curl -s -w ' %{http_code}' --max-time 10 "$base/entities/urn:ngsi-ld:SmokeProbe:never-created")"
+  body="$(curl -s -w ' %{http_code}' --max-time 10 -H "@$auth" "$base/entities/urn:ngsi-ld:SmokeProbe:never-created")"
   [[ "$body" == *ResourceNotFound*" 404" ]] && ok "NGSI-LD unknown id: 404 ResourceNotFound" \
     || { err "NGSI-LD unknown id: ${body:0:300}"; rc=1; }
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -X DELETE "$base/entities/$id")"
+  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 -H "@$auth" -X DELETE "$base/entities/$id")"
   expect 204 "$code" "delete entity"
   if [[ $rc -eq 0 && -n "${JC_ETSI_SMOKE_DIR:-}" ]]; then
     log "ETSI smoke.robot against ${base}"
     NGSILD_URL="$base" JC_REPORTS_DIR="${JC_ETSI_REPORTS:-/tmp/etsi-broker-only}" \
       "${JC_ETSI_SMOKE_DIR}/run.sh" --include smoke || rc=1
   fi
+  rm -f "$auth"
   kill "$pf" 2>/dev/null; wait "$pf" 2>/dev/null || true
   return $rc
 }
