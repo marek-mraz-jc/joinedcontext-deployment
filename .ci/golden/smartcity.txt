@@ -553,6 +553,7 @@ v1/Service smartcity/ckan-solr
 v1/Service smartcity/cnpg-webhook-service
 v1/Service smartcity/context-broker
 v1/Service smartcity/context-gateway
+v1/Service smartcity/context-gateway-pods
 v1/Service smartcity/gitea-http
 v1/Service smartcity/gitea-ssh
 v1/Service smartcity/jc-assistant

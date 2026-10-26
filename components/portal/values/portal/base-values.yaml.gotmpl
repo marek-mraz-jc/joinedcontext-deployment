@@ -347,6 +347,9 @@ env:
   # so the space's policy decides the write and the gateway injects the tenant. Without it a
   # Subscription manifest is read, served and written into no broker.
   JC_PORTAL_GATEWAY_URL: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
+  # Every gateway pod by address (the headless Service): a space move waits until each one's
+  # /metrics shows the hold before it copies (F-POR4-014).
+  JC_PORTAL_GATEWAY_PODS_URL: "http://context-gateway-pods.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8080"
   # Whose token the internal listener answers on `/internal/previews` (T-1500, PF-46, AG-52): the
   # gateway's own Keycloak client, whose tokens an audience mapper binds to `portal-internal`.
   # Unset, that route refuses every call — a Portal without a gateway must not fall back to
