@@ -1,0 +1,10 @@
+---
+context-gateway:
+  gateway:
+    rawValues:
+      env:
+        # Prod only (T-5781, owner 2026-10-26 10:55Z): the Portal's catalogue counts and the public
+        # assistant's types reads come from few callers, and at the default 32 per caller the
+        # assistant's list_types answered 503. The supervisor set 96 live with kubectl at 10:55Z;
+        # this keeps it across applies. dev keeps the default.
+        JC_GATEWAY_MAX_IN_FLIGHT_PER_CALLER: "96"
