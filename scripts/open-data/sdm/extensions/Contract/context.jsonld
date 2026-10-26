@@ -103,9 +103,6 @@
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
     "shex": "http://www.w3.org/ns/shex#",
-    "sidloDodavatela": {
-      "@id": "jc:sidloDodavatela"
-    },
     "sidloObjednavatela": {
       "@id": "jc:sidloObjednavatela"
     },

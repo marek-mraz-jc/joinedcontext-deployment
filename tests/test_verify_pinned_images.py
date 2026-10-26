@@ -128,3 +128,40 @@ def test_both_applies_verify_before_they_sync():
     for recipe, env in (("dev-apply", "dev"), ("prod-apply", "smartcity")):
         body = justfile.split(f"\n{recipe}:\n", 1)[1].split("\n\n", 1)[0]
         assert body.index(f"verify-pinned-images.py {env}") < body.index(f"-e {env} sync"), recipe
+
+
+def _identity():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("verify_pinned_images", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.IDENTITY
+
+
+@pytest.mark.parametrize("workflow", [
+    # the certificates of the digests dev and smartcity pinned on 2026-10-26
+    "joinedcontext-platform/.github/workflows/image.yml@refs/heads/main",
+    "joinedcontext-portal/.github/workflows/image.yml@refs/heads/main",
+    "joinedcontext-deployment/.github/workflows/image-viz.yml@refs/heads/main",
+    "joinedcontext-deployment/.github/workflows/image-ckan.yml@refs/heads/main",
+    "Antares-NGSI-LD-Context-Broker/.github/workflows/ship.yml@refs/heads/dev",
+    # the other signers of the same images
+    "joinedcontext-portal/.github/workflows/promote.yml@refs/heads/main",
+    "joinedcontext-deployment/.github/workflows/image-gitops.yml@refs/heads/main",
+    "Antares-NGSI-LD-Context-Broker/.github/workflows/full.yml@refs/tags/v0.4.1",
+])
+def test_the_signers_of_pinned_images_are_accepted(workflow):
+    assert re.search(_identity(), f"https://github.com/{OWNER}/{workflow}")
+
+
+@pytest.mark.parametrize("workflow", [
+    # F-DEP2-005: a preview or branch build signs with the same organisation's identity
+    "joinedcontext-portal/.github/workflows/preview.yml@refs/heads/main",
+    "joinedcontext-platform/.github/workflows/image.yml@refs/heads/agent/worker-1/T-1",
+    "joinedcontext-platform/.github/workflows/image.yml@refs/pull/7/merge",
+    "Antares-NGSI-LD-Context-Broker/.github/workflows/ship.yml@refs/heads/feature",
+    "joinedcontext-docs/.github/workflows/image.yml@refs/heads/main",
+    "joinedcontext-portal/.github/workflows/image.yml@refs/heads/main.evil",
+])
+def test_a_preview_or_branch_signature_is_refused(workflow):
+    assert not re.search(_identity(), f"https://github.com/{OWNER}/{workflow}")

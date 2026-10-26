@@ -756,11 +756,11 @@ dev-destroy:
 	just _dev-guard
 	just _dev-assemble
 	helmfile -f deployment/helmfile.yaml -e dev destroy --concurrency {{helmfile_concurrency}} --skip-deps || true
-	for ns in $(kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|dev-|jc-operators$)'); do
+	for ns in $(kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|dev-.*|jc-operators)$'); do
 		kubectl delete pvc --all -n "$ns" --ignore-not-found --timeout=120s || true
 		kubectl delete namespace "$ns" --ignore-not-found --timeout=300s || true
 	done
-	echo "remaining platform namespaces:"; kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|jc-operators)' || echo "  none"
+	echo "remaining platform namespaces:"; kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|dev-.*|jc-operators)$' || echo "  none"
 
 # ---------------------------------------------------------------------------
 # The production instance smartcity (T-4678, docs Deployment/14): its own cluster, never dev.

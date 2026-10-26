@@ -98,9 +98,7 @@ datasets:
   type: Address
   smartDataModel: dataModel.CPSV-AP/Address
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/dfd84e65-70bc-4842-9785-ba756ec8b738
-    resource: dfd84e65-70bc-4842-9785-ba756ec8b738
+    kind: endpoint
     rows: 16902
   entityId:
     rowHash: true
@@ -178,9 +176,7 @@ datasets:
   type: Grant
   smartDataModel: extension/Grant
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/7d9f3a85-c733-47bd-96cf-3f4fadab81eb
-    resource: 7d9f3a85-c733-47bd-96cf-3f4fadab81eb
+    kind: endpoint
     rows: 1303
   entityId:
     rowHash: true
@@ -940,9 +936,7 @@ datasets:
   type: PurchaseOrder
   smartDataModel: extension/PurchaseOrder
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/dcd35739-3b47-4722-8c80-380d89d864e8
-    resource: dcd35739-3b47-4722-8c80-380d89d864e8
+    kind: endpoint
     rows: 26862
   entityId:
     keys:
@@ -987,9 +981,7 @@ datasets:
   type: KeyPerformanceIndicator
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/c7e533af-04b7-4a0a-95bc-dc75f18ede97
-    resource: c7e533af-04b7-4a0a-95bc-dc75f18ede97
+    kind: endpoint
     rows: 732
   entityId:
     keys:
@@ -1019,9 +1011,7 @@ datasets:
   type: KeyPerformanceIndicator
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/eb9bd402-c590-4667-ab82-e2c11dd9c248
-    resource: eb9bd402-c590-4667-ab82-e2c11dd9c248
+    kind: endpoint
     rows: 105
   entityId:
     keys:
@@ -1096,9 +1086,7 @@ datasets:
   type: KeyPerformanceIndicator
   smartDataModel: dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/4450222b-7726-40e9-980e-1fbe60a18d12
-    resource: 4450222b-7726-40e9-980e-1fbe60a18d12
+    kind: endpoint
     rows: 27
   entityId:
     keys:
@@ -1172,9 +1160,7 @@ datasets:
   type: CouncilMeeting
   smartDataModel: extension/CouncilMeeting
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/93b1c198-87a6-4d71-920a-d777221b5035
-    resource: 93b1c198-87a6-4d71-920a-d777221b5035
+    kind: endpoint
     rows: 1498
   entityId:
     rowHash: true
@@ -1206,9 +1192,7 @@ datasets:
   type: Contract
   smartDataModel: extension/Contract
   source:
-    kind: ckan-datastore
-    url: https://opendata.dev.joinedcontext.com/datastore/dump/d2df226d-cbf4-4202-aa63-8ef3e38979da
-    resource: d2df226d-cbf4-4202-aa63-8ef3e38979da
+    kind: endpoint
     rows: 19881
   entityId:
     rowHash: true

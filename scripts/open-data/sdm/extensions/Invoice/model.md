@@ -24,7 +24,6 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
-| `adresa` | Property | `string` |  |  | `jc:adresa` | The source column `Adresa`. |
 | `cisloObjednavky` | Property | `string` |  |  | `jc:cisloObjednavky` | The source column `Číslo_objednávky`. |
 | `cisloZmluvy` | Property | `string` |  |  | `jc:cisloZmluvy` | The source column `Číslo_zmluvy`. |
 | `dIC` | Property | `string` |  |  | `jc:dIC` | The source column `DIČ`. |

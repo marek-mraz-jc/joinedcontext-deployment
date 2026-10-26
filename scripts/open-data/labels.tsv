@@ -11,7 +11,7 @@ adHocHnutia2	Ad hoc hnutia	Ad hoc hnutí	Ad hoc movements	Ad-hoc-Bewegungen
 adHocHnutiaAbs	Ad hoc hnutia (počet)	Ad hoc hnutí (počet)	Ad hoc movements (count)	Ad-hoc-Bewegungen (Anzahl)
 addressArea		Část obce	Part of municipality	Ortsteil
 addressReg	Región adresy	Region adresy	Address region	Adressregion
-adresa		Adresa	Address	Adresse
+adresa	Adresa	Adresa	Address	Adresse
 adresaNajvyhodnejsiehoUchadza	Adresa najvýhodnejšieho uchádzača	Adresa nejvýhodnějšího uchazeče	Address of the winning bidder	Adresse des besten Bieters
 adresaObec	Adresa – obec	Adresa – obec	Address – municipality	Adresse – Gemeinde
 adresaOrganizacie		Adresa organizace	Organisation address	Adresse der Organisation
@@ -763,7 +763,7 @@ reformovanaKrestanskaCirkevN	Reformovaná kresťanská cirkev na Slovensku	Refor
 relatedZ1	Súvisiaca zóna 1	Související zóna 1	Related zone 1	Verbundene Zone 1
 relatedZon	Súvisiaca zóna	Související zóna	Related zone	Verbundene Zone
 rezort		Resort	Ministry	Ressort
-riaditel		Ředitel	Director	Direktor
+riaditel	Riaditeľ	Ředitel	Director	Direktor
 riaditelEmail	Riaditeľ – e-mail	Ředitel – e-mail	Director – e-mail	Direktor – E-Mail
 riaditelMobilnyTelefon	Riaditeľ – mobilný telefón	Ředitel – mobilní telefon	Director – mobile phone	Direktor – Mobiltelefon
 riaditelPevnaLinka	Riaditeľ – pevná linka	Ředitel – pevná linka	Director – landline	Direktor – Festnetz
@@ -825,7 +825,7 @@ scitac	Sčítač	Sčítač	Counter	Zählstelle
 sektorOvZPUpraveny	Sektor OvZP (upravený)	Sektor OvZP (upravený)	OvZP sector (adjusted)	OvZP-Sektor (angepasst)
 shortDescr	Krátky popis	Krátký popis	Short description	Kurzbeschreibung
 sidlo		Sídlo	Seat	Sitz
-sidloDodavatela		Sídlo dodavatele	Supplier's seat	Sitz des Lieferanten
+sidloDodavatela	Sídlo dodávateľa	Sídlo dodavatele	Supplier's seat	Sitz des Lieferanten
 sidloObjednavatela		Sídlo objednatele	Client's seat	Sitz des Auftraggebers
 sidloPoskytovatela		Sídlo poskytovatele	Provider's seat	Sitz des Anbieters
 sidloPrevadzkovatela		Sídlo provozovatele	Operator's seat	Sitz des Betreibers
@@ -881,7 +881,7 @@ starostaMeno	Starosta – meno	Starosta – jméno	Mayor – first name	Bürgerm
 starostaPriezvisko	Starosta – priezvisko	Starosta – příjmení	Mayor – surname	Bürgermeister – Nachname
 status	Archivované	Archivováno	Archived	Archiviert
 statutari	Štatutári	Statutáři	Statutory representatives	Vertretungsberechtigte
-statutarnyZastupca		Statutární zástupce	Statutory representative	Gesetzlicher Vertreter
+statutarnyZastupca	Štatutárny zástupca	Statutární zástupce	Statutory representative	Gesetzlicher Vertreter
 stav	Stav	Stav	Status	Status
 stavFinanVyuctovania	Stav finančného vyúčtovania	Stav finančního vyúčtování	Financial settlement status	Stand der Abrechnung
 stavTrvaleByvajucehoObyvat1	Stav trvale bývajúceho obyvateľstva 1	Stav trvale bydlícího obyvatelstva 1	Permanent residents 1	Ständige Einwohner 1

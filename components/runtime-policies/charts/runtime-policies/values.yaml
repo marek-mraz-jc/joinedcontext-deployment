@@ -61,3 +61,6 @@ imageSignatures:
 # The read-only identity of the nightly drift check (T-4956): get and list, no token Secret.
 driftReader:
   enabled: true
+  # The namespaces whose Secrets the drift reader may get and list: the release namespaces,
+  # where Helm keeps its release records (the helmfile fills them in).
+  secretNamespaces: []

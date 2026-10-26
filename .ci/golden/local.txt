@@ -1,12 +1,14 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/local-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/local-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
@@ -219,6 +221,7 @@ rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/Role local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/Role local/edge-file-composer
 rbac.authorization.k8s.io/v1/Role local/gitea-bootstrap
+rbac.authorization.k8s.io/v1/Role local/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/Role local/portal
 rbac.authorization.k8s.io/v1/Role local/portal-build-pods
 rbac.authorization.k8s.io/v1/Role local/portal-mqtt-brokers
@@ -229,6 +232,7 @@ rbac.authorization.k8s.io/v1/Role local/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding local-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding local/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding local/gitea-bootstrap
+rbac.authorization.k8s.io/v1/RoleBinding local/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/RoleBinding local/portal
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding local/portal-mqtt-brokers

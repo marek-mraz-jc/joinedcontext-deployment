@@ -20,7 +20,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Public events of public bodies and venues: a record names an event and its place, never a person.
     personalData: does-not-contain

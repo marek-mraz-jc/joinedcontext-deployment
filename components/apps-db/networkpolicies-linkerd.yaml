@@ -24,6 +24,12 @@ apps-db-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: wasm-host-shard
           componentNamespace: wasm-host
+        # The nightly dump and the stat-statements Job of the `backup` part (F-DEP1-018).
+        - podSelector:
+            matchLabels:
+              joinedcontext.com/psql-client: "true"
+              app.kubernetes.io/name: apps-db-backup
+          componentNamespace: apps-db.backup
       ports:
         - port: 4143
           protocol: TCP
@@ -86,6 +92,35 @@ apps-db-operator-linkerd:
   policyTypes:
     - Egress
   egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 4143
+
+# The `backup` part's Jobs, meshed like the namespace: the control plane, and apps-db through its
+# inbound proxy (as role-setup-linkerd in components/postgres).
+apps-db-backup-linkerd:
+  podSelector:
+    joinedcontext.com/psql-client: "true"
+    app.kubernetes.io/name: apps-db-backup
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
     - to:
         - podSelector:
             matchLabels:

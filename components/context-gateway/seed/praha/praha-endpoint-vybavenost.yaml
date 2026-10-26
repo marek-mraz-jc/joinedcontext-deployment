@@ -25,7 +25,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Public places by address; the animal corners' contact person, e-mail and phone are not read.
     personalData: does-not-contain

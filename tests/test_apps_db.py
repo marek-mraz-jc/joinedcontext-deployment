@@ -75,7 +75,8 @@ def test_only_the_portal_the_shards_the_operator_and_its_own_instances_reach_it(
     scrape = [rule for rule in rules if [name(peer) for peer in rule["from"]] == ["prometheus"]]
     assert all([p["port"] for p in rule["ports"]] == [9187] for rule in scrape), scrape
     names = {name(peer) for rule in rules if rule not in scrape for peer in rule["from"]}
-    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard"}, names
+    # apps-db-backup: the nightly dump and stat-statements of the `backup` part (F-DEP1-018).
+    assert names == {"cloudnative-pg", "join", "apps-db", "portal-portal", "wasm-host-shard", "apps-db-backup"}, names
 
 
 PORTAL_SUPERUSER_SQL = (

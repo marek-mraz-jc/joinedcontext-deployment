@@ -1,12 +1,14 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/dev-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/dev-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
@@ -163,6 +165,8 @@ networking.k8s.io/v1/NetworkPolicy dev/apisix-linkerd-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy dev/apisix-project-apps
 networking.k8s.io/v1/NetworkPolicy dev/apps-db
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/apps-db-backup
+networking.k8s.io/v1/NetworkPolicy dev/apps-db-backup-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-operator-egress
 networking.k8s.io/v1/NetworkPolicy dev/apps-db-operator-linkerd
@@ -432,6 +436,7 @@ rbac.authorization.k8s.io/v1/Role dev-pipeline-identities/portal-pipeline-accoun
 rbac.authorization.k8s.io/v1/Role dev/ckan-api-token
 rbac.authorization.k8s.io/v1/Role dev/edge-file-composer
 rbac.authorization.k8s.io/v1/Role dev/gitea-bootstrap
+rbac.authorization.k8s.io/v1/Role dev/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/Role dev/portal
 rbac.authorization.k8s.io/v1/Role dev/portal-build-pods
 rbac.authorization.k8s.io/v1/Role dev/portal-mqtt-brokers
@@ -449,6 +454,7 @@ rbac.authorization.k8s.io/v1/RoleBinding dev-pipeline-identities/portal-pipeline
 rbac.authorization.k8s.io/v1/RoleBinding dev/ckan-api-token
 rbac.authorization.k8s.io/v1/RoleBinding dev/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding dev/gitea-bootstrap
+rbac.authorization.k8s.io/v1/RoleBinding dev/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-mqtt-brokers

@@ -1,10 +1,6 @@
 {
   "id": "urn:ngsi-ld:Invoice:joinedcontext.com:example:1",
   "type": "Invoice",
-  "adresa": {
-    "type": "Property",
-    "value": "adresa"
-  },
   "cisloObjednavky": {
     "type": "Property",
     "value": "cisloObjednavky"

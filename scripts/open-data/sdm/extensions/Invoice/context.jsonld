@@ -7,9 +7,6 @@
     "Invoice": {
       "@id": "jc:Invoice"
     },
-    "adresa": {
-      "@id": "jc:adresa"
-    },
     "cisloObjednavky": {
       "@id": "jc:cisloObjednavky"
     },

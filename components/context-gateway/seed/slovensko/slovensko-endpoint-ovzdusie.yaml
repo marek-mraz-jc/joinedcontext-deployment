@@ -19,7 +19,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   # The EEA's reuse terms (CC BY 4.0, https://www.eea.europa.eu/en/legal-notice) ask for the
   # source to be credited, so the attribution names it; nothing else does (owner, 2026-10-16).
   catalog:
