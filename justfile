@@ -802,10 +802,12 @@ prod-apply:
 	./scripts/verify-pinned-images.py smartcity
 	# The public assistant is asked every 15 s while the rollouts run (T-4809, at most 40 questions);
 	# its summary line closes the apply's output on success and on failure, for the apply report.
+	# Under set -e a killed probe's wait (143) or a finished probe's kill (1) would end the trap
+	# before the summary and turn a green apply into exit 1 (T-5791): both are `|| true`.
 	probe_log=$(mktemp -t assistant-probe.XXXXXX)
 	./scripts/assistant-probe.py "https://assistant.{{ prod_domain }}" 2>"$probe_log" >"$probe_log.summary" &
 	probe=$!
-	trap 'kill "$probe" 2>/dev/null; wait "$probe" 2>/dev/null; cat "$probe_log.summary"; echo "assistant probe log: $probe_log"' EXIT
+	trap 'kill "$probe" 2>/dev/null || true; wait "$probe" 2>/dev/null || true; cat "$probe_log.summary"; echo "assistant probe log: $probe_log"' EXIT
 	helmfile -f deployment/helmfile.yaml -e smartcity sync --concurrency {{helmfile_concurrency}}
 	./scripts/wait-rollouts.sh smartcity
 	./scripts/release.py record smartcity smartcity
