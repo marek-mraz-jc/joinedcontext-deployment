@@ -327,3 +327,29 @@ def test_every_quality_rule_name_is_unique_in_its_space():
     for path, space in manifests("ContextSpace"):
         names = [rule["name"] for rule in space["spec"].get("quality", [])]
         assert len(names) == len(set(names)), f"{path.name}: {sorted(n for n in names if names.count(n) > 1)}"
+
+
+def _duration_ok(text) -> bool:
+    """A heartbeat the Portal admits (DM-109): an ISO 8601 duration of PT1M to P3650D."""
+    match = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", str(text))
+    if not match or text in ("P", "PT"):
+        return False
+    d, h, m, s = (int(g or 0) for g in match.groups())
+    return 60 <= d * 86400 + h * 3600 + m * 60 + s <= 3650 * 86400
+
+
+def test_every_on_change_recording_has_a_heartbeat():
+    # The Portal refuses a whole space whose retention records onChange without a heartbeat
+    # (DM-109): prod kept helsinki's last valid space, one without the Alert net `current: PT1H`,
+    # so 41 Fintraffic Alerts written before their lifetime never left (T-5792).
+    for path, space in manifests("ContextSpace"):
+        for rule in space["spec"].get("retention", []):
+            recordings = {"": rule, **{f".{name}": own for name, own in rule.get("attributes", {}).items()}}
+            for where, own in recordings.items():
+                if own.get("record") == "onChange":
+                    assert _duration_ok(own.get("heartbeat")), f"{path.name}: {rule['entityType']}{where}"
+
+
+def test_the_heartbeat_check_reads_durations_as_the_portal_does():
+    assert all(map(_duration_ok, ("PT1M", "PT1H", "P7D", "P30D", "P3650D")))
+    assert not any(map(_duration_ok, (None, "PT30S", "P3651D", "P", "PT", "1h")))

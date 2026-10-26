@@ -120,10 +120,12 @@ spec:
     - entityType: PointOfInterest
       history: 'off'
     # Official statistics, one row per period (T-5266): ten years, the longest a duration may be
-    # (DM-82); a row when a value or its period changes, never one per daily run.
+    # (DM-82); a row when a value or its period changes, never one per daily run, and one a
+    # month at least: the Portal refuses onChange without a heartbeat (DM-109, T-5792).
     - entityType: KeyPerformanceIndicator
       history: P3650D
       record: onChange
+      heartbeat: P30D
   # The municipality of Barcelona with a 1 km margin (owner 2026-10-22T18:10Z); an entity outside
   # it is flagged, never refused (DM-87).
   quality:
