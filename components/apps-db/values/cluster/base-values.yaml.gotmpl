@@ -106,6 +106,12 @@ cluster:
       - hostssl apps jc_apps_admin all scram-sha-256
       - hostssl apps /^wasm_host_[0-9]+$ all scram-sha-256
       - hostssl apps /^app_[0-9a-f]{16}_owner$ all scram-sha-256
+      {{- $backup := index .Values "apps-db" "backup" }}
+      {{- if and $backup.enabled $backup.localBackup.enabled }}
+      # The nightly dump (the backup part) runs pg_dumpall as the superuser over TLS; its
+      # NetworkPolicy admits that Job alone (prod apply v0.1.1 failed on this reject, T-4678).
+      - hostssl all postgres all scram-sha-256
+      {{- end }}
       - host all all all reject
 
 {{- $backups := deepCopy ($this.backups | default dict) }}

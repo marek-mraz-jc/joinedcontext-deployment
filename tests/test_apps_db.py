@@ -54,6 +54,12 @@ def test_only_its_three_kinds_of_login_over_tls_and_everyone_else_refused(docs):
     assert not any(" app_" in line and "_owner" not in line for line in hba), "an App's run-time role never logs in"
 
 
+def test_the_superuser_logs_in_over_tls_only_where_the_nightly_dump_runs(rendered):
+    hba = one(rendered("smartcity"), "Cluster", "apps-db")["spec"]["postgresql"]["pg_hba"]
+    assert "hostssl all postgres all scram-sha-256" in hba, "pg_dumpall of the backup part is refused"
+    assert hba[-1] == "host all all all reject"
+
+
 def test_every_password_is_a_generated_secret_where_its_reader_runs(docs):
     for name in ("db-apps-admin", "apps-host-0-db", "apps-host-1-db"):
         found = [d for d in docs if d.get("kind") in ("Secret", "ExternalSecret", "SealedSecret") and d["metadata"]["name"] == name]
