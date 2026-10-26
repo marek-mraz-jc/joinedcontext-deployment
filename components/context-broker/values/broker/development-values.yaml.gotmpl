@@ -27,5 +27,6 @@ env:
   # 16, not 22: with max_connections 50 (3 kept for superusers) the other databases held 24 and
   # Postgres refused Gitea's token lookups (53300, 124 times in 30 min on 2026-10-21 05:2xZ), so
   # every Gitea token answered 401 and a new Portal never finished its first sync. Every
-  # client's ceiling is counted in tests/test_postgres_connection_budget.py.
-  ANTARES_PG_POOL: "16"
+  # client's ceiling is counted in tests/test_postgres_connection_budget.py. 13 since the
+  # assistant's pool grew to 10 (T-5780, 2026-10-26).
+  ANTARES_PG_POOL: "13"

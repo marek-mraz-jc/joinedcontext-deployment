@@ -45,10 +45,11 @@ extraEnv: |
     value: "false"
   # The pool's default ceiling is 100. One shared Postgres has max_connections 55 on the
   # development profile (T-4933); Keycloak grew to 10 there on 2026-10-21 and the other clients'
-  # token lookups were refused (53300). 7 serves one realm at this scale and keeps every
-  # client's ceiling within tests/test_postgres_connection_budget.py.
+  # token lookups were refused (53300). 4 serves one realm at this scale (prod held 2 open on
+  # 2026-10-26 11:5xZ) and keeps every client's ceiling within
+  # tests/test_postgres_connection_budget.py since the assistant's pool grew to 10 (T-5780).
   - name: KC_DB_POOL_MAX_SIZE
-    value: "7"
+    value: "4"
   - name: JGROUPS_DISCOVERY_PROTOCOL
     value: kubernetes.KUBE_PING
   - name: JGROUPS_DISCOVERY_PROPERTIES
