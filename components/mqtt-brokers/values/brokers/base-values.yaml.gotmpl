@@ -14,6 +14,8 @@ image:
   digest: {{ index .Values.images "mqtt-brokers" "brokers" "digest" | quote }}
 
 domain: {{ $global.domain | quote }}
+ingress:
+  className: {{ $global.ingress.ingressClass | quote }}
 authUrl: "http://context-gateway.{{ index .Values "context-gateway" "gateway" "namespace" }}.svc.cluster.local:8082/internal/mqtt/auth"
 gateway:
   namespace: {{ index .Values "context-gateway" "gateway" "namespace" | quote }}

@@ -263,7 +263,6 @@ rbac.authorization.k8s.io/v1/RoleBinding jc/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding jc/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding jc/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding jc/postgres-operator-cloudnative-pg
-traefik.io/v1alpha1/TLSOption jc/mqtt-bsi-tr-02102
 v1/ConfigMap jc/apisix
 v1/ConfigMap jc/apisix-standalone-base
 v1/ConfigMap jc/broker-template
