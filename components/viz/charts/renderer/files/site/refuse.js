@@ -22,6 +22,8 @@
       return false;
     }
     var host = parsed.hostname;
+    // an App's origin `{name}.apps.{domain}` serves untrusted code (ADR-N-037): not ours
+    if (host.slice(-(domain.length + 6)) === ".apps." + domain) return false;
     return parsed.protocol === "https:" && parsed.username === "" && parsed.password === "" &&
       (host === domain || host.slice(-(domain.length + 1)) === "." + domain);
   }

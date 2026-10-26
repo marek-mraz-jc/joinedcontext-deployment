@@ -1,5 +1,5 @@
 var JC_FIELDS = {
-  "$comment": "One importance order and one label table for NGSI-LD attributes (T-4661): the jcctl CKAN publisher orders DataStore fields and writes info.label from it, the assistant widget labels its table columns from it, and the CKAN theme (a byte copy in joinedcontext-deployment) orders and labels the map popup. Groups are in order; an attribute no group lists goes to 'value' when it is a number, else to 'other'.",
+  "$comment": "One importance order and one label table for NGSI-LD attributes (T-4661): the assistant widget labels its table columns from it, and the Portal orders entity fields from its byte copy (ui/src/data/field-order.json). Groups are in order; an attribute no group lists goes to 'value' when it is a number, else to 'other'.",
   "groups": [
     { "group": "name", "attributes": ["name", "title", "alternateName"] },
     { "group": "time", "attributes": ["startDate", "startTime", "endDate", "endTime", "dateObserved", "observedAt", "validFrom", "validTo", "openingHours"] },
@@ -594,6 +594,9 @@ var JCRender = (function () {
     var plain = function (column) { return /year|code$/i.test(String(column)) || /Id$|^id$/.test(String(column)); };
     var cell = function (v, column, i) {
       if (v === null || v === undefined || v === "") return "";
+      // A row's own name per language (T-5330) and an enum's words come before the URN tail.
+      var words = enums[i] && typeof enums[i] === "object" && (typeof v === "string" || typeof v === "number") && Object.prototype.hasOwnProperty.call(enums[i], v) ? enums[i][v] : null;
+      if (words && typeof words === "object") return entry(words, lang) || entry(words, "en") || entry(words, Object.keys(words)[0]) || String(v);
       if (column === "id" && urn(v)) return String(v).split(":").pop();
       if (typeof v === "number") {
         if (!isFinite(v)) return "";
@@ -604,8 +607,6 @@ var JCRender = (function () {
       }
       if (typeof v === "boolean") return YES_NO[lang][v ? 0 : 1];
       if (typeof v === "object") return JSON.stringify(v);
-      var words = enums[i] && typeof enums[i] === "object" && Object.prototype.hasOwnProperty.call(enums[i], v) ? enums[i][v] : null;
-      if (words && typeof words === "object") return entry(words, lang) || entry(words, "en") || String(v);
       if (safeUrl(v)) return { text: LINK[lang], href: v };
       if (column === "observedAt" || (TIME.test(v) && v.length > 10)) return when(v, lang, now);
       return String(v);
@@ -832,32 +833,109 @@ var JCRender = (function () {
   }
 
 
-  // The words of a read's step (T-4801).
+  // The words of a read's step (T-4801); a date bound of its `q` as words (T-5343).
   var READ_WORDS = {
-    sk: { read: "Hľadal som v", query: "dotaz", all: "všetky záznamy" },
-    en: { read: "Searched", query: "query", all: "all records" },
-    cs: { read: "Hledal jsem v", query: "dotaz", all: "všechny záznamy" }
+    sk: { read: "Hľadal som v", all: "všetky záznamy", from: "od", until: "do" },
+    en: { read: "Searched", all: "all records", from: "from", until: "until" },
+    cs: { read: "Hledal jsem v", all: "všechny záznamy", from: "od", until: "do" },
+    de: { read: "Gesucht in", all: "alle Einträge", from: "ab", until: "bis" }
   };
+  var OPS = { "==": "=", "!=": "≠", ">=": "≥", "<=": "≤", ">": ">", "<": "<", "~=": "~", "!~=": "≁" };
+  var CLAUSE = /^([A-Za-z_][\w.\[\]]*)\s*(==|!=|>=|<=|!~=|~=|>|<)\s*(.+)$/;
+  var DAY = /^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/;
 
   /**
-   * A `step` event (T-4801) as the steps list reads it: the source's title, the type, the `q`,
-   * the count the source returned and the dataset page, each checked; null when it names neither
-   * a source nor a type.
+   * A read's `q` in words (T-5343): `endDate>="2026-10-20T00:00:00Z"` → `od 20. 10. 2026`,
+   * `yearBuilt<1900` → `Year built < 1900`; a `q` with `|` or parentheses, or a clause this does
+   * not know, stays as written.
+   */
+  function query(q, lang) {
+    var words = READ_WORDS[lang] || READ_WORDS.en;
+    if (/[|()]/.test(q)) return q;
+    var said = q.split(";").map(function (clause) {
+      var m = CLAUSE.exec(clause.trim());
+      if (!m) return null;
+      var value = m[3].trim().replace(/^"(.*)"$/, "$1");
+      var day = DAY.exec(value);
+      var at = day ? Date.parse(day[2] ? value : day[1] + "T00:00:00Z") : NaN;
+      if (isFinite(at)) {
+        // Midnight UTC is a day; any other instant also says its local time.
+        var midnight = !day[2] || new Date(at).getUTCHours() + new Date(at).getUTCMinutes() + new Date(at).getUTCSeconds() === 0;
+        var shown = new Intl.DateTimeFormat(lang, midnight
+          ? { day: "numeric", month: "numeric", year: "numeric", timeZone: "UTC" }
+          : { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(at);
+        if (m[2] === ">=" || m[2] === ">") return words.from + " " + shown;
+        if (m[2] === "<=" || m[2] === "<") return words.until + " " + shown;
+        value = shown;
+      }
+      return word(LABELS, m[1], lang) + " " + OPS[m[2]] + " " + value;
+    });
+    return said.every(Boolean) ? said.join(", ") : q;
+  }
+
+  /**
+   * A `step` event (T-4801) as the steps list reads it: the source's title, its title per
+   * language (T-5343), the type, the `q`, the count the source returned and the dataset page,
+   * each checked; null when it names neither a source nor a type.
    */
   function read(data) {
     if (!data || typeof data !== "object") return null;
     var count = typeof data.count === "number" && isFinite(data.count) && data.count >= 0 ? Math.floor(data.count) : null;
-    var out = { source: text(data.source, 80), type: text(data.type, 80), q: text(data.q, 200), count: count, url: safeUrl(data.url) };
+    var titles = {};
+    if (data.titles && typeof data.titles === "object" && !Array.isArray(data.titles)) {
+      Object.keys(data.titles).forEach(function (l) {
+        var t = text(data.titles[l], 80);
+        if (/^[a-z]{2,3}$/.test(l) && t) titles[l] = t;
+      });
+    }
+    var out = { source: text(data.source, 80), titles: titles, type: text(data.type, 80), q: text(data.q, 200), count: count, url: safeUrl(data.url) };
     return out.source || out.type ? out : null;
   }
 
-  /** A read's line: `Hľadal som v: Registre kraja / Bridge · dotaz: yearBuilt<1900 → 32`. */
+  /**
+   * A read's line: `Hľadal som v: Podujatia — Banská Bystrica · od 20. 10. 2026 → 55`; the source
+   * in the visitor's language, the type in words unless the title already says it (T-5343).
+   */
   function readLine(r, lang) {
     var words = READ_WORDS[lang] || READ_WORDS.en;
-    var line = words.read + ": " + [r.source, r.type].filter(Boolean).join(" / ");
+    var source = entry(r.titles, lang) || r.source;
+    var kind = r.type ? word(TYPES, r.type, lang) : "";
+    var says = function (w) { return source.toLowerCase().indexOf(w.toLowerCase()) >= 0; };
+    if (source && kind && [kind, word(TYPES, r.type, "en"), r.type].some(says)) kind = "";
+    var line = words.read + ": " + [source, kind].filter(Boolean).join(" / ");
     if (r.count === null) return line;
     var n = new Intl.NumberFormat(YES_NO[lang] ? lang : "en").format(r.count);
-    return line + " · " + words.query + ": " + (r.q || words.all) + " → " + n;
+    return line + " · " + (r.q ? query(r.q, lang) : words.all) + " → " + n;
+  }
+
+  /**
+   * The reads worth a line (T-5343): one that says what another already said is dropped, and so is
+   * one without a count of a source and type another read counted.
+   */
+  function distinct(reads, lang) {
+    var lines = [];
+    return reads.filter(function (r) {
+      var line = readLine(r, lang);
+      var counted = r.count === null && reads.some(function (o) {
+        return o.count !== null && o.source === r.source && o.type === r.type;
+      });
+      if (counted || lines.indexOf(line) >= 0) return false;
+      lines.push(line);
+      return true;
+    });
+  }
+
+  /**
+   * Whether an answer shows a `data` event's table (T-5343): a second read of the same Endpoint
+   * and type would repeat the first one's heading, so only the first is shown. `seen` keeps the
+   * shown ones.
+   */
+  function firstTable(seen, data) {
+    if (!data || typeof data !== "object" || typeof data.type !== "string" || !data.type) return true;
+    var key = String(data.endpoint || "") + "\n" + data.type;
+    if (seen.indexOf(key) >= 0) return false;
+    seen.push(key);
+    return true;
   }
 
   /**
@@ -868,7 +946,7 @@ var JCRender = (function () {
    * fewer than two stages, which need no list.
    */
   function steps(stages, lang, timed, reads) {
-    var checked = (Array.isArray(reads) ? reads : []).map(read).filter(Boolean);
+    var checked = distinct((Array.isArray(reads) ? reads : []).map(read).filter(Boolean), lang);
     if (checked.length > 0) {
       return { summary: (STAGES[lang] || STAGES.en).steps + " (" + checked.length + ")",
         lines: checked.map(function (r) { return readLine(r, lang); }),
@@ -1255,7 +1333,7 @@ var JCRender = (function () {
     sourceCount: sourceCount, badges: badges, chosen: chosen, asksLanguage: asksLanguage, ordered: ordered,
     followups: followups, restore: restore, remember: remember, stamp: stamp,
     lasting: lasting, recalled: recalled, privacyLines: privacyLines,
-    cards: cards, stage: stage, steps: steps, tel: tel, mailto: mailto,
+    cards: cards, stage: stage, steps: steps, firstTable: firstTable, tel: tel, mailto: mailto,
     markdown: markdown, streamable: streamable, sources: sources, label: label, unlisted: unlisted, linkHost: linkHost,
     safeUrl: safeUrl, events: events, language: language, table: table, chart: chart, greeting: greeting, title: title,
     suggestions: suggestions, trouble: trouble, retryable: retryable, said: said, retry: retry,
@@ -2304,7 +2382,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
 
   function showData(item, data) {
     var shown = JCRender.table(data, lang);
-    if (!shown) return;
+    if (!shown || !JCRender.firstTable(item.tables = item.tables || [], data)) return;
     var figure = el("details", "jc-data");
     figure.open = true;
     figure.appendChild(el("summary", "", shown.caption || w.table));
@@ -2581,7 +2659,7 @@ if (typeof module !== "undefined") module.exports = JCRender;
   // empty, so nothing shows twice and nothing is asked again.
   async function replay(id, item, signal) {
     var held = await visitorToken();
-    var response = await fetch("/api/v1/d/" + encodeURIComponent(config.publicId) + "/turns/" +
+    var response = await fetch(api + "/api/v1/d/" + encodeURIComponent(config.publicId) + "/turns/" +
       encodeURIComponent(id) + "/resume?after=0", {
       headers: { Accept: "text/event-stream", "X-JC-Visitor": held.token },
       credentials: "omit",

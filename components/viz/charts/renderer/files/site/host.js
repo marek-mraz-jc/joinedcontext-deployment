@@ -49,10 +49,12 @@
   }
 
   // Whether a parent may hand this page a spec (`#show`, ADR-N-053 §2.9): https on the domain or
-  // one of its subdomains, no port and no user, so only a page on our own hosts makes us draw.
+  // one of its subdomains, no port and no user, so only a page on our own hosts makes us draw. An
+  // App's origin `{name}.apps.{domain}` runs untrusted code (ADR-N-037) and is not ours.
   function ourOrigin(origin, domain) {
     var m = /^https:\/\/([a-z0-9.-]+)$/.exec(String(origin || ""));
-    return !!m && (m[1] === domain || m[1].slice(-(domain.length + 1)) === "." + domain);
+    if (!m || m[1].slice(-(domain.length + 6)) === ".apps." + domain) return false;
+    return m[1] === domain || m[1].slice(-(domain.length + 1)) === "." + domain;
   }
 
   // PT24H, P7D, P1DT12H: the window of a temporal source, in milliseconds; null when it is not one

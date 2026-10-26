@@ -108,7 +108,8 @@ test("only a page on our own hosts may hand the host page a spec (T-4657)", () =
   assert.equal(host.ourOrigin("https://assistant.dev.joinedcontext.com", domain), true);
   assert.equal(host.ourOrigin("https://dev.joinedcontext.com", domain), true);
   for (const origin of ["null", "http://assistant.dev.joinedcontext.com", "https://evil.example", "https://dev.joinedcontext.com.evil.example",
-    "https://evildev.joinedcontext.com", "https://assistant.dev.joinedcontext.com:8443", "", undefined]) {
+    "https://evildev.joinedcontext.com", "https://assistant.dev.joinedcontext.com:8443", "", undefined,
+    "https://x.apps.dev.joinedcontext.com", "https://a.b.apps.dev.joinedcontext.com"]) {
     assert.equal(host.ourOrigin(origin, domain), false, String(origin));
   }
 });
