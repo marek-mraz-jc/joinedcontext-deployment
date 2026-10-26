@@ -121,6 +121,9 @@ elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-s
                  "projects__helsinki__spaces__helsinki__space.yaml",
                  "projects__helsinki__spaces__helsinki-kpi__space.yaml"]
     sys.stdout.write(json.dumps({k: "" for k in keys}))
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "spaces__conformance__endpoints__conformance" in line:
+    # The conformance space's Endpoint, where the round trip writes (F-BNT1-002).
+    sys.stdout.write(spec.get("conformanceEndpoint", "spec:\\n  slug: dv7iyelohbhylxfilexaneobbl\\n"))
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-"):
     # The seeded Endpoint manifest the smoke reads the slug from (T-0282, T-0278); "" = nothing seeded.
     sys.stdout.write(spec.get("seedEndpoint", "spec:\\n  slug: mluyob4nz52lok3ssk7pgn5vwt\\n"))
@@ -1023,16 +1026,15 @@ def test_every_listed_entity_is_retrieved_by_id(tmp_path):
     assert "ok    every listed entity retrieves by id (2 of them)" in result.stdout
 
 
-def test_a_stale_hand_probe_in_the_space_is_removed_and_named(tmp_path):
-    """T-4109: the probe a debugging session left in ovzdusie is deleted when present and named.
-    T-4116: the station eea-SK0263A is never deleted, though a DELETE of it would succeed: the
-    public-air pipeline mints it with the instance's org domain, and the ogc star row reads it."""
-    spec = dict(HEALTHY, statuses=[[["-X DELETE", "deployer-probe"], 204], [["-X DELETE", "eea-SK0263A"], 204]]
-                + HEALTHY_STATUSES)
+def test_the_round_trip_writes_in_the_conformance_space_and_never_in_public_air(tmp_path):
+    """F-BNT1-002: ovzdusie holds the published EEA readings, so the smoke's creates and deletes
+    go to the conformance space's own Endpoint; a write to public-air would answer 403 here."""
+    air = "mluyob4nz52lok3ssk7pgn5vwt"
+    spec = dict(HEALTHY, statuses=[[["-X POST", air], 403], [["-X DELETE", air], 403]] + HEALTHY_STATUSES)
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
-    assert "ok    removed the stale test entity urn:ngsi-ld:AirQualityObserved:hel.fi:ovzdusie:deployer-probe" in result.stdout
-    assert "eea-SK0263A" not in result.stdout
-    assert "0 failed" in result.stdout
+    assert "ok    entity create through the endpoint (201)" in result.stdout
+    assert "ok    entity delete (204)" in result.stdout
+    assert "0 failed" in result.stdout, result.stdout
 
 
 def test_an_entity_that_lists_but_never_retrieves_fails_the_run(tmp_path):

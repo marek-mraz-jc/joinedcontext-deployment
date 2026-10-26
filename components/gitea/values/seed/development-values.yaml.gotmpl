@@ -12,8 +12,8 @@
 {{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
 {{- /* The test objects of the seeds, which a production instance reading these values never holds
        (T-4678): the eval copies of assistants, the eval-uploads source and the conformance
-       suite's account and policy. */}}
-{{- $tests := "/(deployments|sources)/[^/]*eval[^/]*\\.yaml$|/serviceaccounts/conformance\\.yaml$|/policies/conformance-[^/]*\\.yaml$" }}
+       suite's account, policy and space (F-BNT1-002). */}}
+{{- $tests := "/(deployments|sources)/[^/]*eval[^/]*\\.yaml$|/serviceaccounts/conformance\\.yaml$|/policies/conformance-[^/]*\\.yaml$|/spaces/conformance/" }}
 {{- $production := eq .Values.global.profile "production" }}
 {{- range $dir := $sources }}
 {{- range $file, $path := readFile (printf "../../../%s/index.yaml" $dir) | fromYaml }}

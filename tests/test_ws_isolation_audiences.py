@@ -14,7 +14,7 @@ from conftest import seed_documents
 ROOT = Path(__file__).resolve().parent.parent
 CLIENTS = ROOT / "components/context-gateway/keycloak-clients.yaml"
 SEED = ROOT / "components/context-gateway/seed"
-SEEDED_SLUG = "mluyob4nz52lok3ssk7pgn5vwt"
+SEEDED_SLUG = "dv7iyelohbhylxfilexaneobbl"  # the conformance space's Endpoint (F-BNT1-002)
 ISOLATION_SLUGS = {
     "hcwfp3wxr45cjxjwqsfcyxgv4klxb2ob",
     "mieqdukdwfv24izi5qxkia3e3qolhbvp",

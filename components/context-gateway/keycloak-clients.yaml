@@ -64,7 +64,9 @@ banskabystrica-conformance:
         protocolMapper: oidc-audience-mapper
         consentRequired: false
         config:
-          included.custom.audience: mluyob4nz52lok3ssk7pgn5vwt
+          # The conformance space's Endpoint (F-BNT1-002), not public-air: the account writes
+          # nowhere the city publishes.
+          included.custom.audience: dv7iyelohbhylxfilexaneobbl
           access.token.claim: 'true'
           id.token.claim: 'false'
       # The WebSocket isolation run (T-4909, conformance e2e/journeys/48) proposes two sandbox

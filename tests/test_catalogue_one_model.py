@@ -196,6 +196,9 @@ UNFED = {
     # their entities stay in the Endpoint and no Pipeline reads the catalogue for them (T-5060, T-5729).
     "banskabystrica/banskabystrica-od-endpoint.yaml": ["Contract", "CouncilMeeting", "Grant", "KeyPerformanceIndicator",
                                                        "PurchaseOrder"],
+    # The conformance suites' own door (F-BNT1-002): their fixtures live only for a run, no Pipeline
+    # feeds the space, and the Endpoint is neither public nor catalogued.
+    "banskabystrica/endpoint-conformance.yaml": ["AirQualityObserved"],
 }
 
 
