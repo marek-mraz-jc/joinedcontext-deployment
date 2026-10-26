@@ -311,6 +311,14 @@
         },
         "name": {
           "type": "string"
+        },
+        "harvestSecret": {
+          "type": "string",
+          "minLength": 1
+        },
+        "harvestUser": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]{2,100}$"
         }
       }
     },

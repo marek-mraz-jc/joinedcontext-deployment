@@ -33,7 +33,7 @@ rules:
   # the administrator password this Job signs in with.
   - apiGroups: ['']
     resources: [secrets]
-    resourceNames: [{{ .Values.apiToken.secret | quote }}]
+    resourceNames: [{{ .Values.apiToken.secret | quote }}{{ if .Values.harvest.sources }}, {{ .Values.apiToken.harvestSecret | quote }}{{ end }}]
     verbs: [get, update]
   # `create` takes no `resourceNames`: the object does not exist yet on a first install.
   - apiGroups: ['']
@@ -110,6 +110,19 @@ spec:
               value: {{ .Values.apiToken.secret | quote }}
             - name: TOKEN_NAME
               value: {{ .Values.apiToken.name | quote }}
+            {{- if .Values.harvest.sources }}
+            # The organizations the harvests write, created here, and the harvest user's token.
+            {{- $orgs := list }}
+            {{- range .Values.harvest.sources }}
+            {{- $orgs = append $orgs (dict "name" .organization "title" .publisherName "description" (.publisherDescription | default "")) }}
+            {{- end }}
+            - name: HARVEST_ORGS
+              value: {{ $orgs | toJson | quote }}
+            - name: HARVEST_SECRET
+              value: {{ .Values.apiToken.harvestSecret | quote }}
+            - name: HARVEST_USER
+              value: {{ .Values.apiToken.harvestUser | quote }}
+            {{- end }}
             - name: NAMESPACE
               valueFrom:
                 fieldRef: { fieldPath: metadata.namespace }
