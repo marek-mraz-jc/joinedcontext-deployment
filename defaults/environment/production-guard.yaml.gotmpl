@@ -20,5 +20,9 @@
 {{- if (dig "branchPreviews" "enabled" false .Values.global) }}
 {{- fail "global.branchPreviews.enabled is true: branch previews run only on the dev cluster, never on a production instance (ADR-N-062, T-5548)" }}
 {{- end }}
+{{- /* T-5776: only dev lets approvers sign in without a one-time code; production keeps T-5120. */}}
+{{- if eq (toString .Values.global.approverMfa) "false" }}
+{{- fail "global.approverMfa is false: a production instance asks every approver for a one-time code; set it to true or remove it (AUT-2, T-5120, T-5776)" }}
+{{- end }}
 {{- end }}
 {}

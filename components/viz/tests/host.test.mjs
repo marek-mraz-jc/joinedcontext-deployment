@@ -33,6 +33,9 @@ test("each source is one URL under the view's Endpoint", () => {
     `${base}odata/v4/WeatherObserved?%24filter=temperature%20ne%20null&%24select=name%2Ctemperature`);
   assert.equal(host.firstRequest({ source: "temporal", type: "WeatherObserved", attrs: ["temperature"], last: "PT24H", aggrMethod: "avg", aggrPeriod: "PT1H" }, SLUG, API, NOW).url,
     `${base}ngsi-ld/v1/temporal/entities?type=WeatherObserved&attrs=temperature&timerel=after&timeAt=2026-10-17T16%3A00%3A00Z&format=aggregatedValues&aggrMethods=avg&aggrPeriodDuration=PT1H&limit=1000`);
+  // T-5777: the broker's ceiling of instances per window, not its default of 100
+  assert.equal(host.firstRequest({ source: "temporal", type: "WeatherObserved", attrs: ["temperature"], last: "P7D" }, SLUG, API, NOW).url,
+    `${base}ngsi-ld/v1/temporal/entities?type=WeatherObserved&attrs=temperature&timerel=after&timeAt=2026-10-11T16%3A00%3A00Z&format=temporalValues&firstN=1000&limit=1000`);
 });
 
 test("nothing that could leave the Endpoint", () => {

@@ -1,6 +1,7 @@
 """T-0018: bootstrap secret generation and SOPS-encrypted environment secrets."""
 
 import base64
+import json
 import os
 import re
 import shutil
@@ -135,6 +136,30 @@ def test_an_approvers_totp_seed_is_declared_and_held_to_32_characters(tmp_path):
     missing = check(secret_manifest("keycloak-user-demo-steward", {"password": "a" * 32}), {"demo": DECLARATION}, tmp_path)
     assert missing.returncode == 1
     assert "declared key 'totp' is missing" in missing.stdout
+
+
+def realm_secret(approver_mfa: bool) -> str:
+    """The keycloak-config-cli realm Secret, its portal-approver with or without `mfa-required`."""
+    approver = {"name": "portal-approver", "composite": approver_mfa}
+    if approver_mfa:
+        approver["composites"] = {"realm": ["mfa-required"]}
+    realm = {"realm": "jc", "roles": {"realm": [approver, {"name": "mfa-required"}]}}
+    data = {"jc.json": base64.b64encode(json.dumps(realm).encode()).decode()}
+    return yaml.safe_dump({"apiVersion": "v1", "kind": "Secret",
+                           "metadata": {"name": "keycloak-config-cli-config-realms"}, "data": data})
+
+
+def test_an_approver_without_mfa_in_the_realm_needs_no_totp_seed(tmp_path):
+    """T-5776: dev's realm drops `mfa-required` from portal-approver, so its demo approvers get no
+    seed; the declaration follows the rendered realm, and a realm keeping it still asks for one."""
+    keycloak = tmp_path / "components" / "keycloak"
+    keycloak.mkdir(parents=True, exist_ok=True)
+    (keycloak / "demo-users.yaml").write_text(yaml.safe_dump({"demo.steward": {"realmRoles": ["portal-approver"]}}))
+    password_only = secret_manifest("keycloak-user-demo-steward", {"password": "a" * 32})
+    off = check(realm_secret(False) + "---\n" + password_only, {"demo": DECLARATION}, tmp_path)
+    assert off.returncode == 0, off.stdout
+    on = check(realm_secret(True) + "---\n" + password_only, {"demo": DECLARATION}, tmp_path)
+    assert on.returncode == 1 and "declared key 'totp' is missing" in on.stdout
 
 
 def test_demo_user_secret_for_an_unnamed_user_is_refused(tmp_path):

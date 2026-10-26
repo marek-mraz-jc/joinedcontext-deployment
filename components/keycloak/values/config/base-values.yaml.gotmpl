@@ -79,7 +79,7 @@ extraEnv:
   {{- /* The TOTP seed of a demo person who must sign in with a second factor (T-5120), generated
          beside the password (defaults/environment/secrets.yaml.gotmpl); the journeys read it from
          the same Secret. The role list is the composites of `mfa-required` below. */}}
-  {{- if or (has "portal-approver" ($user.realmRoles | default list)) (has "platform-admin" ($user.realmRoles | default list)) }}
+  {{- if or (has "platform-admin" ($user.realmRoles | default list)) (and (ne (toString $global.approverMfa) "false") (has "portal-approver" ($user.realmRoles | default list))) }}
   - name: USER_TOTP_{{ $name | upper | replace "." "_" }}
     valueFrom:
       secretKeyRef:
@@ -512,7 +512,7 @@ config:
             - type: password
               value: "$(USER_PASSWORD_{{ $name | upper | replace "." "_" }})"
               temporary: false
-            {{- if or (has "portal-approver" ($user.realmRoles | default list)) (has "platform-admin" ($user.realmRoles | default list)) }}
+            {{- if or (has "platform-admin" ($user.realmRoles | default list)) (and (ne (toString $global.approverMfa) "false") (has "portal-approver" ($user.realmRoles | default list))) }}
             {{- /* Keycloak keeps an OTP secret as the text itself and hashes its UTF-8 bytes; the
                    journeys compute the code from the same text (T-5120). The fixed id makes a
                    re-import skip the credential it already holds; without one Keycloak creates it
@@ -755,9 +755,15 @@ config:
           # proposal; a user without it can browse and propose only.
           - name: portal-approver
             description: May approve and merge change proposals in the Portal
+            {{- /* dev alone sets global.approverMfa false (T-5776, owner 2026-10-26): its demo
+                   approvers sign in with a password; anything but `false` keeps T-5120. */}}
+            {{- if ne (toString $global.approverMfa) "false" }}
             composite: true
             composites:
               realm: [mfa-required]
+            {{- else }}
+            composite: false
+            {{- end }}
           # Administers the operator UIs: Argo CD's role:admin (components/gitops, ADR-N-056
           # §2.8) and Grafana's Admin. The owner grants it; nobody holds it by default.
           - name: platform-admin
