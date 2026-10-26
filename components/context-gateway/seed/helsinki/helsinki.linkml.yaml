@@ -1959,6 +1959,148 @@ slots:
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
 
+  noiseLevelLow:
+    slot_uri: jc:noiseLevelLow
+    description: >-
+      The lower bound of the area's 5 dB noise band, the A-weighted equivalent sound level (LAeq)
+      the city's 2022 noise survey computes 2 m above ground, in decibels.
+    range: float
+    minimum_value: 0
+    maximum_value: 120
+    unit: { ucum_code: dB }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Dolná hranica hluku
+          cs: Dolní hranice hluku
+          en: Noise level from
+          de: Lärmpegel von
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  noiseLevelHigh:
+    slot_uri: jc:noiseLevelHigh
+    description: The upper bound of the area's 5 dB noise band, in decibels; the loudest band has none.
+    range: float
+    minimum_value: 5
+    maximum_value: 125
+    unit: { ucum_code: dB }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Horná hranica hluku
+          cs: Horní hranice hluku
+          en: Noise level to
+          de: Lärmpegel bis
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  assessmentPeriod:
+    slot_uri: jc:assessmentPeriod
+    description: >-
+      The part of the day the noise level holds for, as the Finnish guideline values count it: the
+      day, 07:00 to 22:00, or the night, 22:00 to 07:00.
+    range: NoiseAssessmentPeriod
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Časť dňa
+          cs: Část dne
+          en: Assessment period
+          de: Beurteilungszeitraum
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  noiseSource:
+    slot_uri: jc:noiseSource
+    description: >-
+      The traffic whose noise the area's band computes: streets and roads, the main railway, the
+      metro or the tram. A custom property: the NoiseZone extension holds one source per map.
+    range: NoiseSource
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zdroj hluku
+          cs: Zdroj hluku
+          en: Noise source
+          de: Lärmquelle
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  species:
+    slot_uri: jc:species
+    description: >-
+      The tree's scientific name, genus and species as the register writes them (Tilia x vulgaris,
+      Betula pendula); `sp.` stands for a species the register leaves open.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh
+          cs: Druh
+          en: Species
+          de: Art
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  trunkDiameterClass:
+    slot_uri: jc:trunkDiameterClass
+    description: The class of the trunk's diameter at breast height the register gives the tree.
+    range: TrunkDiameterClass
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Hrúbka kmeňa
+          cs: Tloušťka kmene
+          en: Trunk diameter
+          de: Stammdurchmesser
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  plantingYear:
+    slot_uri: jc:plantingYear
+    description: The year the tree was planted, when the register knows it.
+    range: integer
+    minimum_value: 1800
+    maximum_value: 2100
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Rok výsadby
+          cs: Rok výsadby
+          en: Planting year
+          de: Pflanzjahr
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  treeSetting:
+    slot_uri: jc:treeSetting
+    description: Whether the tree stands along a street or in a park, as the register files it.
+    range: TreeSetting
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Stanovište
+          cs: Stanoviště
+          en: Setting
+          de: Standort
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  treeSite:
+    slot_uri: jc:treeSite
+    description: The street or the park the tree stands in, as the register names it.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Miesto
+          cs: Místo
+          en: Street or park
+          de: Straße oder Park
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
 classes:
   Event:
     class_uri: sdm:Event
@@ -2733,6 +2875,54 @@ classes:
         description: inService, or underConstruction while the city still builds the signals (the layer's Rakenteilla).
         range: TrafficSignalStatus
         required: true
+  NoiseZone:
+    class_uri: jc:NoiseZone
+    description: >-
+      One area of the city's 2022 noise survey: the ground where the day or the night sound level of
+      one traffic source falls into one 5 dB band, as the Smart Data Model extension NoiseZone
+      (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
+      label:
+        tag: label
+        value:
+          sk: Hluková zóna
+          cs: Hluková zóna
+          en: Noise zone
+          de: Lärmzone
+    slots:
+      - name
+      - noiseLevelLow
+      - noiseLevelHigh
+      - assessmentPeriod
+      - noiseSource
+      - dataProvider
+      - source
+  Tree:
+    class_uri: jc:Tree
+    description: >-
+      One tree of the city's street and park tree register (puurekisteri): where it stands, its
+      species and Finnish name, its trunk class and planting year. Smart Data Models has no tree
+      class; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Strom
+          cs: Strom
+          en: Tree
+          de: Baum
+    slots:
+      - name
+      - species
+      - trunkDiameterClass
+      - plantingYear
+      - treeSetting
+      - treeSite
+      - dataProvider
+      - source
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -3338,3 +3528,99 @@ enums:
           label:
             tag: label
             value: { fi: Rakenteilla, en: Under construction }
+  NoiseAssessmentPeriod:
+    description: The parts of the day a noise band of the 2022 survey holds for.
+    permissible_values:
+      day:
+        description: The day, 07:00 to 22:00 (LAeq 7-22).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Päivä, en: Day }
+      night:
+        description: The night, 22:00 to 07:00 (LAeq 22-7).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Yö, en: Night }
+  NoiseSource:
+    description: The traffic sources the 2022 noise survey computes one map each for.
+    permissible_values:
+      roadTraffic:
+        description: Streets and roads (kadut ja maantiet).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Katu- ja tieliikenne, en: Road traffic }
+      railway:
+        description: The main railway (juna).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Junaliikenne, en: Railway }
+      metro:
+        description: The metro.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Metro, en: Metro }
+      tram:
+        description: The tram (raitiovaunu).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Raitioliikenne, en: Tram }
+  TrunkDiameterClass:
+    description: The trunk diameter classes of the tree register, at breast height.
+    permissible_values:
+      cm0to10:
+        description: Up to 10 cm.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '0 - 10 cm', en: '0 - 10 cm' }
+      cm10to20:
+        description: 10 to 20 cm.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '10 - 20 cm', en: '10 - 20 cm' }
+      cm20to30:
+        description: 20 to 30 cm.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '20 - 30 cm', en: '20 - 30 cm' }
+      cm30to50:
+        description: 30 to 50 cm.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '30 - 50 cm', en: '30 - 50 cm' }
+      cm50to70:
+        description: 50 to 70 cm.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '50 - 70 cm', en: '50 - 70 cm' }
+      cm70plus:
+        description: 70 cm or more.
+        annotations:
+          label:
+            tag: label
+            value: { fi: '70 cm -', en: '70 cm or more' }
+  TreeSetting:
+    description: Where a tree of the register stands.
+    permissible_values:
+      street:
+        description: Along a street (katu).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Katu, en: Street }
+      park:
+        description: In a park (puisto).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Puisto, en: Park }

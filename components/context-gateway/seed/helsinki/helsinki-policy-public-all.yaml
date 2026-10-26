@@ -46,6 +46,9 @@ spec:
         - type: HeritageArea
         # The junctions with traffic lights and warning lights (T-5286).
         - type: TrafficSignalJunction
+        # The noise survey and the tree register (T-5378).
+        - type: NoiseZone
+        - type: Tree
         # The reports the city published in its feedback system (T-5257): the reporter's name, contact
         # details and photos are never written.
         - type: ServiceRequest

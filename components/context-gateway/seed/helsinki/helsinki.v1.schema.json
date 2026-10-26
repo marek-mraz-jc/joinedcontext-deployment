@@ -3910,6 +3910,332 @@
         "inService": "The signals are in service.",
         "underConstruction": "The city is still building the signals (rakenteilla)."
       }
+    },
+    "TreeSetting": {
+      "description": "Where a tree of the register stands.",
+      "enum": [
+        "street",
+        "park"
+      ],
+      "title": "TreeSetting",
+      "type": "string",
+      "x-enum-descriptions": {
+        "park": "In a park (puisto).",
+        "street": "Along a street (katu)."
+      }
+    },
+    "TrunkDiameterClass": {
+      "description": "The trunk diameter classes of the tree register, at breast height.",
+      "enum": [
+        "cm0to10",
+        "cm10to20",
+        "cm20to30",
+        "cm30to50",
+        "cm50to70",
+        "cm70plus"
+      ],
+      "title": "TrunkDiameterClass",
+      "type": "string",
+      "x-enum-descriptions": {
+        "cm0to10": "Up to 10 cm.",
+        "cm10to20": "10 to 20 cm.",
+        "cm20to30": "20 to 30 cm.",
+        "cm30to50": "30 to 50 cm.",
+        "cm50to70": "50 to 70 cm.",
+        "cm70plus": "70 cm or more."
+      }
+    },
+    "NoiseAssessmentPeriod": {
+      "description": "The parts of the day a noise band of the 2022 survey holds for.",
+      "enum": [
+        "day",
+        "night"
+      ],
+      "title": "NoiseAssessmentPeriod",
+      "type": "string",
+      "x-enum-descriptions": {
+        "day": "The day, 07:00 to 22:00 (LAeq 7-22).",
+        "night": "The night, 22:00 to 07:00 (LAeq 22-7)."
+      }
+    },
+    "NoiseSource": {
+      "description": "The traffic sources the 2022 noise survey computes one map each for.",
+      "enum": [
+        "roadTraffic",
+        "railway",
+        "metro",
+        "tram"
+      ],
+      "title": "NoiseSource",
+      "type": "string",
+      "x-enum-descriptions": {
+        "metro": "The metro.",
+        "railway": "The main railway (juna).",
+        "roadTraffic": "Streets and roads (kadut ja maantiet).",
+        "tram": "The tram (raitiovaunu)."
+      }
+    },
+    "Tree": {
+      "additionalProperties": false,
+      "description": "One tree of the city's street and park tree register (puurekisteri): where it stands, its species and Finnish name, its trunk class and planting year. Smart Data Models has no tree class; the closest, GreenspaceRecord, records soil and weather readings of a green area.",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "plantingYear": {
+          "description": "The year the tree was planted, when the register knows it.",
+          "maximum": 2100,
+          "minimum": 1800,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "species": {
+          "description": "The tree's scientific name, genus and species as the register writes them (Tilia x vulgaris, Betula pendula); `sp.` stands for a species the register leaves open.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "treeSetting": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TreeSetting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Whether the tree stands along a street or in a park, as the register files it.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "treeSite": {
+          "description": "The street or the park the tree stands in, as the register names it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "trunkDiameterClass": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TrunkDiameterClass"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The class of the trunk's diameter at breast height the register gives the tree.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "title": "Tree",
+      "type": "object"
+    },
+    "NoiseZone": {
+      "additionalProperties": false,
+      "description": "One area of the city's 2022 noise survey: the ground where the day or the night sound level of one traffic source falls into one 5 dB band, as the Smart Data Model extension NoiseZone (PointOfInterest base).",
+      "properties": {
+        "assessmentPeriod": {
+          "$ref": "#/definitions/NoiseAssessmentPeriod",
+          "description": "The part of the day the noise level holds for, as the Finnish guideline values count it: the day, 07:00 to 22:00, or the night, 22:00 to 07:00.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "noiseLevelHigh": {
+          "description": "The upper bound of the area's 5 dB noise band, in decibels; the loudest band has none.",
+          "maximum": 125,
+          "minimum": 5,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "dB"
+          }
+        },
+        "noiseLevelLow": {
+          "description": "The lower bound of the area's 5 dB noise band, the A-weighted equivalent sound level (LAeq) the city's 2022 noise survey computes 2 m above ground, in decibels.",
+          "maximum": 120,
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "dB"
+          }
+        },
+        "noiseSource": {
+          "$ref": "#/definitions/NoiseSource",
+          "description": "The traffic whose noise the area's band computes: streets and roads, the main railway, the metro or the tram. A custom property: the NoiseZone extension holds one source per map.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "assessmentPeriod",
+        "noiseSource",
+        "id",
+        "type"
+      ],
+      "title": "NoiseZone",
+      "type": "object"
     }
   },
   "metamodel_version": "1.11.0",

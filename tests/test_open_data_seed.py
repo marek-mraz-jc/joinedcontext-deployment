@@ -1277,9 +1277,9 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5286 Helsinki's traffic signal junctions (+1 in hel-fi).
         # T-5788 took the datasets empty on prod off the catalogue (owner 2026-10-26): banskabystrica zdravie
         # and the 8 bb- rows no Pipeline fills (-9), barcelona city-works, events, dog-areas (-3), bbsk catalog (-1),
-        # bratislava MHD stops and lines (-2), helsinki heat vulnerability (-1), praha vozidla, scitace, sluzby (-3).
+        # bratislava MHD stops and lines (-2), helsinki heat vulnerability (-1), praha vozidla, scitace, sluzby (-3); T-5378 helsinki noise survey and tree register (+2).
         "banskabystrica": 13 + 7 + 1 - 2 - 9, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3 - 3, "bbsk": 88 + 6 + 1 - 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13 + 17 - 2,
-        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2 - 1 + 1 - 1 + 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1 + 2 - 2 - 3, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1 - 1}
+        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2 - 1 + 1 - 1 + 1 + 2, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1 + 2 - 2 - 3, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1 - 1}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):

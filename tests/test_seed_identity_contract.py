@@ -102,8 +102,8 @@ def test_helsinki_policies_name_the_organization_by_placeholder():
     # Portal write and public read (T-5493), and the public reads of the autumn traffic volumes and
     # the machine vision counts (T-5669), and the own-account writes of the two pipelines that
     # write several types (T-5717), and the public read of the heritage maps (T-5670), and of the
-    # traffic signal junctions (T-5286).
-    assert len(policies) == 48
+    # traffic signal junctions (T-5286), and those of the noise survey and the tree register (T-5378).
+    assert len(policies) == 50
     for path, policy in policies:
         assert policy["spec"]["assigner"] == "did:web:{orgDomain}", path.name
 
