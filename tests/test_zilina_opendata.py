@@ -350,6 +350,11 @@ def test_each_kind_is_one_public_odbl_dataset_crediting_the_city():
         assert [e["type"] for i in policy["information"] for e in i["entities"]] == [kind]
         assert not {"upsertBatch", "createBatch", "deleteBatch"} & set(policy["operations"]), "the public only reads"
         catalog = endpoint["catalog"]
-        assert (endpoint["publish"]["ckan"]["license"], catalog["license"]) == ("odc-odbl", "ODC_ODBL")
+        assert catalog["license"] == "ODC_ODBL"
+        # A dev-empty Endpoint leaves the catalogue until it holds data (T-5767); the rest publish under ODbL.
+        if catalog.get("harvest") is False:
+            assert "publish" not in endpoint
+        else:
+            assert endpoint["publish"]["ckan"]["license"] == "odc-odbl"
         assert catalog["publisher"]["uri"] == "https://data.gov.sk/id/legal-subject/00321796"
         assert "Mesto Žilina" in catalog["attribution"]["sk"] and "ODbL" in catalog["attribution"]["en"]

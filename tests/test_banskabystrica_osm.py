@@ -262,7 +262,11 @@ def test_the_datasets_are_odbl_with_the_osm_credit_and_the_pipeline_alone_may_de
     for part, kind in (("zdravie", "PointOfInterest"), ("nabijanie", "EVChargingStation")):
         spec = yaml.safe_load((CITY / f"endpoint-{part}.yaml").read_text())["spec"]
         assert spec["contextSpaceRef"] == SPACE and spec["audience"] == "public"
-        assert spec["publish"]["ckan"]["license"] == "odc-odbl"
+        # A dev-empty Endpoint leaves the catalogue until it holds data (T-5767); the rest publish under ODbL.
+        if spec["catalog"].get("harvest") is False:
+            assert "publish" not in spec
+        else:
+            assert spec["publish"]["ckan"]["license"] == "odc-odbl"
         assert spec["catalog"]["license"] == "ODC_ODBL"
         assert "© prispievatelia OpenStreetMap" in spec["catalog"]["attribution"]["sk"]
         assert "© OpenStreetMap contributors" in spec["catalog"]["attribution"]["en"]
