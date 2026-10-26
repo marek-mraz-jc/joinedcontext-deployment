@@ -297,6 +297,7 @@ v1/Service staging/artifact-store
 v1/Service staging/cnpg-webhook-service
 v1/Service staging/context-broker
 v1/Service staging/context-gateway
+v1/Service staging/context-gateway-pods
 v1/Service staging/gitea-http
 v1/Service staging/gitea-ssh
 v1/Service staging/keycloak-app-keycloakx-headless

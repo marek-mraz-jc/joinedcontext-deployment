@@ -24,6 +24,11 @@ command:
 
 containerPort: 8080
 
+# The gateway's pods by address: a space move copies only once every pod's /metrics shows the
+# hold, so no replica still takes writes under the copy (JC_PORTAL_GATEWAY_PODS_URL, F-POR4-014).
+headlessService:
+  name: context-gateway-pods
+
 service:
   enabled: true
   type: ClusterIP

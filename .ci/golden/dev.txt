@@ -604,6 +604,7 @@ v1/Service dev/ckan-solr
 v1/Service dev/cnpg-webhook-service
 v1/Service dev/context-broker
 v1/Service dev/context-gateway
+v1/Service dev/context-gateway-pods
 v1/Service dev/demo-nats
 v1/Service dev/gitea-http
 v1/Service dev/gitea-ssh

@@ -309,6 +309,7 @@ v1/Service jc/artifact-store
 v1/Service jc/cnpg-webhook-service
 v1/Service jc/context-broker
 v1/Service jc/context-gateway
+v1/Service jc/context-gateway-pods
 v1/Service jc/gitea-http
 v1/Service jc/gitea-ssh
 v1/Service jc/keycloak-app-keycloakx-headless

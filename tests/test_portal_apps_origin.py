@@ -34,3 +34,21 @@ def test_the_portal_knows_the_apps_origin_and_it_is_not_its_own(rendered, enviro
         "an App pod calls its endpoint in the cluster, where its NetworkPolicy names the gateway"
     )
     assert gateway.hostname.startswith("context-gateway."), gateway.hostname
+
+
+@pytest.mark.parametrize("environment", ["dev", "local"])
+def test_the_portal_names_every_gateway_pod_by_a_headless_service(rendered, environment):
+    """F-POR4-014: a space move copies only once every gateway pod's /metrics shows the hold, so
+    the Portal is handed a name with one record per pod, and that Service exists headless in the
+    gateway's namespace, selecting the gateway's pods on the port the Portal asks."""
+    docs = rendered(environment)
+    pods = urlsplit(portal_env(docs)["JC_PORTAL_GATEWAY_PODS_URL"])
+    name, namespace = pods.hostname.split(".")[:2]
+    service = next(
+        d
+        for d in docs
+        if d.get("kind") == "Service" and d["metadata"]["name"] == name and d["metadata"]["namespace"] == namespace
+    )
+    assert service["spec"]["clusterIP"] == "None"
+    assert service["spec"]["selector"]["app.kubernetes.io/name"] == "context-gateway-gateway"
+    assert pods.port in [p["port"] for p in service["spec"]["ports"]]
