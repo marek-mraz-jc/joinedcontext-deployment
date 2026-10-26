@@ -27,6 +27,11 @@ SEED = ROOT / "components/context-gateway/seed"
 DEMO = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
 COMPONENT = yaml.safe_load((ROOT / "components/keycloak/component.yaml").read_text())
 REALM = "pf126"
+# The owner's real Keycloak id on smartcity (global.initialUserId): the people Job refuses an id
+# another person already holds, so production never takes the defaults' placeholder.
+SMARTCITY_OWNER = re.search(
+    r"initialUserId: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
+)[1]
 
 # One worker runs the module, so one Keycloak serves its tests (T-3897, T-5370).
 pytestmark = [pytest.mark.xdist_group("docker-keycloak-people")]
@@ -96,13 +101,14 @@ def test_dev_gives_every_demo_person_their_id(rendered):
 def test_a_production_instance_names_its_owner_by_id_and_never_deletes_them(rendered):
     docs = rendered("smartcity")
     lines, _ = people_job(docs)
-    assert lines == [["0a000000-0000-4000-8000-000000000001", "marek.mraz@joinedcontext.com", "false"]]
+    assert UUID.match(SMARTCITY_OWNER) and not SMARTCITY_OWNER.startswith(("0a000000-", "de300000-"))
+    assert lines == [[SMARTCITY_OWNER, "marek.mraz@joinedcontext.com", "false"]]
     seeds = "\n".join(
         str(v) for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-seed")
         for v in (d.get("data") or {}).values()
     )
     assert "de300000-" not in seeds, "a demo person's id reached a production seed"
-    assert "0a000000-0000-4000-8000-000000000001" in seeds, "the steward's grants lost their holder"
+    assert SMARTCITY_OWNER in seeds, "the steward's grants lost their holder"
 
 
 # --- the script in the pinned Keycloak ------------------------------------------------------
