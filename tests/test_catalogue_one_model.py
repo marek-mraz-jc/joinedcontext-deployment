@@ -148,6 +148,22 @@ def test_every_published_dataset_serves_every_mandatory_surface():
         assert doc["spec"]["audience"] == "public", path.name
 
 
+def test_every_published_events_dataset_serves_a_calendar():
+    """Owner 2026-10-26 (T-5763): every events dataset offers iCalendar, one named output at least,
+    so the catalogue row lists /ical/v1/{name}.ics."""
+    events = []
+    for path, doc, bound in published():
+        if "Event" not in set().union(*(types_of(p) for p in bound.values())):
+            continue
+        events.append(path.name)
+        spec = doc["spec"]
+        assert "ical" in spec["enabledRepresentations"], f"{path.name} serves no iCalendar"
+        outputs = spec.get("representations", {}).get("ical", [])
+        assert isinstance(outputs, list) and outputs, f"{path.name} names no ical output"
+        assert all(o.get("timezone") and o.get("title") for o in outputs), path.name
+    assert len(events) >= 7, events
+
+
 def test_a_split_policy_grants_nothing_its_space_did_not_grant_the_public():
     policies = public_policies()
     split = [(path, doc) for path, doc in docs("Policy") if "(T-4344)" in path.read_text()]

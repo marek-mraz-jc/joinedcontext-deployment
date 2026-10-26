@@ -13,7 +13,22 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-events
-  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
+  # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
+  # representations.ical (EP-125, EP-159).
+  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata, ical]
+  representations:
+    ical:
+      - name: vsetky
+        title: { fi: Kaikki tapahtumat Helsingissä, en: All events in Helsinki }
+        lang: fi
+        timezone: Europe/Helsinki
+        sources:
+          - type: Event
+            preset: sdm-event
+            mapping:
+              SUMMARY:
+                firstOf: [name, type]
+              URL: webSite
   # The organizer's contact line stays in the space for the city's own coordination and is
   # served by no public endpoint (EP-61). A projection only narrows.
   projection:

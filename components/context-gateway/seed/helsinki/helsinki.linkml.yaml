@@ -1966,6 +1966,7 @@ classes:
               en: Name
               de: Name
       startDate:
+        required: true
         rank: 2
         annotations:
           summary: true
