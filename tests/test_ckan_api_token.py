@@ -17,12 +17,18 @@ PASSWORD = "admin-password-9f3"
 # A token's shape without a token: built from parts, because a JWT-shaped literal is exactly what
 # the history scan is there to catch.
 MINTED = ".".join(["eyJhbGciOiJIUzI1NiJ9", "eyJqdGkiOiJuZXcifQ", "c2lnbmF0dXJl"])
+HARVEST_MINTED = ".".join(["eyJhbGciOiJIUzI1NiJ9", "eyJqdGkiOiJoYXJ2ZXN0In0", "c2lnbmF0dXJl"])
+ORGS = [{"name": "bbsk", "title": "BBSK", "description": "kraj"}, {"name": "banskabystrica", "title": "BB"}]
 
 
 class FakeCkan:
     def __init__(self):
         self.tokens = {}  # token -> (id, name)
         self.calls = []
+        self.users = {"ckan_admin": {"name": "ckan_admin", "sysadmin": True}}
+        self.orgs = {"banskabystrica": {"name": "banskabystrica"}}
+        self.members = set()  # (org, user, role)
+        self.bearers = []  # the token each harvest-side call carried
 
     def handler(fake):
         class Handler(BaseHTTPRequestHandler):
@@ -72,8 +78,24 @@ class FakeCkan:
                     fake.tokens = {t: v for t, v in fake.tokens.items() if v[0] != payload["jti"]}
                     result = None
                 elif action == "api_token_create":
-                    fake.tokens[MINTED] = ("new", payload["name"])
-                    result = {"token": MINTED}
+                    minted = HARVEST_MINTED if payload["user"] == "harvest" else MINTED
+                    fake.tokens[minted] = ("new-" + payload["user"], payload["name"])
+                    result = {"token": minted}
+                elif action in ("organization_show", "user_show"):
+                    fake.bearers.append(bearer)
+                    found = (fake.orgs if action == "organization_show" else fake.users).get(payload["id"])
+                    if found is None:
+                        return self.reply(404, '{"success": false}')
+                    result = found
+                elif action == "organization_create":
+                    fake.orgs[payload["name"]] = payload
+                    result = payload
+                elif action == "user_create":
+                    assert len(payload["password"]) >= 32
+                    fake.users[payload["name"]] = result = {"name": payload["name"], "sysadmin": False}
+                elif action == "organization_member_create":
+                    fake.members.add((payload["id"], payload["username"], payload["role"]))
+                    result = {}
                 else:
                     return self.reply(404)
                 return self.reply(200, json.dumps({"success": True, "result": result}))
@@ -82,9 +104,15 @@ class FakeCkan:
 
 
 class FakeKube:
-    def __init__(self, token=None):
-        self.secret = None if token is None else base64.b64encode(token.encode()).decode()
+    def __init__(self, token=None, **tokens):
+        self.secrets = {name.replace("_", "-"): base64.b64encode(t.encode()).decode() for name, t in tokens.items()}
+        if token is not None:
+            self.secrets["ckan-api-token"] = base64.b64encode(token.encode()).decode()
         self.writes = []
+
+    @property
+    def secret(self):
+        return self.secrets.get("ckan-api-token")
 
     def handler(fake):
         class Handler(BaseHTTPRequestHandler):
@@ -96,13 +124,16 @@ class FakeKube:
                 self.end_headers()
                 self.wfile.write(body)
 
+            def name(self):
+                return self.path.rsplit("/", 1)[-1]
+
             def do_GET(self):
-                if fake.secret is None:
+                if self.name() not in fake.secrets:
                     return self.reply(404)
-                return self.reply(200, json.dumps({"data": {"token": fake.secret}}).encode())
+                return self.reply(200, json.dumps({"data": {"token": fake.secrets[self.name()]}}).encode())
 
             def do_PUT(self):
-                return self.write(200 if fake.secret is not None else 404)
+                return self.write(200 if self.name() in fake.secrets else 404)
 
             def do_POST(self):
                 return self.write(201)
@@ -111,7 +142,7 @@ class FakeKube:
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
                 if status != 404:
                     fake.writes.append((self.command, self.path, body))
-                    fake.secret = body["data"]["token"]
+                    fake.secrets[body["metadata"]["name"]] = body["data"]["token"]
                 return self.reply(status)
 
         return Handler
@@ -123,15 +154,17 @@ def serve(fake):
     return server
 
 
-def run(ckan, kube, tmp_path, password=PASSWORD):
+def run(ckan, kube, tmp_path, password=PASSWORD, harvest=None):
     ckan_server, kube_server = serve(ckan), serve(kube)
+    extra = {} if harvest is None else {"HARVEST_ORGS": json.dumps(harvest), "HARVEST_SECRET": "ckan-api-token-harvest",
+                                        "HARVEST_USER": "harvest"}
     try:
         return subprocess.run(
             ["python3", "-c", SCRIPT.read_text()],
             env={"CATALOGUE": f"127.0.0.1:{ckan_server.server_port}", "ADMIN_USER": "ckan_admin",
                  "ADMIN_PASSWORD": password, "TOKEN_SECRET": "ckan-api-token", "TOKEN_NAME": "jcctl",
                  "NAMESPACE": "dev", "KUBE_API": f"http://127.0.0.1:{kube_server.server_port}",
-                 "SA_DIR": str(tmp_path)},
+                 "SA_DIR": str(tmp_path), **extra},
             capture_output=True, text=True, timeout=60,
         )
     finally:
@@ -181,3 +214,42 @@ def test_a_refused_sign_in_writes_nothing_and_fails_the_job(tmp_path):
     assert result.returncode != 0
     assert "could not sign in" in result.stderr
     assert kube.writes == [] and ckan.tokens == {}
+
+
+def test_the_harvests_get_an_editor_token_and_never_the_administrators(tmp_path):
+    """F-DEP1-002: the harvest user edits the harvested organizations, which the Job creates as
+    the administrator; its own token lands in its own Secret."""
+    ckan, kube = FakeCkan(), FakeKube()
+    result = run(ckan, kube, tmp_path, harvest=ORGS)
+    assert result.returncode == 0, result.stderr
+    assert ckan.orgs["bbsk"]["title"] == "BBSK" and ckan.orgs["bbsk"]["description"] == "kraj"
+    assert ckan.users["harvest"]["sysadmin"] is False
+    assert ckan.members == {("bbsk", "harvest", "editor"), ("banskabystrica", "harvest", "editor")}
+    written = {body["metadata"]["name"]: base64.b64decode(body["data"]["token"]).decode() for _, _, body in kube.writes}
+    assert written == {"ckan-api-token": MINTED, "ckan-api-token-harvest": HARVEST_MINTED}
+    assert set(ckan.bearers) == {MINTED}, "a harvest-side call ran on something but the administrator's token"
+    for leak in (MINTED, HARVEST_MINTED, PASSWORD):
+        assert leak not in result.stdout + result.stderr
+
+
+def test_a_harvest_token_that_still_authenticates_is_kept(tmp_path):
+    ckan = FakeCkan()
+    ckan.tokens[MINTED] = ("new", "jcctl")
+    ckan.tokens[HARVEST_MINTED] = ("h", "harvest")
+    ckan.users["harvest"] = {"name": "harvest", "sysadmin": False}
+    kube = FakeKube(token=MINTED, ckan_api_token_harvest=HARVEST_MINTED)
+    result = run(ckan, kube, tmp_path, harvest=ORGS)
+    assert result.returncode == 0, result.stderr
+    assert "the token in ckan-api-token-harvest still authenticates" in result.stdout
+    assert kube.writes == []
+    assert ("POST", "api_token_create") not in ckan.calls
+
+
+def test_a_harvest_user_that_became_an_administrator_gets_no_token(tmp_path):
+    ckan = FakeCkan()
+    ckan.users["harvest"] = {"name": "harvest", "sysadmin": True}
+    kube = FakeKube()
+    result = run(ckan, kube, tmp_path, harvest=ORGS)
+    assert result.returncode != 0
+    assert "is a site administrator" in result.stderr
+    assert "ckan-api-token-harvest" not in kube.secrets
