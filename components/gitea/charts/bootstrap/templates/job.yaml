@@ -1046,6 +1046,27 @@ spec:
                 head=$(sed -n 's/.*"commit": *{ *"id": *"\([0-9a-f]\{40\}\)".*/\1/p' $WORK/body)
                 [ "${#head}" -eq 40 ] || { echo "the forge named no commit for main of $APPS_OWNER/$repo" >&2; exit 1; }
 
+                # The lane builds on a push, so a build of this head that failed stays failed when
+                # the runner image is fixed later, and the App answers 404 for good (T-5774: prod's
+                # builds of 2026-10-19 hit an SDK-46 check fixed that evening). When the newest run
+                # is this head's and failed, build.yml is dispatched once more. A queued, running,
+                # passed or cancelled run is left alone.
+                # ponytail: a build that always fails is retried once per apply.
+                status=$(apps_code GET "/api/v1/repos/$APPS_OWNER/$repo/actions/runs?limit=1")
+                if [ "$status" = 200 ]; then
+                  run_sha=$(tr ',{' '\n\n' < $WORK/body | sed -n 's/^ *"head_sha": *"\([0-9a-f]\{40\}\)".*/\1/p' | head -1)
+                  run_end=$(tr ',{' '\n\n' < $WORK/body | sed -n 's/^ *"conclusion": *"\([a-z_]*\)".*/\1/p' | head -1)
+                  if [ "$run_sha" = "$head" ] && [ "$run_end" = failure ]; then
+                    status=$(apps_code POST "/api/v1/repos/$APPS_OWNER/$repo/actions/workflows/build.yml/dispatches" -d '{"ref":"main"}')
+                    case "$status" in
+                      204) echo "app $app: the build of $head had failed; build.yml dispatched again" ;;
+                      *) echo "app $app: dispatching build.yml of $APPS_OWNER/$repo failed: $status" >&2; cat $WORK/body >&2 ;;
+                    esac
+                  fi
+                else
+                  echo "app $app: the runs of $APPS_OWNER/$repo were not read ($status); no build retried" >&2
+                fi
+
                 # The manifest, pinned to that commit at the address a person clones from.
                 sed -e "s|^\(      url: \).*|\1$APPS_PUBLIC_BASE/$APPS_OWNER/$repo.git|" \
                     -e "s|^\(      ref: \).*|\1$head|" "${dir}app.yaml" > $WORK/app-manifest

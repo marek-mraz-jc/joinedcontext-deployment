@@ -7,8 +7,16 @@ rewrites:
   # The seeds name the catalogue opendata.dev.joinedcontext.com, so the domain rule below moves it too (T-4679).
   - from: 'dev\.joinedcontext\.com'
     to: {{ .Values.global.domain | quote }}
+  # A Group names a member by Keycloak user id, never by e-mail (PF-126, ADR-N-061): an e-mail
+  # member fails the Group's validation on the Portal, so the steward line takes the owner's id.
+  - from: '(?m)^([ \t]*- user: )demo\.steward@[A-Za-z0-9.-]+'
+    to: {{ printf "${1}%s" .Values.global.initialUserId | quote }}
   - from: 'demo\.steward@[A-Za-z0-9.-]+'
     to: {{ .Values.global.initialUserEmail | quote }}
   - from: '(?m)^[ \t]*- user: demo\.[a-z]+@[A-Za-z0-9.-]+[ \t]*\r?\n'
     to: ''
+  # A Group whose only members were demo people keeps an empty list: a bare `members:` is null,
+  # which the Portal refuses as "invalid type: null, expected a sequence" (T-5774).
+  - from: '(?m)^([ \t]*)members:[ \t]*(\r?\n|\z)([ \t]*[^-\s]|\z)'
+    to: '${1}members: []${2}${3}'
 {{- end }}

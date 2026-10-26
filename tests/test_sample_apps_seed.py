@@ -208,6 +208,54 @@ def test_a_new_head_of_an_app_that_never_built_carries_no_status(script, tmp_pat
     assert "status" not in moved
 
 
+def set_run(forge, repo, **run):
+    state = json.loads(forge.state.read_text())
+    state.setdefault("runs", {})[repo] = run
+    forge.state.write_text(json.dumps(state))
+
+
+def dispatched(forge):
+    return json.loads(forge.state.read_text()).get("dispatched", [])
+
+
+@requires_helmfile
+def test_a_failed_build_of_the_head_is_dispatched_again_at_the_next_run(script, tmp_path):
+    """T-5774: prod's builds of 2026-10-19 failed on a runner check fixed hours later, and the
+    lane builds on a push only, so ten public Apps answered 404 for a week. The next run of the
+    Job dispatches build.yml of an App whose newest run is its head's and failed."""
+    forge, _ = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    head = repos(forge)["helsinki_helsinki-bikes"]["head"]
+    set_run(forge, "helsinki_helsinki-bikes", head_sha=head, conclusion="failure")
+
+    second = run(forge, script)
+    assert second.returncode == 0, second.stderr
+    assert dispatched(forge) == ["joinedcontext/helsinki_helsinki-bikes@main"]
+    assert f"app helsinki-bikes: the build of {head} had failed; build.yml dispatched again" in second.stdout
+
+
+@requires_helmfile
+@pytest.mark.parametrize("conclusion,status", [("success", "completed"), ("cancelled", "completed"), ("", "running")])
+def test_a_passed_cancelled_or_running_build_is_not_dispatched(script, tmp_path, conclusion, status):
+    """T-5774: only a failure is retried; a person's cancel and a run in flight stay as they are."""
+    forge, _ = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    head = repos(forge)["helsinki_helsinki-bikes"]["head"]
+    set_run(forge, "helsinki_helsinki-bikes", head_sha=head, conclusion=conclusion, status=status)
+    assert run(forge, script).returncode == 0
+    assert dispatched(forge) == []
+
+
+@requires_helmfile
+def test_a_failed_build_of_an_older_commit_is_not_dispatched(script, tmp_path):
+    """T-5774: the seed's new head already started its own build; the old failure is history."""
+    forge, _ = seeded(tmp_path)
+    assert run(forge, script).returncode == 0
+    set_run(forge, "helsinki_helsinki-bikes", head_sha="b" * 40, conclusion="failure")
+    assert run(forge, script).returncode == 0
+    assert dispatched(forge) == []
+
+
 @requires_helmfile
 def test_a_changed_and_a_dropped_file_are_one_commit_and_the_manifest_follows(script, tmp_path):
     """AP-80: an edit of the platform's copy reaches the repository as one commit that updates
@@ -696,3 +744,27 @@ def test_every_app_offering_a_map_download_is_granted_the_geometry():
                 assert "location" in need["attrs"], app["metadata"]["name"]
                 checked += 1
     assert checked >= 2
+
+
+UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+
+def test_every_sample_app_group_on_production_parses_and_names_people_by_id(rendered):
+    """T-5774, PF-126: smartcity's rewrites drop the demo people, and a Group left with a bare
+    `members:` was null, which the Portal refused ("invalid type: null, expected a sequence"),
+    and the steward line became an e-mail, which it refuses too. Every default Group the
+    production render seeds holds a list of members, each named by a Keycloak user id."""
+    docs = rendered("smartcity")
+    groups = {
+        key: yaml.safe_load(text)
+        for d in docs
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-sample-apps-")
+        for key, text in (d.get("data") or {}).items()
+        if key.startswith("grants__users__groups__")
+    }
+    assert groups, "the production render seeds the sample apps' default groups"
+    for key, group in groups.items():
+        members = group["spec"].get("members", [])
+        assert isinstance(members, list), f"{key}: members is {members!r}"
+        for member in members:
+            assert UUID.match(member.get("user", "")), f"{key}: {member} is not a Keycloak user id"
