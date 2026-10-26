@@ -130,6 +130,12 @@ def test_dropping_a_personal_column_keeps_each_id_and_lets_the_next_replace_remo
             local = next(line for line in pipeline.splitlines() if "let local = " in line)
             missing += [f"{e['name']}: id hash lacks {p['column']}" for a, p in e["properties"].items()
                         if a in gone and f'"{p["column"]}": ' not in local]
+            # An ArcGIS query that stops asking for a hashed column hashes null for it: every id moves
+            # and the old Entities keep the dropped values (dev 2026-10-26: zmluvy, odbory).
+            asked = {f for line in pipeline.splitlines() if "outFields=" in line
+                     for f in urllib.parse.unquote(line.split("outFields=")[1].split("&")[0]).split(",")}
+            missing += [f"{e['name']}: query lacks hashed {p['column']}" for a, p in e["properties"].items()
+                        if a in gone and asked and "*" not in asked and p["column"] not in asked]
     assert not missing, missing
     assert hashed, "no hashed dataset drops a column: the id half of this test checks nothing"
 
