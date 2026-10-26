@@ -350,3 +350,12 @@ helsinki-agent-proxy:
           included.custom.audience: q7gad2u6qwo6rbewizbknihhu2dt4yvd
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The heritage and shore-route maps of T-5670 (seed/helsinki/helsinki-endpoint-heritage.yaml).
+      - name: helsinki-heritage-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: xtmpry6uo6sswne5bnnqoikpfvfyjihr
+          access.token.claim: 'true'
+          id.token.claim: 'false'

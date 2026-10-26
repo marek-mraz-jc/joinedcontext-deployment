@@ -97,6 +97,39 @@ def test_the_portal_is_told_where_the_proxy_is_and_opens_its_internal_listener_t
 
 
 @requires_helmfile
+def test_a_runs_ticket_is_honoured_from_the_portal_and_the_runs_own_meshed_workspace_alone(dev):
+    """F-PLT1-008, T-5809: the proxy requires the caller's Linkerd identity and names the Portal's
+    ServiceAccount with its namespace; the workspaces it serves reach it, and the Portal reaches
+    them, on the service port and on the inbound proxy's 4143."""
+    env = env_of(container(dev, "agent-proxy"))
+    assert env["JC_REQUIRE_MESH_IDENTITY"] == "true"
+    account = next(d for d in dev if d.get("kind") == "ServiceAccount" and d["metadata"]["name"] == "portal")
+    assert env["JC_PROXY_PORTAL_IDENTITY"] == f"portal.{account['metadata']['namespace']}"
+    assert container(dev, "portal") in [
+        c for d in dev if d.get("kind") == "Deployment"
+        and d["spec"]["template"]["spec"].get("serviceAccountName") == "portal"
+        for c in d["spec"]["template"]["spec"]["containers"]
+    ], "the Portal runs as the account the proxy names"
+
+    workspace = {"matchExpressions": [{"key": "joinedcontext.com/run-id", "operator": "Exists"}]}
+
+    def ports(name, direction):
+        policy = next(d for d in dev if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == name)
+        return {
+            p["port"]
+            for rule in policy["spec"][direction]
+            for peer in rule.get("from" if direction == "ingress" else "to", [])
+            if peer.get("podSelector") == workspace and peer.get("namespaceSelector")
+            for p in rule["ports"]
+        }
+
+    assert 8080 in ports("agent-proxy", "ingress")
+    assert 4143 in ports("agent-proxy-allow-linkerd", "ingress")
+    assert ports("portal-egress-to-agent-workspaces", "egress") == {8000}
+    assert ports("portal-linkerd-to-agent-workspaces", "egress") == {4143}
+
+
+@requires_helmfile
 def test_the_proxy_client_carries_every_endpoint_of_the_project_as_audience_and_a_manifest_names_it(dev):
     secret = next(
         d for d in dev

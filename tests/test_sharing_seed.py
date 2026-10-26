@@ -35,7 +35,10 @@ def test_the_five_apps_differ_only_in_visibility_and_the_roles_block():
         assert spec.pop("source") == {"path": f"./apps/sharing-{visibility}"}
         assert app["metadata"]["namespace"] == "sharing"
         # The bundle is the Portal image's (portal Dockerfile, apps/sharing-probe).
-        assert app["metadata"]["annotations"] == {"joinedcontext.com/shipped-with": "portal"}
+        annotations = dict(app["metadata"]["annotations"])
+        if visibility == "private":
+            annotations.pop("joinedcontext.com/owner")
+        assert annotations == {"joinedcontext.com/shipped-with": "portal"}
         if visibility == "roles":
             assert spec.pop("access") == [{"role": "viewer", "subjects": [{"group": "sharing-roles-viewer"}]}]
             assert [role["name"] for role in spec.pop("roles")] == ["viewer"]
@@ -43,6 +46,17 @@ def test_the_five_apps_differ_only_in_visibility_and_the_roles_block():
     assert len(shapes) == 1, "the five copies read the same data the same way"
     (need,) = apps["sharing-public"]["spec"]["dataNeeds"]
     assert need["operations"] == ["queryEntity", "retrieveEntity"], "the probe only reads"
+
+
+def test_every_private_app_names_its_owner_by_keycloak_id():
+    """F-BNT3-009: the Portal opens a private App without an owner to the project's administrators
+    alone, so each seeded one names its owner: demo.author's fixed id (T-5712)."""
+    owners = {
+        doc["metadata"]["name"]: doc["metadata"]["annotations"].get("joinedcontext.com/owner")
+        for _, doc in docs()
+        if doc["kind"] == "App" and doc["spec"]["visibility"] == "private"
+    }
+    assert owners == {"sharing-private": PEOPLE["demo.author"]["id"]}
 
 
 def test_the_space_reads_only_the_public_city_bikes():

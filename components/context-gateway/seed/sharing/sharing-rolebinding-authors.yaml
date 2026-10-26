@@ -1,5 +1,5 @@
-# Who may propose an App in sharing (T-4911): its author, which makes demo.author the owner of
-# a seeded App that carries no owner annotation (T-4910). A proposal still needs an approver.
+# Who may propose an App in sharing (T-4911): its author. demo.author owns sharing-private by its
+# owner annotation (T-4910); proposing alone opens no private App. A proposal still needs an approver.
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
 metadata:

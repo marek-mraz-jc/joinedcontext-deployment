@@ -309,6 +309,7 @@ networking.k8s.io/v1/NetworkPolicy dev/pipeline-tokens-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/portal
 networking.k8s.io/v1/NetworkPolicy dev/portal-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-agent-proxy
+networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-agent-workspaces
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-functions
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-gitea
@@ -325,6 +326,7 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-agent-proxy
+networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-agent-workspaces
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-assistant
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-to-functions
 networking.k8s.io/v1/NetworkPolicy dev/portal-to-mqtt-brokers
