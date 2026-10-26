@@ -73,6 +73,9 @@
     "RestrictedTrafficArea": {
       "@id": "sdm:RestrictedTrafficArea"
     },
+    "RoadSegment": {
+      "@id": "sdm:RoadSegment"
+    },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
     },
@@ -427,6 +430,14 @@
       "@id": "sdm:relativeHumidity",
       "@type": "xsd:float"
     },
+    "roadClass": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "sdm:roadClass"
+    },
     "routeCode": {
       "@id": "sdm:routeCode"
     },
@@ -477,6 +488,10 @@
     },
     "streetAddress": {
       "@id": "schema:streetAddress"
+    },
+    "streetCleaningDates": {
+      "@id": "jc:streetCleaningDates",
+      "@type": "xsd:date"
     },
     "surfaceType": {
       "@id": "jc:surfaceType"
