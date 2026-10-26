@@ -92,7 +92,8 @@ CATALOGUE = (
 
 class FakeCkan:
     def __init__(self):
-        self.packages, self.tables, self.organizations, self.calls = {}, {}, set(), []
+        # The api-token Job creates the organization; a harvest only reads it (F-DEP1-002).
+        self.packages, self.tables, self.organizations, self.calls = {}, {}, {"banskabystrica"}, []
         self.views = []
         self.next_id = 0
 
@@ -106,10 +107,6 @@ class FakeCkan:
 
     def organization_show(self, p):
         return {"name": p["id"]} if p["id"] in self.organizations else None
-
-    def organization_create(self, p):
-        self.organizations.add(p["name"])
-        return {"name": p["name"]}
 
     def package_show(self, p):
         return next((v for v in self.packages.values() if p["id"] in (v["id"], v["name"])), None)

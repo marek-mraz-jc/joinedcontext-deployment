@@ -98,7 +98,8 @@ class FakeCkan:
     update and delete. Every request must carry the token."""
 
     def __init__(self):
-        self.orgs, self.packages, self.calls = {}, {}, []
+        # The api-token Job creates the organization; a harvest only reads it (F-DEP1-002).
+        self.orgs, self.packages, self.calls = {"bbsk": {"name": "bbsk"}}, {}, []
         self.tables, self.dropped, self.views = {}, [], []
         fake = self
 
@@ -130,9 +131,6 @@ class FakeCkan:
             if body["id"] in self.orgs:
                 return ok(self.orgs[body["id"]])
             return 404, {"success": False, "error": {"__type": "Not Found Error", "message": "Not found"}}
-        if action == "organization_create":
-            self.orgs[body["name"]] = body
-            return ok(body)
         if action == "package_search":
             org = body["fq"].split(":", 1)[1]
             # CKAN's index drops a deleted dataset (`ckan.search.remove_deleted_packages`).
@@ -373,6 +371,15 @@ def test_html_in_a_description_becomes_text_and_never_markup():
     assert harvest.plain_text(None) == ""
 
 
+def test_a_missing_organization_writes_nothing(ckan, converted):
+    """F-DEP1-002: the harvest user creates no organization; the api-token Job does."""
+    converted(OBCE)
+    ckan.orgs.clear()
+    with pytest.raises(harvest.SourceError, match="api-token Job creates it"):
+        harvest.harvest(harvest.Ckan(ckan.host, "token-1"), dev_source(), items())
+    assert ckan.packages == {} and "organization_create" not in ckan.calls
+
+
 def test_the_harvest_creates_then_leaves_alone_then_withdraws_only_its_own(ckan, converted):
     converted(OBCE, OKRESY, CULTURE, SUPPLIERS)
     client = harvest.Ckan(ckan.host, "token-1")
@@ -382,12 +389,11 @@ def test_the_harvest_creates_then_leaves_alone_then_withdraws_only_its_own(ckan,
 
     counts, kept, _ = harvest.harvest(client, source, items())
     assert counts == {"created": 4, "updated": 0, "unchanged": 0, "withdrawn": 0}
-    assert ckan.orgs["bbsk"]["title"] == "Banskobystrický samosprávny kraj"
     assert set(ckan.active()) == {None, OBCE, OKRESY, CULTURE, SUPPLIERS}
 
     counts, _, _ = harvest.harvest(client, source, items())
     assert counts == {"created": 0, "updated": 0, "unchanged": 4, "withdrawn": 0}
-    assert "organization_create" not in ckan.calls[ckan.calls.index("package_create") + 1:]
+    assert "organization_create" not in ckan.calls
 
     renamed = [dict(i, title="Kultúrne inštitúcie") if i["id"] == CULTURE else i
                for i in items() if i["id"] != SUPPLIERS]
@@ -485,7 +491,7 @@ def test_the_cronjob_runs_the_catalogue_image_with_the_token_by_reference(render
     catalogue = by_name(docs, "Deployment", "ckan")["spec"]["template"]["spec"]["containers"][0]
     assert container["image"] == catalogue["image"] and "@sha256:" in container["image"]
     env = {e["name"]: e for e in container["env"]}
-    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token", "key": "token"}
+    assert env["CKAN_API_TOKEN"]["valueFrom"]["secretKeyRef"] == {"name": "ckan-api-token-harvest", "key": "token"}
     config = json.loads(env["HARVEST_CONFIG"]["value"])
     assert (config["source"], config["organization"], config["kind"]) == ("hub-bbsk", "bbsk", "hub")
     assert "def hub_items(source):" in container["args"][0], "the hub source runs another script"
