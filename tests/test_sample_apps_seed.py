@@ -449,6 +449,12 @@ def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
     demo person in no group of the project gets `403 Access Denied by Policy` on every row, as
     helsinki-alerts did on dev for its own viewer and steward."""
     demo = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
+    # A member is named by Keycloak id (PF-126) or, in older trees, by e-mail.
+    by_id = {person["id"]: name for name, person in demo.items()}
+
+    def name(user: str) -> str:
+        return by_id.get(user, user.split("@")[0])
+
     checked = 0
     for endpoint_file in sorted(VENDORED.glob("*/grants/projects/*/spaces/*/endpoints/*.yaml")):
         endpoint = yaml.safe_load(endpoint_file.read_text())
@@ -457,7 +463,7 @@ def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
         admitted = {endpoint["metadata"]["namespace"], *endpoint["spec"].get("allowedProjects", [])}
         app = yaml.safe_load((endpoint_file.parents[6] / "app.yaml").read_text())
         people = {
-            subject["user"].split("@")[0]
+            name(subject["user"])
             for entry in app["spec"].get("access", [])
             for subject in entry["subjects"]
             if "user" in subject
@@ -465,7 +471,7 @@ def test_every_person_a_sample_app_admits_is_admitted_by_its_endpoint():
         # A role given to a default group reaches its members (AP-118).
         for group_file in (endpoint_file.parents[6] / "grants/users/groups").glob("*.yaml"):
             group = yaml.safe_load(group_file.read_text())
-            people |= {member["user"].split("@")[0] for member in group["spec"].get("members", [])}
+            people |= {name(member["user"]) for member in group["spec"].get("members", [])}
         # The live journeys open every sample as these people (ui/e2e/live/apps-*.spec.ts).
         people |= {"demo.viewer", "demo.steward"}
         for person in sorted(people):
