@@ -47,6 +47,7 @@ spec:
         - derivedFrom
         - computedBy
         - updatedAt
+        - location
       operations: [queryEntity, retrieveEntity]
       representations: [ngsi-ld, ogc-features]
     # The further space (AP-04, T-2933): the district outlines of the region's register, read only

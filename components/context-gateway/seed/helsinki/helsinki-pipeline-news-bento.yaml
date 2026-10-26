@@ -28,7 +28,7 @@ pipeline:
             "description": if $summary == "" { null } else {
               { "type": "LanguageProperty", "languageMap": { "en": $summary } }
             },
-            "url": { "type": "Property", "value": this.link.string() },
+            "url": this.link.or("").string().trim().(u -> if u.re_match("^https?://[^\\s/]+\\.[^\\s]+$") { { "type": "Property", "value": u } } else { null }),
             "datePublished": if $published == null { null } else {
               { "type": "Property", "value": $published }
             },

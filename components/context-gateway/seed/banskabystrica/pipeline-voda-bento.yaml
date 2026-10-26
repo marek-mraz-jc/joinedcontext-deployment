@@ -1,7 +1,7 @@
 # The mapping of the voda pipeline (PL-03): one KeyPerformanceIndicator per year from the
 # drinking-water cube of ŠÚ SR, for the city LAU code SK0321508438. The cube is in thousands of
-# cubic metres of INVOICED water, which is what `unitText` keeps: a UN/CEFACT code loses both the
-# scale factor and the fact that it is water billed rather than water used.
+# cubic metres of INVOICED water: the value is scaled to m³ to match its unitCode MTQ, and
+# `unitText` keeps that it is water billed rather than water used.
 
 pipeline:
   processors:
@@ -13,7 +13,10 @@ pipeline:
         let indicator_dim = "vh5003rr_ukaz"
         let key_dims = []
         let unit_code = "MTQ"
-        let unit_text = "v tis. m3 fakturovanej vody"
+        let unit_text = "fakturovaná pitná voda, m3"
+        # A cell times this is in the unit unitCode names: 1000 for a cube stated in thousands
+        # ("v tis. m3"), else 1 (F-BNT1-015).
+        let scale = 1000
         let source_url = "https://data.statistics.sk/api/v2/dataset/vh5003rr/SK0321508438/*/U03084?lang=sk&type=json"
         let domain = "banskabystrica.sk"
         # JSON-stat 2.0, decoded by the index and never by the order. `value` is flat and
@@ -45,7 +48,7 @@ pipeline:
           # in silence (T-2445). A cube that states no update time gets no `observedAt` at all.
           # A unit with no UN/CEFACT code (a currency) and a cube with no update time leave their
           # term out rather than write a null the broker refuses.
-          "kpiValue": { "type": "Property", "value": c.cell, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
+          "kpiValue": { "type": "Property", "value": c.cell * $scale, "unitCode": $unit_code, "observedAt": $updated }.filter(entry -> entry.value != null),
           "unitText": { "type": "Property", "value": $unit_text },
           "source": { "type": "Property", "value": $source_url },
           "dateObserved": if $updated == null { null } else { { "type": "Property", "value": $updated } }

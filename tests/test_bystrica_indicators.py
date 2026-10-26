@@ -292,10 +292,10 @@ def test_the_water_indicator_records_every_input_of_its_division(city):
     water = city[0]
     assert water["name"]["value"] == "spotreba-vody-obyvatel-mesto"
     assert water["currentValue"]["unitCode"] == "LTR"
-    # 4 053 thousand m3 over 72 123 people over 365 days is 154 litres a person a day.
+    # 4 053 000 m3 over 72 123 people over 365 days is 154 litres a person a day.
     assert water["currentValue"]["value"] == 154
     formula = water["calculationFormula"]["value"]
-    for part in ("vh5003rr/U03084", "4053", "72123", "365"):
+    for part in ("vh5003rr/U03084", "4053000 m3", "72123", "365"):
         assert part in formula, formula
 
 

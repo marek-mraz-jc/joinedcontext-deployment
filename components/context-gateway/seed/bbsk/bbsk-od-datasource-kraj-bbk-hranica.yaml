@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kraj3_WebMercator/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kraj3_WebMercator/FeatureServer/0/query?where=1%3D1&outFields=DOW,FACC,IDN2,NM2,VYMERA,NUTS1,NUTS1_CODE,NUTS2,NUTS2_CODE,NUTS3,NUTS3_CODE&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=OBJECTID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

@@ -15,6 +15,18 @@ spec:
   information:
     - entities:
         - type: KeyPerformanceIndicator
-      propertyNames: [name, currentValue, calculationPeriod, calculationFormula, updatedAt]
-      relationshipNames: [name, currentValue, calculationPeriod, calculationFormula, updatedAt]
+      propertyNames:
+        - name
+        - currentValue
+        - calculationPeriod
+        - calculationFormula
+        - updatedAt
+        - location
+      relationshipNames:
+        - name
+        - currentValue
+        - calculationPeriod
+        - calculationFormula
+        - updatedAt
+        - location
   operations: [queryEntity, retrieveEntity]

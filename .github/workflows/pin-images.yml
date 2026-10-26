@@ -21,7 +21,7 @@ jobs:
       - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
-      - run: pip install --quiet pyyaml
+      - run: pip install --quiet --require-hashes --no-deps -r .github/requirements-pyyaml.txt
       - name: pin, render, check the docs, commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +54,18 @@ jobs:
               continue
             fi
             git commit -q -m "$message" -- components
+            base=$(git rev-parse HEAD^)
             git pull -q --rebase origin main
+            # main moved while this ran: the pin is rendered and its docs checked again on the new
+            # base, or it waits for the next hour's run (F-DEP1-016).
+            if [ "$(git rev-parse HEAD^)" != "$base" ]; then
+              just _dev-assemble
+              if ! scripts/render.sh dev /tmp/rendered-dev.yaml >/dev/null || ! scripts/check-docs-pin.sh; then
+                echo "::warning::$message: main moved and the pin no longer renders or holds its docs; the next run retries"
+                git reset -q --hard origin/main
+                continue
+              fi
+            fi
             git push -q origin HEAD:main
           done
           if [ -n "$skipped" ]; then

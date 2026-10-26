@@ -170,7 +170,6 @@ den		Den	Day	Tag
 denVTyzdni		Den v týdnu	Day of week	Wochentag
 denneTabory		Denní tábory	Day camps	Tagescamps
 descriptio	Popis	Popis	Description	Beschreibung
-description		Název VZN	Regulation title	Titel der Verordnung
 designatio	Označenie	Označení	Designation	Bezeichnung
 dietaDoZacatiaPovinnejSko1	Dieťa do začatia povinnej školskej dochádzky (%)	Dítě do zahájení povinné školní docházky (%)	Child before compulsory schooling (%)	Kind vor der Schulpflicht (%)
 dietaDoZacatiaPovinnejSkols	Dieťa do začatia povinnej školskej dochádzky	Dítě do zahájení povinné školní docházky	Child before compulsory schooling	Kind vor der Schulpflicht
@@ -456,7 +455,6 @@ lastModifi	Posledná zmena	Poslední změna	Last modified	Zuletzt geändert
 lat	Zemepisná šírka	Zeměpisná šířka	Latitude	Breitengrad
 latitude	Zemepisná šírka	Zeměpisná šířka	Latitude	Breitengrad
 layer	Vrstva	Vrstva	Layer	Ebene
-legalName		Název	Name	Name
 legislativnyStav		Legislativní stav	Legal status	Rechtlicher Status
 lehotaNaPredkladanie		Lhůta pro podání	Submission deadline	Einreichungsfrist
 licenseKey	Licenčný kľúč	Licenční klíč	Licence key	Lizenzschlüssel
@@ -512,7 +510,6 @@ nadradenaSaSZEDUID	EDUID nadradenej školy	EDUID nadřazené školy	Parent body 
 nadradenaSaSZKODSKO	Kód SKO nadradenej školy	Kód SKO nadřazené školy	Parent body SKO code	SKO-Code der übergeordneten Einrichtung
 najblizsiKM	Najbližší km	Nejbližší km	Nearest km	Nächster km
 najvyhodnejsiUchadzac		Nejvýhodnější uchazeč	Winning bidder	Bester Bieter
-name	Miesto	Místo	Place	Ort
 nameLangua	Jazyk názvu	Jazyk názvu	Name language	Sprache des Namens
 narodeniOsoba	Narodení (osoby)	Narození (osoby)	Births (persons)	Geburten (Personen)
 narodenych		Narozených	Births	Geburten

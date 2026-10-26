@@ -6,6 +6,8 @@ be reachable by exactly three pods and by nothing outside the cluster (PF-32, Ar
 §3).
 """
 
+import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -64,6 +66,11 @@ def test_the_file_cache_expires(tmp_path):
     script = script_of(docs)
     assert "put-bucket-lifecycle-configuration" in script
     assert '"Prefix":"filecache/"' in script and '"Days":1' in script
+    # Versioned by the object lock: an expiry leaves the old version and its marker behind unless
+    # the rule also expires those (F-DEP1-014).
+    rules = json.loads(re.search(r"--lifecycle-configuration '([^']+)'", script).group(1))["Rules"]
+    assert rules[0]["NoncurrentVersionExpiration"] == {"NoncurrentDays": 1}
+    assert {"ExpiredObjectDeleteMarker": True} in [r["Expiration"] for r in rules]
 
 
 @requires_helm
