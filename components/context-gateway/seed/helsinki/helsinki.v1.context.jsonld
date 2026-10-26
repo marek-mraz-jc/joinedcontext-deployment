@@ -49,6 +49,9 @@
     "KpiPeriod": {
       "@id": "jc:KpiPeriod"
     },
+    "NoiseZone": {
+      "@id": "jc:NoiseZone"
+    },
     "OffStreetParking": {
       "@id": "sdm:OffStreetParking"
     },
@@ -63,6 +66,9 @@
     },
     "PublicTransportRoute": {
       "@id": "sdm:PublicTransportRoute"
+    },
+    "Tree": {
+      "@id": "jc:Tree"
     },
     "Vehicle": {
       "@id": "sdm:Vehicle"
@@ -97,6 +103,14 @@
     },
     "area": {
       "@id": "sdm:area"
+    },
+    "assessmentPeriod": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:assessmentPeriod"
     },
     "availableBikeNumber": {
       "@id": "sdm:availableBikeNumber",
@@ -270,6 +284,22 @@
       "@type": "@id"
     },
     "ngsi-ld": "https://uri.etsi.org/ngsi-ld/",
+    "noiseLevelHigh": {
+      "@id": "jc:noiseLevelHigh",
+      "@type": "xsd:float"
+    },
+    "noiseLevelLow": {
+      "@id": "jc:noiseLevelLow",
+      "@type": "xsd:float"
+    },
+    "noiseSource": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:noiseSource"
+    },
     "observedAt": {
       "@id": "ngsi-ld:observedAt",
       "@type": "xsd:dateTime"
@@ -326,6 +356,10 @@
     },
     "phone": {
       "@id": "sdm:phone"
+    },
+    "plantingYear": {
+      "@id": "jc:plantingYear",
+      "@type": "xsd:integer"
     },
     "pm10": {
       "@id": "sdm:pm10",
@@ -428,6 +462,9 @@
       "@id": "sdm:source",
       "@type": "xsd:anyURI"
     },
+    "species": {
+      "@id": "jc:species"
+    },
     "speed": {
       "@id": "sdm:speed",
       "@type": "xsd:float"
@@ -491,6 +528,25 @@
     "transportationType": {
       "@id": "sdm:transportationType",
       "@type": "xsd:integer"
+    },
+    "treeSetting": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:treeSetting"
+    },
+    "treeSite": {
+      "@id": "jc:treeSite"
+    },
+    "trunkDiameterClass": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:trunkDiameterClass"
     },
     "type": "@type",
     "unknownReference": {

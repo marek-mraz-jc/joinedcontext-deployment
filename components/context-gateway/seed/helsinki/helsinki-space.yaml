@@ -29,6 +29,10 @@ spec:
       history: 'off'
     - entityType: TrafficSignalJunction
       history: 'off'
+    - entityType: NoiseZone
+      history: 'off'
+    - entityType: Tree
+      history: 'off'
     - entityType: AirQualityObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,
