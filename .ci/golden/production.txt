@@ -1,12 +1,14 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
@@ -243,6 +245,7 @@ rbac.authorization.k8s.io/v1/ClusterRoleBinding -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/Role jc-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/Role jc/edge-file-composer
 rbac.authorization.k8s.io/v1/Role jc/gitea-bootstrap
+rbac.authorization.k8s.io/v1/Role jc/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/Role jc/portal
 rbac.authorization.k8s.io/v1/Role jc/portal-build-pods
 rbac.authorization.k8s.io/v1/Role jc/portal-mqtt-brokers
@@ -253,6 +256,7 @@ rbac.authorization.k8s.io/v1/Role jc/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding jc-app-tests/app-test-runner
 rbac.authorization.k8s.io/v1/RoleBinding jc/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding jc/gitea-bootstrap
+rbac.authorization.k8s.io/v1/RoleBinding jc/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/RoleBinding jc/portal
 rbac.authorization.k8s.io/v1/RoleBinding jc/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding jc/portal-mqtt-brokers

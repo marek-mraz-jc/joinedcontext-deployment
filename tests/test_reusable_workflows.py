@@ -340,6 +340,65 @@ def test_a_workload_fetching_chosen_addresses_is_refused_a_private_range(conftes
     assert policy_check(conftest_binary, FIXTURES / "egress-closed.yaml").returncode == 0
 
 
+def gate_of(conftest_binary: str, tmp_path: Path, *docs: dict) -> subprocess.CompletedProcess:
+    manifest = tmp_path / "manifest.yaml"
+    manifest.write_text(yaml.safe_dump_all(list(docs)))
+    return policy_check(conftest_binary, manifest)
+
+
+def runner_egress(*rules: dict) -> dict:
+    return {"apiVersion": "networking.k8s.io/v1", "kind": "NetworkPolicy",
+            "metadata": {"name": "pipeline-runner"},
+            "spec": {"podSelector": {"matchLabels": {"app.kubernetes.io/name": "pipeline-runner-runner"}},
+                     "policyTypes": ["Egress"], "egress": list(rules)}}
+
+
+def block(cidr: str, *excepted: str) -> dict:
+    return {"to": [{"ipBlock": {"cidr": cidr, "except": list(excepted)}}], "ports": [{"port": 443}]}
+
+
+V4_PRIVATE = ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8")
+
+
+def test_an_egress_rule_without_peers_is_refused_a_chosen_address_workload(conftest_binary, tmp_path):
+    """T-5702 (F-DEP2-002): a rule with no `to` reaches every address; it used to pass because
+    the range check iterated over no peers."""
+    result = gate_of(conftest_binary, tmp_path, runner_egress({"ports": [{"port": 443}]}))
+    assert result.returncode == 1 and "without `to`" in result.stdout, result.stdout
+
+
+def test_carrier_grade_nat_and_ipv6_internal_ranges_count_as_private(conftest_binary, tmp_path):
+    """T-5702 (F-DEP2-010): 100.64.0.0/10 must be excepted from an IPv4 block, and an IPv6 block
+    must except loopback, unique-local and link-local, which ADR-N-040 treats as private."""
+    result = gate_of(conftest_binary, tmp_path, runner_egress(block("0.0.0.0/0", *V4_PRIVATE)))
+    assert result.returncode == 1 and "100.64.0.0/10" in result.stdout, result.stdout
+    result = gate_of(conftest_binary, tmp_path, runner_egress(block("::/0", "::1/128", "fe80::/10")))
+    assert result.returncode == 1 and "fc00::/7" in result.stdout, result.stdout
+    assert "10.0.0.0/8" not in result.stdout, "an IPv6 block is held to IPv6 ranges"
+    closed = runner_egress(block("0.0.0.0/0", *V4_PRIVATE, "100.64.0.0/10"),
+                           block("::/0", "::1/128", "fc00::/7", "fe80::/10"))
+    assert gate_of(conftest_binary, tmp_path, closed).returncode == 0
+
+
+def broker_callers(namespace: str, *refs: tuple) -> dict:
+    return {"apiVersion": "policy.linkerd.io/v1alpha1", "kind": "MeshTLSAuthentication",
+            "metadata": {"name": "context-broker-api-clients", "namespace": namespace},
+            "spec": {"identityRefs": [{"kind": "ServiceAccount", "name": name, "namespace": ns}
+                                      for name, ns in refs]}}
+
+
+def test_a_broker_caller_counts_only_in_its_components_namespace(conftest_binary, tmp_path):
+    """T-5702 (F-DEP2-007): a ServiceAccount named portal in an App namespace is not the Portal,
+    and the broker believes the subject any admitted caller sends."""
+    split = broker_callers("dev-context-broker", ("context-broker", "dev-context-broker"),
+                           ("context-gateway", "dev-context-gateway"), ("portal", "dev-portal"))
+    single = broker_callers("jc", ("context-broker", "jc"), ("context-gateway", "jc"), ("portal", "jc"))
+    assert gate_of(conftest_binary, tmp_path, split, single).returncode == 0
+    for ns in ("dev-x-apps", "x-apps", "dev-context-gateway"):
+        result = gate_of(conftest_binary, tmp_path, broker_callers("dev-context-broker", ("portal", ns)))
+        assert result.returncode == 1 and f"not {ns}" in result.stdout, (ns, result.stdout)
+
+
 def test_every_pull_request_runs_kyverno_apply_on_the_rendered_manifests():
     """OPS-40: `kyverno apply` against rendered Helmfile manifests runs before a pull request is
     admitted, in the lane that runs on every pull request, not in a dispatch-only one."""

@@ -1,6 +1,7 @@
 """T-0232: the dev-cluster recipes must never touch a foreign cluster."""
 
 import os
+import re
 import shutil
 import subprocess
 import textwrap
@@ -99,3 +100,16 @@ def test_every_place_that_meshes_the_ingress_marks_443_opaque(source):
         "resolves the public issuer host onto that controller, so its own HTTPS reaches a "
         "meshed destination on 443 and Linkerd's protocol detection resets it"
     )
+
+
+def test_dev_destroy_deletes_only_the_platform_namespaces():
+    """T-5702 (F-DEP2-013): the namespace pattern lacked an end anchor on `dev`, so `devops` or
+    any namespace starting with "dev" lost its PVCs and itself."""
+    recipe = (PROJECT_ROOT / "justfile").read_text().split("\ndev-destroy:\n", 1)[1].split("\n\n", 1)[0]
+    patterns = set(re.findall(r"grep -E '([^']+)'", recipe))
+    assert len(patterns) == 1, patterns
+    pattern = re.compile(patterns.pop())
+    for ns in ("dev", "dev-portal", "dev-x-apps", "jc-operators"):
+        assert pattern.search(ns), ns
+    for ns in ("devops", "developer", "jc-operators-old", "kube-system", "pv-dev"):
+        assert not pattern.search(ns), ns

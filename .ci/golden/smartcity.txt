@@ -1,10 +1,12 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-namespaces
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration
@@ -401,6 +403,7 @@ rbac.authorization.k8s.io/v1/Role smartcity-pipeline-identities/portal-pipeline-
 rbac.authorization.k8s.io/v1/Role smartcity/ckan-api-token
 rbac.authorization.k8s.io/v1/Role smartcity/edge-file-composer
 rbac.authorization.k8s.io/v1/Role smartcity/gitea-bootstrap
+rbac.authorization.k8s.io/v1/Role smartcity/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/Role smartcity/portal
 rbac.authorization.k8s.io/v1/Role smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/Role smartcity/portal-mqtt-brokers
@@ -418,6 +421,7 @@ rbac.authorization.k8s.io/v1/RoleBinding smartcity-pipeline-identities/portal-pi
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/ckan-api-token
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/edge-file-composer
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/gitea-bootstrap
+rbac.authorization.k8s.io/v1/RoleBinding smartcity/jc-drift-reader-secrets
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-build-pods
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-mqtt-brokers

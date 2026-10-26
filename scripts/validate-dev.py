@@ -440,8 +440,14 @@ def run_checks(skip: set[str], env: str = "dev") -> list[dict]:
 def helmfile_diff(env: str) -> tuple[str, int]:
     # --three-way-merge compares with the live objects, not only with Helm's stored manifest:
     # without it a `kubectl edit` on the cluster never shows up as drift (T-4956).
+    # kube-system is left out (T-5702): the drift identity reads Secrets only in the platform's
+    # release namespaces, and kube-system's hold the cluster's own (node passwords, bootstrap
+    # tokens). Its one release, node-storage-local-path, is the local-path provisioner's config.
+    # cert-manager likewise: it holds the ACME account keys and the DNS-01 provider token, and its
+    # one release, apisix-dns01, is installed: false on dev and smartcity, which helmfile diff
+    # still looks up (helm list reads that namespace's release Secrets) to report a deletion.
     run = subprocess.run(
-        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", env, "diff",
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", env, "--selector", "namespace!=kube-system,namespace!=cert-manager", "diff",
          "--detailed-exitcode", "--suppress-secrets", "--context", "0",
          "--diff-args", "--three-way-merge"],
         cwd=ROOT, capture_output=True, text=True, timeout=900, check=False,
