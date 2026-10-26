@@ -23,7 +23,11 @@ cache_resources:
       compaction_interval: 1h
 
 rate_limit_resources:
-  # Every stream's writes to the gateway share this budget.
+  # The gateway write budget of a stream rendered by a Portal before T-5803. A Portal since then
+  # names its project's own `<project>__pipeline_egress` (500 a second) and declares it over the
+  # runner's API before it sends the project a stream (joinedcontext-portal
+  # src/reconciler/streams/identity.rs `declare_egress`), so one project at its cap leaves every
+  # other project's rate untouched (F-BNT3-002). Remove this entry once the Portal pin carries it.
   - label: pipeline_egress
     local:
       count: 500
