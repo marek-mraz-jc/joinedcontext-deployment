@@ -267,7 +267,8 @@ def test_one_pipeline_writes_the_indicators_and_one_public_dataset_reads_each_th
         assert spec["catalog"]["pipelineRef"] == {"kind": "Pipeline", "name": "statistics"}
     space = yaml.safe_load((CITY / "barcelona-space.yaml").read_text())["spec"]
     [kpi] = [r for r in space["retention"] if r["entityType"] == "KeyPerformanceIndicator"]
-    assert kpi == {"entityType": "KeyPerformanceIndicator", "history": "P3650D", "record": "onChange"}
+    assert kpi == {"entityType": "KeyPerformanceIndicator", "history": "P3650D", "record": "onChange",
+                   "heartbeat": "P30D"}
 
 
 def test_each_table_of_the_mapping_is_listed_in_a_theme_dataset_s_sources():
