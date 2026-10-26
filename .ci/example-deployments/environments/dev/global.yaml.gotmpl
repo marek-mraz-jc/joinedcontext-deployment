@@ -148,6 +148,10 @@ global:
         - en
 
   profile: development
+  # The demo approvers (demo.steward ...) sign in with e-mail and password alone (T-5776, owner
+  # 2026-10-26): `portal-approver` loses the `mfa-required` composite and the demo persons get no
+  # seeded one-time-code credential. platform-admin, smartcity and production keep T-5120.
+  approverMfa: false
   # security.txt (T-1721): the owner's decision of 2026-09-24, the owner's own address and a
   # year of validity; the render test fails a month before it expires.
   securityTxt:

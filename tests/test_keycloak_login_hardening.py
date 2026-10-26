@@ -8,6 +8,7 @@ documented ones. scripts/keycloak-login-journey.py walks the same rules in a bro
 
 import base64
 import json
+import subprocess
 import uuid
 
 import pytest
@@ -49,12 +50,37 @@ def role_condition(realm, alias):
     return next(c for c in realm["authenticatorConfig"] if c["alias"] == alias)["config"]
 
 
-def test_approvers_and_admins_carry_mfa_required(realm):
+def mfa_roles(env):
+    """The roles carrying `mfa-required`: dev's approvers sign in without one (T-5776, owner 2026-10-26)."""
+    return {"platform-admin"} if env == "dev" else MFA_ROLES
+
+
+def test_approvers_and_admins_carry_mfa_required(env_docs, realm):
+    env, _ = env_docs
     roles = {r["name"]: r for r in realm["roles"]["realm"]}
     assert "mfa-required" in roles
     for name in MFA_ROLES:
-        assert roles[name]["composite"] is True, name
-        assert roles[name]["composites"]["realm"] == ["mfa-required"], name
+        if name in mfa_roles(env):
+            assert roles[name]["composite"] is True, (env, name)
+            assert roles[name]["composites"]["realm"] == ["mfa-required"], (env, name)
+        else:
+            assert roles[name]["composite"] is False, (env, name)
+            assert "mfa-required" not in json.dumps(roles[name].get("composites")), (env, name)
+
+
+def test_only_dev_lets_approvers_sign_in_without_a_one_time_code(env_docs, realm):
+    """T-5776: dev drops the approvers' second factor; smartcity and production keep T-5120."""
+    env, _ = env_docs
+    approver = next(r for r in realm["roles"]["realm"] if r["name"] == "portal-approver")
+    assert ("mfa-required" in json.dumps(approver.get("composites"))) is (env != "dev"), env
+
+
+def test_the_production_guard_refuses_approvers_without_mfa(own_tree):
+    env = own_tree / "deployment/environments/smartcity/global.yaml.gotmpl"
+    env.write_text(env.read_text().replace("  serviceMesh:\n", "  approverMfa: false\n  serviceMesh:\n", 1))
+    result = subprocess.run([str(own_tree / "scripts/render.sh"), "smartcity", str(own_tree / "out.yaml")],
+                            cwd=str(own_tree), capture_output=True, text=True, check=False)
+    assert result.returncode != 0 and "global.approverMfa is false" in result.stdout + result.stderr
 
 
 def test_the_browser_flow_demands_totp_of_mfa_required_and_offers_2fa_to_the_rest(realm):
@@ -120,7 +146,7 @@ def test_every_demo_person_with_an_mfa_role_has_a_totp_seed_from_its_secret(env_
         name = user["username"].split("@")[0]
         secret = "keycloak-user-" + name.replace(".", "-")
         otp = [c for c in user.get("credentials", []) if c["type"] == "otp"]
-        if MFA_ROLES & set(user.get("realmRoles") or []):
+        if mfa_roles(env) & set(user.get("realmRoles") or []):
             assert len(otp) == 1, (env, name)
             var = "USER_TOTP_" + name.upper().replace(".", "_")
             # The seed reaches the import by variable, never as a literal in Git or the render.

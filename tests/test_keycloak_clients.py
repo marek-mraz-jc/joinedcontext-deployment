@@ -179,8 +179,9 @@ def test_development_profile_seeds_the_demo_users(rendered):
         # Security line of T-0248: the password is a per-cluster Secret substituted at import
         # time, never a literal in the rendered realm.
         assert credential["value"].startswith("$(USER_PASSWORD_") and credential["temporary"] is False
-        # The approvers sign in with TOTP (T-5120): one seeded credential, by variable as well.
-        assert [c["type"] for c in otp] == (["otp"] if user["realmRoles"] else [])
+        # Dev's approvers sign in with the password alone (T-5776, owner 2026-10-26): no seeded
+        # one-time code; smartcity and production keep T-5120 (test_keycloak_login_hardening.py).
+        assert otp == []
 
 
 def test_demo_passwords_are_generated_per_cluster(rendered):
@@ -200,12 +201,8 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
     }
     for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
-        # The approvers' TOTP seed sits beside the password (T-5120).
-        approver = secret["metadata"]["name"] in (
-            "keycloak-user-demo-steward", "keycloak-user-demo-approver", "keycloak-user-demo-zilina",
-            "keycloak-user-demo-barcelona", "keycloak-user-demo-bratislava",
-        )
-        assert sorted(secret["data"]) == (["password", "totp"] if approver else ["password"])
+        # No TOTP seed on dev (T-5776): its approvers sign in without a one-time code.
+        assert sorted(secret["data"]) == ["password"]
 
 
 def test_production_seeds_no_human_users(rendered):
