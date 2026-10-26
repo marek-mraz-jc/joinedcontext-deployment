@@ -173,5 +173,10 @@ context-broker:
     # 0023 (breaking) turns attr_rows into a LIST(short) parent over attr_rows_long and the UNLOGGED attr_rows_short: on dev
     # attr_rows holds one child of 16 kB (2026-10-23T15:18Z), so it runs in moments; Recreate (2a531a7) stops the old
     # release first. No new runtime key. Rollback: dev-47 plus a restore (0023 is breaking). Signed by ship.yml on dev at cc87f2e.
-    tag: 'dev-49'
-    digest: 'sha256:fe24b892c525d1db66992e8d6f630396b5cff660db531a89a9a761cc5628c2f9'
+    # Antares dev 55aa715 (dev-67, over cc87f2e: T-5501 views digest, T-5303 entity_values, T-4934 attribute catalogue,
+    # 20688b81 views access/attributes (T-5750), T-5700 guard bypasses, T-5661 T-5502 T-5726; same FEATURES). Migrations
+    # 0024 (entity_values + backfill: ~18M rows from 1.41M entities on dev, writes wait until it commits), 0025
+    # (entity_attrs), 0026 (views digest generated column), all rollback = "compatible". New runtime keys keep their
+    # defaults (none set here). Rollback: dev-49. Signed by ship.yml on dev at 55aa715 (run of 2026-10-26T03:20Z).
+    tag: 'dev-67'
+    digest: 'sha256:7f1025fc4e48378a9a9e2a5f27002e4435fd6d9291523a6afccd70fad7cf5254'
