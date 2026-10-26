@@ -48,3 +48,22 @@ def test_report_p95_and_suggestion_against_request():
 def test_report_floor_and_missing_request():
     [row] = ms.report([("t", "ns", "tiny-0", "c", "3")], {})
     assert row[-2] is None and row[-1] == 32
+
+
+def test_by_age_reads_rss_at_each_age_and_skips_pods_without_a_start():
+    mib = 2**20
+    rss = {"data": {"result": [
+        {"metric": {"pod": "portal-b", "image": "ghcr.io/x@sha256:aad2d85afa0805cbd145"},
+         "values": [[1000 + 900, str(100 * mib)], [1000 + 3600, str(200 * mib)], [1000 + 7300, str(250 * mib)]]},
+        {"metric": {"pod": "portal-a", "image": "ghcr.io/x@sha256:dfbbb3df4532"},
+         "values": [[500 + 18000, str(417 * mib)]]},
+        {"metric": {"pod": "portal-gone"}, "values": [[1, str(mib)]]},
+    ]}}
+    starts = {"data": {"result": [{"metric": {"pod": "portal-b"}, "value": [0, "1000"]},
+                                  {"metric": {"pod": "portal-a"}, "value": [0, "500"]}]}}
+    rows = ms.by_age(rss, starts, ages=(0.25, 1, 2, 5))
+    assert [r[0] for r in rows] == ["portal-a", "portal-b"]
+    assert rows[0][3] == [None, None, None, 417]
+    assert rows[1][1] == "aad2d85afa08"
+    assert rows[1][3] == [100, 200, 250, None]
+    assert rows[1][4] == 250
