@@ -943,6 +943,36 @@ slots:
           de: Denkmalart
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  signalKind:
+    slot_uri: jc:signalKind
+    description: >-
+      What the junction's signals are: full traffic lights, or warning lights that only flash to
+      warn of a crossing, a tram or a fire station exit.
+    range: TrafficSignalKind
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh signalizácie
+          cs: Druh signalizace
+          en: Signal kind
+          de: Signalart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  junctionNumber:
+    slot_uri: jc:junctionNumber
+    description: The city's own number of the signal installation, as its controller cabinet shows it.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Číslo križovatky
+          cs: Číslo křižovatky
+          en: Junction number
+          de: Knotennummer
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   stewardNote:
     slot_uri: jc:stewardNote
     description: >-
@@ -2545,7 +2575,8 @@ classes:
       One street parking area of the city with its outline: a parking area of the city's
       parking guide with the cars it holds when the city has estimated it (category `public`), a
       parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its
-      code and rules.
+      code and rules; or one parking place of the city's street parking map with its rules as the
+      Smart Data Model's categories, or a tourist coach stop or parking place (`allowedVehicleType` bus).
     is_a: Entity
     annotations:
       upstream_source: https://github.com/smart-data-models/dataModel.Parking
@@ -2556,8 +2587,21 @@ classes:
           cs: Parkování na ulici
           en: On-street parking
           de: Parken an der Straße
-    slots: [name, category, totalSpotNumber, zoneCode, description, url, dataProvider, source]
+    slots:
+      - name
+      - category
+      - allowedVehicleType
+      - totalSpotNumber
+      - zoneCode
+      - description
+      - url
+      - dataProvider
+      - source
     slot_usage:
+      allowedVehicleType:
+        description: >-
+          What may park when the city's layer names it: bus for a tourist coach stop or parking
+          place, motorcycle or bicycle, other for e-scooters. Absent means any vehicle the signs allow.
       category:
         description: Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.
         range: StreetParkingCategory
@@ -2659,6 +2703,36 @@ classes:
           en: Heritage area
           de: Kulturerbe
     slots: [name, heritageCategory, description, dateModified, dataProvider, source]
+  TrafficSignalJunction:
+    class_uri: jc:TrafficSignalJunction
+    description: >-
+      One junction or crossing of the city with traffic lights or warning lights, where it is, the
+      streets that meet there, its installation number and whether it is in service or still being
+      built, as the Smart Data Model extension TrafficSignalJunction (PointOfInterest base).
+    is_a: Entity
+    annotations:
+      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/TrafficSignalJunction
+      label:
+        tag: label
+        value:
+          sk: Svetelná križovatka
+          cs: Světelná křižovatka
+          en: Traffic signal junction
+          de: Ampelkreuzung
+    slots:
+      - name
+      - signalKind
+      - junctionNumber
+      - status
+      - description
+      - dateModified
+      - dataProvider
+      - source
+    slot_usage:
+      status:
+        description: inService, or underConstruction while the city still builds the signals (the layer's Rakenteilla).
+        range: TrafficSignalStatus
+        required: true
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -3000,10 +3074,19 @@ enums:
     description: The OnStreetParking `category` values the city's layers use, a subset of the Smart Data Model's enum.
     permissible_values:
       public:
-        description: A parking area of the parking guide, open to anyone.
+        description: Open to anyone with no fee or time rule the layer states, such as a parking area of the parking guide.
       feeCharged: { description: A parking fee zone; parking costs by the hour. }
       forResidents:
         description: A resident parking zone; residents and businesses of the zone park on its permit.
+      free: { description: Parking costs nothing. }
+      shortTerm:
+        description: Parking is limited in time, by a single fee or a parking disc.
+      onlyWithPermit:
+        description: Only a permit holder parks, such as a car-sharing pick-up place.
+      forDisabled: { description: A place for a person with a disabled parking permit. }
+      forElectricalCharging: { description: A place for an electric car while it charges. }
+      forLoadUnload: { description: A loading place. }
+      taxiStop: { description: A taxi stand. }
   PermitKind:
     permissible_values:
       excavation: { description: Digging on a street or a park. }
@@ -3225,3 +3308,33 @@ enums:
           label:
             tag: label
             value: { fi: Piha, en: Courtyard }
+  TrafficSignalKind:
+    description: What signals a TrafficSignalJunction has.
+    permissible_values:
+      trafficLights:
+        description: Traffic lights that control the junction (liikennevalot).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Liikennevalot, en: Traffic lights }
+      warningLights:
+        description: Warning lights that flash before a crossing, a tram line or a fire station exit (varoitusvalot).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Varoitusvalot, en: Warning lights }
+  TrafficSignalStatus:
+    description: Whether a TrafficSignalJunction's signals work yet.
+    permissible_values:
+      inService:
+        description: The signals are in service.
+        annotations:
+          label:
+            tag: label
+            value: { fi: Käytössä, en: In service }
+      underConstruction:
+        description: The city is still building the signals (rakenteilla).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Rakenteilla, en: Under construction }

@@ -233,7 +233,7 @@ Specialises `Entity`.
 
 ### OnStreetParking
 
-One street parking area of the city with its outline: a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.
+One street parking area of the city with its outline: a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules; or one parking place of the city's street parking map with its rules as the Smart Data Model's categories, or a tourist coach stop or parking place (`allowedVehicleType` bus).
 
 IRI: `sdm:OnStreetParking`
 
@@ -243,6 +243,7 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `category` | Property | [`StreetParkingCategory`](#streetparkingcategory) (list) | yes |  | `sdm:category` | Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words. |
+| `allowedVehicleType` | Property | `string` (list) |  |  | `sdm:allowedVehicleType` | What may park when the city's layer names it: bus for a tourist coach stop or parking place, motorcycle or bicycle, other for e-scooters. Absent means any vehicle the signs allow. |
 | `totalSpotNumber` | Property | `integer` |  |  | `sdm:totalSpotNumber` | The number of vehicles the site holds, as the publisher states or estimates it; for a park and ride site, of its own kind (car or bicycle). |
 | `zoneCode` | Property | `string` |  |  | `jc:zoneCode` | The zone's own code, a fee zone number or a resident permit letter, as the signs show it. |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
@@ -337,6 +338,29 @@ Specialises `Entity`.
 |---|---|---|---|---|---|---|
 | `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
 | `heritageCategory` | Property | [`HeritageCategory`](#heritagecategory) | yes |  | `jc:heritageCategory` | What kind of protected or valued cultural landscape the area is: a strongpoint of the First World War land fortifications, or one of the kinds of the city's landscape culture map. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record, or the station last reported. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### TrafficSignalJunction
+
+One junction or crossing of the city with traffic lights or warning lights, where it is, the streets that meet there, its installation number and whether it is in service or still being built, as the Smart Data Model extension TrafficSignalJunction (PointOfInterest base).
+
+IRI: `jc:TrafficSignalJunction`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `signalKind` | Property | [`TrafficSignalKind`](#trafficsignalkind) | yes |  | `jc:signalKind` | What the junction's signals are: full traffic lights, or warning lights that only flash to warn of a crossing, a tram or a fire station exit. |
+| `junctionNumber` | Property | `string` |  |  | `jc:junctionNumber` | The city's own number of the signal installation, as its controller cabinet shows it. |
+| `status` | Property | [`TrafficSignalStatus`](#trafficsignalstatus) | yes |  | `sdm:status` | inService, or underConstruction while the city still builds the signals (the layer's Rakenteilla). |
 | `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the publisher last changed the record, or the station last reported. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
@@ -664,9 +688,16 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 
 | Value | Meaning |
 |---|---|
-| `public` | A parking area of the parking guide, open to anyone. |
+| `public` | Open to anyone with no fee or time rule the layer states, such as a parking area of the parking guide. |
 | `feeCharged` | A parking fee zone; parking costs by the hour. |
 | `forResidents` | A resident parking zone; residents and businesses of the zone park on its permit. |
+| `free` | Parking costs nothing. |
+| `shortTerm` | Parking is limited in time, by a single fee or a parking disc. |
+| `onlyWithPermit` | Only a permit holder parks, such as a car-sharing pick-up place. |
+| `forDisabled` | A place for a person with a disabled parking permit. |
+| `forElectricalCharging` | A place for an electric car while it charges. |
+| `forLoadUnload` | A loading place. |
+| `taxiStop` | A taxi stand. |
 
 ### PermitKind
 
@@ -769,3 +800,21 @@ The kinds of the fortification and landscape culture maps a HeritageArea is one 
 | `residentialEnsemble` | A residential area kept as an ensemble. |
 | `publicBuildingGrounds` | The grounds of a public building. |
 | `courtyard` | A courtyard (piha). |
+
+### TrafficSignalKind
+
+What signals a TrafficSignalJunction has.
+
+| Value | Meaning |
+|---|---|
+| `trafficLights` | Traffic lights that control the junction (liikennevalot). |
+| `warningLights` | Warning lights that flash before a crossing, a tram line or a fire station exit (varoitusvalot). |
+
+### TrafficSignalStatus
+
+Whether a TrafficSignalJunction's signals work yet.
+
+| Value | Meaning |
+|---|---|
+| `inService` | The signals are in service. |
+| `underConstruction` | The city is still building the signals (rakenteilla). |

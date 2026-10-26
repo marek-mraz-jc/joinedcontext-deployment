@@ -243,6 +243,9 @@
       "@type": "xsd:anyURI"
     },
     "jc": "https://joinedcontext.com/models/",
+    "junctionNumber": {
+      "@id": "jc:junctionNumber"
+    },
     "kpiValue": {
       "@id": "sdm:kpiValue",
       "@type": "xsd:float"
@@ -412,6 +415,14 @@
     "shortName": {
       "@id": "sdm:shortName"
     },
+    "signalKind": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:signalKind"
+    },
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
       "@id": "sdm:source",
@@ -577,6 +588,9 @@
     },
     "TrafficFlowObserved": {
       "@id": "sdm:TrafficFlowObserved"
+    },
+    "TrafficSignalJunction": {
+      "@id": "jc:TrafficSignalJunction"
     },
     "averageVehicleSpeed": {
       "@id": "sdm:averageVehicleSpeed",

@@ -7,8 +7,8 @@ metadata:
   namespace: helsinki
   title: { fi: Pysäköintialueet ja -vyöhykkeet — Helsinki, en: Parking areas and zones — Helsinki }
   description:
-    fi: 'Pysäköintialueet Parkkioppaasta sekä pysäköinnin maksuvyöhykkeet ja asukas- ja yrityspysäköintivyöhykkeet. Lähde: Helsingin kaupunki, CC BY 4.0.'
-    en: 'Parking areas from the parking guide, and the parking fee zones and the resident and business parking zones. Source: City of Helsinki, CC BY 4.0.'
+    fi: 'Pysäköintialueet Parkkioppaasta, pysäköinnin maksuvyöhykkeet ja asukas- ja yrityspysäköintivyöhykkeet, kantakaupungin ja asukaspysäköintivyöhykkeiden pysäköintipaikat sääntöineen (category) sekä matkailuliikenteen pysäkit ja pysäköintipaikat (allowedVehicleType bus). Lähde: Helsingin kaupunki, CC BY 4.0.'
+    en: 'Parking areas from the parking guide, the parking fee zones and the resident and business parking zones, the parking places of the inner city and the resident parking zones with their rules (category), and the tourist coach stops and parking places (allowedVehicleType bus). Source: City of Helsinki, CC BY 4.0.'
 spec:
   contextSpaceRef: helsinki
   slug: x6d6jph5t3tib5vr53kmiz2l5n3u3tnu
@@ -33,9 +33,21 @@ spec:
       en: 'Source: City of Helsinki, CC BY 4.0'
     themes: [TRAN]
     keywords:
-      fi: [pysäköinti, pysäköintialueet, maksuvyöhykkeet, asukaspysäköinti]
-      sv: [parkering, parkeringsområden, avgiftszoner, boendeparkering]
-      en: [parking, parking areas, fee zones, resident parking]
+      fi:
+        - pysäköinti
+        - pysäköintialueet
+        - pysäköintipaikat
+        - maksuvyöhykkeet
+        - asukaspysäköinti
+        - matkailuliikenne
+      sv:
+        - parkering
+        - parkeringsområden
+        - parkeringsplatser
+        - avgiftszoner
+        - boendeparkering
+        - turistbussar
+      en: [parking, parking areas, parking places, fee zones, resident parking, tourist coaches]
     spatial:
       - FI1B1
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
@@ -58,4 +70,21 @@ spec:
         description:
           fi: Helsingin karttapalvelun WFS-taso, GeoJSON.
           en: A WFS layer of the city's map service, as GeoJSON.
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Pysakointipaikat_alue
+        title:
+          fi: Kantakaupungin ja asukaspysäköintivyöhykkeiden pysäköintipaikat
+          en: Parking places of the inner city and the resident parking zones
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki parking-places).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline parking-places).
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Matkailuliikenne_pysakit_piste
+        title: { fi: Matkailuliikenteen pysäkit, en: Tourist coach stops }
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki tourist-stops).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline tourist-stops).
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Matkailuliikenne_pysakointipaikat_piste
+        title: { fi: Matkailuliikenteen pysäköintipaikat, en: Tourist coach parking places }
+        description:
+          fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki tourist-parking).
+          en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline tourist-parking).
     pipelineRef: { kind: Pipeline, name: parking-areas }

@@ -359,3 +359,12 @@ helsinki-agent-proxy:
           included.custom.audience: xtmpry6uo6sswne5bnnqoikpfvfyjihr
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The traffic signal junctions of T-5286 (seed/helsinki/helsinki-endpoint-traffic-signals.yaml).
+      - name: helsinki-traffic-signals-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: wylttuwlfud5yxnwsersbiom4xuhd7jm
+          access.token.claim: 'true'
+          id.token.claim: 'false'

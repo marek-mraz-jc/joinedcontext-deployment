@@ -158,6 +158,11 @@ helsinki-datasource-quarters.yaml: projects/helsinki/datasources/hel-quarters.ya
 helsinki-datasource-fortifications.yaml: projects/helsinki/datasources/hel-fortifications.yaml
 helsinki-datasource-landscape-culture.yaml: projects/helsinki/datasources/hel-landscape-culture.yaml
 helsinki-datasource-waterfront-sites.yaml: projects/helsinki/datasources/hel-waterfront-sites.yaml
+helsinki-datasource-parking-places.yaml: projects/helsinki/datasources/hel-parking-places.yaml
+helsinki-datasource-tourist-stops.yaml: projects/helsinki/datasources/hel-tourist-stops.yaml
+helsinki-datasource-tourist-parking.yaml: projects/helsinki/datasources/hel-tourist-parking.yaml
+helsinki-datasource-traffic-lights.yaml: projects/helsinki/datasources/hel-traffic-lights.yaml
+helsinki-datasource-warning-lights.yaml: projects/helsinki/datasources/hel-warning-lights.yaml
 helsinki-datasource-fee-parking-zones.yaml: projects/helsinki/datasources/hel-parking-fee-zones.yaml
 helsinki-datasource-resident-parking-zones.yaml: projects/helsinki/datasources/hel-resident-parking-zones.yaml
 helsinki-pipeline-services.yaml: projects/helsinki/pipelines/services/pipeline.yaml
@@ -173,6 +178,11 @@ helsinki-pipeline-quarters.yaml: projects/helsinki/pipelines/quarters/pipeline.y
 helsinki-pipeline-fortifications.yaml: projects/helsinki/pipelines/fortifications/pipeline.yaml
 helsinki-pipeline-landscape-culture.yaml: projects/helsinki/pipelines/landscape-culture/pipeline.yaml
 helsinki-pipeline-waterfront-sites.yaml: projects/helsinki/pipelines/waterfront-sites/pipeline.yaml
+helsinki-pipeline-parking-places.yaml: projects/helsinki/pipelines/parking-places/pipeline.yaml
+helsinki-pipeline-tourist-stops.yaml: projects/helsinki/pipelines/tourist-stops/pipeline.yaml
+helsinki-pipeline-tourist-parking.yaml: projects/helsinki/pipelines/tourist-parking/pipeline.yaml
+helsinki-pipeline-traffic-lights.yaml: projects/helsinki/pipelines/traffic-lights/pipeline.yaml
+helsinki-pipeline-warning-lights.yaml: projects/helsinki/pipelines/warning-lights/pipeline.yaml
 helsinki-pipeline-fee-parking-zones.yaml: projects/helsinki/pipelines/fee-parking-zones/pipeline.yaml
 helsinki-pipeline-resident-parking-zones.yaml: projects/helsinki/pipelines/resident-parking-zones/pipeline.yaml
 helsinki-pipeline-services-bento.yaml: projects/helsinki/pipelines/services/bento.yaml
@@ -188,6 +198,11 @@ helsinki-pipeline-quarters-bento.yaml: projects/helsinki/pipelines/quarters/bent
 helsinki-pipeline-fortifications-bento.yaml: projects/helsinki/pipelines/fortifications/bento.yaml
 helsinki-pipeline-landscape-culture-bento.yaml: projects/helsinki/pipelines/landscape-culture/bento.yaml
 helsinki-pipeline-waterfront-sites-bento.yaml: projects/helsinki/pipelines/waterfront-sites/bento.yaml
+helsinki-pipeline-parking-places-bento.yaml: projects/helsinki/pipelines/parking-places/bento.yaml
+helsinki-pipeline-tourist-stops-bento.yaml: projects/helsinki/pipelines/tourist-stops/bento.yaml
+helsinki-pipeline-tourist-parking-bento.yaml: projects/helsinki/pipelines/tourist-parking/bento.yaml
+helsinki-pipeline-traffic-lights-bento.yaml: projects/helsinki/pipelines/traffic-lights/bento.yaml
+helsinki-pipeline-warning-lights-bento.yaml: projects/helsinki/pipelines/warning-lights/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
 # HSL's network registers (T-5254): fare zones, ticket sales points, City Bike Vantaa's stations and the
@@ -291,6 +306,8 @@ helsinki-endpoint-districts.yaml: projects/helsinki/spaces/helsinki/endpoints/he
 helsinki-policy-public-districts.yaml: projects/helsinki/spaces/helsinki/policies/public-districts.yaml
 helsinki-endpoint-heritage.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-heritage.yaml
 helsinki-policy-public-heritage.yaml: projects/helsinki/spaces/helsinki/policies/public-heritage.yaml
+helsinki-endpoint-traffic-signals.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-signals.yaml
+helsinki-policy-public-traffic-signals.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-signals.yaml
 helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
 helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-cycle-counts.yaml
 helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml
