@@ -97,6 +97,12 @@ SPACE_EXTENSIONS = {
         "description": "One area of a city's cultural heritage map: its outline and its kind, such as a fortification or a historic park.",
         "why": "PointOfInterest's category lists services and amenities, not the kinds of a heritage map, and no Smart Data Model holds a heritage area",
     },
+    # Helsinki's signal-controlled junctions (T-5286): the traffic lights and the warning lights of the city.
+    "TrafficSignalJunction": {
+        "baseModel": "dataModel.PointOfInterest/PointOfInterest", "model": "helsinki/helsinki.linkml.yaml",
+        "description": "One junction or crossing with traffic lights or warning lights: where it is, its installation number, its signal kind and whether it is in service.",
+        "why": "the pinned Smart Data Models hold no traffic signal or signalised junction, and PointOfInterest's category lists services and amenities",
+    },
 }
 SDM_HEADER = ("$schema", "$schemaVersion", "$id", "modelTags", "title", "description", "derivedFrom", "license")
 JSON_TYPE = {"integer": "integer", "float": "number", "date": "string", "datetime": "string", "uri": "string", "string": "string"}

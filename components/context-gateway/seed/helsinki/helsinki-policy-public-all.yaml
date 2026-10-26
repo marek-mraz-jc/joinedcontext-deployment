@@ -44,6 +44,8 @@ spec:
         - type: AdministrativeArea
         # The cultural heritage maps (T-5670).
         - type: HeritageArea
+        # The junctions with traffic lights and warning lights (T-5286).
+        - type: TrafficSignalJunction
         # The reports the city published in its feedback system (T-5257): the reporter's name, contact
         # details and photos are never written.
         - type: ServiceRequest

@@ -59,6 +59,7 @@ MODELS = {
     "Article": ("extension", "Article"),
     "AdministrativeArea": ("extension", "AdministrativeArea"),
     "HeritageArea": ("extension", "HeritageArea"),
+    "TrafficSignalJunction": ("extension", "TrafficSignalJunction"),
 }
 
 EXTENSIONS = Path(__file__).resolve().parents[2] / "scripts/open-data/sdm/extensions"

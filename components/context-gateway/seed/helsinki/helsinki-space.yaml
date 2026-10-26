@@ -27,6 +27,8 @@ spec:
       history: 'off'
     - entityType: HeritageArea
       history: 'off'
+    - entityType: TrafficSignalJunction
+      history: 'off'
     - entityType: AirQualityObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,

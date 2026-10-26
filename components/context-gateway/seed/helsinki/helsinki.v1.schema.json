@@ -2347,8 +2347,19 @@
     },
     "OnStreetParking": {
       "additionalProperties": false,
-      "description": "One street parking area of the city with its outline: a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules.",
+      "description": "One street parking area of the city with its outline: a parking area of the city's parking guide with the cars it holds when the city has estimated it (category `public`), a parking fee zone (`feeCharged`) or a resident parking zone (`forResidents`), a zone with its code and rules; or one parking place of the city's street parking map with its rules as the Smart Data Model's categories, or a tourist coach stop or parking place (`allowedVehicleType` bus).",
       "properties": {
+        "allowedVehicleType": {
+          "description": "What may park when the city's layer names it: bus for a tourist coach stop or parking place, motorcycle or bicycle, other for e-scooters. Absent means any vehicle the signs allow.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "category": {
           "description": "Which of the city's street parking layers the area belongs to, in the Smart Data Model's own words.",
           "items": {
@@ -2919,14 +2930,28 @@
       "enum": [
         "public",
         "feeCharged",
-        "forResidents"
+        "forResidents",
+        "free",
+        "shortTerm",
+        "onlyWithPermit",
+        "forDisabled",
+        "forElectricalCharging",
+        "forLoadUnload",
+        "taxiStop"
       ],
       "title": "StreetParkingCategory",
       "type": "string",
       "x-enum-descriptions": {
         "feeCharged": "A parking fee zone; parking costs by the hour.",
+        "forDisabled": "A place for a person with a disabled parking permit.",
+        "forElectricalCharging": "A place for an electric car while it charges.",
+        "forLoadUnload": "A loading place.",
         "forResidents": "A resident parking zone; residents and businesses of the zone park on its permit.",
-        "public": "A parking area of the parking guide, open to anyone."
+        "free": "Parking costs nothing.",
+        "onlyWithPermit": "Only a permit holder parks, such as a car-sharing pick-up place.",
+        "public": "Open to anyone with no fee or time rule the layer states, such as a parking area of the parking guide.",
+        "shortTerm": "Parking is limited in time, by a single fee or a parking disc.",
+        "taxiStop": "A taxi stand."
       }
     },
     "TrafficDirection": {
@@ -3727,6 +3752,159 @@
       "x-enum-descriptions": {
         "closed": "The city has answered the report (READY).",
         "open": "The city is handling the report (the feedback system's PROCESSING)."
+      }
+    },
+    "TrafficSignalJunction": {
+      "additionalProperties": false,
+      "description": "One junction or crossing of the city with traffic lights or warning lights, where it is, the streets that meet there, its installation number and whether it is in service or still being built, as the Smart Data Model extension TrafficSignalJunction (PointOfInterest base).",
+      "properties": {
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "dateModified": {
+          "description": "When the publisher last changed the record, or the station last reported.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "junctionNumber": {
+          "description": "The city's own number of the signal installation, as its controller cabinet shows it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "signalKind": {
+          "$ref": "#/definitions/TrafficSignalKind",
+          "description": "What the junction's signals are: full traffic lights, or warning lights that only flash to warn of a crossing, a tram or a fire station exit.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "status": {
+          "$ref": "#/definitions/TrafficSignalStatus",
+          "description": "inService, or underConstruction while the city still builds the signals (the layer's Rakenteilla).",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "signalKind",
+        "status",
+        "id",
+        "type"
+      ],
+      "title": "TrafficSignalJunction",
+      "type": "object"
+    },
+    "TrafficSignalKind": {
+      "description": "What signals a TrafficSignalJunction has.",
+      "enum": [
+        "trafficLights",
+        "warningLights"
+      ],
+      "title": "TrafficSignalKind",
+      "type": "string",
+      "x-enum-descriptions": {
+        "trafficLights": "Traffic lights that control the junction (liikennevalot).",
+        "warningLights": "Warning lights that flash before a crossing, a tram line or a fire station exit (varoitusvalot)."
+      }
+    },
+    "TrafficSignalStatus": {
+      "description": "Whether a TrafficSignalJunction's signals work yet.",
+      "enum": [
+        "inService",
+        "underConstruction"
+      ],
+      "title": "TrafficSignalStatus",
+      "type": "string",
+      "x-enum-descriptions": {
+        "inService": "The signals are in service.",
+        "underConstruction": "The city is still building the signals (rakenteilla)."
       }
     }
   },
