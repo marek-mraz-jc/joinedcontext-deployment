@@ -497,7 +497,9 @@ def esri_query(e: dict, offset: str, out_fields: str | None = None) -> str:
     s = e["source"]
     params = {
         "where": (e.get("rowFilter") or {}).get("where", "1=1"),
-        "outFields": out_fields or ",".join(dict.fromkeys(p["column"] for p in e["properties"].values())),
+        # The id hash reads the columns impersonal() keeps out of the Entity: fetch them, or every id moves.
+        "outFields": out_fields or ",".join(dict.fromkeys(
+            list(e.get("hashed", {}).values()) + [p["column"] for p in e["properties"].values()])),
         "returnGeometry": "true" if s.get("geometry") else "false",
         "outSR": "4326", "geometryPrecision": "6", "f": "geojson",
         "resultOffset": offset, "resultRecordCount": str(PAGE),
