@@ -131,7 +131,8 @@ def test_the_pipeline_runs_daily_through_the_one_door_and_the_endpoint_publishes
     assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
     endpoint = yaml.safe_load((BARCELONA / "barcelona-endpoint-events.yaml").read_text())["spec"]
     assert endpoint["policyRef"] == "urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-events"
-    assert endpoint["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "barcelona"}
+    # Off the catalogue while prod holds none of it (T-5788, owner 2026-10-26): no publish block, harvest false.
+    assert "publish" not in endpoint and endpoint["catalog"]["harvest"] is False
     assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"])
     policy = yaml.safe_load((BARCELONA / "barcelona-policy-public-events.yaml").read_text())["spec"]
     assert policy["assignee"] == {"kind": "role", "id": "public"}

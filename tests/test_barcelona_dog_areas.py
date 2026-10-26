@@ -111,7 +111,8 @@ def test_the_dog_areas_upsert_from_the_city_and_publish_only_their_own_ids():
     assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
     assert endpoint["policyRef"].endswith(":public-dog-areas")
     assert endpoint["catalog"]["pipelineRef"] == {"kind": "Pipeline", "name": "dog-areas"}
-    assert endpoint["publish"]["ckan"]["instanceRef"]["name"] == "barcelona"
+    # Off the catalogue while prod holds none of it (T-5788, owner 2026-10-26): no publish block, harvest false.
+    assert "publish" not in endpoint and endpoint["catalog"]["harvest"] is False
     assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"])
     assert policy["assignee"] == {"kind": "role", "id": "public"}
     assert not {"upsertBatch", "createBatch", "deleteBatch", "createEntity", "deleteEntity"} & set(policy["operations"])

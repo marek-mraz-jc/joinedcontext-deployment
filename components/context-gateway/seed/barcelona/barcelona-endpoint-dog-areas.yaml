@@ -20,10 +20,11 @@ spec:
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-dog-areas
   enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: barcelona }
   catalog:
+    # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
+    # prod held 0 PointOfInterest; dev's read passes the 10 s gateway cut.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     publisher:
       name:
         ca: Ajuntament de Barcelona

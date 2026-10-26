@@ -191,4 +191,5 @@ def test_the_cc_by_and_the_golemio_places_are_separate_datasets():
     endpoint = yaml.safe_load((PRAHA / "praha-endpoint-sluzby.yaml").read_text())
     assert endpoint["spec"]["policyRef"].endswith(":public-sluzby")
     assert "license" not in endpoint["spec"]["catalog"]
-    assert endpoint["spec"]["publish"]["ckan"]["license"] == "other-at"
+    # Off the catalogue while prod holds none of it (T-5788, owner 2026-10-26): no publish block, harvest false.
+    assert "publish" not in endpoint["spec"] and endpoint["spec"]["catalog"]["harvest"] is False

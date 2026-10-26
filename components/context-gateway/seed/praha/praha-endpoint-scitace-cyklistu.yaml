@@ -15,14 +15,11 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-scitace-cyklistu
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, sta]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: praha }
-      # Golemio's terms (Golemio API Keys Management, Licence 4.3) allow republishing, commercial
-      # too, but grant no sublicence: the record claims no licence of its own and names the source
-      # and its terms (owner 2026-10-22T18:40Z).
-      license: other-at
   catalog:
+    # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
+    # prod held 0 TrafficFlowObserved two hours after the runner resumed (dev 61): its prod polls write nothing.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     # Counts of passing bicycles per direction: no record names a person.
     personalData: does-not-contain
     applicableLegislation:
