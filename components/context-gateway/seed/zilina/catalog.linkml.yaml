@@ -33,6 +33,7 @@ slots:
           sk: Názov
           cs: Název
           fi: Nimi
+          de: Titel
       ngsi_ld_kind: LanguageProperty
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   description:
@@ -48,6 +49,7 @@ slots:
           sk: Popis
           cs: Popis
           fi: Kuvaus
+          de: Beschreibung
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   name:
     slot_uri: foaf:name
@@ -62,6 +64,7 @@ slots:
           sk: Názov
           cs: Název
           fi: Nimi
+          de: Name
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   identifier:
     slot_uri: dct:identifier
@@ -76,6 +79,7 @@ slots:
           sk: Identifikátor
           cs: Identifikátor
           fi: Tunniste
+          de: Kennung
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   url:
     slot_uri: dcat:landingPage
@@ -90,6 +94,7 @@ slots:
           sk: Webová stránka
           cs: Webová stránka
           fi: Verkkosivu
+          de: Webseite
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   keyword:
     slot_uri: dcat:keyword
@@ -105,6 +110,7 @@ slots:
           sk: Kľúčové slová
           cs: Klíčová slova
           fi: Avainsanat
+          de: Schlagwörter
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   theme:
     slot_uri: dcat:theme
@@ -120,6 +126,7 @@ slots:
           sk: Témy
           cs: Témata
           fi: Teemat
+          de: Themen
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   spatial:
     slot_uri: dct:spatial
@@ -135,6 +142,7 @@ slots:
           sk: Územie
           cs: Území
           fi: Alue
+          de: Gebiet
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   temporal:
     slot_uri: dct:temporal
@@ -150,6 +158,7 @@ slots:
           sk: Časový rozsah
           cs: Časový rozsah
           fi: Aikaväli
+          de: Zeitraum
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   frequency:
     slot_uri: dct:accrualPeriodicity
@@ -164,6 +173,7 @@ slots:
           sk: Frekvencia aktualizácie
           cs: Frekvence aktualizace
           fi: Päivitystiheys
+          de: Aktualisierungshäufigkeit
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   publisher:
     slot_uri: jc:publisher
@@ -179,6 +189,7 @@ slots:
           sk: Vydavateľ
           cs: Vydavatel
           fi: Julkaisija
+          de: Herausgeber
   refPublisher:
     slot_uri: dct:publisher
     description: >-
@@ -194,6 +205,7 @@ slots:
           sk: Vydavateľ
           cs: Vydavatel
           fi: Julkaisija
+          de: Herausgeber
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   publishedDatasets:
@@ -212,6 +224,7 @@ slots:
           sk: Dátové sady
           cs: Datové sady
           fi: Aineistot
+          de: Datensätze
       ngsi_ld_kind: Relationship
   refDataService:
     slot_uri: dcat:accessService
@@ -228,6 +241,7 @@ slots:
           sk: Rozhranie
           cs: Rozhraní
           fi: Rajapinta
+          de: Endpunkt
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   refDataset:
@@ -246,6 +260,7 @@ slots:
           sk: Dátové sady
           cs: Datové sady
           fi: Aineistot
+          de: Datensätze
       ngsi_ld_kind: Relationship
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   license:
@@ -261,6 +276,7 @@ slots:
           sk: Licencia
           cs: Licence
           fi: Lisenssi
+          de: Lizenz
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   accessRights:
     slot_uri: dct:accessRights
@@ -275,6 +291,7 @@ slots:
           sk: Prístupové práva
           cs: Přístupová práva
           fi: Käyttöoikeudet
+          de: Zugriffsrechte
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   issued:
     slot_uri: dct:issued
@@ -289,6 +306,7 @@ slots:
           sk: Zverejnené
           cs: Zveřejněno
           fi: Julkaistu
+          de: Veröffentlicht
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   modified:
     slot_uri: dct:modified
@@ -303,6 +321,7 @@ slots:
           sk: Zmenené
           cs: Změněno
           fi: Muutettu
+          de: Geändert
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   source:
     slot_uri: dct:source
@@ -317,6 +336,7 @@ slots:
           sk: Zdroj
           cs: Zdroj
           fi: Lähde
+          de: Quelle
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   endpointURL:
     slot_uri: dcat:endpointURL
@@ -331,6 +351,7 @@ slots:
           sk: Adresa rozhrania
           cs: Adresa rozhraní
           fi: Rajapinnan osoite
+          de: Endpunktadresse
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   accessURL:
     slot_uri: dcat:accessURL
@@ -346,6 +367,7 @@ slots:
           sk: Prístupové cesty
           cs: Přístupové cesty
           fi: Käyttöpolut
+          de: Zugriffswege
       upstream_source: https://github.com/smart-data-models/dataModel.DCAT-AP
   accessLevel:
     slot_uri: jc:accessLevel
@@ -360,6 +382,7 @@ slots:
           sk: Úroveň prístupu
           cs: Úroveň přístupu
           fi: Käyttötaso
+          de: Zugriffsstufe
   visibleBecause:
     slot_uri: jc:visibleBecause
     description: >-
@@ -373,6 +396,7 @@ slots:
           sk: Uvedené, lebo
           cs: Uvedeno, protože
           fi: Näkyy, koska
+          de: Aufgeführt, weil
   entityTypes:
     slot_uri: jc:entityTypes
     description: >-
@@ -387,6 +411,7 @@ slots:
           sk: Typy entít
           cs: Typy entit
           fi: Entiteettityypit
+          de: Entitätstypen
   nextQuery:
     slot_uri: jc:nextQuery
     description: >-
@@ -401,6 +426,7 @@ slots:
           sk: Ďalší dopyt
           cs: Další dotaz
           fi: Seuraava kysely
+          de: Nächste Abfrage
   searchText:
     slot_uri: jc:searchText
     description: >-
@@ -414,6 +440,7 @@ slots:
           sk: Text na vyhľadávanie
           cs: Text pro vyhledávání
           fi: Hakuteksti
+          de: Suchtext
   datasetCount:
     slot_uri: jc:datasetCount
     description: >-
@@ -427,6 +454,7 @@ slots:
           sk: Dátové sady
           cs: Datové sady
           fi: Aineistot
+          de: Datensätze
 classes:
   Dataset:
     is_a: Entity
@@ -451,6 +479,21 @@ classes:
       - source
       - nextQuery
       - searchText
+    slot_usage:
+      location:
+        description: >-
+          The area the dataset covers, a GeoJSON geometry in WGS 84, when its record gives one.
+        annotations:
+          label:
+            tag: label
+            value:
+              en: Location
+              sk: Poloha
+              cs: Poloha
+              fi: Sijainti
+              de: Standort
+          ngsi_ld_kind: GeoProperty
+          upstream_source: ETSI NGSI-LD core context v1.8
     class_uri: dcat:Dataset
     description: >-
       One dataset of the catalogue: a public CKAN dataset by its CKAN name, or a public Endpoint
