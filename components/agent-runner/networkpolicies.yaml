@@ -1,6 +1,7 @@
 ---
-# The proxy is called by the Portal alone (a `static` run's driver) and, later, by the
-# workspaces of T-0540. It calls the Portal's internal listener, the gateway, the forge, and
+# The proxy is called by the Portal (the in-process driver of conversations and `ui` builds) and
+# by the workspace of a `ui-rust` run: a pod the Portal starts in its apps namespace, labelled
+# `joinedcontext.com/run-id` (portal src/agents/kube.rs). It calls the Portal's internal listener, the gateway, the forge, and
 # out on 443: the realm's token endpoint on the cluster's public host (rewritten to the
 # ingress controller's pod before this rule is evaluated, hence 8443 beside 443, the Portal's
 # rule explains it) and the model provider.
@@ -15,6 +16,11 @@ agent-proxy:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+        - podSelector:
+            matchExpressions:
+              - key: joinedcontext.com/run-id
+                operator: Exists
           componentNamespace: portal
       ports:
         - protocol: TCP
@@ -113,6 +119,25 @@ portal-egress-to-agent-proxy:
       ports:
         - protocol: TCP
           port: 8080
+
+# The Portal drives a workspace's agent server (8000). Each workspace's own rule, which the
+# Portal applies with the Job, admits the Portal from its namespace alone (AG-39).
+portal-egress-to-agent-workspaces:
+  componentNamespace: portal
+  podSelector:
+    app.kubernetes.io/name: portal-portal
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchExpressions:
+              - key: joinedcontext.com/run-id
+                operator: Exists
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8000
 
 gateway-from-agent-proxy:
   componentNamespace: context-gateway

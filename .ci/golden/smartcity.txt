@@ -288,6 +288,7 @@ networking.k8s.io/v1/NetworkPolicy smartcity/pipeline-tokens-linkerd-control-pla
 networking.k8s.io/v1/NetworkPolicy smartcity/portal
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-egress-to-agent-proxy
+networking.k8s.io/v1/NetworkPolicy smartcity/portal-egress-to-agent-workspaces
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-egress-to-functions
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-egress-to-gitea
@@ -304,6 +305,7 @@ networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-from-gitea-runner
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-agent-proxy
+networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-agent-workspaces
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-linkerd-to-functions
 networking.k8s.io/v1/NetworkPolicy smartcity/portal-to-mqtt-brokers

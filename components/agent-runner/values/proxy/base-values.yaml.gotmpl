@@ -87,6 +87,11 @@ env:
   JC_DAILY_TOKENS_APP_BUILDER: {{ $thisProxy.dailyTokens.appBuilder | default 0 | int64 | quote }}
   JC_DAILY_TOKENS_OTHER: {{ $thisProxy.dailyTokens.other | default 0 | int64 | quote }}
   JC_DAILY_TOKENS_PER_PERSON: {{ $thisProxy.dailyTokens.perPerson | default 0 | int64 | quote }}
+  # A run's ticket is honoured from the run's own workspace (`agent-run-{id}`) or the Portal's
+  # workload alone, by the caller's Linkerd identity (F-PLT1-008): a ticket copied out of a run
+  # works from no other pod. Off only where there is no mesh to name the caller.
+  JC_REQUIRE_MESH_IDENTITY: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") | quote }}
+  JC_PROXY_PORTAL_IDENTITY: "portal.{{ .Values.portal.portal.namespace }}"
 
 # The token endpoint on the cluster's public host and the model provider are both the
 # proxy's own TLS to hosts outside the mesh, the hop the Portal's values describe: 443 leaves
