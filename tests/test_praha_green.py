@@ -251,6 +251,25 @@ def test_the_saved_versions_of_one_area_are_one_entity_with_the_newest_edit():
         by_guid("green-areas", entities)[guid(first)]["id"]}
 
 
+@requires_docker
+@pytest.mark.parametrize("name, kind", [("vegetation-areas-0", "Garden"), ("trees-0", "Tree")])
+def test_a_woody_category_is_written_only_on_a_tree_since_the_view_holds_it_for_no_garden(name, kind):
+    """IPR fills kod_drevin on some vegetation areas too (T-5737: dev refused every vegetation-areas
+    run for the treeCategory a Garden does not hold). Each entity carries only its class's attributes."""
+    def edit(features):
+        features[0]["properties"]["kod_drevin"] = 2
+
+    entities, errors, _ = outcome(name, edited(name, edit))
+    assert not errors, errors
+    first = by_guid(name, entities)[guid(RECORDED[layer_set(name)]["features"][0])]
+    allowed = set(json.loads((PRAHA / "praha.v1.schema.json").read_text())["definitions"][kind]["properties"])
+    for entity in entities:
+        assert set(entity) <= allowed, (entity["id"], set(entity) - allowed)
+    assert ("treeCategory" in first) == (kind == "Tree")
+    if kind == "Tree":
+        assert first["treeCategory"]["value"] == "Listnatý"
+
+
 @pytest.mark.parametrize("set_, kind, where", [
     ("trees", "Tree", "kod_vp=71 AND MOD(objectid,10)={k}"),
     ("management", "Garden", "MOD(objectid,10)={k}"),
