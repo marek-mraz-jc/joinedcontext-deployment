@@ -31,7 +31,8 @@ class Cluster:
         annotations = {edge.MARKER: edge.MARKED} if marked else {}
         self.secret = {"apiVersion": "v1", "kind": "Secret", "type": "Opaque", "data": {"apisix.yaml": SERVED},
                        "metadata": {"name": edge.SECRET, "namespace": "dev", "resourceVersion": "100", "annotations": annotations}}
-        self.admits, self.log, self.calls = admits, [], []
+        # `history`: the hour before the step; `log`: the lines since it began.
+        self.admits, self.history, self.log, self.calls = admits, [], [], []
 
     def bump(self):
         meta = self.secret["metadata"]
@@ -45,7 +46,7 @@ class Cluster:
         if args[:2] == ("get", "pods"):
             return "dev"
         if args[0] == "logs":
-            return "\n".join(self.log)
+            return "\n".join(self.log if any(a.startswith("--since-time=") for a in args) else self.history + self.log)
         if args[0] == "annotate":
             change = args[5]
             if any(a.startswith("--resource-version=") and a != f"--resource-version={meta['resourceVersion']}" for a in args):
@@ -146,4 +147,62 @@ def test_a_portal_write_between_read_and_patch_is_not_overwritten(monkeypatch):
     monkeypatch.setattr(edge, "kubectl", racing)
     with pytest.raises(RuntimeError, match="Conflict"):
         edge.wave(30, clock=lambda: 0, sleep=cluster.sync)
+    assert cluster.secret["metadata"]["annotations"][edge.MARKER] == edge.MARKED
+
+
+def finished(seconds, leader=True):
+    """A Portal "sync run finished" line as reconciler/daemon.rs sync_once logs it (JSON)."""
+    return json.dumps({"timestamp": "2026-10-26T15:43:45.000000Z", "level": "INFO", "message": edge.SYNCED,
+                       "manifests": 3360, "leader": leader, "elapsed_ms": int(seconds * 1000),
+                       "target": "joinedcontext_portal::reconciler::daemon"})
+
+
+def slow_portal(cluster, writes_at):
+    """A clock and a sleep under which the Portal's leader writes the marker back `writes_at` s in."""
+    now = [0.0]
+
+    def sleep(seconds):
+        now[0] += seconds
+        if now[0] >= writes_at:
+            cluster.sync(seconds)
+
+    return (lambda: now[0]), sleep
+
+
+# Prod 2026-10-26 14:59-15:51Z: one non-leader run, then the leader's (seconds).
+PROD = [finished(82, leader=False)] + [finished(s) for s in (175, 452, 364, 532, 465, 623, 447)]
+
+
+def test_the_wait_follows_the_measured_sync_length(monkeypatch):
+    cluster = Cluster(admits=lambda _secret: True)
+    cluster.history = PROD
+    monkeypatch.setattr(edge, "kubectl", cluster.kubectl)
+    clock, sleep = slow_portal(cluster, writes_at=700)
+    ok, said = edge.wave(clock=clock, sleep=sleep)
+    assert ok, said
+    # The fixed 300 s of before T-5796 was red on the same Portal.
+    cluster = Cluster(admits=lambda _secret: True)
+    monkeypatch.setattr(edge, "kubectl", cluster.kubectl)
+    clock, sleep = slow_portal(cluster, writes_at=700)
+    ok, said = edge.wave(300, clock=clock, sleep=sleep)
+    assert not ok
+    assert "within 300 s (--timeout)" in said
+
+
+def test_the_measured_timeout_is_two_leader_runs_and_the_interval_within_bounds():
+    assert edge.measured_timeout(PROD) == (2 * 623 + 60, "2 x the longest of 7 leader sync runs in the last hour (623 s) + 60 s")
+    assert edge.measured_timeout([finished(70), finished(82, leader=False)])[0] == edge.FLOOR
+    assert edge.measured_timeout([finished(1200)])[0] == edge.CEILING
+    timeout, said = edge.measured_timeout(["portal server listening"])
+    assert timeout == edge.CEILING and "no leader sync run" in said
+
+
+def test_two_leader_runs_without_the_write_end_the_wait_red(monkeypatch):
+    cluster = Cluster(admits=lambda _secret: True)
+    cluster.history = PROD
+    # A follower's run converges nothing and does not count.
+    cluster.sync = lambda _seconds: cluster.log.extend([finished(82, leader=False), finished(400)])
+    ok, said = run(cluster, monkeypatch, timeout=None)
+    assert not ok
+    assert "two Portal leader sync runs finished without writing dev/apisix-standalone-config back" in said
     assert cluster.secret["metadata"]["annotations"][edge.MARKER] == edge.MARKED
