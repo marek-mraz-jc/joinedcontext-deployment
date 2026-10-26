@@ -104,3 +104,5 @@ def test_the_source_reads_three_members_of_the_zip_within_a_bound_and_writes_thr
     pipeline = yaml.safe_load((BRATISLAVA / "bratislava-pipeline-mhd-gtfs.yaml").read_text())["spec"]
     assert pipeline["source"]["dataSourceRef"]["name"] == "dpb-gtfs"
     assert pipeline["output"]["mode"] == "upsert"
+    # One run over the real zip is killed at 64 MiB and passes at 96 (T-5766).
+    assert pipeline["quotas"]["maxMemoryMb"] >= 96

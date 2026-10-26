@@ -19,7 +19,9 @@ spec:
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
   catalog:
     # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
-    # dev and prod hold 0 GtfsRoute, although the mapping turns today's zip into 90 lines: mhd-gtfs writes nothing.
+    # dev and prod hold 0 GtfsRoute, although the mapping turns today's zip into 90 lines: mhd-gtfs writes nothing. Cause (T-5766):
+    # CloudFront refused each member request 403 (it carried a body; platform 068296a) and 64 MiB
+    # killed the run (now 128).
     # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
     harvest: false
     # The publisher is the Project's spec.catalog (T-4596). A timetable network: no record names a person.

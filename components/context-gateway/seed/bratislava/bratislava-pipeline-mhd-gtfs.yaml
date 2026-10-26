@@ -14,5 +14,6 @@ spec:
     dataSourceRef: { kind: DataSource, name: dpb-gtfs }
   targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
   output: { type: GtfsStop, mode: upsert }
-  # 111 kB of CSV at most per message.
-  quotas: { maxMemoryMb: 64, cpuMillicores: 100 }
+  # 111 kB of CSV at most per message. Measured in the runner's Bento over the 22 Oct 2026 zip
+  # (T-5766): one run of the three members is killed at 64 MiB and passes at 96 MiB.
+  quotas: { maxMemoryMb: 128, cpuMillicores: 100 }
