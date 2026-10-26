@@ -93,16 +93,44 @@ def test_the_committed_seed_is_what_the_mapping_generates():
 
 def test_no_generated_pipeline_or_model_publishes_a_persons_contact_or_a_suppliers_street():
     """ADR-N-054, T-5697: a director's or statutory representative's name, phone and e-mail, and a
-    supplier's street (a sole trader's home), never reach the public od spaces."""
-    personal = re.compile(r'"(riaditel\w*|statutar\w*)"\s*:|^\s*-?\s*(riaditel\w*|statutar\w*):?\s*$', re.M | re.I)
-    street = re.compile(r'"(adresa|ulicaACislo|sidloDodavatela)"\s*:')
+    supplier's street (a sole trader's home), never reach the public od spaces. A pipeline may still
+    read such a column into its id hash; the model keeps the name only as a deprecated slot."""
+    personal = re.compile(r'^\s*"(riaditel\w*|statutar\w*)"\s*:', re.M | re.I)
+    street = re.compile(r'^\s*"(adresa|ulicaACislo|sidloDodavatela)"\s*:', re.M)
     found = []
-    for path in sorted(SEED.glob("*/*-od-pipeline-*-bento.yaml")) + sorted(SEED.glob("*/*-otvorene-data.linkml.yaml")):
+    for path in sorted(SEED.glob("*/*-od-pipeline-*-bento.yaml")):
         text = path.read_text()
         found += [f"{path.name}: {m.group(0).strip()}" for m in personal.finditer(text)]
         if re.search(r"-od-pipeline-(dodavatelia|dotacie-2|faktury|objednavky|zmluvy)-bento", path.name):
-            found += [f"{path.name}: {m.group(0)}" for m in street.finditer(text)]
+            found += [f"{path.name}: {m.group(0).strip()}" for m in street.finditer(text)]
+    for path in sorted(SEED.glob("*/*-otvorene-data.linkml.yaml")):
+        slots = yaml.safe_load(path.read_text())["slots"]
+        found += [f"{path.name}: {a}" for a, s in slots.items()
+                  if re.match(r"(riaditel|statutar)", a, re.I) and "deprecated" not in (s or {})]
     assert not found, found
+
+
+def test_dropping_a_personal_column_keeps_each_id_and_lets_the_next_replace_remove_it():
+    """T-5697: the Entities on dev already hold the personal columns. A replace rewrites only the
+    Entities its batch names and refuses one holding an attribute the view does not show (T-5236), so
+    a hashed id still covers the dropped columns and each dropped attribute is a retired slot."""
+    raw = [e for e in yaml.safe_load(generate.MAPPING.read_text())["datasets"]
+           if e["status"] == "mapped" and (e.get("existing") or {}).get("covers") != "whole"]
+    missing, hashed = [], 0
+    for e in raw:
+        kept = entry(e["name"])
+        gone = set(e["properties"]) - set(kept["properties"])
+        retired = generate.RETIRED.get(e["org"], {})
+        missing += [f"{e['org']}/{e['type']}: {generate.attribute(a)}" for a in sorted(gone)
+                    if generate.attribute(a) not in {*retired.get("*", []), *retired.get(e["type"], [])}]
+        if gone and not e["entityId"].get("keys"):
+            hashed += 1
+            pipeline = (SEED / e["org"] / f"{e['org']}-od-pipeline-{SLUGS[e['name']]}-bento.yaml").read_text()
+            local = next(line for line in pipeline.splitlines() if "let local = " in line)
+            missing += [f"{e['name']}: id hash lacks {p['column']}" for a, p in e["properties"].items()
+                        if a in gone and f'"{p["column"]}": ' not in local]
+    assert not missing, missing
+    assert hashed, "no hashed dataset drops a column: the id half of this test checks nothing"
 
 
 def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():

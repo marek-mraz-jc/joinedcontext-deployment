@@ -179,6 +179,15 @@ RETIRED = {
         "Contract": ["centralneCisloZmluvy"],
         "PurchaseOrder": ["cisloObjednavky"],
     },
+    # The personal columns impersonal() drops (T-5697).
+    "bbsk": {
+        "Contract": ["sidloDodavatela"],
+        "Grant": ["statutarnyZastupca", "ulicaACislo"],
+        "Invoice": ["adresa"],
+        "Organization": ["adresa", "riaditel", "riaditelEmail", "riaditelPevnaLinka", "riaditelPracMobil", "statutari", "ulicaACislo"],
+        "PointOfInterest": ["riaditel", "riaditelEmail", "riaditelMobilnyTelefon", "riaditelPevnaLinka"],
+        "PurchaseOrder": ["adresa"],
+    },
 }
 # What a visitor reads for the common slots, in each language the widget speaks (T-4682).
 COMMON_LABELS = {
@@ -424,12 +433,15 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
     path = "this.properties" if kind in FEATURES else "this"
     cols = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
     keys = e["entityId"].get("keys")
+    # The hash keeps reading the columns impersonal() dropped, so an Entity keeps its id and the next
+    # replace overwrites the copy that still holds them (T-5697).
+    hashed = e.get("hashed", cols)
     if keys:
         local = "[" + ", ".join(column(path, kind, k) for k in keys) + "].map_each(v -> v.string()).join(\"-\")"
     else:
         # No column is unique: the id is the hash of what is mapped, so a changed row is a new
         # entity (Research/bb-bbsk-ngsi-ld-mapping.md §4).
-        local = "{" + ", ".join(f"{q(c)}: {column(path, kind, c)}" for c in cols.values()) + "}" \
+        local = "{" + ", ".join(f"{q(c)}: {column(path, kind, c)}" for c in hashed.values()) + "}" \
                 ".format_json(no_indent: true).hash(\"sha256\").encode(\"hex\").slice(0, 24)"
     lines = [f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)"]
     observed = e.get("observedAt")
@@ -1008,6 +1020,7 @@ SUPPLIER_STREET = {"adresa", "ulicaACislo", "sidloDodavatela"}
 def impersonal(e: dict) -> None:
     """Takes the personal columns out of a dataset's mapping before anything is written from it."""
     street = SUPPLIER_STREET if SUPPLIERS.match(e["name"]) else set()
+    e["hashed"] = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
     e["properties"] = {a: p for a, p in e["properties"].items() if not PERSONAL.match(a) and a not in street}
 
 
