@@ -20,7 +20,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Street areas; the plate a reserved bay is bound to is not in the layer.
     personalData: does-not-contain

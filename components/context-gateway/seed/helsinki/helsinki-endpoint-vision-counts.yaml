@@ -33,7 +33,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: hel-fi }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher:
       name: { fi: Forum Virium Helsinki, sv: Forum Virium Helsinki, en: Forum Virium Helsinki }

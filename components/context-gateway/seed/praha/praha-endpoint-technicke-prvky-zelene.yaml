@@ -17,7 +17,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: praha }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Mapped elements: the manager is a city district or a department, never a person.
     personalData: does-not-contain

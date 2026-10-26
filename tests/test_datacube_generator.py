@@ -459,7 +459,7 @@ def test_population_change_is_read_by_region_and_district_and_says_so():
         assert ("its territories" in en) == regional, topic.name
 
 
-def test_a_topic_over_the_download_cap_has_no_mirror_and_declares_its_national_chart():
+def test_a_topic_over_the_download_cap_declares_its_national_chart():
     """T-5089: susr-om-pohyb's file.csv answers 413, so jcctl could neither fill its DataStore nor draw a chart."""
     endpoint = yaml.safe_load((SEED / "susr-om-pohyb/endpoint.yaml").read_text())["spec"]
     assert "datastore" not in endpoint["publish"]["ckan"]
@@ -469,8 +469,8 @@ def test_a_topic_over_the_download_cap_has_no_mirror_and_declares_its_national_c
     assert chart["spec"]["encoding"]["y"] == {"aggregate": "sum", "field": "kpiValue", "type": "quantitative", "title": None}
     topic = next(t for t in datacube.TOPICS if t["name"] == "susr-om-pohyb")
     assert [chart] == yaml.safe_load("x:" + datacube.chart(topic))["x"]["visualizations"]
-    # Every other topic keeps its mirror and jcctl's own charts.
+    # No other topic declares a chart, and none asks CKAN for a DataStore table (T-5060, T-5729).
     others = [t for t in datacube.TOPICS if t is not topic]
     assert not any(datacube.chart(t) for t in others)
     for t in others:
-        assert "datastore" in yaml.safe_load((SEED / t["name"] / "endpoint.yaml").read_text())["spec"]["publish"]["ckan"]
+        assert "datastore" not in yaml.safe_load((SEED / t["name"] / "endpoint.yaml").read_text())["spec"]["publish"]["ckan"]

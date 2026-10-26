@@ -58,7 +58,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: bbsk }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Banskobystrický samosprávny kraj", en: "Banská Bystrica Self-Governing Region" }, uri: "https://www.bbsk.sk/" }
     # Public events of public bodies: a record names an event and its place, never a person.

@@ -31,7 +31,6 @@ spec:
     ckan:
       instanceRef: { kind: CkanInstance, name: slovensko }
       license: cc-by
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     publisher: { name: { sk: "Platforma joinedcontext", en: "The joinedcontext platform" }, uri: "https://dev.joinedcontext.com/" }
     # Public events of public bodies: a record names an event and its place, never a person.

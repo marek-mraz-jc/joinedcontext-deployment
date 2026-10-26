@@ -22,7 +22,6 @@ spec:
       instanceRef: { kind: CkanInstance, name: praha }
       # Golemio's terms allow republishing but grant no sublicence: no licence of its own (T-5268).
       license: other-at
-      datastore: { representation: csv, refresh: onReconcile }
   catalog:
     # Public facilities by address; a police desk or an office is a place, never a person (T-4596).
     personalData: does-not-contain

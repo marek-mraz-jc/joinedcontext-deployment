@@ -95,7 +95,8 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
     pipelines = {p.name for project in generate.PROJECTS for p in files(project, "pipeline")}
     assert len(mapped) - len(whole) == len(SEEDED)
     # A dataset of the city's layers may take several pipelines (generate.parts, T-4317).
-    want = {f"{e['org']}-od-pipeline-{slug}.yaml" for e in SEEDED for _, slug in generate.parts(e, SLUGS[e["name"]])}
+    want = {f"{e['org']}-od-pipeline-{slug}.yaml" for e in SEEDED if e["source"]["kind"] != "endpoint"
+            for _, slug in generate.parts(e, SLUGS[e["name"]])}
     assert pipelines == want
     # Each pipeline alone writes its rows, so it replaces them whole and a dropped attribute
     # leaves at the next run (PL-79, T-4407).
@@ -110,7 +111,9 @@ def test_every_mapped_dataset_has_its_pipeline_unless_a_seed_reads_it_whole():
 
 def test_the_model_classes_and_both_policies_name_every_type_the_pipelines_write():
     for project in generate.PROJECTS:
-        written = {yaml.safe_load(p.read_text())["spec"]["output"]["type"] for p in files(project, "pipeline")}
+        # A dataset its Endpoint alone holds keeps its type in the model and both Policies (T-5060).
+        written = {yaml.safe_load(p.read_text())["spec"]["output"]["type"] for p in files(project, "pipeline")} | {
+            e["type"] for e in SEEDED if e["org"] == project and e["source"]["kind"] == "endpoint"}
         model = yaml.safe_load((SEED / project / f"{project}-od-datamodel.yaml").read_text())
         schema = json.loads((SEED / project / f"{project}-otvorene-data.v1.schema.json").read_text())
         assert set(model["spec"]["classes"]) == written
@@ -272,9 +275,6 @@ def test_schedules_are_valid_cron_and_follow_the_refresh():
     daily = next(e for e in SEEDED if e["refresh"] == "P1D")
     assert generate.schedule(daily, 3, 3).endswith("* * *")
     assert generate.schedule({"refresh": "P1M"}, 30, 30).split()[2] == "3"
-    # The city's register of citizens by age moves daily; read monthly, dev trailed it (T-4519).
-    register = yaml.safe_load((SEED / "banskabystrica" / "banskabystrica-od-pipeline-pocet-obcanov-podla-veku.yaml").read_text())
-    assert register["spec"]["schedule"].endswith("* * *"), register["spec"]["schedule"]
 
 
 def test_the_parts_of_a_split_dataset_run_the_same_day_at_their_own_minute():
@@ -329,6 +329,8 @@ def test_every_request_fits_the_url_length_arcgis_answers():
     asked for 50 columns by name and failed live (T-4255). Such a layer asks for `*`."""
     starred = 0
     for e in SEEDED:
+        if e["source"]["kind"] == "endpoint":
+            continue
         slug, project = SLUGS[e["name"]], e["org"]
         url = yaml.safe_load((SEED / project / f"{project}-od-datasource-{slug}.yaml").read_text())["spec"]["http"]["url"]
         bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
@@ -540,15 +542,16 @@ def test_a_corrected_accident_keeps_its_id_and_the_constant_its_model_requires()
 
 @requires_docker
 def test_a_table_without_a_key_takes_a_stable_row_hash():
-    first = run("banskabystrica", "adresy", "adresy")
-    again = run("banskabystrica", "adresy", "adresy")
+    first = run("bbsk", "dotacie-2", "dotacie-2")
+    again = run("bbsk", "dotacie-2", "dotacie-2")
     assert [e["id"] for e in first] == [e["id"] for e in again]
     assert len({e["id"] for e in first}) == 3
     # One changed value is another row, so another id.
-    doc = json.loads((FIXTURES / "adresy.json").read_text())
-    doc["result"]["records"][0]["Ulica"] = "Iná ulica"
-    changed = run_bytes("banskabystrica", "adresy", json.dumps(doc).encode())
+    doc = json.loads((FIXTURES / "dotacie-2.json").read_text())
+    doc["features"][0]["properties"]["Žiadateľ"] = "Iný žiadateľ"
+    changed = run_bytes("bbsk", "dotacie-2", json.dumps(doc).encode())
     assert changed[0]["id"] != first[0]["id"] and changed[1]["id"] == first[1]["id"]
+    assert all(e["type"] == "Grant" for e in first) and valid("bbsk", first)
 
 
 @requires_docker
@@ -636,15 +639,6 @@ def test_every_built_name_reads_columns_its_dataset_has():
 
 
 @requires_docker
-def test_a_catalogue_table_reads_its_records_as_addresses():
-    entities = run("banskabystrica", "adresy", "adresy")
-    rows = json.loads((FIXTURES / "adresy.json").read_text())["result"]["records"]
-    assert len(entities) == len(rows) == 3
-    for e, r in zip(entities, rows):
-        assert e["id"].startswith("urn:ngsi-ld:Address:banskabystrica.sk:banskabystrica-otvorene-data:adresy-")
-        assert (e["thoroughfare"]["value"], e["postName"]["value"]) == ([r["Ulica"]], [r["Obec"]])
-    assert valid("banskabystrica", entities)
-
 
 def offline(project: str, slug: str, document: bytes, pages: dict[int, bytes | None],
             count: int | None = None) -> subprocess.CompletedProcess:
@@ -789,8 +783,6 @@ def test_an_empty_layer_writes_nothing_and_a_failure_fails_the_run_where_it_show
     refused = offline("bbsk", "dodavatelia", json.dumps(pages[0]).encode(),
                       {**as_pages(pages), 1000: b'{"error": {"code": 498, "message": "Invalid token"}}'}, count=2500)
     assert b"the page at 1000 answered no features: Invalid token" in refused.stdout + refused.stderr
-    table = offline("banskabystrica", "adresy", b'{"success": false}', {})
-    assert b"the catalogue answered no table" in table.stdout + table.stderr
 
 
 # --- S-JTSK archives (T-4317): the ZIP read whole, its GeoJSON member reprojected to WGS 84 ---
@@ -1000,7 +992,7 @@ def test_a_large_dataset_is_read_by_several_pipelines_each_under_the_row_bound()
                                                                    for x in e["source"]["layers"])
     first, second = green[0][0]["source"]["pages"], green[1][0]["source"]["pages"]
     assert (first[0]["offset"], len(first)) == (0, 4) and second[0]["offset"] == 4000
-    assert generate.parts(entry("bb-adresy"), "adresy") == [(entry("bb-adresy"), "adresy")]
+    assert generate.parts(entry("bb-dotacie"), "dotacie") == [(entry("bb-dotacie"), "dotacie")]
 
 
 @requires_docker
@@ -1124,21 +1116,19 @@ def test_every_extension_validates_its_own_examples_and_refuses_a_missing_base_r
         assert sdm_errors(dict(normalized, type=generate.base_type(base)), model_of=t), t
 
 
-@requires_docker
-def test_a_grant_without_a_number_takes_its_row_hash_as_the_identifier_its_base_requires():
-    """bb-dotacie has no number column; CPSV-AP Cost requires `identifier` (T-4336)."""
-    entities = run("banskabystrica", SLUGS["bb-dotacie"], "dotacie")
-    assert len(entities) == len({e["id"] for e in entities}) == 3
-    for e in entities:
-        assert e["type"] == "Grant" and e["id"].endswith(":" + e["identifier"]["value"])
-    assert valid("banskabystrica", entities)
-    # The catalogue smoke refuses a row without a name: the grantee and the action, in one space (T-4745).
-    assert [e["name"]["value"] for e in entities] == [
-        "OZcentrumBB.sk, VMČ č. 1 - akcie realizované z dotácie", "OZcentrumBB.sk, VMČ č. 2 - akcie realizované z dotácie",
-        "Spoločenstvo Rudlová-Sásová, VMČ č. 3 - akcie realizované z dotácie"]
-    # The row hash reads no built name, so the ids are the ones the rows had before it (T-4745).
-    assert [e["id"].rsplit("-", 1)[1] for e in entities] == [
-        "e9820d62e1557e2e74f4f7ef", "d329e36821d1b7c102f467ba", "2c93b454fd99200364743c45"]
+def test_a_dataset_held_by_its_endpoint_alone_reads_no_catalogue_table():
+    """The eight legacy uploads whose one copy was the CKAN DataStore, filled back from their own
+    Endpoint (T-4742), keep their entities and model there: no DataSource reads the catalogue (T-5060)."""
+    held = [e for e in SEEDED if e["source"]["kind"] == "endpoint"]
+    assert len(held) == 8
+    slugs = {SLUGS[e["name"]] for e in held}
+    for project in generate.PROJECTS:
+        assert not [p.name for p in files(project, "datasource") if p.name.removeprefix(f"{project}-od-datasource-")[:-5] in slugs]
+        written = (SEED / project / f"{project}-otvorene-data.linkml.yaml").read_text()
+        assert all(e["type"] in written for e in held if e["org"] == project)
+    ours = re.compile(r"opendata\.dev\.joinedcontext\.com/(datastore/|api/3/action/datastore)")
+    seeds = [p.name for p in SEED.rglob("*.yaml") if ours.search(p.read_text())]
+    assert seeds == [], "no seed reads the platform's own CKAN DataStore"
 
 
 # T-4385: what each publisher's catalogue holds once its harvest ran whole. A harvest lists a
@@ -1288,3 +1278,18 @@ def test_a_slot_many_classes_map_reads_as_the_model_term_not_one_column():
                 continue
             assert slots[a]["description"] == description, (project, a)
             assert slots[a]["annotations"]["label"]["value"] == texts, (project, a)
+
+
+def test_no_seed_or_generator_asks_ckan_for_a_datastore_table():
+    """jc-core refuses publish.ckan.datastore since platform 752949c (T-5087): one such block makes the
+    Portal refuse that seed's Endpoint (T-5060, T-5729)."""
+    asked = []
+    for path in sorted(SEED.rglob("*.yaml")):
+        for doc in yaml.safe_load_all(path.read_text()):
+            publish = ((doc or {}).get("spec") or {}).get("publish") if isinstance(doc, dict) else None
+            if isinstance(publish, dict) and "datastore" in (publish.get("ckan") or {}):
+                asked.append(str(path.relative_to(SEED)))
+    assert asked == []
+    writers = [str(p.relative_to(ROOT)) for d in ("scripts", "seeds") for p in (ROOT / d).rglob("*.py")
+               if re.search(r"datastore:\s*\{", p.read_text())]
+    assert writers == [], "a generator writes publish.ckan.datastore"
