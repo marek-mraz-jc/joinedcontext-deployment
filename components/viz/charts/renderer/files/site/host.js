@@ -120,6 +120,10 @@
             format: aggregated ? "aggregatedValues" : "temporalValues",
             aggrMethods: aggregated ? s.aggrMethod : undefined,
             aggrPeriodDuration: aggregated ? s.aggrPeriod : undefined,
+            // instances per attribute: the broker serves 100 unless asked, so a week of
+            // five-minute readings took 21 windows one after another (T-5777); it caps N at
+            // its own ceiling, and an aggregation counts buckets, not instances
+            firstN: aggregated ? undefined : PAGE,
             limit: PAGE
           })
         };
