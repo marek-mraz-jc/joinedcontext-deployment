@@ -17,12 +17,11 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-sluzby
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: praha }
-      # Golemio's terms allow republishing but grant no sublicence: no licence of its own (T-5268).
-      license: other-at
   catalog:
+    # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
+    # prod held 0 PointOfInterest (dev 417): its prod runs write nothing.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     # Public facilities by address; a police desk or an office is a place, never a person (T-4596).
     personalData: does-not-contain
     applicableLegislation:

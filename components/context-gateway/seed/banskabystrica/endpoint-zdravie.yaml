@@ -19,11 +19,11 @@ spec:
   audience: public
   policyRef: urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:zdravie-read
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: banskabystrica }
-      license: odc-odbl
   catalog:
+    # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
+    # prod held 0 PointOfInterest (dev 37): its prod runs write nothing.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Aggregates of public facilities and readings: no record names a person (T-4596).
     personalData: does-not-contain

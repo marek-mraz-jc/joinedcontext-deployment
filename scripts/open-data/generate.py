@@ -1290,6 +1290,10 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
     seed's public Endpoint, over its whole type: those rows name no catalogue dataset (T-4291)."""
     rows = {}
     for e in mapped:
+        if e["source"]["kind"] == "endpoint":
+            # No Pipeline fills it since T-5729: prod holds no row of it, so the catalogue lists no
+            # distribution and the harvest withdraws the dataset (T-5788, owner 2026-10-26).
+            continue
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
                                                  "dataset": e["dataset"], "location": located(e), "series": "sta" in REPRESENTATIONS and series(e),

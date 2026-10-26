@@ -248,10 +248,14 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
         assert endpoint["enabledRepresentations"] == generate.REPRESENTATIONS
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
-    mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped"]
+    # A dataset no Pipeline fills since T-5729 (source.kind endpoint) lists no distribution (T-5788).
+    mapped = [e for e in MAPPING["datasets"] if e["status"] == "mapped" and e["source"]["kind"] != "endpoint"]
     # The susr- rows are scripts/open-data/datacube.py's (T-4390, test_datacube_generator.py).
     assert len([k for k in rows if not k.startswith("susr-")]) == len({e["dataset"] for e in mapped})
     for e in SEEDED:
+        if e["source"]["kind"] == "endpoint":
+            assert e["dataset"].rsplit("/", 1)[1] not in rows
+            continue
         row = rows[e["dataset"].rsplit("/", 1)[1]]
         assert (row["endpoint"], row["type"], row["dataset"], row["filtered"]) == (slugs[e["org"]], e["type"], e["dataset"], True)
     # T-4288: SensorThings would be listed for the datasets whose numbers carry an instant; with no
@@ -279,7 +283,7 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     for name, row in rows.items():
         if not name.startswith("susr-"):
             assert row["sole"] == (row["filtered"] and doors[(row["endpoint"], row["type"])] == 1), name
-    assert rows["bb-objednavky-bb"]["sole"] and rows["bb-dotacie"]["sole"]
+    assert rows["bb-aktuality"]["sole"] and rows["bb-dtm-bb-register-adries"]["sole"]
     assert not any(rows[name]["sole"] for name in shared), "obce and okresy share a door and a type"
     mosty = rows["bbsk-mosty-v-banskobystrickom-kraji-public-view-3b4675"]
     assert (mosty["type"], endpoints[mosty["endpoint"]][1]["policyRef"]) == ("Bridge", "urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read")
@@ -1259,8 +1263,11 @@ def test_each_publisher_expects_its_converted_datasets_and_its_endpoints():
         # T-5666 Prague's event store praha-akce and Bratislava's events over the national store (slovensko).
         # T-5691 Prague's health care and social services (+1 in praha).
         # T-5677 Prague's TSK street sections and street cleaning dates (+2 in praha).
-        "banskabystrica": 13 + 7 + 1 - 2, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3, "bbsk": 88 + 6 + 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13 + 17,
-        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2 - 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1 + 2 - 2, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1 - 1}
+        # T-5788 took the datasets empty on prod off the catalogue (owner 2026-10-26): banskabystrica zdravie
+        # and the 8 bb- rows no Pipeline fills (-9), barcelona city-works, events, dog-areas (-3), bbsk catalog (-1),
+        # bratislava MHD stops and lines (-2), helsinki heat vulnerability (-1), praha vozidla, scitace, sluzby (-3).
+        "banskabystrica": 13 + 7 + 1 - 2 - 9, "barcelona": 3 + 2 + 3 + 3 + 1 + 1 + 3 + 2 + 3 - 3, "bbsk": 88 + 6 + 1 - 1, "bratislava": 1 + 4 + 327 + 4 + 2 + 8 + 1 + 1 + 17 + 19 + 12 + 12 + 14 + 13 + 17 - 2,
+        "hel-fi": 11 + 1 + 2 + 1 + 1 + 5 + 3 + 2 + 1 + 2 - 1 - 1, "praha": 8 + 1 + 1 + 4 + 3 + 1 + 5 + 1 + 1 + 6 + 3 + 5 + 2 + 1 + 1 + 1 + 1 + 2 - 2 - 3, "slovensko": 3 + 45 + 1, "zilina": 5 + 4 + 1 - 1}
 
 
 def test_the_rdf_artifacts_are_canonical_whatever_order_a_generator_wrote(tmp_path):
