@@ -16,11 +16,11 @@ spec:
   slug: yv3idzveqbqzrkzocxghmn3rcdzmxgg4
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: bbsk }
-      license: cc-zero
   catalog:
+    # Off the catalogue (T-5788, owner order 2026-10-26: an empty dataset leaves it): on 2026-10-26
+    # dev and prod hold no record in it (typeList []).
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Records of public datasets and Endpoints only: no record names a person.
     personalData: does-not-contain

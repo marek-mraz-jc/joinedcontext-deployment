@@ -1294,9 +1294,15 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
     """Per CKAN dataset name: its Endpoint's slug, its entity type, whether it has a location or a
     series and whether its addresses keep only its rows. A dataset an older seed reads whole is served by that
     seed's public Endpoint, over its whole type: those rows name no catalogue dataset (T-4291)."""
-    rows = {}
+    rows, gone = {}, Counter()
     for e in mapped:
         endpoint = SEED / e["org"] / f"{e['org']}-od-endpoint.yaml"
+        if e["source"]["kind"] == "endpoint":
+            # No Pipeline fills it since T-5729: prod holds no row of it, so the catalogue lists no
+            # distribution and the harvest withdraws the dataset (T-5788, owner 2026-10-26). Its old
+            # rows can still sit on the door, so it still counts against `sole` below.
+            gone[(slug_for(endpoint), e["type"])] += 1
+            continue
         rows[e["dataset"].rsplit("/", 1)[1]] = {"endpoint": slug_for(endpoint), "type": e["type"],
                                                  "dataset": e["dataset"], "location": located(e), "series": "sta" in REPRESENTATIONS and series(e),
                                                  "filtered": True}
@@ -1311,7 +1317,7 @@ def distributions(mapped: list[dict], whole: list[dict]) -> str:
     # A dataset whose type holds only its rows on its door is kept by the type alone (`sole`): a `q`
     # the broker checks row by row can neither be counted past 10 000 stored rows nor read in parallel
     # pages, so bb-objednavky-bb's 26 862 rows timed out in every file and its count was 403 (T-4540).
-    doors = Counter((r["endpoint"], r["type"]) for r in rows.values())
+    doors = Counter((r["endpoint"], r["type"]) for r in rows.values()) + gone
     for r in rows.values():
         r["sole"] = r["filtered"] and doors[(r["endpoint"], r["type"])] == 1
     # The ŠÚ SR rows are scripts/open-data/datacube.py's (T-4390): kept as committed.

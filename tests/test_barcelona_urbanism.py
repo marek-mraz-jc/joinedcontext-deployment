@@ -374,7 +374,11 @@ def test_each_dataset_has_its_pipeline_endpoint_and_a_policy_of_its_own_type():
         assert policy["assignee"] == {"kind": "role", "id": "public"}
         assert [e["type"] for rule in policy["information"] for e in rule["entities"]] == [kind]
         assert all(op.startswith(("retrieve", "createSub", "updateSub", "deleteSub")) for op in policy["operations"])
-        assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "barcelona"}
+        # City works leave the catalogue while prod holds none of them (T-5788, owner 2026-10-26).
+        if spec["catalog"].get("harvest") is False:
+            assert "publish" not in spec
+        else:
+            assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "barcelona"}
         assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(spec["enabledRepresentations"])
 
 

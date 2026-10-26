@@ -209,7 +209,11 @@ def test_each_dataset_door_reads_through_its_own_public_policy_and_publishes_to_
     for name, policy in DATASETS.items():
         spec = endpoints[name]["spec"]
         assert spec["policyRef"] == f"urn:ngsi-ld:Policy:bratislava.sk:bratislava:{policy}"
-        assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "bratislava"}
+        # The MHD stops and lines leave the catalogue while prod holds none of them (T-5788, owner 2026-10-26).
+        if spec["catalog"].get("harvest") is False:
+            assert "publish" not in spec
+        else:
+            assert spec["publish"]["ckan"]["instanceRef"] == {"kind": "CkanInstance", "name": "bratislava"}
         read = policies[policy]["spec"]
         assert read["assignee"] == {"kind": "role", "id": "public"}
         assert all(op.startswith(("retrieve", "query", "createSub", "updateSub", "deleteSub")) for op in read["operations"])

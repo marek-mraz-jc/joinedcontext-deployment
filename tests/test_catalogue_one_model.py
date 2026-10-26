@@ -161,7 +161,8 @@ def test_every_published_events_dataset_serves_a_calendar():
         outputs = spec.get("representations", {}).get("ical", [])
         assert isinstance(outputs, list) and outputs, f"{path.name} names no ical output"
         assert all(o.get("timezone") and o.get("title") for o in outputs), path.name
-    assert len(events) >= 7, events
+    # Barcelona events left the catalogue while prod holds none (T-5788).
+    assert len(events) >= 6, events
 
 
 def test_a_split_policy_grants_nothing_its_space_did_not_grant_the_public():
