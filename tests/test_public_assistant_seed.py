@@ -8,12 +8,18 @@ MCP with read-only tools, and its limits are T-4149's with a daily budget per bo
 No other body's site, organization or Endpoint is reachable from it.
 """
 
+import json
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
 import yaml
-from conftest import dev_catalogue, render_catalogue_assistant, seed_documents
+from conftest import (
+    PROJECT_ROOT,
+    dev_catalogue,
+    render_catalogue_assistant,
+    seed_documents,
+)
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
 # jc-assistant's READ_ONLY_TOOLS (platform crates/assistant/src/chat/mcp.rs), which the data loop
@@ -325,6 +331,26 @@ def test_the_general_assistant_reads_every_national_public_endpoint():
     for name in national:
         title = endpoints[name.split("/")[1]]["metadata"]["title"]
         assert title.get("en") and len(title["en"]) <= 80, name
+
+
+# jc-core reach::MAX_RESOLVED (AG-122): jc-assistant serves the first this many Endpoints by slug
+# and drops the rest without a word, so a connector past it is never read.
+MAX_RESOLVED = 100
+
+
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_the_general_assistant_resolves_every_connector_with_the_air_of_banska_bystrica(env):
+    # T-5786: 67 connectors under a bound of 50 dropped the 17 with the highest slugs, among them
+    # banskabystrica-verejne and ovzdusie-sk, the two that hold station SK0263A, and prod answered
+    # that Banská Bystrica publishes no air quality.
+    values = PROJECT_ROOT / f".ci/example-deployments/environments/{env}/ckan.yaml.gotmpl"
+    connectors = yaml.safe_load(values.read_text())["ckan"]["catalogue"]["assistantSeed"]["connectors"]
+    assert len(connectors) == len(set(connectors)), "a connector named twice"
+    assert len(connectors) <= MAX_RESOLVED, f"{len(connectors)} connectors, past AG-122's {MAX_RESOLVED}"
+    assert {"banskabystrica/banskabystrica-verejne", "slovensko/ovzdusie-sk"} <= set(connectors)
+    pipelines = manifests("Pipeline", "banskabystrica")
+    assert any("AirQualityObserved" in json.dumps(p) and "banskabystrica-verejne" in json.dumps(p)
+               for p in pipelines.values()), "a pipeline writes AirQualityObserved into banskabystrica-verejne"
 
 
 def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own_site():
