@@ -145,8 +145,13 @@ probes:
 # stops every project's streams at once (T-3537, 3 restarts at 1536Mi with 97 streams). The
 # GC works harder from 75 % of whatever limit the environment sets: under dev-smoke's 80 % line,
 # so the runtime defends the line instead of letting a normal heap cross it (T-4036; at 85 %
-# the runner sawed between 875 and 1342 Mi of 1536 Mi).
-goMemLimitPercent: 75
+# the runner sawed between 875 and 1342 Mi of 1536 Mi). 65 since T-5797: at 75 % of dev's 3Gi
+# (2304 Mi) the 6-hour working-set floor climbed for two days toward that line (481 to 2197 Mi)
+# and peaked at 2623 Mi, 319 Mi of stacks, buffers and page cache above it and past smoke's
+# 2458 Mi. scripts/runner-rss-rig.py --runs shows no growth per run in Bento 1.22.0 (-0.015 MB
+# over 500 runs of the seeds' input kinds) and an RSS of about twice the heap in use: the floor
+# is what GOGC lets the heap keep, up to this line. 65 % is 1997 Mi, plus those 319 Mi under 2458.
+goMemLimitPercent: 65
 
 resources:
   requests:
