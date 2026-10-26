@@ -24,12 +24,11 @@ spec:
   # and never reaches a token, whose only realm role is `portal-approver`
   # (components/keycloak/demo-users.yaml). A `kind: role` assignee here would match nobody and
   # the refusal would look like a bug in the application. Helsinki's own steward grant
-  # (helsinki-policy-bikes-ops-steward.yaml) names the person for the same reason, and
-  # `{orgDomain}` is rendered out of every spec when the repository is loaded, by the
-  # gateway as well as by jcctl (jcctl loader.rs `render_in_place`, CC-74).
+  # (helsinki-policy-bikes-ops-steward.yaml) names the person for the same reason, by
+  # their Keycloak user id and never by e-mail (PF-126, ADR-N-061).
   assignee:
     kind: user
-    id: demo.steward@{orgDomain}
+    id: de300000-0000-4000-8000-000000000001 # demo.steward
   operations:
     - retrieveOps
     - createSubscription

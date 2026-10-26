@@ -26,7 +26,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # The people and the cities of the demo: the realm users of the development profile and the
 # projects the development seed creates. Read from the tree, so a new demo person or city is
 # covered the day it is added.
-DEMO_PEOPLE = sorted(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text()))
+_DEMO_USERS = yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())
+DEMO_PEOPLE = sorted(_DEMO_USERS)
+# The fixed Keycloak ids the seeds name the demo people by (PF-126).
+DEMO_IDS = sorted(user["id"] for user in _DEMO_USERS.values())
 DEMO_PROJECTS = sorted(p.name for p in (PROJECT_ROOT / "components/context-gateway/seed").iterdir() if p.is_dir())
 
 
@@ -95,6 +98,7 @@ def placeholder_domains(docs):
 def demo_people(docs):
     return sorted(
         {f"{name_of(d)}: {person}" for d in docs for _, s in strings(d) for person in DEMO_PEOPLE if person in s}
+        | {f"{name_of(d)}: {id_}" for d in docs for _, s in strings(d) for id_ in DEMO_IDS if id_ in s}
         | {
             name_of(d)
             for d in docs
@@ -244,7 +248,7 @@ DEFECTS = {
         workload({"JC_PUBLIC_URL": f"https://portal.{DEV_DOMAIN}"}, name="other"),
     ],
     "placeholder_domains": [workload({"JC_PORTAL_ORG_DOMAIN": "joinedcontext.test"})],
-    "demo_people": [workload({"JC_OWNER": f"{DEMO_PEOPLE[0]}@hel.fi"})],
+    "demo_people": [workload({"JC_OWNER": f"{DEMO_PEOPLE[0]}@hel.fi"}), config_map({"subjects": [{"user": DEMO_IDS[0]}]})],
     "demo_accounts_and_feeds": [workload({"JC_CLIENT_ID": f"{DEMO_PROJECTS[0]}-pipelines"})],
     "debug_switches": [workload({"RUST_LOG": "info,jc_core=debug"}), config_map({"apisix": {"enable_debug": True}})],
     "open_cors": [config_map({"plugins": {"cors": {"allow_origins": "*"}}}), config_map({"cors": {"allow_origins_by_regex": [".*"]}})],

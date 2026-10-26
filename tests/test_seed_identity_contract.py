@@ -11,6 +11,13 @@ from pathlib import Path
 import yaml
 
 SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+# The seeds name the demo people by their fixed Keycloak ids (PF-126).
+DEMO_IDS = {
+    name: user["id"]
+    for name, user in yaml.safe_load(
+        (SEED.parent.parent / "keycloak/demo-users.yaml").read_text()
+    ).items()
+}
 
 
 def documents(path: Path):
@@ -186,7 +193,7 @@ def test_the_demo_editor_proposes_and_deletes_nothing():
     may also propose a `RoleBinding`, so the grant refusal is about the width of the grant and
     not about their being unable to grant at all (PF-50).
     """
-    editor = "demo.editor@hel.fi"
+    editor = DEMO_IDS["demo.editor"]
     roles = {doc["metadata"]["name"]: doc for _path, doc in manifests("Role")}
     held = [
         doc["spec"]["role"]
@@ -244,7 +251,7 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
     whole name, and no name the seed or a sample app commits may fall inside it: a janitor that
     could approve the removal of `helsinki` would be an administrator by another name.
     """
-    janitor = "demo.janitor@hel.fi"
+    janitor = DEMO_IDS["demo.janitor"]
     roles = {doc["metadata"]["name"]: doc for _path, doc in manifests("Role")}
     held = [
         doc

@@ -58,12 +58,12 @@ def test_each_test_person_holds_exactly_their_one_kind_of_access():
         for subject in spec["subjects"]:
             held.setdefault(subject["user"], set()).add((spec["role"], spec["scope"]["project"]))
     assert held == {
-        "demo.member@hel.fi": {("viewer", "sharing")},
-        "demo.author@hel.fi": {("viewer", "sharing"), ("app-editor", "sharing")},
-        "demo.neighbour@hel.fi": {("viewer", "sharing-other")},
+        PEOPLE["demo.member"]["id"]: {("viewer", "sharing")},
+        PEOPLE["demo.author"]["id"]: {("viewer", "sharing"), ("app-editor", "sharing")},
+        PEOPLE["demo.neighbour"]["id"]: {("viewer", "sharing-other")},
     }
     (group,) = [doc for _, doc in docs() if doc["kind"] == "Group"]
-    assert group["spec"]["members"] == [{"user": "demo.bearer@hel.fi"}]
+    assert group["spec"]["members"] == [{"user": PEOPLE["demo.bearer"]["id"]}]
     for name in ["outsider", "neighbour", "member", "author", "bearer"]:
         person = PEOPLE[f"demo.{name}"]
         assert person["platformReaders"] is False, name

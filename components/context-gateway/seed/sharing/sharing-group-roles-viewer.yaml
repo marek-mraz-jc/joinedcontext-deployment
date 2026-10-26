@@ -9,4 +9,4 @@ metadata:
 spec:
   description: The viewers of sharing-roles, its default group.
   members:
-    - user: demo.bearer@hel.fi
+    - user: de300000-0000-4000-8000-00000000000e # demo.bearer

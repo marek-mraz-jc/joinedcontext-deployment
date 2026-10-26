@@ -59,6 +59,12 @@ def test_no_demo_account_exists_or_is_bound(smartcity):
     assert (secrets, bindings, realm_users) == ([], [], [])
 
 
+def people_ids(docs):
+    """username -> id, as the keycloak people Job creates them (charts/people)."""
+    data = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "keycloak-user-ids")
+    return {line.split()[1]: line.split()[0] for line in data["data"]["users"].splitlines() if line.strip()}
+
+
 def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcity):
     owner = "marek.mraz@joinedcontext.com"
     humans = [u for u in realm(smartcity)["users"] if not u["username"].startswith("service-account-")]
@@ -71,7 +77,9 @@ def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcit
         text for d in config_maps(smartcity, "gitea-bootstrap")
         for key, text in (d.get("data") or {}).items() if key == "users__assignments__admins.yaml"
     ]
-    assert admins and all(owner in text for text in admins)
+    # The seeds name the steward by id; on this instance that is the owner's (PF-126).
+    owner_id = people_ids(smartcity)[owner]
+    assert admins and all(owner_id in text for text in admins)
 
 
 def test_no_eval_or_conformance_object_is_seeded(smartcity):

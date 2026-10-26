@@ -491,7 +491,8 @@ def test_every_space_the_portal_shows_is_one_its_own_steward_may_read():
                 for policy_name, assignee in readers:
                     if assignee["kind"] != "user":
                         continue
-                    user = assignee["id"].split("@")[0]
+                    # The seeds name a demo person by their fixed Keycloak id (PF-126).
+                    user = next((n for n, u in DEMO_USERS.items() if u["id"] == assignee["id"]), assignee["id"])
                     groups = set(DEMO_USERS.get(user, {}).get("groups", []))
                     assert groups & admitted, (
                         f"{policy_name} grants {user} a read on {name}, whose endpoint admits"
