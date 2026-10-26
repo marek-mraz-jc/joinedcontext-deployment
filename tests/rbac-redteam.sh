@@ -77,7 +77,7 @@ k apply -f - >/dev/null <<-'EOF'
 	    verbs: [get, patch]
 	  - apiGroups: [batch]
 	    resources: [jobs]
-	    verbs: [get, create, patch, delete]
+	    verbs: [get, list, create, patch, delete]
 	  - apiGroups: [""]
 	    resources: [secrets]
 	    resourceNames: [app-registry]
