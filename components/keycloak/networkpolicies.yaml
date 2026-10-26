@@ -51,6 +51,17 @@ keycloak:
       ports:
         - protocol: TCP
           port: 6443
+    # Back-channel logout (T-5568, TR-03187 AR-6): Keycloak posts the logout token of every
+    # session it ends to the Portal's /api/v1/auth/backchannel-logout over the in-cluster
+    # Service; the Portal verifies the token's signature and nothing else admits the call.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 8080
   ingress:
     - from:
         - podSelector:

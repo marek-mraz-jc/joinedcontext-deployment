@@ -85,6 +85,15 @@ keycloak-linkerd-control-plane:
       ports:
         - protocol: TCP
           port: 4143
+    # Back-channel logout to the Portal (T-5568).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: portal-portal
+          componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 4143
 
 keycloak-config-cli-linkerd:
   podSelector:

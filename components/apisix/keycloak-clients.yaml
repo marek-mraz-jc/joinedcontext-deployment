@@ -71,6 +71,8 @@ edge:
       path: /apps/*
   componentNamespaces:
     - apisix
+  # Keycloak posts the end of every edge session to the Portal (T-5568).
+  backchannelLogout: true
   rawValues:
     publicClient: false
     bearerOnly: false
@@ -87,10 +89,10 @@ edge:
       access.token.signed.response.alg: RS256
       id.token.signed.response.alg: RS256
     # An MCP client behind the edge login may ask for the Portal MCP audience too (T-0637).
+    # No offline_access: the edge's session lives in APISIX and ends with the login (T-5568).
     optionalClientScopes:
       - address
       - phone
-      - offline_access
       - microprofile-jwt
       - mcp:portal
     protocolMappers:
