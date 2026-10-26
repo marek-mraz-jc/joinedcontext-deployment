@@ -195,10 +195,6 @@
     "type": "Property",
     "value": "https://example.org/source"
   },
-  "statutarnyZastupca": {
-    "type": "Property",
-    "value": "statutarnyZastupca"
-  },
   "stavFinanVyuctovania": {
     "type": "Property",
     "value": "stavFinanVyuctovania"
@@ -222,10 +218,6 @@
   "typTabora": {
     "type": "Property",
     "value": "typTabora"
-  },
-  "ulicaACislo": {
-    "type": "Property",
-    "value": "ulicaACislo"
   },
   "vSuladeSPrioritamiPoskytovaniaDotacii": {
     "type": "Property",

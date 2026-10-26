@@ -11,7 +11,7 @@ metadata:
 spec:
   type: http
   http:
-    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer/0/query?where=1%3D1&outFields=ID,Typ,In%C5%A1tit%C3%BAcia,I%C4%8CO,DI%C4%8C,Adresa,web_str%C3%A1nka,Riadite%C4%BE,Riadite%C4%BE___email,Riadite%C4%BE___mobiln%C3%BD_telef%C3%B3n,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Latitude,Longitude,Obrazok_odkaz,Riadite%C4%BE___pevn%C3%A1_linka&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
+    url: https://services-eu1.arcgis.com/ODrCBoJHlKVMl3Cg/arcgis/rest/services/Kult%C3%BArne_in%C5%A1tit%C3%BAcie_BBSK_view_public/FeatureServer/0/query?where=1%3D1&outFields=ID,Typ,In%C5%A1tit%C3%BAcia,I%C4%8CO,DI%C4%8C,Adresa,web_str%C3%A1nka,Web,Facebook,Instagram,YouTube,Online_katal%C3%B3g,Latitude,Longitude,Obrazok_odkaz&returnGeometry=true&outSR=4326&geometryPrecision=6&f=geojson&resultOffset=0&resultRecordCount=1000&orderByFields=FID
     verb: GET
     headers:
       Accept: application/geo+json, application/json

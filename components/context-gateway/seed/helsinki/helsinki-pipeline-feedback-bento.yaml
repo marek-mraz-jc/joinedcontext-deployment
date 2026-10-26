@@ -95,12 +95,14 @@ pipeline:
           root = this.ts_unix().ts_format("2006-01-02T15:04:05Z", "UTC")
         }
         # Published text as plain text without contact details: the city's answers come as HTML,
-        # and a reporter or an answer may type an email, a phone number or a signed name (T-5257).
+        # and a reporter or an answer may type an email, a phone number, a signed name (T-5257) or a
+        # Finnish number plate (T-5697).
         map public_text {
           let plain = this.re_replace_all("(?i)<br\\s*/?>|</(div|p|li)>", "\n").re_replace_all("<[^>]*>", "").unescape_html()
           let email = $plain.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+", "[email removed]")
           let phone = $email.re_replace_all("(?:\\+|\\b0)\\d(?:[ -]?\\d){5,}|\\+?\\d(?:[ ]?\\d){6,}", "[phone removed]")
-          let signed = $phone.re_replace_all("(?is)\\n[^\\S\\n]*(ystävällisin terveisin|terveisin|med vänliga hälsningar|vänliga hälsningar|hälsningar|best regards|kind regards|regards)\\b.*$", "")
+          let plate = $phone.re_replace_all("(^|[^\\p{L}\\p{N}-])[A-ZÅÄÖ]{2,3}-[0-9]{1,3}([^\\p{L}\\p{N}-]|$)", "$1[plate removed]$2")
+          let signed = $plate.re_replace_all("(?is)\\n[^\\S\\n]*(ystävällisin terveisin|terveisin|med vänliga hälsningar|vänliga hälsningar|hälsningar|best regards|kind regards|regards)\\b.*$", "")
           root = $signed.re_replace_all("[\\t\\x{00a0} ]+", " ").re_replace_all("\\s*\\n\\s*", "\n").trim()
         }
         let updated = this.updated_datetime.or("").apply("utc").catch(null)

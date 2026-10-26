@@ -871,14 +871,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "sidloDodavatela": {
-          "description": "The source column `S\u00eddlo_dod\u00e1vate\u013ea`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "sidloObjednavatela": {
           "description": "The source column `S\u00eddlo_objedn\u00e1vate\u013ea`.",
           "type": [
@@ -1893,14 +1885,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "statutarnyZastupca": {
-          "description": "The source column `\u0160tatut\u00e1rny_z\u00e1stupca`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "stavFinanVyuctovania": {
           "description": "The source column `Stav_finan__vy\u00fa\u010dtovania`.",
           "type": [
@@ -1936,14 +1920,6 @@
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
-          "x-ngsi-ld-kind": "Property"
-        },
-        "ulicaACislo": {
-          "description": "The source column `Ulica_a_cislo`.",
-          "type": [
-            "string",
-            "null"
-          ],
           "x-ngsi-ld-kind": "Property"
         },
         "vSuladeSPrioritamiPoskytovaniaDotacii": {
@@ -1998,14 +1974,6 @@
       "additionalProperties": false,
       "description": "One row of Fakt\u00fary.",
       "properties": {
-        "adresa": {
-          "description": "The source column `Adresa`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "cisloObjednavky": {
           "description": "The source column `\u010c\u00edslo_objedn\u00e1vky`.",
           "type": [
@@ -7221,38 +7189,6 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
-        "riaditel": {
-          "description": "The source column `Riadite\u013e`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelEmail": {
-          "description": "The source column `Riadite\u013e___email`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelPevnaLinka": {
-          "description": "The source column `Riadite\u013e___pevn\u00e1_linka`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelPracMobil": {
-          "description": "The source column `Riadite\u013e___prac__mobil`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "sTAV": {
           "description": "The source column `STAV`.",
           "type": [
@@ -7312,14 +7248,6 @@
         },
         "starostaPriezvisko": {
           "description": "The source column `Starosta_priezvisko`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "statutari": {
-          "description": "The source column `Statutari`.",
           "type": [
             "string",
             "null"
@@ -7429,14 +7357,6 @@
         },
         "ulica": {
           "description": "The source column `Ulica`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "ulicaACislo": {
-          "description": "The source column `Ulica_a_cislo`.",
           "type": [
             "string",
             "null"
@@ -8620,38 +8540,6 @@
           "description": "The source column `rankingPer`.",
           "type": [
             "integer",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditel": {
-          "description": "The source column `Riadite\u013e`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelEmail": {
-          "description": "The source column `Riadite\u013e___email`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelMobilnyTelefon": {
-          "description": "The source column `Riadite\u013e___mobiln\u00fd_telef\u00f3n`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
-        "riaditelPevnaLinka": {
-          "description": "The source column `Riadite\u013e___pevn\u00e1_linka`.",
-          "type": [
-            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -10218,14 +10106,6 @@
       "additionalProperties": false,
       "description": "One row of Objedn\u00e1vky.",
       "properties": {
-        "adresa": {
-          "description": "The source column `Adresa`.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "x-ngsi-ld-kind": "Property"
-        },
         "dataProvider": {
           "description": "Who published the row, with the credit its licence asks for.",
           "type": [

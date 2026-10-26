@@ -124,6 +124,15 @@ envSecret:
     secret: portal-cookie-key
     key: previous
     optional: true
+  # The key the Portal hashes a data subject with for erasure requests and their log (DM-124,
+  # T-5697): its own secret, so rotating the artifact store credential keeps every logged hash
+  # matching. An operator-supplied SOPS reference in the environment's managedSecrets; absent, the
+  # Portal hashes with the artifact store's key, as every hash made before this key existed; an
+  # erasure proposed before the key is first set is proposed again after.
+  JC_PORTAL_ERASURE_KEY:
+    secret: portal-erasure-key
+    key: key
+    optional: true
 {{- if has "gitea" .Values.components }}
   # Minted by the forge's bootstrap Job, not generated: a token the forge accepts is one the
   # forge issued (T-0399).

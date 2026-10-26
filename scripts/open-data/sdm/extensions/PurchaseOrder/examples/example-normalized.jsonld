@@ -1,10 +1,6 @@
 {
   "id": "urn:ngsi-ld:PurchaseOrder:joinedcontext.com:example:1",
   "type": "PurchaseOrder",
-  "adresa": {
-    "type": "Property",
-    "value": "adresa"
-  },
   "dataProvider": {
     "type": "Property",
     "value": "dataProvider"

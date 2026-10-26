@@ -423,18 +423,6 @@ jc:rok a linkml:SlotDefinition ;
     linkml:range jc:integer ;
     linkml:slot_uri "https://joinedcontext.com/models/rok"^^xsd:anyURI .
 
-jc:sidloDodavatela a linkml:SlotDefinition ;
-    skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
-    linkml:annotations [ a linkml:Annotation ;
-            skos:example "Property" ;
-            linkml:tag "ngsi_ld_kind"^^xsd:anyURI ] ;
-    linkml:definition_uri "https://joinedcontext.com/models/sidloDodavatela"^^xsd:anyURI ;
-    linkml:description "The source column `Sídlo_dodávateľa`." ;
-    linkml:domain_of jc:Contract ;
-    linkml:owner jc:Contract ;
-    linkml:range jc:string ;
-    linkml:slot_uri "https://joinedcontext.com/models/sidloDodavatela"^^xsd:anyURI .
-
 jc:sidloObjednavatela a linkml:SlotDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
@@ -682,7 +670,6 @@ jc:date a linkml:TypeDefinition ;
 
 jc:Entity a linkml:ClassDefinition ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
-    skos:mappingRelation "ngsi-ld:Entity"^^xsd:anyURI ;
     linkml:annotations [ a linkml:Annotation ;
             skos:example "ETSI NGSI-LD core context v1.8" ;
             linkml:tag "upstream_source"^^xsd:anyURI ] ;
@@ -709,7 +696,6 @@ jc:Contract a linkml:ClassDefinition,
     dcterms:license "https://joinedcontext.com/licenses/cc-by-4.0" ;
     dcterms:title "Contract, an extension of dataModel.CPSV-AP/Cost" ;
     skos:inScheme "https://joinedcontext.com/models/sdm/extensions/Contract"^^xsd:anyURI ;
-    skos:mappingRelation "jc:Contract"^^xsd:anyURI ;
     sh:declare [ sh:namespace "https://joinedcontext.com/models/"^^xsd:anyURI ;
             sh:prefix "jc" ],
         [ sh:namespace "https://uri.etsi.org/ngsi-ld/"^^xsd:anyURI ;
@@ -769,7 +755,6 @@ jc:Contract a linkml:ClassDefinition,
         jc:priloha,
         jc:rezort,
         jc:rok,
-        jc:sidloDodavatela,
         jc:sidloObjednavatela,
         jc:source,
         jc:sumaSpoluVEUR,

@@ -146,7 +146,6 @@ Specialises `Entity`.
 | `poznamka` | Property | `string` |  |  | `jc:poznamka` | The source column `Poznámka`. |
 | `priloha` | Property | `string` |  |  | `jc:priloha` | The source column `Príloha`. |
 | `rezort` | Property | `string` |  |  | `jc:rezort` | The source column `Rezort`. |
-| `sidloDodavatela` | Property | `string` |  |  | `jc:sidloDodavatela` | The source column `Sídlo_dodávateľa`. |
 | `sidloObjednavatela` | Property | `string` |  |  | `jc:sidloObjednavatela` | The source column `Sídlo_objednávateľa`. |
 | `sumaSpoluVEUR` | Property | `string` |  |  | `jc:sumaSpoluVEUR` | The source column `Suma_spolu_v_EUR`. |
 | `sumaVEUR` | Property | `string` |  |  | `jc:sumaVEUR` | The source column `Suma_v_EUR`. |
@@ -294,12 +293,10 @@ Specialises `Entity`.
 | `schvalenaVyskaDotacie` | Property | `float` |  |  | `jc:schvalenaVyskaDotacie` | The source column `Schválená_výška_dotácie`. |
 | `sidlo` | Property | `string` |  |  | `jc:sidlo` | The source column `Sídlo`. |
 | `skutocneCerpanie` | Property | `float` |  |  | `jc:skutocneCerpanie` | The source column `Skutočné_čerpanie`. |
-| `statutarnyZastupca` | Property | `string` |  |  | `jc:statutarnyZastupca` | The source column `Štatutárny_zástupca`. |
 | `stavFinanVyuctovania` | Property | `string` |  |  | `jc:stavFinanVyuctovania` | The source column `Stav_finan__vyúčtovania`. |
 | `stavZiadosti` | Property | `string` |  |  | `jc:stavZiadosti` | The source column `Stav_žiadosti`. |
 | `typDotacie` | Property | `string` |  |  | `jc:typDotacie` | The source column `Typ_dotácie`. |
 | `typTabora` | Property | `string` |  |  | `jc:typTabora` | The source column `Typ_tábora`. |
-| `ulicaACislo` | Property | `string` |  |  | `jc:ulicaACislo` | The source column `Ulica_a_cislo`. |
 | `vSuladeSPrioritamiPoskytovaniaDotacii` | Property | `string` |  |  | `jc:vSuladeSPrioritamiPoskytovaniaDotacii` | The source column `V_súlade_s_prioritami_poskytovania_dotácií`. |
 | `vZN` | Property | `string` |  |  | `jc:vZN` | The source column `VZN`. |
 | `vratenaNedocerpanaCastDotacieDna` | Property | `string` |  |  | `jc:vratenaNedocerpanaCastDotacieDna` | The source column `Vrátená_nedočerpaná_časť_dotácie_dňa`. |
@@ -323,7 +320,6 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
-| `adresa` | Property | `string` |  |  | `jc:adresa` | The source column `Adresa`. |
 | `cisloObjednavky` | Property | `string` |  |  | `jc:cisloObjednavky` | The source column `Číslo_objednávky`. |
 | `cisloZmluvy` | Property | `string` |  |  | `jc:cisloZmluvy` | The source column `Číslo_zmluvy`. |
 | `dIC` | Property | `string` |  |  | `jc:dIC` | The source column `DIČ`. |
@@ -990,10 +986,6 @@ Specialises `Entity`.
 | `priprNaOU` | Property | `integer` |  |  | `jc:priprNaOU` | The source column `prípr__na_OU`. |
 | `pripravny8Spolu` | Property | `integer` |  |  | `jc:pripravny8Spolu` | The source column `Prípravný___8____spolu`. |
 | `pripravny8Zeny` | Property | `integer` |  |  | `jc:pripravny8Zeny` | The source column `Prípravný___8____ženy`. |
-| `riaditel` | Property | `string` |  |  | `jc:riaditel` | The source column `Riaditeľ`. |
-| `riaditelEmail` | Property | `string` |  |  | `jc:riaditelEmail` | The source column `Riaditeľ___email`. |
-| `riaditelPevnaLinka` | Property | `string` |  |  | `jc:riaditelPevnaLinka` | The source column `Riaditeľ___pevná_linka`. |
-| `riaditelPracMobil` | Property | `string` |  |  | `jc:riaditelPracMobil` | The source column `Riaditeľ___prac__mobil`. |
 | `sTAV` | Property | `string` |  |  | `jc:sTAV` | The source column `STAV`. |
 | `skola` | Property | `string` |  |  | `jc:skola` | The source column `Škola`. |
 | `skolskaJedalen` | Property | `string` |  |  | `jc:skolskaJedalen` | The source column `Školská_jedáleň`. |
@@ -1001,7 +993,6 @@ Specialises `Entity`.
 | `skupinaOdborovVzdelania` | Property | `string` |  |  | `jc:skupinaOdborovVzdelania` | The source column `Skupina_odborov_vzdelania`. |
 | `starostaMeno` | Property | `string` |  |  | `jc:starostaMeno` | The source column `Starosta_meno`. |
 | `starostaPriezvisko` | Property | `string` |  |  | `jc:starostaPriezvisko` | The source column `Starosta_priezvisko`. |
-| `statutari` | Property | `string` |  |  | `jc:statutari` | The source column `Statutari`. |
 | `stupenVzdelania` | Property | `string` |  |  | `jc:stupenVzdelania` | The source column `Stupeň_vzdelania`. |
 | `supisneCislo` | Property | `string` |  |  | `jc:supisneCislo` | The source column `SupisneCislo`. |
 | `sustavnaPripravaNaPovolanie` | Property | `integer` |  |  | `jc:sustavnaPripravaNaPovolanie` | The source column `SustavnaPripravaNaPovolanie`. |
@@ -1015,7 +1006,6 @@ Specialises `Entity`.
 | `typSaSZSkratka` | Property | `string` |  |  | `jc:typSaSZSkratka` | The source column `TypSaSZSkratka`. |
 | `typUniverzity` | Property | `string` |  |  | `jc:typUniverzity` | The source column `Typ_univerzity`. |
 | `ulica` | Property | `string` |  |  | `jc:ulica` | The source column `Ulica`. |
-| `ulicaACislo` | Property | `string` |  |  | `jc:ulicaACislo` | The source column `Ulica_a_cislo`. |
 | `univerzita` | Property | `string` |  |  | `jc:univerzita` | The source column `Univerzita`. |
 | `upravene` | Property | `datetime` |  |  | `jc:upravene` | The source column `Upravené`. |
 | `vydajnaSkolskaJedalen` | Property | `string` |  |  | `jc:vydajnaSkolskaJedalen` | The source column `Výdajná_školská_jedáleň`. |
@@ -1185,10 +1175,6 @@ Specialises `Entity`.
 | `publishedA` | Property | `datetime` |  |  | `jc:publishedA` | The source column `publishedA`. |
 | `publishedB` | Property | `integer` |  |  | `jc:publishedB` | The source column `publishedB`. |
 | `rankingPer` | Property | `integer` |  |  | `jc:rankingPer` | The source column `rankingPer`. |
-| `riaditel` | Property | `string` |  |  | `jc:riaditel` | The source column `Riaditeľ`. |
-| `riaditelEmail` | Property | `string` |  |  | `jc:riaditelEmail` | The source column `Riaditeľ___email`. |
-| `riaditelMobilnyTelefon` | Property | `string` |  |  | `jc:riaditelMobilnyTelefon` | The source column `Riaditeľ___mobilný_telefón`. |
-| `riaditelPevnaLinka` | Property | `string` |  |  | `jc:riaditelPevnaLinka` | The source column `Riaditeľ___pevná_linka`. |
 | `scitac` | Property | `string` |  |  | `jc:scitac` | The source column `Sčítač`. |
 | `shortDescr` | Property | `string` |  |  | `jc:shortDescr` | The source column `shortDescr`. |
 | `sidloPoskytovatela` | Property | `string` |  |  | `jc:sidloPoskytovatela` | The source column `Sídlo_poskytovateľa`. |
@@ -1420,7 +1406,6 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who published the row, with the credit its licence asks for. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The service the row was read from. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the row belongs to, where its licence and its other rows are. |
-| `adresa` | Property | `string` |  |  | `jc:adresa` | The source column `Adresa`. |
 | `datumVystavenia` | Property | `date` |  |  | `jc:datumVystavenia` | The source column `Dátum_vystavenia`. |
 | `dodavatel` | Property | `string` |  |  | `jc:dodavatel` | The source column `Dodávateľ`. |
 | `iCO` | Property | `string` |  |  | `jc:iCO` | The source column `ICO`. |

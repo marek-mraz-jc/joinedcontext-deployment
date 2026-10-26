@@ -203,7 +203,7 @@
   "service_name": "",
   "service_code": null,
   "status": "CLOSED",
-  "description": "Katuvalo rikki.\nSoittakaa 040 123 4567, 040-123-4567 tai +358 9 310 12345, maija.meikalainen@example.fi\nHavaittu 2026-10-19.\nTerveisin\nMaija Meikäläinen",
+  "description": "Katuvalo rikki.\nSoittakaa 040 123 4567, 040-123-4567 tai +358 9 310 12345, maija.meikalainen@example.fi\nHavaittu 2026-10-19. Auto ÄBC-12 ja XYZ-123 esteenä, ei ABCD-1234.\nTerveisin\nMaija Meikäläinen",
   "agency_responsible": "",
   "service_notice": "",
   "requested_datetime": "2026-10-20T10:48:29Z",
