@@ -178,5 +178,7 @@ context-broker:
     # 0024 (entity_values + backfill: ~18M rows from 1.41M entities on dev, writes wait until it commits), 0025
     # (entity_attrs), 0026 (views digest generated column), all rollback = "compatible". New runtime keys keep their
     # defaults (none set here). Rollback: dev-49. Signed by ship.yml on dev at 55aa715 (run of 2026-10-26T03:20Z).
-    tag: 'dev-67'
-    digest: 'sha256:7f1025fc4e48378a9a9e2a5f27002e4435fd6d9291523a6afccd70fad7cf5254'
+    # Antares dev 6a2e3d5 (dev-71, over 55aa715: T-5747, T-5704, T-5738; same FEATURES). No migration, no new runtime
+    # key. Rollback: dev-67. Signed by ship.yml on dev at 6a2e3d5 (run 40280827268).
+    tag: 'dev-71'
+    digest: 'sha256:155c7c1df696f1ce06a726518faeec17f1d6e8e90b9f37db54c76d9a96ecd2c9'
