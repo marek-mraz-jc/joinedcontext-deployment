@@ -132,6 +132,10 @@ def keycloak():
             time.sleep(2)
         else:
             pytest.fail("Keycloak did not start within 3 minutes")
+        # Every test but the fresh-installation one starts from an existing realm, so each runs alone.
+        status, body, _ = call(base, "POST", "/admin/realms", token(base, "master", "admin-cli", user="admin"),
+                               {"realm": REALM, "enabled": True})
+        assert status == 201, body
         subprocess.run(["docker", "cp", str(SCRIPT), f"{name}:/tmp/people.sh"], check=True)
         yield name, base
     finally:
