@@ -205,5 +205,8 @@ context-broker:
     # Antares dev bcb9082 (dev-86, over e48eaf3: T-5847 gzip/br response compression on the served router; same
     # FEATURES). No migration, no new key. Needs the gateway at platform >= fc27d53 (asks for plain bytes). Rollback: dev-85.
     # Signed by ship.yml on dev at bcb9082 (run 40502309689).
-    tag: 'dev-86'
-    digest: 'sha256:56f8c1be21ea7b59084e52387d952e079e8681c2636389171a0b52c35566172f'
+    # Antares dev 0e5bc9a (dev-87, over bcb9082: T-5849 br quality 2, gzip level 1, 1 KiB minimum; same FEATURES).
+    # No migration, no new key. The gateway asks for plain bytes since fc27d53 (live). Rollback: dev-86.
+    # Signed by ship.yml on dev at 0e5bc9a (run 40513043812).
+    tag: 'dev-87'
+    digest: 'sha256:49ff8ef628cacc3212ebcdb4221a9bf6673a8185b8a1f0817c75903fb9dc64fe'
