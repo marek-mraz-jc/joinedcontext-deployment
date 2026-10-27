@@ -192,5 +192,8 @@ context-broker:
     # idPattern, T-5827 a masked receiverInfo no longer follows a new endpoint uri, T-5816 MCP decision page, T-5805
     # comma ids; same FEATURES). No migration. New runtime key ANTARES_MCP_CONFIRM_URL stays unset (default).
     # Rollback: dev-77. Signed by ship.yml on dev at 2535495 (run 40433810842).
-    tag: 'dev-80'
-    digest: 'sha256:4056562cac25acde7ae72edc5d745b5132da521e984b8b9e67273e1c17b3378f'
+    # Antares dev 70486ab (dev-82, over 2535495: T-5835 OGC history reads drop an attrs list past half the URI cap,
+    # T-5657 batch upsert update mode replaces each named attribute whole; same FEATURES). No migration, no new key.
+    # Rollback: dev-80. Signed by ship.yml on dev at 70486ab (run 40441664675).
+    tag: 'dev-82'
+    digest: 'sha256:13059a05e0bd35d04274b2620943f51ba225566300f6b0203a3ee78abcfe65da'
