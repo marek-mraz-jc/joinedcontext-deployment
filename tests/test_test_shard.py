@@ -49,6 +49,14 @@ def test_a_file_heavier_than_its_share_is_split_and_the_shards_stay_even():
     assert test_shard.split(names, weights, 1) == set()
 
 
+def test_a_heavy_container_module_stays_whole_in_one_shard():
+    # test_keycloak_admin_permissions.py runs its tests against one Keycloak (xdist_group): 785 s on 70de8827
+    weights = {"test_keycloak_admin_permissions.py": 4000.0, **{f"test_{i:02}.py": 100.0 + i for i in range(40)}}
+    names = sorted(weights)
+    assert test_shard.split(names, weights, 6) == set()
+    assert sum("test_keycloak_admin_permissions.py" in s for s in test_shard.shards(names, weights, 6)) == 1
+
+
 def test_each_test_of_a_split_file_runs_in_exactly_one_shard():
     assert all(sum(test_shard.mine(position, shard, 4) for shard in range(1, 5)) == 1 for position in range(200))
 
@@ -62,11 +70,11 @@ def collected(*args, shard=None):
 
 def test_the_shards_collect_every_test_of_a_split_file_once():
     weights = json.loads(test_shard.TABLE.read_text(encoding="utf-8"))
-    cut = sorted(test_shard.split(test_shard.files(), weights, 4))
+    cut = sorted(test_shard.split(test_shard.files(), weights, 6))
     assert cut, "no file is heavy enough to split: pick one for this test"
     paths = [f"tests/{name}" for name in cut]
     whole = collected(*paths)
-    parts = [collected(*paths, shard=f"{i}/4") for i in range(1, 5)]
+    parts = [collected(*paths, shard=f"{i}/6") for i in range(1, 7)]
     assert sorted(itertools.chain(*parts)) == sorted(whole) and all(parts)
     assert max(map(len, parts)) - min(map(len, parts)) <= len(cut)
 
@@ -74,7 +82,7 @@ def test_the_shards_collect_every_test_of_a_split_file_once():
 def test_the_committed_table_spreads_the_time_evenly():
     # The positional split put 13.6 of 26 pytest minutes into shard 4 (run 39344805398).
     weights = json.loads(test_shard.TABLE.read_text(encoding="utf-8"))
-    shards = test_shard.shards(test_shard.files(), weights, 4)
+    shards = test_shard.shards(test_shard.files(), weights, 6)
     loads = [load(s, weights) for s in shards]
     loads[0] += test_shard.SHARD_ONE_STEPS
     assert max(loads) <= 1.15 * statistics.mean(loads), loads
@@ -118,8 +126,8 @@ def test_every_test_file_has_a_measured_weight():
 
 def test_shard_one_carries_less_pytest_time_for_its_own_steps():
     weights = json.loads(test_shard.TABLE.read_text(encoding="utf-8"))
-    loads = [load(s, weights) for s in test_shard.shards(test_shard.files(), weights, 4)]
-    assert test_shard.SHARD_ONE_STEPS >= 120 and all(loads[0] < other for other in loads[1:]), loads
+    loads = [load(s, weights) for s in test_shard.shards(test_shard.files(), weights, 6)]
+    assert test_shard.SHARD_ONE_STEPS >= 150 and all(loads[0] < other for other in loads[1:]), loads
 
 
 def test_record_reads_the_shards_junit_reports_and_keeps_an_unmeasured_weight(tmp_path):

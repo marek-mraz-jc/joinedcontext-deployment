@@ -172,7 +172,7 @@ def exported(collector_config, tmp_path_factory):
 
     name = f"jc-otelcol-test-{port}"
     run = subprocess.run(
-        ["docker", "run", "-d", "--rm", "--name", name, "--network", "host",
+        ["docker", "run", "-d", "--name", name, "--network", "host",
          "-e", "JC_ACTIVITY_CLIENT_SECRET=stub-secret", "-v", f"{d}:/etc/otelcol:ro",
          IMAGE, "--config=/etc/otelcol/config.yaml"],
         capture_output=True, text=True,
