@@ -18,9 +18,12 @@ app.kubernetes.io/part-of: mqtt-brokers
 
 {{- /* Every object of one broker, from a dict: root (the chart's context), release, project, name,
        host, maxBytes, perSecond, connections, checksum, managedBy, and for a broker with a
-       dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision. Rendered per broker below and
-       once with sentinels into the template the Portal fills (T-3994), twice: with and without a
-       port. */ -}}
+       dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision; tlsSecret, the Secret the
+       8883 route serves, is `<release>-tls` unless a custom hostname names the admin's certificate
+       (ADR-N-048 §2.11, T-5874). Rendered per broker below and once with sentinels into the
+       template the Portal fills (T-3994), three times: platform host, dedicated port, custom
+       hostname; and with clientCa, the Secret holding the project's device client CA, a broker's
+       certificate door `<release>-cert` (ADR-N-048 §2.12, T-5875). */ -}}
 {{- define "brokers.objects" -}}
 {{- $root := .root }}
 {{- /* A dedicated port: Traefik passes TLS through on its entrypoint `mqtt-<port>`, so a device
@@ -29,10 +32,21 @@ app.kubernetes.io/part-of: mqtt-brokers
        One outside door per broker (ADR-N-048 §2.5, T-5871): with a port, the 8883 route by
        hostname and the plain listener 1884 behind it are not rendered. */}}
 {{- $port := .port | default "" }}
-{{- $opaque := ternary "1883,8884" "1883,1884" (ne (toString $port) "") }}
+{{- /* The certificate door (ADR-N-048 §2.12, T-5875): its own Deployment and ServiceAccount, so
+       its own mesh identity, which is how the gateway knows a passwordless CONNECT came through
+       a verified client certificate and not through a token listener. RMQTT ends TLS on 8884,
+       asks every device for a certificate the project CA signed (it refuses none, another CA's
+       and an expired one in the handshake) and passes the subject DN as the username. Traefik
+       passes TLS through by SNI on 8883. No internal listener, no API: devices only. */}}
+{{- $cert := .clientCa | default "" }}
+{{- $tlsIn := or (ne (toString $port) "") (ne $cert "") }}
+{{- $opaque := ternary "1883,8884" "1883,1884" $tlsIn }}
+{{- if $cert }}
+{{- $opaque = "8884" }}
+{{- end }}
 {{- /* The HTTP API on 6060, which the Portal reads (ADR-N-048 §2.8, T-4043): only under the mesh,
        which admits the Portal's identity on two GET routes; without it, nothing would. */}}
-{{- $api := and $root.Values.serviceMesh.enabled $root.Values.portal.namespace }}
+{{- $api := and $root.Values.serviceMesh.enabled $root.Values.portal.namespace (not $cert) }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -70,7 +84,7 @@ data:
     # The node-to-node gRPC of a cluster; one node, so loopback.
     rpc.server_addr = "127.0.0.1:5363"
     # The binary opens these by default, with the self-signed certificate inside the image.
-    {{- if not $port }}
+    {{- if not $tlsIn }}
     listener.tls.external.enable = false
     {{- end }}
     listener.ws.external.enable = false
@@ -80,7 +94,11 @@ data:
     # and the gateway's publish check refuses a client above messagesPerSecond, which
     # disconnect_if_pub_rejected turns into a disconnect (T-5562).
     {{- $listeners := list (dict "name" "tcp.internal" "port" 1883 "proxy" false) }}
-    {{- if $port }}
+    {{- if $cert }}
+    {{- $listeners = list }}
+    listener.tcp.internal.enable = false
+    {{- end }}
+    {{- if $tlsIn }}
     {{- /* rustls: TLS 1.2 and 1.3, ECDHE with AEAD suites only, no knob for the list. */}}
     {{- $listeners = append $listeners (dict "name" "tls.external" "port" 8884 "proxy" true) }}
     # The binary opens tcp.external by default: the dedicated port is this broker's only outside door.
@@ -102,15 +120,24 @@ data:
     {{ $l }}.mqueue_rate_limit = "{{ $.perSecond }},1s"
     {{ $l }}.proxy_protocol = {{ $listener.proxy }}
     {{- if eq $listener.port 8884 }}
-    {{ $l }}.cross_certificate = false
     {{ $l }}.cert = "/etc/rmqtt-tls/tls.crt"
     {{ $l }}.key = "/etc/rmqtt-tls/tls.key"
+    {{- if $cert }}
+    {{ $l }}.cross_certificate = true
+    {{ $l }}.client_ca_certs = "/etc/rmqtt-ca/ca.crt"
+    {{- /* The DN, not the CN: a certificate without a CN then arrives as a DN the gateway
+           refuses, where cert_cn_as_username would keep the username the client sent. */}}
+    {{ $l }}.cert_subject_dn_as_username = true
+    {{- else }}
+    {{ $l }}.cross_certificate = false
+    {{- end }}
     {{- end }}
     {{- end }}
   rmqtt-auth-http.toml: |
     http_timeout = "5s"
     disconnect_if_pub_rejected = true
-    # The token's `exp` ends the connection; the device reconnects with a fresh one.
+    # The token's `exp` ends the connection, and on the certificate door the hour the gateway
+    # grants; the device reconnects and is checked again.
     disconnect_if_expiry = true
     # The gateway unreachable is a refusal, never a pass to the next plugin.
     deny_if_error = true
@@ -155,11 +182,13 @@ spec:
     app.kubernetes.io/name: mqtt-broker
     app.kubernetes.io/instance: {{ .release }}
   ports:
+    {{- if not $cert }}
     - name: mqtt-internal
       port: 1883
       targetPort: 1883
       protocol: TCP
-    {{- if $port }}
+    {{- end }}
+    {{- if $tlsIn }}
     - name: mqtts-port
       port: 8884
       targetPort: 8884
@@ -204,7 +233,7 @@ spec:
         joinedcontext.com/project: {{ .project | quote }}
       annotations:
         checksum/config: {{ .checksum | quote }}
-        {{- if $port }}
+        {{- if $tlsIn }}
         # RMQTT reads its certificate once: a renewal (the Certificate's revision) rolls the pod.
         joinedcontext.com/tls-revision: {{ .tlsRevision | toString | quote }}
         {{- end }}
@@ -225,10 +254,12 @@ spec:
           securityContext:
             {{- toYaml $root.Values.securityContext | nindent 12 }}
           ports:
+            {{- if not $cert }}
             - name: mqtt-internal
               containerPort: 1883
               protocol: TCP
-            {{- if $port }}
+            {{- end }}
+            {{- if $tlsIn }}
             - name: mqtts-port
               containerPort: 8884
               protocol: TCP
@@ -250,9 +281,14 @@ spec:
             - name: config
               mountPath: /etc/rmqtt
               readOnly: true
-            {{- if $port }}
+            {{- if $tlsIn }}
             - name: tls
               mountPath: /etc/rmqtt-tls
+              readOnly: true
+            {{- end }}
+            {{- if $cert }}
+            - name: client-ca
+              mountPath: /etc/rmqtt-ca
               readOnly: true
             {{- end }}
       volumes:
@@ -270,7 +306,7 @@ spec:
               - key: rmqtt-http-api.toml
                 path: plugins/rmqtt-http-api.toml
               {{- end }}
-        {{- if $port }}
+        {{- if $tlsIn }}
         - name: tls
           secret:
             secretName: {{ .release }}-tls
@@ -280,6 +316,16 @@ spec:
                 path: tls.crt
               - key: tls.key
                 path: tls.key
+        {{- end }}
+        {{- if $cert }}
+        # The project's device client CA, its certificate only (ADR-N-048 §2.12).
+        - name: client-ca
+          secret:
+            secretName: {{ $cert }}
+            defaultMode: 0444
+            items:
+              - key: {{ .clientCaKey | default "ca.crt" }}
+                path: ca.crt
         {{- end }}
 ---
 # One certificate for this one host (HTTP-01, never a wildcard): Traefik ends TLS with it on
@@ -300,7 +346,30 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - {{ .host | quote }}
-{{- if not $port }}
+{{- if $cert }}
+---
+# The certificate door: TLS passed through by SNI on 8883, so the client certificate reaches RMQTT.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ .release }}
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .release }}
+spec:
+  entryPoints:
+    - {{ $root.Values.entryPoint }}
+  routes:
+    - match: HostSNI(`{{ .host }}`)
+      services:
+        - name: {{ .release }}
+          port: 8884
+          proxyProtocol:
+            version: 2
+  tls:
+    passthrough: true
+{{- else if not $port }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
@@ -321,7 +390,7 @@ spec:
           proxyProtocol:
             version: 2
   tls:
-    secretName: {{ .release }}-tls
+    secretName: {{ .tlsSecret | default (printf "%s-tls" .release) }}
     # BSI TR-02102-2, as on the HTTP edge (templates/tls-option.yaml, T-5562).
     options:
       name: mqtt-bsi-tr-02102
@@ -351,7 +420,10 @@ spec:
 {{- end }}
 {{- if $root.Values.serviceMesh.enabled }}
 {{- $servers := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) }}
-{{- if $port }}
+{{- if $cert }}
+{{- $servers = list }}
+{{- end }}
+{{- if $tlsIn }}
 {{- $servers = append $servers (dict "name" "tls" "port" 8884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
 {{- else }}
 {{- $servers = append $servers (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
