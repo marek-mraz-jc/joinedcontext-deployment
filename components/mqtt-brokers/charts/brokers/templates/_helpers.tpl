@@ -17,10 +17,17 @@ app.kubernetes.io/part-of: mqtt-brokers
 {{- end }}
 
 {{- /* Every object of one broker, from a dict: root (the chart's context), release, project, name,
-       host, maxBytes, perSecond, connections, checksum, managedBy. Rendered per broker below and
-       once with sentinels into the template the Portal fills (T-3994). */ -}}
+       host, maxBytes, perSecond, connections, checksum, managedBy, and for a broker with a
+       dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision. Rendered per broker below and
+       once with sentinels into the template the Portal fills (T-3994), twice: with and without a
+       port. */ -}}
 {{- define "brokers.objects" -}}
 {{- $root := .root }}
+{{- /* A dedicated port: Traefik passes TLS through on its entrypoint `mqtt-<port>`, so a device
+       without SNI still gets this broker's certificate, which only RMQTT can serve; the PROXY v2
+       header before the handshake carries the client's address to the TLS listener 8884. */}}
+{{- $port := .port | default "" }}
+{{- $opaque := ternary "1883,1884,8884" "1883,1884" (ne (toString $port) "") }}
 {{- /* The HTTP API on 6060, which the Portal reads (ADR-N-048 §2.8, T-4043): only under the mesh,
        which admits the Portal's identity on two GET routes; without it, nothing would. */}}
 {{- $api := and $root.Values.serviceMesh.enabled $root.Values.portal.namespace }}
@@ -61,15 +68,22 @@ data:
     # The node-to-node gRPC of a cluster; one node, so loopback.
     rpc.server_addr = "127.0.0.1:5363"
     # The binary opens these by default, with the self-signed certificate inside the image.
+    {{- if not $port }}
     listener.tls.external.enable = false
+    {{- end }}
     listener.ws.external.enable = false
     listener.wss.external.enable = false
     listener.quic.external.enable = false
     # RMQTT 0.24 has no per-publisher rate: `mqueue_rate_limit` caps delivery to each subscriber,
     # and the gateway's publish check refuses a client above messagesPerSecond, which
     # disconnect_if_pub_rejected turns into a disconnect (T-5562).
-    {{- range $listener := list (dict "name" "internal" "port" 1883 "proxy" false) (dict "name" "external" "port" 1884 "proxy" true) }}
-    {{- $l := printf "listener.tcp.%s" $listener.name }}
+    {{- $listeners := list (dict "name" "tcp.internal" "port" 1883 "proxy" false) (dict "name" "tcp.external" "port" 1884 "proxy" true) }}
+    {{- if $port }}
+    {{- /* rustls: TLS 1.2 and 1.3, ECDHE with AEAD suites only, no knob for the list. */}}
+    {{- $listeners = append $listeners (dict "name" "tls.external" "port" 8884 "proxy" true) }}
+    {{- end }}
+    {{- range $listener := $listeners }}
+    {{- $l := printf "listener.%s" $listener.name }}
     {{ $l }}.enable = true
     {{ $l }}.addr = "0.0.0.0:{{ $listener.port }}"
     {{ $l }}.max_connections = {{ $.connections }}
@@ -81,6 +95,11 @@ data:
     {{ $l }}.max_mqueue_len = 1000
     {{ $l }}.mqueue_rate_limit = "{{ $.perSecond }},1s"
     {{ $l }}.proxy_protocol = {{ $listener.proxy }}
+    {{- if eq $listener.port 8884 }}
+    {{ $l }}.cross_certificate = false
+    {{ $l }}.cert = "/etc/rmqtt-tls/tls.crt"
+    {{ $l }}.key = "/etc/rmqtt-tls/tls.key"
+    {{- end }}
     {{- end }}
   rmqtt-auth-http.toml: |
     http_timeout = "5s"
@@ -123,7 +142,7 @@ metadata:
     {{- include "brokers.labels" . | nindent 4 }}
     app.kubernetes.io/instance: {{ .release }}
   annotations:
-    config.linkerd.io/opaque-ports: "1883,1884"
+    config.linkerd.io/opaque-ports: {{ $opaque | quote }}
 spec:
   type: ClusterIP
   selector:
@@ -138,6 +157,12 @@ spec:
       port: 1884
       targetPort: 1884
       protocol: TCP
+    {{- if $port }}
+    - name: mqtts-port
+      port: 8884
+      targetPort: 8884
+      protocol: TCP
+    {{- end }}
     {{- if $api }}
     - name: http-api
       port: 6060
@@ -172,9 +197,13 @@ spec:
         joinedcontext.com/project: {{ .project | quote }}
       annotations:
         checksum/config: {{ .checksum | quote }}
+        {{- if $port }}
+        # RMQTT reads its certificate once: a renewal (the Certificate's revision) rolls the pod.
+        joinedcontext.com/tls-revision: {{ .tlsRevision | toString | quote }}
+        {{- end }}
         {{- if $root.Values.serviceMesh.enabled }}
         linkerd.io/inject: enabled
-        config.linkerd.io/opaque-ports: "1883,1884"
+        config.linkerd.io/opaque-ports: {{ $opaque | quote }}
         {{- end }}
     spec:
       serviceAccountName: {{ .release }}
@@ -195,6 +224,11 @@ spec:
             - name: mqtt-external
               containerPort: 1884
               protocol: TCP
+            {{- if $port }}
+            - name: mqtts-port
+              containerPort: 8884
+              protocol: TCP
+            {{- end }}
             {{- if $api }}
             - name: http-api
               containerPort: 6060
@@ -208,6 +242,11 @@ spec:
             - name: config
               mountPath: /etc/rmqtt
               readOnly: true
+            {{- if $port }}
+            - name: tls
+              mountPath: /etc/rmqtt-tls
+              readOnly: true
+            {{- end }}
       volumes:
         - name: config
           configMap:
@@ -223,6 +262,17 @@ spec:
               - key: rmqtt-http-api.toml
                 path: plugins/rmqtt-http-api.toml
               {{- end }}
+        {{- if $port }}
+        - name: tls
+          secret:
+            secretName: {{ .release }}-tls
+            defaultMode: 0444
+            items:
+              - key: tls.crt
+                path: tls.crt
+              - key: tls.key
+                path: tls.key
+        {{- end }}
 ---
 # TLS ends at the ingress controller with a certificate for this one host (HTTP-01, never a
 # wildcard); the broker sees the client's address in the PROXY header.
@@ -265,8 +315,36 @@ spec:
     # BSI TR-02102-2, as on the HTTP edge (templates/tls-option.yaml, T-5562).
     options:
       name: mqtt-bsi-tr-02102
+{{- if $port }}
+---
+# The dedicated port: one route on the entrypoint, any SNI or none, TLS passed through to 8884.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ .release }}-port
+  namespace: {{ $root.Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .release }}
+spec:
+  entryPoints:
+    - mqtt-{{ $port }}
+  routes:
+    - match: HostSNI(`*`)
+      services:
+        - name: {{ .release }}
+          port: 8884
+          proxyProtocol:
+            version: 2
+  tls:
+    passthrough: true
+{{- end }}
 {{- if $root.Values.serviceMesh.enabled }}
-{{- range $listener := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
+{{- $servers := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
+{{- if $port }}
+{{- $servers = append $servers (dict "name" "tls" "port" 8884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
+{{- end }}
+{{- range $listener := $servers }}
 {{- $server := printf "%s-%s" $.release $listener.name }}
 ---
 # {{ $listener.port }} refuses every identity but the ones below, whatever the NetworkPolicy lets through.
@@ -408,33 +486,3 @@ spec:
 {{- end }}
 {{- end }}
 
-{{- /* A broker's dedicated port (ADR-N-048 §2.5, PL-77, T-5856), from a dict: root, release, port,
-       managedBy. The port is a Traefik entrypoint `mqtt-<port>` of its own (the cluster's Traefik,
-       not this chart): TLS ends there with the broker host's certificate and the 8883 TLSOption,
-       `HostSNI(*)` admits a device that sends no SNI, and the PROXY header carries its address to
-       1884, as on 8883. One route per entrypoint: the Portal and the loop above refuse a second. */ -}}
-{{- define "brokers.port" -}}
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: {{ .release }}-port
-  namespace: {{ .root.Release.Namespace }}
-  labels:
-    {{- include "brokers.labels" . | nindent 4 }}
-    app.kubernetes.io/instance: {{ .release }}
-spec:
-  entryPoints:
-    - mqtt-{{ .port }}
-  routes:
-    - match: HostSNI(`*`)
-      services:
-        - name: {{ .release }}
-          port: 1884
-          proxyProtocol:
-            version: 2
-  tls:
-    secretName: {{ .release }}-tls
-    options:
-      name: mqtt-bsi-tr-02102
-{{- end }}

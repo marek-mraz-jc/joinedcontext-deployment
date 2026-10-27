@@ -1,6 +1,7 @@
 ---
 # A broker has two listeners and one call out (ADR-N-048, PL-76, PL-77): 1883 from the pipeline
-# runner, 1884 from the ingress controller, which terminates TLS on 8883 for the devices, and
+# runner, 1884 from the ingress controller, which terminates TLS on 8883 for the devices (and
+# 8884, TLS in RMQTT behind a dedicated port, T-5856), and
 # the gateway's CONNECT check on its internal listener.
 mqtt-brokers:
   podSelector:
@@ -37,6 +38,9 @@ mqtt-brokers:
       ports:
         - protocol: TCP
           port: 1884
+        # A dedicated port's TLS listener (T-5856), on brokers that hold one; Traefik passes TLS through.
+        - protocol: TCP
+          port: 8884
     # The Portal reads the HTTP API (ADR-N-048 §2.8, T-4043); the chart's Linkerd Server admits
     # its identity on two GET routes only.
     - from:

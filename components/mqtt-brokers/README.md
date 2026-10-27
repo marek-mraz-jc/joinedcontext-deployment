@@ -14,7 +14,10 @@ bucket per client); the gateway sends no `X-Cache`, so the broker asks for every
 disconnects a client whose publish is refused: a device whose role or account is removed, or
 that floods the broker, stops at its next publish (T-5560, T-5562). `mqueue_rate_limit` caps
 delivery to each subscriber at the same rate. TLS ends at Traefik on 8883 with the BSI
-TR-02102-2 TLSOption `mqtt-bsi-tr-02102` of the brokers' namespace, the HTTP edge's settings. The broker's own last rule, `["deny", "all"]`, refuses whatever the gateway did not
+TR-02102-2 TLSOption `mqtt-bsi-tr-02102` of the brokers' namespace, the HTTP edge's settings.
+On a dedicated port TLS ends in RMQTT (rustls): TLS 1.2 and 1.3, ECDHE with AEAD suites only,
+the TLSOption's four TLS 1.2 suites plus the two ECDHE ChaCha20-Poly1305 ones, which rustls
+offers with no setting to drop them (T-5856). The broker's own last rule, `["deny", "all"]`, refuses whatever the gateway did not
 allow. No retainer, no session or message storage, sessions end with the connection.
 
 | Port | Listener | Who reaches it |
@@ -22,7 +25,8 @@ allow. No retainer, no session or message storage, sessions end with the connect
 | 1883 | `internal`, plain MQTT | the pipeline runner only (NetworkPolicy and a Linkerd Server) |
 | 1884 | `external`, PROXY protocol v2 | the ingress controller only |
 | 8883 | Traefik entrypoint `mqtts`, TLS | devices, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
-| 18830-18839 | Traefik entrypoint `mqtt-<port>`, TLS | devices of the one broker whose `spec.port` it is, `HostSNI(*)` (no SNI needed), the broker host's certificate and the same TLSOption, PROXY v2 to 1884 (T-5856) |
+| 8884 | `tls.external`, TLS in RMQTT after a PROXY v2 header, only on a broker with `spec.port` | the ingress controller only (NetworkPolicy and a Linkerd Server) |
+| 18830-18839 | Traefik entrypoint `mqtt-<port>`, TLS passthrough | devices of the one broker whose `spec.port` it is, `HostSNI(*)`, so a device without SNI connects and still gets the broker host's certificate from RMQTT; PROXY v2 to 8884 (T-5856) |
 | 6060 | RMQTT HTTP API, under the mesh only | the Portal's identity, `GET /api/v1/metrics/history/sum` and `GET /api/v1/clients` only (Linkerd `Server` + `HTTPRoute`, ADR-N-048 §2.8, T-4043) |
 
 RMQTT opens TLS, WebSocket and QUIC listeners on its own; the chart turns each of them off, and
@@ -32,8 +36,12 @@ names the Portal; elsewhere the chart turns it off too and the Portal shows "not
 `brokers` is empty in every environment: the Portal's reconciler stamps one broker per
 `MqttBroker` manifest (T-3994). The chart renders a broker's objects once more with sentinels
 (`__RELEASE__`, `__PROJECT__`, `__NAME__`, `__MAX_BYTES__`, `__PER_SECOND__`, `__CONNECTIONS__`,
-`__CONFIG_HASH__`) into the ConfigMap `broker-template`, and a broker's dedicated-port route with
-`__PORT__` into its key `port.yaml`, which the Portal adds only for a broker with a served `spec.port`; the Portal fills them from the manifest,
+`__CONFIG_HASH__`) into the ConfigMap `broker-template`, key `objects.yaml`, and once more with a
+dedicated port into `objects-port.yaml` (`__PORT__`, and `__TLS_REVISION__`, the broker
+Certificate's `status.revision`), which the Portal takes for a broker with a served `spec.port`.
+RMQTT reads its certificate only at start, so a renewal changes the pod annotation
+`joinedcontext.com/tls-revision` and rolls the broker at the next reconcile. The Portal fills the
+sentinels from the manifest,
 applies the objects by server-side apply with `app.kubernetes.io/managed-by: joinedcontext-portal`,
 and deletes those of a broker whose manifest is gone. The Role `portal-mqtt-brokers` lets it do
 that here and nowhere else, and `JC_PORTAL_MQTT_NAMESPACE` tells it where. An entry under
