@@ -1,7 +1,7 @@
 ---
 # A broker has two listeners and one call out (ADR-N-048, PL-76, PL-77): 1883 from the pipeline
-# runner, 1884 from the ingress controller, which terminates TLS on 8883 for the devices (and
-# 8884, TLS in RMQTT behind a dedicated port, T-5856), and
+# runner, 1884 from the ingress controller, which terminates TLS on 8883 for the devices (or,
+# instead, 8884, TLS in RMQTT behind a dedicated port, T-5856, T-5871), and
 # the gateway's CONNECT check on its internal listener.
 mqtt-brokers:
   podSelector:

@@ -2,8 +2,9 @@
   One RMQTT per MqttBroker (ADR-N-048, PL-74). Two listeners, both plain MQTT inside the pod:
   `internal` on 1883 for the pipeline runner only, `external` on 1884 behind the ingress
   controller, which terminates TLS on 8883 and passes the client's address in a PROXY header.
-  A broker with a dedicated port (18830-18839) adds a third, `tls.external` on 8884: TLS in
-  RMQTT, the PROXY header from Traefik's passthrough route on the entrypoint `mqtt-<port>`.
+  A broker with a dedicated port (18830-18839) has `tls.external` on 8884 instead of 1884: TLS
+  in RMQTT, the PROXY header from Traefik's passthrough route on the entrypoint `mqtt-<port>`,
+  and no 8883 route, so each broker has one outside door (T-5871).
   Every CONNECT goes to the gateway (rmqtt-auth-http); its answer carries the client's ACL and
   the broker's own last rule denies everything else. No storage plugin: nothing on disk.
 */}}

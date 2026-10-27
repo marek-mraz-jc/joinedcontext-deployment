@@ -25,9 +25,11 @@ app.kubernetes.io/part-of: mqtt-brokers
 {{- $root := .root }}
 {{- /* A dedicated port: Traefik passes TLS through on its entrypoint `mqtt-<port>`, so a device
        without SNI still gets this broker's certificate, which only RMQTT can serve; the PROXY v2
-       header before the handshake carries the client's address to the TLS listener 8884. */}}
+       header before the handshake carries the client's address to the TLS listener 8884.
+       One outside door per broker (ADR-N-048 §2.5, T-5871): with a port, the 8883 route by
+       hostname and the plain listener 1884 behind it are not rendered. */}}
 {{- $port := .port | default "" }}
-{{- $opaque := ternary "1883,1884,8884" "1883,1884" (ne (toString $port) "") }}
+{{- $opaque := ternary "1883,8884" "1883,1884" (ne (toString $port) "") }}
 {{- /* The HTTP API on 6060, which the Portal reads (ADR-N-048 §2.8, T-4043): only under the mesh,
        which admits the Portal's identity on two GET routes; without it, nothing would. */}}
 {{- $api := and $root.Values.serviceMesh.enabled $root.Values.portal.namespace }}
@@ -77,10 +79,14 @@ data:
     # RMQTT 0.24 has no per-publisher rate: `mqueue_rate_limit` caps delivery to each subscriber,
     # and the gateway's publish check refuses a client above messagesPerSecond, which
     # disconnect_if_pub_rejected turns into a disconnect (T-5562).
-    {{- $listeners := list (dict "name" "tcp.internal" "port" 1883 "proxy" false) (dict "name" "tcp.external" "port" 1884 "proxy" true) }}
+    {{- $listeners := list (dict "name" "tcp.internal" "port" 1883 "proxy" false) }}
     {{- if $port }}
     {{- /* rustls: TLS 1.2 and 1.3, ECDHE with AEAD suites only, no knob for the list. */}}
     {{- $listeners = append $listeners (dict "name" "tls.external" "port" 8884 "proxy" true) }}
+    # The binary opens tcp.external by default: the dedicated port is this broker's only outside door.
+    listener.tcp.external.enable = false
+    {{- else }}
+    {{- $listeners = append $listeners (dict "name" "tcp.external" "port" 1884 "proxy" true) }}
     {{- end }}
     {{- range $listener := $listeners }}
     {{- $l := printf "listener.%s" $listener.name }}
@@ -153,14 +159,15 @@ spec:
       port: 1883
       targetPort: 1883
       protocol: TCP
-    - name: mqtt-external
-      port: 1884
-      targetPort: 1884
-      protocol: TCP
     {{- if $port }}
     - name: mqtts-port
       port: 8884
       targetPort: 8884
+      protocol: TCP
+    {{- else }}
+    - name: mqtt-external
+      port: 1884
+      targetPort: 1884
       protocol: TCP
     {{- end }}
     {{- if $api }}
@@ -221,12 +228,13 @@ spec:
             - name: mqtt-internal
               containerPort: 1883
               protocol: TCP
-            - name: mqtt-external
-              containerPort: 1884
-              protocol: TCP
             {{- if $port }}
             - name: mqtts-port
               containerPort: 8884
+              protocol: TCP
+            {{- else }}
+            - name: mqtt-external
+              containerPort: 1884
               protocol: TCP
             {{- end }}
             {{- if $api }}
@@ -274,8 +282,9 @@ spec:
                 path: tls.key
         {{- end }}
 ---
-# TLS ends at the ingress controller with a certificate for this one host (HTTP-01, never a
-# wildcard); the broker sees the client's address in the PROXY header.
+# One certificate for this one host (HTTP-01, never a wildcard): Traefik ends TLS with it on
+# 8883, or RMQTT itself behind a dedicated port; the broker sees the client's address in the
+# PROXY header.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -291,6 +300,7 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - {{ .host | quote }}
+{{- if not $port }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
@@ -315,7 +325,7 @@ spec:
     # BSI TR-02102-2, as on the HTTP edge (templates/tls-option.yaml, T-5562).
     options:
       name: mqtt-bsi-tr-02102
-{{- if $port }}
+{{- else }}
 ---
 # The dedicated port: one route on the entrypoint, any SNI or none, TLS passed through to 8884.
 apiVersion: traefik.io/v1alpha1
@@ -340,9 +350,11 @@ spec:
     passthrough: true
 {{- end }}
 {{- if $root.Values.serviceMesh.enabled }}
-{{- $servers := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
+{{- $servers := list (dict "name" "internal" "port" 1883 "sa" $root.Values.runner.serviceAccount "ns" $root.Values.runner.namespace) }}
 {{- if $port }}
 {{- $servers = append $servers (dict "name" "tls" "port" 8884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
+{{- else }}
+{{- $servers = append $servers (dict "name" "external" "port" 1884 "sa" $root.Values.ingress.serviceAccount "ns" $root.Values.ingress.namespace) }}
 {{- end }}
 {{- range $listener := $servers }}
 {{- $server := printf "%s-%s" $.release $listener.name }}
