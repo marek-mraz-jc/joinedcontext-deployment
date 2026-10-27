@@ -233,3 +233,8 @@ catalog.linkml.yaml: projects/banskabystrica/spaces/catalog/datamodels/catalog.l
 endpoint-catalog.yaml: projects/banskabystrica/spaces/catalog/endpoints/catalog.yaml
 policy-catalog-portal-write.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-portal-write.yaml
 policy-catalog-public-read.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-public-read.yaml
+# The MQTT demo (T-4857): one broker, its device and the pipeline writing the device's readings.
+mqttbroker-ovzdusie.yaml: projects/banskabystrica/mqttbrokers/ovzdusie.yaml
+serviceaccount-senzor-namestie.yaml: projects/banskabystrica/access/serviceaccounts/senzor-namestie.yaml
+datasource-mqtt-ovzdusie.yaml: projects/banskabystrica/datasources/mqtt-ovzdusie.yaml
+pipeline-mqtt-ovzdusie.yaml: projects/banskabystrica/pipelines/mqtt-ovzdusie/pipeline.yaml

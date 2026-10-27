@@ -51,9 +51,11 @@ def test_no_mapping_of_a_pipeline_with_a_lifetime_writes_expires_at_itself():
                      and (yaml.safe_load((HELSINKI / name).read_text()).get("spec") or {}).get("lifetime")]
     assert {"helsinki-pipeline-hfp.yaml", "helsinki-pipeline-traffic-messages.yaml"} <= set(with_lifetime)
     for name in with_lifetime:
+        # A mapping lives in its own bento file or inline as `spec.compute.bloblang` (T-4857).
         mapping = HELSINKI / name.replace(".yaml", "-bento.yaml")
-        code = "\n".join(line for line in mapping.read_text().splitlines() if not line.lstrip().startswith("#"))
-        assert not assigned.search(code), mapping.name
+        text = mapping.read_text() if mapping.exists() else yaml.safe_load((HELSINKI / name).read_text())["spec"]["compute"]["bloblang"]
+        code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+        assert not assigned.search(code), name
 
 
 def test_the_space_removes_an_alert_its_writer_gave_no_end_an_hour_after_its_last_write():

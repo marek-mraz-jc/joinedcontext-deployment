@@ -1608,6 +1608,62 @@ else
 	esac
 fi
 
+# The MQTT edge brokers (T-4857, ADR-N-048): every broker the Portal stamped runs, answers TLS on
+# its address with its own host's certificate, and refuses a CONNECT without a token. Plain 1883
+# is never reachable from outside. A broker's route names its host (`HostSNI`); a dedicated
+# port's route (`-port`) answers a client that sends no SNI with the same certificate (T-5856).
+echo "mqtt edge brokers (T-4857)"
+mqtt_ns="${JC_MQTT_NAMESPACE:-$slug-mqtt}"
+mqtt_routes=$(kubectl get ingressroutetcp -n "$mqtt_ns" -l app.kubernetes.io/managed-by=joinedcontext-portal \
+	-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.entryPoints 0}} {{(index .spec.routes 0).match}}{{"\n"}}{{end}}' 2>/dev/null || true)
+if [ -z "$mqtt_routes" ]; then
+	skip "mqtt edge brokers (the Portal runs no MqttBroker in $mqtt_ns)"
+else
+	# The dedicated ports carry no host of their own: each takes its broker's from the 8883 route.
+	mqtt_hosts=$(printf '%s\n' "$mqtt_routes" | tr -d '\140' | sed -n 's/^\([^ ]*\) [^ ]* HostSNI(\([^*)]*\))$/\1 \2/p')
+	while read -r route entry _; do
+		[ -n "$route" ] || continue
+		release=${route%-port}
+		host=$(printf '%s\n' "$mqtt_hosts" | awk -v r="$release" '$1 == r { print $2 }')
+		if [ -z "$host" ]; then
+			ko "mqtt $route: no HostSNI route names the broker's host"
+			continue
+		fi
+		if [ "$route" = "$release" ]; then
+			ready=$(kubectl get deployment "$release" -n "$mqtt_ns" -o 'jsonpath={.status.readyReplicas}' 2>/dev/null || true)
+			if [ "${ready:-0}" -ge 1 ]; then ok "mqtt $release runs"; else ko "mqtt $release has no ready replica"; fi
+			port=8883
+			sni=(-servername "$host")
+		else
+			port=${entry#mqtt-}
+			sni=(-noservername)
+		fi
+		# A verified chain for the broker's own host name, with SNI on 8883 and without it on a
+		# dedicated port: the edge's default certificate would fail -verify_hostname.
+		if openssl s_client -connect "$host:$port" "${sni[@]}" -verify_hostname "$host" -verify_return_error \
+			-brief </dev/null >/dev/null 2>&1; then
+			ok "mqtt $host:$port serves a valid certificate for $host"
+		else
+			ko "mqtt $host:$port: no verified TLS for $host"
+		fi
+		# No token, no session: the gateway refuses the CONNECT (ADR-N-048 §2.3), so mosquitto
+		# exits non-zero with a refusal, never a publish.
+		refused=$(timeout 20 mosquitto_pub -h "$host" -p "$port" --capath /etc/ssl/certs -i "smoke-$RANDOM" \
+			-t smoke/none -m x -q 1 2>&1 || true)
+		case "$refused" in
+		*"ot authori"* | *"efused"* | *"Bad user name or password"*) ok "mqtt $host:$port refuses a CONNECT without a token" ;;
+		*) ko "mqtt $host:$port: a CONNECT without a token was not refused (${refused:-published})" ;;
+		esac
+		if [ "$route" = "$release" ]; then
+			if timeout 5 bash -c "exec 3<>/dev/tcp/$host/1883" 2>/dev/null; then
+				ko "mqtt $host:1883 (plain MQTT) answers from outside the cluster"
+			else
+				ok "mqtt $host:1883 (plain MQTT) is closed from outside"
+			fi
+		fi
+	done <<<"$mqtt_routes"
+fi
+
 printf '\n%s passed, %s failed, %s skipped\n' "$pass" "$fail" "$skipped"
 [ "$warned" -eq 0 ] || printf '%s warnings\n' "$warned"
 [ "$fail" -eq 0 ]

@@ -412,3 +412,12 @@ catalog.linkml.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.linkml.
 helsinki-endpoint-catalog.yaml: projects/helsinki/spaces/catalog/endpoints/catalog.yaml
 helsinki-policy-catalog-portal-write.yaml: projects/helsinki/spaces/catalog/policies/catalog-portal-write.yaml
 helsinki-policy-catalog-public-read.yaml: projects/helsinki/spaces/catalog/policies/catalog-public-read.yaml
+# The MQTT demo (T-4857): two brokers, one device each, and the pipelines writing their messages.
+helsinki-mqttbroker-sensors.yaml: projects/helsinki/mqttbrokers/sensors.yaml
+helsinki-mqttbroker-vehicles.yaml: projects/helsinki/mqttbrokers/vehicles.yaml
+helsinki-serviceaccount-sensor-kallio.yaml: projects/helsinki/access/serviceaccounts/sensor-kallio.yaml
+helsinki-serviceaccount-vehicle-demo.yaml: projects/helsinki/access/serviceaccounts/vehicle-demo.yaml
+helsinki-datasource-mqtt-sensors.yaml: projects/helsinki/datasources/mqtt-sensors.yaml
+helsinki-datasource-mqtt-vehicles.yaml: projects/helsinki/datasources/mqtt-vehicles.yaml
+helsinki-pipeline-mqtt-sensors.yaml: projects/helsinki/pipelines/mqtt-sensors/pipeline.yaml
+helsinki-pipeline-mqtt-vehicles.yaml: projects/helsinki/pipelines/mqtt-vehicles/pipeline.yaml
