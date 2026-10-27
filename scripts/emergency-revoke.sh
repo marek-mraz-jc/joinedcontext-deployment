@@ -2,38 +2,47 @@
 # Emergency revocation of a compromised credential or policy (OPS-45, R48, PF-38).
 #
 #   scripts/emergency-revoke.sh --instance dev --policy public-read \
-#       [--user jana.kovacova | --service-account banskabystrica-conformance] \
-#       [--verify-url https://host/api/endpoint/<slug>/ngsi-ld/v1/entities?type=X] \
-#       [--verify-token-file .secrets/compromised-token] [--bound 5]
+#       --project helsinki --space air --forge https://dev.example.org/git \
+#       --verify-url https://host/api/endpoint/<slug>/ngsi-ld/v1/entities?type=X \
+#       --verify-token-file .secrets/compromised-token \
+#       [--user jana.kovacova | --service-account banskabystrica-conformance] [--bound 5]
 #
 # Three things have to happen, in this order, and the order is the point:
 #
-#   1. the Policy that grants the compromised subject leaves the gateway's repository,
+#   1. the Policy that grants the compromised subject leaves the repository the gateway reads,
 #      because an access token already in an attacker's hands stays cryptographically
-#      valid until it expires — only the PDP can stop honouring it;
-#   2. the gateway replicas re-read the repository on their own: the reaper polls it every
-#      second and swaps the tables (platform T-0177), so nothing restarts the gateway every
-#      tenant shares; the measurement below proves the replicas stopped honouring the grant;
-#   3. Keycloak stops minting new tokens for the subject — sessions logged out for a
+#      valid until it expires; only the PDP can stop honouring it. That repository is the
+#      forge's (T-5650): the script deletes the manifest with a commit on `main` as the
+#      Portal's machine user, whose token it reads from the Secret gitea-token-portal;
+#   2. each gateway pod fetches that project now instead of at its next 10 s pass: the script
+#      runs one `jcctl checkouts --once --only <project>` in the pod's checkouts sidecar, and
+#      the reaper swaps the tables within a second (platform T-0177), so nothing restarts the
+#      gateway every tenant shares;
+#   3. Keycloak stops minting new tokens for the subject: sessions logged out for a
 #      user, client secret rotated for a service account.
 #
 # Then the script MEASURES the propagation instead of claiming it: it calls the endpoint
 # with the compromised token until the answer is 401 or 403 and fails if that takes longer
-# than the bound (5 s per OPS-45).
+# than the bound (5 s per OPS-45). A Policy is never removed without that measurement.
 #
-# The script never prints a token, a secret or a password; only lengths and statuses.
+# The script never prints a token, a secret or a password, and never puts one on a command line.
 set -uo pipefail
 
 instance=""
 policy=""
-policy_key=""
+project=""
+space=""
+forge=""
+forge_repo=""
+policy_path=""
+forge_token_secret="gitea-token-portal"
 user=""
 service_account=""
 verify_url=""
 verify_token_file=""
 bound=5
 namespace=""
-configmap="context-gateway"
+gateway="context-gateway"
 idm=""
 
 die() { printf 'emergency-revoke: %s\n' "$1" >&2; exit 2; }
@@ -43,26 +52,43 @@ while [ $# -gt 0 ]; do
 	--instance) instance="${2:?}"; shift 2 ;;
 	--namespace) namespace="${2:?}"; shift 2 ;;
 	--policy) policy="${2:?}"; shift 2 ;;
-	--policy-key) policy_key="${2:?}"; shift 2 ;;
+	--project) project="${2:?}"; shift 2 ;;
+	--space) space="${2:?}"; shift 2 ;;
+	--forge) forge="${2:?}"; shift 2 ;;
+	--forge-repo) forge_repo="${2:?}"; shift 2 ;;
+	--policy-path) policy_path="${2:?}"; shift 2 ;;
+	--forge-token-secret) forge_token_secret="${2:?}"; shift 2 ;;
+	--gateway) gateway="${2:?}"; shift 2 ;;
 	--user) user="${2:?}"; shift 2 ;;
 	--service-account) service_account="${2:?}"; shift 2 ;;
 	--verify-url) verify_url="${2:?}"; shift 2 ;;
 	--verify-token-file) verify_token_file="${2:?}"; shift 2 ;;
 	--bound) bound="${2:?}"; shift 2 ;;
-	--configmap) configmap="${2:?}"; shift 2 ;;
 	--idm) idm="${2:?}"; shift 2 ;;
-	-h | --help) sed -n '2,25p' "$0"; exit 0 ;;
+	-h | --help) sed -n '2,29p' "$0"; exit 0 ;;
 	*) die "unknown argument: $1" ;;
 	esac
 done
 
-[ -n "$instance" ] || die "usage: emergency-revoke.sh --instance <slug> [--policy NAME] [--user NAME | --service-account CLIENT]"
+[ -n "$instance" ] || die "usage: emergency-revoke.sh --instance <slug> [--policy NAME --project P --space S --forge URL --verify-url URL --verify-token-file F] [--user NAME | --service-account CLIENT]"
 [ -n "$policy" ] || [ -n "$user" ] || [ -n "$service_account" ] ||
 	die "nothing to revoke: give --policy, --user or --service-account"
 namespace="${namespace:-$instance}"
-# The seed mounts one file per manifest, so a Policy named `public-read` is the key
-# `policy.yaml` unless the operator says otherwise; `--policy-key` covers the rest.
-[ -n "$policy" ] && [ -z "$policy_key" ] && policy_key="policy.yaml"
+if [ -n "$policy" ]; then
+	[ -n "$forge" ] || die "--forge <https://host/prefix of the forge> is needed to remove a policy"
+	[ -n "$verify_url" ] && [ -n "$verify_token_file" ] ||
+		die "a policy is removed only with --verify-url and --verify-token-file, so the refusal is measured"
+	# Layout 2 (CC-85): each project is its own repository `{owner}/{project}` with the Policy at
+	# spaces/{space}/policies/{name}.yaml (MF-06). Layout 1 names both with the two overrides.
+	if [ -z "$policy_path" ]; then
+		[ -n "$project" ] && [ -n "$space" ] || die "--project and --space (or --forge-repo and --policy-path) name the policy's file"
+		policy_path="spaces/$space/policies/$policy.yaml"
+	fi
+	[ -n "$forge_repo" ] || { [ -n "$project" ] || die "--project or --forge-repo names the policy's repository"; forge_repo="joinedcontext/$project"; }
+	case "$forge_repo/$policy_path" in
+	*..* | /* | *[!A-Za-z0-9._/-]*) die "the policy's repository and path take letters, digits, . _ - and / only" ;;
+	esac
+fi
 
 started=$(date +%s)
 elapsed() { printf '%ss' "$(($(date +%s) - started))"; }
@@ -72,25 +98,79 @@ ko() { printf '[%6s] FAIL  %s\n' "$(elapsed)" "$1" >&2; fail=1; }
 
 step "revoking on instance $instance (namespace $namespace), bound ${bound}s"
 
-# 1. The Policy leaves the repository the gateway reads.
-if [ -n "$policy" ]; then
-	if grep -q "name: $policy" < <(kubectl -n "$namespace" get configmap "$configmap" -o "jsonpath={.data.$policy_key}" 2>/dev/null); then
-		# A JSON Patch `remove` on a key that is gone fails loudly, which is what an
-		# emergency wants: no silent "revoked" on a repository that still grants.
-		if kubectl -n "$namespace" patch configmap "$configmap" \
-			--type=json -p "[{\"op\": \"remove\", \"path\": \"/data/${policy_key//\//~1}\"}]" >/dev/null; then
-			step "policy $policy removed from configmap $configmap ($policy_key)"
-		else
-			ko "policy $policy could not be removed from configmap $configmap"
-		fi
+# 1. The Policy leaves the repository the gateway reads: a commit on the forge's `main`.
+#    The token rides in a curl config on stdin, never on a command line.
+forge_api() {
+	local method="$1" url="$2" body="${3:-}"
+	if [ -n "$body" ]; then
+		curl -sS --max-time 10 -K - -X "$method" -H "Content-Type: application/json" \
+			--data-binary "$body" -w '\n%{http_code}' "$url" <<<"header = \"Authorization: token $forge_token\""
 	else
-		ko "policy $policy is not in configmap $configmap under $policy_key — check --policy-key"
+		curl -sS --max-time 10 -K - -X "$method" -w '\n%{http_code}' "$url" <<<"header = \"Authorization: token $forge_token\""
 	fi
+}
+
+policy_removed=0
+if [ -n "$policy" ]; then
+	forge_token=$(kubectl -n "$namespace" get secret "$forge_token_secret" -o 'jsonpath={.data.token}' 2>/dev/null | base64 -d 2>/dev/null)
+	contents="${forge%/}/api/v1/repos/$forge_repo/contents/$policy_path"
+	if [ -z "$forge_token" ]; then
+		ko "no forge token in Secret $forge_token_secret of $namespace: the policy was not removed"
+	else
+		answer=$(forge_api GET "$contents?ref=main")
+		code=${answer##*$'\n'}
+		sha=$(printf '%s' "${answer%$'\n'*}" | sed -n 's/.*"sha":"\([0-9a-f]*\)".*/\1/p' | head -1)
+		if [ "$code" != 200 ] || [ -z "$sha" ]; then
+			ko "policy $policy is not at $forge_repo:$policy_path on main (forge answered $code): check --project and --space"
+		elif ! printf '%s' "${answer%$'\n'*}" | grep -q '"type":"file"'; then
+			ko "$forge_repo:$policy_path is not a file"
+		else
+			answer=$(forge_api DELETE "$contents" \
+				"{\"sha\":\"$sha\",\"branch\":\"main\",\"message\":\"Emergency revocation of Policy $policy (OPS-45)\"}")
+			code=${answer##*$'\n'}
+			case "$code" in
+			200) policy_removed=1; step "policy $policy removed from $forge_repo:$policy_path on main" ;;
+			*) ko "the forge refused to remove $forge_repo:$policy_path ($code): the policy still grants" ;;
+			esac
+		fi
+	fi
+	unset forge_token answer
 fi
 
-# 2. The replicas re-read the repository by themselves within a second (pdp::reaper,
-#    T-0177). Step 4 measures that at the enforcement point; a restart would only add the
-#    rollout time of the gateway every tenant shares to the bound.
+# 2. Each gateway pod fetches the project now. The checkouts sidecar's own loop fetches every
+#    10 s, over the 5 s bound; one pass with --only takes its turn on the sidecar's lock and
+#    links the new commit, and the reaper swaps the tables within the next second.
+if [ "$policy_removed" -eq 1 ]; then
+	selector=$(kubectl -n "$namespace" get deployment "$gateway" \
+		-o 'go-template={{range $k, $v := .spec.selector.matchLabels}}{{$k}}={{$v}},{{end}}' 2>/dev/null)
+	pods=$(kubectl -n "$namespace" get pods -l "${selector%,}" --field-selector status.phase=Running \
+		-o 'jsonpath={range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null)
+	[ -n "$selector" ] && [ -n "$pods" ] || ko "no running pod of deployment $gateway in $namespace to fetch the revocation"
+	for pod in $pods; do
+		mapfile -t args < <(kubectl -n "$namespace" get pod "$pod" \
+			-o 'jsonpath={range .spec.containers[?(@.name=="checkouts")].args[*]}{@}{"\n"}{end}')
+		if [ "${#args[@]}" -eq 0 ]; then
+			# Layout 1: git-sync reads the organization repository every 10 s; the measurement
+			# below says whether that held the bound.
+			step "$pod has no checkouts sidecar (layout 1): its git-sync fetches within its period"
+			continue
+		fi
+		pass=()
+		while [ "${#args[@]}" -gt 0 ]; do
+			case "${args[0]}" in
+			--interval | --only) args=("${args[@]:2}") ;;
+			--once) args=("${args[@]:1}") ;;
+			*) pass+=("${args[0]}"); args=("${args[@]:1}") ;;
+			esac
+		done
+		if kubectl -n "$namespace" exec "$pod" -c checkouts -- /usr/local/bin/jcctl checkouts \
+			"${pass[@]}" --once --only "${project:-${forge_repo#*/}}" >/dev/null; then
+			step "$pod fetched ${project:-${forge_repo#*/}} without the policy"
+		else
+			ko "$pod could not fetch ${project:-${forge_repo#*/}}: it serves the policy until its next pass"
+		fi
+	done
+fi
 
 # 3. Keycloak stops issuing new tokens for the subject. The admin token comes from the
 #    environment (KEYCLOAK_ADMIN_TOKEN) or from the master-realm password grant with
