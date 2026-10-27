@@ -13,6 +13,7 @@ Without a container runtime the Bento cases skip; the seed cases do not.
 import json
 import re
 import shutil
+import tempfile
 import urllib.parse
 from pathlib import Path
 
@@ -334,8 +335,12 @@ def public_air(document: bytes) -> list[dict]:
     """Pipeline public-air's own steps, as the merged stream runs them, over one fetched file."""
     steps = manifest("pipeline-public-air.yaml")["spec"]["steps"]
     processors = [step["processor"] if "processor" in step else {"mapping": step["bloblang"]} for step in steps]
-    rendered = FIXTURES.parent / ".public-air-steps.yaml"
-    rendered.write_text(yaml.safe_dump({"pipeline": {"processors": processors}}))
+    # One file per call: the tests of this module run on several xdist workers at once, and a
+    # shared name let one unlink the other's steps (main ci 40600747434).
+    with tempfile.NamedTemporaryFile("w", dir=FIXTURES.parent, prefix=".public-air-steps-", suffix=".yaml",
+                                     delete=False) as handle:
+        handle.write(yaml.safe_dump({"pipeline": {"processors": processors}}))
+    rendered = Path(handle.name)
     try:
         return open_data.run(rendered, document, AIR_SPACE, DOMAIN)
     finally:
