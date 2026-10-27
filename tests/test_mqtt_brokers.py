@@ -643,21 +643,21 @@ def test_a_flooding_publisher_is_throttled(tmp_path):
         assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
 
 
-def port_docs(tmp_path) -> list[dict]:
-    brokers = [{**BASE["brokers"][0], "port": 18830}, *BASE["brokers"][1:]]
+def port_docs(tmp_path, port: int = 18830) -> list[dict]:
+    brokers = [{**BASE["brokers"][0], "port": port}, *BASE["brokers"][1:]]
     result = helm({**BASE, "brokers": brokers}, tmp_path)
     assert result.returncode == 0, result.stderr
     return [d for d in yaml.safe_load_all(result.stdout) if d]
 
 
 def test_a_dedicated_port_passes_tls_through_to_the_brokers_own_tls_listener(tmp_path):
-    """T-5856: a broker with a port gets one more route, on the entrypoint `mqtt-<port>`, any SNI
+    """T-5856: a broker with a port gets its route on the entrypoint `mqtt-<port>`, any SNI
     or none, TLS passed through with PROXY v2 to RMQTT's TLS listener 8884, which serves the
     broker host's certificate; Traefik would answer a client without SNI with its default one.
     A broker without a port keeps only its 8883 route, and no Service leaves ClusterIP."""
     docs = port_docs(tmp_path)
     routes = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "IngressRouteTCP"}
-    assert sorted(routes) == sorted([*RELEASES, "mqtt-helsinki-cameras-port"])
+    assert sorted(routes) == sorted([*RELEASES[1:], "mqtt-helsinki-cameras-port"])
     port = routes["mqtt-helsinki-cameras-port"]
     assert port["entryPoints"] == ["mqtt-18830"]
     (route,) = port["routes"]
@@ -686,18 +686,45 @@ def test_a_dedicated_port_passes_tls_through_to_the_brokers_own_tls_listener(tmp
     assert [i["key"] for i in secret["items"]] == ["tls.crt", "tls.key"]
     assert {"name": "tls", "mountPath": "/etc/rmqtt-tls", "readOnly": True} in pod["containers"][0]["volumeMounts"]
     annotations = deployment["metadata"]["annotations"]
-    assert annotations["config.linkerd.io/opaque-ports"] == "1883,1884,8884"
+    assert annotations["config.linkerd.io/opaque-ports"] == "1883,8884"
     assert annotations["joinedcontext.com/tls-revision"] == ""
     other = of(docs, "Deployment")["mqtt-helsinki-buses"]["spec"]["template"]
     assert "joinedcontext.com/tls-revision" not in other["metadata"]["annotations"]
     assert [v["name"] for v in other["spec"]["volumes"]] == ["config"]
 
-    # 8884 admits the ingress controller alone, as 1884 does.
+    # 8884 admits the ingress controller alone, as 1884 does on a broker without a port.
     server = of(docs, "Server")["mqtt-helsinki-cameras-tls"]["spec"]
     assert server["port"] == 8884 and server["accessPolicy"] == "deny"
     assert of(docs, "MeshTLSAuthentication")["mqtt-helsinki-cameras-tls"]["spec"]["identityRefs"] == [
         {"kind": "ServiceAccount", "name": "traefik", "namespace": "traefik"}]
     assert "mqtt-helsinki-buses-tls" not in of(docs, "Server")
+
+
+def outside_routes(docs, release) -> list[str]:
+    """The Traefik entrypoints that reach one broker from the internet."""
+    return sorted(
+        entry for d in docs if d["kind"] == "IngressRouteTCP"
+        and d["metadata"]["labels"]["app.kubernetes.io/instance"] == release
+        for entry in d["spec"]["entryPoints"])
+
+
+def test_a_broker_has_one_outside_door(tmp_path):
+    """T-5871 (owner: "from one mqtt broker only the safe port will go out"): a broker with a
+    port is reached on that port alone, with no 8883 route by hostname and no plain listener
+    1884 behind one; a broker without a port keeps 8883 alone."""
+    docs = port_docs(tmp_path, 18835)
+    assert outside_routes(docs, "mqtt-helsinki-cameras") == ["mqtt-18835"]
+    for release in RELEASES[1:]:
+        assert outside_routes(docs, release) == ["mqtts"], release
+    listeners = config(docs, "mqtt-helsinki-cameras")["rmqtt.toml"]["listener"]
+    assert listeners["tcp"]["external"] == {"enable": False}
+    assert listeners["tcp"]["internal"]["addr"] == "0.0.0.0:1883"
+    assert {p["port"] for p in of(docs, "Service")["mqtt-helsinki-cameras"]["spec"]["ports"]} == {1883, 8884}
+    (container,) = of(docs, "Deployment")["mqtt-helsinki-cameras"]["spec"]["template"]["spec"]["containers"]
+    assert 1884 not in {p["containerPort"] for p in container["ports"]}
+    assert "mqtt-helsinki-cameras-external" not in of(docs, "Server")
+    assert {s["spec"]["port"] for n, s in of(docs, "Server").items() if n.startswith("mqtt-helsinki-cameras-")} == {1883, 8884}
+    assert of(docs, "Server")["mqtt-helsinki-buses-external"]["spec"]["port"] == 1884
 
 
 def test_the_port_template_filled_is_the_broker_with_a_port_the_chart_renders(tmp_path):
