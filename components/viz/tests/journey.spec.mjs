@@ -45,6 +45,11 @@ const ODATA = {
     { id: Object.keys(STATIONS)[1], dateObserved: "2026-10-18T15:43:00Z", name: null, temperature: 13.4 }
   ]
 };
+// SHMÚ Zelená as dev answers it (2026-10-27): soilTemperature holds one instance per depth.
+const SOIL = [{ id: Object.keys(STATIONS)[1], type: "WeatherObserved", soilTemperature: [5, 10, 100].map((cm, n) => ({
+  type: "Property", datasetId: `urn:ngsi-ld:Dataset:shmu:soil-depth-${cm}cm`,
+  values: hours("2026-10-17T16:00:00Z", [0, 1, 2, 3, 4, 5, 6, 7]).map(([i, at]) => [Math.round((13.4 - n * 2 - Math.sin(i / 2) * (3 - n)) * 10) / 10, at])
+})) }];
 const NAMES = Object.entries(STATIONS).map(([id, name]) => ({ id, name }));
 
 const VL = "https://vega.github.io/schema/vega-lite/v5.json";
@@ -98,7 +103,13 @@ const SPECS = {
   }],
   dataUrl: [odata, { $schema: VL, data: { url: "https://evil.example/rows.csv" }, mark: "bar" }],
   javascriptHref: [odata, { $schema: VL, data: { name: "source" }, mark: "bar", encoding: { href: { value: "javascript:alert(1)" } } }],
-  windowExpr: [odata, { $schema: VL, data: { name: "source" }, transform: [{ calculate: "window.location.href", as: "x" }], mark: "bar" }]
+  windowExpr: [odata, { $schema: VL, data: { name: "source" }, transform: [{ calculate: "window.location.href", as: "x" }], mark: "bar" }],
+  // T-5432: soil temperature at two depths, one attribute with an instance per datasetId.
+  soil: [{ source: "temporal", type: "WeatherObserved", attrs: ["soilTemperature"], last: "P7D" }, {
+    $schema: VL, data: { name: "source" }, mark: { type: "line", point: true },
+    encoding: { x: { field: "observedAt", type: "temporal", title: null }, y: { field: "soilTemperature", type: "quantitative", scale: { zero: false } },
+      color: { field: "name", type: "nominal", title: null } }
+  }]
 };
 const ids = Object.fromEntries(Object.keys(SPECS).map((k, i) => [k, `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`]));
 const view = (key) => {
@@ -176,6 +187,7 @@ export async function serve(context, { trustless = false } = {}) {
         return route.fulfill({ status: 404, contentType: "application/json", headers: { "Access-Control-Allow-Origin": `https://${VIZ}` }, body: "{}" });
       }
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "AirQualityObserved") return route.fulfill(windowed(url));
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("attrs") === "soilTemperature") return json(SOIL);
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
       if (url.pathname === `${base}ngsi-ld/v1/entities`) return json(NAMES);
       if (url.pathname === `${base}odata/v4/WeatherObserved`) return json(ODATA);
@@ -381,6 +393,15 @@ for (const [name, width] of [["desktop", 1440], ["phone", 400]]) {
     expect(windows).toEqual([null, "100"]);
     await expect(host(page).locator("#status")).toBeHidden();
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/paged-${width}.png`, fullPage: true });
+  });
+  test(`soil: an attribute with an instance per datasetId draws one line each (${name})`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await serve(context);
+    await page.goto(`https://data.${DOMAIN}/dataset/soil`);
+    await expect(renderer(page).locator("svg .mark-line path")).toHaveCount(3, { timeout: 15000 });
+    await expect(renderer(page).locator("svg.marks")).toContainText("soil-depth-100cm · Stanica");
+    await expect(host(page).locator("#status")).toBeHidden();
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/soil-${width}.png`, fullPage: true });
   });
   test(`partial: a window that never ends draws what it read with a note (${name})`, async ({ page, context }) => {
     await page.setViewportSize({ width, height: 700 });

@@ -60,3 +60,43 @@ spec:
           fi: Datankeruukokeilu Helsingissä, liikennelaskenta konenäön avulla (HRI), CC BY 4.0.
           en: Data gathering pilot in Helsinki, traffic counting using machine vision (HRI), CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: vision-counts }
+    # Declared charts replace the automatic ones (T-5432): the machine vision pilot ran in spring
+    # 2023; no 7-day history window reaches it, so each day is drawn from its own record.
+    visualizations:
+      - name: counts-per-day
+        title: { fi: Laskettu vuorokaudessa, sk: Spočítané za deň, en: Counted per day }
+        description:
+          fi: Kaikkien laskentapisteiden summa päivittäin kulkumuodoittain.
+          sk: Súčet všetkých miest za deň podľa druhu dopravy.
+          en: Every counting point summed per day, by kind of traffic.
+        data:
+          source: odata
+          entitySet: TrafficFlowObserved
+          $select: dateObserved,intensity,vehicleType
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x:
+              field: dateObserved
+              type: temporal
+              title: null
+              timeUnit: yearmonthdate
+            'y':
+              aggregate: sum
+              field: intensity
+              type: quantitative
+              title: null
+            color: { field: vehicleType, type: nominal, title: null }
+            tooltip:
+              - field: dateObserved
+                type: temporal
+                title: null
+                timeUnit: yearmonthdate
+              - aggregate: sum
+                field: intensity
+                type: quantitative
+                format: ',d'
+              - field: vehicleType
+                type: nominal

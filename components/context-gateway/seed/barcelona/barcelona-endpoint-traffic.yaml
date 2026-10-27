@@ -74,3 +74,107 @@ spec:
           ca: El nom, el tipus i el lloc de cada aforament.
           en: The name, kind and place of each counter.
     pipelineRef: { kind: Pipeline, name: traffic-state }
+    # Declared charts replace the automatic ones (T-5432): intensity holds monthly counts of the
+    # aforaments (the newest month 2025-12, one entity each) with no observedAt, so a 7-day history
+    # is empty; the newest month is drawn from the current values instead.
+    visualizations:
+      - name: auto-trafficflowobserved-traveltime
+        title: { ca: Temps de recorregut, sk: Čas jazdy, en: Travel time }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na úsek.
+          en: The values of the last 7 days, one line per section.
+        data:
+          source: temporal
+          type: TrafficFlowObserved
+          attrs: [travelTime]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: travelTime
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: travelTime
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal
+      - name: auto-trafficflowobserved-usualtraveltime
+        title: { ca: Temps de recorregut habitual, sk: Obvyklý čas jazdy, en: Usual travel time }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na úsek.
+          en: The values of the last 7 days, one line per section.
+        data:
+          source: temporal
+          type: TrafficFlowObserved
+          attrs: [usualTravelTime]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: usualTravelTime
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: usualTravelTime
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal
+      - name: busiest-aforaments
+        title:
+          ca: Aforaments amb més vehicles
+          sk: Najvyťaženejšie sčítacie miesta
+          en: Busiest counters
+        description:
+          ca: Els 20 aforaments amb més vehicles del mes més recent publicat.
+          sk: '20 sčítacích miest s najviac vozidlami v najnovšom zverejnenom mesiaci.'
+          en: The 20 counters with the most vehicles in the newest published month.
+        data:
+          source: odata
+          entitySet: TrafficFlowObserved
+          $filter: intensity ne null
+          $select: name,intensity,dateObserved
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          transform:
+            - filter: isValid(datum.intensity)
+            - window:
+                - op: row_number
+                  as: rank
+              sort:
+                - field: intensity
+                  order: descending
+            - filter: datum.rank <= 20
+          mark: { type: bar }
+          encoding:
+            'y':
+              field: name
+              type: nominal
+              sort: '-x'
+              title: null
+            x: { field: intensity, type: quantitative, title: null }
+            tooltip:
+              - field: name
+                type: nominal
+              - field: intensity
+                type: quantitative
+                format: ',d'
+              - field: dateObserved
+                type: temporal

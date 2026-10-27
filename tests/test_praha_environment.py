@@ -266,6 +266,10 @@ def test_a_station_becomes_one_weather_observation_with_its_newest_values():
     assert station["atmosphericPressure"]["value"] == last(values, "P")
     assert station["windSpeed"]["value"] == last(values, "F") and station["gustSpeed"]["value"] == last(values, "Fmax")
     assert station["dateObserved"]["value"] == max(v[2] for v in values if v[1] == "T")
+    # The catalogue's charts read each value's history by observedAt (T-5432): every reading carries
+    # the time of its own value.
+    for attr, element in {"temperature": "T", "relativeHumidity": "H", "atmosphericPressure": "P", "windSpeed": "F", "gustSpeed": "Fmax"}.items():
+        assert station[attr]["observedAt"] == max(v[2] for v in values if v[1] == element), attr
     assert station["dataProvider"]["value"] == "Český hydrometeorologický ústav (CC BY 4.0)"
     assert not open_data.schema_errors(PRAHA / "praha.v1.schema.json", station)
     assert not sdm(station), sdm(station)

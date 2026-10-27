@@ -62,3 +62,38 @@ spec:
           ca: Nom, ubicació, aqüífer i fondària de cada pou, CC BY 4.0.
           en: Name, place, aquifer and depth of each well, CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: groundwater }
+    # Declared charts replace the automatic ones (T-5432): each well holds one reading (the newest
+    # 2026-07) with no observedAt, so a 7-day history is empty; the newest depth is drawn per well.
+    visualizations:
+      - name: water-table-per-well
+        title:
+          ca: Fondària de l'aigua per pou
+          sk: Hĺbka hladiny podľa vrtu
+          en: Depth to water per well
+        description:
+          ca: La fondària de l'aigua sota la superfície (m) de la lectura més recent de cada pou.
+          sk: Hĺbka hladiny pod povrchom (m) z najnovšieho merania každého vrtu.
+          en: The depth to water below ground (m) of each well's newest reading.
+        data:
+          source: odata
+          entitySet: PhreaticObserved
+          $select: name,waterTable,dateObserved
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: bar }
+          encoding:
+            'y':
+              field: name
+              type: nominal
+              sort: x
+              title: null
+            x: { field: waterTable, type: quantitative, title: null }
+            tooltip:
+              - field: name
+                type: nominal
+              - field: waterTable
+                type: quantitative
+                format: '.2f'
+              - field: dateObserved
+                type: temporal

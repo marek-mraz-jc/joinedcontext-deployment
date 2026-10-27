@@ -47,3 +47,64 @@ spec:
           sk: Mesto Žilina, platforma Invipo, POST https://opendata.zilina.sk/api/datasets/v1/city-dashboard/parking/list, ODbL.
           en: City of Žilina, Invipo platform, POST https://opendata.zilina.sk/api/datasets/v1/city-dashboard/parking/list, ODbL.
     pipelineRef: { kind: Pipeline, name: parkovanie }
+    # Declared charts replace the automatic ones (T-5432): totalSpotNumber is the parking's fixed
+    # size and has no observedAt, so its history chart stayed empty.
+    visualizations:
+      - name: auto-offstreetparking-availablespotnumber
+        title: { sk: Voľné miesta, en: Free spaces }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na parkovisko.
+          en: The values of the last 7 days, one line per car park.
+        data:
+          source: temporal
+          type: OffStreetParking
+          attrs: [availableSpotNumber]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: availableSpotNumber
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: availableSpotNumber
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal
+      - name: auto-offstreetparking-occupiedspotnumber
+        title: { sk: Obsadené miesta, en: Occupied spaces }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na parkovisko.
+          en: The values of the last 7 days, one line per car park.
+        data:
+          source: temporal
+          type: OffStreetParking
+          attrs: [occupiedSpotNumber]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: occupiedSpotNumber
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: occupiedSpotNumber
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal

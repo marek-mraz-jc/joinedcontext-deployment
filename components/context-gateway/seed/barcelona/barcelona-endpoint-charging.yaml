@@ -58,3 +58,35 @@ spec:
           ca: Els mateixos estats dels connectors, sense la resta de dades del punt.
           en: The same port states, without the rest of the point's data.
     pipelineRef: { kind: Pipeline, name: ev-charging }
+    # Declared charts replace the automatic ones (T-5432): capacity and socketNumber describe the
+    # station and have no observedAt, so their history charts stayed empty.
+    visualizations:
+      - name: auto-evchargingstation-availablecapacity
+        title: { ca: Connectors lliures, sk: Voľné konektory, en: Free connectors }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: EVChargingStation
+          attrs: [availableCapacity]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: availableCapacity
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: availableCapacity
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal

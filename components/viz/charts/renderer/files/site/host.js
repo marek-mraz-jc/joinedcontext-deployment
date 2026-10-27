@@ -152,18 +152,31 @@
     });
   }
 
-  // One row per instant, entity and attribute: `observedAt` (the start of the period when
-  // aggregated) and the attribute's value under its name.
+  // The instances of an entity's attribute in a temporal answer: one object, or an array of
+  // them when the attribute has several, each with its own datasetId (T-5432).
+  function parts(entity, attr) {
+    var p = entity && entity[attr];
+    return (Array.isArray(p) ? p : [p]).filter(function (i) { return i && typeof i === "object"; });
+  }
+
+  // One row per instant, entity, attribute and instance: `observedAt` (the start of the period
+  // when aggregated) and the attribute's value under its name. An instance with a datasetId is a
+  // series of its own: its row carries the datasetId and the name starts with its last segment,
+  // which a legend cut at 160 px still shows.
   function rowsFromTemporal(body, request, names) {
     var rows = [];
     (Array.isArray(body) ? body : []).forEach(function (entity) {
       request.attrs.forEach(function (attr) {
-        var p = entity[attr] || {};
-        var pairs = request.method ? p[request.method] : p.values;
-        (Array.isArray(pairs) ? pairs : []).forEach(function (pair) {
-          var row = { id: entity.id, name: names[entity.id] || entity.id, observedAt: pair[1] };
-          row[attr] = pair[0];
-          rows.push(row);
+        parts(entity, attr).forEach(function (p) {
+          var pairs = request.method ? p[request.method] : p.values;
+          var dataset = typeof p.datasetId === "string" ? p.datasetId : null;
+          var name = names[entity.id] || entity.id;
+          (Array.isArray(pairs) ? pairs : []).forEach(function (pair) {
+            var row = { id: entity.id, name: dataset ? dataset.split(":").pop() + " · " + name : name, observedAt: pair[1] };
+            if (dataset) row.datasetId = dataset;
+            row[attr] = pair[0];
+            rows.push(row);
+          });
         });
       });
     });
@@ -262,18 +275,20 @@
     var key = request.method || "values";
     return (Array.isArray(body) ? body : []).reduce(function (n, entity) {
       return request.attrs.reduce(function (m, attr) {
-        var pairs = entity && entity[attr] && entity[attr][key];
-        return m + (Array.isArray(pairs) ? pairs.length : 0);
+        return parts(entity, attr).reduce(function (k, p) {
+          return k + (Array.isArray(p[key]) ? p[key].length : 0);
+        }, m);
       }, n);
     }, 0);
   }
 
-  // Windows of one temporal read, merged per entity and attribute; an instant served twice (the
-  // boundary of an `after` window) is kept once.
+  // Windows of one temporal read, merged per entity, attribute and datasetId; an instant served
+  // twice (the boundary of an `after` window) is kept once.
   function merger(request) {
     var key = request.method || "values";
     var entities = [];
     var byId = {};
+    var byPart = {};
     var seen = {};
     return {
       entities: entities,
@@ -283,14 +298,23 @@
           var into = byId[entity.id];
           if (!into) entities.push(into = byId[entity.id] = { id: entity.id });
           request.attrs.forEach(function (attr) {
-            var pairs = entity[attr] && entity[attr][key];
-            if (!Array.isArray(pairs)) return;
-            var list = (into[attr] = into[attr] || {})[key] = into[attr][key] || [];
-            var keys = seen[entity.id + "\n" + attr] = seen[entity.id + "\n" + attr] || {};
-            pairs.forEach(function (pair) {
-              var k = JSON.stringify(pair);
-              if (!keys[k]) list.push(pair);
-              keys[k] = true;
+            parts(entity, attr).forEach(function (p) {
+              if (!Array.isArray(p[key])) return;
+              var dataset = typeof p.datasetId === "string" ? p.datasetId : "";
+              var at = entity.id + "\n" + attr + "\n" + dataset;
+              var part = byPart[at];
+              if (!part) {
+                part = byPart[at] = {};
+                if (dataset) part.datasetId = dataset;
+                part[key] = [];
+                (into[attr] = into[attr] || []).push(part);
+              }
+              var keys = seen[at] = seen[at] || {};
+              p[key].forEach(function (pair) {
+                var k = JSON.stringify(pair);
+                if (!keys[k]) part[key].push(pair);
+                keys[k] = true;
+              });
             });
           });
         });

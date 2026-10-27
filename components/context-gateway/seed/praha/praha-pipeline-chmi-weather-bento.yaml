@@ -14,7 +14,8 @@
 #
 # Read: per element the newest value of the day file: T (air temperature, °C), H (relative humidity, %, written as a fraction), P (pressure,
 # hPa), SRA10M (10-minute precipitation, mm), F (mean wind speed, m/s), D (mean wind direction, °)
-# and Fmax (gust, m/s). dateObserved is the newest timestamp of those values.
+# and Fmax (gust, m/s). Each value carries its own time as observedAt, which the catalogue's
+# charts read its history by (T-5432); dateObserved is the newest of those times.
 #
 # Plausibility (owner 2026-10-22T18:10Z): a value outside its physical range (temperature -40 to
 # 50 °C, humidity 0 to 100 %, pressure 800 to 1100 hPa, precipitation 0 to 100 mm, wind 0 to 75 m/s,
@@ -89,4 +90,4 @@ pipeline:
               "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": this.c } },
               "dataProvider": { "type": "Property", "value": "Český hydrometeorologický ústav (CC BY 4.0)" },
               "source": { "type": "Property", "value": "https://opendata.chmi.cz/meteorology/climate/now/data/" }
-            }.merge($reading.keys().filter(k -> $n.get(k) != null).fold({}, a -> a.tally.merge({ $reading.get(a.value): { "type": "Property", "value": if a.value == "H" { ($n.get(a.value).value * 10).round() / 1000 } else { $n.get(a.value).value } } })))
+            }.merge($reading.keys().filter(k -> $n.get(k) != null).fold({}, a -> a.tally.merge({ $reading.get(a.value): { "type": "Property", "value": if a.value == "H" { ($n.get(a.value).value * 10).round() / 1000 } else { $n.get(a.value).value }, "observedAt": $n.get(a.value).at } })))
