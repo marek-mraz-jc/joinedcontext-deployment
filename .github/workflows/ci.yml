@@ -252,7 +252,11 @@ jobs:
             "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
           echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
+      # A file heavier than a quarter of a shard's share runs in every shard, a quarter of its tests
+      # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
       - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+        env:
+          JC_TEST_SHARD: ${{ matrix.shard }}/4
       # Each test's seconds, for the test-durations job below (T-5551).
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()

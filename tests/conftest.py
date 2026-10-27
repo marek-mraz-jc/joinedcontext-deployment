@@ -7,6 +7,9 @@ list of documents.
 
 import fcntl
 import functools
+import importlib.util
+import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -171,6 +174,30 @@ def worker_id(request):
 def pytest_configure(config):
     # Known without pytest-xdist installed too, so a serial run does not warn about the marker.
     config.addinivalue_line("markers", "xdist_group(name): run on the same xdist worker as the rest of the group")
+
+
+def pytest_collection_modifyitems(config, items):
+    """In a ci.yml shard (JC_TEST_SHARD=<shard>/<count>), only this shard's part of a file
+    scripts/ci/test-shard.py splits over every shard (T-5886); a run without it keeps every test."""
+    if not os.environ.get("JC_TEST_SHARD"):
+        return
+    shard, count = (int(n) for n in os.environ["JC_TEST_SHARD"].split("/"))
+    spec = importlib.util.spec_from_file_location("test_shard", PROJECT_ROOT / "scripts/ci/test-shard.py")
+    test_shard = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(test_shard)
+    cut = test_shard.split(test_shard.files(), json.loads(test_shard.TABLE.read_text(encoding="utf-8")), count)
+    seen: dict[str, int] = {}
+    keep, drop = [], []
+    for item in items:
+        name = item.path.name
+        if name in cut:
+            seen[name] = seen.get(name, -1) + 1
+            (keep if test_shard.mine(seen[name], shard, count) else drop).append(item)
+        else:
+            keep.append(item)
+    if drop:
+        config.hook.pytest_deselected(items=drop)
+        items[:] = keep
 
 
 def demo_id(name: str) -> str:

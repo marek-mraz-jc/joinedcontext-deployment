@@ -28,7 +28,7 @@ LIVING = json.dumps([
      "alertSource": {"type": "Property", "value": "HSL"}},
 ])
 
-CURL_STUB = '''#!/usr/bin/env python3
+CURL_STUB = '''#!/usr/bin/env -S python3 -S
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 args = sys.argv[1:]
@@ -97,7 +97,7 @@ else:
     sys.stdout.write(lookup("bodies", ""))
 '''
 
-KUBECTL_STUB = '''#!/usr/bin/env python3
+KUBECTL_STUB = '''#!/usr/bin/env -S python3 -S
 import base64, itertools, json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 args = sys.argv[1:]
@@ -334,7 +334,7 @@ else:
 '''
 
 # mosquitto_pub without a token: the gateway refuses the CONNECT (T-4857), unless a test says not.
-MOSQUITTO_STUB = '''#!/usr/bin/env python3
+MOSQUITTO_STUB = '''#!/usr/bin/env -S python3 -S
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 if spec.get("mqttAnonymous"):
@@ -343,7 +343,7 @@ sys.stderr.write("Connection error: Connection Refused: not authorised.\\n")
 sys.exit(5)
 '''
 
-OPENSSL_STUB = '''#!/usr/bin/env python3
+OPENSSL_STUB = '''#!/usr/bin/env -S python3 -S
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 if "-verify_hostname" in sys.argv:
@@ -356,7 +356,7 @@ sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", Tr
 ROLLOUTS_STUB = "#!/bin/sh\nexit 0\n"
 
 # scripts/smoke-ws.py has its own tests (test_smoke_ws.py); here it answers what the spec says.
-WS_STUB = '''#!/usr/bin/env python3
+WS_STUB = '''#!/usr/bin/env -S python3 -S
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 answer = spec.get("ws", "101 201")

@@ -3,6 +3,7 @@
 import importlib.util
 import itertools
 import json
+import os
 import statistics
 import subprocess
 import sys
@@ -27,8 +28,47 @@ def test_every_test_file_lands_in_exactly_one_shard():
     ]
     # ci.yml hands the printed paths to pytest in the repo root; bare names collected nothing (T-4791)
     assert all((test_shard.ROOT / path).is_file() for path in itertools.chain(*printed))
-    assert sorted(Path(path).name for path in itertools.chain(*printed)) == names
+    # a split file runs in every shard, a quarter of its tests each (T-5886); any other in one
+    cut = test_shard.split(names, json.loads(test_shard.TABLE.read_text(encoding="utf-8")), 4)
+    assert all(sorted(cut) == sorted(Path(p).name for p in shard if Path(p).name in cut) for shard in printed)
+    assert sorted(Path(path).name for path in itertools.chain(*printed) if Path(path).name not in cut) == sorted(set(names) - cut)
     assert all(printed)
+
+
+def test_a_file_heavier_than_its_share_is_split_and_the_shards_stay_even():
+    # test_smoke_script.py weighed 1,393 s against a 3,300 s share: whole, it filled most of one shard
+    weights = {"test_heavy.py": 4000.0, **{f"test_{i:02}.py": 100.0 + i for i in range(40)}}
+    names = sorted(weights)
+    assert test_shard.split(names, weights, 4) == {"test_heavy.py"}
+    shards = test_shard.shards(names, weights, 4)
+    assert all("test_heavy.py" in s for s in shards)
+    loads = [sum(weights[n] / (4 if n == "test_heavy.py" else 1) for n in s) for s in shards]
+    loads[0] += test_shard.SHARD_ONE_STEPS
+    assert max(loads) < 1.10 * min(loads), loads
+    # the same weights whole: one shard holds the heavy file alone and the rest share three
+    assert test_shard.split(names, weights, 1) == set()
+
+
+def test_each_test_of_a_split_file_runs_in_exactly_one_shard():
+    assert all(sum(test_shard.mine(position, shard, 4) for shard in range(1, 5)) == 1 for position in range(200))
+
+
+def collected(*args, shard=None):
+    env = {k: v for k, v in os.environ.items() if k != "JC_TEST_SHARD"} | ({"JC_TEST_SHARD": shard} if shard else {})
+    out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q", "-p", "no:cacheprovider", *args],
+                         cwd=test_shard.ROOT, env=env, check=True, capture_output=True, text=True).stdout
+    return [line for line in out.splitlines() if "::" in line]
+
+
+def test_the_shards_collect_every_test_of_a_split_file_once():
+    weights = json.loads(test_shard.TABLE.read_text(encoding="utf-8"))
+    cut = sorted(test_shard.split(test_shard.files(), weights, 4))
+    assert cut, "no file is heavy enough to split: pick one for this test"
+    paths = [f"tests/{name}" for name in cut]
+    whole = collected(*paths)
+    parts = [collected(*paths, shard=f"{i}/4") for i in range(1, 5)]
+    assert sorted(itertools.chain(*parts)) == sorted(whole) and all(parts)
+    assert max(map(len, parts)) - min(map(len, parts)) <= len(cut)
 
 
 def test_the_committed_table_spreads_the_time_evenly():
@@ -40,7 +80,9 @@ def test_the_committed_table_spreads_the_time_evenly():
     assert max(loads) <= 1.15 * statistics.mean(loads), loads
 
 
-def test_a_file_the_table_lacks_weighs_the_median_and_still_runs_once():
+def test_a_file_the_table_lacks_weighs_the_median_and_still_runs_once(monkeypatch):
+    # two files only: neither may count as heavy enough to split here
+    monkeypatch.setattr(test_shard, "SPLIT", 1)
     weights = {"test_a.py": 1000.0, "test_b.py": 900.0}
     shards = test_shard.shards(["test_a.py", "test_b.py", "test_new.py"], weights, 2)
     assert sorted(itertools.chain(*shards)) == ["test_a.py", "test_b.py", "test_new.py"]
