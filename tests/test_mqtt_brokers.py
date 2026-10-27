@@ -282,6 +282,28 @@ def test_the_template_filled_is_the_broker_the_chart_renders(docs):
     }
 
 
+def test_the_hostname_template_serves_the_city_name_on_8883_with_its_own_certificate(docs):
+    """T-5874 (ADR-N-048 §2.11): a custom hostname is the platform door with the city's name, one
+    HTTP-01 certificate for that name alone, and the route serves the Secret the Portal names."""
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    text = template["data"]["objects-hostname.yaml"]
+    for sentinel in ("__HOSTNAME__", "__TLS_SECRET__"):
+        assert sentinel in text
+    text = text.replace("__HOSTNAME__", "mqtt.city.example").replace("__TLS_SECRET__", "city-mqtt-cert")
+    stamped = fill(text, "mqtt-helsinki-buses", "helsinki", "buses", BASE["brokers"][1]["limits"])
+    (certificate,) = of(stamped, "Certificate").values()
+    assert certificate["spec"]["dnsNames"] == ["mqtt.city.example"]
+    assert certificate["spec"]["secretName"] == "mqtt-helsinki-buses-tls"
+    (route,) = of(stamped, "IngressRouteTCP").values()
+    assert [r["match"] for r in route["spec"]["routes"]] == ["HostSNI(`mqtt.city.example`)"]
+    assert route["spec"]["tls"]["secretName"] == "city-mqtt-cert"
+    assert route["spec"]["tls"]["options"]["name"] == "mqtt-bsi-tr-02102"
+    assert "mqtt.helsinki" not in yaml.safe_dump_all(stamped)
+    # The same objects as the platform door but for the name and the Secret.
+    platform = fill(template["data"]["objects.yaml"], "mqtt-helsinki-buses", "helsinki", "buses", BASE["brokers"][1]["limits"])
+    assert {(d["kind"], d["metadata"]["name"]) for d in stamped} == {(d["kind"], d["metadata"]["name"]) for d in platform}
+
+
 def test_the_portal_gets_its_role_only_when_named(docs, tmp_path):
     assert not [d for d in docs if d["kind"] in ("Role", "RoleBinding")]
     result = helm({**BASE, "portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}, tmp_path)

@@ -18,9 +18,11 @@ app.kubernetes.io/part-of: mqtt-brokers
 
 {{- /* Every object of one broker, from a dict: root (the chart's context), release, project, name,
        host, maxBytes, perSecond, connections, checksum, managedBy, and for a broker with a
-       dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision. Rendered per broker below and
-       once with sentinels into the template the Portal fills (T-3994), twice: with and without a
-       port. */ -}}
+       dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision; tlsSecret, the Secret the
+       8883 route serves, is `<release>-tls` unless a custom hostname names the admin's certificate
+       (ADR-N-048 §2.11, T-5874). Rendered per broker below and once with sentinels into the
+       template the Portal fills (T-3994), three times: platform host, dedicated port, custom
+       hostname. */ -}}
 {{- define "brokers.objects" -}}
 {{- $root := .root }}
 {{- /* A dedicated port: Traefik passes TLS through on its entrypoint `mqtt-<port>`, so a device
@@ -321,7 +323,7 @@ spec:
           proxyProtocol:
             version: 2
   tls:
-    secretName: {{ .release }}-tls
+    secretName: {{ .tlsSecret | default (printf "%s-tls" .release) }}
     # BSI TR-02102-2, as on the HTTP edge (templates/tls-option.yaml, T-5562).
     options:
       name: mqtt-bsi-tr-02102

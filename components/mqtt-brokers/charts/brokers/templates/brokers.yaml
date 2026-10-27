@@ -61,3 +61,9 @@ data:
   # `spec.port` and fills `__PORT__` and `__TLS_REVISION__`, its Certificate's status.revision.
   objects-port.yaml: |
     {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" (printf "__NAME__.__PROJECT__.mqtt.%s" .Values.domain) "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "port" "__PORT__" "tlsRevision" "__TLS_REVISION__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}
+  # The same broker on a custom hostname the city points at the edge by CNAME (ADR-N-048 §2.11,
+  # T-5874): the Portal fills `__HOSTNAME__` and `__TLS_SECRET__`, `<release>-tls` that the
+  # Certificate's HTTP-01 issue writes, or the admin's certificateRef, for which it drops the
+  # Certificate.
+  objects-hostname.yaml: |
+    {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" "__HOSTNAME__" "tlsSecret" "__TLS_SECRET__" "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}
