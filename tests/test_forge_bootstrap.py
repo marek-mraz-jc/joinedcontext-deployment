@@ -474,8 +474,9 @@ def test_every_project_of_the_seed_runs_under_a_quota_it_can_hold(local):
         if not key.startswith("projects__") or not key.endswith("__project.yaml"):
             continue
         project = key.split("__")[1]
-        own = yaml.safe_load(text)["spec"].get("quotas")
-        if own is not None:
+        # `mqtt` is the MQTT allowance, no PF-73 dimension (portal src/quotas.rs effective()).
+        own = {k: v for k, v in (yaml.safe_load(text)["spec"].get("quotas") or {}).items() if k != "mqtt"}
+        if own:
             assert set(own) == dimensions, f"{project} declares every dimension or none"
             assert all(isinstance(v, int) and v >= 1 for v in own.values()), own
         quota = own or default

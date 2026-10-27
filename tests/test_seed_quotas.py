@@ -29,8 +29,11 @@ def seeded_quotas() -> list[tuple[str, dict]]:
     for path, doc in seed_documents():
         if not isinstance(doc, dict):
             continue
-        if doc.get("kind") == "Project" and "quotas" in doc.get("spec", {}):
-            found.append((path.relative_to(SEED).as_posix(), doc["spec"]["quotas"]))
+        # `mqtt` is the project's MQTT allowance, no PF-73 dimension: a `spec.quotas` holding only
+        # it leaves every dimension to the organization (portal src/quotas.rs effective()).
+        own = {k: v for k, v in doc.get("spec", {}).get("quotas", {}).items() if k != "mqtt"}
+        if doc.get("kind") == "Project" and own:
+            found.append((path.relative_to(SEED).as_posix(), own))
         elif doc.get("kind") == "Organization" and "quota" in doc.get("spec", {}).get("projects", {}):
             found.append((path.relative_to(SEED).as_posix(), doc["spec"]["projects"]["quota"]))
     return found
