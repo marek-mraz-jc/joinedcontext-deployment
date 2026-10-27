@@ -6,9 +6,12 @@ name in another, because no environment declares a broker: the Portal's reconcil
 listener, the runner's namespace variable and the NetworkPolicies.
 """
 
+import ipaddress
 import json
 import shutil
 import socket
+import ssl
+import struct
 import subprocess
 import threading
 import time
@@ -392,6 +395,8 @@ def test_only_brokers_reach_8082_and_only_the_runner_and_traefik_reach_a_broker(
     assert [peer["podSelector"]["matchLabels"] for peer in by_port[1883]] == [
         {"app.kubernetes.io/name": "pipeline-runner-runner"}, {"app.kubernetes.io/name": "portal-portal"}]
     assert by_port[1884][0]["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": "traefik"}
+    (traefik,) = [rule for rule in brokers["ingress"] if rule["ports"][0]["port"] == 1884]
+    assert [p["port"] for p in traefik["ports"]] == [1884, 8884]
     internal = one(local, "NetworkPolicy", "gateway-from-mqtt-brokers")["spec"]
     (rule,) = internal["ingress"]
     assert rule["ports"] == [{"protocol": "TCP", "port": 8082}]
@@ -486,6 +491,7 @@ class Decider(BaseHTTPRequestHandler):
     deny = threading.Event()
     rate: ClassVar[int | None] = None
     connects: ClassVar[list[str]] = []
+    addresses: ClassVar[list[str]] = []
     publishes: ClassVar[list[dict]] = []
     times: ClassVar[list[float]] = []
 
@@ -500,6 +506,7 @@ class Decider(BaseHTTPRequestHandler):
             answer = {"result": "allow" if allow else "deny"}
         else:
             Decider.connects.append(body["clientid"])
+            Decider.addresses.append(body["ipaddr"])
             watch = [{"permission": "allow", "action": "subscribe", "topic": "cameras/#", "qos": [0, 1]}]
             answer = {"result": "allow", "superuser": False, "expire_at": int(time.time()) + 3600,
                       "acl": watch if body["username"] == "watcher" else []}
@@ -528,7 +535,7 @@ class Rmqtt:
         threading.Thread(target=self.decider.serve_forever, daemon=True).start()
         Decider.deny.clear()
         Decider.rate = rate
-        for log in (Decider.connects, Decider.publishes, Decider.times):
+        for log in (Decider.connects, Decider.addresses, Decider.publishes, Decider.times):
             log.clear()
         self.internal, external = free_port(), free_port()
         broker = {"project": "helsinki", "name": "cameras"} | ({"limits": limits} if limits else {})
@@ -634,3 +641,188 @@ def test_a_flooding_publisher_is_throttled(tmp_path):
         assert Decider.connects.count("helsinki-cam-1") > 1, "the flooding device was never disconnected"
         delivered = len(broker.received)
         assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
+
+
+def port_docs(tmp_path) -> list[dict]:
+    brokers = [{**BASE["brokers"][0], "port": 18830}, *BASE["brokers"][1:]]
+    result = helm({**BASE, "brokers": brokers}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    return [d for d in yaml.safe_load_all(result.stdout) if d]
+
+
+def test_a_dedicated_port_passes_tls_through_to_the_brokers_own_tls_listener(tmp_path):
+    """T-5856: a broker with a port gets one more route, on the entrypoint `mqtt-<port>`, any SNI
+    or none, TLS passed through with PROXY v2 to RMQTT's TLS listener 8884, which serves the
+    broker host's certificate; Traefik would answer a client without SNI with its default one.
+    A broker without a port keeps only its 8883 route, and no Service leaves ClusterIP."""
+    docs = port_docs(tmp_path)
+    routes = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "IngressRouteTCP"}
+    assert sorted(routes) == sorted([*RELEASES, "mqtt-helsinki-cameras-port"])
+    port = routes["mqtt-helsinki-cameras-port"]
+    assert port["entryPoints"] == ["mqtt-18830"]
+    (route,) = port["routes"]
+    assert route["match"] == "HostSNI(`*`)"
+    assert route["services"] == [{"name": "mqtt-helsinki-cameras", "port": 8884, "proxyProtocol": {"version": 2}}]
+    assert port["tls"] == {"passthrough": True}
+    for name, spec in routes.items():
+        assert spec["entryPoints"] == (["mqtt-18830"] if name.endswith("-port") else ["mqtts"]), name
+    for d in docs:
+        if d["kind"] == "Service":
+            assert d["spec"].get("type", "ClusterIP") == "ClusterIP", d["metadata"]["name"]
+            ports = [p["port"] for p in d["spec"]["ports"]]
+            assert (8884 in ports) == (d["metadata"]["name"] == "mqtt-helsinki-cameras"), d["metadata"]["name"]
+
+    tls = config(docs, "mqtt-helsinki-cameras")["rmqtt.toml"]["listener"]["tls"]["external"]
+    assert tls["enable"] is True and tls["addr"] == "0.0.0.0:8884" and tls["proxy_protocol"] is True
+    assert (tls["cert"], tls["key"]) == ("/etc/rmqtt-tls/tls.crt", "/etc/rmqtt-tls/tls.key")
+    assert tls["allow_anonymous"] is False and tls["max_qos_allowed"] == 1 and tls["cross_certificate"] is False
+    for release in RELEASES[1:]:
+        assert config(docs, release)["rmqtt.toml"]["listener"]["tls"]["external"]["enable"] is False
+
+    deployment = of(docs, "Deployment")["mqtt-helsinki-cameras"]["spec"]["template"]
+    pod = deployment["spec"]
+    secret = next(v for v in pod["volumes"] if v["name"] == "tls")["secret"]
+    assert secret["secretName"] == "mqtt-helsinki-cameras-tls"
+    assert [i["key"] for i in secret["items"]] == ["tls.crt", "tls.key"]
+    assert {"name": "tls", "mountPath": "/etc/rmqtt-tls", "readOnly": True} in pod["containers"][0]["volumeMounts"]
+    annotations = deployment["metadata"]["annotations"]
+    assert annotations["config.linkerd.io/opaque-ports"] == "1883,1884,8884"
+    assert annotations["joinedcontext.com/tls-revision"] == ""
+    other = of(docs, "Deployment")["mqtt-helsinki-buses"]["spec"]["template"]
+    assert "joinedcontext.com/tls-revision" not in other["metadata"]["annotations"]
+    assert [v["name"] for v in other["spec"]["volumes"]] == ["config"]
+
+    # 8884 admits the ingress controller alone, as 1884 does.
+    server = of(docs, "Server")["mqtt-helsinki-cameras-tls"]["spec"]
+    assert server["port"] == 8884 and server["accessPolicy"] == "deny"
+    assert of(docs, "MeshTLSAuthentication")["mqtt-helsinki-cameras-tls"]["spec"]["identityRefs"] == [
+        {"kind": "ServiceAccount", "name": "traefik", "namespace": "traefik"}]
+    assert "mqtt-helsinki-buses-tls" not in of(docs, "Server")
+
+
+def test_the_port_template_filled_is_the_broker_with_a_port_the_chart_renders(tmp_path):
+    """The Portal stamps `objects-port.yaml` for a broker with a port: filled, it is what an entry
+    with that port renders, and its Certificate revision lands in the pod annotation that rolls
+    the broker on a renewal."""
+    docs = port_docs(tmp_path)
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    text = template["data"]["objects-port.yaml"].replace("__PORT__", "18830")
+    limits = {"maxMessageBytes": 65536, "messagesPerSecond": 10, "maxConnections": 1000}
+    stamped = fill(text.replace("__TLS_REVISION__", ""), "mqtt-helsinki-cameras", "helsinki", "cameras", limits)
+    rendered = [d for d in docs if d["metadata"].get("labels", {}).get("app.kubernetes.io/instance") == "mqtt-helsinki-cameras"]
+    assert comparable(stamped) == comparable(rendered)
+    renewed = fill(text.replace("__TLS_REVISION__", "3"), "mqtt-helsinki-cameras", "helsinki", "cameras", limits)
+    (deployment,) = [d for d in renewed if d["kind"] == "Deployment"]
+    assert deployment["spec"]["template"]["metadata"]["annotations"]["joinedcontext.com/tls-revision"] == "3"
+    assert "8884" not in template["data"]["objects.yaml"] and "__PORT__" not in template["data"]["objects.yaml"]
+
+
+@pytest.mark.parametrize(("ports", "message"), [
+    ([18845], "outside the served range 18830-18839"),
+    ([1883], "outside the served range 18830-18839"),
+    ([18831, 18831], "two brokers hold port 18831"),
+])
+def test_a_port_outside_the_served_pool_or_held_twice_refuses_to_render(tmp_path, ports, message):
+    brokers = [{**b, "port": p} for b, p in zip(BASE["brokers"], ports)]
+    result = helm({**BASE, "brokers": brokers}, tmp_path)
+    assert result.returncode != 0 and message in result.stderr, result.stderr
+
+
+def proxy_v2(source: str, port: int) -> bytes:
+    """The PROXY v2 header Traefik writes before the client's bytes (TCP over IPv4)."""
+    addresses = ipaddress.IPv4Address(source).packed + ipaddress.IPv4Address("10.0.0.1").packed
+    return b"\r\n\r\n\x00\r\nQUIT\n" + bytes([0x21, 0x11]) + struct.pack("!H", 12) + addresses + struct.pack("!HH", port, 8884)
+
+
+# The TLSOption's suites (templates/tls-option.yaml) in OpenSSL names, and the TLS 1.2 ChaCha20
+# suites rustls adds with no knob to drop them: AEAD with ECDHE like the rest (decided in T-5856).
+TLS12_ALLOWED = {"ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES256-GCM-SHA384", "ECDHE-RSA-AES128-GCM-SHA256",
+                 "ECDHE-RSA-AES256-GCM-SHA384", "ECDHE-ECDSA-CHACHA20-POLY1305", "ECDHE-RSA-CHACHA20-POLY1305"}
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@pytest.mark.skipif(shutil.which("docker") is None or shutil.which("openssl") is None, reason="no container runtime")
+def test_the_dedicated_tls_listener_serves_the_broker_certificate_bsi_suites_and_the_client_address(tmp_path):
+    """T-5856 option (a): the rendered 8884 listener of the pinned RMQTT, reached as Traefik's
+    passthrough reaches it (PROXY v2, then TLS, no SNI), serves the mounted certificate, refuses
+    TLS 1.0/1.1 and every suite outside TLS12_ALLOWED, and hands the gateway the address of the
+    PROXY header on CONNECT."""
+    decider = ThreadingHTTPServer(("127.0.0.1", 0), Decider)
+    threading.Thread(target=decider.serve_forever, daemon=True).start()
+    Decider.rate = None
+    Decider.deny.clear()
+    for log in (Decider.connects, Decider.addresses):
+        log.clear()
+    values = {**BASE, "brokers": [{"project": "helsinki", "name": "cameras", "port": 18830}],
+              "authUrl": f"http://127.0.0.1:{decider.server_port}/internal/mqtt/auth"}
+    result = helm(values, tmp_path)
+    assert result.returncode == 0, result.stderr
+    data = of([d for d in yaml.safe_load_all(result.stdout) if d], "ConfigMap")["mqtt-helsinki-cameras"]["data"]
+    internal, external, tls = free_port(), free_port(), free_port()
+    conf, certs = tmp_path / "conf", tmp_path / "tls"
+    (conf / "plugins").mkdir(parents=True)
+    certs.mkdir()
+    (conf / "rmqtt.toml").write_text(
+        data["rmqtt.toml"].replace("0.0.0.0:1883", f"127.0.0.1:{internal}")
+        .replace("0.0.0.0:1884", f"127.0.0.1:{external}").replace("0.0.0.0:8884", f"127.0.0.1:{tls}"))
+    for name in ("rmqtt-auth-http.toml", "rmqtt-acl.toml"):
+        (conf / "plugins" / name).write_text(data[name])
+    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+                    "-subj", "/CN=cameras.helsinki.mqtt.dev.example.org",
+                    "-keyout", str(certs / "tls.key"), "-out", str(certs / "tls.crt")], capture_output=True, check=True)
+    for path in (tmp_path, conf, conf / "plugins", certs):
+        path.chmod(0o755)
+    for path in (*certs.iterdir(), *conf.rglob("*.toml")):
+        path.chmod(0o644)
+    name = f"t5856-rmqtt-{tls}"
+    started = subprocess.run(
+        ["docker", "run", "-d", "--rm", "--name", name, "--network", "host", "--read-only",
+         "-v", f"{conf}:/etc/rmqtt:ro", "-v", f"{certs}:/etc/rmqtt-tls:ro", image(), "-f", "/etc/rmqtt/rmqtt.toml"],
+        capture_output=True, text=True, check=False)
+    try:
+        assert started.returncode == 0, started.stderr
+        deadline = time.monotonic() + 60
+        while socket.socket().connect_ex(("127.0.0.1", tls)) != 0:
+            assert time.monotonic() < deadline, "RMQTT did not listen on its TLS port"
+            time.sleep(0.2)
+
+        def handshake(version=None, ciphers=None) -> ssl.SSLSocket:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            if version:
+                context.minimum_version = context.maximum_version = version
+            context.set_ciphers((ciphers or "ALL") + ":@SECLEVEL=0")
+            raw = socket.create_connection(("127.0.0.1", tls), timeout=5)
+            raw.sendall(proxy_v2("203.0.113.7", 40000))
+            return context.wrap_socket(raw)  # no server_hostname: no SNI, as a bare device
+
+        with handshake() as session:
+            served = ssl.DER_cert_to_PEM_cert(session.getpeercert(binary_form=True))
+            assert served.strip() == (certs / "tls.crt").read_text().strip()
+            # MQTT 3.1.1 CONNECT, client id and username "cam-1", password "a-token".
+            payload = b"\x00\x04MQTT\x04\xc2\x00\x3c" + b"".join(
+                struct.pack("!H", len(v)) + v for v in (b"cam-1", b"cam-1", b"a-token"))
+            session.sendall(b"\x10" + bytes([len(payload)]) + payload)
+            assert session.recv(4) == b"\x20\x02\x00\x00"
+        assert Decider.addresses == ["203.0.113.7"]
+
+        for old in (ssl.TLSVersion.TLSv1, ssl.TLSVersion.TLSv1_1):
+            with pytest.raises((ssl.SSLError, ConnectionError)):
+                handshake(old).close()
+        offered = [c["name"] for c in ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT).get_ciphers() if c["protocol"] == "TLSv1.2"]
+        offered += ["ECDHE-RSA-AES128-SHA", "ECDHE-RSA-AES256-SHA384", "AES128-GCM-SHA256", "DHE-RSA-AES128-GCM-SHA256"]
+        accepted = set()
+        for cipher in offered:
+            try:
+                with handshake(ssl.TLSVersion.TLSv1_2, cipher) as session:
+                    accepted.add(session.cipher()[0])
+            except (ssl.SSLError, ConnectionError):
+                pass
+        assert accepted <= TLS12_ALLOWED, accepted - TLS12_ALLOWED
+        assert {"ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-RSA-AES256-GCM-SHA384"} <= accepted
+        with handshake(ssl.TLSVersion.TLSv1_3) as session:
+            assert session.version() == "TLSv1.3"
+    finally:
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+        decider.shutdown()
