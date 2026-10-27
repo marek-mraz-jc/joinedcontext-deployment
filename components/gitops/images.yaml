@@ -17,8 +17,8 @@ gitops:
   # The helmfile plugin sidecar and the smoke gate's image: our own (images/gitops-helmfile,
   # T-4706) with the versions CI renders with (helmfile 1.8.1, helm 4.3.0), kubectl, yq, jq and
   # curl, and none of the stock image's unused, CRITICAL-flagged tools. Signed by
-  # image-gitops.yml run 39201466861 at 0329738f.
+  # image-gitops.yml run 40589520902 at fd1dd1a6 (alpine 3.24.3, brotli-libs without CVE-2026-111497, T-5887).
   helmfile:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile'
     tag: '1.8.1'
-    digest: 'sha256:5b77491acfa2b8f459683682c469dc06bc05ae31497bff70acbf24af440f70ae'
+    digest: 'sha256:0f9ccb5182517edd8faaae17fcef38c41785d616e75b46cc5d1f4651cc130996'
