@@ -15,17 +15,15 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = PROJECT_ROOT / "scripts" / "emergency-revoke.sh"
 
-SEEDED_POLICY = """apiVersion: joinedcontext.com/v1alpha1
-kind: Policy
-metadata:
-  name: public-read
-  namespace: bb-ovzdusie
-spec:
-  operations: [retrieveOps]
-"""
+FORGE_TOKEN = "forge.write.token"
+CHECKOUTS_ARGS = [
+    "--org-dir", "/repo/current", "--projects-dir", "/projects",
+    "--forge", "http://gitea-http.dev.svc.cluster.local:3000/joinedcontext",
+    "--token-file", "/var/run/forge/token", "--interval", "10",
+]
 
 KUBECTL_STUB = '''#!/usr/bin/env python3
-import json, os, sys
+import base64, json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
 args = sys.argv[1:]
 with open(os.environ["STUB_CALLS"], "a") as log:
@@ -43,10 +41,17 @@ elif "patch" in args and "secret" in args:
 elif "get" in args and "deployments,statefulsets" in args:
     ns = args[args.index("-n") + 1]
     sys.stdout.write("".join(w + "\\n" for w in spec.get("workloads", {}).get(ns, [])))
-elif "get" in args and "configmap" in args:
-    sys.stdout.write(spec.get("seededPolicy", ""))
-elif "patch" in args:
-    sys.exit(0 if spec.get("patchOk", True) else 1)
+elif "get" in args and "secret" in args:
+    token = spec.get("forgeToken", "forge.write.token")
+    sys.stdout.write(base64.b64encode(token.encode()).decode() if token else "")
+elif "get" in args and "deployment" in args:
+    sys.stdout.write("app.kubernetes.io/instance=context-gateway,app.kubernetes.io/name=context-gateway,")
+elif "get" in args and "pods" in args:
+    sys.stdout.write("".join(p + "\\n" for p in spec.get("pods", ["context-gateway-0"])))
+elif "get" in args and "pod" in args:
+    sys.stdout.write("".join(a + "\\n" for a in spec.get("checkoutsArgs", [])))
+elif "exec" in args:
+    sys.exit(0 if spec.get("execOk", True) else 1)
 elif "rollout" in args and "restart" in args:
     sys.exit(0)
 else:
@@ -62,7 +67,18 @@ line = " ".join(sys.argv[1:])
 with open(os.environ["STUB_CALLS"], "a") as log:
     log.write("curl " + line + "\\n")
 
-if "/protocol/openid-connect/token" in line:
+if "/api/v1/repos/" in line:
+    # The forge token must come on stdin (-K -), never in argv.
+    config = sys.stdin.read() if "-K" in sys.argv else ""
+    with open(os.environ["STUB_CALLS"], "a") as log:
+        log.write("forge-config " + config.strip() + "\\n")
+    if "-X DELETE" in line:
+        sys.stdout.write("{}\\n" + str(spec.get("deleteStatus", 200)))
+    elif spec.get("policyAt", True):
+        sys.stdout.write('{"name":"public-read.yaml","sha":"0123abcd","last_commit_sha":"ffff","type":"file"}\\n200')
+    else:
+        sys.stdout.write('{"message":"not found"}\\n404')
+elif "/protocol/openid-connect/token" in line:
     sys.stdout.write('{"access_token":"admin.token.value"}')
 elif "/admin/realms/" in line and "/users?" in line:
     sys.stdout.write(spec.get("userLookup", '[{"id":"user-uuid","username":"jana.kovacova"}]'))
@@ -124,33 +140,93 @@ def test_nothing_to_revoke_is_refused(tmp_path):
     assert calls == [], "a refused invocation must not touch the cluster"
 
 
-def test_the_policy_leaves_the_repository_and_the_shared_gateway_keeps_running(tmp_path):
-    # T-5625: the gateway's reaper re-reads the repository every second (platform T-0177), so a
-    # restart of the gateway every tenant shares only costs the rollout time inside the bound.
-    result, calls = run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY},
+VERIFY = ("--verify-url", "https://host/api/endpoint/slug/ngsi-ld/v1/entities?type=X")
+
+
+def revoke_policy(tmp_path: Path, spec: dict, *extra: str):
+    return run(
+        tmp_path, spec,
         "--instance", "dev", "--namespace", "dev", "--policy", "public-read",
+        "--project", "helsinki", "--space", "air", "--forge", "https://dev.example.test/git",
+        *VERIFY, "--verify-token-file", token_file(tmp_path), *extra,
     )
+
+
+def test_the_policy_leaves_the_forge_and_each_gateway_pod_fetches_it_now(tmp_path):
+    # T-5650: the gateway reads the forge through its checkouts sidecar, never a ConfigMap; the
+    # Policy goes with a commit on main and one --only pass per pod, and nothing restarts.
+    result, calls = revoke_policy(tmp_path, {
+        "pods": ["context-gateway-a", "context-gateway-b"], "checkoutsArgs": CHECKOUTS_ARGS,
+    })
     assert result.returncode == 0, result.stdout + result.stderr
-    patch = next(c for c in calls if "patch configmap" in c)
-    assert '"op": "remove"' in patch and "/data/policy.yaml" in patch
-    assert not any("rollout" in c for c in calls), "no gateway restart or rollout wait"
+    contents = "https://dev.example.test/git/api/v1/repos/joinedcontext/helsinki/contents/spaces/air/policies/public-read.yaml"
+    delete = next(c for c in calls if "-X DELETE" in c)
+    assert contents in delete and '"sha":"0123abcd"' in delete and '"branch":"main"' in delete
+    execs = [c for c in calls if " exec " in f" {c} "]
+    assert len(execs) == 2
+    assert execs[0].startswith("kubectl -n dev exec context-gateway-a -c checkouts -- /usr/local/bin/jcctl checkouts")
+    assert all("--projects-dir /projects" in c and c.endswith("--once --only helsinki") for c in execs)
+    assert not any("--interval" in c for c in execs), "the loop's own interval is not passed to one pass"
+    assert calls.index(delete) < calls.index(execs[0]), "the pods fetch after the commit"
+    assert not any("rollout" in c or "configmap" in c for c in calls), "no restart, no ConfigMap"
 
 
-def test_a_policy_the_repository_does_not_carry_fails_loudly(tmp_path):
-    result, calls = run(
-        tmp_path, {"seededPolicy": ""},
-        "--instance", "dev", "--policy", "public-read",
-    )
+def test_the_forge_token_never_rides_on_a_command_line(tmp_path):
+    result, calls = revoke_policy(tmp_path, {"checkoutsArgs": CHECKOUTS_ARGS})
+    assert result.returncode == 0, result.stdout + result.stderr
+    argv = [c for c in calls if not c.startswith("forge-config ")]
+    assert not any(FORGE_TOKEN in c for c in argv)
+    assert 'forge-config header = "Authorization: token forge.write.token"' in calls
+    assert FORGE_TOKEN not in result.stdout + result.stderr
+
+
+def test_a_policy_the_forge_does_not_carry_fails_loudly(tmp_path):
+    result, calls = revoke_policy(tmp_path, {"policyAt": False, "checkoutsArgs": CHECKOUTS_ARGS})
     assert result.returncode == 1
-    assert "is not in configmap" in result.stderr
-    assert not any("patch configmap" in c for c in calls), "nothing to remove, nothing patched"
+    assert "is not at joinedcontext/helsinki:spaces/air/policies/public-read.yaml" in result.stderr
+    assert not any("-X DELETE" in c or " exec " in c for c in calls), "nothing to remove, nothing fetched"
+
+
+def test_a_refused_commit_fetches_nothing_and_fails(tmp_path):
+    result, calls = revoke_policy(tmp_path, {"deleteStatus": 403, "checkoutsArgs": CHECKOUTS_ARGS})
+    assert result.returncode == 1
+    assert "the forge refused to remove" in result.stderr and "still grants" in result.stderr
+    assert not any(" exec " in c for c in calls)
+
+
+def test_no_forge_token_removes_nothing(tmp_path):
+    result, calls = revoke_policy(tmp_path, {"forgeToken": ""})
+    assert result.returncode == 1
+    assert "no forge token in Secret gitea-token-portal of dev" in result.stderr
+    assert not any("/api/v1/repos/" in c for c in calls)
+
+
+def test_a_pod_that_cannot_fetch_fails_the_run(tmp_path):
+    result, _ = revoke_policy(tmp_path, {"execOk": False, "checkoutsArgs": CHECKOUTS_ARGS})
+    assert result.returncode == 1
+    assert "context-gateway-0 could not fetch helsinki" in result.stderr
+
+
+def test_a_policy_is_never_removed_without_measuring_the_refusal(tmp_path):
+    result, calls = run(
+        tmp_path, {},
+        "--instance", "dev", "--policy", "public-read", "--project", "helsinki",
+        "--space", "air", "--forge", "https://dev.example.test/git",
+    )
+    assert result.returncode == 2
+    assert "--verify-url and --verify-token-file" in result.stderr
+    assert calls == []
+
+
+def test_a_path_that_walks_out_of_the_repository_is_refused(tmp_path):
+    result, calls = revoke_policy(tmp_path, {}, "--forge-repo", "joinedcontext/../admin")
+    assert result.returncode == 2
+    assert calls == []
 
 
 def test_a_user_is_logged_out_and_a_service_account_secret_is_rotated(tmp_path):
-    result, calls = run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY},
-        "--instance", "dev", "--policy", "public-read",
+    result, calls = revoke_policy(
+        tmp_path, {"checkoutsArgs": CHECKOUTS_ARGS},
         "--user", "jana.kovacova", "--service-account", "conformance",
         "--idm", "https://idm.example.test",
     )
@@ -160,24 +236,14 @@ def test_a_user_is_logged_out_and_a_service_account_secret_is_rotated(tmp_path):
 
 
 def test_the_refusal_is_measured_and_passes_inside_the_bound(tmp_path):
-    result, calls = run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY, "refusedAfter": 1},
-        "--instance", "dev", "--policy", "public-read", "--bound", "5",
-        "--verify-url", "https://host/api/endpoint/slug/ngsi-ld/v1/entities?type=X",
-        "--verify-token-file", token_file(tmp_path),
-    )
+    result, calls = revoke_policy(tmp_path, {"refusedAfter": 1, "checkoutsArgs": CHECKOUTS_ARGS}, "--bound", "5")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "is refused (403)" in result.stdout
     assert any("/api/endpoint/" in c and "Authorization: Bearer" in c for c in calls)
 
 
 def test_a_credential_still_accepted_after_the_bound_fails_the_run(tmp_path):
-    result, calls = run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY, "refusedAfter": 99},
-        "--instance", "dev", "--policy", "public-read", "--bound", "2",
-        "--verify-url", "https://host/api/endpoint/slug/ngsi-ld/v1/entities?type=X",
-        "--verify-token-file", token_file(tmp_path),
-    )
+    result, calls = revoke_policy(tmp_path, {"refusedAfter": 99, "checkoutsArgs": CHECKOUTS_ARGS}, "--bound", "2")
     assert result.returncode == 1
     assert "still answers 200" in result.stderr
     assert "OPS-45" in result.stderr
@@ -188,17 +254,14 @@ def test_no_token_or_password_is_ever_printed(tmp_path):
     env_secret = "sup3r-admin-password"
     os.environ["KEYCLOAK_ADMIN_PASSWORD"] = env_secret
     try:
-        result, _ = run(
-            tmp_path, {"seededPolicy": SEEDED_POLICY, "refusedAfter": 1},
-            "--instance", "dev", "--policy", "public-read",
+        result, _ = revoke_policy(
+            tmp_path, {"refusedAfter": 1, "checkoutsArgs": CHECKOUTS_ARGS},
             "--user", "jana.kovacova", "--idm", "https://idm.example.test",
-            "--verify-url", "https://host/api/endpoint/slug/ngsi-ld/v1/entities?type=X",
-            "--verify-token-file", token_file(tmp_path),
         )
     finally:
         del os.environ["KEYCLOAK_ADMIN_PASSWORD"]
     printed = result.stdout + result.stderr
-    for secret in (env_secret, "admin.token.value", "compromised.jwt.value"):
+    for secret in (env_secret, "admin.token.value", "compromised.jwt.value", FORGE_TOKEN):
         assert secret not in printed, f"{secret} reached the console"
 
 
@@ -211,8 +274,8 @@ PROXY_READER = 'Deployment/bikes-agent-proxy {"volumes":[{"name":"s","secret":{"
 
 def revoke_client(tmp_path: Path, spec: dict, client: str = "edge"):
     return run(
-        tmp_path, {"seededPolicy": SEEDED_POLICY, **spec},
-        "--instance", "dev", "--policy", "public-read",
+        tmp_path, spec,
+        "--instance", "dev",
         "--service-account", client, "--idm", "https://idm.example.test",
     )
 
