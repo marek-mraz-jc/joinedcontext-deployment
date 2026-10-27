@@ -579,8 +579,11 @@ def _portal_ui_pin(tmp_path, published: bool, compare: dict | None):
     digest = "sha256:" + "f" * 64
     (bin_dir / "docker").write_text(
         f'#!/bin/sh\necho "Digest:    {digest}"\nexit 0\n' if published else "#!/bin/sh\nexit 1\n")
+    (tmp_path / "compare.json").write_text(json.dumps(compare))
+    # The stub writes the answer where `-o` points, as curl does.
     (bin_dir / "curl").write_text(
-        f"#!/bin/sh\ncat <<'J'\n{json.dumps(compare)}\nJ\n" if compare is not None else "#!/bin/sh\nexit 22\n")
+        f'#!/bin/sh\nwhile [ "$1" != -o ]; do shift; done\ncat {tmp_path / "compare.json"} > "$2"\n'
+        if compare is not None else "#!/bin/sh\nexit 22\n")
     for stub in ("docker", "curl"):
         (bin_dir / stub).chmod(0o755)
     env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", GITHUB_TOKEN="")
@@ -599,6 +602,15 @@ def test_a_portal_commit_without_ui_changes_keeps_the_pinned_bundle(tmp_path):
     pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["ui"]
     result = _portal_ui_pin(tmp_path, published=False,
                             compare={"status": "ahead", "files": [{"filename": "src/api/health.rs"}]})
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == [pinned["commit"], pinned["digest"]]
+
+
+def test_a_compare_past_one_environment_string_is_still_read(tmp_path):
+    """A 300-file compare runs past 128 KiB: as an env var it was 'Argument list too long' (2026-10-27)."""
+    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["ui"]
+    files = [{"filename": f"src/f{n}.rs", "patch": "x" * 1000} for n in range(200)]
+    result = _portal_ui_pin(tmp_path, published=False, compare={"status": "ahead", "files": files})
     assert result.returncode == 0, result.stderr
     assert result.stdout.split() == [pinned["commit"], pinned["digest"]]
 

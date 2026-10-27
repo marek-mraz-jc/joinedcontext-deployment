@@ -31,16 +31,19 @@ read -r pinned digest < <(awk '/^  ui:$/ { mine = 1; next } mine && /^  [a-z]/ {
 
 auth=()
 [ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
-compare=$(curl -fsSL --max-time 30 "${auth[@]}" \
-  "https://api.github.com/repos/marek-mraz-jc/joinedcontext-portal/compare/$pinned...$commit?per_page=300" 2>/dev/null) ||
+# The answer goes through a file: a compare past ~128 KiB exceeds one environment string.
+compare=$(mktemp)
+trap 'rm -f "$compare"' EXIT
+curl -fsSL --max-time 30 "${auth[@]}" -o "$compare" \
+  "https://api.github.com/repos/marek-mraz-jc/joinedcontext-portal/compare/$pinned...$commit?per_page=300" 2>/dev/null ||
   { echo "the compare of portal ${pinned:0:7}...${commit:0:7} did not answer; nothing decided" >&2; exit 1; }
-COMPARE=$compare python3 - "$pinned" "$commit" <<'PY'
+python3 - "$pinned" "$commit" "$compare" <<'PY'
 import json
-import os
 import sys
 
 pinned, commit = sys.argv[1][:7], sys.argv[2][:7]
-answer = json.loads(os.environ["COMPARE"])
+with open(sys.argv[3], encoding="utf-8") as f:
+    answer = json.load(f)
 if answer.get("status") not in ("ahead", "identical"):
     sys.exit(f"portal {commit} does not descend from the pinned portal-ui {pinned} ({answer.get('status')})")
 files = [f["filename"] for f in answer.get("files", [])]
