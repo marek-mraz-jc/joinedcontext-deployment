@@ -122,7 +122,7 @@ if [ -n "$policy" ]; then
 		sha=$(printf '%s' "${answer%$'\n'*}" | sed -n 's/.*"sha":"\([0-9a-f]*\)".*/\1/p' | head -1)
 		if [ "$code" != 200 ] || [ -z "$sha" ]; then
 			ko "policy $policy is not at $forge_repo:$policy_path on main (forge answered $code): check --project and --space"
-		elif ! printf '%s' "${answer%$'\n'*}" | grep -q '"type":"file"'; then
+		elif [[ "${answer%$'\n'*}" != *'"type":"file"'* ]]; then
 			ko "$forge_repo:$policy_path is not a file"
 		else
 			answer=$(forge_api DELETE "$contents" \
