@@ -208,5 +208,8 @@ context-broker:
     # Antares dev 0e5bc9a (dev-87, over bcb9082: T-5849 br quality 2, gzip level 1, 1 KiB minimum; same FEATURES).
     # No migration, no new key. The gateway asks for plain bytes since fc27d53 (live). Rollback: dev-86.
     # Signed by ship.yml on dev at 0e5bc9a (run 40513043812).
-    tag: 'dev-87'
-    digest: 'sha256:49ff8ef628cacc3212ebcdb4221a9bf6673a8185b8a1f0817c75903fb9dc64fe'
+    # Antares dev d43ac52 (dev-88, over 0e5bc9a: T-5859 vendored rumqttc reads PEM with rustls-pki-types, rustls-pemfile
+    # and its RUSTSEC-2025-0134 ignore gone; T-5858 compose only). No migration, no new key. Rollback: dev-87.
+    # Signed by ship.yml on dev at d43ac52 (run 40557136916).
+    tag: 'dev-88'
+    digest: 'sha256:7f902c89a523e831626ee04345332f34c6bea9ce0b6af6528d67c4a1c92b0283'
