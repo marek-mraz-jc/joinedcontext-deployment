@@ -35,7 +35,8 @@ TABLE = ROOT / ".ci" / "test-durations.json"
 # finishes about PARALLEL of them per wall second (run 40149033966: its 10,698 s of test time, the
 # table, in 2,824 s of pytest wall over the four shards).
 PARALLEL = 3.8
-SHARD_ONE_STEPS = round(120 * PARALLEL)
+# Run 40589499373 (T-5886): 150 s (kyverno policy verify 99, temporal audit 30, docs pin 12, gitleaks 4).
+SHARD_ONE_STEPS = round(150 * PARALLEL)
 # A file heavier than 1/SPLIT of one shard's share is split over the shards by its tests
 SPLIT = 4
 # `12.34s call     test_x.py::test_y[param]` (setup and teardown lines count too)
@@ -49,7 +50,14 @@ def files() -> list[str]:
 def split(names: list[str], weights: dict[str, float], count: int) -> set[str]:
     """The files each shard runs a count-th of the tests of."""
     share = (sum(weights.get(n, 0.0) for n in names) + SHARD_ONE_STEPS) / count
-    return {n for n in names if count > 1 and weights.get(n, 0.0) > share / SPLIT}
+    return {n for n in names if count > 1 and weights.get(n, 0.0) > share / SPLIT and not grouped(n)}
+
+
+def grouped(name: str) -> bool:
+    """A module under an xdist_group shares one container over its tests, in order: split, every shard
+    would start its own container and run tests that lean on state an earlier one left (T-5886)."""
+    path = ROOT / "tests" / name
+    return path.is_file() and "xdist_group" in path.read_text(encoding="utf-8")
 
 
 def mine(position: int, shard: int, count: int) -> bool:

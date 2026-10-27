@@ -129,8 +129,10 @@ jobs:
     # Balanced by measured time since 2026-10-20: shard 4 ran past 15 on three main runs (T-4789).
     # 20 since 2026-10-22: shard 1 (pytest at 76 % after 12.5 min, its kyverno and gitleaks steps 4 min more)
     # was cancelled at 15 on 9a0ed939 and 68c4e0d7 and main had no verdict; same files, none skipped.
-    strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4] } }
-    name: tests (${{ matrix.shard }}/4)
+    # Six since 2026-10-27: at four every shard ran 17-19 min of its 20 on 70de8827, the junit times swing
+    # +-20 % from run to run (keycloak admin permissions 377 -> 785 s), and shard 1 was cancelled (T-5886).
+    strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4, 5, 6] } }
+    name: tests (${{ matrix.shard }}/6)
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         # The whole history: a credential deleted in the last commit is still a credential.
@@ -252,11 +254,11 @@ jobs:
             "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
           echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
-      # A file heavier than a quarter of a shard's share runs in every shard, a quarter of its tests
+      # A file heavier than a quarter of a shard's share runs in every shard, a sixth of its tests
       # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
-      - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 4)
+      - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 6)
         env:
-          JC_TEST_SHARD: ${{ matrix.shard }}/4
+          JC_TEST_SHARD: ${{ matrix.shard }}/6
       # Each test's seconds, for the test-durations job below (T-5551).
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
