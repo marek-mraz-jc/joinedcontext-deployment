@@ -56,9 +56,11 @@ spec:
               securityContext:
                 {{- toYaml $.Values.securityContext | nindent 16 }}
               resources:
-                # The largest city file is 14 MB of JSON, about 200 MB once parsed.
+                # An Endpoint sheet (od_sheet) is the peak: bb-dtm-bb-register-statickej-dopravy,
+                # 26 409 rows (85 MB as JSON), held 434 MiB in od_fields and OOMKilled 512Mi on
+                # prod 2026-10-27 (T-5841); OD_MAX_SHEET_BYTES lets a sheet grow about twice that.
                 requests: { cpu: 50m, memory: 128Mi }
-                limits: { memory: 512Mi }
+                limits: { memory: 1Gi }
               env:
                 - name: CATALOGUE
                   value: {{ printf "%s.%s.svc.cluster.local" $full $.Release.Namespace | quote }}
