@@ -143,18 +143,20 @@ def test_every_seeded_manifest_of_the_city_belongs_to_one_of_its_spaces(seed):
     """Nothing in the project floats free of a space, and no manifest of it names a space the
     project does not seed (T-2305, T-2781)."""
     spaces = {name for (kind, name) in seed if kind == "ContextSpace"}
-    # The city's own catalogue (T-5493) is the sixth, the conformance suite's own (F-BNT1-002) the seventh.
+    # The city's own catalogue (T-5493) is the sixth, the conformance suite's own (F-BNT1-002) the
+    # seventh, the MQTT demo sensors' (T-4857) the eighth.
     assert spaces == {"ovzdusie", "conformance", "banskabystrica-mesto", "banskabystrica-kpi", "banskabystrica-verejne",
-                      "banskabystrica-otvorene-data", "catalog"}
+                      "banskabystrica-otvorene-data", "catalog", "senzory"}
     # A DataSource is a fetch and a Project is the project: neither belongs to a space. A
     # Pipeline names its space through the Endpoint it writes through, which is the point. A
     # CkanInstance is the project's catalogue, which each space's Endpoint may publish to (T-2407).
     # A KnowledgeSource is a website the project's assistant answers from, and an
     # AssistantDeployment the assistant that answers from it: neither is a space's (T-3067). An
-    # McpServer serves Endpoints by name, which may sit in different spaces (T-4141).
+    # McpServer serves Endpoints by name, which may sit in different spaces (T-4141). An
+    # MqttBroker is the project's, read by its pipelines whatever space they write (ADR-N-048).
     project_scoped = {
         "Project", "ServiceAccount", "DataSource", "Pipeline", "CkanInstance", "KnowledgeSource",
-        "AssistantDeployment", "McpServer",
+        "AssistantDeployment", "McpServer", "MqttBroker",
     }
     for (kind, name), manifest in seed.items():
         if kind in project_scoped:

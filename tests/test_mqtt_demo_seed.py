@@ -117,7 +117,15 @@ def test_each_broker_is_read_by_a_pipeline_of_its_project(broker):
 
 
 def mapping(project: str, pipeline: str) -> str:
-    return by_name("Pipeline")[(project, pipeline)]["spec"]["compute"]["bloblang"]
+    """The pipeline's bloblang: inline in helsinki, in the `bento.yaml` beside it in the Slovak
+    projects (test_bystrica_pipelines keeps a fetch's mapping out of its manifest)."""
+    spec = by_name("Pipeline")[(project, pipeline)]["spec"]
+    if "compute" in spec:
+        return spec["compute"]["bloblang"]
+    index = yaml.safe_load((SEED / project / "index.yaml").read_text())
+    (name,) = [n for n, path in index.items() if path == f"projects/{project}/pipelines/{pipeline}/bento.yaml"]
+    (processor,) = yaml.safe_load((SEED / project / name).read_text())["pipeline"]["processors"]
+    return processor["mapping"]
 
 
 def bento(project: str, pipeline: str, domain: str, space: str, messages: list[tuple[str, object]]) -> list[dict]:
@@ -145,7 +153,7 @@ def bento(project: str, pipeline: str, domain: str, space: str, messages: list[t
 
 AIR = [
     ("helsinki", "mqtt-sensors", "hel.fi", "helsinki", "sensors/helsinki-sensor-kallio/air", "helsinki-sensor-kallio"),
-    ("banskabystrica", "mqtt-ovzdusie", "banskabystrica.sk", "ovzdusie", "ovzdusie/banskabystrica-senzor-namestie/air",
+    ("banskabystrica", "mqtt-ovzdusie", "banskabystrica.sk", "senzory", "ovzdusie/banskabystrica-senzor-namestie/air",
      "banskabystrica-senzor-namestie"),
 ]
 
