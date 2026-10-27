@@ -3,7 +3,7 @@
 # helmfile image bundles helm-s3, sops, age, kubectl and kustomize built with old Go (CVE-2025-68121
 # and CVE-2026-33186, CRITICAL); none of them is used here but kubectl, which comes as its own
 # release. Each binary is a release download checked against the sha256 pinned below.
-FROM docker.io/library/alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+FROM docker.io/library/alpine:3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 
 # The versions CI renders with (helmfile 1.8.1, helm 4.3.0; .github/workflows/ci.yml).
 ARG HELMFILE=1.8.1 HELMFILE_SHA256=ccabbe75dddbc25008d055fe92a44f95a184342211e7244d32b870409239c7a3

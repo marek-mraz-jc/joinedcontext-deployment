@@ -11,6 +11,7 @@ grafana:
     repository: 'docker.io/grafana/grafana'
     # 12.4.12 clears the 7 fixable CRITICALs of 12.3.1, which the 12.3 line still carries one of
     # (T-3297). Checked against 12.3.1 read-only with this component's grafana.ini, datasource and
-    # dashboard provider: no error, the same five dashboards provisioned.
-    tag: '12.4.12'
-    digest: 'sha256:83be3e511ede559bee80e2215bb1987cb1246075461cb961beb515b0341e7aea'
+    # dashboard provider: no error, the same five dashboards provisioned. 12.4.14 (2026-10-27)
+    # clears CVE-2026-111497 (brotli-libs, HIGH, CISA KEV) and three Go rows (T-5887).
+    tag: '12.4.14'
+    digest: 'sha256:ae509d9ae8c1021ca32ec370a9ca975d40165eda9fccd1e1102d317ff8787cd7'
