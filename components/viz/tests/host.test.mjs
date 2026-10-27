@@ -145,6 +145,26 @@ test("a 206 window follows Link intervalafter on the Endpoint and merges one ser
   assert.equal(data.partial, undefined);
 });
 
+test("an attribute with several instances is one series per datasetId across windows (T-5432)", async () => {
+  const soil = { source: "temporal", type: "WeatherObserved", attrs: ["soilTemperature"], last: "P7D" };
+  const at = (depth, pairs) => ({ type: "Property", datasetId: `urn:ngsi-ld:Dataset:shmu:soil-depth-${depth}`, values: pairs });
+  const next = `/api/endpoint/${SLUG}/ngsi-ld/v1/temporal/entities?attrs=soilTemperature&format=temporalValues&limit=1000&offsetN=2&timeAt=2026-10-16T06%3A00%3A00Z&timerel=after&type=WeatherObserved`;
+  const fetcher = async (url) => {
+    if (!url.includes("/temporal/")) return answer([{ id: "urn:a", name: "Banská Bystrica" }]);
+    if (!url.includes("offsetN")) {
+      return cut([{ id: "urn:a", type: "WeatherObserved", soilTemperature: [at("5cm", [[9.5, "2026-10-16T05:00:00Z"], [9.4, "2026-10-16T06:00:00Z"]]), at("100cm", [[13.4, "2026-10-16T06:00:00Z"]])] }],
+        { "Content-Range": "date-time 2026-10-11T16:00:00Z-2026-10-16T06:00:00Z/*", Link: `<${next}>; rel="intervalafter";type="application/json"` });
+    }
+    return cut([{ id: "urn:a", type: "WeatherObserved", soilTemperature: [at("5cm", [[9.4, "2026-10-16T06:00:00Z"], [9.1, "2026-10-17T06:00:00Z"]])] }], {}, 200);
+  };
+  const data = await host.load(view(soil), API, "en", fetcher, NOW);
+  assert.deepEqual(data.rows.map((r) => [r.name, r.datasetId, r.observedAt, r.soilTemperature]), [
+    ["soil-depth-5cm · Banská Bystrica", "urn:ngsi-ld:Dataset:shmu:soil-depth-5cm", "2026-10-16T05:00:00Z", 9.5],
+    ["soil-depth-5cm · Banská Bystrica", "urn:ngsi-ld:Dataset:shmu:soil-depth-5cm", "2026-10-16T06:00:00Z", 9.4],
+    ["soil-depth-5cm · Banská Bystrica", "urn:ngsi-ld:Dataset:shmu:soil-depth-5cm", "2026-10-17T06:00:00Z", 9.1],
+    ["soil-depth-100cm · Banská Bystrica", "urn:ngsi-ld:Dataset:shmu:soil-depth-100cm", "2026-10-16T06:00:00Z", 13.4]]);
+});
+
 test("a 206 with Content-Range alone continues after its end and keeps the boundary instant once", async () => {
   const asked = [];
   const fetcher = async (url) => {

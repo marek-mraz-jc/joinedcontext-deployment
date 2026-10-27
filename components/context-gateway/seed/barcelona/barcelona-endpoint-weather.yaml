@@ -62,3 +62,296 @@ spec:
           ca: Nom, ubicació i altitud de cada estació, CC BY 4.0.
           en: Name, place and height of each station, CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: weather }
+    # Declared charts replace the automatic ones (T-5432): altitude is the station's fixed height and
+    # has no observedAt, so its history chart stayed empty.
+    visualizations:
+      - name: auto-weatherobserved-atmosphericpressure
+        title: { ca: Pressió atmosfèrica, sk: Tlak vzduchu, en: Air pressure }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [atmosphericPressure]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: atmosphericPressure
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: atmosphericPressure
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-gustspeed
+        title: { ca: Ratxa de vent, sk: Nárazy vetra, en: Wind gusts }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [gustSpeed]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: gustSpeed
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: gustSpeed
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-maxtemperature
+        title: { ca: Temperatura màxima, sk: Najvyššia teplota, en: Highest temperature }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [maxTemperature]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: maxTemperature
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: maxTemperature
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-mintemperature
+        title: { ca: Temperatura mínima, sk: Najnižšia teplota, en: Lowest temperature }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [minTemperature]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: minTemperature
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: minTemperature
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-precipitation
+        title: { ca: Precipitació, sk: Zrážky, en: Precipitation }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [precipitation]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: precipitation
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: precipitation
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-relativehumidity
+        title: { ca: Humitat relativa, sk: Relatívna vlhkosť, en: Relative humidity }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [relativeHumidity]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: relativeHumidity
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: relativeHumidity
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-solarradiation
+        title: { ca: Radiació solar, sk: Slnečné žiarenie, en: Solar radiation }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [solarRadiation]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: solarRadiation
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: solarRadiation
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-temperature
+        title: { ca: Temperatura, sk: Teplota, en: Temperature }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [temperature]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: temperature
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: temperature
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-winddirection
+        title: { ca: Direcció del vent, sk: Smer vetra, en: Wind direction }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [windDirection]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: windDirection
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: windDirection
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal
+      - name: auto-weatherobserved-windspeed
+        title: { ca: Velocitat del vent, sk: Rýchlosť vetra, en: Wind speed }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na stanicu.
+          en: The values of the last 7 days, one line per station.
+        data:
+          source: temporal
+          type: WeatherObserved
+          attrs: [windSpeed]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: windSpeed
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: windSpeed
+                type: quantitative
+                format: '.1f'
+              - field: name
+                type: nominal

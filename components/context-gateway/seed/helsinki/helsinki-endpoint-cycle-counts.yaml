@@ -56,3 +56,35 @@ spec:
           fi: Kaupungin Eco-Counter-laskentapisteet ja niiden havainnot, CC BY 4.0.
           en: The city's Eco-Counter stations and their observations, CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: cycle-counters }
+    # Declared charts replace the automatic ones (T-5432): the Eco-Counter stations count cyclists
+    # and write no averageVehicleSpeed, so that chart stayed empty.
+    visualizations:
+      - name: auto-trafficflowobserved-intensity
+        title: { fi: Pyöräilijöitä vuorokaudessa, sk: Cyklisti za deň, en: Cyclists per day }
+        description:
+          sk: Hodnoty za posledných 7 dní, jedna čiara na sčítacie miesto a smer.
+          en: The values of the last 7 days, one line per station and direction.
+        data:
+          source: temporal
+          type: TrafficFlowObserved
+          attrs: [intensity]
+          last: P7D
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x: { field: observedAt, type: temporal, title: null }
+            'y':
+              field: intensity
+              type: quantitative
+              scale: { zero: false }
+            color: { field: name, type: nominal, title: null }
+            tooltip:
+              - field: observedAt
+                type: temporal
+              - field: intensity
+                type: quantitative
+                format: ',d'
+              - field: name
+                type: nominal

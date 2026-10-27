@@ -60,3 +60,43 @@ spec:
           fi: Helsingin liikennetiedot (HRI liikennemaarat-helsingissa), CC BY 4.0.
           en: Helsinki traffic data (HRI liikennemaarat-helsingissa), CC BY 4.0.
     pipelineRef: { kind: Pipeline, name: traffic-volumes }
+    # Declared charts replace the automatic ones (T-5432): the autumn weekday counts are yearly
+    # (newest 2024); no 7-day history window reaches them, so each year is drawn from its own record.
+    visualizations:
+      - name: volumes-per-year
+        title:
+          fi: Syysarkiliikenne vuosittain
+          sk: Jesenná pracovná doprava za rok
+          en: Autumn weekday traffic per year
+        description:
+          fi: Kaikkien laskentapisteiden summa vuosittain.
+          sk: Súčet všetkých sčítacích miest za rok.
+          en: Every counting point summed per year.
+        data:
+          source: odata
+          entitySet: TrafficFlowObserved
+          $select: dateObserved,intensity
+        spec:
+          $schema: https://vega.github.io/schema/vega-lite/v5.json
+          data: { name: source }
+          mark: { type: line, point: true }
+          encoding:
+            x:
+              field: dateObserved
+              type: temporal
+              title: null
+              timeUnit: year
+            'y':
+              aggregate: sum
+              field: intensity
+              type: quantitative
+              title: null
+            tooltip:
+              - field: dateObserved
+                type: temporal
+                title: null
+                timeUnit: year
+              - aggregate: sum
+                field: intensity
+                type: quantitative
+                format: ',d'
