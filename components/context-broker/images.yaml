@@ -188,5 +188,9 @@ context-broker:
     # 0403/0410 (T-5793); same FEATURES). Migration 0028 (ADD COLUMN temporal_entities.offset_until with a stable
     # default: catalog only, no rewrite), rollback = "compatible". New runtime key ANTARES_WS_QUEUE_BYTES keeps its
     # default. Rollback: dev-73. Signed by ship.yml on dev at 93c3bbc (run 40379008655).
-    tag: 'dev-77'
-    digest: 'sha256:12b1d2df994739fb7f45608dd79c5aca28f701fa129c0bd6c6e4c21a6f385d45'
+    # Antares dev 2535495 (dev-80, over 93c3bbc: T-5826 a dataset view counted in the store by its translatable
+    # idPattern, T-5827 a masked receiverInfo no longer follows a new endpoint uri, T-5816 MCP decision page, T-5805
+    # comma ids; same FEATURES). No migration. New runtime key ANTARES_MCP_CONFIRM_URL stays unset (default).
+    # Rollback: dev-77. Signed by ship.yml on dev at 2535495 (run 40433810842).
+    tag: 'dev-80'
+    digest: 'sha256:4056562cac25acde7ae72edc5d745b5132da521e984b8b9e67273e1c17b3378f'
