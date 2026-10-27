@@ -60,7 +60,8 @@ spec:
       attributes:
         availableBikeNumber: { record: onChange, heartbeat: P7D }
         dataProvider: { record: onChange, heartbeat: P7D }
-        dateModified: { record: onChange, heartbeat: P7D }
+        # dateModified is the pipeline's refresh stamp, new on every write: no history of its own (DM-132, T-5848).
+        dateModified: { record: never }
         freeSlotNumber: { record: onChange, heartbeat: P7D }
         location: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
