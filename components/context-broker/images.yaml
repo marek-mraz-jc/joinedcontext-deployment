@@ -200,5 +200,7 @@ context-broker:
     # ANTARES_SECRET_KEY; same FEATURES). No migration. New runtime key ANTARES_SECRET_KEY stays unset here (boot
     # warns, receiverInfo stays plaintext) until T-5839 part 0 adds it. Rollback: dev-82. Signed by ship.yml on dev
     # at 31f3465 (run 40455113093).
-    tag: 'dev-84'
-    digest: 'sha256:3004a6e5872d621aa35c13a77d861d4189656997989c75b404a553095b58fc87'
+    # Antares dev e48eaf3 (dev-85, over 31f3465: T-5843 a sealed credential opens inside its decoded buffer, no copy;
+    # same FEATURES). No migration, no new key. Rollback: dev-84. Signed by ship.yml on dev at e48eaf3 (run 40459890393).
+    tag: 'dev-85'
+    digest: 'sha256:eb4b18da889c981ec002dbece3e50497c7642770e99c03aa561a81bf7eb782a0'
