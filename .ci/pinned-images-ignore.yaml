@@ -1149,8 +1149,3 @@
   reason: "1.27.3-rootless is the newest Gitea release and its digest is unchanged upstream (2026-10-27); it ships brotli-libs 1.2.0-r1. Re-pin once a Gitea image carries brotli-libs 1.2.1-r0."
   task: T-5887
   expires: 2026-11-10
-- cve: CVE-2026-111497
-  image: ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile
-  reason: "Our own image: images/gitops-helmfile moves to alpine 3.24.3 in the same branch, and image-gitops rebuilds it on main with brotli-libs 1.2.1-r0; re-pin components/gitops/images.yaml to that build and remove this entry."
-  task: T-5887
-  expires: 2026-11-03
