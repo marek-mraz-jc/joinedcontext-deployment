@@ -512,30 +512,15 @@
   reason: "1.27.3-rootless is the newest Gitea release and its digest is unchanged upstream (2026-10-11)."
   task: T-3866
   expires: 2026-11-10
-# docker.io/grafana/grafana: 12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays.
+# docker.io/grafana/grafana: 12.4.14 (2026-10-27, which clears CVE-2026-111497 and three of these rows) still carries the Go findings of 12.4.12, and 13.2.3 carries them and 60 more (trivy 0.70.0), so the pin stays on 12.4.
 - cve: CVE-2026-21728
   image: docker.io/grafana/grafana
-  reason: "12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays."
+  reason: "12.4.14 (2026-10-27, which clears CVE-2026-111497 and three of these rows) still carries the Go findings of 12.4.12, and 13.2.3 carries them and 60 more (trivy 0.70.0), so the pin stays on 12.4."
   task: T-3867
   expires: 2026-11-10
 - cve: CVE-2026-28377
   image: docker.io/grafana/grafana
-  reason: "12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays."
-  task: T-3867
-  expires: 2026-11-10
-- cve: CVE-2026-78667
-  image: docker.io/grafana/grafana
-  reason: "12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays."
-  task: T-3867
-  expires: 2026-11-10
-- cve: CVE-2026-78669
-  image: docker.io/grafana/grafana
-  reason: "12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays."
-  task: T-3867
-  expires: 2026-11-10
-- cve: CVE-2026-97031
-  image: docker.io/grafana/grafana
-  reason: "12.4.12 is the newest Grafana 12 and its digest is unchanged upstream (2026-10-11); 13.2.3 carries these findings and 60 more (trivy 0.70.0), so the pin stays."
+  reason: "12.4.14 (2026-10-27, which clears CVE-2026-111497 and three of these rows) still carries the Go findings of 12.4.12, and 13.2.3 carries them and 60 more (trivy 0.70.0), so the pin stays on 12.4."
   task: T-3867
   expires: 2026-11-10
 # ghcr.io/cloudnative-pg/cloudnative-pg: 1.30.1 is the newest CloudNativePG (2026-09-23) and fixes 13 of the 17 HIGH rows of 1.30.0; these three (four package rows) need Go 1.27.2 and golang.org/x/net 0.60, which no CNPG release ships yet (trivy 0.58.1, 2026-10-11). The operator serves only the Kubernetes API webhook inside the cluster.
@@ -1153,3 +1138,19 @@
   reason: "pip's vendored certifi predates 2026.10.19, the only fixed release, uploaded 2026-10-20 and inside the seven-day dependency cooldown (eligible 2026-10-27); the probe never runs pip; re-pinned once a slim image carries it."
   task: T-5053
   expires: 2026-11-04
+# CVE-2026-111497 (brotli, HIGH, CISA KEV since 2026-10-27): the newest images of these two still ship the affected library (trivy 0.75.0, 2026-10-27).
+- cve: CVE-2026-111497
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "v4.7.1 and v4.8.0, the newest git-sync, both ship libbrotli1 1.1.0-2+b7 (Debian 13); git-sync runs inside the cluster, reads the configuration repository over HTTPS and serves nothing."
+  task: T-5887
+  expires: 2026-11-10
+- cve: CVE-2026-111497
+  image: docker.gitea.com/gitea
+  reason: "1.27.3-rootless is the newest Gitea release and its digest is unchanged upstream (2026-10-27); it ships brotli-libs 1.2.0-r1. Re-pin once a Gitea image carries brotli-libs 1.2.1-r0."
+  task: T-5887
+  expires: 2026-11-10
+- cve: CVE-2026-111497
+  image: ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile
+  reason: "Our own image: images/gitops-helmfile moves to alpine 3.24.3 in the same branch, and image-gitops rebuilds it on main with brotli-libs 1.2.1-r0; re-pin components/gitops/images.yaml to that build and remove this entry."
+  task: T-5887
+  expires: 2026-11-03

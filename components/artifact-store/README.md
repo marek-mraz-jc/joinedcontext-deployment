@@ -36,7 +36,7 @@ on the prefixes that promise immutability (`schemas/`, `endpoints/`, `dumps/`), 
 the per-prefix table in Architecture/17 §2 describes. Set a bucket-wide default only for a
 store that holds published artifacts and nothing else.
 
-Compliance mode means what it says. Verified against RustFS 1.0.0-rc.5:
+Compliance mode means what it says. Verified against RustFS 1.0.0-rc.5 and again on 1.0.4 (T-5887):
 
 ```
 An error occurred (AccessDenied) when calling the DeleteObject operation:
