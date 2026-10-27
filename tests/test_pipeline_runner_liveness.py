@@ -125,6 +125,16 @@ class Runner:
                              capture_output=True, text=True, check=True).stdout
         return float(out.strip().rstrip("%"))
 
+    def busiest(self, seconds):
+        """The highest of the samples taken within `seconds`, up to the first above 80 %: one
+        `docker stats` sample on a runner whose xdist workers fill every core can catch the
+        loop's process off its core for that instant (T-4931, ci 40594287401)."""
+        deadline = time.monotonic() + seconds
+        best = self.cpu()
+        while best <= 80 and time.monotonic() < deadline:
+            best = max(best, self.cpu())
+        return best
+
     def restarted(self):
         subprocess.run(["docker", "restart", "-t", "1", self.name], check=True, capture_output=True)
         self.wait()
@@ -165,7 +175,7 @@ def test_a_looping_stream_is_stopped_and_every_other_stream_runs_on(runners):
     b.call("POST", "/streams/b.good", GOOD)
     a.call("POST", "/streams/a.loop", LOOP)
     time.sleep(3)
-    assert a.cpu() > 80, "the loop holds a core"
+    assert a.busiest(10) > 80, "the loop holds a core"
     assert a.live(), "a stream that runs is alive"
 
     # The Portal's delete at the cap: Bento never answers it, and a parallel read still does.

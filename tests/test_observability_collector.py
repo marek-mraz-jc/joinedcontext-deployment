@@ -163,6 +163,15 @@ def exported(collector_config, tmp_path_factory):
     config = json.loads(json.dumps(collector_config))  # a copy; the other test reads the original
     config["extensions"]["oauth2client"]["token_url"] = f"http://127.0.0.1:{port}/token"
     config["exporters"]["otlphttp/portal"]["logs_endpoint"] = f"http://127.0.0.1:{port}/api/v1/activity"
+    # On the host network every listener of the collector is the runner's: a fixed 8888, 4317,
+    # 4318 or 13133 that another container of the shard holds stops the collector at start
+    # ("bind: address already in use", ci 40594287401, T-5886), so each gets a free port here.
+    health, grpc, http, metrics = (_free_port() for _ in range(4))
+    config["extensions"]["health_check"]["endpoint"] = f"127.0.0.1:{health}"
+    config["receivers"]["otlp"]["protocols"]["grpc"]["endpoint"] = f"127.0.0.1:{grpc}"
+    config["receivers"]["otlp"]["protocols"]["http"]["endpoint"] = f"127.0.0.1:{http}"
+    pull = config["service"]["telemetry"]["metrics"]["readers"][0]["pull"]["exporter"]["prometheus"]
+    pull["host"], pull["port"] = "127.0.0.1", metrics
     d = tmp_path_factory.mktemp("otelcol")
     _write_config(d, config)
 
@@ -179,10 +188,10 @@ def exported(collector_config, tmp_path_factory):
     )
     assert run.returncode == 0, run.stderr
     try:
-        _wait_for_port(13133)
+        _wait_for_port(health)
         post = subprocess.run(
             ["curl", "-sS", "-o", "/dev/null", "-w", "%{http_code}",
-             "-X", "POST", "http://127.0.0.1:4318/v1/logs",
+             "-X", "POST", f"http://127.0.0.1:{http}/v1/logs",
              "-H", "content-type: application/json", "--data-binary", json.dumps(RECORD)],
             capture_output=True, text=True,
         )
