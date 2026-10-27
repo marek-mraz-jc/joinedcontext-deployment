@@ -77,11 +77,13 @@ jobs:
       # ingress-nginx were evicted under DiskPressure and keycloak never became ready. Reclaim
       # the space before any tool lands in the hostedtoolcache, which stays untouched.
       - name: free runner disk
+        # The delete takes one to three minutes and nothing fills the disk before the deployment
+        # pulls its images, well after it ends: it runs on beside the next steps (T-5846). The
+        # runner ends every process left at the end of the job.
         run: |
           df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
-          df -h / | tail -1
+          sudo nohup rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL >/dev/null 2>&1 &
       - uses: ./.github/actions/tools
       - name: k3d cli
         run: |
@@ -112,11 +114,11 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: free runner disk
+        # In the background, as in deployment-variants (T-5846).
         run: |
           df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
-          df -h / | tail -1
+          sudo nohup rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL >/dev/null 2>&1 &
       - uses: ./.github/actions/tools
       - name: k3d cli
         run: |
@@ -150,11 +152,11 @@ jobs:
       # images this deployment pulls crossed the kubelet's ephemeral-storage threshold with
       # 3.8 GB left, and the eviction reads as an unready pod rather than a full disk.
       - name: free runner disk
+        # In the background, as in deployment-variants (T-5846).
         run: |
           df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
-          df -h / | tail -1
+          sudo nohup rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL >/dev/null 2>&1 &
       - uses: ./.github/actions/tools
       - name: k3d cli
         run: |
@@ -211,11 +213,11 @@ jobs:
         with: { fetch-depth: 0 }
       # As k3d-deploy: the deployment and its images need the disk the runner ships full.
       - name: free runner disk
+        # In the background, as in deployment-variants (T-5846).
         run: |
           df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
-            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL
-          df -h / | tail -1
+          sudo nohup rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /usr/share/swift /usr/local/share/powershell /opt/hostedtoolcache/CodeQL >/dev/null 2>&1 &
       - uses: ./.github/actions/tools
       - name: k3d cli
         run: |

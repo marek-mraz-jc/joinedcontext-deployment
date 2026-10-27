@@ -819,8 +819,9 @@ for c in "${COMBOS[@]}"; do
   fi
 done
 
-# Tear down the last cluster unless asked (or forced by a kept failure) to keep it.
-if $MANAGE_CLUSTER && ! $KEEP_CLUSTER; then
+# Tear down the last cluster unless asked (or forced by a kept failure) to keep it. A GitHub
+# runner is thrown away with the job, and the delete cost up to a minute of its 30 (T-5846).
+if $MANAGE_CLUSTER && ! $KEEP_CLUSTER && [ "${GITHUB_ACTIONS:-}" != true ]; then
   log "Removing k3d cluster '${CLUSTER_NAME}'"
   k3d cluster delete "$CLUSTER_NAME" >/dev/null 2>&1 || true
 fi

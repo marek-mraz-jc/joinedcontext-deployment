@@ -229,3 +229,33 @@ def test_an_owner_under_another_id_is_never_deleted(keycloak):
 def test_an_id_that_is_not_a_keycloak_id_is_refused(keycloak):
     result = run(keycloak, [("demo.steward", STEWARD[1], "true")])
     assert result.returncode != 0 and "is not a lower-case Keycloak user id" in result.stderr
+
+
+def test_a_refused_line_changes_nobody_else_in_the_run(keycloak):
+    # Every line is checked before the first write (T-5846): a new person beside a refused owner
+    # is not created either, so a fixed deployment applies the whole list in one go.
+    _, base = keycloak
+    admin = token(base, "master", "admin-cli", user="admin")
+    newcomer = ("de300000-0000-4000-8000-0000000000aa", "demo.newcomer@hel.fi", "true")
+    for user_id in held(base, OWNER[1]):
+        call(base, "DELETE", f"/admin/realms/{REALM}/users/{user_id}", admin)
+    status, body, _ = call(base, "POST", f"/admin/realms/{REALM}/users", admin,
+                           {"username": OWNER[1], "email": OWNER[1], "enabled": True})
+    assert status == 201, body
+    result = run(keycloak, [newcomer, OWNER])
+    assert result.returncode != 0 and "global.initialUserId" in result.stderr
+    assert held(base, newcomer[1]) == []
+
+
+def test_every_demo_person_lands_in_one_run(keycloak):
+    _, base = keycloak
+    people = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
+    users = [(p["id"], name, "true") for name, p in people.items()]
+    admin = token(base, "master", "admin-cli", user="admin")
+    for user_id, _, _ in users:  # the earlier tests gave the steward's id to another username
+        call(base, "DELETE", f"/admin/realms/{REALM}/users/{user_id}", admin)
+    result = run(keycloak, users)
+    assert result.returncode == 0, result.stderr
+    for user_id, name, _ in users:
+        assert held(base, name) == [user_id], name
+    assert result.stdout.count(" created") == len(users) - result.stdout.count("is in place")
