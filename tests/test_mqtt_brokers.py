@@ -973,6 +973,25 @@ def issue(directory: Path, name: str, subject: str, ca: str | None, *extra: str)
     subprocess.run(command, capture_output=True, check=True)
 
 
+def issue_expired(directory: Path, name: str, subject: str, ca: str) -> None:
+    """A certificate of `ca` valid only in January 2020. `openssl x509 -not_after` needs OpenSSL
+    3.4; the CI runner has 3.0, so this goes through `openssl ca -startdate -enddate`."""
+    key, csr, crt = directory / f"{name}.key", directory / f"{name}.csr", directory / f"{name}.crt"
+    subprocess.run(["openssl", "req", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes",
+                    "-keyout", str(key), "-subj", subject, "-out", str(csr)], capture_output=True, check=True)
+    db = directory / f"{name}.ca"
+    db.mkdir()
+    (db / "index.txt").write_text("")
+    (db / "serial").write_text("01\n")
+    (db / "ca.cnf").write_text(
+        f"[ca]\ndefault_ca = d\n[d]\ndatabase = {db}/index.txt\nnew_certs_dir = {db}\nserial = {db}/serial\n"
+        "default_md = sha256\npolicy = p\nunique_subject = no\n[p]\norganizationName = optional\ncommonName = supplied\n")
+    subprocess.run(["openssl", "ca", "-batch", "-notext", "-config", str(db / "ca.cnf"),
+                    "-cert", str(directory / f"{ca}.crt"), "-keyfile", str(directory / f"{ca}.key"),
+                    "-startdate", "20200101000000Z", "-enddate", "20200201000000Z",
+                    "-in", str(csr), "-out", str(crt)], capture_output=True, check=True)
+
+
 @pytest.mark.xdist_group("docker-rmqtt")
 @pytest.mark.skipif(shutil.which("docker") is None or shutil.which("openssl") is None, reason="no container runtime")
 def test_the_certificate_door_admits_only_a_valid_certificate_of_the_project_ca(tmp_path):
@@ -1004,8 +1023,7 @@ def test_the_certificate_door_admits_only_a_valid_certificate_of_the_project_ca(
     issue(keys, "other-ca", "/CN=praha device CA", None)
     issue(keys, "good", "/O=helsinki/CN=sensor-1", "project-ca", "-days", "1")
     issue(keys, "other", "/O=helsinki/CN=sensor-1", "other-ca", "-days", "1")
-    issue(keys, "expired", "/O=helsinki/CN=sensor-1", "project-ca",
-          "-not_before", "20200101000000Z", "-not_after", "20200201000000Z")
+    issue_expired(keys, "expired", "/O=helsinki/CN=sensor-1", "project-ca")
     issue(keys, "server", f"/CN={CERT_HOST}", "project-ca", "-days", "1")
     shutil.copy(keys / "server.crt", certs / "tls.crt")
     shutil.copy(keys / "server.key", certs / "tls.key")
