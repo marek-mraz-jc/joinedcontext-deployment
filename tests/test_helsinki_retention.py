@@ -133,3 +133,17 @@ def test_bike_stations_record_a_change_and_an_hourly_heartbeat_and_no_slot_is_a_
     counted = [slot for slot in slots
                if (model.get("slots", {}).get(slot) or {}).get("annotations", {}).get("quantity") == "perInterval"]
     assert counted == []
+
+
+def test_no_space_keeps_a_history_of_a_refresh_stamp():
+    """T-5848: `dateModified` is the pipeline's refresh stamp and a KPI's `updatedAt` the run's own
+    clock; each is new on every write, so `record: onChange` kept a row per run (prod: 24k rows an hour
+    for Praha's and Bratislava's bike stations). Every rule that names one records never."""
+    stamps = {"dateModified": None, "updatedAt": "KeyPerformanceIndicator"}
+    kept = [(name, rule["entityType"], attribute, setting)
+            for name, space in spaces().items()
+            for rule in space["spec"].get("retention", [])
+            for attribute, setting in rule.get("attributes", {}).items()
+            if attribute in stamps and stamps[attribute] in (None, rule["entityType"])
+            and setting != {"record": "never"}]
+    assert kept == [], kept

@@ -31,7 +31,8 @@ spec:
         derivedFrom: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
         title: { record: onChange, heartbeat: P7D }
-        updatedAt: { record: onChange, heartbeat: P7D }
+        # updatedAt is the run's own clock, new on every run: no history of its own (DM-132, T-5848).
+        updatedAt: { record: never }
   # The space's place (T-4525): the catalogue's Dataset carries it, so georel=near finds the space.
   # the city of Žilina with a margin; a KeyPerformanceIndicator outside it is flagged, never refused (DM-87).
   quality:
