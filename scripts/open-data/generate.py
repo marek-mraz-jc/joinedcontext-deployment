@@ -200,6 +200,14 @@ RETIRED = {
         "PurchaseOrder": ["adresa"],
     },
 }
+# The od-* replace pipelines whose stored Entities still hold what an earlier mapping wrote, with the day
+# that mapping changed: the mapping carries the day as a variable nothing reads, so its stream text moves
+# and a running Portal runs it at once (T-5824) instead of at its weekly or monthly slot (T-5844).
+REVISED = {slug: "2026-10-27" for slug in (
+    "zmluvy", "organizacna-struktura", "materske-skoly-v-banskobystrickom-kraji",
+    "kontakty-na-miestne-samospravy-v-bbk", "stredne-skoly-v-banskobystrickom-kraji", "dodavatelia",
+    "stredne-skoly-v-bbk-odbory-a-pocet-stude", "skoly-a-skolske-zariadenia-v-zriadovatel",
+    "vysoke-skoly-v-banskobystrickom-kraji", "zakladne-skoly-v-banskobystrickom-kraji")}
 # What a visitor reads for the common slots, in each language the widget speaks (T-4682).
 COMMON_LABELS = {
     "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
@@ -463,7 +471,8 @@ def entity(e: dict, slug: str, model_ranges: dict[str, str], source_url: str) ->
         # entity (Research/bb-bbsk-ngsi-ld-mapping.md §4).
         local = "{" + ", ".join(f"{q(c)}: {column(path, kind, c)}" for c in hashed.values()) + "}" \
                 ".format_json(no_indent: true).hash(\"sha256\").encode(\"hex\").slice(0, 24)"
-    lines = [f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)"]
+    lines = [f"let mapping_rev = {q(REVISED[slug])}"] if slug in REVISED else []
+    lines += [f"let local = {q(slug + '-')} + {local}.re_replace_all(\"[^A-Za-z0-9._~-]\", \"-\").slice(0, 80)"]
     observed = e.get("observedAt")
     if observed:
         lines.append(f"let at = {column(path, kind, observed)}.apply(\"observed\")")
