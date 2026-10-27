@@ -64,6 +64,8 @@ postgres:
       schedule: '30 2 * * *'
       keepDays: 7
       size: 10Gi
+      # The dumps' limit when above `size` (local-path cannot grow the PVC); empty: `size`.
+      cap: ''
       # Databases left out of the dump, e.g. [antares]. The dump of the rest stops at `size`
       # and does not start when it would leave the node's disk under 10 % free.
       excludeDatabases: []

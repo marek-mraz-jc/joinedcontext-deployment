@@ -81,7 +81,7 @@ template:
           *Ti) max=$((${VOLUME_SIZE%Ti} * 1099511627776)) ;;
           *Gi) max=$((${VOLUME_SIZE%Gi} * 1073741824)) ;;
           *Mi) max=$((${VOLUME_SIZE%Mi} * 1048576)) ;;
-          *[!0-9]*) echo "localBackup.size $VOLUME_SIZE: give it in Mi, Gi or Ti, e.g. 10Gi" >&2; exit 1 ;;
+          *[!0-9]*) echo "localBackup.cap $VOLUME_SIZE: give it in Mi, Gi or Ti, e.g. 10Gi" >&2; exit 1 ;;
           *) max=$VOLUME_SIZE ;;
         esac
         # local-path does not enforce the volume's size, and the volume sits on the disk
@@ -89,7 +89,7 @@ template:
         # start when that much would leave the node's disk under 10 % free.
         room=$((max - $(du -sk /backup | cut -f1) * 1024))
         if [ "$room" -le 0 ]; then
-          echo "the dumps on the volume fill the $VOLUME_SIZE of localBackup.size: raise it or lower localBackup.keepDays" >&2
+          echo "the dumps on the volume fill the $VOLUME_SIZE of localBackup.cap: raise it or lower localBackup.keepDays" >&2
           exit 1
         fi
         df -Pk /backup | awk 'NR == 2 { print $2, $4 }' > /tmp/df
@@ -113,7 +113,7 @@ template:
         bytes=$(wc -c < "$file.part")
         if [ "$bytes" -gt "$room" ]; then
           rm -f "$file.part"
-          echo "the dump outgrew the $room bytes left of the $VOLUME_SIZE volume and was deleted: raise localBackup.size or name the large databases in localBackup.excludeDatabases" >&2
+          echo "the dump outgrew the $room bytes left of the $VOLUME_SIZE cap and was deleted: raise localBackup.cap or name the large databases in localBackup.excludeDatabases" >&2
           exit 1
         fi
         if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
@@ -123,7 +123,7 @@ template:
         # One dump over 80 % of the volume leaves no room for the next night's: the job fails
         # (PostgresBackupStale) while this dump is still whole.
         if [ $((bytes * 100)) -gt $((max * 80)) ]; then
-          echo "the dump is $bytes bytes, over 80 % of the $VOLUME_SIZE volume: raise localBackup.size" >&2
+          echo "the dump is $bytes bytes, over 80 % of the $VOLUME_SIZE cap: raise localBackup.cap" >&2
           exit 1
         fi
 {{- end }}
@@ -164,7 +164,7 @@ spec:
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
-      {{- include "database.localBackupJob" (dict "root" $ "mode" "dump" "keepDays" .keepDays "size" .size "exclude" $exclude) | nindent 6 }}
+      {{- include "database.localBackupJob" (dict "root" $ "mode" "dump" "keepDays" .keepDays "size" (.cap | default .size) "exclude" $exclude) | nindent 6 }}
 ---
 # The first dump, at every apply: local-path binds the volume only for a pod that mounts it, so
 # without one the PVC stays Pending until the night and `helm --wait` fails the release. Gone
@@ -180,6 +180,6 @@ metadata:
     app.kubernetes.io/component: database-local-backup
 spec:
   ttlSecondsAfterFinished: 600
-  {{- include "database.localBackupJob" (dict "root" $ "mode" "bind" "keepDays" .keepDays "size" .size "exclude" $exclude) | nindent 2 }}
+  {{- include "database.localBackupJob" (dict "root" $ "mode" "bind" "keepDays" .keepDays "size" (.cap | default .size) "exclude" $exclude) | nindent 2 }}
 {{- end }}
 {{- end }}

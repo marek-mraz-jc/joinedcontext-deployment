@@ -38,6 +38,9 @@
         "size": {
           "type": "string"
         },
+        "cap": {
+          "type": "string"
+        },
         "excludeDatabases": {
           "type": "array",
           "description": "databases left out of the dump and its counts, e.g. [antares]",

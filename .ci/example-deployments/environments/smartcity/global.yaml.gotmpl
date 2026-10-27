@@ -191,6 +191,9 @@ postgres:
   databases:
     localBackup:
       enabled: true
+      # The nightly dump grew from 0.33 GB (10-21) to 1.29 GB (10-27): 7 of them overran the
+      # 10Gi request, which local-path cannot grow (T-5840). The node disk had 298 G free.
+      cap: 40Gi
 
 # The Apps' database has no off-site backup either: the same nightly dump (F-DEP1-018).
 apps-db:

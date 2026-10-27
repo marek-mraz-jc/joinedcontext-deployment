@@ -390,7 +390,10 @@ def test_the_dump_job_writes_the_counts_and_fails_a_dump_over_80_percent(smartci
     job = one(smartcity, "Job", "postgres-cluster-local-backup-now")["spec"]["template"]["spec"]
     container = job["containers"][0]
     env = {e["name"]: e.get("value") for e in container["env"]}
-    assert env["VOLUME_SIZE"] == "10Gi"
+    # T-5840: the dumps' cap grows past the PVC request, which local-path cannot expand.
+    assert env["VOLUME_SIZE"] == "40Gi"
+    pvc = one(smartcity, "PersistentVolumeClaim", "postgres-cluster-local-backup")
+    assert pvc["spec"]["resources"]["requests"]["storage"] == "10Gi", "the bound PVC's request never moves"
     script = container["command"][2]
     assert script.index('"$file.counts"') < script.index('mv "$file.part" "$file"')
     assert "over 80 % of the" in script and "-name '*.sql.gz.counts'" in script
@@ -464,7 +467,7 @@ def test_old_dumps_make_room_before_the_dump_and_full_volume_refuses(smartcity, 
     recent = backup / "2026-10-25T0100Z.sql.gz"
     recent.write_bytes(os.urandom(1048576))
     code, log, _ = dump_job(smartcity, tmp_path, "dump", size="1Mi")
-    assert code != 0 and "fill the 1Mi of localBackup.size" in log, log
+    assert code != 0 and "fill the 1Mi of localBackup.cap" in log, log
 
 
 def test_a_dump_that_would_leave_the_node_disk_under_10_percent_free_does_not_start(smartcity, tmp_path):

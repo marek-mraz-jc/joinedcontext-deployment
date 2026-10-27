@@ -13,6 +13,9 @@ localBackup:
   schedule: '30 2 * * *'
   keepDays: 7
   size: 10Gi
+  # What the dumps may fill, when more than `size`: local-path neither enforces nor expands a PVC's
+  # request, so a larger cap goes here, never into `size` (empty: `size`).
+  cap: ''
   # Databases left out of the dump and its counts, e.g. [antares]: what the drill then restores.
   excludeDatabases: []
 databases:
