@@ -45,6 +45,12 @@ FEEDS = {
     # T-5256: the three smallest outlines of each layer, fetched 2026-10-26; one quarter carries a name of its own.
     "voting-districts": ("voting-districts.json", "AdministrativeArea", 3),
     "quarters": ("quarters.json", "AdministrativeArea", 3),
+    # T-5822, fetched 2026-10-27: a plot with numbers, one only ships may use (no floor area), one whose area is worded;
+    # a permit site with a full address, one at the city's own postal code, one with no address at all;
+    # the smallest Finnish and Swedish area of 2026-2027 and the smallest Finnish one of 2025-2026.
+    "business-plots": ("business-plots.json", "PointOfInterest", 3),
+    "environmental-permit-sites": ("environmental-permits.json", "PointOfInterest", 3),
+    "preschool-areas": ("preschool-areas.json", "AdministrativeArea", 3),
     "fee-parking-zones": ("payment-zones.json", "OnStreetParking", 1),
     "resident-parking-zones": ("resident-zones.json", "OnStreetParking", 2),
     # Every row of three line variants: a ferry, a metro line and a one-stop variant.
@@ -59,6 +65,8 @@ def fixture(name: str) -> dict:
 def run(pipeline: str, document: dict) -> list[dict]:
     if pipeline == "services":
         return services(document)
+    if pipeline == "preschool-areas":
+        return preschool(document, [PRESCHOOL_UNIT.format(148)])
     return open_data.run_all(HELSINKI / f"helsinki-pipeline-{pipeline}-bento.yaml", json.dumps(document).encode(), "helsinki")
 
 
@@ -97,6 +105,21 @@ def beach(document: dict, held: list[str]) -> list[dict]:
     """The beach-water mapping with its ask of the space answered by `held`, the units it holds
     (an empty list is also what a failed ask leaves)."""
     steps = [{"mapping": f"meta held = {json.dumps(' '.join(held))}"} if "branch" in p else p for p in beach_steps()]
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
+        yaml.safe_dump({"pipeline": {"processors": steps}}, mapping)
+        mapping.flush()
+        return open_data.run_all(Path(mapping.name), json.dumps(document).encode(), "helsinki")
+
+
+PRESCHOOL_UNIT = "urn:ngsi-ld:PointOfInterest:hel.fi:helsinki:servicemap-{}"
+
+
+def preschool(document: dict, held: list[str]) -> list[dict]:
+    """The preschool-areas mapping with its ask of the space answered by `held`, the units it holds
+    (an empty list is also what a failed ask leaves)."""
+    steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-preschool-areas-bento.yaml").read_text())["pipeline"]["processors"]
+    assert sum("branch" in p for p in steps) == 1
+    steps = [{"mapping": f"meta held = {json.dumps(' '.join(held))}"} if "branch" in p else p for p in steps]
     with tempfile.NamedTemporaryFile("w", suffix=".yaml") as mapping:
         yaml.safe_dump({"pipeline": {"processors": steps}}, mapping)
         mapping.flush()
@@ -462,6 +485,22 @@ def test_an_area_without_an_outline_or_with_an_unknown_code_is_dropped_and_a_rep
 
 
 @requires_docker
+@pytest.mark.parametrize("feed, recording", [("business-plots", "business-plots.json"),
+                                             ("environmental-permit-sites", "environmental-permits.json"),
+                                             ("preschool-areas", "preschool-areas.json")])
+def test_a_record_without_a_point_or_with_an_unknown_id_is_dropped_and_a_repeat_is_one_entity(feed, recording):
+    """T-5822: a record with no geometry, one whose id is not the layer's numeric id, and one listed
+    twice: the first two write nothing, the repeat writes one id."""
+    layer = fixture(recording)
+    first, second, third = layer["features"]
+    second["geometry"] = None
+    third["properties"]["id"] = "X" + str(third["properties"]["id"])
+    layer["features"].append(copy.deepcopy(first))
+    ids = [e["id"] for e in run(feed, layer)]
+    assert len(set(ids)) == 1 and ids[0].endswith("-" + str(first["properties"]["id"]))
+
+
+@requires_docker
 def test_a_zone_link_without_a_scheme_is_written_as_https(written):
     fee = written["fee-parking-zones"][0]
     assert fee["category"]["value"] == ["feeCharged"] and fee["zoneCode"]["value"] == "1"
@@ -588,9 +627,68 @@ def test_a_line_variant_is_the_smart_data_model_public_transport_route_with_its_
 def test_every_district_and_sub_district_is_the_administrative_area_extension(written):
     """T-4338: no official model holds a city district; it is the extension AdministrativeArea
     (PointOfInterest base, which requires `name`)."""
-    for name in ("districts", "subdistricts", "voting-districts", "quarters"):
+    for name in ("districts", "subdistricts", "voting-districts", "quarters", "preschool-areas"):
         for entity in written[name]:
             assert open_data.sdm_errors("extensions/AdministrativeArea", entity) == [], (name, entity["id"])
+
+
+@requires_docker
+def test_a_business_plot_keeps_its_numbers_in_square_metres_and_a_worded_value_as_text(written):
+    """T-5822: pinta_ala and rakennusoikeus are text in the layer; a number becomes plotArea and
+    floorAreaRight (MTK, square metres), "noin 640" stays in the description, never guessed."""
+    plots = {e["id"].rsplit("-", 1)[1]: e for e in written["business-plots"]}
+    office = plots["17812"]
+    assert office["serviceCategory"]["value"] == "businessPlot"
+    assert office["plotArea"] == {"type": "Property", "value": 3414, "unitCode": "MTK"}
+    assert office["floorAreaRight"]["value"] == 10500
+    assert office["address"]["value"] == {"streetAddress": "Mannerheimintie 111", "addressLocality": "Helsinki", "addressCountry": "FI"}
+    assert office["name"]["languageMap"]["fi"] == "Yritystontti, Mannerheimintie 111"
+    lines = office["description"]["languageMap"]["fi"].split("\n")
+    assert "Käyttötarkoitus: Toimistorakennusten korttelialue (KT)" in lines and "Kiinteistötunnus: 091-016-0748-0004" in lines
+    # A plot only ships may use: the plan gives it no floor area, which is 0 and not absent.
+    assert plots["17883"]["floorAreaRight"]["value"] == 0
+    worded = plots["17897"]
+    assert "plotArea" not in worded and worded["floorAreaRight"]["value"] == 625
+    assert "Pinta-ala: noin 640" in worded["description"]["languageMap"]["fi"]
+    for entity in written["business-plots"] + written["environmental-permit-sites"]:
+        assert open_data.sdm_errors("dataModel.PointOfInterest/PointOfInterest", entity) == [], entity["id"]
+
+
+@requires_docker
+def test_an_environmental_permit_site_splits_the_post_office_field_and_names_its_activity(written):
+    sites = {e["id"].rsplit("-", 1)[1]: e for e in written["environmental-permit-sites"]}
+    station = sites["4961781"]
+    assert station["serviceCategory"]["value"] == "environmentalPermitSite"
+    assert station["name"]["languageMap"] == {"fi": "Neste Vanha Porvoontie"}
+    assert station["address"]["value"] == {"streetAddress": "Vanha Porvoontie 32", "postalCode": "00760", "addressLocality": "Helsinki", "addressCountry": "FI"}
+    assert station["description"]["languageMap"]["fi"] == "Toiminta: YSL 527/2014 liite 2.3 jakeluasema"
+    # 00099 HELSINGIN KAUPUNKI is the city's own postal code: the town is still Helsinki, the street text trimmed.
+    assert sites["5350900"]["address"]["value"]["addressLocality"] == "Helsinki"
+    assert sites["5350900"]["address"]["value"]["streetAddress"] == "Sompasaari"
+    # A site the register gives no address keeps its point and has no address, rather than an empty one.
+    assert "address" not in sites["5430652"] and sites["5430652"]["location"]["value"]["type"] == "Point"
+
+
+@requires_docker
+def test_a_preschool_area_carries_its_school_year_language_and_only_the_units_the_space_holds(written):
+    """T-5822: the layer names Service Map units; unit 148 is in the space (the test's ask answers
+    so), unit 29859 is not, and a link to it would make the gateway refuse the area (DM-70)."""
+    areas = {e["id"].rsplit("-", 1)[1]: e for e in written["preschool-areas"]}
+    coming = areas["117314"]
+    assert coming["divisionLevel"]["value"] == "preschoolAdmissionArea"
+    assert coming["name"]["languageMap"] == {"fi": "Suomenlinna", "sv": "Sveaborg"}
+    assert coming["validFrom"]["value"] == "2026-08-01T00:00:00+03:00"
+    assert coming["validTo"]["value"] == "2027-07-31T23:59:59+03:00"
+    assert coming["description"]["languageMap"]["fi"] == "Suomenkielinen esiopetusalue, lukuvuosi 2026–2027"
+    assert coming["serviceUnits"] == {"type": "Relationship", "object": [PRESCHOOL_UNIT.format(148)]}
+    assert areas["117214"]["validFrom"]["value"] == "2025-08-01T00:00:00+03:00"
+    swedish = areas["116782"]
+    assert swedish["name"]["languageMap"] == {"sv": "Drumsö förskola"}
+    assert swedish["description"]["languageMap"]["en"] == "Swedish-language preschool admission area, school year 2026–2027"
+    assert "serviceUnits" not in swedish
+    assert swedish["source"]["value"].endswith("avoindata:Esiopetusalue_ruotsi")
+    # A failed ask (no unit held) writes every area without its links.
+    assert all("serviceUnits" not in e for e in preschool(fixture("preschool-areas.json"), []))
 
 
 @requires_docker

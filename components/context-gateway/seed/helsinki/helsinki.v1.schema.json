@@ -15,6 +15,17 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
         "districtCode": {
           "description": "The city's own code of the area: the district number, for a sub-district the full ten-digit code the city's statistics use for it, for a quarter the register's ten-digit quarter code, for a voting district the district number and a letter (049A). An HSL fare zone has none; its letter is its `fareZone`. The districts, sub-districts, quarters and voting-districts mappings write no area without it.",
           "pattern": "^[0-9]{1,10}[A-Z]?$",
@@ -88,6 +99,22 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "serviceUnits": {
+          "description": "The units of the city's service register that serve the area: for a preschool admission area, the schools and day care centres that give its preschool education, each a PointOfInterest the services pipeline writes.",
+          "items": {
+            "pattern": "^urn:ngsi-ld:PointOfInterest:",
+            "type": "string"
+          },
+          "type": "array",
+          "x-ngsi-ld-kind": "Relationship",
+          "x-ngsi-ld-relationship": {
+            "cardinality": "many-to-many",
+            "inverse": "admissionAreas",
+            "onDelete": "set-null",
+            "target": "PointOfInterest",
+            "unique": false
+          }
+        },
         "source": {
           "description": "The open-data service the entity was read from.",
           "format": "uri",
@@ -100,6 +127,24 @@
         "type": {
           "description": "The entity type, one class of a published data model.",
           "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "validFrom": {
+          "description": "When the situation starts; for a preschool admission area, the first day of its school year.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "validTo": {
+          "description": "When the situation ends; absent while open-ended. For a preschool admission area, the last day of its school year.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
           "x-ngsi-ld-kind": "Property"
         }
       },
@@ -927,7 +972,8 @@
         "subDistrict",
         "fareZone",
         "quarter",
-        "votingDistrict"
+        "votingDistrict",
+        "preschoolAdmissionArea"
       ],
       "title": "DivisionLevel",
       "type": "string",
@@ -938,6 +984,7 @@
         "district": "A district (kaupunginosa), 60 of them.",
         "fareZone": "An HSL fare zone (A, B, C or D), the area a ticket is valid in.",
         "majorDistrict": "A major district (suurpiiri), 8 of them (statistics only).",
+        "preschoolAdmissionArea": "A preschool admission area (esiopetusalue) of one school year, Finnish- or Swedish-language, about 70 a year.",
         "quarter": "A quarter (kortteli), the block a detailed plan names, about 6,000 of them.",
         "subDistrict": "A sub-district (osa-alue), the unit the city's statistics use.",
         "votingDistrict": "A voting district (\u00e4\u00e4nestysalue), about 165 of them."
@@ -2578,6 +2625,18 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "floorAreaRight": {
+          "description": "The floor area the detailed plan lets a business build on the plot (rakennusoikeus), in square metres of floor area.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m2"
+          }
+        },
         "id": {
           "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
           "type": "string",
@@ -2641,6 +2700,18 @@
             "null"
           ],
           "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "plotArea": {
+          "description": "The area of a plot the city offers to a business, in square metres, as the plot register states it.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "m2"
+          }
         },
         "serviceCategory": {
           "$ref": "#/definitions/ServiceCategory",
@@ -2894,7 +2965,9 @@
         "publicAuthority",
         "sports",
         "culture",
-        "waterfrontSite"
+        "waterfrontSite",
+        "businessPlot",
+        "environmentalPermitSite"
       ],
       "title": "ServiceCategory",
       "type": "string",
@@ -2926,7 +2999,9 @@
         "publicAuthority": "An office of the city or the state: administration, justice, taxation, planning or customs.",
         "sports": "A public sports facility or outdoor exercise place.",
         "culture": "A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden.",
-        "waterfrontSite": "A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025)."
+        "waterfrontSite": "A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025).",
+        "businessPlot": "A plot the city offers to a business, with its area and floor area right (vapaat yritystontit).",
+        "environmentalPermitSite": "A site that holds an environmental permit or is registered under the Environmental Protection Act (ymp\u00e4rist\u00f6lupakohde), such as a filling station or a plant."
       }
     },
     "StreetParkingCategory": {

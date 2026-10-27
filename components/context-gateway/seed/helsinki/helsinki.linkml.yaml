@@ -648,7 +648,7 @@ slots:
       ngsi_ld_kind: Property
   validFrom:
     slot_uri: sdm:validFrom
-    description: When the situation starts.
+    description: When the situation starts; for a preschool admission area, the first day of its school year.
     range: datetime
     annotations:
       label:
@@ -663,7 +663,7 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   validTo:
     slot_uri: sdm:validTo
-    description: When the situation ends; absent while open-ended.
+    description: When the situation ends; absent while open-ended. For a preschool admission area, the last day of its school year.
     range: datetime
     annotations:
       label:
@@ -1238,6 +1238,76 @@ slots:
           de: Genehmigungen für öffentliche Flächen
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Relationship
+  serviceUnits:
+    slot_uri: jc:serviceUnits
+    description: >-
+      The units of the city's service register that serve the area: for a preschool admission area,
+      the schools and day care centres that give its preschool education, each a PointOfInterest the
+      services pipeline writes.
+    range: PointOfInterest
+    multivalued: true
+    inverse: admissionAreas
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Prevádzky
+          cs: Provozovny
+          en: Service units
+          de: Einrichtungen
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+      on_delete: set-null
+  admissionAreas:
+    slot_uri: jc:admissionAreas
+    description: The admission areas the unit serves, computed from their serviceUnits and never stored.
+    range: AdministrativeArea
+    multivalued: true
+    inverse: serviceUnits
+    inlined: false
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Spádové oblasti
+          cs: Spádové oblasti
+          en: Admission areas
+          de: Einzugsgebiete
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Relationship
+  plotArea:
+    slot_uri: jc:plotArea
+    description: The area of a plot the city offers to a business, in square metres, as the plot register states it.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m2 }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Plocha pozemku
+          cs: Plocha pozemku
+          en: Plot area
+          de: Grundstücksfläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  floorAreaRight:
+    slot_uri: jc:floorAreaRight
+    description: The floor area the detailed plan lets a business build on the plot (rakennusoikeus), in square metres of floor area.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: m2 }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Prípustná podlahová plocha
+          cs: Přípustná podlahová plocha
+          en: Floor area right
+          de: Zulässige Geschossfläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
   areaIndicators:
     slot_uri: jc:areaIndicators
     description: The statistics indicators that describe this sub-district, computed from their refArea and never stored.
@@ -2695,6 +2765,9 @@ classes:
       - dataProvider
       - source
       - waterQualityObservations
+      - plotArea
+      - floorAreaRight
+      - admissionAreas
   WaterQualityObserved:
     class_uri: sdm:WaterQualityObserved
     description: >-
@@ -2827,6 +2900,10 @@ classes:
       - source
       - publicAreaPermits
       - areaIndicators
+      - description
+      - validFrom
+      - validTo
+      - serviceUnits
   HeritageArea:
     class_uri: jc:HeritageArea
     description: >-
@@ -3255,6 +3332,10 @@ enums:
         description: A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden.
       waterfrontSite:
         description: A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025).
+      businessPlot:
+        description: A plot the city offers to a business, with its area and floor area right (vapaat yritystontit).
+      environmentalPermitSite:
+        description: A site that holds an environmental permit or is registered under the Environmental Protection Act (ympäristölupakohde), such as a filling station or a plant.
   ServiceRequestStatus:
     description: Open311's two report states, as Smart Data Models' service_requests names them.
     permissible_values:
@@ -3306,6 +3387,8 @@ enums:
         description: A quarter (kortteli), the block a detailed plan names, about 6,000 of them.
       votingDistrict:
         description: A voting district (äänestysalue), about 165 of them.
+      preschoolAdmissionArea:
+        description: A preschool admission area (esiopetusalue) of one school year, Finnish- or Swedish-language, about 70 a year.
       fareZone:
         description: An HSL fare zone (A, B, C or D), the area a ticket is valid in.
   TransportMode:
