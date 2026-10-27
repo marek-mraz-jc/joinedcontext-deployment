@@ -50,12 +50,18 @@ read -r ui_commit ui < <(scripts/portal-ui-pin.sh "$commit") || true
 docs=$(curl -fsSL "https://raw.githubusercontent.com/marek-mraz-jc/joinedcontext-portal/$commit/public-docs/COMMIT")
 [[ "$docs" =~ ^[0-9a-f]{40}$ ]] || { echo "portal $commit names no docs commit in public-docs/COMMIT" >&2; exit 1; }
 
+# The platform commit the image's jc-core is built from (the Cargo.toml rev): the seed is held to
+# it (tests/test_portal_pin_reads_the_seed.py), so it moves with the portal.
+platform=$(curl -fsSL "https://raw.githubusercontent.com/marek-mraz-jc/joinedcontext-portal/$commit/Cargo.toml" |
+  sed -nE 's/^jc-core = .*joinedcontext-platform\.git", rev = "([0-9a-f]{40})".*/\1/p' | head -1)
+[[ "$platform" =~ ^[0-9a-f]{40}$ ]] || { echo "portal $commit builds jc-core from no platform rev in Cargo.toml" >&2; exit 1; }
+
 short=${commit:0:7}
-python3 - "$short" "$portal" "$builder" "$rust" "$commit" "$docs" "$ui" "$ui_commit" <<'EOF'
+python3 - "$short" "$portal" "$builder" "$rust" "$commit" "$docs" "$ui" "$ui_commit" "$platform" <<'EOF'
 import re
 import sys
 
-short, portal, builder, rust, commit, docs, ui, ui_commit = sys.argv[1:]
+short, portal, builder, rust, commit, docs, ui, ui_commit, platform = sys.argv[1:]
 
 def pin(path, pins):
     text = open(path).read()
@@ -69,7 +75,7 @@ def pin(path, pins):
 
 pin("components/portal/images.yaml", [("joinedcontext-portal", portal), ("joinedcontext-portal-ui", ui)])
 text = open("components/portal/images.yaml").read()
-for key, value in (("commit", commit), ("docs", docs)):
+for key, value in (("commit", commit), ("docs", docs), ("platform", platform)):
     text, n = re.subn(rf"(\n    {key}: )'[0-9a-f]{{40}}'", rf"\g<1>'{value}'", text, count=1)
     if n != 1:
         sys.exit(f"components/portal/images.yaml: no {key} pin")
