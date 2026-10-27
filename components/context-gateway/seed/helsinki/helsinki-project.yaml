@@ -6,3 +6,15 @@ metadata:
   title: { en: Helsinki, sk: Helsinki }
 spec:
   organizationRef: hel
+  # The MQTT demo (T-4857, ADR-N-048 §2.9): two brokers, `sensors` on the platform address and
+  # `vehicles` on the dedicated port 18830, whose limits sum to 40 connections and 60 messages a
+  # second; a third broker is refused for the count. Written here by the org admin only (PF-117).
+  quotas:
+    mqtt:
+      enabled: true
+      brokers: 2
+      connections: 50
+      messagesPerSecond: 100
+      maxMessageBytes: 4096
+      addresses: [platform, dedicatedPort]
+      ports: [18830]

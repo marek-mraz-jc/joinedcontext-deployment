@@ -104,7 +104,16 @@ args = sys.argv[1:]
 line = " ".join(args)
 # The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
 EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
-if args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "endpoints__helsinki-" in line:
+MQTT_ROUTES = ["mqtt-helsinki-sensors mqtts HostSNI(`sensors.helsinki.mqtt.example.test`)",
+               "mqtt-helsinki-vehicles mqtts HostSNI(`vehicles.helsinki.mqtt.example.test`)",
+               "mqtt-helsinki-vehicles-port mqtt-18830 HostSNI(`*`)"]
+if args[0] == "get" and args[1] == "ingressroutetcp":
+    # The MQTT brokers' routes the Portal stamped (T-4857): name, entrypoint, match.
+    for route in spec.get("mqttRoutes", MQTT_ROUTES):
+        print(route)
+elif args[0] == "get" and args[1] == "deployment" and args[2].startswith("mqtt-"):
+    print(spec.get("mqttReady", "1"), end="")
+elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
     name = "".join(itertools.takewhile(lambda c: c.isalnum() or c == "-", line.split("endpoints__helsinki-", 1)[1]))
@@ -324,9 +333,22 @@ else:
     sys.exit(1)
 '''
 
+# mosquitto_pub without a token: the gateway refuses the CONNECT (T-4857), unless a test says not.
+MOSQUITTO_STUB = '''#!/usr/bin/env python3
+import json, os, sys
+spec = json.load(open(os.environ["STUB_SPEC"]))
+if spec.get("mqttAnonymous"):
+    sys.exit(0)
+sys.stderr.write("Connection error: Connection Refused: not authorised.\\n")
+sys.exit(5)
+'''
+
 OPENSSL_STUB = '''#!/usr/bin/env python3
 import json, os, sys
 spec = json.load(open(os.environ["STUB_SPEC"]))
+if "-verify_hostname" in sys.argv:
+    # An MQTT broker's own certificate for its host (T-4857), or the edge's default one.
+    sys.exit(0 if spec.get("mqttTls", True) else 1)
 sys.stdout.write("New, (NONE), Cipher is (NONE)\\n" if spec.get("cbcRefused", True)
                  else "New, TLSv1.2, Cipher is ECDHE-RSA-AES128-SHA256\\n")
 '''
@@ -361,7 +383,7 @@ def sandbox(tmp_path: Path, spec: dict) -> dict:
 
     stub_bin = tmp_path / "bin"
     stub_bin.mkdir(parents=True, exist_ok=True)
-    for name, body in (("curl", CURL_STUB), ("kubectl", KUBECTL_STUB), ("openssl", OPENSSL_STUB)):
+    for name, body in (("curl", CURL_STUB), ("kubectl", KUBECTL_STUB), ("openssl", OPENSSL_STUB), ("mosquitto_pub", MOSQUITTO_STUB)):
         (stub_bin / name).write_text(body)
         (stub_bin / name).chmod(0o755)
 
@@ -1966,3 +1988,26 @@ def test_an_instance_without_a_meshed_broker_skips_the_forged_caller_probe(tmp_p
     for spec in (dict(HEALTHY, brokerServer=False), dict(HEALTHY, brokerPodIp="")):
         result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
         assert "broker callers (no meshed context broker with its Server in this instance)" in result.stdout
+
+
+def test_the_mqtt_brokers_serve_their_certificate_and_refuse_a_connect_without_a_token(tmp_path):
+    """T-4857: each stamped broker runs, its host and its dedicated port verify, a tokenless
+    CONNECT is refused, and plain 1883 is closed; a broker that admits one fails the run."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    for line in ("mqtt mqtt-helsinki-sensors runs",
+                 "mqtt sensors.helsinki.mqtt.example.test:8883 serves a valid certificate for sensors.helsinki.mqtt.example.test",
+                 "mqtt vehicles.helsinki.mqtt.example.test:18830 serves a valid certificate for vehicles.helsinki.mqtt.example.test",
+                 "mqtt vehicles.helsinki.mqtt.example.test:18830 refuses a CONNECT without a token",
+                 "mqtt sensors.helsinki.mqtt.example.test:1883 (plain MQTT) is closed from outside"):
+        assert f"  ok    {line}" in result.stdout, result.stdout
+    for spec, failure in ((dict(HEALTHY, mqttAnonymous=True), "a CONNECT without a token was not refused"),
+                          (dict(HEALTHY, mqttTls=False), "no verified TLS for"),
+                          (dict(HEALTHY, mqttReady=""), "has no ready replica"),
+                          (dict(HEALTHY, mqttRoutes=["mqtt-x-y-port mqtt-18831 HostSNI(`*`)"]), "no HostSNI route names")):
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert result.returncode == 1 and failure in result.stdout, result.stdout
+
+
+def test_an_instance_without_mqtt_brokers_skips_their_checks(tmp_path):
+    result = run(tmp_path, dict(HEALTHY, mqttRoutes=[]), "https://example.test", "https://idm.example.test")
+    assert "  skip  mqtt edge brokers (the Portal runs no MqttBroker in dev-mqtt)" in result.stdout

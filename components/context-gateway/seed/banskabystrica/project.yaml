@@ -34,3 +34,10 @@ spec:
     agentRunsPerDay: 2000
     entitiesPerSpace: 1000000
     requestsPerMinute: 6000
+    # The MQTT demo (T-4857, ADR-N-048 §2.9): one broker, `ovzdusie`, on the platform address.
+    mqtt:
+      enabled: true
+      brokers: 1
+      connections: 20
+      messagesPerSecond: 20
+      maxMessageBytes: 4096
