@@ -177,6 +177,7 @@ helsinki-datasource-trees-0.yaml: projects/helsinki/datasources/hel-trees-0.yaml
 helsinki-datasource-trees-1.yaml: projects/helsinki/datasources/hel-trees-1.yaml
 helsinki-datasource-trees-2.yaml: projects/helsinki/datasources/hel-trees-2.yaml
 helsinki-datasource-trees-3.yaml: projects/helsinki/datasources/hel-trees-3.yaml
+helsinki-datasource-nature.yaml: projects/helsinki/datasources/hel-nature.yaml
 helsinki-datasource-fee-parking-zones.yaml: projects/helsinki/datasources/hel-parking-fee-zones.yaml
 helsinki-datasource-resident-parking-zones.yaml: projects/helsinki/datasources/hel-resident-parking-zones.yaml
 helsinki-pipeline-services.yaml: projects/helsinki/pipelines/services/pipeline.yaml
@@ -211,6 +212,7 @@ helsinki-pipeline-trees-0.yaml: projects/helsinki/pipelines/trees-0/pipeline.yam
 helsinki-pipeline-trees-1.yaml: projects/helsinki/pipelines/trees-1/pipeline.yaml
 helsinki-pipeline-trees-2.yaml: projects/helsinki/pipelines/trees-2/pipeline.yaml
 helsinki-pipeline-trees-3.yaml: projects/helsinki/pipelines/trees-3/pipeline.yaml
+helsinki-pipeline-nature.yaml: projects/helsinki/pipelines/nature/pipeline.yaml
 helsinki-pipeline-fee-parking-zones.yaml: projects/helsinki/pipelines/fee-parking-zones/pipeline.yaml
 helsinki-pipeline-resident-parking-zones.yaml: projects/helsinki/pipelines/resident-parking-zones/pipeline.yaml
 helsinki-pipeline-services-bento.yaml: projects/helsinki/pipelines/services/bento.yaml
@@ -245,6 +247,7 @@ helsinki-pipeline-trees-0-bento.yaml: projects/helsinki/pipelines/trees-0/bento.
 helsinki-pipeline-trees-1-bento.yaml: projects/helsinki/pipelines/trees-1/bento.yaml
 helsinki-pipeline-trees-2-bento.yaml: projects/helsinki/pipelines/trees-2/bento.yaml
 helsinki-pipeline-trees-3-bento.yaml: projects/helsinki/pipelines/trees-3/bento.yaml
+helsinki-pipeline-nature-bento.yaml: projects/helsinki/pipelines/nature/bento.yaml
 helsinki-pipeline-fee-parking-zones-bento.yaml: projects/helsinki/pipelines/fee-parking-zones/bento.yaml
 helsinki-pipeline-resident-parking-zones-bento.yaml: projects/helsinki/pipelines/resident-parking-zones/bento.yaml
 # HSL's network registers (T-5254): fare zones, ticket sales points, City Bike Vantaa's stations and the
@@ -354,6 +357,8 @@ helsinki-endpoint-noise.yaml: projects/helsinki/spaces/helsinki/endpoints/helsin
 helsinki-policy-public-noise.yaml: projects/helsinki/spaces/helsinki/policies/public-noise.yaml
 helsinki-endpoint-trees.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-trees.yaml
 helsinki-policy-public-trees.yaml: projects/helsinki/spaces/helsinki/policies/public-trees.yaml
+helsinki-endpoint-nature.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-nature.yaml
+helsinki-policy-public-nature.yaml: projects/helsinki/spaces/helsinki/policies/public-nature.yaml
 helsinki-endpoint-places.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-places.yaml
 helsinki-endpoint-cycle-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-cycle-counts.yaml
 helsinki-endpoint-traffic-counts.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-traffic-counts.yaml

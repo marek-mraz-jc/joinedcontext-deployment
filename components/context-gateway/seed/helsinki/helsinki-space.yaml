@@ -33,6 +33,8 @@ spec:
       history: 'off'
     - entityType: Tree
       history: 'off'
+    - entityType: NatureSite
+      history: 'off'
     - entityType: AirQualityObserved
       history: P30D
       # Written on every run without an observedAt: one row per change and one a week,

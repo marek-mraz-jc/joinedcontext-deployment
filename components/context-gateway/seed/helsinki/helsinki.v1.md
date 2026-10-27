@@ -422,6 +422,28 @@ Specialises `Entity`.
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
 | `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
 
+### NatureSite
+
+One site of the city's nature information system (luontotietojärjestelmä): a protected or proposed nature site, or an area the city values for its flying squirrels, birds, bats, plants or geology, with its outline, name, value class and the system's description. Smart Data Models has no protected-area class; the closest, GreenspaceRecord, records soil and weather readings of a green area.
+
+IRI: `jc:NatureSite`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | LanguageProperty | `string` |  |  | `schema:name` | The name, per language. |
+| `natureSiteCategory` | Property | [`NatureSiteCategory`](#naturesitecategory) | yes |  | `jc:natureSiteCategory` | Which layer of the city's nature information system the site comes from: a protected site (nature reserve, Natura 2000 area, natural monument, protected habitat type), a site of the national nature conservation programme still to be protected, or a site the city values for its species or its geology. |
+| `valueClass` | Property | `string` |  |  | `jc:valueClass` | The value class the nature information system gives the site, in its own Finnish words (I hyvin arvokas, Geologinen arvo: suuri, Arvokas lepakkoalue); the protected sites carry none. |
+| `areaHectares` | Property | `float` |  | har | `jc:areaHectares` | The area of the site's outline in hectares, as the nature information system computes it. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
 ### GtfsStop
 
 One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -914,3 +936,20 @@ Where a tree of the register stands.
 |---|---|
 | `street` | Along a street (katu). |
 | `park` | In a park (puisto). |
+
+### NatureSiteCategory
+
+The layers of the nature information system a NatureSite comes from.
+
+| Value | Meaning |
+|---|---|
+| `natureReserve` | A nature reserve protected under the Nature Conservation Act (luonnonsuojelualue). |
+| `natura2000` | An area of the EU Natura 2000 network (Natura-alue). |
+| `naturalMonument` | A protected natural monument, mostly an old tree or a boulder (luonnonmuistomerkki). |
+| `protectedHabitat` | A habitat type protected under the Nature Conservation Act (suojeltu luontotyyppi). |
+| `conservationProgramme` | A site of the city's nature conservation programme, to be protected (luonnonsuojeluohjelman kohde). |
+| `flyingSquirrelCore` | A core area of the Siberian flying squirrel (liito-oravan ydinalue). |
+| `birdArea` | An important bird area (tärkeä lintualue). |
+| `batArea` | An area bats use, by value class (lepakkoalue). |
+| `valuablePlantSite` | A valuable vegetation or flora site (arvokas kasvillisuus- ja kasvistokohde). |
+| `geologicalSite` | A geologically or geomorphologically valuable site (geologisesti arvokas kohde). |
