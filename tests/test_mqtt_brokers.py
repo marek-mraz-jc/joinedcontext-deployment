@@ -518,6 +518,7 @@ class Decider(BaseHTTPRequestHandler):
     rate: ClassVar[int | None] = None
     connects: ClassVar[list[str]] = []
     addresses: ClassVar[list[str]] = []
+    usernames: ClassVar[list[str]] = []
     publishes: ClassVar[list[dict]] = []
     times: ClassVar[list[float]] = []
 
@@ -533,6 +534,7 @@ class Decider(BaseHTTPRequestHandler):
         else:
             Decider.connects.append(body["clientid"])
             Decider.addresses.append(body["ipaddr"])
+            Decider.usernames.append(body["username"])
             watch = [{"permission": "allow", "action": "subscribe", "topic": "cameras/#", "qos": [0, 1]}]
             answer = {"result": "allow", "superuser": False, "expire_at": int(time.time()) + 3600,
                       "acl": watch if body["username"] == "watcher" else []}
@@ -876,6 +878,176 @@ def test_the_dedicated_tls_listener_serves_the_broker_certificate_bsi_suites_and
         assert {"ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-RSA-AES256-GCM-SHA384"} <= accepted
         with handshake(ssl.TLSVersion.TLSv1_3) as session:
             assert session.version() == "TLSv1.3"
+    finally:
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+        decider.shutdown()
+
+
+CA = {"name": "helsinki-device-ca", "key": "ca.crt"}
+CERT_RELEASE = "mqtt-helsinki-cameras-cert"
+CERT_HOST = "cert.cameras.helsinki.mqtt.dev.example.org"
+
+
+def cert_docs(tmp_path) -> list[dict]:
+    brokers = [{**BASE["brokers"][0], "clientCa": CA}, *BASE["brokers"][1:]]
+    result = helm({**BASE, "brokers": brokers}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    return [d for d in yaml.safe_load_all(result.stdout) if d]
+
+
+def test_a_certificate_door_is_a_release_of_its_own_that_asks_for_the_project_ca(tmp_path):
+    """T-5875 (ADR-N-048 §2.12, option (a) of T-4861): a broker whose devices may use client
+    certificates gets a second release `<release>-cert`, with its own ServiceAccount and so its
+    own mesh identity, which is how the gateway tells a certificate device from a token one. It
+    serves devices only: TLS in RMQTT on 8884 behind a passthrough route on 8883 by its own SNI,
+    a client certificate the project CA signed required, the subject DN as the username, and no
+    internal listener, no HTTP API. The broker's own release keeps its token door unchanged."""
+    docs = cert_docs(tmp_path)
+    assert of(docs, "ServiceAccount")[CERT_RELEASE]["metadata"]["name"] == CERT_RELEASE
+    pod = of(docs, "Deployment")[CERT_RELEASE]["spec"]["template"]
+    assert pod["spec"]["serviceAccountName"] == CERT_RELEASE
+    assert pod["metadata"]["annotations"]["config.linkerd.io/opaque-ports"] == "8884"
+    assert pod["metadata"]["annotations"]["joinedcontext.com/tls-revision"] == ""
+    (container,) = pod["spec"]["containers"]
+    assert [p["containerPort"] for p in container["ports"]] == [8884]
+    assert {"name": "client-ca", "mountPath": "/etc/rmqtt-ca", "readOnly": True} in container["volumeMounts"]
+    ca = next(v for v in pod["spec"]["volumes"] if v["name"] == "client-ca")["secret"]
+    assert ca == {"secretName": "helsinki-device-ca", "defaultMode": 0o444, "items": [{"key": "ca.crt", "path": "ca.crt"}]}
+    assert next(v for v in pod["spec"]["volumes"] if v["name"] == "tls")["secret"]["secretName"] == f"{CERT_RELEASE}-tls"
+
+    toml = config(docs, CERT_RELEASE)
+    listeners = toml["rmqtt.toml"]["listener"]
+    assert listeners["tcp"] == {"internal": {"enable": False}, "external": {"enable": False}}
+    tls = listeners["tls"]["external"]
+    assert tls["enable"] is True and tls["addr"] == "0.0.0.0:8884" and tls["proxy_protocol"] is True
+    assert tls["cross_certificate"] is True and tls["client_ca_certs"] == "/etc/rmqtt-ca/ca.crt"
+    assert tls["cert_subject_dn_as_username"] is True and "cert_cn_as_username" not in tls
+    assert tls["allow_anonymous"] is False
+    assert "rmqtt-http-api.toml" not in toml
+    assert toml["rmqtt.toml"]["plugins"]["disabled_default_startups"] == ["rmqtt-http-api"]
+    assert toml["rmqtt-auth-http.toml"]["http_auth_req"]["params"]["password"] == "%P"
+    assert [p["port"] for p in of(docs, "Service")[CERT_RELEASE]["spec"]["ports"]] == [8884]
+
+    route = of(docs, "IngressRouteTCP")[CERT_RELEASE]["spec"]
+    assert route["entryPoints"] == ["mqtts"] and route["tls"] == {"passthrough": True}
+    assert route["routes"] == [{"match": f"HostSNI(`{CERT_HOST}`)",
+                                "services": [{"name": CERT_RELEASE, "port": 8884, "proxyProtocol": {"version": 2}}]}]
+    assert of(docs, "Certificate")[CERT_RELEASE]["spec"]["dnsNames"] == [CERT_HOST]
+    servers = {n: s["spec"]["port"] for n, s in of(docs, "Server").items() if n.startswith(CERT_RELEASE)}
+    assert servers == {f"{CERT_RELEASE}-tls": 8884}
+    assert of(docs, "MeshTLSAuthentication")[f"{CERT_RELEASE}-tls"]["spec"]["identityRefs"] == [
+        {"kind": "ServiceAccount", "name": "traefik", "namespace": "traefik"}]
+    assert outside_routes(docs, "mqtt-helsinki-cameras") == ["mqtts"]
+    assert of(docs, "IngressRouteTCP")["mqtt-helsinki-cameras"]["spec"]["routes"][0]["services"][0]["port"] == 1884
+    for release in RELEASES[1:]:
+        assert f"{release}-cert" not in of(docs, "Deployment"), release
+
+
+def test_the_certificate_template_filled_is_the_certificate_door_the_chart_renders(tmp_path):
+    """The Portal stamps `objects-certificate.yaml` beside the broker's objects: filled with the
+    door's release, host and the allowance's clientCaRef, it is what the chart renders."""
+    docs = cert_docs(tmp_path)
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    text = template["data"]["objects-certificate.yaml"]
+    for sentinel, value in (("__CLIENT_CA__", CA["name"]),
+                            ("__CLIENT_CA_KEY__", CA["key"]), ("__TLS_REVISION__", "")):
+        text = text.replace(sentinel, value)
+    limits = {"maxMessageBytes": 65536, "messagesPerSecond": 10, "maxConnections": 1000}
+    stamped = fill(text, CERT_RELEASE, "helsinki", "cameras", limits)
+    rendered = [d for d in docs if d["metadata"].get("labels", {}).get("app.kubernetes.io/instance") == CERT_RELEASE]
+    assert comparable(stamped) == comparable(rendered)
+    assert "client_ca_certs" not in template["data"]["objects.yaml"]
+
+
+def issue(directory: Path, name: str, subject: str, ca: str | None, *extra: str) -> None:
+    """A P-256 key and certificate `name`, self-signed when `ca` is None, else signed by it."""
+    key, crt = directory / f"{name}.key", directory / f"{name}.crt"
+    curve = ["-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:P-256", "-nodes", "-keyout", str(key)]
+    if ca is None:
+        command = ["openssl", "req", "-x509", *curve, "-days", "2", "-subj", subject, "-out", str(crt)]
+    else:
+        csr = directory / f"{name}.csr"
+        subprocess.run(["openssl", "req", *curve, "-subj", subject, "-out", str(csr)], capture_output=True, check=True)
+        command = ["openssl", "x509", "-req", "-in", str(csr), "-CA", str(directory / f"{ca}.crt"),
+                   "-CAkey", str(directory / f"{ca}.key"), "-CAcreateserial", "-out", str(crt), *extra]
+    subprocess.run(command, capture_output=True, check=True)
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@pytest.mark.skipif(shutil.which("docker") is None or shutil.which("openssl") is None, reason="no container runtime")
+def test_the_certificate_door_admits_only_a_valid_certificate_of_the_project_ca(tmp_path):
+    """T-5875: the rendered certificate door of the pinned RMQTT, reached as Traefik's passthrough
+    reaches it (PROXY v2, then TLS). A device certificate the project CA signed reaches the
+    gateway with the subject DN as its username, whatever username the device sent, and no
+    password; a device with no certificate, another CA's or an expired one is refused in the
+    handshake and never reaches the gateway. RMQTT 0.24 has no CRL setting: a revoked device is
+    refused by the gateway on its ServiceAccount (ADR-N-048 §2.12)."""
+    decider = ThreadingHTTPServer(("127.0.0.1", 0), Decider)
+    threading.Thread(target=decider.serve_forever, daemon=True).start()
+    Decider.rate = None
+    Decider.deny.clear()
+    for log in (Decider.connects, Decider.addresses, Decider.usernames):
+        log.clear()
+    brokers = [{"project": "helsinki", "name": "cameras", "clientCa": CA}]
+    values = {**BASE, "brokers": brokers, "authUrl": f"http://127.0.0.1:{decider.server_port}/internal/mqtt/auth"}
+    result = helm(values, tmp_path)
+    assert result.returncode == 0, result.stderr
+    data = of([d for d in yaml.safe_load_all(result.stdout) if d], "ConfigMap")[CERT_RELEASE]["data"]
+    tls = free_port()
+    conf, certs, ca, keys = tmp_path / "conf", tmp_path / "tls", tmp_path / "ca", tmp_path / "keys"
+    for directory in (conf / "plugins", certs, ca, keys):
+        directory.mkdir(parents=True)
+    (conf / "rmqtt.toml").write_text(data["rmqtt.toml"].replace("0.0.0.0:8884", f"127.0.0.1:{tls}"))
+    for name in ("rmqtt-auth-http.toml", "rmqtt-acl.toml"):
+        (conf / "plugins" / name).write_text(data[name])
+    issue(keys, "project-ca", "/CN=helsinki device CA", None)
+    issue(keys, "other-ca", "/CN=praha device CA", None)
+    issue(keys, "good", "/O=helsinki/CN=sensor-1", "project-ca", "-days", "1")
+    issue(keys, "other", "/O=helsinki/CN=sensor-1", "other-ca", "-days", "1")
+    issue(keys, "expired", "/O=helsinki/CN=sensor-1", "project-ca",
+          "-not_before", "20200101000000Z", "-not_after", "20200201000000Z")
+    issue(keys, "server", f"/CN={CERT_HOST}", "project-ca", "-days", "1")
+    shutil.copy(keys / "server.crt", certs / "tls.crt")
+    shutil.copy(keys / "server.key", certs / "tls.key")
+    shutil.copy(keys / "project-ca.crt", ca / "ca.crt")
+    for path in (tmp_path, conf, conf / "plugins", certs, ca):
+        path.chmod(0o755)
+    for path in (*certs.iterdir(), *ca.iterdir(), *conf.rglob("*.toml")):
+        path.chmod(0o644)
+    name = f"t5875-rmqtt-{tls}"
+    started = subprocess.run(
+        ["docker", "run", "-d", "--rm", "--name", name, "--network", "host", "--read-only",
+         "-v", f"{conf}:/etc/rmqtt:ro", "-v", f"{certs}:/etc/rmqtt-tls:ro", "-v", f"{ca}:/etc/rmqtt-ca:ro",
+         image(), "-f", "/etc/rmqtt/rmqtt.toml"],
+        capture_output=True, text=True, check=False)
+    try:
+        assert started.returncode == 0, started.stderr
+        deadline = time.monotonic() + 60
+        while socket.socket().connect_ex(("127.0.0.1", tls)) != 0:
+            assert time.monotonic() < deadline, "RMQTT did not listen on its TLS port"
+            time.sleep(0.2)
+
+        def connect(client: str | None) -> bytes:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.load_verify_locations(keys / "project-ca.crt")
+            if client:
+                context.load_cert_chain(keys / f"{client}.crt", keys / f"{client}.key")
+            raw = socket.create_connection(("127.0.0.1", tls), timeout=5)
+            raw.sendall(proxy_v2("203.0.113.9", 40001))
+            with context.wrap_socket(raw, server_hostname=CERT_HOST) as session:
+                # MQTT 3.1.1 CONNECT, client id "helsinki-sensor-1", username "spoofed", no password.
+                payload = b"\x00\x04MQTT\x04\x82\x00\x3c" + b"".join(
+                    struct.pack("!H", len(v)) + v for v in (b"helsinki-sensor-1", b"spoofed"))
+                session.sendall(b"\x10" + bytes([len(payload)]) + payload)
+                return session.recv(4)
+
+        assert connect("good") == b"\x20\x02\x00\x00"
+        assert Decider.usernames == ["O=helsinki, CN=sensor-1"]
+        assert Decider.connects == ["helsinki-sensor-1"] and Decider.addresses == ["203.0.113.9"]
+        for refused in (None, "other", "expired"):
+            with pytest.raises((ssl.SSLError, ConnectionError)):
+                connect(refused)
+        assert Decider.connects == ["helsinki-sensor-1"]
     finally:
         subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
         decider.shutdown()

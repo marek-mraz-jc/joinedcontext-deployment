@@ -1,5 +1,6 @@
 {{- /*
-  One RMQTT per MqttBroker (ADR-N-048, PL-74). Two listeners, both plain MQTT inside the pod:
+  One RMQTT per MqttBroker (ADR-N-048, PL-74), and a second, `<release>-cert`, for a broker whose
+  devices may use client certificates (ADR-N-048 §2.12, T-5875). Two listeners, both plain MQTT inside the pod:
   `internal` on 1883 for the pipeline runner only, `external` on 1884 behind the ingress
   controller, which terminates TLS on 8883 and passes the client's address in a PROXY header.
   A broker with a dedicated port (18830-18839) has `tls.external` on 8884 instead of 1884: TLS
@@ -40,6 +41,14 @@
 {{- $tlsRevision = dig "status" "revision" "" (lookup "cert-manager.io/v1" "Certificate" $root.Release.Namespace $release) }}
 {{- end }}
 {{ include "brokers.objects" (dict "root" $root "release" $release "project" .project "name" .name "host" $host "maxBytes" $maxBytes "perSecond" $perSecond "connections" $connections "port" $port "tlsRevision" $tlsRevision "managedBy" $root.Release.Service "checksum" (printf "%s%s%s%d%d%d%v" $root.Values.authUrl $release $host $maxBytes $perSecond $connections $port | sha256sum)) }}
+{{- $project := .project }}
+{{- $name := .name }}
+{{- with .clientCa }}
+{{- $certRelease := printf "%s-cert" $release }}
+{{- $certHost := printf "cert.%s" $host }}
+{{- $certRevision := dig "status" "revision" "" (lookup "cert-manager.io/v1" "Certificate" $root.Release.Namespace $certRelease) }}
+{{ include "brokers.objects" (dict "root" $root "release" $certRelease "project" $project "name" $name "host" $certHost "clientCa" .name "clientCaKey" .key "maxBytes" $maxBytes "perSecond" $perSecond "connections" $connections "tlsRevision" $certRevision "managedBy" $root.Release.Service "checksum" (printf "%s%s%s%s%d%d%d" $root.Values.authUrl $certRelease $certHost .name $maxBytes $perSecond $connections | sha256sum)) }}
+{{- end }}
 {{- end }}
 ---
 # What the Portal stamps per MqttBroker (ADR-N-048 §2.6, T-3994): the objects above with
@@ -67,3 +76,9 @@ data:
   # Certificate.
   objects-hostname.yaml: |
     {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" "__HOSTNAME__" "tlsSecret" "__TLS_SECRET__" "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}
+  # A broker's certificate door (ADR-N-048 §2.12, T-5875): the Portal stamps it beside the
+  # broker's own objects for a broker whose deviceAuth names clientCertificate, with `__RELEASE__`
+  # the bounded `<release>-cert` (its host is `cert.<name>.<project>.mqtt.<domain>`),
+  # `__CLIENT_CA__` and `__CLIENT_CA_KEY__` the allowance's clientCaRef, and `__TLS_REVISION__`.
+  objects-certificate.yaml: |
+    {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" (printf "cert.__NAME__.__PROJECT__.mqtt.%s" .Values.domain) "clientCa" "__CLIENT_CA__" "clientCaKey" "__CLIENT_CA_KEY__" "tlsRevision" "__TLS_REVISION__" "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}

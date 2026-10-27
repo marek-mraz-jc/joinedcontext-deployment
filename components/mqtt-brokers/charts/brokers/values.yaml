@@ -41,7 +41,8 @@ portal:
   namespace: ''
   serviceAccount: portal
 
-# One entry per MqttBroker: {project, name, port (18830-18839, optional), limits: {maxMessageBytes, messagesPerSecond,
+# One entry per MqttBroker: {project, name, port (18830-18839, optional), clientCa ({name, key}: the Secret of the
+# project's device client CA, which adds the certificate door <release>-cert, T-5875), limits: {maxMessageBytes, messagesPerSecond,
 # maxConnections}}. The roles stay in the gateway, which answers each CONNECT with them.
 brokers: []
 
