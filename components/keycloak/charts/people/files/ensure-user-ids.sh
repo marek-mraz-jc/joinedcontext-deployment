@@ -23,7 +23,8 @@ USERS_FILE=${USERS_FILE:-/config/users}
 
 CONFIG=$(mktemp)
 BODY=$(mktemp)
-trap 'rm -f "$CONFIG" "$BODY"' EXIT
+HELD=$(mktemp)
+trap 'rm -f "$CONFIG" "$BODY" "$HELD"' EXIT
 kc() { /opt/keycloak/bin/kcadm.sh "$@" --config "$CONFIG"; }
 fail() { echo "user ids: $*" >&2; exit 1; }
 
@@ -35,12 +36,36 @@ if ! kc get "realms/$REALM" --fields realm >/dev/null 2>&1; then
   echo "realm $REALM created; the import fills it in"
 fi
 
-# The id a username holds in the realm, or nothing.
+# Every kcadm.sh call starts a JVM (about 5 s under the Job's CPU limit): one call per person and
+# check took 234 s for the 14 demo people in CI (T-5846). So the realm's users are read in pages
+# of $PAGE, every line is checked before anything changes, and the people go in at most two
+# partial imports.
+PAGE=500
+read_held() {
+  : > "$HELD"
+  local first=0 page rows
+  while :; do
+    page=$(kc get users -r "$REALM" -q briefRepresentation=true -q first="$first" -q max="$PAGE" \
+      --fields id,username --format csv --noquotes)
+    [ -n "$page" ] || break
+    printf '%s\n' "$page" >> "$HELD"
+    mapfile -t rows <<< "$page"
+    [ ${#rows[@]} -ge "$PAGE" ] || break
+    first=$((first + PAGE))
+  done
+}
+# The id a username holds in the realm, or nothing. Keycloak keeps usernames in lower case.
+# The image has no awk: plain bash.
 id_of() {
-  kc get users -r "$REALM" -q username="$1" -q exact=true --fields id --format csv --noquotes
+  local id username
+  while IFS=, read -r id username; do
+    if [ "$username" = "${1,,}" ]; then echo "$id"; return; fi
+  done < "$HELD"
 }
 
 UUID='^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+read_held
+missing=() replaced=() created=()
 while read -r id username recreate; do
   [ -n "$id" ] || continue
   [[ $id =~ $UUID ]] || fail "'$id' is not a lower-case Keycloak user id"
@@ -48,17 +73,41 @@ while read -r id username recreate; do
   held=$(id_of "$username")
   if [ "$held" = "$id" ]; then
     echo "$id is in place"
-    continue
+  elif [ -z "$held" ]; then
+    missing+=("$id $username")
+  elif [ "$recreate" = true ]; then
+    replaced+=("$id $username $held")
+  else
+    fail "the person meant to hold $id holds $held: set that id where the deployment names them (global.initialUserId); nobody was changed"
   fi
-  mode=SKIP
-  if [ -n "$held" ]; then
-    [ "$recreate" = true ] ||
-      fail "the person meant to hold $id holds $held: set that id where the deployment names them (global.initialUserId); nobody was changed"
-    mode=OVERWRITE
-  fi
-  printf '{"ifResourceExists":"%s","users":[{"id":"%s","username":"%s","email":"%s","enabled":true,"emailVerified":true}]}' \
-    "$mode" "$id" "$username" "$username" > "$BODY"
-  kc create partialImport -r "$REALM" -f "$BODY" >/dev/null
-  [ "$(id_of "$username")" = "$id" ] || fail "Keycloak did not create $id"
-  echo "$id created${held:+ in place of $held}"
 done < "$USERS_FILE"
+
+# One partial import of these people: SKIP leaves anyone else alone, OVERWRITE replaces the
+# person under the old id.
+import_people() { # mode "id username [held]"...
+  local mode=$1 sep="" entry id username
+  shift
+  [ $# -gt 0 ] || return 0
+  {
+    printf '{"ifResourceExists":"%s","users":[' "$mode"
+    for entry in "$@"; do
+      read -r id username _ <<< "$entry"
+      printf '%s{"id":"%s","username":"%s","email":"%s","enabled":true,"emailVerified":true}' \
+        "$sep" "$id" "$username" "$username"
+      sep=,
+    done
+    printf ']}'
+  } > "$BODY"
+  kc create partialImport -r "$REALM" -f "$BODY" >/dev/null
+  created+=("$@")
+}
+import_people SKIP "${missing[@]}"
+import_people OVERWRITE "${replaced[@]}"
+[ ${#created[@]} -gt 0 ] || exit 0
+
+read_held
+for entry in "${created[@]}"; do
+  read -r id username was <<< "$entry"
+  [ "$(id_of "$username")" = "$id" ] || fail "Keycloak did not create $id"
+  echo "$id created${was:+ in place of $was}"
+done
