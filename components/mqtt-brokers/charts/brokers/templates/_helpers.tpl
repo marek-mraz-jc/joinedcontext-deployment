@@ -407,3 +407,34 @@ spec:
       name: {{ $server }}
 {{- end }}
 {{- end }}
+
+{{- /* A broker's dedicated port (ADR-N-048 §2.5, PL-77, T-5856), from a dict: root, release, port,
+       managedBy. The port is a Traefik entrypoint `mqtt-<port>` of its own (the cluster's Traefik,
+       not this chart): TLS ends there with the broker host's certificate and the 8883 TLSOption,
+       `HostSNI(*)` admits a device that sends no SNI, and the PROXY header carries its address to
+       1884, as on 8883. One route per entrypoint: the Portal and the loop above refuse a second. */ -}}
+{{- define "brokers.port" -}}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ .release }}-port
+  namespace: {{ .root.Release.Namespace }}
+  labels:
+    {{- include "brokers.labels" . | nindent 4 }}
+    app.kubernetes.io/instance: {{ .release }}
+spec:
+  entryPoints:
+    - mqtt-{{ .port }}
+  routes:
+    - match: HostSNI(`*`)
+      services:
+        - name: {{ .release }}
+          port: 1884
+          proxyProtocol:
+            version: 2
+  tls:
+    secretName: {{ .release }}-tls
+    options:
+      name: mqtt-bsi-tr-02102
+{{- end }}

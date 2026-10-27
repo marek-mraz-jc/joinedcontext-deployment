@@ -22,6 +22,7 @@ allow. No retainer, no session or message storage, sessions end with the connect
 | 1883 | `internal`, plain MQTT | the pipeline runner only (NetworkPolicy and a Linkerd Server) |
 | 1884 | `external`, PROXY protocol v2 | the ingress controller only |
 | 8883 | Traefik entrypoint `mqtts`, TLS | devices, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
+| 18830-18839 | Traefik entrypoint `mqtt-<port>`, TLS | devices of the one broker whose `spec.port` it is, `HostSNI(*)` (no SNI needed), the broker host's certificate and the same TLSOption, PROXY v2 to 1884 (T-5856) |
 | 6060 | RMQTT HTTP API, under the mesh only | the Portal's identity, `GET /api/v1/metrics/history/sum` and `GET /api/v1/clients` only (Linkerd `Server` + `HTTPRoute`, ADR-N-048 §2.8, T-4043) |
 
 RMQTT opens TLS, WebSocket and QUIC listeners on its own; the chart turns each of them off, and
@@ -31,7 +32,8 @@ names the Portal; elsewhere the chart turns it off too and the Portal shows "not
 `brokers` is empty in every environment: the Portal's reconciler stamps one broker per
 `MqttBroker` manifest (T-3994). The chart renders a broker's objects once more with sentinels
 (`__RELEASE__`, `__PROJECT__`, `__NAME__`, `__MAX_BYTES__`, `__PER_SECOND__`, `__CONNECTIONS__`,
-`__CONFIG_HASH__`) into the ConfigMap `broker-template`; the Portal fills them from the manifest,
+`__CONFIG_HASH__`) into the ConfigMap `broker-template`, and a broker's dedicated-port route with
+`__PORT__` into its key `port.yaml`, which the Portal adds only for a broker with a served `spec.port`; the Portal fills them from the manifest,
 applies the objects by server-side apply with `app.kubernetes.io/managed-by: joinedcontext-portal`,
 and deletes those of a broker whose manifest is gone. The Role `portal-mqtt-brokers` lets it do
 that here and nowhere else, and `JC_PORTAL_MQTT_NAMESPACE` tells it where. An entry under
@@ -43,9 +45,6 @@ The `mqtts` entrypoint is part of the cluster's Traefik, not of this repository:
 on 8883, published on the node with `externalTrafficPolicy: Local`, and its container port in
 Traefik's `config.linkerd.io/skip-inbound-ports`. Without the last one, Traefik sees every
 client as 127.0.0.1, writes that into the PROXY header, and the gateway reads a device as a
-client inside the cluster.
-
-## Not here yet
-
-- A dedicated `port` (18830-18849) per broker: on the node behind klipper and the Linkerd
-  inbound proxy, the broker would see every such client as a loopback address.
+client inside the cluster. Each dedicated port is the same: an entrypoint `mqtt-<port>` for
+18830-18839, published on the node, and in the same skip list (hetzner-kit
+`extra-manifests/40-traefik-linkerd.yaml.tpl`); 18840-18849 stay reserved and are not served.

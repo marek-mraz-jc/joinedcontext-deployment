@@ -634,3 +634,45 @@ def test_a_flooding_publisher_is_throttled(tmp_path):
         assert Decider.connects.count("helsinki-cam-1") > 1, "the flooding device was never disconnected"
         delivered = len(broker.received)
         assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
+
+
+def test_a_dedicated_port_is_its_own_entrypoint_with_tls_and_the_proxy_header(tmp_path):
+    """T-5856: a broker with a port gets one more route, on the entrypoint `mqtt-<port>`, any SNI,
+    TLS at Traefik with the BSI option and the client's address in PROXY v2 to 1884. A broker
+    without one keeps only its 8883 route, and nothing publishes 1883 or 1884 past ClusterIP."""
+    brokers = [{**BASE["brokers"][0], "port": 18830}, *BASE["brokers"][1:]]
+    result = helm({**BASE, "brokers": brokers}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    docs = [d for d in yaml.safe_load_all(result.stdout) if d]
+    routes = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "IngressRouteTCP"}
+    assert sorted(routes) == sorted([*RELEASES, "mqtt-helsinki-cameras-port"])
+    port = routes["mqtt-helsinki-cameras-port"]
+    assert port["entryPoints"] == ["mqtt-18830"]
+    (route,) = port["routes"]
+    assert route["match"] == "HostSNI(`*`)"
+    assert route["services"] == [{"name": "mqtt-helsinki-cameras", "port": 1884, "proxyProtocol": {"version": 2}}]
+    assert port["tls"] == {"secretName": "mqtt-helsinki-cameras-tls", "options": {"name": "mqtt-bsi-tr-02102"}}
+    for name, spec in routes.items():
+        assert spec["entryPoints"] == (["mqtt-18830"] if name.endswith("-port") else ["mqtts"]), name
+    for d in docs:
+        if d["kind"] == "Service":
+            assert d["spec"].get("type", "ClusterIP") == "ClusterIP", d["metadata"]["name"]
+    # The template the Portal stamps holds the same route behind the `__PORT__` sentinel.
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    stamped = fill(template["data"]["port.yaml"].replace("__PORT__", "18830"), "mqtt-helsinki-cameras", "helsinki", "cameras", {"maxMessageBytes": 0, "messagesPerSecond": 0, "maxConnections": 0})
+    for d in stamped:
+        d["metadata"]["labels"]["app.kubernetes.io/managed-by"] = "-"
+    rendered = next(d for d in docs if d["metadata"]["name"] == "mqtt-helsinki-cameras-port")
+    rendered["metadata"]["labels"]["app.kubernetes.io/managed-by"] = "-"
+    assert stamped == [rendered]
+
+
+@pytest.mark.parametrize(("ports", "message"), [
+    ([18845], "outside the served range 18830-18839"),
+    ([1883], "outside the served range 18830-18839"),
+    ([18831, 18831], "two brokers hold port 18831"),
+])
+def test_a_port_outside_the_served_pool_or_held_twice_refuses_to_render(tmp_path, ports, message):
+    brokers = [{**b, "port": p} for b, p in zip(BASE["brokers"], ports)]
+    result = helm({**BASE, "brokers": brokers}, tmp_path)
+    assert result.returncode != 0 and message in result.stderr, result.stderr

@@ -7,6 +7,7 @@
 */}}
 {{- $root := . }}
 {{- $hosts := dict }}
+{{- $ports := dict }}
 {{- range .Values.brokers }}
 {{- $release := .release | default (include "brokers.release" .) }}
 {{- if gt (len $release) 63 }}
@@ -22,6 +23,17 @@
 {{- $perSecond := $limits.messagesPerSecond | default 10 | int }}
 {{- $connections := $limits.maxConnections | default 1000 | int }}
 {{ include "brokers.objects" (dict "root" $root "release" $release "project" .project "name" .name "host" $host "maxBytes" $maxBytes "perSecond" $perSecond "connections" $connections "managedBy" $root.Release.Service "checksum" (printf "%s%s%s%d%d%d" $root.Values.authUrl $release $host $maxBytes $perSecond $connections | sha256sum)) }}
+{{- with .port }}
+{{- $port := int . }}
+{{- if or (lt $port 18830) (gt $port 18839) }}
+{{- fail (printf "broker %s: port %d is outside the served range 18830-18839 (ADR-N-048 §2.5)" $release $port) }}
+{{- end }}
+{{- if hasKey $ports (toString $port) }}
+{{- fail (printf "two brokers hold port %d" $port) }}
+{{- end }}
+{{- $_ := set $ports (toString $port) true }}
+{{ include "brokers.port" (dict "root" $root "release" $release "port" $port "managedBy" $root.Release.Service) }}
+{{- end }}
 {{- end }}
 ---
 # What the Portal stamps per MqttBroker (ADR-N-048 §2.6, T-3994): the objects above with
@@ -39,3 +51,6 @@ metadata:
 data:
   objects.yaml: |
     {{- include "brokers.objects" (dict "root" $root "release" "__RELEASE__" "project" "__PROJECT__" "name" "__NAME__" "host" (printf "__NAME__.__PROJECT__.mqtt.%s" (required "domain names the brokers' hosts" .Values.domain)) "maxBytes" "__MAX_BYTES__" "perSecond" "__PER_SECOND__" "connections" "__CONNECTIONS__" "managedBy" "joinedcontext-portal" "checksum" "__CONFIG_HASH__") | nindent 4 }}
+  # Added for a broker with `spec.port` only (T-5856); the Portal fills `__PORT__` from it.
+  port.yaml: |
+    {{- include "brokers.port" (dict "root" $root "release" "__RELEASE__" "port" "__PORT__" "managedBy" "joinedcontext-portal") | nindent 4 }}
