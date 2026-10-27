@@ -23,11 +23,15 @@ allow. No retainer, no session or message storage, sessions end with the connect
 | Port | Listener | Who reaches it |
 |---|---|---|
 | 1883 | `internal`, plain MQTT | the pipeline runner only (NetworkPolicy and a Linkerd Server) |
-| 1884 | `external`, PROXY protocol v2 | the ingress controller only |
-| 8883 | Traefik entrypoint `mqtts`, TLS | devices, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
+| 1884 | `external`, PROXY protocol v2, only on a broker without `spec.port` | the ingress controller only |
+| 8883 | Traefik entrypoint `mqtts`, TLS | devices of a broker without `spec.port`, `HostSNI(<name>.<project>.mqtt.<domain>)`, one HTTP-01 certificate per host |
 | 8884 | `tls.external`, TLS in RMQTT after a PROXY v2 header, only on a broker with `spec.port` | the ingress controller only (NetworkPolicy and a Linkerd Server) |
 | 18830-18839 | Traefik entrypoint `mqtt-<port>`, TLS passthrough | devices of the one broker whose `spec.port` it is, `HostSNI(*)`, so a device without SNI connects and still gets the broker host's certificate from RMQTT; PROXY v2 to 8884 (T-5856) |
 | 6060 | RMQTT HTTP API, under the mesh only | the Portal's identity, `GET /api/v1/metrics/history/sum` and `GET /api/v1/clients` only (Linkerd `Server` + `HTTPRoute`, ADR-N-048 §2.8, T-4043) |
+
+A broker has one outside door (T-5871): 8883 by hostname, or its dedicated port when `spec.port`
+is set, never both. A pool port no broker holds keeps its entrypoint with no route, and Traefik
+closes the connection.
 
 RMQTT opens TLS, WebSocket and QUIC listeners on its own; the chart turns each of them off, and
 binds the cluster gRPC to loopback. Its HTTP API runs only where the instance runs the mesh and
