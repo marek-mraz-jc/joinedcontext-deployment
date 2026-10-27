@@ -195,5 +195,10 @@ context-broker:
     # Antares dev 70486ab (dev-82, over 2535495: T-5835 OGC history reads drop an attrs list past half the URI cap,
     # T-5657 batch upsert update mode replaces each named attribute whole; same FEATURES). No migration, no new key.
     # Rollback: dev-80. Signed by ship.yml on dev at 70486ab (run 40441664675).
-    tag: 'dev-82'
-    digest: 'sha256:13059a05e0bd35d04274b2620943f51ba225566300f6b0203a3ee78abcfe65da'
+    # Antares dev 31f3465 (dev-84, over 70486ab: T-5842 a prohibition naming attributes takes back only those,
+    # T-5826 Rule idPatterns bind as regexp_like (ordered id range scan), T-5838 receiverInfo sealed at rest under
+    # ANTARES_SECRET_KEY; same FEATURES). No migration. New runtime key ANTARES_SECRET_KEY stays unset here (boot
+    # warns, receiverInfo stays plaintext) until T-5839 part 0 adds it. Rollback: dev-82. Signed by ship.yml on dev
+    # at 31f3465 (run 40455113093).
+    tag: 'dev-84'
+    digest: 'sha256:3004a6e5872d621aa35c13a77d861d4189656997989c75b404a553095b58fc87'
