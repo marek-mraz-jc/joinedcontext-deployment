@@ -49,6 +49,9 @@
     "KpiPeriod": {
       "@id": "jc:KpiPeriod"
     },
+    "NatureSite": {
+      "@id": "jc:NatureSite"
+    },
     "NoiseZone": {
       "@id": "jc:NoiseZone"
     },
@@ -103,6 +106,10 @@
     },
     "area": {
       "@id": "sdm:area"
+    },
+    "areaHectares": {
+      "@id": "jc:areaHectares",
+      "@type": "xsd:float"
     },
     "assessmentPeriod": {
       "@context": {
@@ -274,6 +281,14 @@
     "name": {
       "@container": "@language",
       "@id": "schema:name"
+    },
+    "natureSiteCategory": {
+      "@context": {
+        "description": "skos:prefLabel",
+        "meaning": "@id",
+        "text": "skos:notation"
+      },
+      "@id": "jc:natureSiteCategory"
     },
     "nearbyParking": {
       "@id": "jc:nearbyParking",
@@ -567,6 +582,9 @@
     "validTo": {
       "@id": "sdm:validTo",
       "@type": "xsd:dateTime"
+    },
+    "valueClass": {
+      "@id": "jc:valueClass"
     },
     "vehicleType": {
       "@id": "sdm:vehicleType"

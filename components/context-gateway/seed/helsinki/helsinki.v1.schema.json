@@ -3945,6 +3945,159 @@
         "cm70plus": "70 cm or more."
       }
     },
+    "NatureSite": {
+      "additionalProperties": false,
+      "description": "One site of the city's nature information system (luontotietoj\u00e4rjestelm\u00e4): a protected or proposed nature site, or an area the city values for its flying squirrels, birds, bats, plants or geology, with its outline, name, value class and the system's description. Smart Data Models has no protected-area class; the closest, GreenspaceRecord, records soil and weather readings of a green area.",
+      "properties": {
+        "areaHectares": {
+          "description": "The area of the site's outline in hectares, as the nature information system computes it.",
+          "minimum": 0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property",
+          "x-unit": {
+            "ucumCode": "har"
+          }
+        },
+        "dataProvider": {
+          "description": "Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "description": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "A short description, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "id": {
+          "description": "The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "location": {
+          "description": "Where the entity is, as GeoJSON geometry.",
+          "properties": {
+            "coordinates": {
+              "type": "array"
+            },
+            "type": {
+              "enum": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "GeoProperty"
+        },
+        "name": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The name, per language.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "LanguageProperty"
+        },
+        "natureSiteCategory": {
+          "$ref": "#/definitions/NatureSiteCategory",
+          "description": "Which layer of the city's nature information system the site comes from: a protected site (nature reserve, Natura 2000 area, natural monument, protected habitat type), a site of the national nature conservation programme still to be protected, or a site the city values for its species or its geology.",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "observedAt": {
+          "description": "When the observation the entity reports was made.",
+          "format": "date-time",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "source": {
+          "description": "The open-data service the entity was read from.",
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "type": {
+          "description": "The entity type, one class of a published data model.",
+          "type": "string",
+          "x-ngsi-ld-kind": "Property"
+        },
+        "valueClass": {
+          "description": "The value class the nature information system gives the site, in its own Finnish words (I hyvin arvokas, Geologinen arvo: suuri, Arvokas lepakkoalue); the protected sites carry none.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        }
+      },
+      "required": [
+        "natureSiteCategory",
+        "id",
+        "type"
+      ],
+      "title": "NatureSite",
+      "type": "object"
+    },
+    "NatureSiteCategory": {
+      "description": "The layers of the nature information system a NatureSite comes from.",
+      "enum": [
+        "natureReserve",
+        "natura2000",
+        "naturalMonument",
+        "protectedHabitat",
+        "conservationProgramme",
+        "flyingSquirrelCore",
+        "birdArea",
+        "batArea",
+        "valuablePlantSite",
+        "geologicalSite"
+      ],
+      "title": "NatureSiteCategory",
+      "type": "string",
+      "x-enum-descriptions": {
+        "batArea": "An area bats use, by value class (lepakkoalue).",
+        "birdArea": "An important bird area (t\u00e4rke\u00e4 lintualue).",
+        "conservationProgramme": "A site of the city's nature conservation programme, to be protected (luonnonsuojeluohjelman kohde).",
+        "flyingSquirrelCore": "A core area of the Siberian flying squirrel (liito-oravan ydinalue).",
+        "geologicalSite": "A geologically or geomorphologically valuable site (geologisesti arvokas kohde).",
+        "natura2000": "An area of the EU Natura 2000 network (Natura-alue).",
+        "naturalMonument": "A protected natural monument, mostly an old tree or a boulder (luonnonmuistomerkki).",
+        "natureReserve": "A nature reserve protected under the Nature Conservation Act (luonnonsuojelualue).",
+        "protectedHabitat": "A habitat type protected under the Nature Conservation Act (suojeltu luontotyyppi).",
+        "valuablePlantSite": "A valuable vegetation or flora site (arvokas kasvillisuus- ja kasvistokohde)."
+      }
+    },
     "NoiseAssessmentPeriod": {
       "description": "The parts of the day a noise band of the 2022 survey holds for.",
       "enum": [

@@ -386,3 +386,12 @@ helsinki-agent-proxy:
           included.custom.audience: xwl3gxuwwqw3gqqxlme2wz2rwsvhqdx4
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The nature information system of T-5823 (seed/helsinki/helsinki-endpoint-nature.yaml).
+      - name: helsinki-nature-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kddqg7cdcp4okv6mcfzgfiw6huoyyjjr
+          access.token.claim: 'true'
+          id.token.claim: 'false'

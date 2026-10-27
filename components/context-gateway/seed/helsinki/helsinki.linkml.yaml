@@ -2101,6 +2101,56 @@ slots:
           de: Straße oder Park
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  natureSiteCategory:
+    slot_uri: jc:natureSiteCategory
+    description: >-
+      Which layer of the city's nature information system the site comes from: a protected site
+      (nature reserve, Natura 2000 area, natural monument, protected habitat type), a site of the
+      national nature conservation programme still to be protected, or a site the city values for
+      its species or its geology.
+    range: NatureSiteCategory
+    required: true
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Druh lokality
+          cs: Druh lokality
+          en: Site category
+          de: Gebietsart
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  valueClass:
+    slot_uri: jc:valueClass
+    description: >-
+      The value class the nature information system gives the site, in its own Finnish words (I
+      hyvin arvokas, Geologinen arvo: suuri, Arvokas lepakkoalue); the protected sites carry none.
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Trieda hodnoty
+          cs: Třída hodnoty
+          en: Value class
+          de: Wertklasse
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
+  areaHectares:
+    slot_uri: jc:areaHectares
+    description: The area of the site's outline in hectares, as the nature information system computes it.
+    range: float
+    minimum_value: 0
+    unit: { ucum_code: har }
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Rozloha
+          cs: Rozloha
+          en: Area
+          de: Fläche
+        annotations: { generated: sk cs en de }
+      ngsi_ld_kind: Property
 classes:
   Event:
     class_uri: sdm:Event
@@ -2923,6 +2973,24 @@ classes:
       - treeSite
       - dataProvider
       - source
+  NatureSite:
+    class_uri: jc:NatureSite
+    description: >-
+      One site of the city's nature information system (luontotietojärjestelmä): a protected or
+      proposed nature site, or an area the city values for its flying squirrels, birds, bats, plants
+      or geology, with its outline, name, value class and the system's description. Smart Data
+      Models has no protected-area class; the closest, GreenspaceRecord, records soil and weather
+      readings of a green area.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Prírodná lokalita
+          cs: Přírodní lokalita
+          en: Nature site
+          de: Naturgebiet
+    slots: [name, natureSiteCategory, valueClass, areaHectares, description, dataProvider, source]
   GtfsStop:
     class_uri: sdm:GtfsStop
     description: One HSL stop or station platform, where it is, its sign's code and its fare zone.
@@ -3624,3 +3692,66 @@ enums:
           label:
             tag: label
             value: { fi: Puisto, en: Park }
+  NatureSiteCategory:
+    description: The layers of the nature information system a NatureSite comes from.
+    permissible_values:
+      natureReserve:
+        description: A nature reserve protected under the Nature Conservation Act (luonnonsuojelualue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Luonnonsuojelualue, en: Nature reserve }
+      natura2000:
+        description: An area of the EU Natura 2000 network (Natura-alue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Natura-alue, en: Natura 2000 area }
+      naturalMonument:
+        description: A protected natural monument, mostly an old tree or a boulder (luonnonmuistomerkki).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Luonnonmuistomerkki, en: Natural monument }
+      protectedHabitat:
+        description: A habitat type protected under the Nature Conservation Act (suojeltu luontotyyppi).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Suojeltu luontotyyppi, en: Protected habitat type }
+      conservationProgramme:
+        description: A site of the city's nature conservation programme, to be protected (luonnonsuojeluohjelman kohde).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Luonnonsuojeluohjelman kohde, en: Nature conservation programme site }
+      flyingSquirrelCore:
+        description: A core area of the Siberian flying squirrel (liito-oravan ydinalue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Liito-oravan ydinalue, en: Flying squirrel core area }
+      birdArea:
+        description: An important bird area (tärkeä lintualue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Tärkeä lintualue, en: Important bird area }
+      batArea:
+        description: An area bats use, by value class (lepakkoalue).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Lepakkoalue, en: Bat area }
+      valuablePlantSite:
+        description: A valuable vegetation or flora site (arvokas kasvillisuus- ja kasvistokohde).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Arvokas kasvikohde, en: Valuable plant site }
+      geologicalSite:
+        description: A geologically or geomorphologically valuable site (geologisesti arvokas kohde).
+        annotations:
+          label:
+            tag: label
+            value: { fi: Geologisesti arvokas kohde, en: Valuable geological site }
