@@ -16,6 +16,10 @@ still lands in exactly one shard. Shard 1 starts with SHARD_ONE_STEPS seconds, i
 The table went stale within days (T-5551: 73 of 271 files missing, shard 1 at 1,192 s of its 20
 minutes against 544 s for shard 2), so every ci.yml shard uploads its junit report and the
 `test-durations` job on main prints the table they add up to: commit it when the shards drift.
+
+A file heavier than a quarter of one shard's share goes to every shard, and the conftest hook
+`pytest_collection_modifyitems` keeps every count-th of its tests there (JC_TEST_SHARD=<shard>/<count>),
+so no one file pins a shard (T-5886: test_smoke_script.py weighed 1,393 s of a 3,300 s share).
 """
 import json
 import re
@@ -32,6 +36,8 @@ TABLE = ROOT / ".ci" / "test-durations.json"
 # table, in 2,824 s of pytest wall over the four shards).
 PARALLEL = 3.8
 SHARD_ONE_STEPS = round(120 * PARALLEL)
+# A file heavier than 1/SPLIT of one shard's share is split over the shards by its tests
+SPLIT = 4
 # `12.34s call     test_x.py::test_y[param]` (setup and teardown lines count too)
 DURATION = re.compile(r"^(\d+(?:\.\d+)?)s (?:call|setup|teardown)\s+(?:tests/)?(test_[\w]+\.py)::")
 
@@ -40,13 +46,29 @@ def files() -> list[str]:
     return sorted(p.name for p in (ROOT / "tests").glob("test_*.py"))
 
 
+def split(names: list[str], weights: dict[str, float], count: int) -> set[str]:
+    """The files each shard runs a count-th of the tests of."""
+    share = (sum(weights.get(n, 0.0) for n in names) + SHARD_ONE_STEPS) / count
+    return {n for n in names if count > 1 and weights.get(n, 0.0) > share / SPLIT}
+
+
+def mine(position: int, shard: int, count: int) -> bool:
+    """Whether the test at this collection position of a split file runs in this shard (1-based)."""
+    return position % count == shard - 1
+
+
 def shards(names: list[str], weights: dict[str, float], count: int) -> list[list[str]]:
     known = [weights[n] for n in names if n in weights]
     default = statistics.median(known) if known else 1.0
     load = [0.0] * count
     load[0] = SHARD_ONE_STEPS
     out: list[list[str]] = [[] for _ in range(count)]
-    for name in sorted(names, key=lambda n: (-weights.get(n, default), n)):
+    cut = split(names, weights, count)
+    for name in sorted(cut):
+        for i in range(count):
+            out[i].append(name)
+            load[i] += weights[name] / count
+    for name in sorted((n for n in names if n not in cut), key=lambda n: (-weights.get(n, default), n)):
         least = min(range(count), key=lambda i: (load[i], i))
         out[least].append(name)
         load[least] += weights.get(name, default)
