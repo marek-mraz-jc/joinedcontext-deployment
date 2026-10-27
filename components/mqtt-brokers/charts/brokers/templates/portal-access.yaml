@@ -25,7 +25,8 @@ rules:
     resources: ["certificates"]
     verbs: ["get", "list", "create", "patch", "delete"]
   - apiGroups: ["traefik.io"]
-    resources: ["ingressroutetcps"]
+    # middlewaretcps: a broker's allowedSources filter, `mqtt-…-sources` (PF-129, T-5870).
+    resources: ["ingressroutetcps", "middlewaretcps"]
     verbs: ["get", "list", "create", "patch", "delete"]
   - apiGroups: ["policy.linkerd.io"]
     resources: ["servers", "httproutes", "meshtlsauthentications", "authorizationpolicies"]

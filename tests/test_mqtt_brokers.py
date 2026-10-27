@@ -295,11 +295,15 @@ def test_the_portal_gets_its_role_only_when_named(docs, tmp_path):
     assert granted == {
         ("", "serviceaccounts"), ("", "configmaps"), ("", "services"), ("apps", "deployments"),
         ("cert-manager.io", "certificates"), ("traefik.io", "ingressroutetcps"),
+        ("traefik.io", "middlewaretcps"),
         ("policy.linkerd.io", "servers"), ("policy.linkerd.io", "httproutes"),
         ("policy.linkerd.io", "meshtlsauthentications"), ("policy.linkerd.io", "authorizationpolicies"),
     }
     for rule in role["rules"]:
         assert "*" not in rule["verbs"] and "escalate" not in rule["verbs"] and "bind" not in rule["verbs"]
+    # PF-129, T-5870: the reconciler applies, lists and retires a broker's allowedSources middleware.
+    traefik = next(rule for rule in role["rules"] if "middlewaretcps" in rule["resources"])
+    assert set(traefik["verbs"]) == {"get", "list", "create", "patch", "delete"}
 
 
 PORTAL = {"portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}
