@@ -153,8 +153,8 @@ Specialises `Entity`.
 | `severity` | Property | `string` |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `dateIssued` | Property | `datetime` |  |  | `sdm:dateIssued` | When the situation was published. |
-| `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts. |
-| `validTo` | Property | `datetime` |  |  | `sdm:validTo` | When the situation ends; absent while open-ended. |
+| `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts; for a preschool admission area, the first day of its school year. |
+| `validTo` | Property | `datetime` |  |  | `sdm:validTo` | When the situation ends; absent while open-ended. For a preschool admission area, the last day of its school year. |
 | `refRoute` | Relationship | [`GtfsRoute`](#gtfsroute) (list) |  |  | `jc:refRoute` | The lines an HSL service alert affects, each a GtfsRoute of this space. |
 | `refStop` | Relationship | [`GtfsStop`](#gtfsstop) (list) |  |  | `jc:refStop` | The stops an HSL service alert affects, each a GtfsStop of this space. |
 | `unknownReference` | Property | `string` (list) |  |  | `jc:unknownReference` | What an HSL service alert names that this space holds no entity for, as `route:<id>` or `stop:<id>`, kept as text rather than as a relationship that would point at nothing. |
@@ -205,6 +205,9 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `waterQualityObservations` | Relationship | [`WaterQualityObserved`](#waterqualityobserved) (list) |  |  | `jc:waterQualityObservations` | The water-quality readings taken at this place, computed from their refPointOfInterest and never stored. |
+| `plotArea` | Property | `float` |  | m2 | `jc:plotArea` | The area of a plot the city offers to a business, in square metres, as the plot register states it. |
+| `floorAreaRight` | Property | `float` |  | m2 | `jc:floorAreaRight` | The floor area the detailed plan lets a business build on the plot (rakennusoikeus), in square metres of floor area. |
+| `admissionAreas` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:admissionAreas` | The admission areas the unit serves, computed from their serviceUnits and never stored. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -321,6 +324,10 @@ Specialises `Entity`.
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `publicAreaPermits` | Relationship | [`CityWork`](#citywork) (list) |  |  | `jc:publicAreaPermits` | The public-area permits that lie in this district, computed from their refDistrict and never stored. |
+| `description` | LanguageProperty | `string` |  |  | `schema:description` | A short description, per language. |
+| `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts; for a preschool admission area, the first day of its school year. |
+| `validTo` | Property | `datetime` |  |  | `sdm:validTo` | When the situation ends; absent while open-ended. For a preschool admission area, the last day of its school year. |
+| `serviceUnits` | Relationship | [`PointOfInterest`](#pointofinterest) (list) |  |  | `jc:serviceUnits` | The units of the city's service register that serve the area: for a preschool admission area, the schools and day care centres that give its preschool education, each a PointOfInterest the services pipeline writes. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -717,6 +724,8 @@ IRI: `ngsi-ld:Entity`
 | `sports` | A public sports facility or outdoor exercise place. |
 | `culture` | A public cultural or leisure place, such as a cultural centre, a public artwork, a playground or an allotment garden. |
 | `waterfrontSite` | A site on the city's shore route offered for a new service, such as a sauna, a cafe or a pier (rantareitti 2025). |
+| `businessPlot` | A plot the city offers to a business, with its area and floor area right (vapaat yritystontit). |
+| `environmentalPermitSite` | A site that holds an environmental permit or is registered under the Environmental Protection Act (ympäristölupakohde), such as a filling station or a plant. |
 
 ### ServiceRequestStatus
 
@@ -774,6 +783,7 @@ The OnStreetParking `category` values the city's layers use, a subset of the Sma
 | `fareZone` | An HSL fare zone (A, B, C or D), the area a ticket is valid in. |
 | `quarter` | A quarter (kortteli), the block a detailed plan names, about 6,000 of them. |
 | `votingDistrict` | A voting district (äänestysalue), about 165 of them. |
+| `preschoolAdmissionArea` | A preschool admission area (esiopetusalue) of one school year, Finnish- or Swedish-language, about 70 a year. |
 
 ### TransportMode
 

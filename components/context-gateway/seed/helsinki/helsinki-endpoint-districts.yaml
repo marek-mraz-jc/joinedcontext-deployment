@@ -6,11 +6,11 @@ metadata:
   name: helsinki-districts
   namespace: helsinki
   title:
-    fi: Kaupunginosat, korttelit, äänestysalueet ja HSL-vyöhykkeet — Helsinki
-    en: City districts, quarters, voting districts and HSL fare zones — Helsinki
+    fi: Kaupunginosat, korttelit, äänestys- ja esiopetusalueet ja HSL-vyöhykkeet — Helsinki
+    en: City districts, quarters, voting and preschool areas and HSL fare zones — Helsinki
   description:
-    fi: 'Kaupunginosat, osa-alueet, korttelit ja äänestysalueet rajoineen sekä HSL:n taksavyöhykkeet A–D. Mallin ulkopuoliset ominaisuudet: divisionLevel (district, subDistrict, quarter, votingDistrict tai fareZone), districtCode (kaupungin oma tunnus: kaupunginosan numero, osa-alueen tai korttelin kymmennumeroinen tunnus, äänestysalueen tunnus kuten 049A) ja fareZone (vyöhykkeen kirjain). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
-    en: "The city districts, sub-districts, quarters and voting districts with their boundaries, and HSL's fare zones A to D. Properties beyond the model: divisionLevel (district, subDistrict, quarter, votingDistrict or fareZone), districtCode (the city's own code: the district number, the ten-digit code of a sub-district or quarter, a voting district's code such as 049A) and fareZone (the zone letter). Sources: City of Helsinki and HSL, CC BY 4.0."
+    fi: 'Kaupunginosat, osa-alueet, korttelit, äänestysalueet ja esiopetusalueet rajoineen sekä HSL:n taksavyöhykkeet A–D. Mallin ulkopuoliset ominaisuudet: divisionLevel (district, subDistrict, quarter, votingDistrict, preschoolAdmissionArea tai fareZone), districtCode (kaupungin oma tunnus: kaupunginosan numero, osa-alueen tai korttelin kymmennumeroinen tunnus, äänestysalueen tunnus kuten 049A) fareZone (vyöhykkeen kirjain) sekä esiopetusalueella validFrom ja validTo (lukuvuosi), serviceUnits (esiopetusta antavat Palvelukartan toimipisteet) ja description (opetuskieli ja lukuvuosi). Lähteet: Helsingin kaupunki ja HSL, CC BY 4.0.'
+    en: "The city districts, sub-districts, quarters, voting districts and preschool admission areas with their boundaries, and HSL's fare zones A to D. Properties beyond the model: divisionLevel (district, subDistrict, quarter, votingDistrict, preschoolAdmissionArea or fareZone), districtCode (the city's own code: the district number, the ten-digit code of a sub-district or quarter, a voting district's code such as 049A) fareZone (the zone letter), and for a preschool admission area validFrom and validTo (its school year), serviceUnits (the Service Map units giving its preschool education) and description (the language and the school year). Sources: City of Helsinki and HSL, CC BY 4.0."
 spec:
   contextSpaceRef: helsinki
   slug: s3luopgog5nkxcpykwxdvhw22iis5n7e
@@ -35,9 +35,9 @@ spec:
       en: 'Sources: City of Helsinki and Helsinki Region Transport (HSL), CC BY 4.0'
     themes: [REGI, TRAN]
     keywords:
-      fi: [kaupunginosat, osa-alueet, korttelit, äänestysalueet, taksavyöhykkeet]
-      sv: [stadsdelar, delområden, kvarter, röstningsområden, taxezoner]
-      en: [districts, sub-districts, quarters, voting districts, fare zones]
+      fi: [kaupunginosat, osa-alueet, korttelit, äänestysalueet, esiopetusalueet, taksavyöhykkeet]
+      sv: [stadsdelar, delområden, kvarter, röstningsområden, förskoleområden, taxezoner]
+      en: [districts, sub-districts, quarters, voting districts, preschool areas, fare zones]
     spatial:
       - FI1B1
       - http://uri.suomi.fi/codelist/jhs/kunta_1_20250101/code/091
@@ -65,6 +65,11 @@ spec:
         description:
           fi: Helsingin karttapalvelun WFS-taso, GeoJSON. Luetaan viikoittain (putki voting-districts).
           en: A WFS layer of the city's map service, as GeoJSON. Read weekly (pipeline voting-districts).
+      - url: https://kartta.hel.fi/ws/geoserver/avoindata/wfs?service=WFS&version=2.0.0&request=GetFeature&outputFormat=application/json&srsName=EPSG:4326&typeNames=avoindata:Esiopetusalue_suomi_tuleva
+        title: { fi: Esiopetusalueet, en: Preschool admission areas }
+        description:
+          fi: Helsingin karttapalvelun WFS-tasot (suomen- ja ruotsinkieliset, kuluva ja tuleva lukuvuosi), GeoJSON. Luetaan viikoittain (putki preschool-areas).
+          en: WFS layers of the city's map service (Finnish- and Swedish-language, the running and the coming school year), as GeoJSON. Read weekly (pipeline preschool-areas).
       - url: https://hri.fi/data/en_GB/dataset/hsl-n-taksavyohykkeet
         title:
           fi: HSL:n taksavyöhykkeet
