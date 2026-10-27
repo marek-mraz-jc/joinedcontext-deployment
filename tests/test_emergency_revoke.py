@@ -75,7 +75,8 @@ if "/api/v1/repos/" in line:
     if "-X DELETE" in line:
         sys.stdout.write("{}\\n" + str(spec.get("deleteStatus", 200)))
     elif spec.get("policyAt", True):
-        sys.stdout.write('{"name":"public-read.yaml","sha":"0123abcd","last_commit_sha":"ffff","type":"file"}\\n200')
+        kind = spec.get("pathType", "file")
+        sys.stdout.write('{"name":"public-read.yaml","sha":"0123abcd","last_commit_sha":"ffff","type":"' + kind + '"}\\n200')
     else:
         sys.stdout.write('{"message":"not found"}\\n404')
 elif "/protocol/openid-connect/token" in line:
@@ -185,6 +186,13 @@ def test_a_policy_the_forge_does_not_carry_fails_loudly(tmp_path):
     assert result.returncode == 1
     assert "is not at joinedcontext/helsinki:spaces/air/policies/public-read.yaml" in result.stderr
     assert not any("-X DELETE" in c or " exec " in c for c in calls), "nothing to remove, nothing fetched"
+
+
+def test_a_path_that_is_no_file_is_not_removed(tmp_path):
+    result, calls = revoke_policy(tmp_path, {"pathType": "dir", "checkoutsArgs": CHECKOUTS_ARGS})
+    assert result.returncode == 1
+    assert "spaces/air/policies/public-read.yaml is not a file" in result.stderr
+    assert not any("-X DELETE" in c or " exec " in c for c in calls)
 
 
 def test_a_refused_commit_fetches_nothing_and_fails(tmp_path):
