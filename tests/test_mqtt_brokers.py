@@ -959,6 +959,9 @@ def test_the_certificate_template_filled_is_the_certificate_door_the_chart_rende
     assert "client_ca_certs" not in template["data"]["objects.yaml"]
 
 
+V3_LEAF = "basicConstraints = CA:FALSE\nsubjectKeyIdentifier = hash\nauthorityKeyIdentifier = keyid\n"
+
+
 def issue(directory: Path, name: str, subject: str, ca: str | None, *extra: str) -> None:
     """A P-256 key and certificate `name`, self-signed when `ca` is None, else signed by it."""
     key, crt = directory / f"{name}.key", directory / f"{name}.crt"
@@ -968,8 +971,12 @@ def issue(directory: Path, name: str, subject: str, ca: str | None, *extra: str)
     else:
         csr = directory / f"{name}.csr"
         subprocess.run(["openssl", "req", *curve, "-subj", subject, "-out", str(csr)], capture_output=True, check=True)
+        # OpenSSL 3.0 (the CI runner) issues a v1 certificate without -extfile, which rustls refuses.
+        extensions = directory / f"{name}.ext"
+        extensions.write_text(V3_LEAF)
         command = ["openssl", "x509", "-req", "-in", str(csr), "-CA", str(directory / f"{ca}.crt"),
-                   "-CAkey", str(directory / f"{ca}.key"), "-CAcreateserial", "-out", str(crt), *extra]
+                   "-CAkey", str(directory / f"{ca}.key"), "-CAcreateserial", "-extfile", str(extensions),
+                   "-out", str(crt), *extra]
     subprocess.run(command, capture_output=True, check=True)
 
 
@@ -985,7 +992,8 @@ def issue_expired(directory: Path, name: str, subject: str, ca: str) -> None:
     (db / "serial").write_text("01\n")
     (db / "ca.cnf").write_text(
         f"[ca]\ndefault_ca = d\n[d]\ndatabase = {db}/index.txt\nnew_certs_dir = {db}\nserial = {db}/serial\n"
-        "default_md = sha256\npolicy = p\nunique_subject = no\n[p]\norganizationName = optional\ncommonName = supplied\n")
+        "default_md = sha256\npolicy = p\nunique_subject = no\nx509_extensions = v3\n"
+        f"[p]\norganizationName = optional\ncommonName = supplied\n[v3]\n{V3_LEAF}")
     subprocess.run(["openssl", "ca", "-batch", "-notext", "-config", str(db / "ca.cnf"),
                     "-cert", str(directory / f"{ca}.crt"), "-keyfile", str(directory / f"{ca}.key"),
                     "-startdate", "20200101000000Z", "-enddate", "20200201000000Z",
@@ -1042,7 +1050,9 @@ def test_the_certificate_door_admits_only_a_valid_certificate_of_the_project_ca(
         assert started.returncode == 0, started.stderr
         deadline = time.monotonic() + 60
         while socket.socket().connect_ex(("127.0.0.1", tls)) != 0:
-            assert time.monotonic() < deadline, "RMQTT did not listen on its TLS port"
+            if time.monotonic() > deadline:
+                logs = subprocess.run(["docker", "logs", name], capture_output=True, text=True, check=False)
+                pytest.fail(f"RMQTT did not listen on its TLS port: {logs.stdout}{logs.stderr}")
             time.sleep(0.2)
 
         def connect(client: str | None) -> bytes:
