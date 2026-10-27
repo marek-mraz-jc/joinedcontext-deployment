@@ -202,5 +202,8 @@ context-broker:
     # at 31f3465 (run 40455113093).
     # Antares dev e48eaf3 (dev-85, over 31f3465: T-5843 a sealed credential opens inside its decoded buffer, no copy;
     # same FEATURES). No migration, no new key. Rollback: dev-84. Signed by ship.yml on dev at e48eaf3 (run 40459890393).
-    tag: 'dev-85'
-    digest: 'sha256:eb4b18da889c981ec002dbece3e50497c7642770e99c03aa561a81bf7eb782a0'
+    # Antares dev bcb9082 (dev-86, over e48eaf3: T-5847 gzip/br response compression on the served router; same
+    # FEATURES). No migration, no new key. Needs the gateway at platform >= fc27d53 (asks for plain bytes). Rollback: dev-85.
+    # Signed by ship.yml on dev at bcb9082 (run 40502309689).
+    tag: 'dev-86'
+    digest: 'sha256:56f8c1be21ea7b59084e52387d952e079e8681c2636389171a0b52c35566172f'
