@@ -56,6 +56,10 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
+    # T-5928 (owner 2026-10-28 "vymaž všetky limity"): a region office asks from one NAT address,
+    # so one visitor may spend the whole day; the minute and hour above pace one address and the
+    # day's cost stays the money guard.
+    visitorSharePercent: 100
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
   transcriptRetention: P90D
   transcriptRedaction: personal

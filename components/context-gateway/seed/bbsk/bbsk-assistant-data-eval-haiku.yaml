@@ -810,6 +810,7 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
+    visitorSharePercent: 100
   model: { router: anthropic/claude-haiku-5.5, answer: anthropic/claude-haiku-5.5 }
   # No city in the header or the greeting (owner: "nie pre konkrétne mesto"), and no host name
   # either (owner 2026-10-18: "remove data.dev and just write open data", T-4635); the widget

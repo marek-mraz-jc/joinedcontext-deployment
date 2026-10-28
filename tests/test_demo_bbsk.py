@@ -176,6 +176,17 @@ def test_the_demo_stays_inside_the_keys_five_dollars_with_the_public_assistants(
     assert total + deployment_named("bbsk-demo")["spec"]["budget"]["costPerDayUsd"] <= 5
 
 
+def test_an_office_behind_one_address_is_paced_by_the_minute_not_a_share_of_the_day():
+    # T-5928 (owner 2026-10-28): 9 questions spent one address's 10 % share of bbsk-demo's $1.
+    # The trial deployments give one visitor the whole day; the per-minute and per-hour rates
+    # stay the abuse bound, the day's cost the money bound.
+    for spec in (deployment_named("bbsk-demo")["spec"], general()["spec"]):
+        assert spec["budget"]["visitorSharePercent"] == 100
+        rate = spec["rateLimit"]
+        assert rate["perClientPerMinute"] <= 10 and rate["perClientPerHour"] <= 60
+        assert rate["perClientPerDay"] >= 200
+
+
 def deployment_named(public_id: str) -> dict:
     found = [d for d in manifests("AssistantDeployment", "bbsk").values() if d["spec"]["publicId"] == public_id]
     assert len(found) == 1, public_id
