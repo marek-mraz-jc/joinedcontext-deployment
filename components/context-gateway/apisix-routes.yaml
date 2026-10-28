@@ -448,8 +448,9 @@ api-context-endpoint:
   # set. A request with either header neither reads nor fills the cache, nor does one with a
   # header that shapes the answer outside the key (Link names the @context of a compacted answer,
   # Prefer, NGSILD-Tenant; the gateway keeps those answers private too). The key carries the other
-  # request headers the gateway's `Vary` names. The client
-  # still gets the chain's `no-store` (response-rewrite), so only the edge keeps a copy. The zone
+  # request headers the gateway's `Vary` names. The client gets the gateway's own
+  # `public, max-age=N` too (context-endpoint's response-rewrite sets no Cache-Control), so a
+  # browser may reuse an anonymous public answer for the same N seconds the edge does. The zone
   # must be one the APISIX chart's config.yaml declares, and chart 2.15 declares only
   # `disk_cache_one` (on the pod's /tmp): a route naming another zone is dropped whole, and every
   # read of the data host answered the edge's 404 on dev (2026-10-28, `memory_cache`).
