@@ -107,7 +107,7 @@ def test_only_the_two_plain_listeners_are_open(docs):
         assert listener["allow_anonymous"] is False
         assert listener["max_qos_allowed"] == 1
         assert listener["max_session_expiry_interval"] == "0s"
-        assert listener["max_packet_size"] == "1024B"
+        assert listener["max_packet_size"] == "4096B", "1024 payload bytes + 512, under the CONNECT floor"
         assert listener["max_connections"] == 3
     assert main["rpc"]["server_addr"].startswith("127.0.0.1:")
     assert main["log"]["to"] == "console"
@@ -241,11 +241,27 @@ def test_the_decider_port_admits_broker_identities_only(docs, tmp_path):
     assert not [d for d in unmeshed if d["metadata"]["name"] == "context-gateway-internal"]
 
 
+def packet_bytes(max_message_bytes: int) -> int:
+    """The Portal's packet_bytes (src/reconciler/mqtt_brokers.rs): payload + PUBLISH header, at
+    least a token CONNECT (T-5883)."""
+    return max(max_message_bytes + 512, 4096)
+
+
+def test_the_packet_cap_is_the_payload_and_its_header_and_holds_a_token_connect(tmp_path):
+    for payload, packet in ((1024, "4096B"), (65536, "66048B")):
+        broker = {"project": "helsinki", "name": "cameras", "limits": {"maxMessageBytes": payload}}
+        result = helm({**BASE, "brokers": [broker]}, tmp_path)
+        assert result.returncode == 0, result.stderr
+        main = config([d for d in yaml.safe_load_all(result.stdout) if d], "mqtt-helsinki-cameras")["rmqtt.toml"]
+        assert main["listener"]["tcp"]["external"]["max_packet_size"] == packet
+        assert f"{packet_bytes(payload)}B" == packet
+
+
 def fill(template: str, release: str, project: str, name: str, limits: dict) -> list[dict]:
     """The template filled as the Portal fills it (src/reconciler/mqtt_brokers.rs), hash aside."""
     for sentinel, value in (
         ("__RELEASE__", release), ("__PROJECT__", project), ("__NAME__", name),
-        ("__MAX_BYTES__", limits["maxMessageBytes"]), ("__PER_SECOND__", limits["messagesPerSecond"]),
+        ("__MAX_BYTES__", packet_bytes(limits["maxMessageBytes"])), ("__PER_SECOND__", limits["messagesPerSecond"]),
         ("__CONNECTIONS__", limits["maxConnections"]), ("__CONFIG_HASH__", "h"),
     ):
         template = template.replace(sentinel, str(value))
@@ -598,7 +614,9 @@ class Rmqtt:
     """The pinned RMQTT with the rendered configuration of one broker on two free local ports,
     asking a Decider stub; mosquitto clients on its internal listener."""
 
-    def __init__(self, tmp_path: Path, limits: dict | None = None, rate: int | None = None):
+    def __init__(self, tmp_path: Path, limits: dict | None = None, rate: int | None = None,
+                 password: str = "a-token"):
+        self.password = password
         self.decider = ThreadingHTTPServer(("127.0.0.1", 0), Decider)
         threading.Thread(target=self.decider.serve_forever, daemon=True).start()
         Decider.deny.clear()
@@ -645,7 +663,7 @@ class Rmqtt:
 
     def client(self, tool: str, name: str, *args: str, **popen) -> subprocess.Popen:
         process = subprocess.Popen([tool, "-h", "127.0.0.1", "-p", str(self.internal), "-q", "1",
-                                    "-i", name, "-u", name, "-P", "a-token", *args], **popen)
+                                    "-i", name, "-u", name, "-P", self.password, *args], **popen)
         self.clients.append(process)
         return process
 
@@ -709,6 +727,23 @@ def test_a_flooding_publisher_is_throttled(tmp_path):
         assert Decider.connects.count("helsinki-cam-1") > 1, "the flooding device was never disconnected"
         delivered = len(broker.received)
         assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@needs_rmqtt
+def test_a_token_connect_and_a_full_message_pass_a_small_broker(tmp_path):
+    """T-5883: RMQTT 0.24's max_packet_size caps every packet, CONNECT included. A broker of
+    maxMessageBytes 1024 admits a CONNECT whose password is an access token (1183 bytes on dev,
+    3000 here) and a 1024-byte payload, and refuses a payload far above the cap."""
+    with Rmqtt(tmp_path, limits={"maxMessageBytes": 1024}, password="t" * 3000) as broker:
+        full = broker.client("mosquitto_pub", "helsinki-cam-1", "-t", "cameras/helsinki-cam-1/frame",
+                             "-m", "x" * 1024, stderr=subprocess.PIPE, text=True)
+        assert full.wait(10) == 0, full.stderr.read()
+        big = broker.client("mosquitto_pub", "helsinki-cam-2", "-t", "cameras/helsinki-cam-2/frame",
+                            "-m", "y" * 8192, stderr=subprocess.DEVNULL)
+        big.wait(10)
+        time.sleep(1)
+        assert len(broker.received) == 1, f"{len(broker.received)} messages arrived, expected the 1024-byte one"
 
 
 def port_docs(tmp_path, port: int = 18830) -> list[dict]:

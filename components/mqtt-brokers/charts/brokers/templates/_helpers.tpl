@@ -17,7 +17,7 @@ app.kubernetes.io/part-of: mqtt-brokers
 {{- end }}
 
 {{- /* Every object of one broker, from a dict: root (the chart's context), release, project, name,
-       host, maxBytes, perSecond, connections, checksum, managedBy, and for a broker with a
+       host, packetBytes, perSecond, connections, checksum, managedBy, and for a broker with a
        dedicated port (ADR-N-048 §2.5, T-5856) port and tlsRevision; tlsSecret, the Secret the
        8883 route serves, is `<release>-tls` unless a custom hostname names the admin's certificate
        (ADR-N-048 §2.11, T-5874). Rendered per broker below and once with sentinels into the
@@ -111,7 +111,7 @@ data:
     {{ $l }}.enable = true
     {{ $l }}.addr = "0.0.0.0:{{ $listener.port }}"
     {{ $l }}.max_connections = {{ $.connections }}
-    {{ $l }}.max_packet_size = "{{ $.maxBytes }}B"
+    {{ $l }}.max_packet_size = "{{ $.packetBytes }}B"
     {{ $l }}.allow_anonymous = false
     {{ $l }}.max_qos_allowed = 1
     {{ $l }}.session_expiry_interval = "0s"
