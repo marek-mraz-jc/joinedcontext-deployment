@@ -579,6 +579,7 @@ v1/Service smartcity/jc-wasm-host-1
 v1/Service smartcity/keycloak-app-keycloakx-headless
 v1/Service smartcity/keycloak-app-keycloakx-http
 v1/Service smartcity/model-tools
+v1/Service smartcity/mqtt-broker-pods
 v1/Service smartcity/pipeline-runner
 v1/Service smartcity/pipeline-runner-pods
 v1/Service smartcity/pipeline-tokens

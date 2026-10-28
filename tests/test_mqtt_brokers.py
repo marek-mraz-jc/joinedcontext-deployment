@@ -64,7 +64,7 @@ def docs(tmp_path_factory) -> list[dict]:
 
 def of(docs, kind):
     """The objects of one kind by name, the template the Portal stamps from left out."""
-    return {d["metadata"]["name"]: d for d in docs if d["kind"] == kind and d["metadata"]["name"] != TEMPLATE}
+    return {d["metadata"]["name"]: d for d in docs if d["kind"] == kind and d["metadata"]["name"] not in (TEMPLATE, "mqtt-broker-pods")}
 
 
 def config(docs, release):
@@ -207,7 +207,7 @@ def test_no_broker_renders_only_the_template(tmp_path):
     assert sorted((d["kind"], d["metadata"]["name"]) for d in docs) == [
         ("AuthorizationPolicy", "context-gateway-internal"), ("ConfigMap", TEMPLATE),
         ("MeshTLSAuthentication", "context-gateway-internal"), ("Server", "context-gateway-internal"),
-        ("TLSOption", "mqtt-bsi-tr-02102")]
+        ("Service", "mqtt-broker-pods"), ("TLSOption", "mqtt-bsi-tr-02102")]
 
 
 def test_no_traefik_renders_no_tls_option(tmp_path):
@@ -501,6 +501,18 @@ def test_the_gateway_admits_the_portals_capture_subscriber_from_its_pods_only(lo
     portal = one(local, "Deployment", "portal")
     assert pods["spec"]["selector"] == portal["spec"]["selector"]["matchLabels"]
     assert portal["metadata"]["namespace"] == namespace
+
+
+def test_the_gateway_admits_the_runner_from_the_brokers_own_pods(local):
+    """T-5893: under the mesh a broker reports its internal listener's clients at its own address,
+    so the gateway resolves the brokers' headless Service, which lists every broker pod and nothing
+    else; only 1883 forwards without a PROXY header, and its Server admits the runner and the Portal."""
+    host = env_of(one(local, "Deployment", "context-gateway"))["JC_GATEWAY_MQTT_BROKER_HOST"]
+    name, namespace = host.split(".")[:2]
+    pods = one(local, "Service", name)
+    assert pods["metadata"]["namespace"] == namespace == one(local, "NetworkPolicy", "mqtt-brokers")["metadata"]["namespace"]
+    assert pods["spec"]["clusterIP"] == "None" and pods["spec"]["publishNotReadyAddresses"] is True
+    assert pods["spec"]["selector"] == {"app.kubernetes.io/name": "mqtt-broker", "app.kubernetes.io/part-of": "mqtt-brokers"}
 
 
 def test_the_mqtts_route_uses_the_bsi_tls_option(docs):

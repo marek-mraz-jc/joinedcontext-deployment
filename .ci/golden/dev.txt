@@ -626,6 +626,7 @@ v1/Service dev/keycloak-app-keycloakx-headless
 v1/Service dev/keycloak-app-keycloakx-http
 v1/Service dev/mail-catcher
 v1/Service dev/model-tools
+v1/Service dev/mqtt-broker-pods
 v1/Service dev/pipeline-runner
 v1/Service dev/pipeline-runner-pods
 v1/Service dev/pipeline-tokens

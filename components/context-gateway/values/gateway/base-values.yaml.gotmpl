@@ -85,6 +85,11 @@ env:
   # The Portal's headless Service: a capture broker admits its tokenless subscriber only from
   # its pods (ADR-N-048 §2.10, T-4880).
   JC_GATEWAY_MQTT_PORTAL_HOST: "portal-pods.{{ .Values.portal.portal.namespace }}.svc.cluster.local"
+  {{- with dig "mqtt-brokers" "brokers" "namespace" "" .Values }}
+  # The brokers' headless Service: under the mesh a broker sees its internal listener's clients at
+  # its own address, so the runner and the capture are admitted from these pods too (T-5893).
+  JC_GATEWAY_MQTT_BROKER_HOST: "mqtt-broker-pods.{{ . }}.svc.cluster.local"
+  {{- end }}
   # The anonymous OAuth server redirects to Google's relay alone: OAuth is for Gemini only, Claude,
   # ChatGPT and Grok read the open data without a token (owner 2026-10-18, ADR-N-052 §2.3, T-4630).
   JC_GATEWAY_OAUTH_REDIRECT_HOSTS: oauth-redirect.googleusercontent.com
