@@ -114,7 +114,8 @@ def preflight(rev: str, names: list[str], env=os.environ, cwd: Path = ROOT) -> d
         tag, sha = broker_commit(rev, cwd)
         where = env.get("ANTARES_DIR", "").strip()
         try:
-            head = git("rev-parse", "HEAD", cwd=Path(where)) if where else ""
+            # Only a checkout root (.git dir or worktree file): a plain dir inside another repo would report that repo's HEAD.
+            head = git("rev-parse", "HEAD", cwd=Path(where)) if where and (Path(where) / ".git").exists() else ""
         except (Refused, OSError):
             head = ""
         if not head.startswith(sha):
