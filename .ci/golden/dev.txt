@@ -576,6 +576,7 @@ v1/Secret dev/gitea-inline-config
 v1/Secret dev/keycloak-admin-user
 v1/Secret dev/keycloak-client-apisix-gateway
 v1/Secret dev/keycloak-client-banskabystrica-conformance
+v1/Secret dev/keycloak-client-banskabystrica-loadtest
 v1/Secret dev/keycloak-client-banskabystrica-pipelines
 v1/Secret dev/keycloak-client-barcelona-pipelines
 v1/Secret dev/keycloak-client-bbsk-pipelines

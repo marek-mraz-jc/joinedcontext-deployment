@@ -107,6 +107,11 @@ env:
   # cookie is never kept. A platform image older than T-5900 ignores the key and keeps every
   # answer private, which the edge then never stores.
   JC_GATEWAY_PUBLIC_MAX_AGE: "5"
+  # The weekly load run's client (T-5921, components/context-gateway/keycloak-clients.yaml): its
+  # verified reads hold 512 in flight instead of 32, its writes are refused 403. A platform image
+  # older than T-5921 ignores both keys.
+  JC_GATEWAY_LOADTEST_CLIENT: banskabystrica-loadtest
+  JC_GATEWAY_LOADTEST_IN_FLIGHT: "512"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by
   # this pod's projected token and no secret (PF-47, T-2868; the volume below).
