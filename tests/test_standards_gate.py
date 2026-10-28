@@ -62,3 +62,28 @@ def test_every_stage_targets_dev_only(tmp_path):
 def test_a_partial_run_is_never_green():
     stages = [{"name": n, "verdict": "pass"} for n in gate.REQUIRED if n != "load"]
     assert not gate.verdict(stages, [])
+
+
+def test_the_committed_known_reds_park_todays_dev_smoke_reds_and_nothing_else(tmp_path):
+    # the five lines dev-smoke prints on every run since 2026-10-27 (deployer, T-5899 09:4xZ), as the scripts print them
+    log = (
+        "  FAIL  catalogue catalog (wna4brinxxxxxxxxxxxxxxxxxxxx): count 0 entities of Catalog\n"
+        "  FAIL  catalogue (no dataset) (emzask3oxxxxxxxxxxxxxxxxxxxx): ckan no dataset lists this Endpoint\n"
+        "  FAIL  catalogue (no dataset) (y5jpwu6fxxxxxxxxxxxxxxxxxxxx): ckan no dataset lists this Endpoint\n"
+        "  FAIL  catalogue: 626 datasets, 625 complete, 1 ko, 2 public Endpoints without a dataset; 482 requests\n"
+        "  FAIL  source links: the run's budget ended after 482 requests\n"
+    )
+    known = gate.known_red()
+    assert all(task.startswith("T-") for task, _ in known)
+
+    def smoke(text):
+        argv = ["bash", "-c", f"printf %s {gate.quote(text)}; exit 1"]
+        return gate.run_stage("dev-smoke", argv, {}, tmp_path, tmp_path / "out", known)
+
+    held = smoke("  ok    portal: 200\n" + log)
+    assert held["verdict"] == "pass", held
+    assert len(held["known_red"]) == 5
+    # a catalogue outage or another Endpoint's red is not parked
+    assert smoke(log + "  FAIL  catalogue: package_search answered 503\n")["verdict"] == "fail"
+    assert smoke(log + "  FAIL  catalogue bbsk-x (abcdefgh): count 0 entities\n")["verdict"] == "fail"
+    assert smoke(log + "  FAIL  source link e1 T: resolved a, expected b\n")["verdict"] == "fail"

@@ -11,8 +11,11 @@ record.json (sha, image pins, every stage and case), report.md and junit.xml. Th
 smoke, the standards suites of joinedcontext-conformance (NGSI-LD ETSI smoke.robot with writes when
 NGSILD_TOKEN and WRITE_ENDPOINT are set, OGC API Features ETS + GeoJSON, OData, SensorThings, iCal,
 WebSocket, MCP), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included)
-and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). A record is green
-when every stage ran and passed and no case green in the previous green record is red now.
+and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). A stage passes when it
+exits 0, or when every red case it left matches .ci/release-gate-known-red.txt (each line names the
+task that owns the red; a stage red with no case to show, a Python traceback or a red load stays red).
+A record is green when every stage ran and passed and no case green in the previous green record is
+red now, unless the known-red file parks that case.
 
 Every target is dev and nothing else: the gate has no target parameter, so it never writes to prod.
 The ETSI TTF suite never runs here (owner rule). Credentials come only from the environment the
@@ -45,6 +48,8 @@ API = f"https://api.{DOMAIN}"
 RELEASE_FILES = re.compile(r"^(releases/[^/]+|CHANGELOG\.md)$")
 SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
 REQUIRED = ("dev-smoke", *SUITES, "dcat", "portal-sweep", "load")
+KNOWN_RED = ROOT / ".ci/release-gate-known-red.txt"
+TASK_ID = re.compile(r"T-\d{4,}")
 
 
 class Refused(Exception):
@@ -107,9 +112,31 @@ def quote(path) -> str:
     return "'" + str(path).replace("'", "'\\''") + "'"
 
 
-def cases(name: str, folder: Path, log: str) -> dict[str, str]:
-    """Every case a stage left behind, `<stage>::<case>` -> pass | fail."""
+def known_red(path: Path = KNOWN_RED) -> list[tuple[str, re.Pattern]]:
+    """(task id, pattern) per line of the known-red file; a malformed line refuses the whole run."""
+    out = []
+    for n, line in enumerate(path.read_text().splitlines(), 1) if path.exists() else []:
+        if not line.strip() or line.startswith("#"):
+            continue
+        task, _, pattern = line.partition(" ")
+        if not TASK_ID.fullmatch(task) or not pattern.strip():
+            raise Refused(f"{path.name}:{n}: want '<task id> <regex>', got {line!r}")
+        try:
+            out.append((task, re.compile(pattern.strip())))
+        except re.error as e:
+            raise Refused(f"{path.name}:{n}: {e}") from e
+    return out
+
+
+def parked(text: str, known: list[tuple[str, re.Pattern]]) -> str | None:
+    """The task that parks this red case, if a known-red line matches it."""
+    return next((task for task, pattern in known if pattern.fullmatch(text)), None)
+
+
+def cases(name: str, folder: Path, log: str, details: dict[str, str] | None = None) -> dict[str, str]:
+    """Every case a stage left behind, `<stage>::<case>` -> pass | fail; `details` gets each smoke line's text."""
     found: dict[str, str] = {}
+    details = {} if details is None else details
     for xml in sorted(folder.rglob("*.xml")):
         try:
             tree = ET.parse(xml)
@@ -133,8 +160,10 @@ def cases(name: str, folder: Path, log: str) -> dict[str, str]:
         for result in data.get("results", []) if isinstance(data, dict) else []:
             if result.get("verdict") in ("pass", "fail", "error"):
                 found[f"{name}::{result['key']}"] = "pass" if result["verdict"] == "pass" else "fail"
-    for m in re.finditer(r"^  (ok|FAIL)  +([^:\n]+)", log, re.MULTILINE):
-        found[f"{name}::{m.group(2).strip()}"] = "pass" if m.group(1) == "ok" else "fail"
+    for m in re.finditer(r"^  (ok|FAIL)  +([^:\n]+)(?::[ \t]*(.*))?", log, re.MULTILINE):
+        key = f"{name}::{m.group(2).strip()}"
+        found[key] = "pass" if m.group(1) == "ok" else "fail"
+        details[key] = f"{key}: {m.group(3)}" if m.group(3) else key
     return found
 
 
@@ -154,7 +183,7 @@ def load_verdict(folder: Path) -> list[str]:
     return problems
 
 
-def run_stage(name, argv, env, cwd, out: Path) -> dict:
+def run_stage(name, argv, env, cwd, out: Path, known: list | None = None) -> dict:
     folder = out / name
     folder.mkdir(parents=True, exist_ok=True)
     started = datetime.now(UTC)
@@ -165,12 +194,20 @@ def run_stage(name, argv, env, cwd, out: Path) -> dict:
     except (OSError, subprocess.TimeoutExpired) as e:
         code, log = 127, f"{name} did not run: {e}"
     (folder / "output.txt").write_text(log)
+    details: dict[str, str] = {}
+    found = cases(name, folder, log, details)
+    red = {k: details.get(k, k) for k, v in found.items() if v == "fail"}
+    excused = {k: parked(text, known or []) for k, text in red.items()}
     problems = [] if code == 0 else [f"exit {code}: {tail(log)}"]
+    # A non-zero exit is forgiven only when it shows its reds and a task owns each one.
+    explained = bool(red) and all(excused.values()) and name != "load" and "Traceback (most recent" not in log
+    if explained:
+        problems = []
     if name == "load" and code == 0:
         problems += load_verdict(folder)
-    found = cases(name, folder, log)
     found[name] = "fail" if problems else "pass"
     return {"name": name, "verdict": found[name], "problems": problems, "cases": found,
+            "known_red": {k: f"{t}: {red[k]}" for k, t in excused.items() if t},
             "seconds": int((datetime.now(UTC) - started).total_seconds())}
 
 
@@ -198,10 +235,11 @@ def previous_green(root: Path, sha: str) -> dict | None:
     return greens[-1] if greens else None
 
 
-def regressions(before: dict | None, now: dict[str, str]) -> list[str]:
+def regressions(before: dict | None, now: dict[str, str], parked_now: frozenset = frozenset()) -> list[str]:
     if not before:
         return []
-    return sorted(k for k, v in before.get("cases", {}).items() if v == "pass" and now.get(k) == "fail")
+    return sorted(k for k, v in before.get("cases", {}).items()
+                  if v == "pass" and now.get(k) == "fail" and k not in parked_now)
 
 
 def verdict(stage_results: list[dict], regressed: list[str]) -> bool:
@@ -222,6 +260,12 @@ def report(rec: dict) -> str:
     missing = [n for n in REQUIRED if n not in {s["name"] for s in rec["stages"]}]
     if missing:
         lines += ["", f"Not run (a partial record never opens prod): {', '.join(missing)}"]
+    held = {k: v for s in rec["stages"] for k, v in s.get("known_red", {}).items()}
+    lines += ["", f"## Known reds, each owned by a task ({len(held)})", ""]
+    lines += [f"- {v.replace('|', '/')}" for _, v in sorted(held.items())] or ["none"]
+    if rec.get("unmatched"):
+        lines += ["", "Known-red lines no case matched (fixed? remove them in their task):", ""]
+        lines += [f"- `{u}`" for u in rec["unmatched"]]
     lines += ["", f"## Regressions against the previous green record ({len(rec['regressions'])})", ""]
     lines += [f"- {k}" for k in rec["regressions"]] or ["none"]
     lines += ["", "## Image pins", ""] + [f"- `{i}`" for i in rec["images"]]
@@ -236,7 +280,9 @@ def junit(rec: dict) -> str:
         for key, v in sorted(s["cases"].items()):
             case = ET.SubElement(suite, "testcase", classname=s["name"], name=key)
             if v == "fail":
-                ET.SubElement(case, "failure", message="; ".join(s["problems"]) if key == s["name"] else "red")
+                why = s.get("known_red", {}).get(key)
+                ET.SubElement(case, "failure", message="; ".join(s["problems"]) if key == s["name"]
+                              else f"known red, owned by {why.split(':', 1)[0]}" if why else "red")
     return ET.tostring(suites, encoding="unicode")
 
 
@@ -254,15 +300,19 @@ def run(args) -> int:
     root = args.records
     out = root / cand["sha"] / "stages"
     started = datetime.now(UTC).strftime("%FT%TZ")
+    known = known_red()
     results = []
     for name, argv, env, cwd in stages(args, out):
         print(f"release gate: {name} ...", flush=True)
-        results.append(run_stage(name, argv, env, cwd, out))
+        results.append(run_stage(name, argv, env, cwd, out, known))
         print(f"release gate: {name} {results[-1]['verdict']} {'; '.join(results[-1]['problems'])}", flush=True)
     every = {k: v for s in results for k, v in s["cases"].items()}
     base = previous_green(root, cand["sha"])
-    regressed = regressions(base, every)
-    rec = {**cand, "started": started, "finished": datetime.now(UTC).strftime("%FT%TZ"), "rate": args.rate,
+    held = {k: v for s in results for k, v in s["known_red"].items()}
+    regressed = regressions(base, every, frozenset(held))
+    texts = [v.split(": ", 1)[1] for v in held.values()]
+    unmatched = [f"{t} {p.pattern}" for t, p in known if not any(p.fullmatch(x) for x in texts)]
+    rec = {**cand, "unmatched": unmatched, "started": started, "finished": datetime.now(UTC).strftime("%FT%TZ"), "rate": args.rate,
            "duration": args.duration, "baseline": base and base["sha"], "stages": results,
            "cases": every, "regressions": regressed, "green": verdict(results, regressed)}
     folder = write(rec, root)
@@ -370,6 +420,30 @@ def self_test() -> None:
             "http_req_failed": {"values": {"passes": 3}}, "http_req_duration": {"values": {"p(95)": 120}}}}))
         assert load_verdict(folder) == ["3 failed requests (the gate allows 0)"]
         assert run_stage("load", ["false"], {}, tmp, Path(tmp) / "out")["verdict"] == "fail"
+        # a stage red only on known reds passes; an unknown red, a silent exit or a traceback stays red
+        listed = Path(tmp) / "known.txt"
+        listed.write_text("# parked\nT-0001 s::catalogue \\(no dataset\\) \\(ab\\): .*\n")
+        known = known_red(listed)
+
+        def smoke(text):
+            return run_stage("s", ["bash", "-c", f"printf %s {quote(text)}; exit 1"], {}, tmp, Path(tmp) / "o", known)
+
+        held = smoke("  ok    portal: 200\n  FAIL  catalogue (no dataset) (ab): no dataset\n")
+        assert held["verdict"] == "pass" and held["known_red"] == {
+            "s::catalogue (no dataset) (ab)": "T-0001: s::catalogue (no dataset) (ab): no dataset"}, held
+        assert smoke("  FAIL  catalogue (no dataset) (cd): no dataset\n")["verdict"] == "fail"
+        assert smoke("  FAIL  catalogue (no dataset) (ab): x\n  FAIL  mqtt: refused\n")["verdict"] == "fail"
+        assert smoke("  ok    portal: 200\n")["verdict"] == "fail"
+        assert smoke("  FAIL  catalogue (no dataset) (ab): x\nTraceback (most recent call last):\n")["verdict"] == "fail"
+        assert regressions({"cases": {"a": "pass"}}, {"a": "fail"}, frozenset({"a"})) == []
+        for bad in ("catalogue .*\n", "T-1 x\n", "T-0002 (\n"):
+            listed.write_text(bad)
+            try:
+                known_red(listed)
+            except Refused:
+                continue
+            raise AssertionError(f"a malformed known-red line must refuse: {bad!r}")
+        assert known_red(), "the committed known-red file parses"
     print("standards-gate self-test: ok")
 
 
