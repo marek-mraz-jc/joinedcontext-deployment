@@ -89,6 +89,38 @@ def test_the_committed_known_reds_park_todays_dev_smoke_reds_and_nothing_else(tm
     assert smoke(log + "  FAIL  source link e1 T: resolved a, expected b\n")["verdict"] == "fail"
 
 
+def test_the_first_live_runs_reds_are_parked_by_case_and_a_suite_row_does_not_hide_them(tmp_path):
+    # c97c4488 on dev (deployer 2026-10-28T14:1xZ): the helsinki-feedback catalogue row and the two ws cases
+    known = gate.known_red()
+    feedback = ("  FAIL  catalogue helsinki-feedback (gv24bicwway4foznuszsagmzydzk3e2z): data urn:ngsi-ld:ServiceRequest:"
+                "hel.fi:helsinki:open311-3379243 has no name; urn:ngsi-ld:ServiceRequest:hel.fi:helsinki:open311-1 has no name"
+                " (+17 more)\n")
+    argv = ["bash", "-c", f"printf %s {gate.quote(feedback)}; exit 1"]
+    assert gate.run_stage("dev-smoke", argv, {}, tmp_path, tmp_path / "s", known)["verdict"] == "pass"
+    other = feedback.replace("has no name", "has no location", 1)
+    argv = ["bash", "-c", f"printf %s {gate.quote(other)}; exit 1"]
+    assert gate.run_stage("dev-smoke", argv, {}, tmp_path, tmp_path / "s2", known)["verdict"] == "fail"
+
+    def ws(reds: dict[str, list[str]]):
+        out = tmp_path / f"ws{len(list(tmp_path.iterdir()))}"
+        rows = ["endpoint\tsuite\tverdict\tdetail\tlog"]
+        for ep, names in reds.items():
+            (out / "ws" / ep / "ws").mkdir(parents=True)
+            body = "".join(f'<testcase classname="tests.ws.test_gateway_ws" name="{n}"><failure/></testcase>' for n in names)
+            (out / "ws" / ep / "ws" / "pytest.xml").write_text(f'<testsuite><testcase classname="c" name="ok"/>{body}</testsuite>')
+            rows.append(f"{ep}\tws\t{'fail' if names else 'pass'}\tx\ty")
+        (out / "ws" / "results.tsv").write_text("\n".join(rows) + "\n")
+        return gate.run_stage("ws", ["false"], {}, tmp_path, out, known)
+
+    a, b = "hqgmj6ieuq57y37g5g4ckz5eyhebklox", "mluyob4nz52lok3ssk7pgn5vwt"
+    flood = "test_a_subscribe_flood_closes_with_1008_and_another_socket_stays"
+    upgrade = "test_a_plain_get_answers_426_naming_the_upgrade"
+    held = ws({a: [upgrade], b: [upgrade, flood]})
+    assert held["verdict"] == "pass" and len(held["known_red"]) == 3, held
+    assert ws({a: [upgrade, flood]})["verdict"] == "fail", "the flood is parked on mluyob4n only"
+    assert ws({a: [upgrade, "test_other"]})["verdict"] == "fail"
+
+
 def test_the_roundtrip_stage_writes_only_on_the_seeded_conformance_endpoint(tmp_path, monkeypatch):
     # T-5914: the write-here read-everywhere stage targets the conformance space's own Endpoint
     args = argparse.Namespace(conformance=tmp_path, portal=tmp_path, requests=None, rate=1000,
