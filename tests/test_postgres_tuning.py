@@ -26,7 +26,6 @@ DEV_PARAMETERS = {
     "log_parameter_max_length": "0",
     "pg_stat_statements.track": "top",
     "pg_stat_statements.max": "5000",
-    "wal_compression": "lz4",
     "max_wal_size": "4GB",
     "checkpoint_timeout": "15min",
 }
