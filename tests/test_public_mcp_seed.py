@@ -26,7 +26,8 @@ SERVERS = {
 # Endpoints by `select`, one server; never the space the conformance runs write (public-air).
 COMBINED = ("bbsk", "kraj-a-mesto", {
     "spaces": ["banskabystrica/banskabystrica-verejne", "banskabystrica/banskabystrica-otvorene-data",
-               "bbsk/bbsk-registre", "bbsk/bbsk-kraj", "bbsk/bbsk-kpi", "bbsk/bbsk-otvorene-data"],
+               "bbsk/bbsk-registre", "bbsk/bbsk-kraj", "bbsk/bbsk-kpi", "bbsk/bbsk-otvorene-data",
+               "bbsk/bbsk-podujatia"],
     "accessLevel": ["public"]})
 # What an anonymous Policy of a member may grant: reads, and the subscriptions a WebSocket
 # needs (T-4073), which the gateway hides from anonymous MCP callers (T-4168). No entity write.

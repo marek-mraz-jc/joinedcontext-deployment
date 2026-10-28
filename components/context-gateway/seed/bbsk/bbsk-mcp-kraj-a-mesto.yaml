@@ -25,5 +25,7 @@ spec:
       - bbsk/bbsk-kraj
       - bbsk/bbsk-kpi
       - bbsk/bbsk-otvorene-data
+      # The region's events (T-5929: "Čo sa deje cez víkend v okolí Zvolena?" found none without it).
+      - bbsk/bbsk-podujatia
     accessLevel: [public]
   audience: public
