@@ -11,6 +11,12 @@ operator makes from their resources, and one injected linkerd-proxy request per 
 namespace annotation the prepare hook writes from global.serviceMesh.proxyResources). Jobs and
 CronJobs are left out: they run minutes at a time and hold nothing between runs.
 
+The scheduler also needs room for a roll: a Deployment rolling with a surge starts its new pod
+beside the old one, so the node must keep the largest surge pod's request free besides what every
+pod books, the kit's pods included (deployer 2026-10-28: at 95 % booked a model-tools surge pod
+stayed Pending, "Insufficient memory"). helmfile syncs four releases at once; a second surge pod
+waits until another roll frees its old pod, so one surge pod at a time is what must fit.
+
 Limits are overcommitted by design (a limit is the room for a burst, not a reservation), so they
 get a ceiling instead of a budget: the measured sum of today, which a raised limit must lower
 somewhere else or move here with its reason. The generic `production` profile is for a cluster of
@@ -18,6 +24,7 @@ several nodes (three Postgres instances of 8Gi); it gets the same two ceilings s
 unseen either.
 """
 
+import math
 import re
 from pathlib import Path
 
@@ -28,6 +35,11 @@ ROOT = Path(__file__).resolve().parent.parent
 UNITS = {"Ki": 1 / 1024, "Mi": 1, "Gi": 1024, "K": 1000 / 1024**2, "M": 1000**2 / 1024**2, "G": 1000**3 / 1024**2, "": 1 / 1024**2}
 
 NODE_REQUEST_BUDGET_MIB = 12.5 * 1024
+# dev's cpx42 node: allocatable 14136272Ki; the pods the render does not make (Traefik, Kyverno,
+# cert-manager, CoreDNS, metrics-server, the Linkerd control plane) booked 13222Mi live minus the
+# render's 12232Mi on 2026-10-28.
+NODE_ALLOCATABLE_MIB = 14136272 / 1024
+KIT_REQUESTS_MIB = 990
 # (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi.
 CEILINGS = {
     "dev": (NODE_REQUEST_BUDGET_MIB, 44544),
@@ -72,12 +84,31 @@ def pods(docs: list[dict]):
             yield name, spec.get("replicas", 1), True, [memory(spec.get("resources"))]
 
 
+def pod_request(containers, meshed: bool) -> float:
+    return sum(r for r, _ in containers) + (proxy_mib()[0] if meshed else 0)
+
+
+def largest_surge(docs: list[dict]) -> tuple[float, str]:
+    """The largest request a rolling Deployment adds beside its old pods while it rolls."""
+    largest = (0.0, "none")
+    rolling = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "Deployment"}
+    for name, replicas, meshed, containers in pods(docs):
+        spec = rolling.get(name, {}).get("spec")
+        strategy = (spec or {}).get("strategy") or {}
+        if spec is None or strategy.get("type", "RollingUpdate") != "RollingUpdate":
+            continue
+        surge = str((strategy.get("rollingUpdate") or {}).get("maxSurge", "25%"))
+        count = math.ceil(replicas * int(surge[:-1]) / 100) if surge.endswith("%") else int(surge)
+        largest = max(largest, (count * pod_request(containers, meshed), name))
+    return largest
+
+
 def sums(docs: list[dict]) -> tuple[float, float, list[str]]:
-    proxy_request, proxy_limit = proxy_mib()
+    _, proxy_limit = proxy_mib()
     requests = limits = 0.0
     rows = []
     for name, replicas, meshed, containers in pods(docs):
-        request = sum(r for r, _ in containers) + (proxy_request if meshed else 0)
+        request = pod_request(containers, meshed)
         limit = sum(l for _, l in containers) + (proxy_limit if meshed else 0)
         requests += replicas * request
         limits += replicas * limit
@@ -109,6 +140,44 @@ def test_a_raised_request_goes_red():
         {"resources": {"requests": {"memory": "13Gi"}, "limits": {"memory": "13Gi"}}},
     ]}}}}
     assert sums([big])[0] > NODE_REQUEST_BUDGET_MIB
+
+
+def deployment(name, memory, strategy=None):
+    spec = {"template": {"spec": {"containers": [{"resources": {"requests": {"memory": memory}}}]}}}
+    if strategy:
+        spec["strategy"] = strategy
+    return {"kind": "Deployment", "metadata": {"name": name, "namespace": "x"}, "spec": spec}
+
+
+def test_the_largest_surge_skips_recreate_and_zero_surge():
+    proxy_request, _ = proxy_mib()
+    docs = [
+        deployment("rolls", "512Mi"),
+        deployment("recreates", "2Gi", {"type": "Recreate"}),
+        deployment("no-surge", "2Gi", {"type": "RollingUpdate", "rollingUpdate": {"maxSurge": 0, "maxUnavailable": 1}}),
+        {"kind": "StatefulSet", "metadata": {"name": "sts", "namespace": "x"}, "spec": {"template": {"spec": {"containers": [
+            {"resources": {"requests": {"memory": "4Gi"}}},
+        ]}}}},
+    ]
+    assert largest_surge(docs) == (512 + proxy_request, "rolls")
+
+
+def test_a_node_without_room_for_the_surge_goes_red():
+    docs = [deployment("full", f"{NODE_ALLOCATABLE_MIB - KIT_REQUESTS_MIB - 100:.0f}Mi"), deployment("rolls", "200Mi")]
+    surge, _ = largest_surge(docs)
+    assert sums(docs)[0] + KIT_REQUESTS_MIB + surge > NODE_ALLOCATABLE_MIB
+
+
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_the_node_keeps_room_for_the_largest_rolling_surge(rendered, env):
+    docs = rendered(env)
+    requests, _, _ = sums(docs)
+    surge, name = largest_surge(docs)
+    booked = requests + KIT_REQUESTS_MIB + surge
+    assert booked <= NODE_ALLOCATABLE_MIB, (
+        f"{env}: requests {requests:.0f}Mi + kit {KIT_REQUESTS_MIB}Mi + {name}'s surge pod {surge:.0f}Mi"
+        f" = {booked:.0f}Mi over the node's {NODE_ALLOCATABLE_MIB:.0f}Mi allocatable"
+    )
 
 
 @pytest.mark.parametrize("env", sorted(CEILINGS))
