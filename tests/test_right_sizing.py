@@ -66,3 +66,11 @@ def test_helm_keeps_three_revisions():
     # held in the k3s datastore and the API server's watch cache; a rollback needs the previous one.
     defaults = yaml.safe_load((ROOT / "defaults/helm-defaults.yaml").read_text())["helmDefaults"]
     assert defaults["historyMax"] == 3
+
+
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_keycloak_heap_is_capped_below_the_kc_sh_container_default(rendered, env):
+    """T-5892: kc.sh's container default (70 % max, 50 % initial) held 1021Mi on a 97 % node."""
+    found = {(d["kind"], d["metadata"]["name"], c["name"]): c for d, c in containers(rendered(env))}
+    env_vars = {e["name"]: e.get("value") for e in found[("StatefulSet", "keycloak-app-keycloakx", "keycloak")]["env"]}
+    assert env_vars["JAVA_OPTS_KC_HEAP"] == "-XX:MaxRAMPercentage=25 -XX:InitialRAMPercentage=5"
