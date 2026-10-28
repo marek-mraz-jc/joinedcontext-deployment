@@ -1610,8 +1610,11 @@ fi
 
 # The MQTT edge brokers (T-4857, ADR-N-048): every broker the Portal stamped runs, answers TLS on
 # its address with its own host's certificate, and refuses a CONNECT without a token. Plain 1883
-# is never reachable from outside. A broker's route names its host (`HostSNI`); a dedicated
-# port's route (`-port`) answers a client that sends no SNI with the same certificate (T-5856).
+# is never reachable from outside. A broker is its Deployment and its host its Certificate's name
+# (a custom hostname with the admin's certificate: its route's `HostSNI`). A broker with a
+# dedicated port has only its `-port` route, which answers a client that sends no SNI with the same
+# certificate (T-5856, T-5871); the others have the 8883 route by `HostSNI`. Certificate doors
+# (`-cert`, T-5875) need a client certificate and are not probed here.
 # The brokers live where the brokers chart put its `broker-template` (the instance's namespace on
 # dev). Fewer running than the seed declares (gitea-seed-* ConfigMaps) fails; neither skips.
 echo "mqtt edge brokers (T-4857)"
@@ -1620,36 +1623,47 @@ mqtt_ns="${JC_MQTT_NAMESPACE:-$(kubectl get configmaps -A --field-selector metad
 mqtt_seeded=$(kubectl get configmaps -n "$slug" \
 	-o go-template='{{range .items}}==cm {{.metadata.name}}{{"\n"}}{{range .data}}{{.}}{{"\n"}}{{end}}{{end}}' 2>/dev/null |
 	awk '/^==cm / { seed = ($2 ~ /^gitea-seed-/) } seed && $0 == "kind: MqttBroker" { n++ } END { print n + 0 }' || true)
+mqtt_brokers=""
 mqtt_routes=""
+mqtt_certs=""
 if [ -n "$mqtt_ns" ]; then
-	mqtt_routes=$(kubectl get ingressroutetcp -n "$mqtt_ns" -l app.kubernetes.io/managed-by=joinedcontext-portal \
-		-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.entryPoints 0}} {{(index .spec.routes 0).match}}{{"\n"}}{{end}}' 2>/dev/null || true)
+	mqtt_portal=app.kubernetes.io/managed-by=joinedcontext-portal
+	mqtt_brokers=$(kubectl get deployments -n "$mqtt_ns" -l "app.kubernetes.io/name=mqtt-broker,$mqtt_portal" \
+		-o go-template='{{range .items}}{{.metadata.name}} {{with .status.readyReplicas}}{{.}}{{else}}0{{end}}{{"\n"}}{{end}}' 2>/dev/null |
+		awk '$1 != "" && $1 !~ /-cert$/' || true)
+	mqtt_routes=$(kubectl get ingressroutetcp -n "$mqtt_ns" -l "$mqtt_portal" \
+		-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.entryPoints 0}} {{(index .spec.routes 0).match}}{{"\n"}}{{end}}' 2>/dev/null |
+		tr -d '\140' || true)
+	mqtt_certs=$(kubectl get certificates -n "$mqtt_ns" -l "$mqtt_portal" \
+		-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.dnsNames 0}}{{"\n"}}{{end}}' 2>/dev/null || true)
 fi
-mqtt_running=$(printf '%s\n' "$mqtt_routes" | awk '$1 != "" && $1 !~ /-port$/ { n++ } END { print n + 0 }')
+mqtt_running=$(printf '%s\n' "$mqtt_brokers" | awk 'NF { n++ } END { print n + 0 }')
 if [ "${mqtt_seeded:-0}" -gt "$mqtt_running" ]; then
 	ko "mqtt edge brokers: the seed declares ${mqtt_seeded} MqttBroker(s), ${mqtt_running} run in ${mqtt_ns:-no namespace (no broker-template ConfigMap: components/mqtt-brokers is not installed)}"
 fi
-if [ -z "$mqtt_routes" ]; then
+if [ -z "$mqtt_brokers" ]; then
 	[ "${mqtt_seeded:-0}" -gt 0 ] || skip "mqtt edge brokers (no MqttBroker seeded or stamped in this instance)"
 else
-	# The dedicated ports carry no host of their own: each takes its broker's from the 8883 route.
-	mqtt_hosts=$(printf '%s\n' "$mqtt_routes" | tr -d '\140' | sed -n 's/^\([^ ]*\) [^ ]* HostSNI(\([^*)]*\))$/\1 \2/p')
-	while read -r route entry _; do
-		[ -n "$route" ] || continue
-		release=${route%-port}
-		host=$(printf '%s\n' "$mqtt_hosts" | awk -v r="$release" '$1 == r { print $2 }')
+	while read -r release ready; do
+		if [ "${ready:-0}" -ge 1 ]; then ok "mqtt $release runs"; else ko "mqtt $release has no ready replica"; fi
+		host=$(printf '%s\n' "$mqtt_certs" | awk -v r="$release" '$1 == r { print $2 }')
+		[ -n "$host" ] || host=$(printf '%s\n' "$mqtt_routes" |
+			sed -n "s/^$release [^ ]* HostSNI(\([^*)]*\))\$/\1/p")
+		dedicated=$(printf '%s\n' "$mqtt_routes" | awk -v r="$release-port" '$1 == r { print $2 }')
+		on8883=$(printf '%s\n' "$mqtt_routes" | awk -v r="$release" '$1 == r { print $1 }')
 		if [ -z "$host" ]; then
-			ko "mqtt $route: no HostSNI route names the broker's host"
+			ko "mqtt $release: neither a Certificate nor a HostSNI route names the broker's host"
 			continue
 		fi
-		if [ "$route" = "$release" ]; then
-			ready=$(kubectl get deployment "$release" -n "$mqtt_ns" -o 'jsonpath={.status.readyReplicas}' 2>/dev/null || true)
-			if [ "${ready:-0}" -ge 1 ]; then ok "mqtt $release runs"; else ko "mqtt $release has no ready replica"; fi
+		if [ -n "$dedicated" ]; then
+			port=${dedicated#mqtt-}
+			sni=(-noservername)
+		elif [ -n "$on8883" ]; then
 			port=8883
 			sni=(-servername "$host")
 		else
-			port=${entry#mqtt-}
-			sni=(-noservername)
+			ko "mqtt $release: no route on 8883 or a dedicated port reaches the broker"
+			continue
 		fi
 		# A verified chain for the broker's own host name, with SNI on 8883 and without it on a
 		# dedicated port: the edge's default certificate would fail -verify_hostname.
@@ -1667,14 +1681,12 @@ else
 		*"ot authori"* | *"efused"* | *"Bad user name or password"*) ok "mqtt $host:$port refuses a CONNECT without a token" ;;
 		*) ko "mqtt $host:$port: a CONNECT without a token was not refused (${refused:-published})" ;;
 		esac
-		if [ "$route" = "$release" ]; then
-			if timeout 5 bash -c "exec 3<>/dev/tcp/$host/1883" 2>/dev/null; then
-				ko "mqtt $host:1883 (plain MQTT) answers from outside the cluster"
-			else
-				ok "mqtt $host:1883 (plain MQTT) is closed from outside"
-			fi
+		if timeout 5 bash -c "exec 3<>/dev/tcp/$host/1883" 2>/dev/null; then
+			ko "mqtt $host:1883 (plain MQTT) answers from outside the cluster"
+		else
+			ok "mqtt $host:1883 (plain MQTT) is closed from outside"
 		fi
-	done <<<"$mqtt_routes"
+	done <<<"$mqtt_brokers"
 fi
 
 printf '\n%s passed, %s failed, %s skipped\n' "$pass" "$fail" "$skipped"
