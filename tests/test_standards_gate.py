@@ -87,3 +87,37 @@ def test_the_committed_known_reds_park_todays_dev_smoke_reds_and_nothing_else(tm
     assert smoke(log + "  FAIL  catalogue: package_search answered 503\n")["verdict"] == "fail"
     assert smoke(log + "  FAIL  catalogue bbsk-x (abcdefgh): count 0 entities\n")["verdict"] == "fail"
     assert smoke(log + "  FAIL  source link e1 T: resolved a, expected b\n")["verdict"] == "fail"
+
+
+def test_the_roundtrip_stage_writes_only_on_the_seeded_conformance_endpoint(tmp_path, monkeypatch):
+    # T-5914: the write-here read-everywhere stage targets the conformance space's own Endpoint
+    args = argparse.Namespace(conformance=tmp_path, portal=tmp_path, requests=None, rate=1000,
+                              duration="5m", only=["roundtrip"])
+    monkeypatch.delenv("WRITE_ENDPOINT", raising=False)
+    [(name, argv, env, cwd)] = gate.stages(args, tmp_path)
+    seeded = re.search(r"slug: (\w+)", gate.CONFORMANCE_ENDPOINT.read_text()).group(1)
+    assert name == "roundtrip" and cwd == tmp_path and env == {}
+    assert argv[argv.index("--endpoint") + 1] == f"https://api.dev.joinedcontext.com/api/endpoint/{seeded}"
+    assert "contextSpaceRef: conformance" in gate.CONFORMANCE_ENDPOINT.read_text()
+    monkeypatch.setenv("WRITE_ENDPOINT", "abc")
+    assert gate.stages(args, tmp_path)[0][1][argv.index("--endpoint") + 1].endswith("/api/endpoint/abc")
+    monkeypatch.setenv("WRITE_ENDPOINT", "../x")
+    try:
+        gate.stages(args, tmp_path)
+    except gate.Refused as e:
+        assert "not an Endpoint slug" in str(e)
+    else:
+        raise AssertionError("a WRITE_ENDPOINT that is no slug must refuse")
+
+
+def test_a_red_roundtrip_case_blocks_the_record(tmp_path):
+    # the deliberate break: the suite's red line, as roundtrip.py prints it, turns the stage and the record red
+    line = "  FAIL  current OData: OData: pm10.value: want 21.5 got 22"
+    script = f"print('  ok  current NGSI-LD retrieve'); print({line!r}); raise SystemExit(1)"
+    stage = gate.run_stage("roundtrip", [sys.executable, "-c", script], {}, tmp_path, tmp_path, known=[])
+    assert stage["verdict"] == "fail"
+    assert stage["cases"]["roundtrip::current OData"] == "fail"
+    assert stage["cases"]["roundtrip::current NGSI-LD retrieve"] == "pass"
+    green = [{"name": n, "verdict": "pass"} for n in gate.REQUIRED if n != "roundtrip"]
+    assert not gate.verdict([*green, stage], [])
+    assert gate.verdict([*green, {**stage, "verdict": "pass"}], [])
