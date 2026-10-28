@@ -75,15 +75,15 @@ service:
   port: 8080
   targetPort: 8080
   name: http
-{{- if has "agent-runner" .Values.components }}
-  # The internal listener (AG-52): the proxy resolves a run's ticket and posts its events
-  # here. Not routed by the edge; the NetworkPolicy opens it to the proxy alone.
+  # The internal listener (AG-52), which the Portal opens whenever it verifies tokens: the
+  # gateway polls its revocations here (T-5869), the agent proxy resolves a run's ticket, a
+  # pipeline test posts its capture. Not routed by the edge; each NetworkPolicy opens it to its
+  # named callers alone, and every route answers only that caller's workload token.
   extraPorts:
     - name: internal
       port: 9090
       targetPort: 9090
       protocol: TCP
-{{- end }}
 
 probes:
   # Readiness waits for the mirror (OPS-51): 503 until this replica's first sync. Liveness
