@@ -217,5 +217,8 @@ context-broker:
     # Antares dev daeea7d (dev-90, over d81a193: T-5835 temporal history pages through the split-rule union, so a
     # wide type list no longer 414s; same FEATURES). No migration, no new key. Rollback: dev-89.
     # Signed by ship.yml on dev at daeea7d (run 40620036936).
-    tag: 'dev-90'
-    digest: 'sha256:463c3031bb04f49960d721d853ae7c17030f1d2ed66f66a5429c51969efa7632'
+    # Antares dev a376b65 (dev-91, over daeea7d: T-5894 merged @context cache bounded at 64 MiB of heap instead of
+    # 2 million terms; same FEATURES). No migration, no new key. Rollback: dev-90.
+    # Signed by ship.yml on dev at a376b65 (run 40646951161).
+    tag: 'dev-91'
+    digest: 'sha256:67f5833d6b61dee7d343bb2dd4ca47c4831689609ec7caa1c364f4adc8e6de55'
