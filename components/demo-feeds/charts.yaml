@@ -4,3 +4,5 @@ demo-feeds:
     chart: ../../charts/workload
   feed:
     chart: ../../charts/workload
+  hsl-bridge:
+    chart: ../../charts/workload

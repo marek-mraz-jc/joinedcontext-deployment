@@ -312,3 +312,15 @@ def test_the_source_is_hsls_whole_position_feed_read_over_tls():
     assert spec["mqtt"]["topics"] == ["/hfp/v2/journey/ongoing/vp/#"]
     assert spec["mqtt"]["qos"] == 0 and spec["mqtt"]["cleanSession"] is True
     assert not {"username", "passwordRef"} & set(spec["mqtt"])
+
+
+@requires_docker
+def test_a_frame_bridged_under_hsl_is_written_as_the_direct_one():
+    """T-5883: the dev bridge republishes HSL's topic under `hsl` (an MQTT filter of ours may not
+    start with HSL's empty level), and the unchanged mapping reads every level where it was."""
+    frames = [frame(v, "01", "tram", 40, "1009") for v in (1, 2)] + [frame(3, "02", "bus", 22, "2550")]
+    bridged = [json.dumps({**json.loads(f), "topic": "hsl" + json.loads(f)["topic"]}) for f in frames]
+    known = ("urn:ngsi-ld:GtfsRoute:hel.fi:helsinki:1009", "urn:ngsi-ld:GtfsStop:hel.fi:helsinki:1040601")
+    direct = bento(frames, known)
+    assert len(direct) == 3 and direct[0]["nextStop"]["object"].endswith(":1040601")
+    assert bento(bridged, known) == direct

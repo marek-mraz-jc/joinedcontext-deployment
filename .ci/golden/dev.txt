@@ -39,6 +39,7 @@ apps/v1/Deployment dev/demo-nats
 apps/v1/Deployment dev/gitea
 apps/v1/Deployment dev/gitea-runner
 apps/v1/Deployment dev/gitea-runner-rust
+apps/v1/Deployment dev/hsl-bridge
 apps/v1/Deployment dev/jc-assistant
 apps/v1/Deployment dev/jc-functions
 apps/v1/Deployment dev/jc-wasm-host-0
@@ -269,6 +270,8 @@ networking.k8s.io/v1/NetworkPolicy dev/gitea-linkerd-from-jc
 networking.k8s.io/v1/NetworkPolicy dev/gitea-linkerd-from-lane-token
 networking.k8s.io/v1/NetworkPolicy dev/gitea-runner
 networking.k8s.io/v1/NetworkPolicy dev/gitea-runner-linkerd
+networking.k8s.io/v1/NetworkPolicy dev/hsl-bridge
+networking.k8s.io/v1/NetworkPolicy dev/hsl-bridge-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/keycloak
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-admin-permissions
 networking.k8s.io/v1/NetworkPolicy dev/keycloak-admin-permissions-linkerd
@@ -521,6 +524,7 @@ v1/ConfigMap dev/gitea-seed-s6-*
 v1/ConfigMap dev/gitea-seed-s7-*
 v1/ConfigMap dev/gitea-seed-s8-*
 v1/ConfigMap dev/gitea-seed-s9-*
+v1/ConfigMap dev/hsl-bridge
 v1/ConfigMap dev/keycloak-admin-permissions
 v1/ConfigMap dev/keycloak-theme
 v1/ConfigMap dev/keycloak-user-ids
@@ -654,6 +658,7 @@ v1/ServiceAccount dev/gitea-bootstrap
 v1/ServiceAccount dev/gitea-bootstrap-lane-token
 v1/ServiceAccount dev/gitea-runner
 v1/ServiceAccount dev/gitea-runner-rust
+v1/ServiceAccount dev/hsl-bridge
 v1/ServiceAccount dev/jc-assistant
 v1/ServiceAccount dev/jc-drift-reader
 v1/ServiceAccount dev/jc-functions

@@ -90,3 +90,21 @@ pipeline-runner-to-demo-nats-proxy:
       ports:
         - protocol: TCP
           port: 4143
+
+hsl-bridge-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: demo-feeds-hsl-bridge
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
