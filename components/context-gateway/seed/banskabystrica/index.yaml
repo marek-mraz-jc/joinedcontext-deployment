@@ -78,6 +78,7 @@ policy-kpi-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-k
 policy-kpi-shared-read.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/policies/kpi-shared-read.yaml
 policy-kpi-steward-read.yaml: projects/banskabystrica/spaces/banskabystrica-kpi/policies/kpi-steward-read.yaml
 serviceaccount-pipelines.yaml: projects/banskabystrica/access/serviceaccounts/pipelines.yaml
+serviceaccount-loadtest.yaml: projects/banskabystrica/access/serviceaccounts/loadtest.yaml
 # The city's two ingestion pipelines and their mappings (T-2305).
 datasource-voda.yaml: projects/banskabystrica/datasources/susr-vh5003rr.yaml
 datasource-obyvatelia.yaml: projects/banskabystrica/datasources/mesto-obyvatelia-vek.yaml

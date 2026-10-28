@@ -642,3 +642,45 @@ def test_the_portal_carries_the_simulate_audience_and_never_the_gateways(realm_c
     )
     assert simulate["config"]["access.token.claim"] == "true"
     assert simulate["config"]["id.token.claim"] == "false"
+
+
+LOADTEST = "banskabystrica-loadtest"
+
+
+def test_the_loadtest_client_is_disabled_outside_a_run(dev_realm_clients):
+    """T-5921: the weekly load run's client mints no token between runs (its runner enables it
+    with kcadm for the run and every realm apply disables it again), reads with the gateway's
+    audience only and never through a browser flow, and its token lasts one run."""
+    client = dev_realm_clients[LOADTEST]
+    assert client["enabled"] is False
+    assert client["serviceAccountsEnabled"] is True
+    assert not (client["standardFlowEnabled"] or client["implicitFlowEnabled"] or client["directAccessGrantsEnabled"])
+    assert client["publicClient"] is False and client["secret"].startswith("$(CLIENT_SECRET_")
+    assert client["attributes"]["access.token.lifespan"] == "1800"
+    audiences = {
+        m["config"]["included.custom.audience"]
+        for m in client["protocolMappers"]
+        if m["protocolMapper"] == "oidc-audience-mapper"
+    }
+    assert audiences == {"context-gateway"}
+
+
+def test_the_gateway_knows_the_loadtest_client(rendered):
+    """T-5921: the gateway's loadtest class names the realm's client, so its reads hold the larger
+    share and its writes are refused."""
+    gateway = next(
+        d for d in rendered("dev")
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway"
+    )
+    env = {
+        e["name"]: e.get("value")
+        for c in gateway["spec"]["template"]["spec"]["containers"]
+        for e in c.get("env", [])
+    }
+    config = {
+        k: v
+        for d in rendered("dev")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("context-gateway")
+        for k, v in (d.get("data") or {}).items()
+    }
+    assert {**config, **env}.get("JC_GATEWAY_LOADTEST_CLIENT") == LOADTEST

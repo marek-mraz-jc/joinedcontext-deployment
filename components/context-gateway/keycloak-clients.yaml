@@ -90,6 +90,38 @@ banskabystrica-conformance:
           access.token.claim: 'true'
           id.token.claim: 'false'
 
+# The load generator of the weekly k6 run (T-5921): the account `loadtest` of project
+# `banskabystrica`, whose role is the anonymous reader's. The gateway holds this client's verified
+# reads to JC_GATEWAY_LOADTEST_IN_FLIGHT instead of a caller's 32 and refuses its writes 403. The
+# client is disabled here: the run's runner (conformance tests/k6/weekly.sh) enables it with kcadm
+# for the run and disables it on exit, and every realm apply disables it again, so its secret mints
+# no token between runs. A token lives 30 minutes, one run's length, and names the gateway, which
+# admits it on every Endpoint.
+banskabystrica-loadtest:
+  profiles: [development]
+  name: Load test
+  description: Service account of the weekly k6 load run; client_credentials only, disabled outside a run
+  subdomain: ''
+  redirectPath: /
+  rawValues:
+    enabled: false
+    publicClient: false
+    standardFlowEnabled: false
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: true
+    attributes:
+      access.token.lifespan: '1800'
+    protocolMappers:
+      - name: context-gateway-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: context-gateway
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+
 # A workload on the Portal's side (T-2245, PF-45, PF-49): the account `pipeline-proposer` of
 # project `helsinki` in the development seed. Its token's audience is the Portal's API client and
 # nothing else, so the Portal accepts it (the MCP door and the REST API) and every endpoint of the
