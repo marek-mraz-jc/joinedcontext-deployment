@@ -13,5 +13,6 @@ spec:
   contextSpaceRef: conformance
   slug: dv7iyelohbhylxfilexaneobbl
   audience: organization
-  # The surfaces every seeded Endpoint serves (T-3957, T-4074), so the suites reach each one here.
-  enabledRepresentations: [ngsi-ld, mcp, ogc-features, websocket]
+  # The surfaces every seeded Endpoint serves (T-3957, T-4074), so the suites reach each one here; OData,
+  # SensorThings and CSV too, so the release gate's roundtrip (T-5914) reads a write back through each.
+  enabledRepresentations: [ngsi-ld, mcp, ogc-features, websocket, odata, sta, csv]

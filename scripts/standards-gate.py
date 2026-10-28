@@ -10,7 +10,9 @@ record to $JC_RELEASE_GATE_DIR/<sha>/ (default /workspace/tasks/evidence/release
 record.json (sha, image pins, every stage and case), report.md and junit.xml. The stages are dev's
 smoke, the standards suites of joinedcontext-conformance (NGSI-LD ETSI smoke.robot with writes when
 NGSILD_TOKEN and WRITE_ENDPOINT are set, OGC API Features ETS + GeoJSON, OData, SensorThings, iCal,
-WebSocket, MCP), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included)
+WebSocket, MCP), the roundtrip (tests/roundtrip, T-5914: one t-roundtrip- Entity written through NGSI-LD
+on the conformance Endpoint with NGSILD_TOKEN, read back through every served surface current, temporal
+and stream, then deleted), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included)
 and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). A stage passes when it
 exits 0, or when every red case it left matches .ci/release-gate-known-red.txt (each line names the
 task that owns the red; a stage red with no case to show, a Python traceback or a red load stays red).
@@ -47,7 +49,10 @@ API = f"https://api.{DOMAIN}"
 # What `release.py cut` adds on top of the gated main commit.
 RELEASE_FILES = re.compile(r"^(releases/[^/]+|CHANGELOG\.md)$")
 SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
-REQUIRED = ("dev-smoke", *SUITES, "dcat", "portal-sweep", "load")
+REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load")
+# The write-here read-everywhere Endpoint (T-5914): the conformance space nothing publishes, written only
+# by the conformance ServiceAccount (Policy conformance-write); WRITE_ENDPOINT overrides its slug.
+CONFORMANCE_ENDPOINT = ROOT / "components/context-gateway/seed/banskabystrica/endpoint-conformance.yaml"
 KNOWN_RED = ROOT / ".ci/release-gate-known-red.txt"
 TASK_ID = re.compile(r"T-\d{4,}")
 
@@ -91,6 +96,9 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
     for suite in SUITES:
         plan.append((suite, [str(std)], {"TARGET": "dev", "API": API, "SUITES": suite,
                                           "OUT": str(out / suite)}, conf))
+    plan.append(("roundtrip", ["python3", str(conf / "tests/roundtrip/roundtrip.py"), "--endpoint",
+                               f"{API}/api/endpoint/{write_endpoint()}", "--out", str(out / "roundtrip")],
+                 {}, conf))
     plan.append(("dcat", [str(conf / "tests/prod-nightly/run.sh")],
                  {"API": API, "CATALOGUE": f"https://opendata.{DOMAIN}", "SUITES": "dcat",
                   "OUT": str(out / "dcat"), "PAUSE": "0"}, conf))
@@ -106,6 +114,17 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
                   "JC_K6_RATE": str(args.rate), "JC_K6_DURATION": args.duration, "JC_K6_P95_MS": "500",
                   "JC_REPORTS_DIR": str(load)}, conf))
     return [s for s in plan if not args.only or s[0] in args.only]
+
+
+def write_endpoint() -> str:
+    """The roundtrip stage's Endpoint slug: WRITE_ENDPOINT, else the seeded conformance Endpoint's."""
+    slug = os.environ.get("WRITE_ENDPOINT", "").strip()
+    if not slug:
+        m = re.search(r"^\s+slug:\s*([a-z2-7]+)\s*$", CONFORMANCE_ENDPOINT.read_text(), re.MULTILINE)
+        slug = m.group(1) if m else ""
+    if not re.fullmatch(r"[a-z0-9-]{1,64}", slug):
+        raise Refused(f"roundtrip: {slug!r} is not an Endpoint slug (WRITE_ENDPOINT or {CONFORMANCE_ENDPOINT.name})")
+    return slug
 
 
 def quote(path) -> str:
