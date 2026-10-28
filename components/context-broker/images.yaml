@@ -214,5 +214,8 @@ context-broker:
     # Antares dev d81a193 (dev-89, over d43ac52: T-4937 batch admission clock on web_time for wasm32; the native
     # broker keeps std Instant; same FEATURES). No migration, no new key. Rollback: dev-88.
     # Signed by ship.yml on dev at d81a193 (run 40606467553).
-    tag: 'dev-89'
-    digest: 'sha256:635f6f4ac119226c0f409f9e6ff13d72fcbc32e1f695b2d9ded8d79e393ff2ee'
+    # Antares dev daeea7d (dev-90, over d81a193: T-5835 temporal history pages through the split-rule union, so a
+    # wide type list no longer 414s; same FEATURES). No migration, no new key. Rollback: dev-89.
+    # Signed by ship.yml on dev at daeea7d (run 40620036936).
+    tag: 'dev-90'
+    digest: 'sha256:463c3031bb04f49960d721d853ae7c17030f1d2ed66f66a5429c51969efa7632'
