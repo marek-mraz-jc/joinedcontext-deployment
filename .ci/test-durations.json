@@ -297,6 +297,7 @@
  "test_smoke_source_links.py": 0.0,
  "test_smoke_ws.py": 0.0,
  "test_sops_recipients.py": 0.5,
+ "test_standards_gate.py": 1.2,
  "test_status_page.py": 0.2,
  "test_temporal_audit.py": 89.5,
  "test_test_shard.py": 3.2,
