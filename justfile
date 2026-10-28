@@ -575,13 +575,14 @@ dev-smoke:
 	exit "$rc"
 
 # T-5899: after dev-apply of <rev>, every standard (reads and writes), the Portal live sweep and the
-# k6 mix at <rate>/s. Credentials only from the environment (ANTARES_DIR, NGSILD_TOKEN,
+# k6 mix at <rate>/s (8: under the edge's 10/s per address, T-5900). Credentials only from the
+# environment (ANTARES_DIR, NGSILD_TOKEN,
 # WRITE_ENDPOINT, the sweep's *_PASSWORD from the secrets mount; ANTARES_DIR at the Antares commit the
 # candidate's broker pins); it refuses in seconds when one is missing, and each stage stops after an hour.
 # See scripts/standards-gate.py.
 # Run the release gate on dev: its green record is what prod-apply asks for
 [group('dev cluster')]
-release-gate rev='HEAD' rate='1000' duration='5m':
+release-gate rev='HEAD' rate='8' duration='5m':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The release gate before every prod apply (T-5899): every standard and a load stage on dev.
 
-  scripts/standards-gate.py run [<rev>] [--rate 1000] [--duration 5m] [--only STAGE ...]
+  scripts/standards-gate.py run [<rev>] [--rate 8] [--duration 5m] [--only STAGE ...]
   scripts/standards-gate.py check [<rev>]       # prod-apply: refuse <rev> without a green record
   scripts/standards-gate.py --self-test
 
@@ -585,7 +585,10 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="command", required=True)
     r = sub.add_parser("run")
     r.add_argument("rev", nargs="?", default="HEAD")
-    r.add_argument("--rate", type=int, default=1000, help="k6 arrival rate per second (default 1000)")
+    # The floor one source may send through the edge (T-5900): class 3 admits 10 requests a second
+    # per client address and bearer, and the gate runs from one address, so 1000/s measured only the
+    # limiter (99.5 % 429, b629a881). Capacity itself is the bench rig's table in T-5900.
+    r.add_argument("--rate", type=int, default=8, help="k6 arrival rate per second (default 8)")
     r.add_argument("--duration", default="5m", help="k6 hold time (default 5m)")
     r.add_argument("--requests", type=Path, help="k6 request list (default: make_requests.py of dev's CKAN)")
     r.add_argument("--only", nargs="+", choices=REQUIRED, help="a partial run, never green for prod")
