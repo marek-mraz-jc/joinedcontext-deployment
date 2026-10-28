@@ -8,8 +8,9 @@
 resources:
   requests:
     cpu: 100m
-    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 96, peak 105Mi.
-    memory: 128Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 96, peak 105Mi. T-5897: dev working set 2026-10-25..28 (Prometheus, 3 days, supervisor):
+    # 694Mi since the WAL archive grew (T-5772), + 20 %: the request says what it holds.
+    memory: 832Mi
   limits:
     cpu: 1000m
     memory: 1024Mi

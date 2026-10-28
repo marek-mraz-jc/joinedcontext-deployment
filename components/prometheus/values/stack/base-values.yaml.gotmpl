@@ -173,7 +173,8 @@ prometheus:
     resources:
       requests:
         cpu: 100m
-        memory: 512Mi
+        # T-5897: dev working set 2026-10-25..28 (Prometheus, 3 days, supervisor): 576Mi, + 20 %.
+        memory: 704Mi
       limits:
         memory: 1536Mi
 

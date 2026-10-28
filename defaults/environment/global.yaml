@@ -177,10 +177,11 @@ global:
     # proxy limit, because an OOMKilled proxy cuts its pod off, and this default reaches every
     # environment, production included. An empty value removes the annotation an earlier apply
     # wrote, which leaves Linkerd's own default. A pod needing more sets the same annotation on
-    # its pod template.
+    # its pod template. T-5897: 270 MiB over ~35 proxies on 2026-10-28 (7.7Mi mean), so the request is
+    # 16Mi, above all but the broker's proxy; 24Mi booked 840Mi for 270Mi used.
     proxyResources:
       cpuRequest: 10m
-      memoryRequest: 24Mi
+      memoryRequest: 16Mi
       memoryLimit: 250Mi
 
   ingress:
