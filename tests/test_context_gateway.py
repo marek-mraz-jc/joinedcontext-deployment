@@ -12,7 +12,7 @@ import shutil
 
 import pytest
 import yaml
-from conftest import seed_configmap
+from conftest import drop_component, seed_configmap
 from pipeline_spec import outputs
 
 requires_helmfile = pytest.mark.skipif(shutil.which("helmfile") is None, reason="helmfile not installed")
@@ -334,6 +334,29 @@ def test_the_gateway_posts_its_usage_counts_to_the_portals_internal_listener(gat
     internal listener the previews come from, with the gateway's own token."""
     previews = gateway_env["JC_GATEWAY_PREVIEWS_URL"]
     assert gateway_env["JC_GATEWAY_USAGE_URL"] == previews.replace("/internal/previews", "/internal/usage")
+
+
+def test_the_gateway_reads_its_revocations_without_an_agent_runner(rendered_variant):
+    """T-5869: a gateway with a realm and no revocations list refuses to start (F-SEC1-024), and
+    the k3d variants run no agent runner. The URL and the Portal's internal Service port follow
+    the Portal, not the agent runner."""
+    def without_agent_runner(tree):
+        # The assistant needs the agent runner (its model goes through the proxy).
+        drop_component(tree, "dev", "assistant")
+        drop_component(tree, "dev", "agent-runner")
+
+    docs = rendered_variant("dev", without_agent_runner)
+    gateway = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "context-gateway")
+    env = {e["name"]: e.get("value") for e in gateway["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_OIDC_ISSUER"]
+    assert env["JC_GATEWAY_REVOCATIONS_URL"] == "http://portal.dev.svc.cluster.local:9090/internal/revocations"
+    assert "JC_GATEWAY_PREVIEWS_URL" not in env
+    service = next(d for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] == "portal")
+    assert {p["port"] for p in service["spec"]["ports"]} == {8080, 9090}
+    assert any(
+        d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "portal-internal-from-context-gateway"
+        for d in docs
+    )
 
 
 def test_a_forge_outage_after_the_first_clone_keeps_the_gateway_in_service(gateway_pod):
