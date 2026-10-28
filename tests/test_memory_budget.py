@@ -1,0 +1,120 @@
+"""T-5897: the platform's memory requests fit the node it runs on, and its limits stop growing.
+
+dev and smartcity (prod) are one 16 GB node each and render the development profile. The owner
+wants the platform to live there with headroom: what this deployment requests stays within
+12.5 GiB, which leaves 3.5 GiB of the node to k3s, the kernel, the kit's pods (Traefik 216Mi and
+Kyverno 247Mi measured on dev 2026-10-28), a helmfile sync and the nightly pipeline window.
+
+The sum counts every pod the render makes: each container of a Deployment, StatefulSet or
+DaemonSet times its replicas, each CNPG Cluster instance, the Prometheus and Alertmanager pods the
+operator makes from their resources, and one injected linkerd-proxy request per meshed pod (the
+namespace annotation the prepare hook writes from global.serviceMesh.proxyResources). Jobs and
+CronJobs are left out: they run minutes at a time and hold nothing between runs.
+
+Limits are overcommitted by design (a limit is the room for a burst, not a reservation), so they
+get a ceiling instead of a budget: the measured sum of today, which a raised limit must lower
+somewhere else or move here with its reason. The generic `production` profile is for a cluster of
+several nodes (three Postgres instances of 8Gi); it gets the same two ceilings so it cannot grow
+unseen either.
+"""
+
+import re
+from pathlib import Path
+
+import pytest
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+UNITS = {"Ki": 1 / 1024, "Mi": 1, "Gi": 1024, "K": 1000 / 1024**2, "M": 1000**2 / 1024**2, "G": 1000**3 / 1024**2, "": 1 / 1024**2}
+
+NODE_REQUEST_BUDGET_MIB = 12.5 * 1024
+# (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi.
+CEILINGS = {
+    "dev": (NODE_REQUEST_BUDGET_MIB, 44544),
+    "smartcity": (NODE_REQUEST_BUDGET_MIB, 43008),
+    "production": (37120, 67584),
+}
+
+
+def mib(quantity) -> float:
+    match = re.fullmatch(r"(\d+(?:\.\d+)?)(Ki|Mi|Gi|K|M|G)?", str(quantity))
+    assert match, f"not a Kubernetes memory quantity: {quantity!r}"
+    return float(match[1]) * UNITS[match[2] or ""]
+
+
+def proxy_mib() -> tuple[float, float]:
+    mesh = yaml.safe_load((ROOT / "defaults/environment/global.yaml").read_text())["global"]["serviceMesh"]
+    resources = mesh["proxyResources"]
+    return mib(resources["memoryRequest"]), mib(resources["memoryLimit"])
+
+
+def memory(resources: dict | None) -> tuple[float, float]:
+    resources = resources or {}
+    return (
+        mib(resources.get("requests", {}).get("memory", 0)),
+        mib(resources.get("limits", {}).get("memory", 0)),
+    )
+
+
+def pods(docs: list[dict]):
+    """(name, replicas, meshed, [(request, limit) per container]) for every long-running pod."""
+    for d in docs:
+        kind, spec, name = d.get("kind"), d.get("spec") or {}, d.get("metadata", {}).get("name")
+        if kind in ("Deployment", "StatefulSet", "DaemonSet"):
+            template = spec["template"]
+            annotations = (template.get("metadata") or {}).get("annotations") or {}
+            meshed = annotations.get("linkerd.io/inject") != "disabled" and d["metadata"].get("namespace") != "kube-system"
+            replicas = 1 if kind == "DaemonSet" else spec.get("replicas", 1)
+            yield name, replicas, meshed, [memory(c.get("resources")) for c in template["spec"]["containers"]]
+        elif kind == "Cluster" and "postgresql" in spec:
+            yield name, spec.get("instances", 1), True, [memory(spec.get("resources"))]
+        elif kind in ("Prometheus", "Alertmanager"):
+            yield name, spec.get("replicas", 1), True, [memory(spec.get("resources"))]
+
+
+def sums(docs: list[dict]) -> tuple[float, float, list[str]]:
+    proxy_request, proxy_limit = proxy_mib()
+    requests = limits = 0.0
+    rows = []
+    for name, replicas, meshed, containers in pods(docs):
+        request = sum(r for r, _ in containers) + (proxy_request if meshed else 0)
+        limit = sum(l for _, l in containers) + (proxy_limit if meshed else 0)
+        requests += replicas * request
+        limits += replicas * limit
+        rows.append(f"{name} x{replicas}: {request:.0f}/{limit:.0f}Mi")
+    return requests, limits, rows
+
+
+def test_the_sum_counts_containers_replicas_and_proxies():
+    docs = [
+        {"kind": "Deployment", "metadata": {"name": "a", "namespace": "x"}, "spec": {"replicas": 2, "template": {"spec": {"containers": [
+            {"resources": {"requests": {"memory": "100Mi"}, "limits": {"memory": "1Gi"}}},
+            {"resources": {"requests": {"memory": "28Mi"}}},
+        ]}}}},
+        {"kind": "DaemonSet", "metadata": {"name": "b", "namespace": "kube-system"}, "spec": {"template": {"spec": {"containers": [
+            {"resources": {"requests": {"memory": "24Mi"}, "limits": {"memory": "96Mi"}}},
+        ]}}}},
+        {"kind": "Cluster", "metadata": {"name": "pg"}, "spec": {"instances": 3, "postgresql": {}, "resources": {"requests": {"memory": "1Gi"}, "limits": {"memory": "2Gi"}}}},
+        {"kind": "Prometheus", "metadata": {"name": "p"}, "spec": {"resources": {"requests": {"memory": "512Mi"}}}},
+        {"kind": "CronJob", "metadata": {"name": "c"}, "spec": {}},
+    ]
+    proxy_request, proxy_limit = proxy_mib()
+    requests, limits, _ = sums(docs)
+    assert requests == 2 * (128 + proxy_request) + 24 + 3 * (1024 + proxy_request) + 512 + proxy_request
+    assert limits == 2 * (1024 + proxy_limit) + 96 + 3 * (2048 + proxy_limit) + proxy_limit
+
+
+def test_a_raised_request_goes_red():
+    big = {"kind": "Deployment", "metadata": {"name": "big", "namespace": "x"}, "spec": {"template": {"spec": {"containers": [
+        {"resources": {"requests": {"memory": "13Gi"}, "limits": {"memory": "13Gi"}}},
+    ]}}}}
+    assert sums([big])[0] > NODE_REQUEST_BUDGET_MIB
+
+
+@pytest.mark.parametrize("env", sorted(CEILINGS))
+def test_requests_and_limits_stay_within_the_budget(rendered, env):
+    requests, limits, rows = sums(rendered(env))
+    request_ceiling, limit_ceiling = CEILINGS[env]
+    table = "\n".join(sorted(rows))
+    assert requests <= request_ceiling, f"{env}: requests {requests:.0f}Mi over {request_ceiling:.0f}Mi\n{table}"
+    assert limits <= limit_ceiling, f"{env}: limits {limits:.0f}Mi over the {limit_ceiling:.0f}Mi ceiling\n{table}"

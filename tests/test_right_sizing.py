@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # (kind, workload, container): (memory request, memory limit)
 SIZES = {
-    ("Deployment", "model-tools", "model-tools-tools"): ("320Mi", "1Gi"),
+    ("Deployment", "model-tools", "model-tools-tools"): ("640Mi", "1Gi"),
     ("Deployment", "ckan", "ckan"): ("448Mi", "2Gi"),
     ("StatefulSet", "ckan-solr", "solr"): ("768Mi", "1Gi"),
     ("Deployment", "portal", "portal-portal"): ("576Mi", "1536Mi"),

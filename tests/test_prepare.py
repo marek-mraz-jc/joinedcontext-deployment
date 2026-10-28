@@ -65,7 +65,7 @@ def dev(rendered):
 PROXY = (
     " config.linkerd.io/proxy-cpu-request=10m"
     " config.linkerd.io/proxy-memory-limit=250Mi"
-    " config.linkerd.io/proxy-memory-request=24Mi"
+    " config.linkerd.io/proxy-memory-request=16Mi"
 )
 
 
@@ -144,7 +144,7 @@ def test_the_proxy_resources_come_from_the_global_values(hook, tmp_path):
     )))
     assert len(lines) == len(ensured(hook)), lines
     for line in lines:
-        assert "config.linkerd.io/proxy-memory-limit=96Mi config.linkerd.io/proxy-memory-request=24Mi --overwrite" in line
+        assert "config.linkerd.io/proxy-memory-limit=96Mi config.linkerd.io/proxy-memory-request=16Mi --overwrite" in line
         # An emptied value removes what an earlier apply wrote (re-apply), it never keeps it.
         assert " config.linkerd.io/proxy-cpu-request- " in line, line
         assert "proxy-cpu-request=" not in line, "an emptied value still writes its annotation"
