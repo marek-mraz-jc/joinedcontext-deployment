@@ -11,6 +11,8 @@ helsinki-mqttbroker-hsl-bridge.yaml: projects/helsinki/mqttbrokers/hsl-bridge.ya
 helsinki-serviceaccount-hsl-bridge.yaml: projects/helsinki/access/serviceaccounts/hsl-bridge.yaml
 helsinki-datasource-mqtt-hsl-bridge.yaml: projects/helsinki/datasources/mqtt-hsl-bridge.yaml
 helsinki-hsl-mqtt-test-space.yaml: projects/helsinki/spaces/hsl-mqtt-test/space.yaml
+helsinki-hsl-mqtt-test-datamodel.yaml: projects/helsinki/spaces/hsl-mqtt-test/datamodels/hsl-mqtt-test.yaml
+hsl-mqtt-test.linkml.yaml: projects/helsinki/spaces/hsl-mqtt-test/datamodels/hsl-mqtt-test.linkml.yaml
 helsinki-hsl-mqtt-test-endpoint.yaml: projects/helsinki/spaces/hsl-mqtt-test/endpoints/hsl-mqtt-test.yaml
 helsinki-hsl-mqtt-test-policy-pipelines-write.yaml: projects/helsinki/spaces/hsl-mqtt-test/policies/hsl-mqtt-test-pipelines-write.yaml
 helsinki-pipeline-mqtt-hsl-bridge.yaml: projects/helsinki/pipelines/mqtt-hsl-bridge/pipeline.yaml

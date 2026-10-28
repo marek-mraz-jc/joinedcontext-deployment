@@ -13,11 +13,13 @@ spec:
   urnSegment: hsl-mqtt-test
   isSandbox: false
   defaultLocale: en
-  # Ten minutes of anything: a test needs the newest positions, not a track.
+  dataModelRef: { kind: DataModel, name: hsl-mqtt-test }
+  # The space helsinki's Vehicle rule (T-5046): gone five minutes after its last report, five
+  # minutes of track; a test needs the newest positions.
   retention:
     - entityType: Vehicle
-      current: PT10M
-      history: PT10M
+      current: PT5M
+      history: PT5M
       # Every report is a new observedAt: a row per report of what changes in it, a row per
       # change and one a minute of what holds (the space helsinki's Vehicle rule, T-5247).
       attributes:

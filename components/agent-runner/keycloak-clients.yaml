@@ -395,3 +395,12 @@ helsinki-agent-proxy:
           included.custom.audience: kddqg7cdcp4okv6mcfzgfiw6huoyyjjr
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The MQTT test space of T-5883 (seed/helsinki-demo-feeds/helsinki-hsl-mqtt-test-endpoint.yaml).
+      - name: helsinki-hsl-mqtt-test-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: bxh7tot5zee4ndom364owjtyf2ppinsy
+          access.token.claim: 'true'
+          id.token.claim: 'false'

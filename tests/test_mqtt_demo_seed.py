@@ -251,7 +251,7 @@ def test_the_test_space_is_organization_only_short_lived_and_names_hsls_licence(
     assert "CC BY 4.0" in space["metadata"]["description"]["en"]
     assert "HSL" in space["metadata"]["description"]["en"]
     (rule,) = space["spec"]["retention"]
-    assert (rule["entityType"], rule["current"], rule["history"]) == ("Vehicle", "PT10M", "PT10M")
+    assert (rule["entityType"], rule["current"], rule["history"]) == ("Vehicle", "PT5M", "PT5M")
     endpoints = [e for (ns, _), e in by_name("Endpoint").items()
                  if ns == "helsinki" and e["spec"]["contextSpaceRef"] == "hsl-mqtt-test"]
     assert [e["metadata"]["name"] for e in endpoints] == ["hsl-mqtt-test"]
