@@ -151,10 +151,6 @@ prometheus:
     enforcedLabelNameLengthLimit: 128
     enforcedLabelValueLengthLimit: 1024
     enforcedBodySizeLimit: 32MB
-    # The k6 load runs remote-write their client-side metrics here (T-5901, dashboard
-    # "k6 load runs"), through a kubectl port-forward of the operator: the NetworkPolicy admits
-    # no new caller, so only someone allowed to port-forward in this namespace can write.
-    enableRemoteWriteReceiver: true
     # Every ServiceMonitor, PodMonitor, Probe and PrometheusRule on the cluster, not only the
     # ones labelled with this release: the monitoring component renders its monitors into the
     # namespace of each component it scrapes, and the APISIX, Keycloak and CNPG charts render
