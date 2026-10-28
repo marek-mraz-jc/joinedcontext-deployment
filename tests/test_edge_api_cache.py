@@ -38,7 +38,8 @@ def test_only_the_anonymous_data_host_route_caches():
     # The gateway's max-age decides; a `private` or `no-store` answer is never stored.
     assert cache["cache_control"] is True
     for field in ("cache_bypass", "no_cache"):
-        assert set(cache[field]) == {"$http_cookie", "$http_authorization"}, field
+        assert set(cache[field]) == {"$http_cookie", "$http_authorization", "$http_link", "$http_prefer",
+                                     "$http_ngsild_tenant"}, field
     assert cache["cache_http_status"] == [200] and cache["cache_method"] == ["GET", "HEAD"]
     # Every request header the gateway's Vary names, Authorization aside (it bypasses).
     for var in ("$host", "$request_uri", "$http_accept", "$http_accept_language", "$http_accept_encoding",
@@ -59,11 +60,11 @@ class Gateway(http.server.BaseHTTPRequestHandler):
         n = next(self.counter)
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
-        anonymous = self.headers.get("Authorization") is None and self.headers.get("Cookie") is None
+        anonymous = all(self.headers.get(h) is None for h in ("Authorization", "Cookie", "Link", "Prefer"))
         self.send_header("Cache-Control", "public, max-age=5" if anonymous else "private, no-store")
         self.send_header("Vary", "Authorization, Accept, Accept-Language, NGSILD-Results-Restricted, Accept-Encoding")
         self.end_headers()
-        self.wfile.write(json.dumps({"n": n, "auth": self.headers.get("Authorization"),
+        self.wfile.write(json.dumps({"n": n, "auth": self.headers.get("Authorization"), "link": self.headers.get("Link"),
                                      "lang": self.headers.get("Accept-Language")}).encode())
 
     def log_message(self, *args):
@@ -148,3 +149,17 @@ def test_an_answer_kept_private_is_never_stored(edge):
     one, _ = get(url, Authorization="Bearer a")
     two, headers = get(url, Authorization="Bearer a")
     assert one["n"] != two["n"] and headers.get("Apisix-Cache-Status") != "HIT"
+
+
+def test_a_read_with_a_link_context_neither_reads_nor_fills_the_cache(edge):
+    # T-5900 review: Link names the @context a compacted answer is written in; it is not in the
+    # key, so a Link read must never be served a plain answer nor leave its own for a plain read.
+    url = edge + "/api/endpoint/s/ngsi-ld/v1/entities?type=D"
+    context = '<https://example.org/ctx.jsonld>; rel="http://www.w3.org/ns/json-ld#context"'
+    linked, headers = get(url, Link=context)
+    assert linked["link"] == context and headers.get("Apisix-Cache-Status") != "HIT"
+    plain, _ = get(url)
+    assert plain["n"] != linked["n"] and plain["link"] is None
+    again, headers = get(url, Link=context)
+    assert again["n"] not in (linked["n"], plain["n"]) and headers.get("Apisix-Cache-Status") != "HIT"
+    assert get(url)[0] == plain
