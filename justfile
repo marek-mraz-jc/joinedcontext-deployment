@@ -574,6 +574,17 @@ dev-smoke:
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
 	exit "$rc"
 
+# T-5899: after dev-apply of <rev>, every standard (reads and writes), the Portal live sweep and the
+# k6 mix at <rate>/s. Credentials only from the environment (ANTARES_DIR, NGSILD_TOKEN,
+# WRITE_ENDPOINT, the sweep's *_PASSWORD from the secrets mount); see scripts/standards-gate.py.
+# Run the release gate on dev: its green record is what prod-apply asks for
+[group('dev cluster')]
+release-gate rev='HEAD' rate='1000' duration='5m':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	./scripts/standards-gate.py run "{{ rev }}" --rate "{{ rate }}" --duration "{{ duration }}"
+
 # Validate dev against main (T-2799): drift, image pins and signatures, NetworkPolicy probes,
 # certificate and backup expiry, Kyverno; the summary is what tasks/file-failures reads
 [group('dev cluster')]
@@ -796,6 +807,9 @@ prod-apply:
 	# Only an annotated release tag on origin is applied (T-4955); a rollback checks out the
 	# previous tag and runs this recipe again.
 	tag=$(./scripts/release.py verify HEAD)
+	# Every standard and the load stage ran green on dev for this commit's deployment and image pins
+	# (T-5899): no green record of `just release-gate`, no prod apply.
+	./scripts/standards-gate.py check HEAD
 	echo "applying release $tag to smartcity"
 	just _dev-assemble
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
