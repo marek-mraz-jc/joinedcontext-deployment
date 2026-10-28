@@ -1612,12 +1612,25 @@ fi
 # its address with its own host's certificate, and refuses a CONNECT without a token. Plain 1883
 # is never reachable from outside. A broker's route names its host (`HostSNI`); a dedicated
 # port's route (`-port`) answers a client that sends no SNI with the same certificate (T-5856).
+# The brokers live where the brokers chart put its `broker-template` (the instance's namespace on
+# dev). Fewer running than the seed declares (gitea-seed-* ConfigMaps) fails; neither skips.
 echo "mqtt edge brokers (T-4857)"
-mqtt_ns="${JC_MQTT_NAMESPACE:-$slug-mqtt}"
-mqtt_routes=$(kubectl get ingressroutetcp -n "$mqtt_ns" -l app.kubernetes.io/managed-by=joinedcontext-portal \
-	-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.entryPoints 0}} {{(index .spec.routes 0).match}}{{"\n"}}{{end}}' 2>/dev/null || true)
+mqtt_ns="${JC_MQTT_NAMESPACE:-$(kubectl get configmaps -A --field-selector metadata.name=broker-template \
+	-o 'jsonpath={.items[*].metadata.namespace}' 2>/dev/null | awk '{ print $1 }' || true)}"
+mqtt_seeded=$(kubectl get configmaps -n "$slug" \
+	-o go-template='{{range .items}}==cm {{.metadata.name}}{{"\n"}}{{range .data}}{{.}}{{"\n"}}{{end}}{{end}}' 2>/dev/null |
+	awk '/^==cm / { seed = ($2 ~ /^gitea-seed-/) } seed && $0 == "kind: MqttBroker" { n++ } END { print n + 0 }' || true)
+mqtt_routes=""
+if [ -n "$mqtt_ns" ]; then
+	mqtt_routes=$(kubectl get ingressroutetcp -n "$mqtt_ns" -l app.kubernetes.io/managed-by=joinedcontext-portal \
+		-o go-template='{{range .items}}{{.metadata.name}} {{index .spec.entryPoints 0}} {{(index .spec.routes 0).match}}{{"\n"}}{{end}}' 2>/dev/null || true)
+fi
+mqtt_running=$(printf '%s\n' "$mqtt_routes" | awk '$1 != "" && $1 !~ /-port$/ { n++ } END { print n + 0 }')
+if [ "${mqtt_seeded:-0}" -gt "$mqtt_running" ]; then
+	ko "mqtt edge brokers: the seed declares ${mqtt_seeded} MqttBroker(s), ${mqtt_running} run in ${mqtt_ns:-no namespace (no broker-template ConfigMap: components/mqtt-brokers is not installed)}"
+fi
 if [ -z "$mqtt_routes" ]; then
-	skip "mqtt edge brokers (the Portal runs no MqttBroker in $mqtt_ns)"
+	[ "${mqtt_seeded:-0}" -gt 0 ] || skip "mqtt edge brokers (no MqttBroker seeded or stamped in this instance)"
 else
 	# The dedicated ports carry no host of their own: each takes its broker's from the 8883 route.
 	mqtt_hosts=$(printf '%s\n' "$mqtt_routes" | tr -d '\140' | sed -n 's/^\([^ ]*\) [^ ]* HostSNI(\([^*)]*\))$/\1 \2/p')
