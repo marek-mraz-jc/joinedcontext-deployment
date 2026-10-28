@@ -139,6 +139,15 @@ elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-s
 elif args[0] == "get" and args[1] == "configmap" and args[2] == "portal-branding":
     # The block both the Portal and the catalogue theme are served (OPS-46).
     sys.stdout.write(spec.get("branding", "instanceName: Example Context\\ncolours:\\n  primary: '#0000bf'\\n"))
+elif args[0] == "get" and args[1] == "configmaps" and "broker-template" in line:
+    # The namespace the brokers chart installed its template into (T-4857); "" = not installed.
+    print(spec.get("mqttNamespace", "dev"))
+elif args[0] == "get" and args[1] == "configmaps" and "==cm" in line:
+    # Every ConfigMap's values (T-4857): the seed's MqttBrokers, one per stamped broker by default.
+    print("==cm gitea-seed-s4-helsinki")
+    for _ in range(spec.get("mqttSeeded", 2)):
+        print("apiVersion: joinedcontext.com/v1alpha1\\nkind: MqttBroker")
+    print("==cm gitea-sample-apps-helsinki-bikes\\nkind: MqttBroker")
 elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
     # The sample applications the forge bootstrap seeded (T-2599); `sampleApps: []` is none.
     for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
@@ -2009,5 +2018,17 @@ def test_the_mqtt_brokers_serve_their_certificate_and_refuse_a_connect_without_a
 
 
 def test_an_instance_without_mqtt_brokers_skips_their_checks(tmp_path):
-    result = run(tmp_path, dict(HEALTHY, mqttRoutes=[]), "https://example.test", "https://idm.example.test")
-    assert "  skip  mqtt edge brokers (the Portal runs no MqttBroker in dev-mqtt)" in result.stdout
+    for spec in (dict(HEALTHY, mqttRoutes=[], mqttSeeded=0), dict(HEALTHY, mqttRoutes=[], mqttSeeded=0, mqttNamespace="")):
+        result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+        assert "  skip  mqtt edge brokers (no MqttBroker seeded or stamped in this instance)" in result.stdout, result.stdout
+
+
+def test_seeded_mqtt_brokers_that_do_not_run_fail_the_run(tmp_path):
+    """T-4857 (deployer 2026-10-28): the check looked in dev-mqtt and skipped while the brokers ran
+    in dev; it reads their namespace from the broker-template ConfigMap, and a seed whose brokers
+    do not all run fails instead of skipping. Only gitea-seed-* ConfigMaps count as the seed."""
+    result = run(tmp_path, dict(HEALTHY, mqttSeeded=3), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1 and "the seed declares 3 MqttBroker(s), 2 run in dev" in result.stdout, result.stdout
+    result = run(tmp_path, dict(HEALTHY, mqttRoutes=[], mqttNamespace=""), "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1 and "the seed declares 2 MqttBroker(s), 0 run in no namespace (no broker-template" in result.stdout, result.stdout
+    assert "skip  mqtt edge brokers" not in result.stdout
