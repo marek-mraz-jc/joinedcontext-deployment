@@ -58,6 +58,10 @@ bbsk-pipeline-mzdy-bento.yaml: projects/bbsk/pipelines/mzdy/bento.yaml
 bbsk-datasource-navstevnost.yaml: projects/bbsk/datasources/susr-cr3802mr.yaml
 bbsk-pipeline-navstevnost.yaml: projects/bbsk/pipelines/navstevnost/pipeline.yaml
 bbsk-pipeline-navstevnost-bento.yaml: projects/bbsk/pipelines/navstevnost/bento.yaml
+# The region's bicycle counters, summed per counter and month into bbsk-kraj (T-5930).
+bbsk-datasource-cyklisti.yaml: projects/bbsk/datasources/bbsk-scitace-cyklistov.yaml
+bbsk-pipeline-cyklisti.yaml: projects/bbsk/pipelines/cyklisti/pipeline.yaml
+bbsk-pipeline-cyklisti-bento.yaml: projects/bbsk/pipelines/cyklisti/bento.yaml
 bbsk-datasource-kapacity.yaml: projects/bbsk/datasources/susr-cr3807qr.yaml
 bbsk-pipeline-kapacity.yaml: projects/bbsk/pipelines/kapacity/pipeline.yaml
 bbsk-pipeline-kapacity-bento.yaml: projects/bbsk/pipelines/kapacity/bento.yaml
