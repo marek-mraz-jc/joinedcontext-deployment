@@ -47,7 +47,8 @@ def test_the_broker_runs_the_surfaces_and_requires_its_admin_credential(broker_p
     assert env["ANTARES_WS_MAX_LIFETIME_SECS"] == "86400"
     assert "ANTARES_WS_ALLOWED_ORIGINS" not in env, "browsers reach the socket through the gateway alone"
     assert env["ANTARES_POLICY_SUBJECT_HEADERS"].split(",") == [
-        "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did"]
+        "x-jc-subject", "x-jc-groups", "x-jc-roles", "x-jc-client", "x-jc-restricted", "x-jc-did",
+        "x-jc-read-only"]
     assert not {"authorization", "cookie"} & set(env["ANTARES_POLICY_SUBJECT_HEADERS"].split(","))
     assert env["ANTARES_ADMIN_TOKEN_FILE"] == "/var/run/secrets/antares/admin/token"
     assert env["ANTARES_ADMIN_METRICS"] == "open"

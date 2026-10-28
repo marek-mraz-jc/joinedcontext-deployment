@@ -156,9 +156,10 @@ env:
   # participant, which the gateway strips from every client request (platform T-3800, T-3816).
   # The joinedcontext engine decides every request by them and the Portal's rule documents
   # (T-3768): a request naming nobody is the cluster's own and is refused outside the Context
-  # Source clauses; the gateway's own hops speak as its client (T-3767).
+  # Source clauses; the gateway's own hops speak as its client (T-3767). `x-jc-read-only` marks a
+  # read-only connector's token, refused every write (platform T-5955, S-49).
   ANTARES_POLICY: "joinedcontext"
-  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did"
+  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did,x-jc-read-only"
   {{- if and $mesh (dig "enabled" false $gateway) }}
   # The gateway's mesh identity (Linkerd sets l5d-client-id from its mTLS certificate): the only
   # caller whose JC-Provenance-* and X-Request-Id headers the broker stores in history
