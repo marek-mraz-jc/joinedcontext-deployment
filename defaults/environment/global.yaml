@@ -178,10 +178,13 @@ global:
     # environment, production included. An empty value removes the annotation an earlier apply
     # wrote, which leaves Linkerd's own default. A pod needing more sets the same annotation on
     # its pod template. T-5897: 270 MiB over ~35 proxies on 2026-10-28 (7.7Mi mean), so the request is
-    # 16Mi, above all but the broker's proxy; 24Mi booked 840Mi for 270Mi used.
+    # 16Mi, above all but the broker's proxy; 24Mi booked 840Mi for 270Mi used. 10Mi since the
+    # node must keep the largest rolling surge free (deployer 2026-10-28: a model-tools surge pod
+    # stayed Pending at 95 % booked): the mean plus 30 % sums to what the proxies use together,
+    # and a proxy above it only uses room the limit already gives it.
     proxyResources:
       cpuRequest: 10m
-      memoryRequest: 16Mi
+      memoryRequest: 10Mi
       memoryLimit: 250Mi
 
   ingress:
