@@ -53,7 +53,7 @@ def test_the_demo_projects_each_seed_a_broker_and_helsinki_two():
     per_project = {}
     for broker in BROKERS:
         per_project.setdefault(broker["metadata"]["namespace"], []).append(broker["metadata"]["name"])
-    assert sorted(per_project.get("helsinki", [])) == ["sensors", "vehicles"]
+    assert sorted(per_project.get("helsinki", [])) == ["hsl-bridge", "sensors", "vehicles"]
     assert per_project.get("banskabystrica") == ["ovzdusie"]
 
 
@@ -81,7 +81,13 @@ def test_no_dedicated_port_is_assigned_twice():
     assert len(held) == len(set(held))
 
 
-@pytest.mark.parametrize("broker", BROKERS, ids=lambda b: f'{b["metadata"]["namespace"]}/{b["metadata"]["name"]}')
+# The HSL bridge's broker (T-5883): one account republishes another operator's feed, judged by
+# the bridge tests below.
+BRIDGE = ("helsinki", "hsl-bridge")
+DEVICE_BROKERS = [b for b in BROKERS if (b["metadata"]["namespace"], b["metadata"]["name"]) != BRIDGE]
+
+
+@pytest.mark.parametrize("broker", DEVICE_BROKERS, ids=lambda b: f'{b["metadata"]["namespace"]}/{b["metadata"]["name"]}')
 def test_a_device_publishes_only_under_its_own_client_id(broker):
     accounts = by_name("ServiceAccount")
     project = broker["metadata"]["namespace"]
@@ -194,3 +200,65 @@ def test_a_tracker_writes_its_vehicle_inside_the_hsl_area_only():
     ])
     assert [e["id"] for e in written] == ["urn:ngsi-ld:Vehicle:hel.fi:helsinki:mqtt-helsinki-vehicle-demo"]
     assert written[0]["location"]["value"]["coordinates"] == [24.94, 60.17]
+
+
+def test_the_bridge_account_publishes_hsls_trams_alone_on_a_broker_of_its_own():
+    """T-5883: the bridge holds publish on HSL's tram topic and nothing else, its broker's high
+    per-client rate reaches no tracker or sensor, and its account writes nothing through an
+    Endpoint and carries no credential in the seed."""
+    broker = by_name("MqttBroker")[BRIDGE]
+    (role,) = broker["spec"]["roles"]
+    assert role["serviceAccounts"] == ["hsl-bridge"]
+    assert role["publish"] == ["hsl/hfp/v2/journey/ongoing/vp/tram/#"]
+    assert not role.get("subscribe")
+    assert role["sharedTopics"] is True and role["reason"].strip(), "MF-54: a shared topic says why"
+    assert "port" not in broker["spec"], "the platform address: the dedicated port stays the trackers'"
+    limits = broker["spec"]["limits"]
+    assert limits["maxConnections"] <= 2 and limits["messagesPerSecond"] >= 900
+    others = [b for b in DEVICE_BROKERS if b["metadata"]["namespace"] == "helsinki"]
+    assert all(b["spec"]["limits"]["messagesPerSecond"] <= 2 for b in others), "the devices keep their rate"
+    account = by_name("ServiceAccount")[("helsinki", "hsl-bridge")]["spec"]
+    assert [c["kind"] for c in account["credentials"]] == ["oauth-client"]
+    assert not keys(account["credentials"]) & SECRET_KEYS
+    assert account["roles"] == [{"role": "space-reader", "scope": {"contextSpace": "hsl-mqtt-test"}, "types": ["Vehicle"]}]
+
+
+def seed_doc(name: str) -> dict:
+    """A helsinki seed file; the bridge's own sit in helsinki-demo-feeds, seeded only where the
+    dev bridge runs."""
+    found = [d / name for d in (SEED / "helsinki", SEED / "helsinki-demo-feeds") if (d / name).exists()]
+    assert len(found) == 1, name
+    return yaml.safe_load(found[0].read_text())
+
+
+def test_the_bridged_trams_run_the_hfp_mapping_unchanged_into_the_test_space():
+    """T-5883: the test pipeline is hsl-hfp-vehicles with another source and another target."""
+    hfp = seed_doc("helsinki-pipeline-hfp-bento.yaml")
+    bridged = seed_doc("helsinki-pipeline-mqtt-hsl-bridge-bento.yaml")
+    assert bridged == hfp
+    pipeline = by_name("Pipeline")[("helsinki", "mqtt-hsl-bridge")]["spec"]
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:hsl-mqtt-test:hsl-mqtt-test"
+    assert pipeline["lifetime"] == by_name("Pipeline")[("helsinki", "hsl-hfp-vehicles")]["spec"]["lifetime"]
+    source = by_name("DataSource")[("helsinki", "mqtt-hsl-bridge")]["spec"]["mqtt"]
+    assert source["topics"] == ["hsl/hfp/v2/journey/ongoing/vp/#"]
+    index = yaml.safe_load((SEED / "helsinki-demo-feeds" / "index.yaml").read_text())
+    assert index["helsinki-pipeline-mqtt-hsl-bridge-bento.yaml"] == "projects/helsinki/pipelines/mqtt-hsl-bridge/bento.yaml"
+
+
+def test_the_test_space_is_organization_only_short_lived_and_names_hsls_licence():
+    """T-5883 Security: nothing of the test space is published; HSL's data stays attributed."""
+    space = by_name("ContextSpace")[("helsinki", "hsl-mqtt-test")]
+    assert "CC BY 4.0" in space["metadata"]["description"]["en"]
+    assert "HSL" in space["metadata"]["description"]["en"]
+    (rule,) = space["spec"]["retention"]
+    assert (rule["entityType"], rule["current"], rule["history"]) == ("Vehicle", "PT10M", "PT10M")
+    endpoints = [e for (ns, _), e in by_name("Endpoint").items()
+                 if ns == "helsinki" and e["spec"]["contextSpaceRef"] == "hsl-mqtt-test"]
+    assert [e["metadata"]["name"] for e in endpoints] == ["hsl-mqtt-test"]
+    spec = endpoints[0]["spec"]
+    assert spec["audience"] == "organization"
+    assert "catalog" not in spec and "publish" not in spec, "in no catalogue"
+    policies = [p for (ns, _), p in by_name("Policy").items()
+                if ns == "helsinki" and p["spec"]["contextSpaceRef"]["name"] == "hsl-mqtt-test"]
+    assert [p["spec"]["assignee"] for p in policies] == [{"kind": "serviceAccount", "id": "pipelines"}]
+    assert "deleteBatch" not in policies[0]["spec"]["operations"]

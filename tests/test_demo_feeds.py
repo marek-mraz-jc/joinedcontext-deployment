@@ -4,7 +4,10 @@ Proves a broker input end to end on dev by providing a live feed on a subject
 every ten seconds. Dev only, never in production.
 """
 
+import http.server
 import json
+import subprocess
+import threading
 from pathlib import Path
 
 import pytest
@@ -123,6 +126,8 @@ def test_demo_feeds_not_in_local_environment(local):
     names = {d.get("metadata", {}).get("name") for d in local if isinstance(d, dict)}
     assert "demo-nats" not in names
     assert "demo-feed" not in names
+    assert "hsl-bridge" not in names
+    assert not [p for p in forge_seed(local) if "hsl-bridge" in p or "hsl-mqtt-test" in p], "the bridge's seed waits for the bridge"
 
 
 # T-2960: the Helsinki pipeline that reads the feed. The feed publishes `DemoCounter`, which no
@@ -194,3 +199,94 @@ def test_an_installation_without_the_feed_seeds_no_demo_pipeline(local):
     assert seed, "the local seed renders"
     assert PIPELINE_PATH not in seed
     assert not any("DEMO_FEEDS_NAMESPACE" in text for text in seed.values())
+
+
+# T-5883: HSL's live trams through the helsinki broker hsl-bridge, published like a device's.
+def bridge_config(dev, name):
+    return by_name(dev, "ConfigMap", "hsl-bridge")["data"][name]
+
+
+def test_the_bridge_signs_in_with_its_accounts_secret_from_a_secret_ref_only(dev):
+    deployment = by_name(dev, "Deployment", "hsl-bridge")
+    (container,) = deployment["spec"]["template"]["spec"]["containers"]
+    assert container["image"] == f"ghcr.io/warpstreamlabs/bento:1.22.0@{FEED_IMAGE_DIGEST}"
+    env = {e["name"]: e for e in container["env"]}
+    assert env["CLIENT_SECRET"]["valueFrom"]["secretKeyRef"] == {
+        "name": "hsl-bridge-client", "key": "client-secret", "optional": True}
+    assert env["CLIENT_ID"]["value"] == "helsinki-hsl-bridge"
+    assert env["TOKEN_URL"]["value"].startswith("https://idm.")
+    assert env["BROKER_URL"]["value"].startswith("ssl://hsl-bridge.helsinki.mqtt.") and env["BROKER_URL"]["value"].endswith(":8883")
+    assert "TOKEN" not in env, "the token is asked for at run time, never configured"
+    assert container["securityContext"]["readOnlyRootFilesystem"] is True
+
+
+def test_the_bridge_republishes_hsls_trams_under_hsl_with_its_token(dev):
+    bridge = yaml.safe_load(bridge_config(dev, "bridge.yaml"))
+    source = bridge["input"]["mqtt"]
+    assert source["urls"] == ["wss://mqtt.hsl.fi:443/"] and source["topics"] == ["/hfp/v2/journey/ongoing/vp/tram/#"]
+    out = bridge["output"]["mqtt"]
+    assert out["topic"] == 'hsl${! meta("mqtt_topic") }'
+    assert (out["user"], out["password"], out["tls"]) == ("${CLIENT_ID}", "${TOKEN}", {"enabled": True})
+    assert out["qos"] == 1
+    (limit,) = bridge["rate_limit_resources"]
+    assert limit["local"]["count"] < 1000, "under the broker's per-client rate, which disconnects"
+    run = bridge_config(dev, "run.sh")
+    assert 'timeout -s TERM "$((life - 30))"' in run, "a new token before the broker drops the old one"
+    assert "echo $TOKEN" not in run and "echo $CLIENT_SECRET" not in run
+
+
+def test_the_bridge_dials_out_only_to_public_443_and_the_ingress_controller(dev):
+    (policy,) = [d for d in dev if d.get("kind") == "NetworkPolicy"
+                 and d["spec"].get("podSelector", {}).get("matchLabels") == {"app.kubernetes.io/name": "demo-feeds-hsl-bridge"}
+                 and "Ingress" in d["spec"].get("policyTypes", [])]
+    assert not policy["spec"].get("ingress"), "nothing dials the bridge"
+    public, ingress_controller, dns = policy["spec"]["egress"]
+    assert [p["port"] for p in public["ports"]] == [443]
+    assert "10.0.0.0/8" in public["to"][0]["ipBlock"]["except"]
+    assert sorted(p["port"] for p in ingress_controller["ports"]) == [443, 8443, 8883]
+    assert [p["port"] for p in dns["ports"]] == [53, 53]
+
+
+@open_data.requires_docker
+def test_the_bridge_writes_a_token_and_nothing_of_a_refused_request(dev, tmp_path):
+    """The token round against a stub realm: a granted token lands in the file the loop reads,
+    a refusal leaves no file, and the secret is in no line Bento logs."""
+    class Realm(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            body = self.rfile.read(int(self.headers["Content-Length"])).decode()
+            ok = "client_id=helsinki-hsl-bridge" in body and "client_secret=s%26cr%2Bt" in body
+            self.send_response(200 if ok else 401)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"access_token": "eyJ.a.b", "expires_in": 300} if ok else {"error": "unauthorized_client"}).encode())
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Realm)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    (tmp_path / "token.yaml").write_text(bridge_config(dev, "token.yaml"))
+    # The image runs as its own user: the mount must be readable to it.
+    tmp_path.chmod(0o755)
+    (tmp_path / "token.yaml").chmod(0o644)
+    try:
+        for secret, expected in (("s&cr+t", "eyJ.a.b 300"), ("wrong-secret", "")):
+            result = subprocess.run(
+                ["docker", "run", "--rm", "--network", "host", "-v", f"{tmp_path}:/c:ro",
+                 "-e", f"TOKEN_URL=http://localhost:{server.server_port}/token", "-e", "CLIENT_ID=helsinki-hsl-bridge",
+                 "-e", f"CLIENT_SECRET={secret}", "--entrypoint", "sh", f"ghcr.io/warpstreamlabs/bento:1.22.0@{FEED_IMAGE_DIGEST}",
+                 "-c", "/bento -c /c/token.yaml >/dev/null 2>&1; echo ---; cat /tmp/token 2>/dev/null; true"],
+                check=False, capture_output=True, text=True, timeout=60,
+            )
+            assert result.stdout.split("---", 1)[1].strip() == expected, result
+            # Bento's own log of the round: the refusal is named, the secret is not.
+            log = subprocess.run(
+                ["docker", "run", "--rm", "--network", "host", "-v", f"{tmp_path}:/c:ro",
+                 "-e", f"TOKEN_URL=http://localhost:{server.server_port}/token", "-e", "CLIENT_ID=helsinki-hsl-bridge",
+                 "-e", f"CLIENT_SECRET={secret}", f"ghcr.io/warpstreamlabs/bento:1.22.0@{FEED_IMAGE_DIGEST}",
+                 "-c", "/c/token.yaml"],
+                check=False, capture_output=True, text=True, timeout=60,
+            )
+            assert secret not in log.stdout + log.stderr
+    finally:
+        server.shutdown()
