@@ -22,6 +22,7 @@ import pytest
 import yaml
 
 from test_apisix_429_contract import pinned_image
+from test_apisix_routes import requires_helmfile
 
 pytestmark = pytest.mark.xdist_group("docker-apisix-cache")
 
@@ -34,7 +35,7 @@ VALUES = ROOT / "components/context-gateway/values/gateway/base-values.yaml.gotm
 def test_only_the_anonymous_data_host_route_caches():
     assert (ROUTE["subDomain"], ROUTE["uri"], ROUTE["pluginConfig"]) == ("api", "/api/endpoint/*", "context-endpoint")
     cache = ROUTE["plugins"]["proxy-cache"]
-    assert (cache["cache_strategy"], cache["cache_zone"]) == ("memory", "memory_cache")
+    assert (cache["cache_strategy"], cache["cache_zone"]) == ("disk", "disk_cache_one")
     # The gateway's max-age decides; a `private` or `no-store` answer is never stored.
     assert cache["cache_control"] is True
     for field in ("cache_bypass", "no_cache"):
@@ -47,6 +48,20 @@ def test_only_the_anonymous_data_host_route_caches():
         assert var in cache["cache_key"], var
     # One route: the apex and Portal-host routes carry bearers and never cache.
     assert ROUTES.count("proxy-cache:") == 1
+
+
+@requires_helmfile
+def test_every_cache_zone_a_route_names_is_one_the_apisix_config_declares(rendered):
+    """APISIX drops a route whose proxy-cache zone its config.yaml lacks, and the data host then
+    answered every read with the edge's 404 (dev, 2026-10-28): the chart's config decides."""
+    docs = rendered("dev")
+    config = next(d for d in docs if d.get("kind") == "ConfigMap" and "config.yaml" in d.get("data", {})
+                  and "proxy_cache" in d["data"]["config.yaml"])
+    zones = {z["name"] for z in yaml.safe_load(config["data"]["config.yaml"])["apisix"]["proxy_cache"]["zones"]}
+    standalone = next(d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base")
+    named = {r["plugins"]["proxy-cache"]["cache_zone"] for r in yaml.safe_load(standalone["data"]["apisix.yaml"])["routes"]
+             if "proxy-cache" in r.get("plugins", {})}
+    assert named and named <= zones, (named, zones)
 
 
 def test_the_gateway_marks_anonymous_reads_public_for_five_seconds():
@@ -84,7 +99,12 @@ def edge(tmp_path_factory):
     server = http.server.ThreadingHTTPServer(("0.0.0.0", 0), Gateway)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     tmp = tmp_path_factory.mktemp("api-cache")
-    (tmp / "config.yaml").write_text("deployment:\n  role: data_plane\n  role_data_plane:\n    config_provider: yaml\n")
+    # The chart's zone list (apisix 2.15 config.yaml): the image's default would also hold
+    # `memory_cache`, which the deployed config lacks.
+    (tmp / "config.yaml").write_text("deployment:\n  role: data_plane\n  role_data_plane:\n    config_provider: yaml\n"
+                                     "apisix:\n  proxy_cache:\n    cache_ttl: 10s\n    zones:\n"
+                                     "    - name: disk_cache_one\n      memory_size: 50m\n      disk_size: 1G\n"
+                                     "      disk_path: /tmp/disk_cache_one\n      cache_levels: \"1:2\"\n")
     rules = {"routes": [{"id": "r", "uri": "/api/endpoint/*",
                          "upstream": {"type": "roundrobin", "nodes": {f"upstream:{server.server_port}": 1}},
                          "plugins": {"proxy-cache": ROUTE["plugins"]["proxy-cache"]}}]}

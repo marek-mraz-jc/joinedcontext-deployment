@@ -449,11 +449,14 @@ api-context-endpoint:
   # header that shapes the answer outside the key (Link names the @context of a compacted answer,
   # Prefer, NGSILD-Tenant; the gateway keeps those answers private too). The key carries the other
   # request headers the gateway's `Vary` names. The client
-  # still gets the chain's `no-store` (response-rewrite), so only the edge keeps a copy.
+  # still gets the chain's `no-store` (response-rewrite), so only the edge keeps a copy. The zone
+  # must be one the APISIX chart's config.yaml declares, and chart 2.15 declares only
+  # `disk_cache_one` (on the pod's /tmp): a route naming another zone is dropped whole, and every
+  # read of the data host answered the edge's 404 on dev (2026-10-28, `memory_cache`).
   plugins:
     proxy-cache:
-      cache_strategy: memory
-      cache_zone: memory_cache
+      cache_strategy: disk
+      cache_zone: disk_cache_one
       cache_key: ["$host", "$request_uri", "$http_accept", "$http_accept_language", "$http_accept_encoding", "$http_ngsild_results_restricted"] # yamllint disable-line rule:line-length
       cache_bypass: ["$http_cookie", "$http_authorization", "$http_link", "$http_prefer", "$http_ngsild_tenant"] # yamllint disable-line rule:line-length
       no_cache: ["$http_cookie", "$http_authorization", "$http_link", "$http_prefer", "$http_ngsild_tenant"] # yamllint disable-line rule:line-length
