@@ -100,6 +100,13 @@ env:
   # in_flight_tests: idle +9 MiB with it, about +100 MiB without).
   MALLOC_MMAP_THRESHOLD_: "131072"
   JC_GATEWAY_PUBLIC_URL: "https://api.{{ $global.domain }}"
+  # The edge keeps an anonymous read of data 5 s (T-5900, the api-context-endpoint proxy-cache):
+  # every anonymous caller is the Endpoint's one anonymous subject, so a repeated public read is
+  # answered at the edge instead of by the gateway, Antares and PostgreSQL. A revoked public grant
+  # or a changed value reaches anonymous readers at most 5 s late; a read with a token or a
+  # cookie is never kept. A platform image older than T-5900 ignores the key and keeps every
+  # answer private, which the edge then never stores.
+  JC_GATEWAY_PUBLIC_MAX_AGE: "5"
   JC_OIDC_ISSUER: "https://idm.{{ $global.domain }}/realms/{{ $global.instanceSlug }}"
   # The gateway's own client on the Portal's internal listener (T-1500, PF-46, AG-52), proved by
   # this pod's projected token and no secret (PF-47, T-2868; the volume below).

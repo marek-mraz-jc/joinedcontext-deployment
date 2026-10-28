@@ -98,6 +98,7 @@
  "test_disk_full.py": 0.2,
  "test_docs_pin.py": 16.7,
  "test_dr_drill.py": 152.5,
+ "test_edge_api_cache.py": 2.4,
  "test_edge_asset_cache.py": 11.7,
  "test_edge_attack_surface.py": 17.8,
  "test_edge_caller.py": 0.1,

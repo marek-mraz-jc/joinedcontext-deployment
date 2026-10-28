@@ -441,6 +441,25 @@ api-context-endpoint:
     size: 320
     idleTimeout: 60
     requests: 1000
+  # The edge cache of anonymous reads (T-5900): the data host is where anonymous traffic lands.
+  # APISIX keeps only an answer the gateway marks `public, max-age=N` (cache_control: true honours
+  # it and never stores `private` or `no-store`); the gateway marks only a 200 to a GET or HEAD of
+  # data sent with neither Authorization nor Cookie, and only while JC_GATEWAY_PUBLIC_MAX_AGE is
+  # set. A request with either header neither reads nor fills the cache. The key carries every
+  # request header the gateway's `Vary` names except Authorization, which bypasses. The client
+  # still gets the chain's `no-store` (response-rewrite), so only the edge keeps a copy.
+  plugins:
+    proxy-cache:
+      cache_strategy: memory
+      cache_zone: memory_cache
+      cache_key: ["$host", "$request_uri", "$http_accept", "$http_accept_language", "$http_accept_encoding", "$http_ngsild_results_restricted"] # yamllint disable-line rule:line-length
+      cache_bypass: ["$http_cookie", "$http_authorization"]
+      no_cache: ["$http_cookie", "$http_authorization"]
+      cache_method: ["GET", "HEAD"]
+      cache_http_status: [200]
+      cache_control: true
+      cache_ttl: 5
+      hide_cache_headers: false
 
 api-mcp-hub:
   name: api-mcp-hub
