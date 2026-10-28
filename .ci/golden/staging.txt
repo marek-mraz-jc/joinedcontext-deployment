@@ -308,6 +308,7 @@ v1/Service staging/gitea-ssh
 v1/Service staging/keycloak-app-keycloakx-headless
 v1/Service staging/keycloak-app-keycloakx-http
 v1/Service staging/model-tools
+v1/Service staging/mqtt-broker-pods
 v1/Service staging/observability-collector
 v1/Service staging/pipeline-runner
 v1/Service staging/pipeline-runner-pods

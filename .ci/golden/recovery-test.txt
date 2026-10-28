@@ -320,6 +320,7 @@ v1/Service jc/gitea-ssh
 v1/Service jc/keycloak-app-keycloakx-headless
 v1/Service jc/keycloak-app-keycloakx-http
 v1/Service jc/model-tools
+v1/Service jc/mqtt-broker-pods
 v1/Service jc/observability-collector
 v1/Service jc/pipeline-runner
 v1/Service jc/pipeline-runner-pods
