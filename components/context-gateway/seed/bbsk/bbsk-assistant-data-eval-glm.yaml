@@ -810,6 +810,7 @@ spec:
     outputTokensPerAnswer: 700
     messagesPerConversation: 30
     questionChars: 1000
+    visitorSharePercent: 100
   model:
     router: z-ai/glm-5.3
     answer: z-ai/glm-5.3
