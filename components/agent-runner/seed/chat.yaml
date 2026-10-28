@@ -48,6 +48,9 @@ spec:
       - jc_space_complete
       - jc_pipeline_propose
       - jc_pipeline_test
+      - jc_pipeline_sample_source
+      - jc_pipeline_try_mapping
+      - jc_pipeline_validate
       - jc_resource_propose
       - jc_resource_list
       - jc_resource_get

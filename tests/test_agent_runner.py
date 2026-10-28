@@ -183,6 +183,8 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
     named = set(access["operations"])
     assert {"jc_resource_propose", "jc_change_list", "jc_pipeline_metrics", "jc_datasource_check",
             "jc_workspace_open", "jc_workspace_preview_start"} <= named
+    # T-5957: the integrate-pipeline path (portal src/agents/paths.rs) samples, tries and validates.
+    assert {"jc_pipeline_sample_source", "jc_pipeline_try_mapping", "jc_pipeline_validate"} <= named
     assert len(access["operations"]) == len(named), "an operation is listed once"
     # Never an agent's: approving, deleting, keys, whole projects, bringing a copy back (AG-11, AG-82).
     never = {"jc_change_approve", "jc_change_reject", "jc_resource_delete", "jc_project_delete",
@@ -209,6 +211,8 @@ def test_the_forge_seed_commits_the_chat_profile_no_wider_than_the_builder(dev):
     assert chat["spec"]["model"]["provider"] == "openai-compatible"
     assert chat["spec"]["limits"]["concurrentRunsPerOrganization"] >= builder["spec"]["limits"]["concurrentRunsPerOrganization"]
     # Security of T-2770: the chat's access is the builder's or narrower, never wider.
+    # T-5957: the chat's integrate-pipeline path samples, tries and validates before it proposes.
+    assert {"jc_pipeline_sample_source", "jc_pipeline_try_mapping", "jc_pipeline_validate"} <= set(chat["spec"]["access"]["operations"])
     assert set(chat["spec"]["access"]["operations"]) <= set(builder["spec"]["access"]["operations"])
     widest = {grant["kind"]: set(grant["verbs"]) for grant in builder["spec"]["access"]["kinds"]}
     for grant in chat["spec"]["access"]["kinds"]:
