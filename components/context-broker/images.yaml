@@ -220,5 +220,10 @@ context-broker:
     # Antares dev a376b65 (dev-91, over daeea7d: T-5894 merged @context cache bounded at 64 MiB of heap instead of
     # 2 million terms; same FEATURES). No migration, no new key. Rollback: dev-90.
     # Signed by ship.yml on dev at a376b65 (run 40646951161).
-    tag: 'dev-91'
-    digest: 'sha256:67f5833d6b61dee7d343bb2dd4ca47c4831689609ec7caa1c364f4adc8e6de55'
+    # Antares dev c9c3a1e (dev-99, over a376b65: trains 20261028-1049..2133, T-5895 T-5896 T-5904 T-5913 T-5898
+    # T-5916 T-5909 T-5912 T-5935 T-5936 T-5918 T-5919 T-5905 T-5906 T-5933 T-5907 T-5955; the joinedcontext
+    # engine refuses every write of an x-jc-read-only caller; same FEATURES). No migration; new optional keys
+    # ANTARES_MEMORY_BUDGET, ANTARES_SCHEMA_WRITES, ANTARES_VIEW_IDLE keep their defaults. Rollback: dev-91.
+    # Signed by ship.yml on dev at c9c3a1e (run 40780917799).
+    tag: 'dev-99'
+    digest: 'sha256:bb701cd369261ff96ecc5a561ae560caca044255f02afaa7b25e44f5a54a5051'
