@@ -13,7 +13,11 @@ NGSILD_TOKEN and WRITE_ENDPOINT are set, OGC API Features ETS + GeoJSON, OData, 
 WebSocket, MCP), the roundtrip (tests/roundtrip, T-5914: one t-roundtrip- Entity written through NGSI-LD
 on the conformance Endpoint with NGSILD_TOKEN, read back through every served surface current, temporal
 and stream, then deleted), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included)
-and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). A stage passes when it
+and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). Before the first stage the
+run refuses in seconds when a stage would only fail on setup: ANTARES_DIR not at the Antares commit the
+candidate's broker pin names (ogc, odata, dcat), no NGSILD_TOKEN (roundtrip), a demo password of the sweep
+missing. Each stage ends after --stage-timeout seconds (its process group is killed, the stage is red) and
+the record is rewritten after every stage, so a stopped run still leaves a RED record. A stage passes when it
 exits 0, or when every red case it left matches .ci/release-gate-known-red.txt (each line names the
 task that owns the red; a stage red with no case to show, a Python traceback or a red load stays red).
 A record is green when every stage ran and passed and no case green in the previous green record is
@@ -35,6 +39,7 @@ import importlib.util
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -50,6 +55,11 @@ API = f"https://api.{DOMAIN}"
 RELEASE_FILES = re.compile(r"^(releases/[^/]+|CHANGELOG\.md)$")
 SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
 REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load")
+# What a stage needs from the caller's environment, or it fails on setup after hours instead of seconds.
+NEEDS_ANTARES = ("ogc", "odata", "dcat")
+NEEDS_ENV = {"roundtrip": ("NGSILD_TOKEN",),
+             "portal-sweep": ("PORTAL_PASSWORD", "APPROVER_PASSWORD", "VIEWER_PASSWORD", "EDITOR_PASSWORD")}
+BROKER_IMAGES = "components/context-broker/images.yaml"
 # The write-here read-everywhere Endpoint (T-5914): the conformance space nothing publishes, written only
 # by the conformance ServiceAccount (Policy conformance-write); WRITE_ENDPOINT overrides its slug.
 CONFORMANCE_ENDPOINT = ROOT / "components/context-gateway/seed/banskabystrica/endpoint-conformance.yaml"
@@ -83,6 +93,41 @@ def images_at(rev: str, cwd: Path = ROOT) -> list[str]:
 
 def candidate(rev: str, cwd: Path = ROOT) -> dict:
     return {"sha": git("rev-parse", "--verify", f"{rev}^{{commit}}", cwd=cwd), "images": images_at(rev, cwd)}
+
+
+def broker_commit(rev: str, cwd: Path = ROOT) -> tuple[str, str]:
+    """(tag, Antares commit) of the broker `rev` pins: the tag, and the `Antares dev <sha> (<tag>` note above it."""
+    text = git("show", f"{rev}:{BROKER_IMAGES}", cwd=cwd)
+    tags = re.findall(r"^\s+tag:\s*'?([\w.-]+)'?\s*$", text, re.MULTILINE)
+    if not tags:
+        raise Refused(f"{BROKER_IMAGES} at {rev} pins no broker tag")
+    shas = re.findall(rf"Antares dev ([0-9a-f]{{7,40}}) \({re.escape(tags[-1])}\b", text)
+    if not shas:
+        raise Refused(f"{BROKER_IMAGES} at {rev} names no 'Antares dev <sha> ({tags[-1]}' commit for its tag")
+    return tags[-1], shas[-1]
+
+
+def preflight(rev: str, names: list[str], env=os.environ, cwd: Path = ROOT) -> dict[str, str]:
+    """What the planned stages need, checked before the first one; the extra env (ANTARES_DIR) they get."""
+    problems, extra = [], {}
+    if any(n in NEEDS_ANTARES for n in names):
+        tag, sha = broker_commit(rev, cwd)
+        where = env.get("ANTARES_DIR", "").strip()
+        try:
+            head = git("rev-parse", "HEAD", cwd=Path(where)) if where else ""
+        except (Refused, OSError):
+            head = ""
+        if not head.startswith(sha):
+            problems.append(f"ANTARES_DIR={where or '(unset)'} is {head[:12] or 'no checkout'}, the candidate's broker "
+                            f"{tag} is Antares {sha}: git -C <Antares clone> worktree add --detach <dir> {sha}")
+        extra["ANTARES_DIR"] = where
+    for name in names:
+        missing = [k for k in NEEDS_ENV.get(name, ()) if not env.get(k, "").strip()]
+        if missing:
+            problems.append(f"{name} needs {', '.join(missing)} from the secrets mount")
+    if problems:
+        raise Refused("; ".join(problems))
+    return extra
 
 
 # ---------------------------------------------------------------------------- the stages
@@ -171,8 +216,13 @@ def cases(name: str, folder: Path, log: str, details: dict[str, str] | None = No
     if tsv.exists():
         for line in tsv.read_text().splitlines()[1:]:
             cols = line.split("\t")
-            if len(cols) >= 3 and cols[2] in ("pass", "fail"):
-                found[f"{name}::{cols[0]}/{cols[1]}"] = cols[2]
+            if len(cols) < 3 or cols[2] not in ("pass", "fail"):
+                continue
+            # A red suite row whose own junit lists its red cases is judged by those cases alone.
+            inside = f"{name}::{cols[0]}/{cols[1]}/"
+            if cols[2] == "fail" and any(k.startswith(inside) and v == "fail" for k, v in found.items()):
+                continue
+            found[f"{name}::{cols[0]}/{cols[1]}"] = cols[2]
     summary = folder / "summary.json"
     if summary.exists():
         data = json.loads(summary.read_text())
@@ -202,24 +252,44 @@ def load_verdict(folder: Path) -> list[str]:
     return problems
 
 
-def run_stage(name, argv, env, cwd, out: Path, known: list | None = None) -> dict:
+def execute(argv, cwd, env, log: Path, timeout: float) -> tuple[int, str]:
+    """Run argv into log; past timeout kill its whole process group (npx and Chromium hold the pipes)."""
+    with log.open("w") as sink:
+        try:
+            proc = subprocess.Popen(argv, cwd=cwd, env=env, stdout=sink, stderr=subprocess.STDOUT,
+                                    start_new_session=True)
+        except OSError as e:
+            return 127, f"did not run: {e}"
+        try:
+            return proc.wait(timeout=timeout), ""
+        except subprocess.TimeoutExpired:
+            for sig, grace in ((signal.SIGTERM, 30), (signal.SIGKILL, None)):
+                try:
+                    os.killpg(proc.pid, sig)
+                    proc.wait(timeout=grace)
+                    break
+                except (ProcessLookupError, subprocess.TimeoutExpired):
+                    continue
+            return 124, f"timed out after {int(timeout)} s (--stage-timeout); stopped"
+
+
+def run_stage(name, argv, env, cwd, out: Path, known: list | None = None, timeout: float = 3600) -> dict:
     folder = out / name
     folder.mkdir(parents=True, exist_ok=True)
     started = datetime.now(UTC)
-    try:
-        done = subprocess.run(argv, cwd=cwd, env={**os.environ, **env}, capture_output=True, text=True,
-                              check=False, timeout=4 * 3600)
-        code, log = done.returncode, done.stdout + done.stderr
-    except (OSError, subprocess.TimeoutExpired) as e:
-        code, log = 127, f"{name} did not run: {e}"
-    (folder / "output.txt").write_text(log)
+    code, why = execute(argv, cwd, {**os.environ, **env}, folder / "output.txt", timeout)
+    if why:
+        with (folder / "output.txt").open("a") as sink:
+            sink.write(f"\n{name} {why}\n")
+    log = (folder / "output.txt").read_text(errors="replace")
     details: dict[str, str] = {}
     found = cases(name, folder, log, details)
     red = {k: details.get(k, k) for k, v in found.items() if v == "fail"}
     excused = {k: parked(text, known or []) for k, text in red.items()}
     problems = [] if code == 0 else [f"exit {code}: {tail(log)}"]
     # A non-zero exit is forgiven only when it shows its reds and a task owns each one.
-    explained = bool(red) and all(excused.values()) and name != "load" and "Traceback (most recent" not in log
+    explained = (bool(red) and all(excused.values()) and name != "load" and code != 124
+                 and "Traceback (most recent" not in log)
     if explained:
         problems = []
     if name == "load" and code == 0:
@@ -320,23 +390,31 @@ def run(args) -> int:
     out = root / cand["sha"] / "stages"
     started = datetime.now(UTC).strftime("%FT%TZ")
     known = known_red()
-    results = []
-    for name, argv, env, cwd in stages(args, out):
+    plan = stages(args, out)
+    extra = preflight(args.rev, [s[0] for s in plan])
+    results: list[dict] = []
+    for name, argv, env, cwd in plan:
         print(f"release gate: {name} ...", flush=True)
-        results.append(run_stage(name, argv, env, cwd, out, known))
+        stage_env = {**env, **{k: v for k, v in extra.items() if name in NEEDS_ANTARES}}
+        results.append(run_stage(name, argv, stage_env, cwd, out, known, args.stage_timeout))
         print(f"release gate: {name} {results[-1]['verdict']} {'; '.join(results[-1]['problems'])}", flush=True)
+        rec = record_of(cand, results, known, root, started, args)
+        folder = write(rec, root)
+    print(f"release gate {cand['sha'][:12]}: {'GREEN' if rec['green'] else 'RED'}; report {folder / 'report.md'}")
+    return 0 if rec["green"] else 1
+
+
+def record_of(cand: dict, results: list[dict], known: list, root: Path, started: str, args) -> dict:
+    """The record so far: a run stopped between stages leaves it RED with the missing stages listed."""
     every = {k: v for s in results for k, v in s["cases"].items()}
     base = previous_green(root, cand["sha"])
     held = {k: v for s in results for k, v in s["known_red"].items()}
     regressed = regressions(base, every, frozenset(held))
     texts = [v.split(": ", 1)[1] for v in held.values()]
     unmatched = [f"{t} {p.pattern}" for t, p in known if not any(p.fullmatch(x) for x in texts)]
-    rec = {**cand, "unmatched": unmatched, "started": started, "finished": datetime.now(UTC).strftime("%FT%TZ"), "rate": args.rate,
-           "duration": args.duration, "baseline": base and base["sha"], "stages": results,
-           "cases": every, "regressions": regressed, "green": verdict(results, regressed)}
-    folder = write(rec, root)
-    print(f"release gate {cand['sha'][:12]}: {'GREEN' if rec['green'] else 'RED'}; report {folder / 'report.md'}")
-    return 0 if rec["green"] else 1
+    return {**cand, "unmatched": unmatched, "started": started, "finished": datetime.now(UTC).strftime("%FT%TZ"),
+            "rate": args.rate, "duration": args.duration, "baseline": base and base["sha"], "stages": results,
+            "cases": every, "regressions": regressed, "green": verdict(results, regressed)}
 
 
 # ---------------------------------------------------------------------------- check
@@ -437,7 +515,37 @@ def self_test() -> None:
                        "s::a.spec.ts › t": "pass", "s::portal": "pass", "s::mqtt": "fail"}, got
         (folder / "summary.json").write_text(json.dumps({"metrics": {
             "http_req_failed": {"values": {"passes": 3}}, "http_req_duration": {"values": {"p(95)": 120}}}}))
+        # a red suite row whose junit lists its red cases is judged by those; one with none stays red itself
+        (folder / "e2" / "ws").mkdir(parents=True)
+        (folder / "e2" / "ws" / "p.xml").write_text('<testsuite><testcase classname="c" name="bad"><failure/></testcase></testsuite>')
+        (folder / "results.tsv").write_text("endpoint\tsuite\tverdict\tdetail\tlog\ne1\togc\tfail\tx\ty\ne2\tws\tfail\tx\ty\n")
+        got = cases("s", folder, "")
+        assert got["s::e1/ogc"] == "fail" and "s::e2/ws" not in got and got["s::e2/ws/p.xml::c::bad"] == "fail", got
         assert load_verdict(folder) == ["3 failed requests (the gate allows 0)"]
+        # a stage past --stage-timeout is stopped with its children and stays red, whatever it printed
+        slow = run_stage("s", ["bash", "-c", "printf '  FAIL  catalogue (no dataset) (ab): x\\n'; sleep 60 & wait"],
+                         {}, tmp, Path(tmp) / "t", [("T-0001", re.compile(r"s::catalogue .*"))], timeout=1)
+        assert slow["verdict"] == "fail" and "timed out after 1 s" in slow["problems"][0], slow
+        # preflight: the broker's Antares commit, ANTARES_DIR at it, the env each stage needs
+        commit("broker", {BROKER_IMAGES: "x:\n  # Antares dev aaaaaaa (dev-9, ...)\n  # Antares dev "
+                          + git("rev-parse", "--short=7", "HEAD", cwd=repo) + " (dev-91, over aaaaaaa)\n    tag: 'dev-91'\n"})
+        tag, sha = broker_commit("HEAD", repo)
+        assert tag == "dev-91" and git("rev-parse", "HEAD~1", cwd=repo).startswith(sha), (tag, sha)
+        git("checkout", "-q", "HEAD~1", cwd=repo)
+        good = {"ANTARES_DIR": str(repo), "NGSILD_TOKEN": "t"}
+        try:
+            preflight("HEAD@{1}", ["ogc"], good, repo)
+        except Refused as e:
+            raise AssertionError(f"ANTARES_DIR at the pinned commit must pass: {e}") from e
+        for env, names, want in (({}, ["odata"], "ANTARES_DIR=(unset)"), ({"ANTARES_DIR": tmp}, ["dcat"], "no checkout"),
+                                 (good, ["portal-sweep"], "PORTAL_PASSWORD"), ({}, ["roundtrip"], "NGSILD_TOKEN")):
+            try:
+                preflight("HEAD@{1}", names, env, repo)
+            except Refused as e:
+                assert want in str(e), (want, str(e))
+                continue
+            raise AssertionError(f"preflight must refuse {names} with {env}")
+        assert preflight("HEAD@{1}", ["sta", "ws"], {}, repo) == {}
         assert run_stage("load", ["false"], {}, tmp, Path(tmp) / "out")["verdict"] == "fail"
         # a stage red only on known reds passes; an unknown red, a silent exit or a traceback stays red
         listed = Path(tmp) / "known.txt"
@@ -483,6 +591,7 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--conformance", type=Path, default=ROOT.parent / "joinedcontext-conformance")
     r.add_argument("--portal", type=Path, default=ROOT.parent / "joinedcontext-portal")
     r.add_argument("--records", type=Path, default=RECORDS)
+    r.add_argument("--stage-timeout", type=float, default=3600, help="seconds per stage before it is stopped red")
     c = sub.add_parser("check")
     c.add_argument("rev", nargs="?", default="HEAD")
     c.add_argument("--records", type=Path, default=RECORDS)
