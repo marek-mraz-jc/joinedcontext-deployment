@@ -74,7 +74,9 @@ def test_no_other_type_loses_its_current_state():
         ("barcelona/barcelona", "TrafficFlowObserved"),
         ("helsinki/helsinki", "Alert"), ("helsinki/helsinki", "Event"),
         ("helsinki/helsinki", "PointOfInterest"), ("helsinki/helsinki", "ServiceRequest"),
-        ("helsinki/helsinki", "Vehicle")]
+        ("helsinki/helsinki", "Vehicle"),
+        # The MQTT test space keeps the space helsinki's Vehicle rule (T-5883).
+        ("helsinki/hsl-mqtt-test", "Vehicle")]
     # T-5257: the nightly sweep rewrites every event that has not ended, so only a past or
     # withdrawn one reaches its 30 days.
     (event,) = [rule for rule in helsinki()["retention"] if rule["entityType"] == "Event"]

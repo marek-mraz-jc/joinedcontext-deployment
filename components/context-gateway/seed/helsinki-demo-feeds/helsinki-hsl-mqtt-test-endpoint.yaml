@@ -10,4 +10,4 @@ spec:
   contextSpaceRef: hsl-mqtt-test
   slug: bxh7tot5zee4ndom364owjtyf2ppinsy
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, mcp, websocket, ogc-features]
