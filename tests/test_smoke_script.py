@@ -104,15 +104,27 @@ args = sys.argv[1:]
 line = " ".join(args)
 # The pod selector of APISIX's egress policy (components/apisix/networkpolicies.yaml).
 EDGE_SELECTOR = [("app.kubernetes.io/name", "apisix"), ("app.kubernetes.io/instance", "apisix-apisix")]
+# dev's brokers (T-4857): sensors on 8883 by SNI, vehicles on its dedicated port alone (T-5871),
+# and a certificate door beside sensors (T-5875), which the check does not probe or count.
+MQTT_BROKERS = ["mqtt-helsinki-sensors 1", "mqtt-helsinki-vehicles 1", "mqtt-helsinki-sensors-cert 1"]
 MQTT_ROUTES = ["mqtt-helsinki-sensors mqtts HostSNI(`sensors.helsinki.mqtt.example.test`)",
-               "mqtt-helsinki-vehicles mqtts HostSNI(`vehicles.helsinki.mqtt.example.test`)",
-               "mqtt-helsinki-vehicles-port mqtt-18830 HostSNI(`*`)"]
-if args[0] == "get" and args[1] == "ingressroutetcp":
-    # The MQTT brokers' routes the Portal stamped (T-4857): name, entrypoint, match.
+               "mqtt-helsinki-vehicles-port mqtt-18830 HostSNI(`*`)",
+               "mqtt-helsinki-sensors-cert mqtts HostSNI(`cert.sensors.helsinki.mqtt.example.test`)"]
+MQTT_CERTS = ["mqtt-helsinki-sensors sensors.helsinki.mqtt.example.test",
+              "mqtt-helsinki-vehicles vehicles.helsinki.mqtt.example.test",
+              "mqtt-helsinki-sensors-cert cert.sensors.helsinki.mqtt.example.test"]
+if args[0] == "get" and args[1] == "deployments" and "app.kubernetes.io/name=mqtt-broker" in line:
+    # The brokers the Portal stamped (T-4857): name and ready replicas.
+    for broker in spec.get("mqttBrokers", MQTT_BROKERS):
+        print(broker)
+elif args[0] == "get" and args[1] == "ingressroutetcp":
+    # Their routes: name, entrypoint, match.
     for route in spec.get("mqttRoutes", MQTT_ROUTES):
         print(route)
-elif args[0] == "get" and args[1] == "deployment" and args[2].startswith("mqtt-"):
-    print(spec.get("mqttReady", "1"), end="")
+elif args[0] == "get" and args[1] == "certificates":
+    # Their certificates: name, first dnsName.
+    for cert in spec.get("mqttCerts", MQTT_CERTS):
+        print(cert)
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "endpoints__helsinki-" in line:
     # The Helsinki seed's slugs, one per endpoint name (T-0478); nothing seeded by default,
     # because the checks behind them wait up to 210 s for data to flow.
@@ -2000,25 +2012,39 @@ def test_an_instance_without_a_meshed_broker_skips_the_forged_caller_probe(tmp_p
 
 
 def test_the_mqtt_brokers_serve_their_certificate_and_refuse_a_connect_without_a_token(tmp_path):
-    """T-4857: each stamped broker runs, its host and its dedicated port verify, a tokenless
+    """T-4857: each stamped broker runs, its host on 8883 or its dedicated port verifies, a tokenless
     CONNECT is refused, and plain 1883 is closed; a broker that admits one fails the run."""
     result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
     for line in ("mqtt mqtt-helsinki-sensors runs",
+                 "mqtt mqtt-helsinki-vehicles runs",
                  "mqtt sensors.helsinki.mqtt.example.test:8883 serves a valid certificate for sensors.helsinki.mqtt.example.test",
                  "mqtt vehicles.helsinki.mqtt.example.test:18830 serves a valid certificate for vehicles.helsinki.mqtt.example.test",
                  "mqtt vehicles.helsinki.mqtt.example.test:18830 refuses a CONNECT without a token",
                  "mqtt sensors.helsinki.mqtt.example.test:1883 (plain MQTT) is closed from outside"):
         assert f"  ok    {line}" in result.stdout, result.stdout
+    assert result.returncode == 0 and "FAIL  mqtt" not in result.stdout, result.stdout
+    assert "cert.sensors" not in result.stdout, result.stdout
     for spec, failure in ((dict(HEALTHY, mqttAnonymous=True), "a CONNECT without a token was not refused"),
                           (dict(HEALTHY, mqttTls=False), "no verified TLS for"),
-                          (dict(HEALTHY, mqttReady=""), "has no ready replica"),
-                          (dict(HEALTHY, mqttRoutes=["mqtt-x-y-port mqtt-18831 HostSNI(`*`)"]), "no HostSNI route names")):
+                          (dict(HEALTHY, mqttBrokers=["mqtt-helsinki-sensors 0", "mqtt-helsinki-vehicles 1"]),
+                           "mqtt-helsinki-sensors has no ready replica"),
+                          (dict(HEALTHY, mqttCerts=[]), "mqtt-helsinki-vehicles: neither a Certificate nor a HostSNI route"),
+                          (dict(HEALTHY, mqttRoutes=["mqtt-helsinki-sensors mqtts HostSNI(`sensors.helsinki.mqtt.example.test`)"]), "mqtt-helsinki-vehicles: no route on 8883 or a dedicated port")):
         result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
         assert result.returncode == 1 and failure in result.stdout, result.stdout
 
 
+def test_a_custom_hostname_broker_takes_its_host_from_its_route(tmp_path):
+    """T-4857, T-5874: a broker on the admin's own certificate has no Certificate object; its 8883
+    route names the host."""
+    spec = dict(HEALTHY, mqttBrokers=["mqtt-helsinki-sensors 1"], mqttCerts=[], mqttSeeded=1,
+                mqttRoutes=["mqtt-helsinki-sensors mqtts HostSNI(`mqtt.city.example`)"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert "  ok    mqtt mqtt.city.example:8883 serves a valid certificate for mqtt.city.example" in result.stdout, result.stdout
+
+
 def test_an_instance_without_mqtt_brokers_skips_their_checks(tmp_path):
-    for spec in (dict(HEALTHY, mqttRoutes=[], mqttSeeded=0), dict(HEALTHY, mqttRoutes=[], mqttSeeded=0, mqttNamespace="")):
+    for spec in (dict(HEALTHY, mqttBrokers=[], mqttSeeded=0), dict(HEALTHY, mqttBrokers=[], mqttSeeded=0, mqttNamespace="")):
         result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
         assert "  skip  mqtt edge brokers (no MqttBroker seeded or stamped in this instance)" in result.stdout, result.stdout
 
@@ -2029,6 +2055,6 @@ def test_seeded_mqtt_brokers_that_do_not_run_fail_the_run(tmp_path):
     do not all run fails instead of skipping. Only gitea-seed-* ConfigMaps count as the seed."""
     result = run(tmp_path, dict(HEALTHY, mqttSeeded=3), "https://example.test", "https://idm.example.test")
     assert result.returncode == 1 and "the seed declares 3 MqttBroker(s), 2 run in dev" in result.stdout, result.stdout
-    result = run(tmp_path, dict(HEALTHY, mqttRoutes=[], mqttNamespace=""), "https://example.test", "https://idm.example.test")
+    result = run(tmp_path, dict(HEALTHY, mqttBrokers=[], mqttNamespace=""), "https://example.test", "https://idm.example.test")
     assert result.returncode == 1 and "the seed declares 2 MqttBroker(s), 0 run in no namespace (no broker-template" in result.stdout, result.stdout
     assert "skip  mqtt edge brokers" not in result.stdout
