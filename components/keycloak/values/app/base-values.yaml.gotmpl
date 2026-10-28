@@ -50,6 +50,14 @@ extraEnv: |
   # tests/test_postgres_connection_budget.py since the assistant's pool grew to 10 (T-5780).
   - name: KC_DB_POOL_MAX_SIZE
     value: "4"
+  # kc.sh sizes the heap in a container at MaxRAMPercentage=70 with InitialRAMPercentage=50, and its
+  # default MaxHeapFreeRatio=70 rarely gives a page back: on dev's 2048Mi limit that is a 1024Mi
+  # heap from the start and up to 1434Mi, while 146 MB of it is live (jcmd, T-5282). Keycloak sat at
+  # 1021Mi on a node at 97 % (T-5892). A quarter of the limit (512Mi on dev, 2Gi on the production
+  # profile) is the cap kc.sh itself picks outside a container (-Xmx512m) and leaves the live set
+  # three times over; the 5 % start lets the heap grow from about 100Mi instead of committing 1Gi.
+  - name: JAVA_OPTS_KC_HEAP
+    value: "-XX:MaxRAMPercentage=25 -XX:InitialRAMPercentage=5"
   - name: JGROUPS_DISCOVERY_PROTOCOL
     value: kubernetes.KUBE_PING
   - name: JGROUPS_DISCOVERY_PROPERTIES
