@@ -624,3 +624,56 @@ def test_the_city_register_updates_the_same_entities_every_day(entities):
     day = produced[0]["refPeriod"]["value"]
     assert all(day not in e["id"] for e in produced)
     assert {e["id"].rsplit("-", 1)[1] for e in produced} == {e["dimensionKey"]["value"] for e in produced}
+
+
+CYKLISTI = SEED / "bbsk/bbsk-pipeline-cyklisti-bento.yaml"
+JUNE_2025 = {"rok": "2025", "mesiac": "jún", "hodiny": 720, "od": "2025-06-01", "do": "2025-06-30"}
+
+
+def cyklisti_month(answer: dict, month: dict) -> list:
+    """The cyklisti summing step over one recorded month answer, as the stream runs it after its
+    `http` read; a refusal comes back as one {"failed": ...} element."""
+    steps = [
+        {"mapping": f"meta month = {json.dumps(json.dumps(month))}\nroot = this"},
+        processors(CYKLISTI)[4],
+        {"mapping": 'root = if errored() { {"failed": error()} } else { this }'},
+    ] + PORTAL_BATCHING
+    written = run_stream(steps, json.dumps(answer), "bbsk.sk", "bbsk-kraj")
+    return [element for batch in written.splitlines() if batch.strip() for element in json.loads(batch)]
+
+
+@requires_docker
+def test_the_counter_pipeline_asks_for_every_month_the_layer_holds():
+    """T-5930: the layer cannot sum its text columns, so the run reads each month the DataSource
+    lists (recorded 2026-10-28: 54 months, 2022-01 to 2026-06) with its own escaped filter."""
+    months = json.loads(run_mapping(processors(CYKLISTI)[0], (FIXTURES / "scitace-mesiace.json").read_text(), "bbsk.sk", "bbsk-kraj"))
+    assert len(months) == 54
+    june = next(m for m in months if m["rok"] == "2025" and m["mesiac"] == "jún")
+    assert june["hodiny"] == 720 and june["where"] == "Rok%3D%272025%27+AND+Mesiac%3D%27j%C3%BAn%27"
+    assert max(m["hodiny"] for m in months) <= 2000, "a month past one page would be summed short"
+
+
+@requires_docker
+def test_a_counter_month_is_the_sum_of_its_hours_and_an_empty_counter_writes_nothing():
+    produced = cyklisti_month(json.loads((FIXTURES / "scitace-2025-06.json").read_text()), JUNE_2025)
+    # Sums of the recorded hours, checked by hand against the layer on 2026-10-28.
+    assert {e["refArea"]["value"]: e["kpiValue"]["value"] for e in produced} == {
+        "Halič": 8029, "Klátna": 1433, "Kráľova Hoľa": 4497, "Oždiansky tunel": 8338, "Pastierska": 688,
+        "Poltár": 8869, "Rimava": 468, "Rimavská Sobota": 8140, "Roveň": 139, "Sedlo Javoriny": 918,
+        "Veľká Lúka": 781, "Športová": 10477,
+    }
+    sportova = next(e for e in produced if e["refArea"]["value"] == "Športová")
+    assert sportova["id"] == "urn:ngsi-ld:KeyPerformanceIndicator:bbsk.sk:bbsk-kraj:scitace-new-300021910-2025-06"
+    assert sportova["refPeriod"]["value"] == "2025-06"
+    assert sportova["kpiValue"]["observedAt"] == "2025-06-30T23:00:00Z"
+    assert {e["kpiValue"]["unitCode"] for e in produced} == {"C62"}
+
+
+@requires_docker
+def test_a_counter_month_answered_short_fails_the_run_rather_than_look_quiet():
+    answer = json.loads((FIXTURES / "scitace-2025-06.json").read_text())
+    answer["features"] = answer["features"][:100]
+    (refused,) = cyklisti_month(answer, JUNE_2025)
+    assert "answered 100 hours where the layer counts 720" in refused["failed"]
+    (refused,) = cyklisti_month({"error": {"code": 400, "message": "Invalid query"}}, JUNE_2025)
+    assert "answered no rows: Invalid query" in refused["failed"]
