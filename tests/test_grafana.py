@@ -107,7 +107,7 @@ def test_it_talks_to_prometheus_and_the_realm_and_to_nothing_else(addons):
 
 
 def test_the_dashboards_are_committed_json_and_reach_the_pod(addons):
-    """Six dashboards, provisioned from files rather than fetched at start-up: the egress
+    """Seven dashboards, provisioned from files rather than fetched at start-up: the egress
     policy above allows no outbound call that could fetch one, which is the point."""
     dashboards = by_name(addons, "ConfigMap", "grafana-dashboards")["data"]
     assert sorted(dashboards) == [
@@ -115,6 +115,7 @@ def test_the_dashboards_are_committed_json_and_reach_the_pod(addons):
         "context-broker.json",
         "context-gateway.json",
         "edge-apisix.json",
+        "k6-load.json",
         "portal.json",
         "slo.json",
     ]
@@ -138,8 +139,9 @@ def test_no_dashboard_queries_a_metric_no_component_exports():
     """A panel is a claim that somebody exports that series. These prefixes are the ones
     this platform actually has: APISIX's own, Antares's own, and — since T-0463 — the Context
     Gateway's and the Portal's, the Portal's assistant series (`jc_agent_`) since T-2771, and the synthetic probe's (`jc_probe_`,
-    T-5103) with the SLO rules recorded from them (`jc:probe_`, T-5104)."""
-    allowed = ("apisix_", "antares_", "jc_gateway_", "jc_portal_", "jc_agent_", "jc_probe_", "jc:probe_")
+    T-5103) with the SLO rules recorded from them (`jc:probe_`, T-5104), and k6's (`k6_`), which the
+    load runs remote-write (T-5901, conformance tests/k6/load.sh)."""
+    allowed = ("apisix_", "antares_", "jc_gateway_", "jc_portal_", "jc_agent_", "jc_probe_", "jc:probe_", "k6_")
     for path in sorted((COMPONENT / "charts/dashboards/files").glob("*.json")):
         for panel in json.loads(path.read_text())["panels"]:
             for target in panel["targets"]:

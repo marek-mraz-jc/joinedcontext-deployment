@@ -172,10 +172,11 @@ def test_dev_deploys_the_store_and_wires_the_reconciler_to_it(rendered):
     it was render-tested and never run."""
     docs = rendered("dev")
     store = workload(docs, "StatefulSet", "artifact-store")
-    # T-4473: dev requests what one hour of kubectl top measured (peak 105Mi), not the chart's 256Mi.
+    # T-4473: dev requests what kubectl top measured, not the chart's 256Mi; T-5897: 694Mi over
+    # 2026-10-25..28 since the WAL archive grew, + 20 %.
     assert store["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"] == {
         "cpu": "100m",
-        "memory": "128Mi",
+        "memory": "832Mi",
     }
     env_of = {e["name"]: e for e in portal_container(docs)["env"]}
     assert env_of["JC_PORTAL_ARTIFACT_STORE_BUCKET"]["value"] == "jc-artifacts"
