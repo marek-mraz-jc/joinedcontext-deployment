@@ -211,5 +211,8 @@ context-broker:
     # Antares dev d43ac52 (dev-88, over 0e5bc9a: T-5859 vendored rumqttc reads PEM with rustls-pki-types, rustls-pemfile
     # and its RUSTSEC-2025-0134 ignore gone; T-5858 compose only). No migration, no new key. Rollback: dev-87.
     # Signed by ship.yml on dev at d43ac52 (run 40557136916).
-    tag: 'dev-88'
-    digest: 'sha256:7f902c89a523e831626ee04345332f34c6bea9ce0b6af6528d67c4a1c92b0283'
+    # Antares dev d81a193 (dev-89, over d43ac52: T-4937 batch admission clock on web_time for wasm32; the native
+    # broker keeps std Instant; same FEATURES). No migration, no new key. Rollback: dev-88.
+    # Signed by ship.yml on dev at d81a193 (run 40606467553).
+    tag: 'dev-89'
+    digest: 'sha256:635f6f4ac119226c0f409f9e6ff13d72fcbc32e1f695b2d9ded8d79e393ff2ee'
