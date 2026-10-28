@@ -30,6 +30,14 @@ postgres:
             # extension; the databases chart's stat-statements Job then takes it from PUBLIC.
             pg_stat_statements.track: "top"
             pg_stat_statements.max: "5000"
+            # WAL volume (T-5772): dev wrote 1282 GB of WAL from 10-21 to 10-28 (183 GB a day, 196M
+            # full-page images, wal_compression off) and its gzip archive refilled the node disk to
+            # 89 % two days after the first cleanup. lz4 compresses the full-page images at little
+            # CPU; checkpoints every 15 min with 4GB of WAL between them, instead of a forced one
+            # each ~8 min at max_wal_size 1GB, write fewer of them. All three apply on reload.
+            wal_compression: "lz4"
+            max_wal_size: "4GB"
+            checkpoint_timeout: "15min"
     # Base backups and the WAL archive in the artifact store on the same node (T-5289): point-in-time
     # recovery, the monthly restore drill and upgrade.py's pre-upgrade backup, none of which ran
     # before. Two days, not 30 (T-5772): the store's volume sits on the node disk Postgres runs on,
