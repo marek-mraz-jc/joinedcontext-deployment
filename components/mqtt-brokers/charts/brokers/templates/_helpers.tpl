@@ -310,7 +310,7 @@ spec:
         - name: tls
           secret:
             secretName: {{ .release }}-tls
-            defaultMode: 0444
+            defaultMode: 292  # 0444 in decimal: the Portal reads this template as YAML 1.2, where 0444 is a string
             items:
               - key: tls.crt
                 path: tls.crt
@@ -322,7 +322,7 @@ spec:
         - name: client-ca
           secret:
             secretName: {{ $cert }}
-            defaultMode: 0444
+            defaultMode: 292  # 0444 in decimal: the Portal reads this template as YAML 1.2, where 0444 is a string
             items:
               - key: {{ .clientCaKey | default "ca.crt" }}
                 path: ca.crt

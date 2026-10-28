@@ -8,6 +8,7 @@ listener, the runner's namespace variable and the NetworkPolicies.
 
 import ipaddress
 import json
+import re
 import shutil
 import socket
 import ssl
@@ -280,6 +281,33 @@ def test_the_template_filled_is_the_broker_the_chart_renders(docs):
         ("policy.linkerd.io/v1beta3", "Server"), ("policy.linkerd.io/v1alpha1", "MeshTLSAuthentication"),
         ("policy.linkerd.io/v1alpha1", "AuthorizationPolicy"),
     }
+
+
+def test_every_template_key_reads_the_same_as_yaml_1_1_and_1_2(docs):
+    """T-5856 (dev 2026-10-28): Helm reads the chart as YAML 1.1, the Portal reads the template
+    keys as YAML 1.2 (serde_norway). `defaultMode: 0444` is the number 292 to the first and the
+    string "0444" to the second, so the API server refused the stamped Deployment and the
+    dedicated port's route behind it was never applied. A plain scalar the two read apart
+    (a leading-zero number, yes/no/on/off) has no place in a key the Portal stamps."""
+    (template,) = [d for d in docs if d["kind"] == "ConfigMap" and d["metadata"]["name"] == TEMPLATE]
+    apart = re.compile(r"0[0-9]+|[0-9_]*_[0-9_]*|(?i:y|n|yes|no|on|off)")
+
+    def plain(node):
+        if isinstance(node, yaml.ScalarNode):
+            if node.style is None and apart.fullmatch(node.value):
+                yield node.value
+        elif isinstance(node, yaml.SequenceNode):
+            for item in node.value:
+                yield from plain(item)
+        elif isinstance(node, yaml.MappingNode):
+            for key, value in node.value:
+                yield from plain(key)
+                yield from plain(value)
+
+    assert set(template["data"]) >= {"objects.yaml", "objects-port.yaml", "objects-certificate.yaml"}
+    for key, text in template["data"].items():
+        found = [value for node in yaml.compose_all(text) for value in plain(node)]
+        assert not found, f"{key}: {found}"
 
 
 def test_the_hostname_template_serves_the_city_name_on_8883_with_its_own_certificate(docs):
