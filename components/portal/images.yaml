@@ -248,18 +248,18 @@ portal:
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
-    digest: 'sha256:4c3d0e981f0a9c819b7802d65d672c367f99cad86775dccca2567b4a951d6b74'
+    digest: 'sha256:d10320130f81f84824532e47dbd4689badaa17040f537d8f365b67c17c6894a3'
     # The Portal commit this digest is the image of, and the docs commit its /docs pages are
     # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
     # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
-    commit: '87a52fabefa06cd804d3ad0d3966167da7c1e505'
-    docs: '55985ab0e709c0e901ee709184ef8123c6d29e96'
+    commit: '474a7f1f94595596a678235d27b9d554070dccdf'
+    docs: '06abfd43689132820b17812f0bb1d34539319bb7'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
     # The platform commit the pinned Portal's jc-core is built from: portal f49d6e3's Cargo.toml rev 967e8d3;
     # it carries 9358512 (T-5295's datacube step, which the susr-* pipelines use since T-5382).
-    platform: '37f38f257d9a96bf3e89ab3d090351d486f645e3'
+    platform: '5ac5c7c754899d7217ca83cf8ed1cdf0d9ae0b0a'
   # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
   # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, so `commit` is the
   # newest such commit at or before portal.commit; scripts/pin-portal.sh moves both together and
