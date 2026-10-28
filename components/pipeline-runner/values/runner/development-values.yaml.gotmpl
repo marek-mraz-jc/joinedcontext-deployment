@@ -19,8 +19,10 @@ replicaCount: 1
 resources:
   requests:
     cpu: 100m
-    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 807, peak 963Mi.
-    memory: 896Mi
+    # T-4473: dev, kubectl top 2026-10-17 21:22-22:22Z: median 807, peak 963Mi. T-5897: 338Mi
+    # steady over 3 days on dev once T-5282 cut the resident streams (2026-10-28), so 512Mi; the
+    # nightly peaks (1872Mi, T-5285) use the limit, and 896Mi left no node room for a surge pod.
+    memory: 512Mi
   limits:
     cpu: 2000m
     memory: 3Gi
