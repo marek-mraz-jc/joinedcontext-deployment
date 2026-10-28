@@ -62,7 +62,10 @@ def test_the_data_host_serves_the_four_surfaces_on_the_apex_chains(apisix_config
         assert route["priority"] == apex["priority"], route_id
         assert route.get("plugin_config_id") == apex.get("plugin_config_id"), route_id
         assert route.get("vars") == apex.get("vars") and route.get("methods") == apex.get("methods"), route_id
-        assert route.get("plugins") == apex.get("plugins"), route_id
+        # T-5900: the data host alone keeps the edge cache of anonymous reads (test_edge_api_cache.py).
+        cache = {"proxy-cache"} if route_id == "api-context-endpoint" else set()
+        assert set(route.get("plugins", {})) == set(apex.get("plugins", {})) | cache, route_id
+        assert {k: v for k, v in route.get("plugins", {}).items() if k not in cache} == apex.get("plugins", {}), route_id
         assert all(node.startswith("context-gateway.") for node in upstreams[route_id]["nodes"]), route_id
     assert routes["api-context-endpoint-ws"].get("enable_websocket") is True
 
