@@ -5,6 +5,7 @@ Endpoint over the same space; a type no dataset publishes links nothing."""
 import csv
 import importlib.util
 import json
+import time
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts/smoke-source-links.py"
@@ -52,10 +53,19 @@ class Recorded:
 
     def fetch(self, url, method="GET", headers=None, body=None, limit=0):
         self.count += 1
+        return self._send(method, url, headers, body, limit)
+
+    # The parallel per-Endpoint reads (smoke-catalogue's count pass) go through the client's send.
+    def _send(self, method, url, headers, body, limit):
         self.asked.append(url)
         if url not in self.table:
             return links.smoke.Answer(404, "application/json", b"{}")
+        if self.table[url] == 429:
+            return links.smoke.Answer(429, "application/json", b"{}")
         return links.smoke.Answer(200, "application/json", json.dumps(self.table[url]).encode())
+
+    _clock = staticmethod(time.monotonic)
+    _sleep = staticmethod(lambda seconds: None)
 
 
 def table(path):
@@ -64,7 +74,11 @@ def table(path):
 
 
 def test_rows_of_the_space_link_the_dataset_that_names_their_type(tmp_path):
-    assert links.run(DOMAIN, "prod", tmp_path, Recorded(answers("Bridge")), now="T") == 0
+    client = Recorded(answers("Bridge"))
+    assert links.run(DOMAIN, "prod", tmp_path, client, now="T") == 0
+    # T-5903: a type one Endpoint alone serves needs no first entity, the run's budget goes to shared ones.
+    assert not [u for u in client.asked if "type=PointOfInterest" in u]
+    assert [u for u in client.asked if "type=Bridge" in u]
     rows = table(tmp_path / "smoke-source-links-prod-T.tsv")
     dataset = f"https://opendata.{DOMAIN}/dataset/bbsk-mosty"
     assert rows[(REGISTRE, "Bridge")]["resolved"] == dataset
@@ -84,6 +98,16 @@ def test_a_page_that_names_another_type_is_a_ko(tmp_path, capsys):
     assert rows[(REGISTRE, "Bridge")]["verdict"] == "ko"
     assert rows[(MOSTY, "Bridge")]["verdict"] == "ok", "its own Endpoint's one page"
     assert "source link " + REGISTRE + " Bridge" in capsys.readouterr().out
+
+
+def test_a_lasting_rate_limit_judges_nothing(tmp_path, capsys):
+    recorded = answers("Bridge")
+    recorded[f"{API}/{MOSTY}/ngsi-ld/v1/types"] = 429
+    client = Recorded(recorded)
+    assert links.run(DOMAIN, "prod", tmp_path, client, now="T") == 1
+    assert "budget ended after" in capsys.readouterr().out
+    assert not list(tmp_path.glob("*.tsv")), "no table from a run the limit cut"
+    assert client.count == len(client.asked)
 
 
 def test_names_that_are_not_plain_never_reach_a_pattern():
