@@ -54,6 +54,9 @@ COUNT_WORKERS = 6
 COUNT_SLOW = 2  # requests at once for COUNT_COOL seconds after a 429 or a 503
 COUNT_COOL = 60.0
 COUNT_DEADLINE = 600.0
+# The edge counts 600 reads a minute per client address on /api/endpoint/* (limit-count), and every
+# agent of the sandbox host shares that address: the pass starts at most 400 a minute (T-5903).
+COUNT_INTERVAL = 60 / 400
 COUNT_TYPES = 3  # types of an untyped dataset tried, the first with an entity wins
 CORE = ["ngsi-ld", "mcp", "odata", "ogc", "model", "data", "views"]
 ROTATING = ["datastore", "websocket", "map", "csv"]
@@ -492,11 +495,22 @@ class Counts:
         self._send, self._clock, self._sleep = send, clock, sleep
         self.gate, self.count, self.lock = Gate(clock), 0, threading.Lock()
         self.start = clock()
+        self.next = self.start
+
+    def _pace(self):
+        """Request starts COUNT_INTERVAL apart, whichever worker asks."""
+        with self.lock:
+            now = self._clock()
+            slot = max(now, self.next)
+            self.next = slot + COUNT_INTERVAL
+        if slot > now:
+            self._sleep(slot - now)
 
     def get(self, url: str) -> Answer:
         """One read; a 429 or 503 slows the pass and is retried after its Retry-After."""
         for attempt in range(RETRIES + 1):
             with self.gate:
+                self._pace()
                 answer = self._send("GET", url, {"User-Agent": "jc-smoke-catalogue", "Accept": "application/json"},
                                     None, MAX_BODY)
             with self.lock:

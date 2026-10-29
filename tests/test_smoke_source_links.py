@@ -105,7 +105,8 @@ def test_a_lasting_rate_limit_judges_nothing(tmp_path, capsys):
     recorded[f"{API}/{MOSTY}/ngsi-ld/v1/types"] = 429
     client = Recorded(recorded)
     assert links.run(DOMAIN, "prod", tmp_path, client, now="T") == 1
-    assert "budget ended after" in capsys.readouterr().out
+    assert f"budget ended after 12 requests: 429 after 3 retries on {API}/{MOSTY}/ngsi-ld/v1/types" \
+        in capsys.readouterr().out
     assert not list(tmp_path.glob("*.tsv")), "no table from a run the limit cut"
     assert client.count == len(client.asked)
 
