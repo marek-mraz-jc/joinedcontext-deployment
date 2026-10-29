@@ -157,6 +157,7 @@
  "test_helsinki_transport_endpoint.py": 0.3,
  "test_hfp_vehicles.py": 24.5,
  "test_hook_timeouts.py": 34.0,
+ "test_image_os_upgrade.py": 0.1,
  "test_image_pins.py": 0.0,
  "test_image_sbom.py": 0.0,
  "test_justfile_golden.py": 8.6,

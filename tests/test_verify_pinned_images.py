@@ -148,6 +148,7 @@ def _identity():
     # the other signers of the same images
     "joinedcontext-portal/.github/workflows/promote.yml@refs/heads/main",
     "joinedcontext-deployment/.github/workflows/image-gitops.yml@refs/heads/main",
+    "joinedcontext-deployment/.github/workflows/image-patched.yml@refs/heads/main",
     "Antares-NGSI-LD-Context-Broker/.github/workflows/full.yml@refs/tags/v0.4.1",
 ])
 def test_the_signers_of_pinned_images_are_accepted(workflow):
