@@ -1,0 +1,16 @@
+---
+context-broker:
+  broker:
+    rawValues:
+      env:
+        # Dev only (T-6033); smartcity reuses dev's values profile, so this sits in dev's
+        # environment and reaches prod only after dev ran with it. The dev broker was OOMKilled at
+        # its 1536Mi limit seven times from 2026-10-27 to 10-29 (dev-101 twice in 136 min): ten
+        # minutes after a start it held a narrowed handle (state + in-process router, ~250 KiB,
+        # T-5896) for each of ~3870 view x surface pairs (669 views), 785 MiB of live heap
+        # (antares_view_builds_total, antares_memory_allocated_bytes), and the 1h default never
+        # dropped one before the next kill. Replayed over the 5.7 min of log before the
+        # 06:32:03Z kill (24 787 surface operations, the release gate's catalogue burst in it), a
+        # 2m bound holds at most 1418 handles (~350 MiB) for 272 rebuilds of ~2 ms in 5 min;
+        # 5m holds 1802 for 48. 2m, because memory is what kills the pod and a rebuild is cheap.
+        ANTARES_VIEW_IDLE: "2m"
