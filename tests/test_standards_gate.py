@@ -153,3 +153,22 @@ def test_a_red_roundtrip_case_blocks_the_record(tmp_path):
     green = [{"name": n, "verdict": "pass"} for n in gate.REQUIRED if n != "roundtrip"]
     assert not gate.verdict([*green, stage], [])
     assert gate.verdict([*green, {**stage, "verdict": "pass"}], [])
+
+
+def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, monkeypatch):
+    # first record b629a881: the sweep hit the 3600 s stage cap at spec 79 of 330, 1,619 s of it critic-* walks
+    args = argparse.Namespace(conformance=tmp_path, portal=tmp_path, requests=None, rate=8,
+                              duration="5m", only=["portal-sweep", "ws"], stage_timeout=3600,
+                              sweep_timeout=18000, rev="HEAD", records=tmp_path)
+    env = {name: env for name, _, env, _ in gate.stages(args, tmp_path)}["portal-sweep"]
+    skip = re.compile(env["SWEEP_SKIP"])
+    assert skip.search("e2e/live/critic-policy.spec.ts") and not skip.search("e2e/live/mqtt-device.spec.ts")
+    seen = {}
+    monkeypatch.setattr(gate, "candidate", lambda rev: {"sha": "a" * 40, "images": {}})
+    monkeypatch.setattr(gate, "preflight", lambda rev, names: {})
+    monkeypatch.setattr(gate, "run_stage", lambda name, *a: seen.setdefault(name, a[-1]) and
+                        {"name": name, "verdict": "pass", "problems": [], "cases": {}})
+    monkeypatch.setattr(gate, "record_of", lambda *a: {"green": False, "sha": "a" * 40})
+    monkeypatch.setattr(gate, "write", lambda rec, root: tmp_path)
+    gate.run(args)
+    assert seen == {"portal-sweep": 18000, "ws": 3600}, seen
