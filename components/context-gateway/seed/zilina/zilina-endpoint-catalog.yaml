@@ -16,11 +16,11 @@ spec:
   slug: wna4brinpl3tdvgcjwdfuzfpmrar3gra
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: zilina }
-      license: cc-zero
   catalog:
+    # Off the catalogue (T-6071, as T-5788: an empty dataset leaves it): on 2026-10-29 dev and prod
+    # hold no record in it (typeList []), and the three city catalogues shared one CKAN package name.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     # The publisher and contact desk are the Project's spec.catalog, its registry IRI (T-4596).
     # Records of public datasets and Endpoints only: no record names a person.
     personalData: does-not-contain

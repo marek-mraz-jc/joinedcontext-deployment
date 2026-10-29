@@ -16,11 +16,11 @@ spec:
   slug: emzask3opaecj2x4td52pjc6zzxeciii
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, mcp]
-  publish:
-    ckan:
-      instanceRef: { kind: CkanInstance, name: hel-fi }
-      license: cc-zero
   catalog:
+    # Off the catalogue (T-6071, as T-5788: an empty dataset leaves it): on 2026-10-29 dev and prod
+    # hold no record in it (typeList []), and the three city catalogues shared one CKAN package name.
+    # The harvest feeds leave it out (EP-139); publish it again once prod holds data.
+    harvest: false
     publisher:
       name: { fi: Helsingin kaupunki, sv: Helsingfors stad, en: City of Helsinki }
       uri: https://www.hel.fi/
