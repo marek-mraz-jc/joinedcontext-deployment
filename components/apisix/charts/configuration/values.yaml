@@ -46,6 +46,9 @@ edge:
   # the namespaced Issuer `letsencrypt-dns01` and the Certificate `apisix-apps-wildcard`.
   # Empty renders nothing, and every App host keeps a certificate of its own.
   appsWildcard: ''
+  # Hosts that serve an Endpoint WebSocket (`/api/endpoint/{slug}/ws`). On Traefik their
+  # non-upgrade answers carry `Upgrade: websocket` again (T-5931). Empty renders nothing.
+  websocketHosts: []
 
 # Service mesh integration: a Linkerd `Server` marks the APISIX data plane as the
 # public edge reachable by the ingress controller.

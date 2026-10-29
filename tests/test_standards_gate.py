@@ -90,7 +90,7 @@ def test_the_committed_known_reds_park_todays_dev_smoke_reds_and_nothing_else(tm
 
 
 def test_the_first_live_runs_reds_are_parked_by_case_and_a_suite_row_does_not_hide_them(tmp_path):
-    # c97c4488 on dev (deployer 2026-10-28T14:1xZ): the helsinki-feedback catalogue row and the two ws cases
+    # c97c4488 on dev (deployer 2026-10-28T14:1xZ): the helsinki-feedback catalogue row is parked
     known = gate.known_red()
     feedback = ("  FAIL  catalogue helsinki-feedback (gv24bicwway4foznuszsagmzydzk3e2z): data urn:ngsi-ld:ServiceRequest:"
                 "hel.fi:helsinki:open311-3379243 has no name; urn:ngsi-ld:ServiceRequest:hel.fi:helsinki:open311-1 has no name"
@@ -115,11 +115,10 @@ def test_the_first_live_runs_reds_are_parked_by_case_and_a_suite_row_does_not_hi
     a, b = "hqgmj6ieuq57y37g5g4ckz5eyhebklox", "mluyob4nz52lok3ssk7pgn5vwt"
     flood = "test_a_subscribe_flood_closes_with_1008_and_another_socket_stays"
     upgrade = "test_a_plain_get_answers_426_naming_the_upgrade"
-    held = ws({a: [upgrade], b: [upgrade, flood]})
-    assert held["verdict"] == "pass" and len(held["known_red"]) == 3, held
-    # The flood moves between the two Endpoints from run to run (440ef3b9 failed it on hqgmj...).
-    assert ws({a: [upgrade, flood]})["verdict"] == "pass", "the flood is parked on either Endpoint"
-    assert ws({a: [upgrade, "test_other"]})["verdict"] == "fail"
+    # T-5931 fixed both ws cases (the edge advertises the upgrade, the gateway ends a flood with a close
+    # handshake): neither is parked any more, on either Endpoint.
+    assert ws({a: [upgrade]})["verdict"] == "fail", "the 426 without Upgrade is red again"
+    assert ws({b: [flood]})["verdict"] == "fail", "the flood without its 1008 is red again"
 
 
 def test_the_roundtrip_stage_writes_only_on_the_seeded_conformance_endpoint(tmp_path, monkeypatch):

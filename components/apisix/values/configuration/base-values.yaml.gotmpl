@@ -43,6 +43,18 @@ composer:
 {{- end }}
 {{- end }}
 {{- $subDomains = $subDomains | uniq | sortAlpha }}
+{{- /* The hosts an Endpoint WebSocket route answers on, from the same route map (T-5931). */}}
+{{- $websocketHosts := list }}
+{{- range $component, $config := .Values.routes }}
+{{- if dig "websocket" false $config }}
+{{- if hasKey $config "subDomain" }}
+{{- $websocketHosts = append $websocketHosts (printf "%s.%s" $config.subDomain $global.domain) }}
+{{- else }}
+{{- $websocketHosts = append $websocketHosts $global.domain }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $websocketHosts = $websocketHosts | uniq | sortAlpha }}
 edge:
   enabled: {{ $global.ingress.enabled }}
   secretName: apisix-edge-tls
@@ -63,6 +75,9 @@ edge:
     {{- end }}
     {{- else }} []
     {{- end }}
+  # Hosts with an Endpoint WebSocket route: Traefik advertises the upgrade on their `/ws`
+  # answers (T-5931).
+  websocketHosts: {{ if $websocketHosts }}{{ $websocketHosts | toJson }}{{ else }}[]{{ end }}
   # The zone every App host sits in, when its wildcard certificate is on (ADR-N-037 §6).
   appsWildcard: {{ if dig "ingress" "appsWildcard" "enabled" false $global }}{{ printf "*.apps.%s" $global.domain | quote }}{{ else }}''{{ end }}
 
