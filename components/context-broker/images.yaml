@@ -229,5 +229,12 @@ context-broker:
     # pool slots freed after a failed release ping over TLS, zip 9.0.5 for CVE-2026-115905; same FEATURES).
     # No migration, no new key. Rollback: dev-99.
     # Signed by ship.yml on dev at a48423e (run 40817974367).
-    tag: 'dev-101'
-    digest: 'sha256:9b8673732f3773296fb59d0cda25b7c6a8460d0203320ce31c2e5295e868eb24'
+    # Antares dev 7375b1c (dev-113, over a48423e: 33 train merges, T-5396 T-5616 T-5772 T-5835 T-5889 T-5911
+    # T-6001 T-6021 T-6034..T-6036 T-6046 T-6049 T-6052 T-6055 T-6056 T-6066 T-6070 T-6072 T-6074 T-6085 T-6100).
+    # Migrations 0029 (entity_values update trigger writes the difference; function only) and 0030
+    # (temporal_entities.bare, constant default, catalog only). Schema and temporal_entities dumped before the
+    # apply (t5835/ on the postgres volume, 20261029T2315Z). No new runtime key (ANTARES_POLICY_SUBJECT_HEADERS
+    # is already set). Rollback: dev-101 (the store ignores missing migrations) and that dump restored.
+    # Signed by ship.yml on dev at 7375b1c (run 40955556681).
+    tag: 'dev-113'
+    digest: 'sha256:da7856c1f8cce9ec1b99c3e0429fd230b4c10dfe044eb903f05f41a9041a40c8'
