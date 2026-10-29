@@ -4,7 +4,8 @@ The Portal's reconciler writes each workload-bound account's client with `federa
 authentication naming the realm's identity provider `kubernetes`; this is the other half:
 the realm declares that provider with the cluster's issuer, Keycloak holds the one token it
 reads the issuer's keys with (projected, an hour's life, the default token still unmounted),
-and its NetworkPolicy reaches the API server on 6443 and opens no 443 to the world.
+and its NetworkPolicy reaches the API server on 6443; its only 443 to the internet is the
+public-address rule for Client ID Metadata Documents (T-5954).
 """
 
 import base64
@@ -62,8 +63,13 @@ def test_keycloak_holds_a_short_projected_token_and_not_the_default_one(rendered
     assert mounts["kube-api-token"]["readOnly"] is True
 
 
-def test_keycloak_reaches_the_api_server_and_no_https_elsewhere(rendered):
-    """PF-47: 6443 to the control plane, and no 443 to 0.0.0.0/0 came with it."""
+PRIVATE = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8", "100.64.0.0/10"}
+
+
+def test_keycloak_reaches_the_api_server_and_https_only_on_public_addresses(rendered):
+    """PF-47: 6443 to the control plane. T-5954: a CIMD login fetches the client's document
+    over https, so 443 opens, but only to public addresses: no pod, node, metadata service or
+    loopback is reachable on it."""
     policies = [
         d for d in rendered("local")
         if d.get("kind") == "NetworkPolicy"
@@ -71,11 +77,12 @@ def test_keycloak_reaches_the_api_server_and_no_https_elsewhere(rendered):
         and "Egress" in d["spec"].get("policyTypes", [])
     ]
     assert policies, "no egress policy selects the Keycloak pods"
-    open_to_world = [
-        port["port"]
+    open_to_world = sorted(
+        (port["port"], tuple(sorted(peer["ipBlock"].get("except", []))))
         for policy in policies
         for rule in policy["spec"].get("egress", [])
-        if any(peer.get("ipBlock", {}).get("cidr") == "0.0.0.0/0" for peer in rule.get("to", []))
+        for peer in rule.get("to", [])
+        if peer.get("ipBlock", {}).get("cidr") == "0.0.0.0/0"
         for port in rule.get("ports", [])
-    ]
-    assert open_to_world == [6443], open_to_world
+    )
+    assert open_to_world == [(443, tuple(sorted(PRIVATE))), (6443, ())], open_to_world
