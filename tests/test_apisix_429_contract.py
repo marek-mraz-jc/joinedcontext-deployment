@@ -132,7 +132,7 @@ def test_a_browser_gets_a_page_in_its_language():
         # T-5078: a timed reload the reader cannot stop fails WCAG 2.2.1 (axe meta-refresh,
         # critical); the page names the seconds and links the same address instead.
         assert "http-equiv" not in page.lower(), f"{lang}: no timed refresh"
-        assert "$sent_http_x_ratelimit_reset s" in page, f"{lang}: the page says when"
+        assert "$jc_refusal_retry_after s" in page, f"{lang}: the page says when"
         assert re.findall(r"<a [^>]*>", page) == ['<a href="">'], f"{lang}: one link, to the same address"
         assert "<script" not in page and "src=" not in page and page.count("href=") == 1, f"{lang}: it loads nothing"
         for count in {str(block.get("count")) for _, _, block in limit_count_blocks()}:
@@ -142,15 +142,21 @@ def test_a_browser_gets_a_page_in_its_language():
         assert f'if ($jc_refusal_lang ~* "^\\s*{lang}") {{' in snippet, lang
     # Each page's location sets the headers a refusal needs, and a CSP that allows nothing to load.
     for block in re.findall(r"location @too_many_requests_\w+ \{(.*?)\n        \}", snippet, re.S):
-        assert "add_header Retry-After $sent_http_x_ratelimit_reset always;" in block
+        assert "add_header Retry-After $jc_refusal_retry_after always;" in block
         assert 'add_header X-Content-Type-Options "nosniff" always;' in block
         assert 'add_header Cache-Control "no-store, no-cache, must-revalidate" always;' in block
         assert "add_header Content-Security-Policy" in block
 
 
 def test_retry_after_is_the_window_the_limit_published():
-    """A constant would lie the day a route's `time_window` changes."""
-    assert "add_header Retry-After $sent_http_x_ratelimit_reset always;" in server_snippet()
+    """A constant would lie the day a route's `time_window` changes; a limiter that publishes
+    no window (`limit-conn`, `limit-req`) still gets a number (T-6022): nginx drops an
+    `add_header` whose value is empty."""
+    assert "add_header Retry-After $jc_refusal_retry_after always;" in server_snippet()
+    mapped = re.search(r"map \$sent_http_x_ratelimit_reset \$jc_refusal_retry_after \{(.*?)\}", http_end_snippet(), re.DOTALL)
+    assert mapped, "the fallback map is in the http block"
+    assert re.search(r'^\s*"" [1-9][0-9]*;$', mapped.group(1), re.MULTILINE), mapped.group(1)
+    assert "default $sent_http_x_ratelimit_reset;" in mapped.group(1)
 
 
 @pytest.mark.parametrize("path,route,block", limit_count_blocks(),
@@ -299,6 +305,41 @@ routes:
         assert '<html lang="en">' in answer(url, page)[2], "no Accept-Language is English"
         status, headers, body = answer(url, {"Accept": "application/json", "Accept-Language": "sk"})
         assert headers["Content-Type"] == "application/problem+json" and json.loads(body)["type"] == PROBLEM_TYPE
+
+
+def test_the_pinned_image_names_a_retry_for_a_limiter_without_a_window(tmp_path):
+    """T-6022: the bulk and temporal routes refuse with `limit-conn`, which publishes no
+    `X-RateLimit-Reset`; dev's anonymous temporal 429 then came without `Retry-After` while its
+    body said to read it. `limit-req` refuses the same way and needs no held connection."""
+    rules = """
+routes:
+  - uri: /probe
+    plugins:
+      limit-req:
+        rate: 1
+        burst: 0
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+    upstream:
+      nodes:
+        "127.0.0.1:9": 1
+      type: roundrobin
+#END
+"""
+    with pinned_apisix(tmp_path, rules) as base:
+        url = base + "/probe"
+        answer(url)
+        status, headers, body = answer(url)
+        assert status == 429, body
+        assert "X-RateLimit-Reset" not in headers, headers
+        assert headers["Content-Type"] == "application/problem+json", headers
+        assert headers.get("Retry-After") == "60", headers
+        page = {"Accept": "text/html", "Accept-Language": "en"}
+        status, headers, body = answer(url, page)
+        assert status == 429, body
+        assert headers.get("Retry-After") == "60", headers
+        assert "Try again in 60 s." in body, body
 
 
 def test_the_pinned_image_counts_space_reads_and_writes_apart(tmp_path):

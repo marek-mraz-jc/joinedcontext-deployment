@@ -235,6 +235,17 @@ apisix:
           "" 30;
           default $jc_maintenance;
         }
+        # `Retry-After` of a 429 the edge writes (T-6022): the seconds `limit-count` published in
+        # `X-RateLimit-Reset`, so it counts down with the window. `limit-conn` (the bulk and
+        # temporal routes) and `limit-req` publish no reset, and nginx drops an `add_header` with
+        # an empty value, so their 429 told the client to read a header it never got. Their
+        # fallback is 60 s: the window every `limit-count` of the edge uses, and the scale on which
+        # one of the 10 held bulk exports ends. A map is evaluated when it is read, here in the
+        # named 429 location, after the limiter set (or did not set) its header.
+        map $sent_http_x_ratelimit_reset $jc_refusal_retry_after {
+          "" 60;
+          default $sent_http_x_ratelimit_reset;
+        }
       # The body ceiling belongs here, in the server block, and not above: APISIX's own
       # `client_max_body_size 0` is already in the http block and nginx refuses to start on a
       # duplicate in the same block (T-2263). `0` reads as "no limit" for a body with a
@@ -267,9 +278,9 @@ apisix:
         #
         # `Retry-After` is the seconds `limit-count` itself published in `X-RateLimit-Reset`,
         # so it counts down with the window instead of naming a constant that would lie the
-        # day a route's `time_window` changes; `add_header` with an empty value adds nothing,
-        # which is the right answer for a `429` that did not come from a rate limit. The
-        # detail names no route, no quota and no upstream (R20).
+        # day a route's `time_window` changes; a limiter that publishes none (`limit-conn`,
+        # `limit-req`) gets the fixed fallback of `$jc_refusal_retry_after` in the http block
+        # (T-6022). The detail names no route, no quota and no upstream (R20).
         # nginx builds this answer in the named location, after the plugin chain's
         # `header_filter` has run, so each route's `response-rewrite` headers do not reach it:
         # the ones a refusal needs are repeated here. HSTS and `nosniff` are the two every
@@ -308,58 +319,58 @@ apisix:
           internal;
           default_type text/html;
           charset utf-8;
-          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Retry-After $jc_refusal_retry_after always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
-          return 429 '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Príliš veľa požiadaviek</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Príliš veľa požiadaviek</h1><p>Z vašej siete prišlo za poslednú minútu viac požiadaviek, ako platforma prijme z jednej adresy. Skúste to znova o $sent_http_x_ratelimit_reset s.</p><p><a href="">Načítať stránku znova</a></p></main></body></html>';
+          return 429 '<!doctype html><html lang="sk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Príliš veľa požiadaviek</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Príliš veľa požiadaviek</h1><p>Z vašej siete prišlo za poslednú minútu viac požiadaviek, ako platforma prijme z jednej adresy. Skúste to znova o $jc_refusal_retry_after s.</p><p><a href="">Načítať stránku znova</a></p></main></body></html>';
         }
         location @too_many_requests_html_cs {
           internal;
           default_type text/html;
           charset utf-8;
-          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Retry-After $jc_refusal_retry_after always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
-          return 429 '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Příliš mnoho požadavků</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Příliš mnoho požadavků</h1><p>Z vaší sítě přišlo za poslední minutu více požadavků, než platforma přijme z jedné adresy. Zkuste to znovu za $sent_http_x_ratelimit_reset s.</p><p><a href="">Načíst stránku znovu</a></p></main></body></html>';
+          return 429 '<!doctype html><html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Příliš mnoho požadavků</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Příliš mnoho požadavků</h1><p>Z vaší sítě přišlo za poslední minutu více požadavků, než platforma přijme z jedné adresy. Zkuste to znovu za $jc_refusal_retry_after s.</p><p><a href="">Načíst stránku znovu</a></p></main></body></html>';
         }
         location @too_many_requests_html_de {
           internal;
           default_type text/html;
           charset utf-8;
-          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Retry-After $jc_refusal_retry_after always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
-          return 429 '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zu viele Anfragen</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Zu viele Anfragen</h1><p>Aus Ihrem Netz kamen in der letzten Minute mehr Anfragen, als die Plattform von einer Adresse annimmt. Versuchen Sie es in $sent_http_x_ratelimit_reset s erneut.</p><p><a href="">Seite neu laden</a></p></main></body></html>';
+          return 429 '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zu viele Anfragen</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Zu viele Anfragen</h1><p>Aus Ihrem Netz kamen in der letzten Minute mehr Anfragen, als die Plattform von einer Adresse annimmt. Versuchen Sie es in $jc_refusal_retry_after s erneut.</p><p><a href="">Seite neu laden</a></p></main></body></html>';
         }
         location @too_many_requests_html_en {
           internal;
           default_type text/html;
           charset utf-8;
-          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Retry-After $jc_refusal_retry_after always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
           add_header Referrer-Policy "no-referrer" always;
           add_header Cache-Control "no-store, no-cache, must-revalidate" always;
           add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" always;
-          return 429 '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Too many requests</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Too many requests</h1><p>Your network sent more requests in the last minute than the platform accepts from one address. Try again in $sent_http_x_ratelimit_reset s.</p><p><a href="">Load the page again</a></p></main></body></html>';
+          return 429 '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Too many requests</title><style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:24px;color:#1a1a1a;background:#f6f6f6}main{max-width:36rem;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px}h1{font-size:1.4rem;margin:0 0 8px}</style></head><body><main><h1>Too many requests</h1><p>Your network sent more requests in the last minute than the platform accepts from one address. Try again in $jc_refusal_retry_after s.</p><p><a href="">Load the page again</a></p></main></body></html>';
         }
         location @too_many_requests_json {
           internal;
           default_type application/problem+json;
-          add_header Retry-After $sent_http_x_ratelimit_reset always;
+          add_header Retry-After $jc_refusal_retry_after always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
