@@ -1,7 +1,8 @@
 # Argo CD as pinned, with the two tools it bundles from other projects replaced (T-4706): v3.5.4
 # and v3.5.5 both ship git-lfs 3.7.1 (Go 1.25.3) and kustomize 5.8.1 (Go 1.24.0), CVE-2025-68121
 # CRITICAL. Argo CD's own binary is unchanged. Drop this image when an upstream release carries
-# fixed builds of both (trivy image --severity CRITICAL on the new tag).
+# fixed builds of both (trivy image --severity CRITICAL on the new tag). Its Ubuntu packages are
+# upgraded too: v3.5.4 ships libbrotli1 1.2.0-3build1, CVE-2026-111497 HIGH in CISA KEV (T-6114).
 # ponytail: amd64 only, the one architecture the clusters run.
 FROM docker.io/library/alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS tools
 ARG GIT_LFS=3.8.0 GIT_LFS_SHA256=e455e00f15d9b95661b8d53498ffb0c3367962cf1ec73c31ab7369516cd6ab8d
@@ -17,5 +18,10 @@ RUN apk add --no-cache curl \
     && chmod 0755 /out/git-lfs /out/kustomize
 
 FROM quay.io/argoproj/argocd:v3.5.4@sha256:49dff79439bb38b1b942b19a113fe1fec7e6b6c671ddf9fe6a4a7c46bde0b77b
+USER root
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+USER 999
 COPY --from=tools /out/git-lfs /out/kustomize /usr/local/bin/
 RUN git-lfs version && kustomize version

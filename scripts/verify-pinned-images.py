@@ -32,7 +32,7 @@ ISSUER = "https://token.actions.githubusercontent.com"
 # The workflows that sign what an environment pins, read off the pinned digests' certificates
 # (2026-10-26: image.yml of platform and portal, image-viz/image-ckan of deployment, Antares
 # ship.yml on dev) plus the other signers of the same images (promote.yml, the deployment's
-# image-gitops and reusable-container-sign, Antares image-jc.yml and full.yml on a tag). A
+# image-gitops, image-patched (T-6114) and reusable-container-sign, Antares image-jc.yml and full.yml on a tag). A
 # preview.yml or any branch build signs too and is refused here (F-DEP2-005).
 IDENTITY = (
     rf"^https://github\.com/{OWNER}/("
