@@ -15,6 +15,23 @@ permissions: { contents: read }
 concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: "${{ github.ref != 'refs/heads/main' }}" }
 # Every tool version and checksum comes from tools.env, loaded by .github/actions/tools (T-4954).
 jobs:
+  changes:
+    # T-6110: a range whose every file is a components/<c>/images.yaml (a pin) takes the short set:
+    # render and gate every environment (the render job, unchanged), verify the pinned signatures,
+    # check the docs pin and run the tests that read an images.yaml, in one job instead of six
+    # shards. Any other file, or a base git cannot read, is the full set (scripts/ci/changes.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      pins_only: ${{ steps.changes.outputs.pins_only }}
+      pin_tests: ${{ steps.changes.outputs.pin_tests }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      - id: changes
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: python3 scripts/ci/changes.py "$BASE" "$GITHUB_SHA" | tee -a "$GITHUB_OUTPUT"
   render:
     runs-on: ubuntu-latest
     timeout-minutes: 25  # nine environments since T-4956, about 30 s each
@@ -151,10 +168,12 @@ jobs:
     # was cancelled at 15 on 9a0ed939 and 68c4e0d7 and main had no verdict; same files, none skipped.
     # Six since 2026-10-27: at four every shard ran 17-19 min of its 20 on 70de8827, the junit times swing
     # +-20 % from run to run (keycloak admin permissions 377 -> 785 s), and shard 1 was cancelled (T-5886).
-    strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4, 5, 6] } }
-    name: tests (${{ matrix.shard }}/6)
     # actions: read lets the shard download this run's base-renders artifact (T-6111).
     permissions: { contents: read, actions: read }
+    # Shard 0 is the pin set (T-6110): the test files that read a moved images.yaml, whole.
+    needs: changes
+    strategy: { fail-fast: false, matrix: { shard: "${{ fromJSON(needs.changes.outputs.pins_only == 'true' && '[0]' || '[1, 2, 3, 4, 5, 6]') }}" } }
+    name: tests (${{ matrix.shard == 0 && 'pins' || format('{0}/6', matrix.shard) }})
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         # The whole history: a credential deleted in the last commit is still a credential.
@@ -193,7 +212,7 @@ jobs:
           sudo install -m 0755 conftest /usr/local/bin/conftest
           rm -f gitleaks.tar.gz conftest.tar.gz gitleaks conftest
       - name: gitleaks over the whole history
-        if: matrix.shard == 1
+        if: matrix.shard <= 1
         # Was the `gitleaks` job (reusable-gitleaks.yml); same ruleset, same scope, one billed
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
@@ -203,7 +222,7 @@ jobs:
         # The Portal's /docs is the docs commit pinned beside its digest; the pinned Portal and
         # platform commits and this tree are checked out and that docs commit's own checkers
         # run against them. tests/test_docs_pin.py proves it red on a page the code lacks.
-        if: matrix.shard == 1
+        if: matrix.shard <= 1
         run: scripts/check-docs-pin.sh
       - name: the images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
@@ -305,9 +324,25 @@ jobs:
           fi
       # A file heavier than a quarter of a shard's share runs in every shard, a sixth of its tests
       # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
-      - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 6)
+      # The pin set verifies every platform digest the dev render pins, as `just dev-apply` does
+      # before it syncs (T-5564): a pin reaches dev without the six shards, never without this.
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+        if: matrix.shard == 0
+      - name: the pinned images carry our workflows' signatures (T-5564)
+        if: matrix.shard == 0
+        run: |
+          helmfile -f deployment/helmfile.yaml -e dev repos >/dev/null
+          scripts/verify-pinned-images.py dev
+      - name: pytest
         env:
-          JC_TEST_SHARD: ${{ matrix.shard }}/6
+          JC_TEST_SHARD: ${{ matrix.shard != 0 && format('{0}/6', matrix.shard) || '' }}
+          PIN_TESTS: ${{ needs.changes.outputs.pin_tests }}
+        run: |
+          if [ "${{ matrix.shard }}" = 0 ]; then files="$PIN_TESTS"; else files=$(python3 scripts/ci/test-shard.py "${{ matrix.shard }}" 6); fi
+          # an empty list would run every file of tests/ under the pin set's single job
+          : "${files:?no test file chosen}"
+          # shellcheck disable=SC2086 # one word per test file
+          pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $files
       - name: the test images pulled
         if: always()
         run: |
@@ -316,7 +351,7 @@ jobs:
           [ "$(cat /tmp/test-images.rc 2>/dev/null)" = 0 ] || { echo "::error::pulling the test images failed: a registry failure, not a test"; exit 1; }
       # Each test's seconds, for the test-durations job below (T-5551).
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
+        if: always() && matrix.shard != 0
         with:
           name: test-durations-${{ matrix.shard }}
           path: pytest-${{ matrix.shard }}.xml
@@ -337,8 +372,8 @@ jobs:
     # The .ci/test-durations.json the shards of this main run add up to (T-5551: the table went
     # stale in four days and shard 1 ran 1,192 s against 544 s for shard 2). It prints the diff
     # and keeps the table as an artifact; a person commits it when the shards drift.
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: tests
+    if: always() && needs.changes.outputs.pins_only != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [changes, tests]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -361,6 +396,9 @@ jobs:
     # must name the broken slot. Left out: the models with no Entity class (nothing to test) and
     # the two generated open-data models whose bare `label: {sk: ...}` annotations linkml_runtime
     # cannot load (/workspace/chyby.md, scripts/open-data/generate.py).
+    # a pin moves no model (T-6110)
+    needs: changes
+    if: needs.changes.outputs.pins_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

@@ -574,6 +574,50 @@ dev-smoke:
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
 	exit "$rc"
 
+# T-6110: render dev at <base> (default: the commit jc-release records as applied) and at HEAD,
+# sync only the releases whose objects moved, wait, record, and smoke their components. A range
+# with any file besides a components/<c>/images.yaml is refused: `just dev-apply` stays the path
+# for charts, values and seeds. `dry=true` prints the releases and their `helmfile diff` only.
+# Apply a pin-only range to dev: only the releases it moved
+[group('dev cluster')]
+dev-apply-pins base='' dry='false':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	just _dev-assemble
+	base="{{ base }}"
+	[ -n "$base" ] || base=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.commit}')
+	[ -n "$base" ] || { echo "no applied commit recorded in dev (jc-release); run just dev-apply" >&2; exit 1; }
+	# a plain assignment, so a refusal stops the recipe (a process substitution hides its exit)
+	moved=$(./scripts/apply-pins.py releases dev "$base")
+	mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d')
+	selectors=()
+	for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
+	echo "pins ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
+	if [ "{{ dry }}" = true ]; then
+		[ "${#releases[@]}" -eq 0 ] || helmfile -f deployment/helmfile.yaml -e dev diff --concurrency {{helmfile_concurrency}} "${selectors[@]}"
+		exit 0
+	fi
+	if [ "${#releases[@]}" -gt 0 ]; then
+		# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
+		./scripts/verify-pinned-images.py dev
+		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
+		./scripts/wait-rollouts.sh dev
+	fi
+	./scripts/release.py record dev dev
+	rc=0
+	components=""
+	[ "${#releases[@]}" -eq 0 ] || components=$(./scripts/apply-pins.py components dev "${releases[@]}")
+	for c in $components; do
+		just dev-smoke-component "$c" || rc=1
+	done
+	exit "$rc"
+
+# The smoke checks of one component (scripts/smoke-component.sh), after dev-apply-pins
+[group('dev cluster')]
+dev-smoke-component component:
+	./scripts/smoke-component.sh "{{ dev_domain }}" dev "{{ component }}"
+
 # T-5899: after dev-apply of <rev>, every standard (reads and writes), the Portal live sweep and the
 # k6 mix at <rate>/s (8: under the edge's 10/s per address, T-5900). Credentials only from the
 # environment (ANTARES_DIR, NGSILD_TOKEN,

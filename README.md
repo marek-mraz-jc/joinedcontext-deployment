@@ -101,6 +101,17 @@ just deploy-instance local      # one instance (namespace = global.instanceSlug)
 syncs it and `just dev-smoke` verifies it, both against `.secrets/kubeconfig-dev.yaml`, and
 both belong to whoever holds that cluster.
 
+A pin reaches `dev` without waiting for the hourly batch (T-6110). A commit whose every file is a
+`components/<c>/images.yaml` runs ci's short set (render and gate every environment, the pinned
+signatures, the docs pin, the tests that read the moved images.yaml). Once that run is green,
+`just dev-apply-pins` applies it at once: it renders `dev` at the commit `jc-release` records as
+applied and at HEAD, syncs only the releases whose objects moved, waits for their rollouts and
+runs `just dev-smoke-component <c>` for each moved component (the Portal: the served commit is
+the pin, the login reaches Keycloak, one Endpoint read; the gateway: one Endpoint read and an MCP
+`tools/list`). `just dev-apply-pins '' true` prints the releases and their `helmfile diff` only.
+It refuses a range with any other file in it: charts, values and seeds keep the hourly
+`just dev-apply` and `just dev-smoke`.
+
 ## 6. Security
 
 Report a vulnerability in the platform privately through the security advisories of the
