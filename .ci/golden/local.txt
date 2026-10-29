@@ -304,6 +304,7 @@ v1/Secret local/apisix-standalone-config
 v1/Secret local/apps-db-backup-artifact-store
 v1/Secret local/artifact-store-root
 v1/Secret local/context-broker-admin-token
+v1/Secret local/context-broker-secret-key
 v1/Secret local/context-gateway-oauth-key
 v1/Secret local/db-antares
 v1/Secret local/db-gitea
@@ -346,6 +347,7 @@ v1/Secret local/keycloak-user-demo-viewer
 v1/Secret local/keycloak-user-demo-zilina
 v1/Secret local/portal-cookie-key
 v1/Secret local/postgres-backup-artifact-store
+v1/Secret local/postgres-cluster-local-backup-key
 v1/Service local/apisix-gateway
 v1/Service local/artifact-store
 v1/Service local/cnpg-webhook-service

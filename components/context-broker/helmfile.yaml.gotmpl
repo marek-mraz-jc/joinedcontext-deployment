@@ -108,6 +108,9 @@ releases:
           PGPASSWORD:
             secret: db-antares-{{ $name }}
             key: password
+          ANTARES_SECRET_KEY:
+            secret: {{ $release }}-secret-key
+            key: key
         env:
           ANTARES_DATABASE_URL: "postgresql://antares:$(PGPASSWORD)@{{ $db }}-rw.{{ $broker.namespace }}.svc.cluster.local:5432/antares"
           ANTARES_MCP_ALLOWED_HOSTS: "{{ $host }}:8080"

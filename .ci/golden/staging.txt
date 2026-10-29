@@ -279,6 +279,7 @@ v1/Secret staging/apisix-standalone-config
 v1/Secret staging/apps-db-backup-artifact-store
 v1/Secret staging/artifact-store-root
 v1/Secret staging/context-broker-admin-token
+v1/Secret staging/context-broker-secret-key
 v1/Secret staging/context-gateway-oauth-key
 v1/Secret staging/db-antares
 v1/Secret staging/db-gitea
@@ -297,6 +298,7 @@ v1/Secret staging/keycloak-client-gitea
 v1/Secret staging/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret staging/portal-cookie-key
 v1/Secret staging/postgres-backup-artifact-store
+v1/Secret staging/postgres-cluster-local-backup-key
 v1/Service staging/apisix-gateway
 v1/Service staging/artifact-store
 v1/Service staging/cnpg-webhook-service

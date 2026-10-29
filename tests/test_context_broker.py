@@ -5,6 +5,7 @@ These pin what only it guarantees: it runs as nobody with nothing writable but /
 probes, fits the node, is reachable from the gateway and the Portal only, reaches its database and
 nothing else, and is addressed by the gateway and the Portal at the port its Service serves."""
 
+import base64
 import shutil
 
 import pytest
@@ -112,6 +113,20 @@ def test_the_database_password_comes_from_the_secret_the_database_is_made_with(d
     assert url.endswith(f"/{database['name']}"), url
     literal = [name for name, var in env.items() if "PASSWORD" in name and "valueFrom" not in var]
     assert literal == [], "a password is a secretKeyRef, never a literal value"
+
+
+@requires_helmfile
+def test_receiver_info_is_sealed_with_a_generated_key_of_the_broker_alone(dev):
+    """T-5838/T-5839: ANTARES_SECRET_KEY, 64 hex digits from a generated Secret only the broker's
+    namespace holds, never a literal."""
+    (container,) = pod_of(dev)["containers"]
+    ref = env_of(container)["ANTARES_SECRET_KEY"]["valueFrom"]["secretKeyRef"]
+    assert ref == {"name": "context-broker-secret-key", "key": "key"}
+    secret = one(dev, "Secret", ref["name"])
+    assert secret["metadata"]["namespace"] == one(dev, "Deployment", "context-broker")["metadata"]["namespace"]
+    assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
+    key = base64.b64decode(secret["data"]["key"]).decode()
+    assert len(key) == 64 and int(key, 16) >= 0, "the broker reads 64 hex digits as its 32-byte key"
 
 
 @requires_helmfile

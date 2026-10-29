@@ -69,6 +69,10 @@ postgres:
       # Databases left out of the dump, e.g. [antares]. The dump of the rest stops at `size`
       # and does not start when it would leave the node's disk under 10 % free.
       excludeDatabases: []
+      # Each dump is age-encrypted to these keys and to the drill key (T-5839). The default is the
+      # dev age key of .sops.yaml, whose private half only the operator's secret store holds:
+      # restore with `age -d -i <that key> <file>.sql.gz.age | gunzip | psql`.
+      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
     # The monthly restore drill (OPS-11, OPS-12, T-0046, T-5101): restores the archive above
     # into a throwaway Cluster `{cluster}-drill` twice, to its end and to the instant the drill
     # counted the source's tables, compares the row counts, measures RTO and RPO, writes the
