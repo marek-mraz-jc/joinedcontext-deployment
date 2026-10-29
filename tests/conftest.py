@@ -70,8 +70,14 @@ def rendered(tmp_path_factory, worker_id):
             with open(out_dir / f"{env}.lock", "w") as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 # A finished render is renamed into place, so a file that exists is whole.
+                # In ci the render job's own render of this commit, fetched before pytest
+                # (T-6111): each shard rendered the same three to six environments again.
+                shared = Path(os.environ.get("JC_RENDERED_DIR") or "/nonexistent") / f"{env}.yaml"
+                partial = out_dir / f"{env}.partial.yaml"
+                if not out.exists() and shared.is_file():
+                    shutil.copyfile(shared, partial)
+                    partial.rename(out)
                 if not out.exists():
-                    partial = out_dir / f"{env}.partial.yaml"
                     result = subprocess.run(
                         [str(RENDER_SH), env, str(partial)],
                         cwd=str(PROJECT_ROOT), capture_output=True, text=True,

@@ -58,7 +58,6 @@ jobs:
         run: |
           set -eu
           mkdir -p /tmp/scan
-          golden_red=""
           # R1/R2: every remote chart pinned exactly in the file a reader sees, no helmfile.lock.
           python3 scripts/ci/check-chart-pins.py --no-lock .
           helmfile -f .ci/kyverno/helmfile.yaml.gotmpl list --output json | python3 scripts/ci/check-chart-pins.py -
@@ -70,6 +69,30 @@ jobs:
           echo "::group::render ${environments[*]}"
           RENDER_JOBS=3 scripts/render-all.sh rendered "${environments[@]}"
           echo "::endgroup::"
+          # The secret gates first: the renders leave this job as the shards' artifact below, and
+          # what leaves holds only generated values of the right length, no plaintext secret.
+          for env in "${environments[@]}"; do
+            python3 scripts/check-rendered-secrets.py "rendered/${env}.yaml" /tmp/scan/rendered.yaml
+            ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
+            python3 scripts/check-secrets.py "rendered/${env}.yaml"
+          done
+          printf '%s\n' "${GITHUB_SHA}" > rendered/COMMIT
+      # The test shards read these instead of rendering the same environments again (T-6111):
+      # uploaded before the gates below, so a shard has them by the time its setup is done.
+      # The artifact lives one day and is read by this run only; verify-pinned-images.py and
+      # the apply never read it, they render for themselves.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: base-renders
+          path: |
+            rendered/*.yaml
+            rendered/COMMIT
+          retention-days: 1
+      - name: gate every environment
+        run: |
+          set -eu
+          golden_red=""
+          mapfile -t environments < .ci/golden/ENVIRONMENTS
           for env in "${environments[@]}"; do
             echo "::group::${env}"
             cat "rendered/${env}.log"
@@ -79,9 +102,6 @@ jobs:
             ./conftest test --all-namespaces -p policies "rendered/${env}.yaml"
             # `! grep` alone never failed the step (errexit ignores a negated command).
             if grep -i -E 'civitas' "rendered/${env}.yaml"; then echo "::error::${env} renders the legacy name civitas"; exit 1; fi
-            python3 scripts/check-rendered-secrets.py "rendered/${env}.yaml" /tmp/scan/rendered.yaml
-            ./gitleaks detect --no-git --source /tmp/scan --config .ci/gitleaks-rendered.toml --redact --exit-code 1
-            python3 scripts/check-secrets.py "rendered/${env}.yaml"
             python3 .ci/golden/list-objects.py "rendered/${env}.yaml" | diff -u ".ci/golden/${env}.txt" - || golden_red="${golden_red} ${env}"
             echo "::endgroup::"
           done
@@ -133,6 +153,8 @@ jobs:
     # +-20 % from run to run (keycloak admin permissions 377 -> 785 s), and shard 1 was cancelled (T-5886).
     strategy: { fail-fast: false, matrix: { shard: [1, 2, 3, 4, 5, 6] } }
     name: tests (${{ matrix.shard }}/6)
+    # actions: read lets the shard download this run's base-renders artifact (T-6111).
+    permissions: { contents: read, actions: read }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         # The whole history: a credential deleted in the last commit is still a credential.
@@ -194,7 +216,10 @@ jobs:
         # tests/test_alert_rules.py runs `promtool test rules` in the Prometheus image (T-5104).
         # tests/test_postgres_tuning.py runs the pg_stat_statements Job in the roleJob image (T-5693).
         # Pulled here so a registry failure reads as a registry failure rather than as a red
-        # test; a registry 429 (ghcr.io toomanyrequests, run 40221371387) is retried.
+        # test; a registry 429 (ghcr.io toomanyrequests, run 40221371387) is retried. In the
+        # background since T-6111 (about 65 s of every shard): the setup below runs meanwhile,
+        # a test reaching an image still being pulled waits on the same layers, and the step
+        # "the test images pulled" after pytest fails the job on a pull that failed.
         run: |
           python3 - <<'EOF' > /tmp/test-images
           import yaml
@@ -204,13 +229,18 @@ jobs:
           import re
           print(re.search(r'^IMAGE = "(.+)"$', open("tests/test_alert_rules.py").read(), re.M).group(1))
           EOF
+          cat > /tmp/pull-test-images.sh <<'EOF'
+          rc=0
           while read -r image; do
             for attempt in 1 2 3; do
               docker pull --quiet "$image" && break
-              if [ "$attempt" = 3 ]; then exit 1; fi
+              if [ "$attempt" = 3 ]; then echo "pull of $image failed three times"; rc=1; break; fi
               sleep 30
             done
           done < /tmp/test-images
+          echo "$rc" > /tmp/test-images.rc
+          EOF
+          nohup bash /tmp/pull-test-images.sh > /tmp/test-images.log 2>&1 &
       - name: assemble deployment dir and add the chart repos
         # Both environments: `addons` pulls chart repositories no core component uses, and a
         # test that renders it would fail on a missing repository rather than on its subject.
@@ -254,11 +284,36 @@ jobs:
             "$sha" "$jc_core" "$gateway" 5a24c4298689bd21e842511bda8fbf21157b1580 +main:refs/remotes/origin/main
           echo "JC_PLATFORM_DIR=$RUNNER_TEMP/platform" >> "$GITHUB_ENV"
           echo "JC_PORTAL_DIR=$RUNNER_TEMP/portal" >> "$GITHUB_ENV"
+      # The render job's renders of this commit (T-6111): it uploads them about two minutes in,
+      # when a shard's setup is done. A shard waits up to four minutes for them and then goes on
+      # without; the rendered fixture (tests/conftest.py) renders whatever is not here.
+      - name: the render job's renders of the base environments
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          set -u
+          dir="$RUNNER_TEMP/base-renders"
+          for _ in $(seq 1 24); do
+            if gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n base-renders -D "$dir" 2>/dev/null; then break; fi
+            rm -rf "$dir"
+            sleep 10
+          done
+          if [ -f "$dir/COMMIT" ] && [ "$(cat "$dir/COMMIT")" = "$GITHUB_SHA" ]; then
+            echo "JC_RENDERED_DIR=$dir" >> "$GITHUB_ENV"
+            ls "$dir"
+          else
+            echo "::warning::no base renders from the render job; this shard renders its own"
+          fi
       # A file heavier than a quarter of a shard's share runs in every shard, a sixth of its tests
       # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
       - run: pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $(python3 scripts/ci/test-shard.py ${{ matrix.shard }} 6)
         env:
           JC_TEST_SHARD: ${{ matrix.shard }}/6
+      - name: the test images pulled
+        if: always()
+        run: |
+          for _ in $(seq 1 60); do [ -f /tmp/test-images.rc ] && break; sleep 5; done
+          cat /tmp/test-images.log
+          [ "$(cat /tmp/test-images.rc 2>/dev/null)" = 0 ] || { echo "::error::pulling the test images failed: a registry failure, not a test"; exit 1; }
       # Each test's seconds, for the test-durations job below (T-5551).
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
