@@ -12,11 +12,12 @@ smoke, the standards suites of joinedcontext-conformance (NGSI-LD ETSI smoke.rob
 NGSILD_TOKEN and WRITE_ENDPOINT are set, OGC API Features ETS + GeoJSON, OData, SensorThings, iCal,
 WebSocket, MCP), the roundtrip (tests/roundtrip, T-5914: one t-roundtrip- Entity written through NGSI-LD
 on the conformance Endpoint with NGSILD_TOKEN, read back through every served surface current, temporal
-and stream, then deleted), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included)
+and stream, then deleted), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included, the critic-* shot walks not)
 and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). Before the first stage the
 run refuses in seconds when a stage would only fail on setup: ANTARES_DIR not at the Antares commit the
 candidate's broker pin names (ogc, odata, dcat), no NGSILD_TOKEN (roundtrip), a demo password of the sweep
-missing. Each stage ends after --stage-timeout seconds (its process group is killed, the stage is red) and
+missing. Each stage ends after --stage-timeout seconds (--sweep-timeout for the sweep; its process group is
+killed, the stage is red) and
 the record is rewritten after every stage, so a stopped run still leaves a RED record. A stage passes when it
 exits 0, or when every red case it left matches .ci/release-gate-known-red.txt (each line names the
 task that owns the red; a stage red with no case to show, a Python traceback or a red load stays red).
@@ -54,6 +55,9 @@ API = f"https://api.{DOMAIN}"
 # What `release.py cut` adds on top of the gated main commit.
 RELEASE_FILES = re.compile(r"^(releases/[^/]+|CHANGELOG\.md)$")
 SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
+# The critic-* walks record 1440 + 400 shots and timings for the UI critic tasks (T-5523, T-5982); they
+# judge no release and took 1,619 s of the first record's sweep hour, so the gate's sweep leaves them out.
+SWEEP_SKIP = r"/critic-[a-z]+\.spec\.ts$"
 REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load")
 # What a stage needs from the caller's environment, or it fails on setup after hours instead of seconds.
 NEEDS_ANTARES = ("ogc", "odata", "dcat")
@@ -150,7 +154,7 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
                   "OUT": str(out / "dcat"), "PAUSE": "0"}, conf))
     plan.append(("portal-sweep", [str(portal / "ui/e2e/live/sweep.sh")],
                  {"PORTAL_URL": f"https://portal.{DOMAIN}", "SWEEP_OUT": str(out / "portal-sweep"),
-                  "TASKS_DIR": ""}, portal / "ui"))
+                  "TASKS_DIR": "", "SWEEP_SKIP": SWEEP_SKIP}, portal / "ui"))
     load = out / "load"
     requests = args.requests or load / "requests.tsv"
     script = (f"set -euo pipefail; [ -s {quote(requests)} ] || python3 tests/k6/make_requests.py "
@@ -397,7 +401,8 @@ def run(args) -> int:
     for name, argv, env, cwd in plan:
         print(f"release gate: {name} ...", flush=True)
         stage_env = {**env, **{k: v for k, v in extra.items() if name in NEEDS_ANTARES}}
-        results.append(run_stage(name, argv, stage_env, cwd, out, known, args.stage_timeout))
+        timeout = args.sweep_timeout if name == "portal-sweep" else args.stage_timeout
+        results.append(run_stage(name, argv, stage_env, cwd, out, known, timeout))
         print(f"release gate: {name} {results[-1]['verdict']} {'; '.join(results[-1]['problems'])}", flush=True)
         rec = record_of(cand, results, known, root, started, args)
         folder = write(rec, root)
@@ -596,6 +601,9 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--portal", type=Path, default=ROOT.parent / "joinedcontext-portal")
     r.add_argument("--records", type=Path, default=RECORDS)
     r.add_argument("--stage-timeout", type=float, default=3600, help="seconds per stage before it is stopped red")
+    # The sweep runs one worker over ~154 spec files: the first record (b629a881) ran 20 of them, critic-*
+    # left out, in 1,874 s (94 s each), so the whole sweep needs ~14,400 s; 18,000 leaves 25 %.
+    r.add_argument("--sweep-timeout", type=float, default=18000, help="seconds for the portal-sweep stage")
     c = sub.add_parser("check")
     c.add_argument("rev", nargs="?", default="HEAD")
     c.add_argument("--records", type=Path, default=RECORDS)
