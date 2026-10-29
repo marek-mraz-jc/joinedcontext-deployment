@@ -361,7 +361,7 @@ def test_mcp_local_takes_a_loopback_callback_on_any_port_and_nothing_else(realm_
     assert int(client["attributes"]["access.token.lifespan"]) <= 300
     assert int(client["attributes"]["client.session.max.lifespan"]) <= 8 * 3600
     assert "offline_access" not in client["optionalClientScopes"] + client["defaultClientScopes"]
-    assert client["optionalClientScopes"] == ["mcp:portal"]
+    assert client["optionalClientScopes"] == ["mcp:portal", "connector"]
 
 
 @pytest.mark.parametrize("client_id", ["mcp-mobile", "mcp-local"])
@@ -385,6 +385,81 @@ def test_an_mcp_connector_token_names_only_the_resource_it_asked_for(realm_clien
             realm = json.loads(base64.b64decode(doc["data"]["local.json"]))
     scope = {s["name"]: s for s in realm["clientScopes"]}["mcp:portal"]
     assert [m["config"]["included.client.audience"] for m in scope["protocolMappers"]] == ["portal-api"]
+
+
+@pytest.fixture(scope="module")
+def local_realm(rendered):
+    return realm_of(rendered, "local")
+
+
+def test_a_connector_token_names_one_connector_and_the_connectors_door_alone(local_realm, realm_clients):
+    """T-5954, ADR-N-064 §3.3: Keycloak 26.8 mints no audience per connector, so the parameterized
+    scope `connector:{id}` names the connector and its mapper names `portal-connectors`; the
+    Portal refuses a token with a `connector:` scope on every route but /c/{id}. Measured on 26.8.1 with keycloak-config-cli 6.5.1-26 importing this
+    block: claude.ai, Claude Code, VS Code and mcp-local tokens carry `aud: portal-connectors` and the
+    one scope; `connector:../x` is refused invalid_scope."""
+    scope = {s["name"]: s for s in local_realm["clientScopes"]}["connector"]
+    attributes = scope["attributes"]
+    assert attributes["is.parameterized.scope"] == "true"
+    assert attributes["parameterized.scope.type"] == "custom"
+    # The whole parameter is a connector id: 26 base32 characters, nothing else.
+    assert attributes["parameterized.scope.regexp"] == "[a-z2-7]{26}"
+    assert re.fullmatch(attributes["parameterized.scope.regexp"], "abcdefghijklmnopqrstuvwxyz")
+    for bad in ["../x", "a" * 25, "a" * 27, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "*"]:
+        assert not re.fullmatch(attributes["parameterized.scope.regexp"], bad)
+    assert attributes["include.in.token.scope"] == "true"
+    assert attributes["display.on.consent.screen"] == "true"
+    mappers = {m["name"]: m for m in scope["protocolMappers"]}
+    assert set(mappers) == {"portal-connectors-audience", "portal-api-audience", "groups", "amr"}
+    # portal-api exchanges the token for an Endpoint read: Keycloak's exchange refuses a subject
+    # token whose `aud` lacks the requester ("Client is not within the token audience").
+    assert mappers["portal-api-audience"]["config"]["included.client.audience"] == "portal-api"
+    audience = mappers["portal-connectors-audience"]
+    assert audience["protocolMapper"] == "oidc-audience-mapper"
+    assert audience["config"] == {
+        "included.custom.audience": "portal-connectors",
+        "access.token.claim": "true",
+        "id.token.claim": "false",
+    }
+    # The audience is the connectors' alone: no other scope or client names it.
+    others = [
+        m
+        for owner in local_realm["clientScopes"] + list(realm_clients.values())
+        if owner.get("name") != "connector"
+        for m in owner.get("protocolMappers", [])
+    ]
+    assert not [m for m in others if "portal-connectors" in json.dumps(m)]
+    # The two fixed connector clients may ask for it; a client the realm creates by CIMD gets it
+    # as its only optional scope.
+    for client_id in ["mcp-mobile", "mcp-local"]:
+        assert "connector" in realm_clients[client_id]["optionalClientScopes"]
+    assert local_realm["defaultOptionalClientScopes"] == ["connector"]
+
+
+def test_only_the_known_ai_clients_sign_in_by_their_client_id_url(local_realm):
+    """T-5954: CIMD admits an https client id on claude.ai (claude.ai, Claude Code) or vscode.dev
+    and fetches its document; its exact redirect URIs are the only ones it gets (measured: a
+    foreign redirect is invalid_redirect_uri, a client id on another host client_not_found). No
+    dynamic registration exists beside it."""
+    (policy,) = local_realm["clientPolicies"]["policies"]
+    assert policy["enabled"] is True and policy["profiles"] == ["cimd"]
+    (condition,) = policy["conditions"]
+    assert condition["condition"] == "client-id-uri"
+    assert condition["configuration"] == {
+        "client-id-uri-scheme": ["https"],
+        "client-id-uri-allow-permitted-domains": ["claude.ai", "vscode.dev"],
+    }
+    (profile,) = local_realm["clientProfiles"]["profiles"]
+    (executor,) = profile["executors"]
+    assert executor["executor"] == "client-id-metadata-document"
+    config = executor["configuration"]
+    assert config["cimd-allow-permitted-domains"] == [
+        "claude.ai", "vscode.dev", "code.visualstudio.com", "localhost", "127.0.0.1"
+    ]
+    assert not config.get("cimd-allow-http-scheme")
+    assert not [d for d in config["cimd-allow-permitted-domains"] if "*" in d]
+    # Resource indicators stay off: no static resource list stands in for the connector scope.
+    assert "cimd-resource-indicator-allow-list" not in config
 
 
 def test_mcp_hub_is_a_public_pkce_client_with_consent(realm_clients):

@@ -421,7 +421,94 @@ config:
       # docs Architecture/07 §1). An MCP client asks for this optional scope on the
       # `mcp-mobile` or `edge` client and its token gains the audience; nothing else on the
       # token changes. The scope stays optional until RFC 8707 resource indicators land.
+      # A client that signs in by its client id URL (CIMD: claude.ai, Claude Code, VS Code) is
+      # created on its first login with the realm's default scopes; of the optional ones it may
+      # ask only for `connector` (T-5954).
+      defaultOptionalClientScopes:
+        - connector
+      # CIMD (T-5954, ADR-N-064 §3.3): a client id that is an https URL on one of these hosts is
+      # fetched, and its document's exact redirect URIs are the only ones it gets. The executor
+      # checks every URI of a document: the loopback hosts are callbacks of Claude Code and VS
+      # Code and code.visualstudio.com holds VS Code's logo; none is a client id host, because
+      # the policy condition admits only the two vendor hosts. No dynamic registration exists beside it.
+      clientProfiles:
+        profiles:
+          - name: cimd
+            description: Client ID Metadata Documents of the known AI clients
+            executors:
+              - executor: client-id-metadata-document
+                configuration:
+                  cimd-allow-permitted-domains:
+                    [claude.ai, vscode.dev, code.visualstudio.com, localhost, 127.0.0.1]
+                  # claude.ai's document lists the jwt-bearer grant beside the code flow; the
+                  # client stays public and gets only the code flow.
+                  accept-public-client-with-confidential-client-only-grant: true
+      clientPolicies:
+        policies:
+          - name: cimd
+            description: Client ids that are https URLs of the known AI clients
+            enabled: true
+            conditions:
+              - condition: client-id-uri
+                configuration:
+                  client-id-uri-scheme: [https]
+                  client-id-uri-allow-permitted-domains: [claude.ai, vscode.dev]
+            profiles: [cimd]
       clientScopes:
+        # One Portal connector (T-5954, ADR-N-064 §3.3): `connector:{id}` names the connector the
+        # token is for, and the mappers name the connectors' door and `portal-api`, the client
+        # that exchanges the token for an Endpoint read (RFC 8693 wants it in `aud`). Keycloak
+        # 26.8 mints no audience per connector (resource indicators match a static list only),
+        # so the Portal takes a token at /c/{id} only when its one `connector:` scope is that id,
+        # and refuses a token with any `connector:` scope on every other route.
+        - name: connector
+          description: One AI connector you created in the Portal
+          protocol: openid-connect
+          attributes:
+            is.parameterized.scope: 'true'
+            parameterized.scope.type: custom
+            parameterized.scope.regexp: '[a-z2-7]{26}'
+            include.in.token.scope: 'true'
+            display.on.consent.screen: 'true'
+            consent.screen.text: Use one AI connector you created in the Portal, with the rights you gave it
+          protocolMappers:
+            - name: portal-connectors-audience
+              protocol: openid-connect
+              protocolMapper: oidc-audience-mapper
+              consentRequired: false
+              config:
+                included.custom.audience: portal-connectors
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+            - name: portal-api-audience
+              protocol: openid-connect
+              protocolMapper: oidc-audience-mapper
+              consentRequired: false
+              config:
+                included.client.audience: portal-api
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+            # A CIMD client is created with no role scope (fullScopeAllowed false), so its token
+            # carries no realm roles: these two put back the groups and the sign-in steps the
+            # Portal decides with. A right held only as a realm role stays out (fails closed).
+            - name: groups
+              protocol: openid-connect
+              protocolMapper: oidc-group-membership-mapper
+              consentRequired: false
+              config:
+                claim.name: groups
+                full.path: 'false'
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+                userinfo.token.claim: 'false'
+            - name: amr
+              protocol: openid-connect
+              protocolMapper: oidc-amr-mapper
+              consentRequired: false
+              config:
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+                introspection.token.claim: 'true'
         - name: mcp:portal
           description: Audience of the Portal MCP server at /api/v1/mcp
           protocol: openid-connect

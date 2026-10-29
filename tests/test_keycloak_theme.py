@@ -159,6 +159,10 @@ def test_keycloak_is_built_with_script_mappers_off_and_nothing_turns_them_on(ren
     (build,) = [c for c in pod["initContainers"] if c["name"] == "build-keycloak"]
     (line,) = [line for line in build["args"][0].splitlines() if "kc.sh build" in line]
     assert "--features-disabled=scripts" in line.split()
+    # T-5954: CIMD (experimental) and parameterized scopes (preview) for the connector sign-in;
+    # resource indicators stay off (exact-match static list, breaks today's connectors).
+    assert "--features=cimd,parameterized-scopes" in line.split()
+    assert "resource-indicators" not in line
     assert not re.search(r"--features(=|\s)\S*scripts", line)
     for container in pod["initContainers"] + pod["containers"]:
         for env in container.get("env", []):
