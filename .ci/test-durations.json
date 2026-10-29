@@ -212,6 +212,7 @@
  "test_portal_basemap.py": 0.0,
  "test_portal_ckan_token.py": 0.2,
  "test_portal_cost_prices.py": 91.3,
+ "test_portal_decisions_second_factor.py": 116.6,
  "test_portal_health_mount.py": 0.0,
  "test_portal_invitation_client.py": 0.0,
  "test_portal_namespaces_policy.py": 95.6,
