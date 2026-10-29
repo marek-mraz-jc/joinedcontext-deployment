@@ -43,6 +43,12 @@
         },
         "appsWildcard": {
           "type": "string"
+        },
+        "websocketHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
