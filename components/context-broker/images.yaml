@@ -225,5 +225,9 @@ context-broker:
     # engine refuses every write of an x-jc-read-only caller; same FEATURES). No migration; new optional keys
     # ANTARES_MEMORY_BUDGET, ANTARES_SCHEMA_WRITES, ANTARES_VIEW_IDLE keep their defaults. Rollback: dev-91.
     # Signed by ship.yml on dev at c9c3a1e (run 40780917799).
-    tag: 'dev-99'
-    digest: 'sha256:bb701cd369261ff96ecc5a561ae560caca044255f02afaa7b25e44f5a54a5051'
+    # Antares dev a48423e (dev-101, over c9c3a1e: trains 20261028-2239..20261029-0326, T-5933 T-5991 T-6000 T-6017:
+    # pool slots freed after a failed release ping over TLS, zip 9.0.5 for CVE-2026-115905; same FEATURES).
+    # No migration, no new key. Rollback: dev-99.
+    # Signed by ship.yml on dev at a48423e (run 40817974367).
+    tag: 'dev-101'
+    digest: 'sha256:9b8673732f3773296fb59d0cda25b7c6a8460d0203320ce31c2e5295e868eb24'
