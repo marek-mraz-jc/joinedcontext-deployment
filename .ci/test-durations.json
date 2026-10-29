@@ -293,6 +293,7 @@
  "test_seed_retention_history.py": 0.0,
  "test_seeded_endpoint_surfaces.py": 207.8,
  "test_shared_branding.py": 0.0,
+ "test_shared_renders.py": 68.4,
  "test_sharing_seed.py": 0.2,
  "test_smartcity.py": 65.4,
  "test_smoke_catalogue.py": 2.3,
