@@ -18,10 +18,12 @@ ckan:
     digest: 'sha256:f17750c1ea075dd66303d9cd3746c29641fc3e8a76c7296453d2afde6bc695e1'
   solr:
     # A plain Solr cannot index CKAN: the collection needs CKAN's schema, and this image is
-    # the one that carries it. Its minor version tracks the CKAN one above.
-    repository: 'docker.io/ckan/ckan-solr'
+    # the one that carries it. Its minor version tracks the CKAN one above. ckan/ckan-solr
+    # 2.11-solr9 with the Ubuntu archive's fixes (libbrotli1 for CVE-2026-111497, T-6114):
+    # images/patched-ckan-solr, signed by image-patched.yml run 40958311324 at b92a8aa0.
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr'
     tag: '2.11-solr9'
-    digest: 'sha256:ef8e5d3e6be1678cfe50ceb14a8ebf16c36d44aac2de1086a285ce6807af64e6'
+    digest: 'sha256:959ac52f1ed559db58d56d3411088d8c6729e86f311efe3657394666349c232d'
   redis:
     repository: 'docker.io/library/redis'
     tag: '7-alpine'

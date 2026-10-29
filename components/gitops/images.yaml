@@ -4,12 +4,13 @@
 gitops:
   # Every Argo CD workload, and the Job that writes Redis's password.
   # Argo CD v3.5.4 with git-lfs 3.8.0 and kustomize 5.8.3 in place of the builds it bundles
-  # (CVE-2025-68121, T-4706): images/gitops-argocd, signed by image-gitops.yml run 39201466861
-  # at 0329738f. Back to quay.io/argoproj/argocd once an upstream tag scans clean at CRITICAL.
+  # (CVE-2025-68121, T-4706) and the Ubuntu archive's fixes (libbrotli1 for CVE-2026-111497, T-6114):
+  # images/gitops-argocd, signed by image-gitops.yml run 40958311476 at b92a8aa0.
+  # Back to quay.io/argoproj/argocd once an upstream tag scans clean at CRITICAL.
   argocd:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-argocd'
     tag: 'v3.5.4'
-    digest: 'sha256:d5f5988728c67a8784e7fd5f1626387e88e3c1de119fc43995f70cd6a201f0cf'
+    digest: 'sha256:ec7fc33b94d1f73fa2ee796be437943c77e9efce4f222b411e9e7b63b4ac9255'
   redis:
     repository: 'ecr-public.aws.com/docker/library/redis'
     tag: '8.6.4-alpine'
