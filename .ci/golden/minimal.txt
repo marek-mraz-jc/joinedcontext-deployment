@@ -147,6 +147,7 @@ v1/ConfigMap minimal/postgres-cluster-monitoring-logical-replication
 v1/Secret minimal/apisix-oidc-session
 v1/Secret minimal/apisix-standalone-config
 v1/Secret minimal/context-broker-admin-token
+v1/Secret minimal/context-broker-secret-key
 v1/Secret minimal/db-antares
 v1/Secret minimal/db-keycloak
 v1/Secret minimal/db-portal
@@ -170,6 +171,7 @@ v1/Secret minimal/keycloak-user-demo-steward
 v1/Secret minimal/keycloak-user-demo-viewer
 v1/Secret minimal/keycloak-user-demo-zilina
 v1/Secret minimal/portal-cookie-key
+v1/Secret minimal/postgres-cluster-local-backup-key
 v1/Service minimal/apisix-gateway
 v1/Service minimal/cnpg-webhook-service
 v1/Service minimal/context-broker

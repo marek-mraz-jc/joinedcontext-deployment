@@ -201,7 +201,8 @@ spec:
             starts (T-5556), in this pod: the drill creates no pod and execs into none. The
             copy holds production-shaped data, so Postgres listens on no port (a Unix socket
             in the emptyDir only), the container gets no API token, the dump volume is mounted
-            read-only, and the script deletes the copy's files before the container exits.
+            read-only, and the script deletes the copy's files before the container exits. It
+            opens the encrypted dump with the drill key (T-5839), in this container alone.
             It hands its verdict to the drill as files under /tmp/local-dump.
           */}}
           initContainers:
@@ -231,6 +232,12 @@ spec:
                   mountPath: /var/lib/drill
                 - name: backup
                   mountPath: /backup
+                  readOnly: true
+                - name: age
+                  mountPath: /opt/age
+                  readOnly: true
+                - name: key
+                  mountPath: /key
                   readOnly: true
           {{- end }}
           containers:
@@ -302,6 +309,14 @@ spec:
               persistentVolumeClaim:
                 claimName: {{ $.Values.cluster.name }}-local-backup
                 readOnly: true
+            - name: age
+              configMap:
+                name: {{ $.Values.cluster.name }}-local-backup-age
+            {{- /* Mode 0440 with the pod's fsGroup: the init container's uid 26 reads it. */}}
+            - name: key
+              secret:
+                secretName: {{ $.Values.cluster.name }}-local-backup-key
+                defaultMode: 0440
             {{- end }}
 {{- end }}
 {{- end }}

@@ -52,7 +52,9 @@ v1/ConfigMap brokeronly/postgres-cluster-dr-drill
 v1/ConfigMap brokeronly/postgres-cluster-dr-drill-script
 v1/ConfigMap brokeronly/postgres-cluster-monitoring-logical-replication
 v1/Secret brokeronly/context-broker-admin-token
+v1/Secret brokeronly/context-broker-secret-key
 v1/Secret brokeronly/db-antares
+v1/Secret brokeronly/postgres-cluster-local-backup-key
 v1/Service brokeronly/cnpg-webhook-service
 v1/Service brokeronly/context-broker
 v1/ServiceAccount brokeronly/context-broker

@@ -446,6 +446,7 @@ traefik.io/v1alpha1/TLSOption smartcity/mqtt-bsi-tr-02102
 v1/ConfigMap kube-system/local-path-config
 v1/ConfigMap smartcity/apisix
 v1/ConfigMap smartcity/apisix-standalone-base
+v1/ConfigMap smartcity/apps-db-local-backup-age
 v1/ConfigMap smartcity/apps-db-monitoring-logical-replication
 v1/ConfigMap smartcity/basemap-tiles
 v1/ConfigMap smartcity/basemap-tiles-styles
@@ -498,6 +499,7 @@ v1/ConfigMap smartcity/pipeline-runner-helsinki-streams
 v1/ConfigMap smartcity/portal-branding
 v1/ConfigMap smartcity/postgres-cluster-dr-drill
 v1/ConfigMap smartcity/postgres-cluster-dr-drill-script
+v1/ConfigMap smartcity/postgres-cluster-local-backup-age
 v1/ConfigMap smartcity/postgres-cluster-monitoring-logical-replication
 v1/ConfigMap smartcity/probe
 v1/ConfigMap smartcity/status-page
@@ -518,12 +520,14 @@ v1/ResourceQuota smartcity-app-tests/app-tests
 v1/Secret smartcity/apisix-oidc-session
 v1/Secret smartcity/apisix-standalone-config
 v1/Secret smartcity/apps-db-backup-artifact-store
+v1/Secret smartcity/apps-db-local-backup-key
 v1/Secret smartcity/apps-host-0-db
 v1/Secret smartcity/apps-host-1-db
 v1/Secret smartcity/artifact-store-root
 v1/Secret smartcity/ckan-admin-credentials
 v1/Secret smartcity/ckan-session
 v1/Secret smartcity/context-broker-admin-token
+v1/Secret smartcity/context-broker-secret-key
 v1/Secret smartcity/context-gateway-oauth-key
 v1/Secret smartcity/db-antares
 v1/Secret smartcity/db-apps-admin
@@ -556,6 +560,7 @@ v1/Secret smartcity/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret smartcity/keycloak-user-initial
 v1/Secret smartcity/portal-cookie-key
 v1/Secret smartcity/postgres-backup-artifact-store
+v1/Secret smartcity/postgres-cluster-local-backup-key
 v1/Secret smartcity/prometheus-prometheus-token
 v1/Service kube-system/node-exporter
 v1/Service smartcity/agent-proxy

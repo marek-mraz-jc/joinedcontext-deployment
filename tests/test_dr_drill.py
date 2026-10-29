@@ -9,6 +9,7 @@ and keeps the last result patched into the result ConfigMap.
 import gzip
 import json
 import os
+import shutil
 import stat
 import subprocess
 import textwrap
@@ -18,6 +19,38 @@ import pytest
 import yaml
 
 NAME = "postgres-cluster-dr-drill"
+DUMP = "2026-10-24T0230Z.sql.gz.age"
+
+
+def age_identity(tmp_path: Path) -> tuple[Path, str]:
+    """An age identity under `tmp_path` and its public key, from the real `age-keygen`: the dumps
+    of these tests are sealed and opened by the `age` CLI, which writes the same files the
+    chart's files/age.py does (the CI venv has no python3-cryptography to run age.py itself;
+    tests/test_postgres_local_backup.py runs it in the image the cluster runs)."""
+    if not shutil.which("age-keygen"):
+        pytest.skip("age not installed: the dump is age-encrypted (T-5839), ci.yml installs it")
+    identity = tmp_path / "identity.txt"
+    if not identity.exists():
+        subprocess.run(["age-keygen", "-o", str(identity)], check=True, capture_output=True)
+    public = subprocess.run(["age-keygen", "-y", str(identity)], check=True, capture_output=True, text=True)
+    return identity, public.stdout.strip()
+
+
+def seal(tmp_path: Path, data: bytes) -> bytes:
+    _, public = age_identity(tmp_path)
+    return subprocess.run(["age", "-r", public], input=data, check=True, capture_output=True).stdout
+
+
+def age_stub(tmp_path: Path, bin_: Path) -> None:
+    """`python3 <age.py> decrypt --identity-file F`, as the drill calls it, answered by the age
+    CLI with the test identity, and refusing as age.py does (`age.py: ...` on stderr)."""
+    identity, _ = age_identity(tmp_path)
+    (bin_ / "python3").write_text(textwrap.dedent(f"""\
+        #!/bin/sh
+        [ "$2" = decrypt ] && [ "$3" = --identity-file ] || {{ echo "stub python3: unexpected $*" >&2; exit 64; }}
+        age -d -i {identity} 2>/dev/null || {{ echo "age.py: chunk 0 is damaged or the file is truncated" >&2; exit 1; }}
+        """))
+    (bin_ / "python3").chmod(0o755)
 
 
 def one(docs: list[dict], kind: str, name: str) -> dict:
@@ -68,7 +101,8 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
 
     `dump` stands for the nightly dump's volume (T-5556): `counts` the file the dump job wrote
     beside it, `restored` the per-database `name|count` answers of the restored copy, `data` the
-    gzip bytes (a real gzip of a line by default) and `psql_error` a line the restore's psql
+    gzip bytes (a real gzip of a line by default), sealed with age, `raw` the file's bytes as
+    they are (unsealed) and `psql_error` a line the restore's psql
     prints before it fails. With `dump`, the script first runs as the init container does
     (`dr-drill.sh dump`, stub initdb, postgres and psql, /backup under `tmp_path`, so gzip judges
     the file), then as the drill on its handoff. `handoff=False` drops what the init container
@@ -92,9 +126,15 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
     base = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "MEMINFO": str(tmp_path / "meminfo"),
             "POLL_SECONDS": "0", "HANDOFF": str(tmp_path / "handoff")}
     if dump is not None:
-        newest = backup / "2026-10-24T0230Z.sql.gz"
-        (backup / "2026-10-23T0230Z.sql.gz").write_bytes(gzip.compress(b"-- older"))
-        newest.write_bytes(dump.get("data", gzip.compress(b"SELECT 1;\n")))
+        newest = backup / DUMP
+        (backup / "2026-10-23T0230Z.sql.gz.age").write_bytes(seal(tmp_path, gzip.compress(b"-- older")))
+        # A plain dump of before T-5839 sorts after the sealed ones and is never read.
+        (backup / "2026-10-25T0230Z.sql.gz").write_bytes(gzip.compress(b"-- plain"))
+        if "raw" in dump:
+            newest.write_bytes(dump["raw"])
+        else:
+            newest.write_bytes(seal(tmp_path, dump.get("data", gzip.compress(b"SELECT 1;\n"))))
+        age_stub(tmp_path, tmp_path)
         (backup / f"{newest.name}.counts").write_text(dump["counts"])
         for db, answer in dump.get("restored", {}).items():
             (tmp_path / f"restored.{db}").write_text(answer)
@@ -268,9 +308,9 @@ def test_prod_restores_its_local_dump_and_still_says_it_has_no_off_site_backup(s
     assert code == 0, result
     assert result["result"] == "no-backup", "the dump is no off-site backup, the alert keeps saying so"
     assert result["localDump"] == "local-dump-passed"
-    assert result["localDumpDetail"] == "2026-10-24T0230Z.sql.gz: 3 tables match", "the newest dump"
+    assert result["localDumpDetail"] == f"{DUMP}: 3 tables match", "the newest dump"
     assert result["localDumpRtoSeconds"].isdigit()
-    newest = tmp_path / "backup" / "2026-10-24T0230Z.sql.gz"
+    newest = tmp_path / "backup" / DUMP
     assert result["localDumpBytes"] == str(newest.stat().st_size)
     assert log == [], "the dump restores in the drill's own pod: nothing created, no Cluster without an archive"
 
@@ -289,7 +329,7 @@ def test_a_dump_missing_a_table_fails_the_drill_and_names_the_table(smartcity, t
     code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "restored": restored})
     assert code != 0
     assert result["result"] == "failed" and result["localDump"] == "failed"
-    assert result["localDumpDetail"] == "2026-10-24T0230Z.sql.gz short: portal.public.b(missing)"
+    assert result["localDumpDetail"] == f"{DUMP} short: portal.public.b(missing)"
     assert log == []
 
 
@@ -302,11 +342,25 @@ def test_a_truncated_dump_fails_the_drill(smartcity, tmp_path):
     assert result["localDumpRtoSeconds"] == ""
 
 
+def test_a_truncated_or_foreign_sealed_dump_fails_the_drill_at_the_decryption(smartcity, tmp_path):
+    sealed = seal(tmp_path, gzip.compress(os.urandom(200_000)))
+    code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "raw": sealed[:70_000]})
+    assert code != 0 and result["localDump"] == "failed", result
+    assert result["localDumpDetail"] == f"{DUMP} did not restore: age.py: chunk 0 is damaged or the file is truncated"
+    assert log == []
+
+
+def test_a_dump_file_that_is_not_sealed_is_refused(smartcity, tmp_path):
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "raw": gzip.compress(b"SELECT 1;\n")})
+    assert code != 0 and result["localDump"] == "failed"
+    assert result["localDumpDetail"].startswith(f"{DUMP} did not restore: age.py:"), result
+
+
 def test_a_refused_statement_fails_without_copying_a_value_into_the_result(smartcity, tmp_path):
     error = 'psql:<stdin>:812: ERROR:  invalid input syntax for type integer: "4111 1111 1111 1111"'
     code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "psql_error": error})
     assert code != 0 and result["localDump"] == "failed"
-    assert result["localDumpDetail"] == ("2026-10-24T0230Z.sql.gz did not restore: "
+    assert result["localDumpDetail"] == (f"{DUMP} did not restore: "
                                          "psql:<stdin>:812: ERROR:  invalid input syntax for type integer: ")
     assert "4111" not in json.dumps(result)
 
@@ -314,7 +368,7 @@ def test_a_refused_statement_fails_without_copying_a_value_into_the_result(smart
 def test_a_dump_without_its_counts_fails(smartcity, tmp_path):
     code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": ""})
     assert code != 0 and result["localDump"] == "failed"
-    assert result["localDumpDetail"] == "no table counts beside 2026-10-24T0230Z.sql.gz"
+    assert result["localDumpDetail"] == f"no table counts beside {DUMP}"
 
 
 def test_a_dump_restore_that_left_no_verdict_fails(smartcity, tmp_path):
@@ -396,17 +450,20 @@ def test_the_dump_job_writes_the_counts_and_fails_a_dump_over_80_percent(smartci
     assert pvc["spec"]["resources"]["requests"]["storage"] == "10Gi", "the bound PVC's request never moves"
     script = container["command"][2]
     assert script.index('"$file.counts"') < script.index('mv "$file.part" "$file"')
-    assert "over 80 % of the" in script and "-name '*.sql.gz.counts'" in script
+    assert "over 80 % of the" in script and "-name '*.counts'" in script
 
 
 # ---- the dump job itself (T-5556 deployer hold: an hourly apply must not fill Postgres's disk)
 
 
 def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096, size: str = "1Mi",
-             disk_kib: tuple[int, int] = (10_000_000, 5_000_000), exclude: str = "") -> tuple[int, str, Path]:
+             disk_kib: tuple[int, int] = (10_000_000, 5_000_000), exclude: str = "",
+             seal_fails: bool = False) -> tuple[int, str, Path]:
     """Runs the rendered dump script of the CronJob (mode dump) or the apply's Job (mode bind)
     over a scratch directory: psql answers two databases, pg_dumpall writes `dump_bytes` of noise
-    and records its arguments, df reports `disk_kib` (total, available)."""
+    (also kept in `dumpall.out`) and records its arguments, df reports `disk_kib` (total,
+    available). `python3 age.py encrypt` is the age CLI sealing to the recipients it is handed
+    (kept in `age.args`) and to the test identity, which stands for the drill key."""
     name = "postgres-cluster-local-backup"
     job = one(docs, "CronJob", name)["spec"]["jobTemplate"]["spec"] if mode == "dump" else one(docs, "Job", f"{name}-now")["spec"]
     container = job["template"]["spec"]["containers"][0]
@@ -417,7 +474,11 @@ def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096
         d.mkdir(exist_ok=True)
     stubs = {
         "psql": """case "$*" in *datname*) printf 'antares\\nportal\\n' ;; *) echo "public.t|3" ;; esac""",
-        "pg_dumpall": f"""echo "$*" > {tmp_path}/dumpall.args; head -c {dump_bytes} /dev/urandom""",
+        "pg_dumpall": f"""echo "$*" > {tmp_path}/dumpall.args; head -c {dump_bytes} /dev/urandom | tee {tmp_path}/dumpall.out""",
+        "python3": "exit 1" if seal_fails else f"""[ "$2 $3 $4" = "encrypt --identity-file /key/key" ] || exit 64; shift 4
+echo "$*" > {tmp_path}/age.args
+set -- $(for r; do printf -- '-r %s ' "$r"; done)
+exec age "$@" -r {age_identity(tmp_path)[1]}""",
         "df": f"""printf 'Filesystem 1024-blocks Used Available Capacity Mounted\\n/dev/sda3 {disk_kib[0]} 0 {disk_kib[1]} 50%% /backup\\n'""",
     }
     for stub, body in stubs.items():
@@ -434,17 +495,37 @@ def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096
 def test_the_apply_dumps_only_when_no_dump_of_the_last_20_h_is_there(smartcity, tmp_path):
     code, log, backup = dump_job(smartcity, tmp_path, "bind")
     assert code == 0, log
-    assert len(list(backup.glob("*.sql.gz"))) == 1 and len(list(backup.glob("*.sql.gz.counts"))) == 1
+    assert len(list(backup.glob("*.sql.gz.age"))) == 1 and len(list(backup.glob("*.sql.gz.age.counts"))) == 1
     (tmp_path / "dumpall.args").unlink()
     code, log, backup = dump_job(smartcity, tmp_path, "bind")
     assert code == 0 and "none at this apply" in log, log
     assert not (tmp_path / "dumpall.args").exists(), "the second apply wrote no dump"
-    assert len(list(backup.glob("*.sql.gz"))) == 1
+    assert len(list(backup.glob("*.sql.gz.age"))) == 1
+
+
+def test_the_dump_on_the_volume_is_sealed_to_the_operator_and_the_drill_key(smartcity, tmp_path):
+    """T-5839: no plain byte of the dump reaches the volume; the drill key opens it."""
+    code, log, backup = dump_job(smartcity, tmp_path, "dump")
+    assert code == 0, log
+    dump, = backup.glob("*.sql.gz.age")
+    assert dump.read_bytes().startswith(b"age-encryption.org/v1\n")
+    assert (tmp_path / "age.args").read_text().split() == ["age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55"], \
+        "smartcity's operator key, the dev age key of .sops.yaml"
+    identity, _ = age_identity(tmp_path)
+    opened = subprocess.run(["age", "-d", "-i", str(identity), str(dump)], check=True, capture_output=True).stdout
+    assert gzip.decompress(opened) == (tmp_path / "dumpall.out").read_bytes()
+    assert [p.name for p in backup.iterdir() if not p.name.endswith((".age", ".counts"))] == []
+
+
+def test_a_dump_that_cannot_be_sealed_leaves_nothing_on_the_volume(smartcity, tmp_path):
+    code, log, backup = dump_job(smartcity, tmp_path, "dump", seal_fails=True)
+    assert code != 0 and "could not be encrypted" in log, log
+    assert list(backup.iterdir()) == []
 
 
 def test_the_nightly_dump_runs_although_a_recent_dump_is_there(smartcity, tmp_path):
     (tmp_path / "backup").mkdir()
-    (tmp_path / "backup" / "2026-10-25T0230Z.sql.gz").write_bytes(b"x")
+    (tmp_path / "backup" / "2026-10-25T0230Z.sql.gz.age").write_bytes(b"x")
     code, log, _ = dump_job(smartcity, tmp_path, "dump")
     assert code == 0, log
     assert (tmp_path / "dumpall.args").read_text().split() == ["--clean", "--if-exists"]
@@ -464,7 +545,7 @@ def test_old_dumps_make_room_before_the_dump_and_full_volume_refuses(smartcity, 
     os.utime(old, (0, 0))
     code, log, _ = dump_job(smartcity, tmp_path, "dump", size="1Mi")
     assert code == 0 and not old.exists(), log
-    recent = backup / "2026-10-25T0100Z.sql.gz"
+    recent = backup / "2026-10-25T0100Z.sql.gz.age"
     recent.write_bytes(os.urandom(1048576))
     code, log, _ = dump_job(smartcity, tmp_path, "dump", size="1Mi")
     assert code != 0 and "fill the 1Mi of localBackup.cap" in log, log
