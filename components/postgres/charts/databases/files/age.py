@@ -47,7 +47,7 @@ def unb64(text):
 
 def recipient_key(text, want="age"):
     """The 32 bytes of an age1... recipient (bech32, BIP 173); `want` "age-secret-key-" reads an
-    AGE-SECRET-KEY-1... identity the same way."""
+    age identity (its upper-case secret-key form) the same way."""
     text = text.strip().lower()
     hrp, _, data = text.rpartition("1")
     if hrp != want or len(data) < 6 or any(c not in BECH32 for c in data):
