@@ -25,6 +25,9 @@ SIZES = {
     ("Deployment", "context-gateway", "checkouts"): ("128Mi", "256Mi"),
     ("Deployment", "jc-assistant", "git-sync"): ("64Mi", "256Mi"),
     ("Deployment", "jc-assistant", "checkouts"): ("64Mi", "256Mi"),
+    # T-5926: RustFS 1.0.4 has no setting that bounds what grows (anon memory per stored object);
+    # the request covers dev's measured working set, the limit is the headroom.
+    ("StatefulSet", "artifact-store", "rustfs"): ("832Mi", "1024Mi"),
 }
 
 UNITS = {"Ki": 2**10, "Mi": 2**20, "Gi": 2**30}
