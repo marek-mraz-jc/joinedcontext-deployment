@@ -73,6 +73,18 @@ def config(docs, release):
 
 
 RELEASES = ["mqtt-helsinki-cameras", "mqtt-helsinki-buses", "mqtt-praha-cameras"]
+# The smallest packet cap (T-6043, the Portal's CONNECT_ALLOWANCE): a device's CONNECT carries a
+# Keycloak token of about 1.2 KB as its password, and RMQTT's one max_packet_size caps it too.
+CONNECT_ALLOWANCE = 4096
+
+
+def test_a_token_connect_fits_every_broker_whatever_its_message_cap(docs):
+    """T-6043: the hsl-bridge broker (maxMessageBytes 1024) refused its device's 1186-byte CONNECT
+    ("Max size exceeded"); every listener's cap is maxMessageBytes, never under 4096."""
+    wanted = {"mqtt-helsinki-cameras": 65536, "mqtt-helsinki-buses": 4096, "mqtt-praha-cameras": 65536}
+    for release in RELEASES:
+        for name, listener in config(docs, release)["rmqtt.toml"]["listener"]["tcp"].items():
+            assert listener["max_packet_size"] == f"{wanted[release]}B", (release, name)
 
 
 def test_each_broker_is_one_release_with_its_own_identity(docs):
@@ -107,7 +119,8 @@ def test_only_the_two_plain_listeners_are_open(docs):
         assert listener["allow_anonymous"] is False
         assert listener["max_qos_allowed"] == 1
         assert listener["max_session_expiry_interval"] == "0s"
-        assert listener["max_packet_size"] == "1024B"
+        # maxMessageBytes 1024, raised to the CONNECT allowance (T-6043).
+        assert listener["max_packet_size"] == "4096B"
         assert listener["max_connections"] == 3
     assert main["rpc"]["server_addr"].startswith("127.0.0.1:")
     assert main["log"]["to"] == "console"
@@ -245,7 +258,7 @@ def fill(template: str, release: str, project: str, name: str, limits: dict) -> 
     """The template filled as the Portal fills it (src/reconciler/mqtt_brokers.rs), hash aside."""
     for sentinel, value in (
         ("__RELEASE__", release), ("__PROJECT__", project), ("__NAME__", name),
-        ("__MAX_BYTES__", limits["maxMessageBytes"]), ("__PER_SECOND__", limits["messagesPerSecond"]),
+        ("__MAX_BYTES__", max(limits["maxMessageBytes"], CONNECT_ALLOWANCE)), ("__PER_SECOND__", limits["messagesPerSecond"]),
         ("__CONNECTIONS__", limits["maxConnections"]), ("__CONFIG_HASH__", "h"),
     ):
         template = template.replace(sentinel, str(value))
@@ -709,6 +722,31 @@ def test_a_flooding_publisher_is_throttled(tmp_path):
         assert Decider.connects.count("helsinki-cam-1") > 1, "the flooding device was never disconnected"
         delivered = len(broker.received)
         assert 0 < delivered <= (seconds + 1) * rate, f"{delivered} frames of a flood at {10 * rate}/s"
+
+
+@pytest.mark.xdist_group("docker-rmqtt")
+@needs_rmqtt
+def test_a_device_with_a_1200_byte_token_signs_in_on_a_1024_byte_broker(tmp_path):
+    """T-6043: the pinned RMQTT with maxMessageBytes 1024 takes a CONNECT whose password is a
+    1200-byte token and delivers its publish, and still drops a packet over the 4096 cap."""
+    with Rmqtt(tmp_path, limits={"maxMessageBytes": 1024}) as broker:
+        def publish(name: str, message: str) -> subprocess.CompletedProcess:
+            return subprocess.run(
+                ["mosquitto_pub", "-h", "127.0.0.1", "-p", str(broker.internal), "-q", "1", "-i", name,
+                 "-u", name, "-P", "t" * 1200, "-t", f"cameras/{name}/frame", "-m", message],
+                capture_output=True, text=True, timeout=20, check=False)
+        before = len(broker.received)
+        signed = publish("helsinki-cam-2", "frame")
+        assert signed.returncode == 0, signed.stderr
+        assert "helsinki-cam-2" in Decider.connects
+        deadline = time.monotonic() + 5
+        while len(broker.received) == before and time.monotonic() < deadline:
+            time.sleep(0.1)
+        assert len(broker.received) == before + 1, "the token device's frame did not arrive"
+        oversized = publish("helsinki-cam-3", "x" * (CONNECT_ALLOWANCE + 100))
+        time.sleep(1)
+        assert len(broker.received) == before + 1, "a packet over the cap was delivered"
+        assert oversized.returncode != 0 or "helsinki-cam-3" not in Decider.connects
 
 
 def port_docs(tmp_path, port: int = 18830) -> list[dict]:
