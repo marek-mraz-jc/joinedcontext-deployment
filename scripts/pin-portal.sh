@@ -41,8 +41,8 @@ docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" 
 docker run --rm --entrypoint cat "$registry/joinedcontext-app-builder@$builder" /usr/local/bin/build-app >"$work/build-app"
 python3 scripts/check-builder-contract.py "$work/lane.mjs" "$work/build-app" components/gitea/apps/*/.gitea/workflows/build.yml
 
-# The UI bundle of the same files (T-5297): this commit's, or the pinned one when ui/ and sdk/ did
-# not change since.
+# The UI bundle of the same files (T-5297, T-6050): this commit's, or the pinned or newest one built
+# since, when ui/ and sdk/ did not change after it.
 read -r ui_commit ui < <(scripts/portal-ui-pin.sh "$commit") || true
 [[ "$ui_commit" =~ ^[0-9a-f]{40}$ && "$ui" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "no portal-ui bundle matches $commit" >&2; exit 1; }
 

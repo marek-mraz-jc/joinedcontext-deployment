@@ -572,18 +572,25 @@ def test_a_pin_step_that_pins_both_sources_passes(tmp_path):
     assert log.count("git push") == 2 and summary == ""
 
 
-def _portal_ui_pin(tmp_path, published: bool, compare: dict | None):
-    """scripts/portal-ui-pin.sh with docker answering `published` and the compare API `compare`."""
+def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None):
+    """scripts/portal-ui-pin.sh with docker answering `published` (True, False or the commits that
+    have a bundle) and the compare API `compare` from the pinned bundle, `newer[base]` from others."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     digest = "sha256:" + "f" * 64
-    (bin_dir / "docker").write_text(
-        f'#!/bin/sh\necho "Digest:    {digest}"\nexit 0\n' if published else "#!/bin/sh\nexit 1\n")
-    (tmp_path / "compare.json").write_text(json.dumps(compare))
-    # The stub writes the answer where `-o` points, as curl does.
+    tags = {"c" * 40} if published is True else set(published or ())
+    cases = "".join(f'  *:{t}) echo "Digest:    {digest}"; exit 0 ;;\n' for t in sorted(tags))
+    (bin_dir / "docker").write_text(f'#!/bin/sh\nfor a; do last=$a; done\ncase "$last" in\n{cases}esac\nexit 1\n')
+    answers = {"pinned": compare, **(newer or {})}
+    for base, answer in answers.items():
+        if answer is not None:
+            (tmp_path / f"compare-{base}.json").write_text(json.dumps(answer))
+    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["ui"]["commit"]
+    # The stub writes the answer where `-o` points, as curl does; a base it has no answer for fails.
     (bin_dir / "curl").write_text(
-        f'#!/bin/sh\nwhile [ "$1" != -o ]; do shift; done\ncat {tmp_path / "compare.json"} > "$2"\n'
-        if compare is not None else "#!/bin/sh\nexit 22\n")
+        '#!/bin/sh\nwhile [ "$1" != -o ]; do shift; done\nout=$2; url=$3\n'
+        f'base=$(echo "$url" | sed -E "s|.*/compare/([0-9a-f]+)\\.\\.\\..*|\\1|"); [ "$base" = {pinned} ] && base=pinned\n'
+        f'[ -f {tmp_path}/compare-$base.json ] || exit 22\ncat {tmp_path}/compare-$base.json > "$out"\n')
     for stub in ("docker", "curl"):
         (bin_dir / stub).chmod(0o755)
     env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", GITHUB_TOKEN="")
@@ -626,5 +633,32 @@ def test_a_compare_past_one_environment_string_is_still_read(tmp_path):
 def test_a_bundle_built_from_other_ui_files_is_refused_in_words(tmp_path, compare, reason):
     """A bundle of other ui/ or sdk/ files would call routes the binary may not have (T-5297)."""
     result = _portal_ui_pin(tmp_path, published=False, compare=compare)
+    assert result.returncode != 0 and result.stdout == ""
+    assert reason in result.stderr, result.stderr
+
+
+NEWER, OLDER = "a" * 40, "b" * 40
+# 9006b60 (2026-10-29): ui/ changed after the pinned bundle, a4ff17f built one that was never pinned.
+UI_SINCE_PINNED = {"status": "ahead", "files": [{"filename": "ui/src/App.tsx"}],
+                   "commits": [{"sha": OLDER}, {"sha": NEWER}, {"sha": "d" * 40}, {"sha": "c" * 40}]}
+
+
+def test_a_newer_unpinned_bundle_is_taken_when_nothing_ui_changed_after_it(tmp_path):
+    """T-6050: the newest bundle of the compare is pinned when ui/ and sdk/ held still after it."""
+    result = _portal_ui_pin(tmp_path, published={OLDER, NEWER}, compare=UI_SINCE_PINNED,
+                            newer={NEWER: {"status": "ahead", "files": [{"filename": "src/main.rs"}]}})
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == [NEWER, "sha256:" + "f" * 64]
+
+
+@pytest.mark.parametrize("published, newer, reason", [
+    ({OLDER, NEWER}, {NEWER: {"status": "ahead", "files": [{"filename": "sdk/src/index.ts"}]}},
+     "changed sdk/src/index.ts since the newer portal-ui aaaaaaa"),
+    (set(), {}, "changed ui/src/App.tsx since the pinned portal-ui"),
+    ({NEWER}, {}, "did not answer; nothing decided"),
+])
+def test_a_newer_bundle_built_from_other_ui_files_is_refused(tmp_path, published, newer, reason):
+    """T-6050: a ui/ change after the newest bundle refuses it, and no older one is tried."""
+    result = _portal_ui_pin(tmp_path, published=published, compare=UI_SINCE_PINNED, newer=newer)
     assert result.returncode != 0 and result.stdout == ""
     assert reason in result.stderr, result.stderr
