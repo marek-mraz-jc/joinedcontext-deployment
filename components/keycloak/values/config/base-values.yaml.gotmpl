@@ -524,6 +524,26 @@ config:
                 included.client.audience: portal-api
                 access.token.claim: 'true'
                 id.token.claim: 'false'
+        # The hub's audience in the token the Portal exchanges a person's token for, to read one
+        # Endpoint as them (T-6063, API/14 §4.2): Keycloak's standard token exchange hands out
+        # only an audience a scope of the requester maps, so the Portal asks for this one beside
+        # `endpoint:{slug}`. Optional on `portal-api` alone; the gateway admits the hub audience
+        # only together with an `endpoint:` scope, so on its own it reaches nothing.
+        - name: gateway-hub
+          description: Audience of the MCP hub in the Portal's exchanged token for one Endpoint
+          protocol: openid-connect
+          attributes:
+            include.in.token.scope: 'false'
+            display.on.consent.screen: 'false'
+          protocolMappers:
+            - name: mcp-hub-audience
+              protocol: openid-connect
+              protocolMapper: oidc-audience-mapper
+              consentRequired: false
+              config:
+                included.client.audience: mcp-hub
+                access.token.claim: 'true'
+                id.token.claim: 'false'
       # Every Endpoint the person may read, through the MCP hub (T-4114, ADR-N-025 4b, EP-88): a
       # default scope of `mcp-hub` only, shown on its consent screen, so one login hands a
       # connector what the person's own session reads and nothing more. The gateway still

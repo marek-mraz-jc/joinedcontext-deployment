@@ -112,6 +112,9 @@ echo "denied $PRINCIPAL the writes on $count clients without $MANAGED_KEY: $MANA
 # The command line's client gets the same optional links (T-5614): `jcctl token --resource` asks
 # for one of them, and the gateway admits a `jcctl` token on the one Endpoint its scope names.
 # There `endpoint:*` is unlinked like any stray, so no jcctl token names every Endpoint.
+# The Portal's own client gets them too (T-6063): a connector's `jc_data_query` exchanges the
+# person's token for `endpoint:{slug}` (RFC 8693), and Keycloak's standard token exchange grants
+# only a scope the requester holds as optional. No `endpoint:*` there either.
 HUB_CLIENT=${HUB_CLIENT:-mcp-hub}
 CLI_CLIENT=${CLI_CLIENT:-jcctl}
 SCOPE_PREFIX=endpoint:
@@ -195,3 +198,4 @@ link_endpoint_scopes() {
 
 link_endpoint_scopes "$HUB_CLIENT" keep-star
 link_endpoint_scopes "$CLI_CLIENT" unlink-star
+link_endpoint_scopes "$PRINCIPAL" unlink-star
