@@ -441,6 +441,8 @@ rbac.authorization.k8s.io/v1/RoleBinding smartcity/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-cluster-dr-drill
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding smartcity/probe
+traefik.io/v1alpha1/IngressRoute smartcity/endpoint-ws
+traefik.io/v1alpha1/Middleware smartcity/endpoint-ws-upgrade
 traefik.io/v1alpha1/TLSOption smartcity/bsi-tr-02102
 traefik.io/v1alpha1/TLSOption smartcity/mqtt-bsi-tr-02102
 v1/ConfigMap kube-system/local-path-config

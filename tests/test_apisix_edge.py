@@ -510,6 +510,44 @@ def test_traefik_listener_enforces_tr_02102(rendered):
     assert annotations["traefik.ingress.kubernetes.io/router.tls.options"] == "dev-bsi-tr-02102@kubernetescrd"
 
 
+def websocket_edge(docs: list[dict]) -> dict[str, dict]:
+    return {
+        d["kind"]: d
+        for d in docs
+        if d.get("kind") in ("Middleware", "IngressRoute")
+        and d["metadata"]["name"] in ("endpoint-ws-upgrade", "endpoint-ws")
+    }
+
+
+def test_traefik_names_the_upgrade_on_endpoint_websocket_answers(rendered):
+    """T-5931, RFC 9110 15.5.22: the 426 of a plain GET on `/api/endpoint/{slug}/ws` names the
+    upgrade. Upgrade is hop-by-hop, so Traefik drops the gateway's; the edge sets it again on these
+    paths only, behind the same certificate, TLS policy and APISIX Service as the edge Ingress."""
+    docs = rendered("dev")
+    objects = edge_objects(docs)
+    ws = websocket_edge(docs)
+    headers = ws["Middleware"]["spec"]["headers"]["customResponseHeaders"]
+    assert headers == {"Upgrade": "websocket", "Connection": "Upgrade"}
+    route = ws["IngressRoute"]["spec"]
+    [rule] = route["routes"]
+    assert rule["middlewares"] == [{"name": "endpoint-ws-upgrade"}]
+    assert rule["match"].endswith(" && PathRegexp(`^/api/endpoint/[^/]+/ws$`)"), rule["match"]
+    hosts = set(re.findall(r"Host\(`([^`]+)`\)", rule["match"]))
+    domain = objects["Certificate"]["spec"]["dnsNames"][0]
+    # Every host an Endpoint WebSocket route of APISIX answers on, and only hosts the certificate covers.
+    assert {domain, f"api.{domain}", f"portal.{domain}"} <= hosts <= set(objects["Certificate"]["spec"]["dnsNames"])
+    ingress = objects["Ingress"]
+    backend = ingress["spec"]["rules"][0]["http"]["paths"][0]["backend"]["service"]
+    assert rule["services"] == [{"name": backend["name"], "port": backend["port"]["number"]}]
+    assert route["tls"]["secretName"] == ingress["spec"]["tls"][0]["secretName"]
+    assert route["tls"]["options"]["name"] == objects["TLSOption"]["metadata"]["name"]
+    assert route["entryPoints"] == ["websecure"]
+
+
+def test_no_traefik_websocket_route_on_another_ingress_controller(rendered):
+    assert websocket_edge(rendered("production")) == {}
+
+
 def test_nginx_listener_carries_the_same_cipher_policy(rendered):
     """OPS-36: the nginx branch of the same requirement; no TLSOption CRD exists there."""
     objects = edge_objects(rendered("production"))

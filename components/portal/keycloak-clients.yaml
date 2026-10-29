@@ -55,6 +55,14 @@ portal-api:
     implicitFlowEnabled: false
     directAccessGrantsEnabled: false
     serviceAccountsEnabled: true
+    # A connector's `jc_data_query` reads one Endpoint as the person (T-6063, API/14 §4.2): the
+    # Portal exchanges the person's token (RFC 8693, standard token exchange V2) for audience
+    # `mcp-hub` and scopes `gateway-hub endpoint:{slug}`, which the admin-permissions Job links
+    # here as optional. The realm takes only a subject token whose audience names `portal-api`,
+    # and the gateway decides the read on the person's own grants.
+    attributes:
+      standard.token.exchange.enabled: 'true'
+    optionalClientScopes: [address, phone, microprofile-jwt, gateway-hub]
     # The Portal reads the caller's realm roles from the ID token (src/auth/oidc.rs
     # realm_roles) and gates the Flows gallery by Blueprint.spec.allowedRoles on them
     # (CC-59). Keycloak's default realm-roles mapper writes realm_access into the access
