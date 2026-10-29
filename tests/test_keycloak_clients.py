@@ -628,21 +628,50 @@ def test_only_jcctl_offers_the_device_flow(realm_clients):
 PROXY = "helsinki-agent-proxy"
 
 
-def test_only_the_agent_proxy_and_the_gateway_may_exchange_a_persons_token(dev_realm_clients):
-    """Standard token exchange V2 on two clients: any other client that could turn a person's
+def test_only_the_agent_proxy_the_gateway_and_the_portal_may_exchange_a_persons_token(dev_realm_clients):
+    """Standard token exchange V2 on three clients: any other client that could turn a person's
     token into one of its own could read as that person (ADR-N-038 §3.2). The gateway exchanges
     only for a broker's audience on a read across brokers (T-3999,
-    tests/test_broker_token_exchange.py)."""
+    tests/test_broker_token_exchange.py); the Portal only for one Endpoint through the hub, on a
+    connector's `jc_data_query` (T-6063, API/14 §4.2)."""
     exchanging = {
         client_id
         for client_id, client in dev_realm_clients.items()
         if client.get("attributes", {}).get("standard.token.exchange.enabled") == "true"
     }
-    assert exchanging == {PROXY, "context-gateway"}
+    assert exchanging == {PROXY, "context-gateway", "portal-api"}
     attributes = dev_realm_clients[PROXY]["attributes"]
     # A refresh token for the run, tied to the person's own session: it ends when they sign out
     # (ADR-N-038 §3.5), which an offline token would not.
     assert attributes["standard.token.exchange.enableRefreshRequestedTokenType"] == "SAME_SESSION"
+
+
+def test_only_the_portal_may_ask_for_the_hub_audience_in_an_exchange(rendered):
+    """T-6063: the realm hands the Portal's exchanged token the `mcp-hub` audience only through
+    `gateway-hub`, an optional scope of `portal-api` and of no other client, never a default
+    one: no login token of any client names the hub through it. A connector's token names
+    `portal-api` (the `connector` scope), so the Portal may exchange it."""
+    for doc in rendered("dev"):
+        if doc.get("kind") == "Secret" and doc["metadata"]["name"].endswith("config-cli-config-realms"):
+            realm = json.loads(base64.b64decode(doc["data"]["dev.json"]))
+            break
+    else:
+        pytest.fail("no keycloak-config-cli realm Secret in the dev render")
+    scopes = {s["name"]: s for s in realm["clientScopes"]}
+    hub = scopes["gateway-hub"]
+    assert [
+        (m["protocolMapper"], m["config"].get("included.client.audience")) for m in hub["protocolMappers"]
+    ] == [("oidc-audience-mapper", "mcp-hub")]
+    offering = {c["clientId"] for c in realm["clients"] if "gateway-hub" in c.get("optionalClientScopes", [])}
+    assert offering == {"portal-api"}
+    assert not [c["clientId"] for c in realm["clients"] if "gateway-hub" in c.get("defaultClientScopes", [])]
+    assert "gateway-hub" not in realm.get("defaultDefaultClientScopes", [])
+    assert "gateway-hub" not in realm.get("defaultOptionalClientScopes", [])
+    connector = {
+        m["config"].get("included.client.audience") for m in scopes["connector"]["protocolMappers"]
+        if m["protocolMapper"] == "oidc-audience-mapper"
+    }
+    assert "portal-api" in connector
 
 
 def test_a_persons_token_names_the_proxy_so_it_may_be_exchanged(dev_realm_clients):

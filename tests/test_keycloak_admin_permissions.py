@@ -331,6 +331,93 @@ def test_the_job_links_the_marked_endpoint_scopes_to_jcctl_and_no_star(keycloak)
     assert "unlinked" not in again.stdout, again.stdout
 
 
+def claims(jwt):
+    import base64
+    payload = jwt.split(".")[1]
+    return json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
+
+
+def test_the_portal_exchanges_a_connector_token_for_one_endpoint_once_the_job_ran(keycloak):
+    """T-6063, API/14 §4.2: a connector's `jc_data_query` exchanges the person's token (a CIMD
+    client's: public, no role scope, audience `portal-api` through the `connector` scope) as
+    `portal-api` for audience `mcp-hub` and `gateway-hub endpoint:{slug}`. Keycloak refuses it
+    `invalid_scope` until the Job links the marked `endpoint:` scope to `portal-api`; after the
+    run the token names the hub alone, `azp` the Portal and the person, and an unmarked scope
+    stays refused. The realm side mirrors components/portal/keycloak-clients.yaml and the
+    `gateway-hub` scope of components/keycloak (pinned by tests/test_keycloak_clients.py)."""
+    name, base = keycloak
+    ids = realm(base)
+    admin = ids["admin"]
+
+    def post(path, body):
+        status, answer, headers = call(base, "POST", f"/admin/realms/{REALM}{path}", admin, body)
+        assert status == 201, answer
+        return headers["Location"].rsplit("/", 1)[1]
+
+    def audience(mapper, key, value):
+        return {"name": mapper, "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper",
+                "config": {key: value, "access.token.claim": "true"}}
+
+    post("/clients", {"clientId": "mcp-hub", "publicClient": False, "secret": "mcp-hub-secret"})
+    hub_scope = post("/client-scopes", {"name": "gateway-hub", "protocol": "openid-connect",
+                                        "attributes": {"include.in.token.scope": "false"},
+                                        "protocolMappers": [audience("hub", "included.client.audience", "mcp-hub")]})
+    post("/client-scopes", {"name": "connector", "protocol": "openid-connect",
+                            "attributes": {"include.in.token.scope": "true"},
+                            "protocolMappers": [audience("door", "included.custom.audience", "portal-connectors"),
+                                                audience("portal", "included.client.audience", "portal-api")]})
+    for scope_name, marked in [("endpoint:ex-ours", True), ("endpoint:ex-stray", False)]:
+        attributes = {"include.in.token.scope": "true"}
+        if marked:
+            attributes["managed-by"] = "joinedcontext"
+        post("/client-scopes", {"name": scope_name, "protocol": "openid-connect", "attributes": attributes})
+    post("/clients", {"clientId": "cimd", "publicClient": True, "directAccessGrantsEnabled": True,
+                      "fullScopeAllowed": False, "defaultClientScopes": ["basic", "profile"],
+                      "optionalClientScopes": ["connector"]})
+    post("/users", {"username": "jana", "enabled": True, "email": "jana@example.org", "firstName": "Jana",
+                    "lastName": "Example", "emailVerified": True,
+                    "credentials": [{"type": "password", "value": "jana", "temporary": False}]})
+    portal = ids["portal"]
+    status, client, _ = call(base, "GET", f"/admin/realms/{REALM}/clients/{portal}", admin)
+    assert status == 200, client
+    client["attributes"]["standard.token.exchange.enabled"] = "true"
+    status, body, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{portal}", admin, client)
+    assert status == 204, body
+    status, body, _ = call(base, "PUT", f"/admin/realms/{REALM}/clients/{portal}/optional-client-scopes/{hub_scope}", admin)
+    assert status == 204, body
+
+    status, body, _ = call(base, "POST", f"/realms/{REALM}/protocol/openid-connect/token", form={
+        "grant_type": "password", "client_id": "cimd", "username": "jana", "password": "jana",
+        "scope": "openid connector"})
+    assert status == 200, body
+    subject = body["access_token"]
+    assert "portal-api" in claims(subject)["aud"]
+
+    def exchange(slug):
+        return call(base, "POST", f"/realms/{REALM}/protocol/openid-connect/token", form={
+            "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange", "client_id": "portal-api",
+            "client_secret": "portal-api-secret", "subject_token": subject,
+            "subject_token_type": "urn:ietf:params:oauth:token-type:access_token",
+            "requested_token_type": "urn:ietf:params:oauth:token-type:access_token",
+            "audience": "mcp-hub", "scope": f"gateway-hub endpoint:{slug}"})
+
+    status, body, _ = exchange("ex-ours")
+    assert status == 400 and "invalid_scope" in body, (status, body)
+
+    run = sync(name)
+    assert run.returncode == 0, run.stderr
+    assert "endpoint: scopes to portal-api" in run.stdout, run.stdout
+
+    status, body, _ = exchange("ex-ours")
+    assert status == 200, body
+    token_ = claims(body["access_token"])
+    assert token_["aud"] in ("mcp-hub", ["mcp-hub"]), token_["aud"]
+    assert token_["azp"] == "portal-api" and token_["preferred_username"] == "jana", token_
+    assert "endpoint:ex-ours" in token_["scope"].split(), token_["scope"]
+    status, body, _ = exchange("ex-stray")
+    assert status == 400 and "invalid_scope" in body, (status, body)
+
+
 def test_the_job_links_a_thousand_new_scopes_in_one_process(keycloak):
     """T-4474 (ADR-N-025 §4d): one kcadm JVM per link took a second each, so a fresh realm with
     10,000 Endpoint scopes never converged inside the Job's 900 s. The links go over one bash
