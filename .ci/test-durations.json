@@ -65,6 +65,7 @@
  "test_catalogue_knowledge_seed.py": 25.6,
  "test_catalogue_one_model.py": 190.1,
  "test_chaos_recovery.py": 0.0,
+ "test_ci_changes.py": 3.1,
  "test_ckan.py": 110.7,
  "test_ckan_admin_seed.py": 102.9,
  "test_ckan_api_token.py": 6.2,
