@@ -1,2 +1,2 @@
-name,base_url,locale,scope,locality,provider,read_on,version
-tvormespolu,https://tvormespolu.banskabystrica.sk,sk,/SK/BB/banska_bystrica,Banská Bystrica,"Mesto Banská Bystrica, tvormespolu.banskabystrica.sk",2026-10-21,0.29.5
+name,base_url,locale,scope,locality,provider,read_on,version,organization
+tvormespolu,https://tvormespolu.banskabystrica.sk,sk,/SK/BB/banska_bystrica,Banská Bystrica,"Mesto Banská Bystrica, tvormespolu.banskabystrica.sk",2026-10-21,0.29.5,banskabystrica

@@ -381,6 +381,28 @@ def test_the_space_reads_publicly_and_only_pipelines_write():
         assert seed(path.name)["spec"]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{SPACE}:{SPACE}-zapis"
 
 
+def test_the_dataset_is_filed_under_the_town_while_it_is_the_only_instance():
+    # T-6098: one instance files the dataset under its town's CKAN organization, keeping the dataset
+    # name (the Endpoint's) and the slovensko instance; several fall back to the slovensko
+    # organization and a Slovakia title.
+    endpoint = seed("slovensko-endpoint-participacia.yaml")
+    ckan = endpoint["spec"]["publish"]["ckan"]
+    assert ckan == {"instanceRef": {"kind": "CkanInstance", "name": "slovensko"}, "organization": "banskabystrica", "license": "cc-by"}
+    assert endpoint["metadata"]["name"] == "slovensko-participacia" and "name" not in ckan
+    assert endpoint["metadata"]["title"]["sk"].endswith("Banská Bystrica")
+    sys.path.insert(0, str(HERE))
+    try:
+        import generate
+    finally:
+        sys.path.remove(str(HERE))
+    one = generate.rows()
+    assert len(one) == 1 and generate.organization(one) == ["      organization: banskabystrica"]
+    two = one + [dict(one[0], name="trnava", locality="Trnava", organization="trnava")]
+    assert generate.organization(two) == []
+    assert "na Slovensku" in generate.title(two)[0] and "Trnava" not in generate.title(two)[0]
+    assert generate.organization([dict(one[0], organization="")]) == []
+
+
 def test_every_http_step_writes_its_host_out():
     # The runner refuses a pipeline whose URL takes any part of its host from a message (PL-07,
     # jc-core data_source.rs refused_target): `https://host${! @path }` ran as RunnerRefused on dev
