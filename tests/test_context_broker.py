@@ -215,3 +215,17 @@ def test_the_mcp_surface_admits_the_portal_and_apex_origins_alone(dev):
     public = [portal[k]["value"] for k in ("JC_PORTAL_PUBLIC_URL", "JC_PORTAL_APPS_URL")]
     assert sorted(origins) == sorted(f"{u}:443" for u in public), (origins, public)
     assert all(o.startswith("https://") and "*" not in o for o in origins), origins
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", ["dev", "production", "smartcity"])
+def test_a_broker_mcp_write_is_decided_on_the_portal_page(rendered, env):
+    """T-5830: with ANTARES_MCP_CONFIRM_URL unset the AI client's own accept confirmed a broker
+    MCP write (form mode). Set, the broker asks by URL and writes only on the decision the
+    person recorded on the Portal page (/mcp-confirmations/$id, Portal T-5829)."""
+    docs = rendered(env)
+    (container,) = pod_of(docs)["containers"]
+    portal = env_of(one(docs, "Deployment", "portal")["spec"]["template"]["spec"]["containers"][0])
+    page = env_of(container)["ANTARES_MCP_CONFIRM_URL"]["value"]
+    assert page == portal["JC_PORTAL_PUBLIC_URL"]["value"] + "/mcp-confirmations/{id}", page
+    assert page.startswith("https://") and page.count("{id}") == 1, page
