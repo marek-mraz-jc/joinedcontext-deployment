@@ -146,15 +146,22 @@ class Reads:
     """GETs in parallel through smoke-catalogue's count pass: a lasting 429 or its deadline ends the run."""
 
     def __init__(self, counter):
-        self.counter, self.stop = counter, threading.Event()
+        self.counter, self.stop, self.why = counter, threading.Event(), ""
+
+    def halt(self, why: str):
+        if not self.stop.is_set():
+            self.why = why
+            self.stop.set()
+        raise smoke.OutOfBudget(self.why)
 
     def one(self, url: str):
-        if self.stop.is_set() or self.counter._clock() - self.counter.start > smoke.COUNT_DEADLINE:
-            raise smoke.OutOfBudget()
+        if self.stop.is_set():
+            raise smoke.OutOfBudget(self.why)
+        if self.counter._clock() - self.counter.start > smoke.COUNT_DEADLINE:
+            self.halt(f"the {smoke.COUNT_DEADLINE:.0f} s deadline passed")
         answer = self.counter.get(url)
         if answer.status == 429:
-            self.stop.set()
-            raise smoke.OutOfBudget()
+            self.halt(f"429 after {smoke.RETRIES} retries on {url}")
         return answer
 
     def all(self, urls: dict) -> dict:
@@ -240,8 +247,9 @@ def run(domain: str, env: str, out: Path, client=None, now: str | None = None) -
     now = now or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     try:
         rows, fixture = sweep(client, domain)
-    except smoke.OutOfBudget:
-        print(f"  FAIL  source links: the run's budget ended after {client.count} requests")
+    except smoke.OutOfBudget as stop:
+        print(f"  FAIL  source links: the run's budget ended after {client.count} requests"
+              + (f": {stop}" if str(stop) else ""))
         return 1
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"smoke-source-links-{env}-{now}.tsv"

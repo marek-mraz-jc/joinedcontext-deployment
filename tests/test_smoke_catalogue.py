@@ -851,6 +851,17 @@ def test_a_429_backs_off_the_count_pass_and_the_retry_counts():
     assert counter.gate.until == fake.now - 7 + smoke.COUNT_COOL  # 2 at once for the next minute
 
 
+def test_the_count_pass_starts_at_most_400_reads_a_minute():
+    # T-5903: 6 at once on the edge cache passed the edge's 600 a minute per address, and a lasting 429
+    # ended dev-smoke's source links after 1218 of ~1400 reads.
+    fake = Fake({})
+    counter = smoke.Counts(DOMAIN, fake.send, fake.clock, fake.sleep)
+    for n in range(5):
+        counter.get(f"{API}/e{n}/ngsi-ld/v1/types")
+    assert fake.pauses == [pytest.approx(0.15)] * 4
+    assert fake.now == pytest.approx(0.6)
+
+
 def test_a_429_that_lasts_leaves_the_count_not_this_run_and_a_503_that_lasts_is_a_ko():
     a, b = package("air", "a1", "AirQualityObserved"), package("park", "p1", "OnStreetParking")
     answers = count_world([a, b], ["a1", "p1"])

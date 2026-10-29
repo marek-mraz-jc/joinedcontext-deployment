@@ -512,7 +512,7 @@ _smoke domain namespace:
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
 	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only; the
-	# entity count of every dataset first, 6 at once (T-5768), then 50 requests a minute for
+	# entity count of every dataset first, 6 at once and 400 a minute (T-5768, T-5903), then 50 requests a minute for
 	# 10 minutes at most; its table lands in .smoke/.
 	echo "catalogue"
 	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
