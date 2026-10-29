@@ -188,7 +188,11 @@ extraInitContainers: |
         # Script mappers stay off: with them, whoever may manage a client runs code in every
         # token it mints (T-2857). Keycloak 26 ships them off; the build says so, so no image or
         # default change turns them on.
-        /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --features-disabled=scripts --http-relative-path={{ $this.pathPrefix }}
+        # `cimd` (experimental) lets claude.ai, Claude Code and VS Code sign in by their published
+        # client id URL; `parameterized-scopes` (preview) mints the one `connector:{id}` scope that
+        # binds a token to one Portal connector (T-5954, ADR-N-064 §3.3). `resource-indicators`
+        # stays off: Keycloak 26.8 matches `resource` only against a static list.
+        /app/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true --features=cimd,parameterized-scopes --features-disabled=scripts --http-relative-path={{ $this.pathPrefix }}
     resources:
       requests:
         cpu: "100m"

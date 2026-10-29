@@ -176,6 +176,8 @@ mcp-mobile:
       - offline_access
       - microprofile-jwt
       - mcp:portal
+      # One Portal connector (T-5954): ChatGPT asks for `connector:{id}` at /c/{id}.
+      - connector
     # The apps come back to their own callback URLs, which are not on this host, so they
     # are listed verbatim rather than derived from the domain.
     redirectUris:
@@ -219,6 +221,7 @@ mcp-local:
     protocolMappers: *mcp-realm-roles
     optionalClientScopes:
       - mcp:portal
+      - connector
     redirectUris:
       - http://localhost/callback
       - http://127.0.0.1/callback
