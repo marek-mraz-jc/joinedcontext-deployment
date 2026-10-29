@@ -46,7 +46,6 @@ spec:
       - jc_endpoint_propose
       - jc_kpi_compute
       - jc_space_complete
-      - jc_pipeline_propose
       - jc_pipeline_test
       - jc_pipeline_sample_source
       - jc_pipeline_try_mapping
@@ -66,10 +65,7 @@ spec:
       - jc_draft_put
       - jc_manifest_dry_run
       - jc_datasource_check
-      - jc_datasource_propose
-      - jc_space_propose
       - jc_model_infer
-      - jc_model_propose
       - jc_model_source_get
       - jc_pipeline_metrics
       - jc_syncsource_status
