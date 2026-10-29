@@ -43,14 +43,31 @@ keycloak:
           port: 57800
     # The Kubernetes API, for the issuer's keys the `kubernetes` identity provider verifies
     # workload tokens against (PF-47). The API server is not a pod, so it is named by address;
-    # k3s serves it on 6443 and the policy sees that port after the Service's DNAT, so 443 to
-    # the world stays closed.
+    # k3s serves it on 6443 and the policy sees that port after the Service's DNAT.
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
       ports:
         - protocol: TCP
           port: 6443
+    # Client ID Metadata Documents (T-5954, ADR-N-064 §3.3): a CIMD login makes Keycloak fetch
+    # the client's document from its https client id, and without this rule that fetch ends in
+    # an SSLHandshakeException. The realm's `client-id-uri` condition admits only claude.ai and
+    # vscode.dev as hosts; this rule is the second fence: 443 to public addresses only, so a
+    # name that resolves inward reaches no pod, node, metadata service or loopback.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+              - 127.0.0.0/8
+              - 100.64.0.0/10
+      ports:
+        - protocol: TCP
+          port: 443
     # Back-channel logout (T-5568, TR-03187 AR-6): Keycloak posts the logout token of every
     # session it ends to the Portal's /api/v1/auth/backchannel-logout over the in-cluster
     # Service; the Portal verifies the token's signature and nothing else admits the call.
