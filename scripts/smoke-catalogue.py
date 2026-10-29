@@ -41,6 +41,7 @@ BUDGET = 500
 DEADLINE = 600.0
 TIMEOUT = 20.0
 MAX_BODY = 1 << 20  # an interface answer: limit=1, or the head of file.csv
+MAX_PAGE = 8 << 20  # the gateway's own cap of one surface page (an OGC feature with its geometry)
 MAX_INVENTORY = 64 << 20  # package_search, the DCAT feed and a model's JSON Schema, read whole
 SAMPLE = 20  # rows of NGSI-LD the data check validates (T-4743)
 TOLERANCE = 0.01
@@ -69,7 +70,11 @@ PEOPLE = re.compile(r"(Organi[sz]ation|Person)$")
 URN_TYPE = re.compile(r"^urn:ngsi-ld:([A-Za-z][\w]*):")
 # ponytail: the NUTS regions the catalogues name today, as (west, south, east, north) rounded
 # outward; a code missing here is checked against its parent, add a box when a city brings one.
+# A position outside the region but inside its country (the code's first three characters) is a warn:
+# a transport network reaches past its city (PID into CZ020 and beyond, T-6073); outside the country is ko.
 REGIONS = {
+    "CZ0": (12.09, 48.55, 18.86, 51.06),
+    "FI1": (19.08, 59.45, 31.59, 70.10),
     "SK0": (16.78, 47.68, 22.62, 49.66),
     "SK031": (18.25, 48.70, 20.05, 49.66),
     "SK032": (18.40, 47.90, 20.55, 49.05),
@@ -354,7 +359,8 @@ def sample_query(data: Dataset, limit: int = SAMPLE) -> dict:
 
 def odata_query(data: Dataset) -> dict:
     """The OData count of the dataset's own rows, filtered as its CKAN link is."""
-    query = {"$top": 1, "$count": "true"}
+    # Only the id: one row of a flood zone polygon outgrows MAX_BODY, and a cut body has no count (T-6073).
+    query = {"$top": 1, "$count": "true", "$select": "id"}
     if data.part_of:
         query["$filter"] = "isPartOf eq '" + data.part_of.replace("'", "''") + "'"
     return query
@@ -398,11 +404,18 @@ def blank(attribute) -> bool:
     return not (isinstance(value, str) and value.strip())
 
 
-def row_problems(rows: list, typ: str, schema: dict, region) -> list:
-    """What is wrong with sampled NGSI-LD rows, by row id and attribute name, never a value."""
+def inside(points, box) -> bool:
+    west, south, east, north = box
+    return all(west <= lon <= east and south <= lat <= north for lon, lat in points)
+
+
+def row_problems(rows: list, typ: str, schema: dict, region) -> tuple:
+    """What is wrong with sampled NGSI-LD rows, by row id and attribute name, never a value, and the
+    warnings: rows without the name their model does not require, rows past the region in its country."""
     known = set(schema.get("properties") or {})
     required = [a for a in schema.get("required") or [] if isinstance(a, str)]
-    problems, seen = [], set()
+    problems, seen, unnamed, beyond = [], set(), 0, 0
+    country = REGIONS.get(region[0][:3]) if region and region[0][:3] != region[0] else None
     for row in rows:
         if not isinstance(row, dict):
             problems.append("a row that is not an entity")
@@ -419,16 +432,25 @@ def row_problems(rows: list, typ: str, schema: dict, region) -> list:
         if PEOPLE.search(typ):
             problems += [f"{rid} has {a}, a place's count, not an {typ}'s"
                          for a in sorted(row) if PLACE_COUNT.match(a)]
-        if blank(row.get("name")):
+        # A source without names (IPR's green register, T-6073) leaves `name` out, a warning unless the
+        # model requires one (counted above); a blank name is a defect.
+        if "name" in row and blank(row["name"]):
             problems.append(f"{rid} has no name")
+        unnamed += "name" not in row and "name" not in required
         if "location" in row and region:
-            code, (west, south, east, north) = region
+            code, box = region
             points = positions((row["location"] or {}).get("value") if isinstance(row["location"], dict) else None)
             if points is None:
                 problems.append(f"{rid} location is no GeoJSON geometry")
-            elif any(not (west <= lon <= east and south <= lat <= north) for lon, lat in points):
-                problems.append(f"{rid} location lies outside {code}")
-    return problems
+            elif not inside(points, box):
+                if country and inside(points, country):
+                    beyond += 1
+                else:
+                    problems.append(f"{rid} location lies outside {code}")
+    warnings = [f"{unnamed} without name"] if unnamed else []
+    if beyond:
+        warnings.append(f"{beyond} reach beyond {region[0]} inside {region[0][:3]}")
+    return problems, warnings
 
 
 def relationships(rows: list) -> dict:
@@ -610,7 +632,8 @@ class Run:
             return skip("the dataset lists no OGC distribution (its type has no location)")
         query = {"limit": 1, **({"isPartOf": data.part_of} if data.part_of else {})}
         url = self.base(data) + f"ogc/features/collections/{data.type}/items?" + urllib.parse.urlencode(query)
-        answer = self.client.fetch(url)
+        # OGC has no "no geometry" option: one flood zone polygon is 1.2 MB, so the gateway's page cap holds (T-6073).
+        answer = self.client.fetch(url, limit=MAX_PAGE)
         if answer.status != 200 or "geo+json" not in answer.ctype:
             return ko(f"items answered {answer.why()}")
         body = answer.json() or {}
@@ -652,10 +675,13 @@ class Run:
                       else f"model.schema.json defines no {data.type}")
         self.schemas[data.name] = schema
         region = region_box(data.region)
-        problems = row_problems(rows, data.type, schema, region) + self.dangling(data, rows)
+        problems, warnings = row_problems(rows, data.type, schema, region)
+        problems += self.dangling(data, rows)
         if problems:
             more = f" (+{len(problems) - 3} more)" if len(problems) > 3 else ""
             return ko("; ".join(problems[:3]) + more)
+        if warnings:
+            return warn(f"{len(rows)} rows, " + ", ".join(warnings))
         where = f"inside {region[0]}" if region else (
             f"location not checked: no box for {data.region}" if data.region else "location not checked: no region")
         return ok(f"{len(rows)} rows, {where}")

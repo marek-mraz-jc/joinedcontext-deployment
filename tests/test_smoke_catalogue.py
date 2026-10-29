@@ -117,7 +117,9 @@ class Fake:
     def send(self, method, url, headers, body, limit):
         self.sent.append((method, url))
         got = self.answers.get(url, answer(404, {"type": "resource-not-found"}))
-        return got.pop(0) if isinstance(got, list) else got
+        got = got.pop(0) if isinstance(got, list) else got
+        # send() reads at most `limit` bytes: a longer body arrives cut, as it does live.
+        return smoke.Answer(**{**got.__dict__, "body": got.body[:limit]})
 
     def ws(self, url, typ):
         self.sent.append(("WS", url))
@@ -232,7 +234,7 @@ def test_a_type_without_location_skips_ogc_and_has_no_map_page():
 
 def test_a_timeout_is_a_ko_with_its_time():
     p = package("air", "a1", "AirQualityObserved")
-    url = f"{API}/a1/odata/v4/AirQualityObserved?%24top=1&%24count=true"
+    url = f"{API}/a1/odata/v4/AirQualityObserved?%24top=1&%24count=true&%24select=id"
     rows, _ = table(world([p], ["a1"], overrides={url: answer(0, error="timeout after 20 s")}))
     assert rows["air"]["odata"] == "ko: AirQualityObserved answered timeout after 20 s, no @odata.count"
 
@@ -495,14 +497,35 @@ def test_an_attribute_the_model_does_not_define_and_a_missing_required_one_are_k
                             "urn:ngsi-ld:Organization:1 has stray, which the Organization model does not define")
 
 
-@pytest.mark.parametrize("name", [None, {"type": "Property", "value": "  "},
+@pytest.mark.parametrize("name", [{"type": "Property", "value": "  "},
                                   {"type": "LanguageProperty", "languageMap": {"sk": "", "en": " "}}])
 def test_a_blank_name_is_a_ko(name):
+    bare = row("Organization", 2, name=name)
+    assert data_cell([row("Organization"), bare])["data"] == "ko: urn:ngsi-ld:Organization:2 has no name"
+
+
+def test_a_missing_name_is_a_ko_only_when_the_model_requires_one():
+    """IPR's green register has no name field (T-6073): its Trees and Gardens leave `name` out."""
     bare = row("Organization", 2)
     bare.pop("name")
-    if name is not None:
-        bare["name"] = name
-    assert data_cell([row("Organization"), bare])["data"] == "ko: urn:ngsi-ld:Organization:2 has no name"
+    assert data_cell([row("Organization"), bare])["data"] == "warn: 2 rows, 1 without name"
+    required = model("Organization", required=["name"])
+    assert data_cell([row("Organization"), bare], required)["data"] == "ko: urn:ngsi-ld:Organization:2 has no name"
+
+
+def test_a_location_past_the_region_inside_its_country_is_a_warn_outside_the_country_a_ko():
+    """PID's fare zones and lines reach from Prague (CZ010) into Středočeský kraj and beyond (T-6073)."""
+    kladno = row("Organization", 3, location={"type": "GeoProperty", "value": {
+        "type": "LineString", "coordinates": [[14.42, 50.08], [14.10, 50.14]]}})
+    prague = row("Organization", 4, location={"type": "GeoProperty",
+                                              "value": {"type": "Point", "coordinates": [14.42, 50.08]}})
+    assert data_cell([prague, kladno], region="CZ010")["data"] == "warn: 2 rows, 1 reach beyond CZ010 inside CZ0"
+    swapped = row("Organization", 5, location={"type": "GeoProperty",
+                                               "value": {"type": "Point", "coordinates": [50.08, 14.42]}})
+    assert data_cell([prague, swapped], region="CZ010")["data"] == (
+        "ko: urn:ngsi-ld:Organization:5 location lies outside CZ010")
+    # A country's own box has no wider one.
+    assert data_cell([swapped], region="SK0")["data"] == "ko: urn:ngsi-ld:Organization:5 location lies outside SK0"
 
 
 def test_a_name_in_one_language_is_enough():
@@ -872,3 +895,22 @@ def test_a_run_goes_red_on_an_empty_dataset_and_green_once_it_holds_data(tmp_pat
     assert smoke.run(DOMAIN, "prod", tmp_path, Fake(count_world([p], ["k1"], empty={"kpi"})).client(), "t1") == 1
     assert "  FAIL  catalogue kpi (k1): count 0 entities of KeyPerformanceIndicator" in capsys.readouterr().out
     assert smoke.run(DOMAIN, "prod", tmp_path, Fake(count_world([p], ["k1"])).client(), "t2") == 0
+
+
+def test_a_flood_zone_over_max_body_still_counts_on_odata_and_has_a_feature_on_ogc():
+    """praha-zaplavova-uzemi on prod (T-6073): one Q100 polygon is 1.2 MB, past MAX_BODY."""
+    p = package("flood", "f1", "FloodZone")
+    data = smoke.describe(p, DOMAIN)
+    polygon = {"type": "Polygon", "coordinates": [[[14.4, 50.1]] * 80_000]}
+    big = answer(body={"features": [{"type": "Feature", "geometry": polygon}]}, ctype=GEO)
+    assert len(big.body) > smoke.MAX_BODY
+    full = {"@odata.count": 2438, "value": [{"id": "urn:ngsi-ld:FloodZone:1", "location": polygon}]}
+    unselected = f"{API}/f1/odata/v4/FloodZone?" + urllib.parse.urlencode({"$top": 1, "$count": "true"})
+    rows, fake = table(world([p], ["f1"], overrides={
+        f"{API}/f1/ogc/features/collections/FloodZone/items?limit=1": big,
+        unselected: answer(body=full),
+        f"{API}/f1/odata/v4/FloodZone?" + urllib.parse.urlencode(smoke.odata_query(data)):
+            answer(body={"@odata.count": 2438, "value": [{"id": "urn:ngsi-ld:FloodZone:1"}]})}))
+    assert rows["flood"]["odata"] == "ok: 2438 rows"
+    assert rows["flood"]["ogc"] == "ok"
+    assert unselected not in [u for _, u in fake.sent], "the count reads only the id"
