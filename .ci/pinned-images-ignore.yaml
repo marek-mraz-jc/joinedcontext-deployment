@@ -1149,3 +1149,89 @@
   reason: "1.27.3-rootless is the newest Gitea release and its digest is unchanged upstream (2026-10-27); it ships brotli-libs 1.2.0-r1. Re-pin once a Gitea image carries brotli-libs 1.2.1-r0."
   task: T-5887
   expires: 2026-11-10
+# CVE-2026-56857 (Go stdlib, GO-2026-6604, CRITICAL in trivy 0.75.0 since 2026-10-28): Windows-only (os.Root.Mkdir and siblings, goos windows in the Go advisory); every pinned image is linux/amd64, so none carries the affected code path. Re-pin each image as its upstream ships a Go 1.26.9+/1.27.2+ build.
+- cve: CVE-2026-56857
+  image: alpine/kubectl
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: docker.io/hetzner/cert-manager-webhook-hetzner
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: docker.io/library/nats
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: ghcr.io/cloudnative-pg/cloudnative-pg
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: ghcr.io/marek-mraz-jc/joinedcontext-argocd
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: ghcr.io/marek-mraz-jc/joinedcontext-gitops-helmfile
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: ghcr.io/warpstreamlabs/bento
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: otel/opentelemetry-collector-contrib
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: quay.io/prometheus-operator/prometheus-config-reloader
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: quay.io/prometheus-operator/prometheus-operator
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: quay.io/prometheus/alertmanager
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: quay.io/prometheus/node-exporter
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: docker.gitea.com/gitea
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: quay.io/prometheus/prometheus
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: registry.k8s.io/git-sync/git-sync
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: registry.k8s.io/kube-state-metrics/kube-state-metrics
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
+- cve: CVE-2026-56857
+  image: docker.io/adorsys/keycloak-config-cli
+  reason: "GO-2026-6604 (Go os.Root following a junction out of the root) affects only GOOS=windows; this image runs linux binaries, which do not contain the affected code. Re-pin when a release built with Go 1.26.9 or 1.27.2 or later ships."
+  task: T-6003
+  expires: 2026-11-28
