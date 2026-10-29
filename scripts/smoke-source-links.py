@@ -4,9 +4,10 @@
 
     scripts/smoke-source-links.py <domain> <env> [out-dir]
 
-Reads only public data, anonymously, paced as smoke-catalogue.py: the gateway's DCAT feed and the
-hub's named MCP servers (`list_endpoints`) for the public Endpoints, each one's types and its first
-entity of each type, and CKAN's package_search.
+Reads only public data, anonymously: the gateway's DCAT feed, the hub's named MCP servers
+(`list_endpoints`) for the public Endpoints and CKAN's package_search, paced as smoke-catalogue.py;
+then each Endpoint's types and its first entity of each type another Endpoint serves too, 6 at once
+within 10 minutes as smoke-catalogue.py's count pass (T-5903).
 Two Endpoints serve one (space, type) when their first entity of the type is the same URN.
 
 Per (Endpoint, type) it compares the dataset the assistant's resolver finds, the rule of
@@ -25,7 +26,10 @@ import importlib.util
 import json
 import re
 import sys
+import threading
 import urllib.parse
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -138,6 +142,31 @@ def hub_endpoints(client, domain: str) -> dict:
     return found
 
 
+class Reads:
+    """GETs in parallel through smoke-catalogue's count pass: a lasting 429 or its deadline ends the run."""
+
+    def __init__(self, counter):
+        self.counter, self.stop = counter, threading.Event()
+
+    def one(self, url: str):
+        if self.stop.is_set() or self.counter._clock() - self.counter.start > smoke.COUNT_DEADLINE:
+            raise smoke.OutOfBudget()
+        answer = self.counter.get(url)
+        if answer.status == 429:
+            self.stop.set()
+            raise smoke.OutOfBudget()
+        return answer
+
+    def all(self, urls: dict) -> dict:
+        with ThreadPoolExecutor(smoke.COUNT_WORKERS) as pool:
+            futures = {key: pool.submit(self.one, url) for key, url in urls.items()}
+            try:
+                return {key: future.result() for key, future in futures.items()}
+            except smoke.OutOfBudget:
+                self.stop.set()
+                raise
+
+
 def sweep(client, domain: str) -> tuple[list, dict]:
     packages, start = [], 0
     while True:
@@ -165,21 +194,30 @@ def sweep(client, domain: str) -> tuple[list, dict]:
         slug = dataset_endpoint(package)
         if slug and package.get("name"):
             owned.setdefault(slug, []).append(base + package["name"])
-    served, first = {}, {}
-    for slug in public:
-        gateway = f"https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1"
-        if slug in lent:
-            served[slug] = lent[slug]
-        else:
-            answer = client.fetch(f"{gateway}/types", headers={"Accept": "application/json"})
+    # Every Endpoint's types and first entities: ~1400 limit=1 reads on dev, 6 at once as smoke-catalogue's
+    # count pass reads (T-5768); paced at 50 a minute they outlasted the run's 500 requests (T-5903).
+    reads = Reads(smoke.Counts(domain, client._send, client._clock, client._sleep))
+
+    def gateway(slug):
+        return f"https://api.{domain}/api/endpoint/{slug}/ngsi-ld/v1"
+
+    try:
+        served = dict.fromkeys(public)
+        for slug, answer in reads.all({s: gateway(s) + "/types" for s in public if s not in lent}).items():
             listed = (answer.json() or {}).get("typeList") if answer.status == 200 else None
             served[slug] = [t for t in listed or [] if isinstance(t, str) and TYPE_NAME.match(t)]
-        for kind in served[slug]:
-            answer = client.fetch(f"{gateway}/entities?" + urllib.parse.urlencode(
-                {"type": kind, "limit": 1, "pick": "id"}), headers={"Accept": "application/json"})
+        served.update({s: lent[s] for s in public if s in lent})
+        # The first entity only tells Endpoints over one type apart: a type one Endpoint alone serves
+        # has no sibling and no other dataset whatever it is, so it costs no read.
+        shared = {kind for kind, n in Counter(k for kinds in served.values() for k in set(kinds)).items() if n > 1}
+        first = {}
+        for key, answer in reads.all({(s, k): gateway(s) + "/entities?" + urllib.parse.urlencode(
+                {"type": k, "limit": 1, "pick": "id"}) for s in public for k in served[s] if k in shared}).items():
             body = answer.json() if answer.status == 200 else None
             if isinstance(body, list) and body and isinstance(body[0], dict):
-                first[(slug, kind)] = body[0].get("id")
+                first[key] = body[0].get("id")
+    finally:
+        client.count += reads.counter.count
     rows = []
     for slug in public:
         for kind in served[slug]:

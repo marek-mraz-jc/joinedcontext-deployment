@@ -7,7 +7,6 @@
 T-5317 dev-smoke::catalogue (\(no dataset\)|catalog) \((emzask3o|wna4brin|y5jpwu6f)[a-z2-7]*\): .*
 # The summary is red whenever a row is; a new row is red on its own line above.
 T-5317 dev-smoke::catalogue: \d+ datasets, \d+ complete, .*
-T-5903 dev-smoke::source links: the run's budget ended after \d+ requests
 # helsinki-feedback ServiceRequest rows without a name (first release gate run, c97c4488, 2026-10-28).
 T-5451 dev-smoke::catalogue helsinki-feedback \(gv24bicw[a-z2-7]*\): data (urn:ngsi-ld:ServiceRequest:\S+ has no name(; )?)+( \(\+\d+ more\))?
 # The gateway's WebSocket door on dev (first release gate run, c97c4488): the 426 lacks Upgrade, one Endpoint's flood is not closed.

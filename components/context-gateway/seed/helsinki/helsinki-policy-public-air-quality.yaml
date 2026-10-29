@@ -31,4 +31,4 @@ spec:
   information:
     - entities:
         - type: AirQualityObserved
-          idPattern: ^urn:ngsi-ld:AirQualityObserved:[a-z0-9.-]+:helsinki:fmi-.+$
+          idPattern: ^urn:ngsi-ld:AirQualityObserved:[a-z0-9.-]+:helsinki:fmi-[a-z0-9-]+$

@@ -135,3 +135,19 @@ def test_the_model_declares_every_attribute_the_mapping_and_the_app_use():
     # The mapping's attributes, plus the steward's note the air-quality App writes.
     for attr in ("name", "location", "dateObserved", "pm10", "pm25", "airQualityIndex", "source", "stewardNote"):
         assert attr in properties, attr
+
+
+def test_the_public_policy_admits_every_station_by_a_pattern_the_broker_pages_on():
+    """Antares hands a policy idPattern to its store only inside an exact subset that has no `.`
+    wildcard (antares-store id_pattern_sql); `fmi-.+` left every temporal read of the type walking
+    the whole space into the 10 000-row ceiling, 403 TooManyResults (T-6052)."""
+    policy = yaml.safe_load((HELSINKI / "helsinki-policy-public-air-quality.yaml").read_text())
+    (rule,) = policy["spec"]["information"]
+    (selector,) = rule["entities"]
+    pattern = selector["idPattern"]
+    assert "." not in re.sub(r"\[[^\]]*\]", "", pattern), pattern
+    stations = re.findall(r'"id": "([^"]+)", "name"', MAPPING.read_text())
+    assert len(stations) == 11, stations
+    for station in stations:
+        assert re.fullmatch(pattern, PREFIX + station), station
+    assert not re.fullmatch(pattern, "urn:ngsi-ld:AirQualityObserved:hel.fi:helsinki:swarco-1-2")
