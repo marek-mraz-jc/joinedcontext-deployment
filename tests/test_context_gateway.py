@@ -207,6 +207,9 @@ def test_the_writes_are_bound_to_the_service_account_and_only_to_it(seed):
     account = seed[("ServiceAccount", "conformance")]
     assert write["spec"]["assignee"] == {"kind": "serviceAccount", "id": account["metadata"]["name"]}
     assert grants(write) & WRITE_GROUPS, grants(write)
+    # The roundtrip (T-5914) reads its writes back as history (NGSI-LD temporal, OGC history, STA
+    # Observations) and as a WebSocket notification: without these the dev record is red.
+    assert {"retrieveTemporal", "queryTemporal", "createSubscription"} <= grants(write), grants(write)
     # Every other account-bound policy names an account the same project seeds, or the account
     # the runner derives for one of its Pipelines (pl-<pipeline>, PL-19; T-5320's pl-osm); nothing
     # grants a write to an account that does not exist.
