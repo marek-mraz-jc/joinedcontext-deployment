@@ -23,7 +23,10 @@
 {{- end }}
 {{- $_ := set $hosts $host true }}
 {{- $limits := .limits | default dict }}
-{{- $maxBytes := $limits.maxMessageBytes | default 65536 | int }}
+{{- /* The packet cap, as the Portal's reconciler fills __MAX_BYTES__ (T-6043): maxMessageBytes, never
+       under 4096, because RMQTT's max_packet_size caps CONNECT too and a device's token password is
+       about 1.2 KB. */}}
+{{- $maxBytes := max ($limits.maxMessageBytes | default 65536 | int) 4096 }}
 {{- $perSecond := $limits.messagesPerSecond | default 10 | int }}
 {{- $connections := $limits.maxConnections | default 1000 | int }}
 {{- $port := "" }}

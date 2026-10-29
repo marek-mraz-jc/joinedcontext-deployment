@@ -111,6 +111,9 @@ data:
     {{ $l }}.enable = true
     {{ $l }}.addr = "0.0.0.0:{{ $listener.port }}"
     {{ $l }}.max_connections = {{ $.connections }}
+    {{- /* One cap for every packet, CONNECT included: RMQTT 0.24 has no PUBLISH-only size, so
+           maxBytes is max(maxMessageBytes, 4096) and a token CONNECT always fits (T-6043); a
+           smaller maxMessageBytes is not held per PUBLISH, the gateway decides each publish. */}}
     {{ $l }}.max_packet_size = "{{ $.maxBytes }}B"
     {{ $l }}.allow_anonymous = false
     {{ $l }}.max_qos_allowed = 1
