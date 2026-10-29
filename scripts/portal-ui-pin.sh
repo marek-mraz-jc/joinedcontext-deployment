@@ -4,9 +4,9 @@
 # usage: scripts/portal-ui-pin.sh <portal commit, 40 hex>   -> prints "<ui commit> <digest>"
 #
 # image.yml builds the bundle only for a push that changes ui/ or sdk/, so most portal commits
-# publish none. Then the bundle pinned now stays, but only when no file under ui/ or sdk/ changed
-# between its commit and this one: a bundle built from other files would call routes the binary
-# may not have. Reads the public repository's compare API; GITHUB_TOKEN, when set, lifts its
+# publish none. Then the bundle pinned now stays, or else the newest bundle published between the
+# two, but only when no file under ui/ or sdk/ changed between its commit and this one: a bundle
+# built from other files would call routes the binary may not have. Reads the public repository's compare API; GITHUB_TOKEN, when set, lifts its
 # rate limit.
 set -euo pipefail
 
@@ -31,28 +31,50 @@ read -r pinned digest < <(awk '/^  ui:$/ { mine = 1; next } mine && /^  [a-z]/ {
 
 auth=()
 [ -n "${GITHUB_TOKEN:-}" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
-# The answer goes through a file: a compare past ~128 KiB exceeds one environment string.
-compare=$(mktemp)
-trap 'rm -f "$compare"' EXIT
-curl -fsSL --max-time 30 "${auth[@]}" -o "$compare" \
-  "https://api.github.com/repos/marek-mraz-jc/joinedcontext-portal/compare/$pinned...$commit?per_page=300" 2>/dev/null ||
-  { echo "the compare of portal ${pinned:0:7}...${commit:0:7} did not answer; nothing decided" >&2; exit 1; }
-python3 - "$pinned" "$commit" "$compare" <<'PY'
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+
+# holds <ui commit> <its name>: exit 0 when the bundle built from <ui commit> fits $commit; else the reason on
+# stderr and, in $work/candidates, the compare's commits newest first.
+holds() {
+  # The answer goes through a file: a compare past ~128 KiB exceeds one environment string.
+  curl -fsSL --max-time 30 "${auth[@]}" -o "$work/compare" \
+    "https://api.github.com/repos/marek-mraz-jc/joinedcontext-portal/compare/$1...$commit?per_page=300" 2>/dev/null ||
+    { echo "the compare of portal ${1:0:7}...${commit:0:7} did not answer; nothing decided" >&2; exit 1; }
+  python3 - "$1" "$commit" "$work/compare" "$work/candidates" "$2" <<'PY'
 import json
 import sys
 
-pinned, commit = sys.argv[1][:7], sys.argv[2][:7]
+base, commit, name = sys.argv[1][:7], sys.argv[2][:7], sys.argv[5]
 with open(sys.argv[3], encoding="utf-8") as f:
     answer = json.load(f)
+with open(sys.argv[4], "w", encoding="utf-8") as f:
+    f.writelines(c["sha"] + "\n" for c in reversed(answer.get("commits", [])) if c["sha"] != sys.argv[2])
 if answer.get("status") not in ("ahead", "identical"):
-    sys.exit(f"portal {commit} does not descend from the pinned portal-ui {pinned} ({answer.get('status')})")
+    sys.exit(f"portal {commit} does not descend from {name} {base} ({answer.get('status')})")
 files = [f["filename"] for f in answer.get("files", [])]
 # The API lists at most 300 files: past that a ui/ change may hide in the rest.
 if len(files) >= 300:
-    sys.exit(f"portal {pinned}...{commit} changed 300 files or more; pin a commit image.yml built portal-ui for")
+    sys.exit(f"portal {base}...{commit} changed 300 files or more; pin a commit image.yml built portal-ui for")
 changed = [f for f in files if f.startswith(("ui/", "sdk/"))]
 if changed:
-    sys.exit(f"portal {commit} changed {changed[0]} since the pinned portal-ui {pinned} and image.yml "
+    sys.exit(f"portal {commit} changed {changed[0]} since {name} {base} and image.yml "
              "published no portal-ui for it")
 PY
-echo "$pinned $digest"
+}
+
+holds "$pinned" "the pinned portal-ui" && { echo "$pinned $digest"; exit 0; }
+
+# The pinned bundle does not fit, but a newer commit of the compare may have published one that
+# was never pinned (T-6050). Only the newest published one can fit: every ui/ or sdk/ change after
+# it also comes after each older one.
+cp "$work/candidates" "$work/walk"
+while read -r candidate; do
+  [[ "$candidate" =~ ^[0-9a-f]{40}$ ]] || continue
+  found=$({ docker buildx imagetools inspect "$image:$candidate" 2>/dev/null || true; } | awk '/^Digest:/ { print $2; exit }')
+  [[ "$found" =~ ^sha256:[0-9a-f]{64}$ ]] || continue
+  holds "$candidate" "the newer portal-ui" || { echo "the newest portal-ui since, ${candidate:0:7}, does not fit either" >&2; exit 1; }
+  echo "$candidate $found"
+  exit 0
+done <"$work/walk"
+exit 1
