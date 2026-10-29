@@ -136,6 +136,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "RFC 9728 protected-resource metadata is public by the RFC; it names no secret",
     },
+    "portal-connector": {
+        "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
+        "why": "a personal connector's MCP server (API/14 §3): an MCP client holds only a bearer, so the Portal answers 401 with WWW-Authenticate itself, verifies the token's audience and connector scope, the owner and the client on every call, and limits per connector and person",
+    },
     "assistant-chat": {
         "reach": UPSTREAM, "cacheable": False, "framing": "DENY",
         "why": "the knowledge assistant's public deployments answer anyone on their allowed origins; jc-assistant checks the Origin, limits per deployment and client, and caps the budget (API/05, AG-100, AG-101)",

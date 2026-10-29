@@ -34,6 +34,21 @@ portal-well-known:
   subDomain: portal
   priority: 5
 
+# A personal connector's MCP server, `/c/{id}`, and its RFC 9728 metadata,
+# `/c/{id}/.well-known/oauth-protected-resource` (API/14 §3, AG-143). An MCP client holds only a
+# bearer, so a login redirect in front is a door nobody can open: the client must get the
+# Portal's own 401 and its `WWW-Authenticate` naming the metadata. No edge session either: the
+# Portal reads `Authorization` alone on this path and limits calls per connector and per person.
+# The plugin config is portal-well-known's: forged headers cleared, a per-address limit, no login.
+portal-connector:
+  name: portal-connector
+  description: Personal connector MCP servers, bearer only, verified by the Portal
+  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/c/*'
+  subDomain: portal
+  priority: 5
+  pluginConfig: portal-well-known
+
 # Where the gateway delivers the notifications of the Portal's own live-update subscriptions
 # (API/01 §32, T-3105). The broker behind the gateway holds no token, so there is no login in
 # front; the path's key is an HMAC only this Portal can make, and a notification only makes an
