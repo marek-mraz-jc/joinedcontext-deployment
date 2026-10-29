@@ -123,6 +123,32 @@ case "$*" in *"$REFUSE"*) echo "no matching signatures" >&2; exit 1;; esac
     assert container not in result.stderr
 
 
+def test_a_locked_trust_cache_is_asked_again_and_a_refusal_is_not(tmp_path):
+    # deployment ci 40962622414: parallel cosigns hit "creating cached local store: resource temporarily
+    # unavailable" on images that are signed; the check asks again, a real refusal still fails.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    fake = bin_dir / "cosign"
+    fake.write_text(f"""#!/bin/sh
+image=$(echo "$*" | awk '{{print $NF}}'); mark={tmp_path}/seen-$(echo "$image" | md5sum | cut -c1-8)
+case "$image" in *"$REFUSE"*) echo "no matching signatures" >&2; exit 1;; esac
+if [ ! -e "$mark" ]; then touch "$mark"; echo "getting Rekor public keys: creating cached local store: resource temporarily unavailable" >&2; exit 1; fi
+""")
+    fake.chmod(0o755)
+    d = lambda c: "sha256:" + c * 64
+    signed = f"ghcr.io/{OWNER}/joinedcontext-portal@{d('1')}"
+    unsigned = f"ghcr.io/{OWNER}/joinedcontext-ckan@{d('2')}"
+    render = tmp_path / "render.yaml"
+    render.write_text(pod(signed, unsigned))
+    env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}", "REFUSE": d("2")}
+
+    result = verify(render, env=env)
+
+    assert result.returncode == 1
+    assert signed not in result.stderr
+    assert unsigned in result.stderr and "no matching signatures" in result.stderr
+
+
 def test_both_applies_verify_before_they_sync():
     justfile = (ROOT / "justfile").read_text()
     for recipe, env in (("dev-apply", "dev"), ("prod-apply", "smartcity")):

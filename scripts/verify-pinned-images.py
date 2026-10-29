@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -63,12 +64,18 @@ def cosign_verify(image: str, key: str | None) -> str | None:
     """None when the signature holds, else the reason cosign gave."""
     trust = ["--key", key, "--insecure-ignore-tlog=true"] if key else [
         "--certificate-oidc-issuer", ISSUER, "--certificate-identity-regexp", IDENTITY]
-    try:
-        run = subprocess.run(["cosign", "verify", *trust, image], check=False, capture_output=True, text=True, timeout=120)
-    except subprocess.TimeoutExpired:
-        return "cosign verify did not answer within 120 s"
-    if run.returncode == 0:
-        return None
+    for attempt in range(3):
+        try:
+            run = subprocess.run(["cosign", "verify", *trust, image], check=False, capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            return "cosign verify did not answer within 120 s"
+        if run.returncode == 0:
+            return None
+        # Parallel cosigns contend for the one local Sigstore trust cache; a locked cache says nothing about
+        # the signature, so ask again (deployment ci 40962622414). Any other refusal stands at once.
+        if "resource temporarily unavailable" not in run.stderr:
+            break
+        time.sleep(1 + attempt)
     lines = run.stderr.strip().splitlines()
     return lines[-1] if lines else f"cosign exited {run.returncode}"
 
