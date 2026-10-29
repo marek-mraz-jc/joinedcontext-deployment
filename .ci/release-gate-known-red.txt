@@ -12,4 +12,5 @@ T-5903 dev-smoke::source links: the run's budget ended after \d+ requests
 T-5451 dev-smoke::catalogue helsinki-feedback \(gv24bicw[a-z2-7]*\): data (urn:ngsi-ld:ServiceRequest:\S+ has no name(; )?)+( \(\+\d+ more\))?
 # The gateway's WebSocket door on dev (first release gate run, c97c4488): the 426 lacks Upgrade, one Endpoint's flood is not closed.
 T-5931 ws::[a-z2-7]+/ws/pytest\.xml::tests\.ws\.test_gateway_ws::test_a_plain_get_answers_426_naming_the_upgrade
-T-5931 ws::mluyob4n[a-z2-7]*/ws/pytest\.xml::tests\.ws\.test_gateway_ws::test_a_subscribe_flood_closes_with_1008_and_another_socket_stays
+# The flood case moves between the two conformance Endpoints from run to run (440ef3b9: hqgmj...).
+T-5931 ws::[a-z2-7]+/ws/pytest\.xml::tests\.ws\.test_gateway_ws::test_a_subscribe_flood_closes_with_1008_and_another_socket_stays
