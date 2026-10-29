@@ -198,6 +198,7 @@ v1/Secret addons/keycloak-client-apisix-gateway
 v1/Secret addons/keycloak-client-edge
 v1/Secret addons/keycloak-client-grafana
 v1/Secret addons/keycloak-config-keycloak-config-cli-config-realms
+v1/Secret addons/postgres-cluster-local-backup-key
 v1/Secret addons/prometheus-prometheus-token
 v1/Secret argocd/argocd-secret
 v1/Service addons/apisix-gateway

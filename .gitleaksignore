@@ -31,3 +31,5 @@ e2cb2f2ec903ae8a4835c44f17bed33bee14c901:scripts/open-data/sdm/pins.json:generic
 # built with base64.b64encode now.
 0e706330d7021b8a93111200be6a834f504ad15a:tests/test_smoke_edge_wave.py:generic-api-key:29
 0e706330d7021b8a93111200be6a834f504ad15a:tests/test_smoke_edge_wave.py:generic-api-key:104
+# T-5839: the operator's age public key (the dev recipient of .sops.yaml), no secret; the test reads it from .sops.yaml since.
+71b6c1ef40dcf6a8fce4588c3274dfb316e573bd:tests/test_postgres_local_backup.py:generic-api-key:20

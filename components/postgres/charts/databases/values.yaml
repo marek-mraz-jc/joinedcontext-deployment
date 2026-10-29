@@ -18,6 +18,9 @@ localBackup:
   cap: ''
   # Databases left out of the dump and its counts, e.g. [antares]: what the drill then restores.
   excludeDatabases: []
+  # The age1... public keys each dump is encrypted to besides the drill key (T-5839): the
+  # operator's, who restores with `age -d -i <key>`. The render fails when on and empty.
+  ageRecipients: []
 databases:
   {}
   # Example database configuration:

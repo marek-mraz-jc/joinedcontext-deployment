@@ -76,6 +76,11 @@ envSecret:
   PGPASSWORD:
     secret: db-antares
     key: password
+  # Subscription receiverInfo sealed at rest (T-5838, T-5839): 64 hex digits, read at boot. Never
+  # rotate it while rows are sealed under it: a sealed value read under another key is a 500.
+  ANTARES_SECRET_KEY:
+    secret: context-broker-secret-key
+    key: key
 
 # ponytail: no NATS on the cluster, so the broker runs its matcher in-process. Antares
 # refuses that combination with a postgres store unless the deployment is a single

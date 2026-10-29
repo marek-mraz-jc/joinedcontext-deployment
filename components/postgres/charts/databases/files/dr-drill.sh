@@ -51,7 +51,7 @@ compare() { # want got
 }
 
 # 0. The nightly dump, in the init container (the cluster's image, no API token): the newest
-# .sql.gz restored with psql into a Postgres on an emptyDir that listens on no port, the dump
+# .sql.gz.age, opened with the drill key (T-5839), restored with psql into a Postgres on an emptyDir that listens on no port, the dump
 # volume read-only. Its tables are held to the counts the dump job took just before pg_dumpall,
 # written beside the dump.
 if [ "${1:-}" = dump ]; then
@@ -78,7 +78,7 @@ if [ "${1:-}" = dump ]; then
     begin=$(date +%s)
     # The names are dates, so the glob's order ends on the newest.
     file=""
-    for f in "$backup"/*.sql.gz; do
+    for f in "$backup"/*.sql.gz.age; do
       [ ! -f "$f" ] || file=$f
     done
     if [ -z "$file" ]; then
@@ -108,10 +108,16 @@ if [ "${1:-}" = dump ]; then
       fi
       sleep 1
     done
+    # The dump decrypted in the pipe with the drill key, the plain text never on a disk; a
+    # damaged or truncated chunk is refused and leaves $work/refused.
+    unseal() {
+      python3 "${AGE_PY:-/opt/age/age.py}" decrypt --identity-file "${AGE_KEY:-/key/key}" <"$file" || : >"$work/refused"
+    }
     # gzip -t reads the whole file first: a truncated dump fails here, not halfway through psql.
-    if ! { gzip -t "$file" && gunzip -c "$file" | psql -X -q -v ON_ERROR_STOP=1 -d postgres >/dev/null; } 2>"$work/restore.err"; then
+    if ! { unseal | gzip -t && [ ! -e "$work/refused" ] \
+      && unseal | gunzip | psql -X -q -v ON_ERROR_STOP=1 -d postgres >/dev/null && [ ! -e "$work/refused" ]; } 2>"$work/restore.err"; then
       # The first error, cut at its first quote: a quoted value may be a row of the dump.
-      local_detail="${file##*/} did not restore: $(grep -m 1 -E 'ERROR|gzip:' "$work/restore.err" | sed 's/".*//' | tr -d '\134')"
+      local_detail="${file##*/} did not restore: $(grep -m 1 -E 'age.py:|ERROR|gzip:' "$work/restore.err" | sed 's/".*//' | tr -d '\134')"
       return 1
     fi
     local_rto=$(($(date +%s) - begin))
