@@ -246,6 +246,7 @@
  "test_prod_apply_trap.py": 0.8,
  "test_production_baseline.py": 0.0,
  "test_production_is_not_dev.py": 3.0,
+ "test_prometheus_series.py": 146.4,
  "test_prometheus_stack.py": 0.0,
  "test_public_assistant_seed.py": 13.0,
  "test_public_docs_branding.py": 0.0,
