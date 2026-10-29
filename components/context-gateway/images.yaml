@@ -123,10 +123,10 @@ context-gateway:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:25960affc677f25a41588845162a798d02a36541106f611e14c5ccd0bd2dac05'
+    digest: 'sha256:9c981151e50d348c02a953972ec02c807f5a37d032330c86fa36a51aafe99838'
     # The platform commit this digest is the image of: moved with the digest, scripts/check-docs-pin.sh
     # refuses a pair the registry does not hold, and holds the pinned docs to this code (T-4483).
-    commit: '98207ace34396c026b5c8927b09a793180c057c8'
+    commit: '6d4572f5b84e3e36cd25b9c1f35ead929feb80a5'
   # `jcctl checkouts` keeps every registered project checked out for the gateway in layout 2
   # (CC-86, T-2646): the platform image's `checkouts` target, debian-slim with git.
   # platform 871624a: the same command, rebuilt on a Debian that clears the 12 fixable perl
@@ -135,7 +135,7 @@ context-gateway:
   checkouts:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform/checkouts'
     tag: 'main'
-    digest: 'sha256:5dbd9df2ec220c1ec9f555888e2a0398f2f5257460f413804b6cbc970bd19646'
+    digest: 'sha256:598247ca4a1de4324b55016c8f27a82855948b4c0479139d4570258dfae08900'
   # git-sync keeps the gateway's checkout of the configuration repository current (T-0278).
   git-sync:
     repository: 'registry.k8s.io/git-sync/git-sync'
