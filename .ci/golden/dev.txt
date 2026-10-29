@@ -532,6 +532,7 @@ v1/ConfigMap dev/pipeline-runner-helsinki-streams
 v1/ConfigMap dev/portal-branding
 v1/ConfigMap dev/postgres-cluster-dr-drill
 v1/ConfigMap dev/postgres-cluster-dr-drill-script
+v1/ConfigMap dev/postgres-cluster-local-backup-age
 v1/ConfigMap dev/postgres-cluster-monitoring-logical-replication
 v1/ConfigMap dev/probe
 v1/ConfigMap dev/sandbox-reaper-reaper
@@ -553,12 +554,14 @@ v1/ResourceQuota dev-app-tests/app-tests
 v1/Secret dev/apisix-oidc-session
 v1/Secret dev/apisix-standalone-config
 v1/Secret dev/apps-db-backup-artifact-store
+v1/Secret dev/apps-db-local-backup-key
 v1/Secret dev/apps-host-0-db
 v1/Secret dev/apps-host-1-db
 v1/Secret dev/artifact-store-root
 v1/Secret dev/ckan-admin-credentials
 v1/Secret dev/ckan-session
 v1/Secret dev/context-broker-admin-token
+v1/Secret dev/context-broker-secret-key
 v1/Secret dev/context-gateway-oauth-key
 v1/Secret dev/db-antares
 v1/Secret dev/db-apps-admin
@@ -605,6 +608,7 @@ v1/Secret dev/keycloak-user-demo-viewer
 v1/Secret dev/keycloak-user-demo-zilina
 v1/Secret dev/portal-cookie-key
 v1/Secret dev/postgres-backup-artifact-store
+v1/Secret dev/postgres-cluster-local-backup-key
 v1/Secret dev/prometheus-prometheus-token
 v1/Service dev/agent-proxy
 v1/Service dev/ai-app

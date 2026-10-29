@@ -98,7 +98,9 @@ def test_each_broker_owns_a_cluster_with_its_own_login_over_tls(docs):
         assert (spec["storage"]["size"], spec["storage"].get("storageClass", "")) == storage
     secrets = {d["metadata"]["name"] for d in docs if d.get("kind") == "Secret"}
     for name in OTHER:
-        assert {f"db-antares-{name}", f"context-broker-{name}-admin-token"} <= secrets
+        assert {f"db-antares-{name}", f"context-broker-{name}-admin-token", f"context-broker-{name}-secret-key"} <= secrets
+        ref = env_of(named(docs, "Deployment", f"context-broker-{name}"))["ANTARES_SECRET_KEY"]["valueFrom"]["secretKeyRef"]
+        assert ref == {"name": f"context-broker-{name}-secret-key", "key": "key"}, "each broker seals with its own key"
 
 
 def test_no_broker_reaches_another_brokers_database(docs):

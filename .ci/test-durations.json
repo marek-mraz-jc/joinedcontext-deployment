@@ -221,6 +221,7 @@
  "test_portal_setup.py": 0.0,
  "test_postgres_backup.py": 0.0,
  "test_postgres_connection_budget.py": 173.3,
+ "test_postgres_local_backup.py": 66.5,
  "test_postgres_memory_budget.py": 46.9,
  "test_postgres_recovery.py": 28.6,
  "test_postgres_tuning.py": 2.4,
