@@ -17,7 +17,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 CHART = ROOT / "components/postgres/charts/databases"
-OPERATOR_KEY = "age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55"
+# The operator recipient the default environments name: the dev age key of .sops.yaml (public).
+OPERATOR_RECIPIENT = yaml.safe_load((ROOT / ".sops.yaml").read_text())["creation_rules"][0]["age"]
 
 
 def one(docs: list[dict], kind: str, name: str) -> dict:
@@ -42,7 +43,7 @@ def test_the_dump_is_encrypted_before_it_touches_the_volume(smartcity, cluster):
     assert "file=/backup/$(date -u +%Y-%m-%dT%H%MZ).sql.gz.age" in script
     assert "-name '*.sql.gz.age' -mmin -1200" in script, "the apply's bind check looks for sealed dumps"
     env = {e["name"]: e.get("value") for e in container["env"]}
-    assert env["AGE_RECIPIENTS"] == OPERATOR_KEY
+    assert env["AGE_RECIPIENTS"] == OPERATOR_RECIPIENT
     volumes = {v["name"]: v for v in pod["volumes"]}
     assert volumes["key"]["secret"] == {"secretName": f"{cluster}-local-backup-key", "defaultMode": 0o440}
     assert volumes["age"]["configMap"]["name"] == f"{cluster}-local-backup-age"
@@ -81,7 +82,7 @@ def test_the_render_refuses_a_dump_sealed_to_no_operator_key(tmp_path):
     assert refused.returncode != 0 and "localBackup.ageRecipients is empty" in refused.stderr
     refused = helm_template(tmp_path, "localBackup.ageRecipients={age1short}")
     assert refused.returncode != 0 and "ageRecipients" in refused.stderr, "the schema holds each to an age1 key"
-    rendered = helm_template(tmp_path, f"localBackup.ageRecipients={{{OPERATOR_KEY}}}")
+    rendered = helm_template(tmp_path, f"localBackup.ageRecipients={{{OPERATOR_RECIPIENT}}}")
     assert rendered.returncode == 0, rendered.stderr
     kinds = [d["kind"] for d in yaml.safe_load_all(rendered.stdout) if d]
     assert "CronJob" in kinds and "ConfigMap" in kinds
