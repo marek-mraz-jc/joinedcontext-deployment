@@ -117,7 +117,8 @@ def test_the_first_live_runs_reds_are_parked_by_case_and_a_suite_row_does_not_hi
     upgrade = "test_a_plain_get_answers_426_naming_the_upgrade"
     held = ws({a: [upgrade], b: [upgrade, flood]})
     assert held["verdict"] == "pass" and len(held["known_red"]) == 3, held
-    assert ws({a: [upgrade, flood]})["verdict"] == "fail", "the flood is parked on mluyob4n only"
+    # The flood moves between the two Endpoints from run to run (440ef3b9 failed it on hqgmj...).
+    assert ws({a: [upgrade, flood]})["verdict"] == "pass", "the flood is parked on either Endpoint"
     assert ws({a: [upgrade, "test_other"]})["verdict"] == "fail"
 
 
