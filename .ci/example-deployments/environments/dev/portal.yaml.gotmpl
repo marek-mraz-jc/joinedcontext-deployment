@@ -15,6 +15,14 @@ portal:
     # repository the Portal stages. Without the Secret the mount is empty and every reference
     # is refused with "the age identity is unreadable", which is the same fail-closed answer.
     sopsAgeSecret: portal-age-identity
+    rawValues:
+      env:
+        # Dev only (T-6083, owner 2026-10-29): the demo approvers sign in with a password alone
+        # (approverMfa false, T-5776), so the decision doors (approve, reject, revoke, people)
+        # stop asking for a one-time code here. smartcity reuses dev's values profile, which is
+        # why this sits in dev's environment and not in development-values; smartcity and the
+        # production profile keep AUT-2 (the Portal's default; only "false" turns it off).
+        JC_PORTAL_DECISIONS_NEED_SECOND_FACTOR: "false"
   # No relay yet (T-3309): App mail lands in the in-cluster catcher, where a person reads it with
   # `kubectl -n dev port-forward svc/mail-catcher 8025` and the e2e reads `/api/v1/messages`
   # (T-3583). Naming the relay later is `portal-mail-relay` and this switched off.
