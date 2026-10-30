@@ -4,7 +4,8 @@
 # portal: the served binary and UI bundle are the pinned commit, the login hands over to
 # Keycloak, one public Endpoint read through the gateway. context-gateway: one Endpoint read
 # and an MCP tools/list. Any other component: its rollouts were waited on by wait-rollouts.sh,
-# which is its whole check here; the hourly `just dev-smoke` runs the rest.
+# which is its whole check here; the hourly `just dev-smoke` runs the rest. Each route checked
+# also answers with the edge's security response headers (T-6155), as smoke.sh checks them on idm.
 set -uo pipefail
 
 domain="${1:?usage: smoke-component.sh <domain> <namespace> <component>}"
@@ -30,6 +31,16 @@ status() {
 	if [ "$got" = "$expected" ]; then ok "$desc ($got)"; else ko "$desc (expected $expected, got $got)"; fi
 }
 
+# headers <url>: the edge's security response headers on the route the component serves.
+headers() {
+	local got missing="" h
+	got=$(curl -sSI --max-time 20 "$1" 2>/dev/null | tr -d '\r')
+	for h in strict-transport-security x-content-type-options x-frame-options referrer-policy content-security-policy; do
+		grep -qi "^$h:" <<<"$got" || missing="$missing $h"
+	done
+	if [ -z "$missing" ]; then ok "$1 answers the edge security headers"; else ko "$1 lacks the security headers:$missing"; fi
+}
+
 # The public Helsinki Endpoint the seed declares (the file the gateway's checkouts serve), read
 # from the tree, so the smoke needs no cluster credential.
 endpoint() {
@@ -51,6 +62,7 @@ read_endpoint() {
 	type=$(granted "$slug")
 	if [ -z "$type" ]; then ko "Endpoint $slug names no type in its access document"; return; fi
 	status 200 "Endpoint $slug answers an NGSI-LD read of $type" "$api/api/endpoint/$slug/ngsi-ld/v1/entities?type=$type&limit=1"
+	headers "$api/api/endpoint/$slug/ngsi-ld/v1/entities?type=$type&limit=1"
 	if [ "$component" = context-gateway ]; then
 		status 200 "Endpoint $slug answers an MCP tools/list" -X POST -H 'Content-Type: application/json' \
 			-H 'Accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
@@ -80,9 +92,11 @@ print((v.get("portal") or {}).get("commit", ""), (v.get("ui") or {}).get("commit
 			"$idm/realms/$ns/protocol/openid-connect/auth?"*) ok "the Portal login hands over to Keycloak" ;;
 			*) ko "the Portal login redirects to '${location}', not to $idm/realms/$ns" ;;
 		esac
+		headers "$portal/"
 		read_endpoint
 		;;
 	context-gateway) read_endpoint ;;
+	keycloak) headers "$idm/realms/$ns/" ;;
 	*) ok "$component: rollouts Ready (wait-rollouts.sh); no component check beyond them" ;;
 esac
 exit "$fail"

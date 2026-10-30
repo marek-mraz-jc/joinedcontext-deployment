@@ -588,6 +588,8 @@ dev-smoke:
 	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
 	echo "forge login"
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
+	# a green full smoke releases what a red per-change apply held (dev-apply-pins, T-6155)
+	[ "$rc" -ne 0 ] || kubectl -n dev delete configmap jc-apply-red --ignore-not-found
 	exit "$rc"
 
 # The two data sweeps (~20 min of ~1250 count reads and ~1400 link reads), read-only. They left the
@@ -627,43 +629,77 @@ dev-smoke-full:
 	exit "$rc"
 
 # T-6110: render dev at <base> (default: the commit jc-release records as applied) and at HEAD,
-# sync only the releases whose objects moved, wait, record, and smoke their components. A range
-# with any file besides a components/<c>/images.yaml is refused: `just dev-apply` stays the path
-# for charts, values and seeds. `dry=true` prints the releases and their `helmfile diff` only.
-# Apply a pin-only range to dev: only the releases it moved
+# sync only the releases whose objects moved, wait for their workloads alone, record, and smoke
+# their components (rollouts, routes, edge security headers). T-6155: the per-change path, run for
+# each pin commit as it lands; it prints the seconds from the commit to dev running it smoked.
+# A range with any file besides a components/<c>/images.yaml takes the full way instead:
+# `just dev-apply` (scoped by render, T-6135) and `just dev-smoke`. A red rollout or smoke holds
+# its releases in the ConfigMap jc-apply-red: the next per-change apply of a held release is
+# refused until the full dev-apply and a green dev-smoke clear it. `dry=true` prints the releases
+# and their `helmfile diff` only.
+# Apply one change to dev: only the releases a pin moved, smoked in a minute
 [group('dev cluster')]
 dev-apply-pins base='' dry='false':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
+	committed=$(git log -1 --format=%ct HEAD)
 	base="{{ base }}"
 	[ -n "$base" ] || base=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.commit}')
 	[ -n "$base" ] || { echo "no applied commit recorded in dev (jc-release); run just dev-apply" >&2; exit 1; }
-	# a plain assignment, so a refusal stops the recipe (a process substitution hides its exit)
-	moved=$(./scripts/apply-pins.py releases dev "$base")
+	# exit 3: the range holds more than pins, so it goes the full way; any other failure stops here
+	planned=0
+	moved=$(./scripts/apply-pins.py releases dev "$base") || planned=$?
+	if [ "$planned" -eq 3 ]; then
+		echo "dev-apply-pins: more than pins since ${base:0:12}; the full just dev-apply and just dev-smoke instead"
+		[ "{{ dry }}" = true ] && exit 0
+		just dev-apply
+		exec just dev-smoke
+	fi
+	[ "$planned" -eq 0 ] || exit "$planned"
 	mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d')
 	selectors=()
 	for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
 	echo "pins ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
+	# a release whose last per-change apply went red waits for the full path
+	red=$(kubectl -n dev get configmap jc-apply-red --ignore-not-found -o jsonpath='{.data.releases}')
+	held=()
+	for r in "${releases[@]}"; do
+		if grep -qxF "$r" <<<"$red"; then held+=("$r"); fi
+	done
+	if [ "${#held[@]}" -gt 0 ]; then
+		echo "refusing: ${held[*]} went red in a per-change apply (ConfigMap jc-apply-red in dev); fix it, then just dev-apply and a green just dev-smoke clear the hold" >&2
+		exit 1
+	fi
 	if [ "{{ dry }}" = true ]; then
 		[ "${#releases[@]}" -eq 0 ] || helmfile -f deployment/helmfile.yaml -e dev diff --concurrency {{helmfile_concurrency}} "${selectors[@]}"
 		exit 0
 	fi
+	rc=0
 	if [ "${#releases[@]}" -gt 0 ]; then
 		# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
 		./scripts/verify-pinned-images.py dev
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
-		./scripts/wait-rollouts.sh dev
+		./scripts/wait-rollouts.sh dev 600 "${releases[@]}" || rc=1
 	fi
-	./scripts/release.py record dev dev
-	rc=0
-	components=""
-	[ "${#releases[@]}" -eq 0 ] || components=$(./scripts/apply-pins.py components dev "${releases[@]}")
-	for c in $components; do
-		just dev-smoke-component "$c" || rc=1
-	done
-	exit "$rc"
+	if [ "$rc" -eq 0 ]; then
+		./scripts/release.py record dev dev
+		components=""
+		[ "${#releases[@]}" -eq 0 ] || components=$(./scripts/apply-pins.py components dev "${releases[@]}")
+		for c in $components; do
+			just dev-smoke-component "$c" || rc=1
+		done
+	fi
+	took=$(( $(date -u +%s) - committed ))
+	if [ "$rc" -ne 0 ]; then
+		kubectl -n dev create configmap jc-apply-red --dry-run=client -o yaml \
+			--from-literal=releases="$(printf '%s\n' $red "${releases[@]}" | sed '/^$/d' | sort -u)" \
+			--from-literal=commit="$(git rev-parse HEAD)" | kubectl apply -f -
+		echo "dev-apply-pins: $(git rev-parse --short=12 HEAD) red ${took} s after its commit; held: ${releases[*]}" >&2
+		exit "$rc"
+	fi
+	echo "dev-apply-pins: $(git rev-parse --short=12 HEAD) running on dev and smoked ${took} s after its commit"
 
 # The smoke checks of one component (scripts/smoke-component.sh), after dev-apply-pins
 [group('dev cluster')]
