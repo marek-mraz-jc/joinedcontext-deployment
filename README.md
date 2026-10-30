@@ -99,7 +99,9 @@ just deploy-instance local      # one instance (namespace = global.instanceSlug)
 
 `just --list` prints every recipe. The `dev` cluster is a different thing: `just dev-apply`
 syncs it and `just dev-smoke` verifies it, both against `.secrets/kubeconfig-dev.yaml`, and
-both belong to whoever holds that cluster.
+both belong to whoever holds that cluster. `just dev-smoke` is the per-apply check (about 5 min);
+the catalogue and source-link sweeps (about 20 min of reads) run hourly as `just dev-smoke-sweeps`,
+and `just dev-smoke-full` runs both, as the release gate and `just prod-smoke` do (T-6148).
 
 A pin reaches `dev` without waiting for the hourly batch (T-6110). A commit whose every file is a
 `components/<c>/images.yaml` runs ci's short set (render and gate every environment, the pinned

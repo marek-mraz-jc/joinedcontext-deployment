@@ -535,14 +535,6 @@ _smoke domain namespace:
 	export CURL_HOME; CURL_HOME=$(mktemp -d); trap 'rm -rf "$CURL_HOME"' EXIT
 	printf 'resolve = *:443:%s\nresolve = *:80:%s\n' "$edge" "$edge" >"$CURL_HOME/.curlrc"
 	JC_REALM="{{ namespace }}" ./scripts/smoke.sh "https://{{ domain }}" "https://idm.{{ domain }}" || rc=1
-	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only; the
-	# entity count of every dataset first, 6 at once and 400 a minute (T-5768, T-5903), then 50 requests a minute for
-	# 10 minutes at most; its table lands in .smoke/.
-	echo "catalogue"
-	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
-	# Rows of every public Endpoint x type link the dataset of their space and type (T-4802).
-	echo "source links"
-	python3 scripts/smoke-source-links.py "{{ domain }}" "{{ namespace }}" || rc=1
 	# Every public App of the seeds on its own host (T-5774): prod's Gitea-built Apps had no bundle
 	# for a week, and nothing read their hosts.
 	echo "public apps"
@@ -596,6 +588,42 @@ dev-smoke:
 	# A real forge login as the demo people (T-1422): the button can fail with the rest green.
 	echo "forge login"
 	./scripts/smoke-forge-login.sh "https://{{ dev_domain }}" || rc=1
+	exit "$rc"
+
+# The two data sweeps (~20 min of ~1250 count reads and ~1400 link reads), read-only. They left the
+# per-apply smoke (T-6148: push to dev under 30 min) and run hourly beside it; prod-smoke and the
+# release gate (dev-smoke-full) still run them.
+[group('dev cluster')]
+_smoke-sweeps domain namespace:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	rc=0
+	# Every catalogue dataset and public Endpoint on every interface (T-4716): read-only; the
+	# entity count of every dataset first, 6 at once and 400 a minute (T-5768, T-5903), then 50 requests a minute for
+	# 10 minutes at most; its table lands in .smoke/.
+	echo "catalogue"
+	python3 scripts/smoke-catalogue.py "{{ domain }}" "{{ namespace }}" || rc=1
+	# Rows of every public Endpoint x type link the dataset of their space and type (T-4802).
+	echo "source links"
+	python3 scripts/smoke-source-links.py "{{ domain }}" "{{ namespace }}" || rc=1
+	exit "$rc"
+
+# The hourly data sweeps of dev (catalogue, source links), off the apply's critical path
+[group('dev cluster')]
+dev-smoke-sweeps:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _dev-guard
+	just _smoke-sweeps "{{ dev_domain }}" dev
+
+# Everything dev-smoke and dev-smoke-sweeps check, in one run: the release gate's dev-smoke stage
+[group('dev cluster')]
+dev-smoke-full:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	rc=0
+	just dev-smoke || rc=1
+	just _smoke-sweeps "{{ dev_domain }}" dev || rc=1
 	exit "$rc"
 
 # T-6110: render dev at <base> (default: the commit jc-release records as applied) and at HEAD,
@@ -903,7 +931,10 @@ prod-smoke:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _prod-guard
-	JC_SMOKE_NO_TEST_WRITER=1 just _smoke "{{ prod_domain }}" smartcity
+	rc=0
+	JC_SMOKE_NO_TEST_WRITER=1 just _smoke "{{ prod_domain }}" smartcity || rc=1
+	just _smoke-sweeps "{{ prod_domain }}" smartcity || rc=1
+	exit "$rc"
 
 # Moves the `dev-green` branch forward to that commit (never back, never forced).
 # Record a commit as green on dev: run after a green `just dev-apply` + `just dev-smoke` of it
