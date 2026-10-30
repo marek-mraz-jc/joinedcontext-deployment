@@ -142,7 +142,7 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
     """(name, argv, extra env, cwd) per stage; each writes what it reads back into out/<name>."""
     conf, portal = args.conformance.resolve(), args.portal.resolve()
     std = conf / "tests/standards/run.sh"
-    plan = [("dev-smoke", ["just", "dev-smoke"], {"JUST_NO_DOTENV": "true"}, ROOT)]
+    plan = [("dev-smoke", ["just", "dev-smoke-full"], {"JUST_NO_DOTENV": "true"}, ROOT)]
     for suite in SUITES:
         plan.append((suite, [str(std)], {"TARGET": "dev", "API": API, "SUITES": suite,
                                           "OUT": str(out / suite)}, conf))

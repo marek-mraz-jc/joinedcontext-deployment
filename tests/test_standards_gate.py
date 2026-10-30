@@ -3,10 +3,13 @@
 import argparse
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "standards-gate.py"
@@ -174,3 +177,30 @@ def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, mo
     monkeypatch.setattr(gate, "write", lambda rec, root: tmp_path)
     gate.run(args)
     assert seen == {"portal-sweep": 18000, "ws": 3600}, seen
+
+
+def test_the_per_apply_smoke_leaves_the_two_data_sweeps_to_the_hourly_recipe_and_the_gate():
+    # T-6148: the catalogue (~15 min) and source-link (~5 min) sweeps held every apply ~20 min;
+    # the per-apply smoke keeps every other check, the release gate and prod-smoke keep the sweeps.
+    sweeps = ("smoke-catalogue.py", "smoke-source-links.py")
+    per_apply = recipe("_smoke") + recipe("dev-smoke")
+    assert not [s for s in sweeps if s in per_apply]
+    for check in ("scripts/smoke.sh", "smoke-public-apps.py", "failed-jobs.py", "smoke-edge-wave.py",
+                  "smoke-forge-login.sh", "disk-full.py"):
+        assert check in per_apply, check
+    assert all(s in recipe("_smoke-sweeps") for s in sweeps)
+    assert "just _dev-guard" in recipe("dev-smoke-sweeps")
+    assert 'just _smoke-sweeps "{{ dev_domain }}" dev' in recipe("dev-smoke-sweeps")
+    full = recipe("dev-smoke-full")
+    assert "just dev-smoke " in full and 'just _smoke-sweeps "{{ dev_domain }}" dev' in full
+    assert 'just _smoke-sweeps "{{ prod_domain }}" smartcity' in recipe("prod-smoke")
+    plan = [p for p in gate.stages(argparse.Namespace(conformance=ROOT, portal=ROOT, only=None, requests=None,
+                                                             rate=1, duration="1s"), ROOT) if p[0] == "dev-smoke"]
+    assert plan[0][1] == ["just", "dev-smoke-full"]
+
+
+@pytest.mark.parametrize("name", ["dev-smoke", "dev-smoke-sweeps", "dev-smoke-full", "prod-smoke"])
+def test_the_smoke_recipes_parse(name):
+    run = subprocess.run(["just", "--dry-run", name], cwd=ROOT, capture_output=True, text=True, check=False,
+                         env={**os.environ, "JUST_NO_DOTENV": "true"})
+    assert run.returncode == 0, run.stderr
