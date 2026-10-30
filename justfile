@@ -508,7 +508,6 @@ dev-apply full='false':
 		echo "dev-apply: full sync"
 	fi
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
-	# --scanned: and every platform digest passed image-scan.yml, which dev does not wait for (T-6154).
 	./scripts/verify-pinned-images.py dev
 	if [ "$plan" = full ] || [ "${#selectors[@]}" -gt 0 ]; then
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
@@ -680,7 +679,6 @@ dev-apply-pins base='' dry='false':
 	rc=0
 	if [ "${#releases[@]}" -gt 0 ]; then
 		# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
-	# --scanned: and every platform digest passed image-scan.yml, which dev does not wait for (T-6154).
 		./scripts/verify-pinned-images.py dev
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
 		./scripts/wait-rollouts.sh dev 600 "${releases[@]}" || rc=1
