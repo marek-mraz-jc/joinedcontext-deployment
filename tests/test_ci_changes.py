@@ -1,4 +1,4 @@
-"""The short ci set for a pin-only range and the per-release dev apply of a pin (T-6110)."""
+"""The ci set a range takes (T-6110, T-6152) and the per-release dev apply of a pin (T-6110)."""
 
 import importlib.util
 import os
@@ -55,10 +55,14 @@ def repo(tmp_path):
     return tmp_path
 
 
-def run(repo, base, head="HEAD"):
+def outputs(repo, base, head="HEAD"):
     done = subprocess.run(["python3", str(ROOT / "scripts/ci/changes.py"), base, head], cwd=repo,
                           capture_output=True, text=True, check=True)
-    return done.stdout.strip()
+    return dict(line.split("=", 1) for line in done.stdout.splitlines())
+
+
+def run(repo, base, head="HEAD"):
+    return f"pins_only={outputs(repo, base, head)['pins_only']}"
 
 
 def test_the_cli_reads_the_range_from_git(repo):
@@ -73,9 +77,79 @@ def test_the_cli_reads_the_range_from_git(repo):
     assert run(repo, pin) == "pins_only=false"
 
 
-@pytest.mark.parametrize("base", ["0" * 40, "", "not-a-sha", "deadbeefdeadbeef"])
+@pytest.mark.parametrize("base", ["0" * 40, "", "not-a-sha", "deadbeefdeadbeef", "full"])
 def test_an_unreadable_base_takes_the_full_set(repo, base):
     assert run(repo, base) == "pins_only=false"
+    assert outputs(repo, base)["full"] == "true"
+
+
+TESTS = {
+    "tests/test_portal_chart.py": 'CHART = ROOT / "components/portal/charts/portal"',
+    "tests/test_helsinki.py": 'SEED = ROOT / "components" / "context-gateway" / "seed" / "helsinki"',
+    "tests/test_every_seed.py": 'for p in (ROOT / "components/context-gateway/seed").rglob("*.yaml"): ...',
+    "tests/test_agent_runner.py": 'def test_x(rendered): assert rendered("dev")',
+    "tests/test_apply_pins.py": 'load("scripts/apply-pins.py")',
+    "tests/test_networkpolicies.py": "def test_y(rendered): ...",
+    "tests/test_other.py": "assert True",
+}
+ENVS = ["local", "production", "dev", "smartcity", "minimal"]
+
+
+@pytest.mark.parametrize("files, tests", [
+    # a chart file: the tests naming its chart and the render-wide ones
+    (["components/portal/charts/portal/templates/deployment.yaml"], ["tests/test_networkpolicies.py", "tests/test_portal_chart.py"]),
+    # a seed file: the tests naming its directory, in either spelling
+    (["components/context-gateway/seed/helsinki/endpoint.yaml"],
+     ["tests/test_every_seed.py", "tests/test_helsinki.py", "tests/test_networkpolicies.py"]),
+    # a component no test names by path: the test file named after it
+    (["components/agent-runner/values/proxy.yaml.gotmpl"], ["tests/test_agent_runner.py", "tests/test_networkpolicies.py"]),
+    # a script: the tests naming it; a test file: itself
+    (["scripts/apply-pins.py", "tests/test_other.py"], ["tests/test_apply_pins.py", "tests/test_other.py"]),
+    # nothing a test reads
+    (["README.md", ".ci/test-durations.json"], []),
+])
+def test_a_change_selects_the_test_files_that_read_it(files, tests):
+    got = changes.scope(files, TESTS, ENVS)
+    assert got["full"] is False and got["tests"] == tests
+    assert got["envs"] == ["dev"] and got["demo"] is False
+
+
+@pytest.mark.parametrize("files", [
+    ["scripts/nobody-reads-this.sh"],                     # an unknown path
+    ["components/portal/images.yaml", "tests/conftest.py"],  # read by every test
+    ["defaults/environment/global.yaml"],                 # read by every render
+    [".ci/golden/ENVIRONMENTS"],
+    [],
+    None,
+])
+def test_an_unknown_or_shared_path_selects_the_full_set(files):
+    got = changes.scope(files, TESTS, ENVS)
+    assert got == {"full": True, "tests": [], "envs": ENVS, "pins": True, "demo": True}
+
+
+def test_an_environment_file_renders_that_environment_beside_dev():
+    got = changes.scope([".ci/example-deployments/environments/smartcity/portal.yaml.gotmpl",
+                         ".ci/golden/minimal.txt", "tests/test_other.py"], TESTS, ENVS)
+    assert got["envs"] == ["dev", "smartcity", "minimal"] and got["tests"] == ["tests/test_other.py"]
+
+
+def test_a_pin_verifies_signatures_and_a_demo_change_renders_the_demo():
+    assert changes.scope(["components/portal/images.yaml"], {**TESTS, "tests/test_p.py": "components/portal/images.yaml"},
+                         ENVS)["pins"] is True
+    got = changes.scope(["demos/bbsk/helmfile.yaml.gotmpl", "tests/test_other.py"],
+                        {**TESTS, "tests/test_demo.py": 'ROOT / "demos/bbsk"'}, ENVS)
+    assert got["demo"] is True and got["pins"] is False and "tests/test_demo.py" in got["tests"]
+
+
+def test_the_cli_prints_the_scoped_set(repo):
+    base = git(repo, "rev-parse", "HEAD")
+    (repo / "tests").mkdir()
+    (repo / "tests/test_seed.py").write_text('SEED = "components/portal/seed.yaml"\n')
+    (repo / "components/portal/seed.yaml").write_text("a: 2\n")
+    git(repo, "add", ".")
+    git(repo, "commit", "-qm", "seed")
+    got = outputs(repo, base)
+    assert (got["full"], got["tests"], got["envs"], got["pins"]) == ("false", "tests/test_seed.py", "dev", "false")
 
 
 def write_release(root, name, objects):
@@ -383,3 +457,12 @@ def test_a_scoped_wait_waits_for_the_named_releases_alone(tmp_path, stuck):
     rolled = [line for line in done.stdout.splitlines() if line.startswith(("ROLLOUT", "UNEXPECTED"))]
     assert rolled == ["ROLLOUT deployment/portal"]
     assert done.returncode == (1 if stuck else 0), done.stdout + done.stderr
+
+
+def test_the_scoped_set_gets_a_shard_per_fifteen_measured_minutes():
+    scoped = {"full": False, "tests": ["tests/test_a.py", "tests/test_b.py"]}
+    assert changes.shards(scoped, {"test_a.py": 100.0}) == 1
+    assert changes.shards(scoped, {"test_a.py": 900.0, "test_b.py": 1.0}) == 2
+    assert changes.shards(scoped, {"test_a.py": 99999.0}) == changes.SHARDS
+    assert changes.shards({"full": False, "tests": []}, {}) == 1
+    assert changes.shards({"full": True, "tests": []}, {}) == changes.SHARDS

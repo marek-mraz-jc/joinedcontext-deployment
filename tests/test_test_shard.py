@@ -9,10 +9,30 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts/ci/test-shard.py"
 spec = importlib.util.spec_from_file_location("test_shard", SCRIPT)
 test_shard = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(test_shard)
+
+
+@pytest.fixture(autouse=True)
+def every_file(monkeypatch):
+    """A scoped ci shard sets JC_TEST_FILES for its whole job; these tests split every file."""
+    monkeypatch.delenv("JC_TEST_FILES", raising=False)
+
+
+def test_the_scoped_set_splits_only_its_own_files(monkeypatch):
+    monkeypatch.setenv("JC_TEST_FILES", "tests/test_b.py tests/test_a.py")
+    assert test_shard.files() == ["test_a.py", "test_b.py"]
+    monkeypatch.setenv("JC_TEST_FILES", "")
+    assert test_shard.files() == []
+    monkeypatch.setenv("JC_TEST_FILES", "*")
+    assert test_shard.files() == test_shard.all_files() and len(test_shard.files()) > 100
+    printed = subprocess.run([sys.executable, str(SCRIPT), "1", "1"], check=True, capture_output=True, text=True,
+                             env={**os.environ, "JC_TEST_FILES": "tests/test_test_shard.py"}).stdout.split()
+    assert printed == ["tests/test_test_shard.py"]
 
 
 def load(shard, weights):
