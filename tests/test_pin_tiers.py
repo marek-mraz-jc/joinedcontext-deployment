@@ -75,3 +75,14 @@ def test_a_pin_moves_the_commit_its_block_records(pin):
     # the next block keeps its own digest, and a pin without a commit leaves the line alone
     assert out.endswith(f"digest: '{old_digest}'\n")
     assert f"commit: '{'a' * 40}'" in pin.pin(text, "joinedcontext-platform", new_digest)[0]
+
+
+@pytest.mark.parametrize("red", ["ci.yml", "image.yml"])
+def test_a_pin_needs_its_ci_and_image_run_green(pin, monkeypatch, red):
+    # T-6154: pin-images starts on image.yml's dispatch, before or after its run settled; a commit
+    # whose ci or image run is red or still running is never pinned, and image-scan.yml is not asked.
+    asked = []
+    monkeypatch.setattr(pin, "green", lambda repository, workflow, commit: asked.append(workflow) or workflow != red)
+    pin.main("platform")
+    assert not pin.written
+    assert "image-scan.yml" not in asked

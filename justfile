@@ -508,6 +508,7 @@ dev-apply full='false':
 		echo "dev-apply: full sync"
 	fi
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
+	# --scanned: and every platform digest passed image-scan.yml, which dev does not wait for (T-6154).
 	./scripts/verify-pinned-images.py dev
 	if [ "$plan" = full ] || [ "${#selectors[@]}" -gt 0 ]; then
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
@@ -652,6 +653,7 @@ dev-apply-pins base='' dry='false':
 	fi
 	if [ "${#releases[@]}" -gt 0 ]; then
 		# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
+	# --scanned: and every platform digest passed image-scan.yml, which dev does not wait for (T-6154).
 		./scripts/verify-pinned-images.py dev
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
 		./scripts/wait-rollouts.sh dev
@@ -912,7 +914,8 @@ prod-apply:
 	echo "applying release $tag to smartcity"
 	just _dev-assemble
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
-	./scripts/verify-pinned-images.py smartcity
+	# --scanned: and every platform digest passed image-scan.yml, which dev does not wait for (T-6154).
+	./scripts/verify-pinned-images.py smartcity --scanned
 	# The public assistant is asked every 15 s while the rollouts run (T-4809, at most 40 questions);
 	# its summary line closes the apply's output on success and on failure, for the apply report.
 	# Under set -e a killed probe's wait (143) or a finished probe's kill (1) would end the trap

@@ -192,3 +192,41 @@ def test_the_signers_of_pinned_images_are_accepted(workflow):
 ])
 def test_a_preview_or_branch_signature_is_refused(workflow):
     assert not re.search(_identity(), f"https://github.com/{OWNER}/{workflow}")
+
+
+def test_scanned_asks_the_platform_image_scan_for_both_attestations(tmp_path):
+    # T-6154: production takes a platform digest only with the SBOM and vuln-scan attestations of
+    # the platform's image-scan.yml on main; dev (no --scanned) never asks.
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    log = tmp_path / "cosign.log"
+    fake = bin_dir / "cosign"
+    # Signatures hold; refuses an attestation call naming REFUSE.
+    fake.write_text(f"""#!/bin/sh
+echo "$*" >> {log}
+case "$1 $*" in verify-attestation*"$REFUSE"*) echo "none of the attestations matched" >&2; exit 1;; esac
+""")
+    fake.chmod(0o755)
+    d = lambda c: "sha256:" + c * 64
+    gateway = f"ghcr.io/{OWNER}/joinedcontext-platform@{d('1')}"
+    checkouts = f"ghcr.io/{OWNER}/joinedcontext-platform/checkouts@{d('2')}"
+    portal = f"ghcr.io/{OWNER}/joinedcontext-portal@{d('3')}"
+    render = tmp_path / "render.yaml"
+    render.write_text(pod(gateway, checkouts, portal))
+    env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}", "REFUSE": d("2")}
+
+    assert verify(render, env=env).returncode == 0
+    assert "verify-attestation" not in log.read_text()
+
+    log.write_text("")
+    result = verify(render, "--scanned", env=env)
+
+    asked = [call for call in log.read_text().splitlines() if call.startswith("verify-attestation")]
+    identity = f"--certificate-identity https://github.com/{OWNER}/joinedcontext-platform/.github/workflows/image-scan.yml@refs/heads/main"
+    assert sorted((c.split()[2], c.split()[-1]) for c in asked) == sorted(
+        (kind, image) for kind in ("cyclonedx", "https://joinedcontext.com/attestations/vuln-scan/v1")
+        for image in (gateway, checkouts))
+    assert all(identity in c for c in asked)
+    assert result.returncode == 1
+    assert f"{checkouts} has no cyclonedx attestation" in result.stderr
+    assert "vuln-scan/v1 attestation" in result.stderr and gateway not in result.stderr

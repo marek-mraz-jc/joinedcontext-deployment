@@ -1,11 +1,15 @@
 name: pin-images
 # ADR-N-056 §2.4, OPS-57: pin the images of the newest commit platform and Portal `main` built
-# (image.yml runs once an hour, T-4696) once their ci is green, cosign verifies the signature of
+# (image.yml runs on each green ci of main, T-6154) once their ci is green, cosign verifies the signature of
 # their own image.yml on main, and the dev render passes; Argo CD takes the pin commit from here.
 # Antares stays a hand pin (its pins carry migration notes). The repositories are public: the
 # workflow's own token is enough. A push made with that token starts no ci run, so the dev render
 # below is the pin commit's gate.
 on:
+  # platform image.yml's notify job, the moment a commit's images are signed (T-6154; the
+  # cron stays as the fallback while that dispatch token is missing or a dispatch is lost)
+  repository_dispatch:
+    types: [image-pushed]
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
