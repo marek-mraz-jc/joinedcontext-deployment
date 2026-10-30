@@ -154,11 +154,13 @@ case " $* " in
   *" template "*)
     out=""; prev=""
     for a in "$@"; do [ "$prev" = --output-dir ] && out="$a"; prev="$a"; done
-    for c in a b; do
-      mkdir -p "$out/$c-x"
-      { echo "kind: ConfigMap"; echo "metadata: {name: $c}"; echo "data:"; sed 's/^/  /' "components/$c/images.yaml"; } > "$out/$c-x/t.yaml"
+    for r in a-x b-x agent-runner-proxy; do
+      c=${r%-*}
+      mkdir -p "$out/$r"
+      { echo "kind: ConfigMap"; echo "metadata: {name: $c}"; echo "data:"; sed 's/^/  /' "components/$c/images.yaml"; } > "$out/$r/t.yaml"
     done ;;
-  *" list "*) echo '[{"name":"a-x","labels":"component:a"},{"name":"b-x","labels":"component:b"}]' ;;
+  *" list "*) echo '[{"name":"a-x","labels":"component:a"},{"name":"b-x","labels":"component:b"},'\
+'{"name":"agent-runner-proxy","labels":"component:agent-runner"}]' ;;
   *) echo "HELMFILE $*" ;;
 esac
 """
@@ -195,7 +197,7 @@ def tree(tmp_path):
     for name, text in (("helmfile", HELMFILE_STUB), ("kubectl", KUBECTL_STUB)):
         (stubs / name).write_text(text)
         (stubs / name).chmod(0o755)
-    for c in ("a", "b"):
+    for c in ("a", "b", "agent-runner"):
         (work / "components" / c).mkdir(parents=True)
         (work / "components" / c / "images.yaml").write_text("digest: '1'\n")
     git(work, "init", "-q")
@@ -253,6 +255,59 @@ def test_a_range_with_more_than_pins_takes_the_full_apply_and_smoke(tree):
     out = done.stdout
     assert out.index("the full just dev-apply") < out.index("-e dev sync") < out.index("RAN dev-smoke")
     assert "RAN smoke-component" not in out
+
+
+def pin_a_and_the_proxy(work):
+    for c in ("a", "agent-runner"):
+        (work / f"components/{c}/images.yaml").write_text("digest: '2'\n")
+    git(work, "commit", "-qam", "pin a and agent-runner")
+
+
+def test_the_spend_guard_keeps_agent_runner_proxy_out_of_a_pin_apply(tree):
+    work, env = tree
+    pin_a_and_the_proxy(work)
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    assert "skipping agent-runner-proxy: the spend guard" in done.stdout
+    assert "sync --concurrency 4 --selector name=a-x\n" in done.stdout
+    assert "name=agent-runner-proxy" not in done.stdout
+    assert "RAN wait-rollouts.sh dev 600 a-x\n" in done.stdout
+    assert "smoke-component.sh dev.joinedcontext.com dev agent-runner" not in done.stdout
+    # spend_guard=off says the guard was lifted: the proxy syncs with the rest
+    lifted = just(work, env, "", "false", "off")
+    assert lifted.returncode == 0, lifted.stderr
+    assert "skipping" not in lifted.stdout
+    assert "--selector name=a-x --selector name=agent-runner-proxy" in lifted.stdout
+    bogus = just(work, env, "", "false", "maybe")
+    assert bogus.returncode == 2 and "spend_guard is on or off" in bogus.stderr and "HELMFILE" not in bogus.stdout
+
+
+def test_a_pin_of_the_proxy_alone_syncs_nothing_under_the_guard(tree):
+    work, env = tree
+    (work / "components/agent-runner/images.yaml").write_text("digest: '2'\n")
+    git(work, "commit", "-qam", "pin agent-runner")
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    assert "skipping agent-runner-proxy" in done.stdout and "HELMFILE" not in done.stdout
+
+
+def test_the_full_path_keeps_the_guard(tree):
+    work, env = tree
+    (work / "components/agent-runner/images.yaml").write_text("digest: '2'\n")
+    (work / "components/a/values.yaml").write_text("x: 1\n")
+    git(work, "add", ".")
+    git(work, "commit", "-qm", "pin agent-runner and a value")
+    text = (work / "justfile").read_text()
+    (work / "justfile").write_text("set allow-duplicate-recipes\n" + text + "\ndev-smoke:\n\t@echo RAN dev-smoke\n")
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    assert "skipping agent-runner-proxy" in done.stdout and "name=agent-runner-proxy" not in done.stdout
+    full = just(work, env, "true", recipe="dev-apply")
+    assert full.returncode == 0, full.stderr
+    assert "sync --concurrency 4 --selector name!=agent-runner-proxy\n" in full.stdout
+    lifted = just(work, env, "true", "off", recipe="dev-apply")
+    assert lifted.returncode == 0, lifted.stderr
+    assert "HELMFILE -f deployment/helmfile.yaml -e dev sync --concurrency 4\n" in lifted.stdout
 
 
 def test_a_red_smoke_holds_the_release_until_the_full_path_clears_it(tree):
