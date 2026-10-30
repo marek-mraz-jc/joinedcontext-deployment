@@ -11,6 +11,7 @@
  "test_apisix_routes.py": 39.4,
  "test_app_registry.py": 84.8,
  "test_app_shapes.py": 52.9,
+ "test_apply_scoped.py": 0.2,
  "test_apps_db.py": 56.1,
  "test_artifact_store.py": 1.2,
  "test_artifact_store_credentials.py": 149.2,
