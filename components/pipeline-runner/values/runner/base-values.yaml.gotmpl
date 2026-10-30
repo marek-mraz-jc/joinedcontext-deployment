@@ -126,14 +126,18 @@ probes:
   # (measured on 1.22.0, 2026-10-25). The Portal deletes a run past its cap and stops starting
   # it; a stream still held stopped two probes in a row fails this one, and the restart frees
   # the core. A finished run is deleted within the Portal's next queue tick, seconds, so it is
-  # never seen twice a minute apart; a streams API that does not answer fails it too.
+  # never seen twice a minute apart; a streams API that does not answer fails it too. A stream
+  # is told by its id and its uptime: Bento freezes `uptime` when a stream stops and starts it
+  # again on the next run under the same id, so two runs of one frequent pipeline that each
+  # finished just before a probe are two streams, not one held (T-6140: dev restarted every
+  # ~40 min and turned every dev-smoke red), while a stop that never ends keeps its uptime.
   liveness:
     exec:
       - sh
       - -c
       - >-
         l=$(wget -qO- -T 5 http://127.0.0.1:4195/streams) || exit 1;
-        echo "$l" | grep -o '"[^"]*":{"active":false' | cut -d'"' -f2 | sort > /tmp/stopped.now;
+        echo "$l" | grep -o '"[^"]*":{"active":false,"uptime":[^,}]*' | sort > /tmp/stopped.now;
         touch /tmp/stopped; held=$(comm -12 /tmp/stopped /tmp/stopped.now);
         mv /tmp/stopped.now /tmp/stopped; test -z "$held"
     periodSeconds: 60

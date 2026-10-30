@@ -76,6 +76,54 @@ def test_the_probe_command_is_the_one_the_chart_renders():
     assert "comm -12 /tmp/stopped /tmp/stopped.now" in command[2]
 
 
+def stopped(name, uptime):
+    return {name: {"active": False, "uptime": uptime, "uptime_str": f"{uptime}s"}}
+
+
+RUNNING = {"helsinki.feed": {"active": True, "uptime": 812.4, "uptime_str": "13m32.4s"}}
+
+
+@pytest.fixture
+def probe(tmp_path):
+    """Runs the rendered probe over /streams answers read from fixtures: a `wget` on PATH
+    prints the next answer, and the probe keeps its state under tmp_path instead of /tmp."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    answer = tmp_path / "streams.json"
+    wget = bin_dir / "wget"
+    wget.write_text(f"#!/bin/sh\ncat {answer}\n")
+    wget.chmod(0o755)
+    command = probe_command()[2].replace("/tmp/", f"{tmp_path}/")
+
+    def run(streams):
+        answer.write_text(json.dumps(streams, separators=(",", ":")))
+        env = {"PATH": f"{bin_dir}:/usr/bin:/bin"}
+        return subprocess.run(["sh", "-c", command], env=env, check=False).returncode == 0
+
+    return run
+
+
+def test_two_runs_of_one_pipeline_each_seen_finished_keep_the_runner_alive(probe):
+    # T-6140: helsinki.hsl-departures runs often under one stream id; each probe saw a different
+    # run that had just finished, and the id-only probe restarted the runner every ~40 min.
+    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 15.204118553)})
+    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 14.871903377)})
+    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 15.002771649)})
+
+
+def test_a_stream_held_stopped_across_two_probes_fails_the_probe(probe):
+    held = stopped("helsinki.loop", 6.012405858)
+    assert probe({**RUNNING, **held}), "the first sight of a stopped stream is a finished run"
+    assert not probe({**RUNNING, **held}), "the same stopped stream a probe later never ended"
+
+
+def test_runs_and_deletes_between_probes_keep_the_runner_alive(probe):
+    assert probe(RUNNING)
+    assert probe({**RUNNING, **stopped("a.once", 0.000664608)})
+    assert probe(RUNNING)
+    assert probe({})
+
+
 def image():
     pin = yaml.safe_load((ROOT / "components/pipeline-runner/images.yaml").read_text())["pipeline-runner"]["runner"]
     return f"{pin['repository']}:{pin['tag']}@{pin['digest']}"
@@ -209,6 +257,24 @@ def test_a_finished_run_deleted_between_probes_keeps_the_runner_alive(runners):
     assert a.live()
     a.call("DELETE", "/streams/a.once")
     assert a.live()
+
+
+@requires_docker
+def test_a_pipeline_run_again_under_its_id_between_probes_keeps_the_runner_alive(runners):
+    a = runners("t6140-rerun", 42016)
+    once = {"input": ONE, "output": {"drop": {}}}
+    a.call("POST", "/streams/a.often", once)
+    time.sleep(3)
+    first = answers_within_2s(a)["a.often"]
+    assert first["active"] is False
+    assert a.live()
+    # The Portal's next run of the pipeline replaces the stream under the same id.
+    a.call("PUT", "/streams/a.often", once)
+    time.sleep(3)
+    second = answers_within_2s(a)["a.often"]
+    assert second["active"] is False and second["uptime"] != first["uptime"]
+    assert a.live(), "a new run that finished is not the earlier run held"
+    assert not a.live(), "the same finished run still listed a probe later is held"
 
 
 @requires_docker
