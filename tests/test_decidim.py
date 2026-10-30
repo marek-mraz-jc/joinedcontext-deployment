@@ -7,6 +7,7 @@ check the space, its two Endpoints, the read Policy and that generate.py wrote w
 """
 import copy
 import http.server
+import importlib.util
 import json
 import re
 import shutil
@@ -390,11 +391,11 @@ def test_the_dataset_is_filed_under_the_town_while_it_is_the_only_instance():
     assert ckan == {"instanceRef": {"kind": "CkanInstance", "name": "slovensko"}, "organization": "banskabystrica", "license": "cc-by"}
     assert endpoint["metadata"]["name"] == "slovensko-participacia" and "name" not in ckan
     assert endpoint["metadata"]["title"]["sk"].endswith("Banská Bystrica")
-    sys.path.insert(0, str(HERE))
-    try:
-        import generate
-    finally:
-        sys.path.remove(str(HERE))
+    # by path under its own name: a bare `import generate` returns whichever seeds/*/generate.py
+    # another test of the same xdist worker imported first (deployment ci 40974828008)
+    spec = importlib.util.spec_from_file_location("decidim_generate", HERE / "generate.py")
+    generate = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generate)
     one = generate.rows()
     assert len(one) == 1 and generate.organization(one) == ["      organization: banskabystrica"]
     two = one + [dict(one[0], name="trnava", locality="Trnava", organization="trnava")]
