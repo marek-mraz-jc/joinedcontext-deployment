@@ -107,12 +107,17 @@ A pin reaches `dev` without waiting for the hourly batch (T-6110). A commit whos
 `components/<c>/images.yaml` runs ci's short set (render and gate every environment, the pinned
 signatures, the docs pin, the tests that read the moved images.yaml). Once that run is green,
 `just dev-apply-pins` applies it at once: it renders `dev` at the commit `jc-release` records as
-applied and at HEAD, syncs only the releases whose objects moved, waits for their rollouts and
-runs `just dev-smoke-component <c>` for each moved component (the Portal: the served commit is
-the pin, the login reaches Keycloak, one Endpoint read; the gateway: one Endpoint read and an MCP
-`tools/list`). `just dev-apply-pins '' true` prints the releases and their `helmfile diff` only.
-It refuses a range with any other file in it: charts, values and seeds keep the hourly
-`just dev-apply` and `just dev-smoke`.
+applied and at HEAD, syncs only the releases whose objects moved, waits for the workloads of
+those releases alone (T-6155: no wait on CNPG or an unrelated pod) and runs
+`just dev-smoke-component <c>` for each moved component (the Portal: the served commit is the
+pin, the login reaches Keycloak, one Endpoint read; the gateway: one Endpoint read and an MCP
+`tools/list`; each route also answers the edge security headers). Its last line gives the seconds
+from the commit to `dev` running it smoked. `just dev-apply-pins '' true` prints the releases and
+their `helmfile diff` only. A range with any other file in it (charts, values, seeds) takes the
+full way: `just dev-apply` and `just dev-smoke`. A red rollout or smoke holds its releases in the
+ConfigMap `jc-apply-red`: the next `just dev-apply-pins` of a held release is refused until a fix,
+`just dev-apply` and a green `just dev-smoke` clear the hold. `just dev-smoke` and the sweeps
+still run hourly, and the release gate (`just dev-smoke-full`, the standards) is unchanged.
 
 ## 6. Security
 

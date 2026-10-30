@@ -1,16 +1,42 @@
 #!/usr/bin/env bash
 # Wait for every workload of a deployed instance to become Ready and report what did not.
-#   scripts/wait-rollouts.sh <instance-slug> [timeout-seconds]
+#   scripts/wait-rollouts.sh <instance-slug> [timeout-seconds] [release...]
+# With release names (`just dev-apply-pins`, T-6155) it waits only for the Deployments, StatefulSets
+# and DaemonSets those Helm releases own (annotation meta.helm.sh/release-name) and fails when one
+# does not roll out: a pin of the Portal waits neither on CNPG nor on an unrelated pod.
 set -euo pipefail
 
-slug="${1:?usage: wait-rollouts.sh <instance-slug> [timeout]}"
+slug="${1:?usage: wait-rollouts.sh <instance-slug> [timeout] [release...]}"
 timeout="${2:-600}"
+shift $(( $# < 2 ? $# : 2 ))
 
 namespaces=$(kubectl get ns -o name | sed 's|namespace/||' | grep -E "^(${slug}|${slug}-|jc-operators$)" || true)
 [ -n "$namespaces" ] || { echo "no namespaces for instance '${slug}'" >&2; exit 1; }
 
-echo "waiting up to ${timeout}s for rollouts in: $(echo "$namespaces" | tr '\n' ' ')"
 deadline=$(( $(date +%s) + timeout ))
+
+if [ "$#" -gt 0 ]; then
+	echo "waiting up to ${timeout}s for the rollouts of: $*"
+	failed=0 n=0
+	for ns in $namespaces; do
+		# a plain assignment, so an unreadable listing stops the wait (a loop list hides its exit)
+		owned=$(kubectl get deploy,statefulset,daemonset -n "$ns" -o json | python3 -c '
+import json, sys
+wanted = set(sys.argv[1:])
+for o in json.load(sys.stdin)["items"]:
+    if (o["metadata"].get("annotations") or {}).get("meta.helm.sh/release-name") in wanted:
+        print(o["kind"].lower() + "/" + o["metadata"]["name"])' "$@")
+		for res in $owned; do
+			n=$((n + 1))
+			left=$(( deadline - $(date +%s) )); [ "$left" -gt 0 ] || left=1
+			kubectl rollout status "$res" -n "$ns" --timeout="${left}s" || { failed=1; echo "--- not rolled out: ${ns}/${res}"; }
+		done
+	done
+	[ "$failed" -eq 0 ] && echo "${n} workload(s) of $* rolled out"
+	exit "$failed"
+fi
+
+echo "waiting up to ${timeout}s for rollouts in: $(echo "$namespaces" | tr '\n' ' ')"
 for ns in $namespaces; do
 	for res in $(kubectl get deploy,statefulset,daemonset -n "$ns" -o name 2>/dev/null); do
 		left=$(( deadline - $(date +%s) ))

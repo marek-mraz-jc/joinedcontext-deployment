@@ -166,7 +166,11 @@ esac
 KUBECTL_STUB = """#!/usr/bin/env bash
 case "$*" in
   "config view"*) echo "https://116.203.134.249:6443" ;;
-  *jc-release*) cat "$STUB_DIR/applied" ;;
+  *"get configmap jc-release"*) cat "$STUB_DIR/applied" ;;
+  *"get configmap jc-apply-red"*) cat "$STUB_DIR/red" 2>/dev/null || true ;;
+  *"create configmap jc-apply-red"*) echo "HOLD $*" ;;
+  "apply -f -") sed 's/^/KUBECTL-APPLY /' ;;
+  *) echo "KUBECTL $*" ;;
 esac
 """
 
@@ -183,7 +187,9 @@ def tree(tmp_path):
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
     for name in ("verify-pinned-images.py", "wait-rollouts.sh", "release.py", "smoke-component.sh"):
-        (work / "scripts" / name).write_text(f'#!/bin/sh\necho "RAN {name} $*"\n')
+        # a component named in $STUB_DIR/red-smoke fails its smoke
+        (work / "scripts" / name).write_text(f'#!/bin/sh\necho "RAN {name} $*"\n'
+                                             f'grep -qx "{name} $*" "$STUB_DIR/fail" 2>/dev/null && exit 1; exit 0\n')
         (work / "scripts" / name).chmod(0o755)
     stubs.mkdir()
     for name, text in (("helmfile", HELMFILE_STUB), ("kubectl", KUBECTL_STUB)):
@@ -202,8 +208,13 @@ def tree(tmp_path):
     return work, env
 
 
-def just(work, env, *args):
-    return subprocess.run(["just", "dev-apply-pins", *args], check=False, cwd=work, env=env, capture_output=True, text=True)
+def just(work, env, *args, recipe="dev-apply-pins"):
+    return subprocess.run(["just", recipe, *args], check=False, cwd=work, env=env, capture_output=True, text=True)
+
+
+def pin_a(work):
+    (work / "components/a/images.yaml").write_text("digest: '2'\n")
+    git(work, "commit", "-qam", "pin a")
 
 
 def test_dev_apply_pins_syncs_only_the_release_the_pin_moved(tree):
@@ -218,17 +229,102 @@ def test_dev_apply_pins_syncs_only_the_release_the_pin_moved(tree):
     assert done.returncode == 0, done.stderr
     assert "HELMFILE -f deployment/helmfile.yaml -e dev sync --concurrency 4 --selector name=a-x\n" in done.stdout
     lines = [line for line in done.stdout.splitlines() if line.startswith("RAN")]
-    assert lines == ["RAN verify-pinned-images.py dev", "RAN wait-rollouts.sh dev", "RAN release.py record dev dev",
+    # T-6155: the wait covers the synced release alone, not every workload of dev (CNPG included)
+    assert lines == ["RAN verify-pinned-images.py dev", "RAN wait-rollouts.sh dev 600 a-x", "RAN release.py record dev dev",
                      "RAN smoke-component.sh dev.joinedcontext.com dev a"]
+    assert "running on dev and smoked" in done.stdout and "HOLD" not in done.stdout
 
 
-def test_dev_apply_pins_refuses_a_range_with_more_than_pins(tree):
+def test_a_range_with_more_than_pins_takes_the_full_apply_and_smoke(tree):
     work, env = tree
     (work / "components/a/images.yaml").write_text("digest: '2'\n")
     (work / "components/a/values.yaml").write_text("x: 1\n")
     git(work, "add", ".")
     git(work, "commit", "-qm", "pin a and a value")
+    dry = just(work, env, "", "true")
+    assert dry.returncode == 0, dry.stderr
+    assert "the full just dev-apply and just dev-smoke instead" in dry.stdout and "HELMFILE" not in dry.stdout
+    # dev-smoke reads the live hosts: the copy's recipe is a stub (the later definition wins)
+    text = (work / "justfile").read_text()
+    (work / "justfile").write_text("set allow-duplicate-recipes\n" + text + "\ndev-smoke:\n\t@echo RAN dev-smoke\n")
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    # dev-apply plans by render (only a-x moved) and syncs it, then dev-smoke runs
+    out = done.stdout
+    assert out.index("the full just dev-apply") < out.index("-e dev sync") < out.index("RAN dev-smoke")
+    assert "RAN smoke-component" not in out
+
+
+def test_a_red_smoke_holds_the_release_until_the_full_path_clears_it(tree):
+    work, env = tree
+    stub_dir = Path(env["STUB_DIR"])
+    (stub_dir / "fail").write_text("smoke-component.sh dev.joinedcontext.com dev a\n")
+    pin_a(work)
+    red = just(work, env)
+    assert red.returncode != 0
+    assert "KUBECTL-APPLY HOLD -n dev create configmap jc-apply-red" in red.stdout
+    assert "--from-literal=releases=a-x" in red.stdout
+    assert "red" in red.stderr and "held: a-x" in red.stderr
+    # the next per-change apply of a-x is refused before any sync
+    (stub_dir / "red").write_text("a-x")
+    (work / "components/a/images.yaml").write_text("digest: '3'\n")
+    git(work, "commit", "-qam", "pin a again")
+    held = just(work, env)
+    assert held.returncode != 0
+    assert "a-x went red in a per-change apply" in held.stderr
+    assert "sync" not in held.stdout and "RAN" not in held.stdout
+
+
+def test_a_held_release_does_not_hold_another(tree):
+    work, env = tree
+    (Path(env["STUB_DIR"]) / "red").write_text("b-x")
+    pin_a(work)
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    assert "--selector name=a-x" in done.stdout
+
+
+def test_a_failed_rollout_holds_the_release_and_skips_the_record(tree):
+    work, env = tree
+    (Path(env["STUB_DIR"]) / "fail").write_text("wait-rollouts.sh dev 600 a-x\n")
+    pin_a(work)
     done = just(work, env)
     assert done.returncode != 0
-    assert "run the full `just dev-apply`" in done.stderr
-    assert "HELMFILE" not in done.stdout and "RAN" not in done.stdout
+    assert "RAN release.py" not in done.stdout and "RAN smoke-component" not in done.stdout
+    assert "--from-literal=releases=a-x" in done.stdout
+
+
+def test_a_green_dev_smoke_releases_the_hold():
+    text = (ROOT / "justfile").read_text()
+    body = text[text.index("\ndev-smoke:"):text.index("\n_smoke-sweeps ")]
+    assert '[ "$rc" -ne 0 ] || kubectl -n dev delete configmap jc-apply-red --ignore-not-found' in body
+
+
+WAIT_KUBECTL = """#!/usr/bin/env bash
+case "$*" in
+  "get ns -o name") echo namespace/dev ;;
+  *"-o json"*) cat <<'JSON'
+{"items": [
+ {"kind": "Deployment", "metadata": {"name": "portal", "annotations": {"meta.helm.sh/release-name": "portal-portal"}}},
+ {"kind": "StatefulSet", "metadata": {"name": "postgres", "annotations": {"meta.helm.sh/release-name": "cnpg"}}},
+ {"kind": "Deployment", "metadata": {"name": "bare"}}]}
+JSON
+  ;;
+  "rollout status"*) echo "ROLLOUT $3"; [ "$3" != deployment/portal ] || [ ! -e "$STUB_DIR/stuck" ] ;;
+  *) echo "UNEXPECTED $*"; exit 9 ;;
+esac
+"""
+
+
+@pytest.mark.parametrize("stuck", [False, True])
+def test_a_scoped_wait_waits_for_the_named_releases_alone(tmp_path, stuck):
+    (tmp_path / "kubectl").write_text(WAIT_KUBECTL)
+    (tmp_path / "kubectl").chmod(0o755)
+    if stuck:
+        (tmp_path / "stuck").write_text("")
+    env = {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "STUB_DIR": str(tmp_path)}
+    done = subprocess.run([str(ROOT / "scripts/wait-rollouts.sh"), "dev", "60", "portal-portal"], env=env,
+                          capture_output=True, text=True, check=False)
+    rolled = [line for line in done.stdout.splitlines() if line.startswith(("ROLLOUT", "UNEXPECTED"))]
+    assert rolled == ["ROLLOUT deployment/portal"]
+    assert done.returncode == (1 if stuck else 0), done.stdout + done.stderr
