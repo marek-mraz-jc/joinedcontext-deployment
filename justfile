@@ -482,14 +482,17 @@ _dev-assemble:
 # Apply the dev environment to the dev cluster and wait for every rollout. Syncs only the
 # releases whose render moved since the commit dev last recorded (T-6135); the whole
 # environment when that cannot be judged safely (scripts/apply-pins.py plan) or with full=true.
+# While the model spend guard holds it leaves agent-runner-proxy out (T-6155, see dev-apply-pins);
+# spend_guard=off syncs it too.
 [group('dev cluster')]
-dev-apply full='false':
+dev-apply full='false' spend_guard='on':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
 	started=$(date -u +%s)
 	selectors=()
+	case "{{ spend_guard }}" in on | off) ;; *) echo "spend_guard is on or off, not '{{ spend_guard }}'" >&2; exit 2 ;; esac
 	if [ "{{ full }}" = true ]; then
 		plan=full
 	else
@@ -502,10 +505,18 @@ dev-apply full='false':
 	fi
 	if [ "$plan" != full ]; then
 		mapfile -t releases < <(printf '%s' "$plan" | sed '/^$/d')
+		if [ "{{ spend_guard }}" = on ] && grep -qxF agent-runner-proxy <<<"$plan"; then
+			echo "skipping agent-runner-proxy: the spend guard keeps it at 0 replicas (spend_guard=off syncs it; once the guard lifts, just dev-apply true off brings it to HEAD)"
+			mapfile -t releases < <(printf '%s' "$plan" | sed '/^$/d;/^agent-runner-proxy$/d')
+		fi
 		for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
 		echo "dev-apply ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
 	else
 		echo "dev-apply: full sync"
+		if [ "{{ spend_guard }}" = on ]; then
+			echo "skipping agent-runner-proxy: the spend guard keeps it at 0 replicas (spend_guard=off syncs it; once the guard lifts, just dev-apply true off brings it to HEAD)"
+			selectors+=(--selector "name!=agent-runner-proxy")
+		fi
 	fi
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
 	./scripts/verify-pinned-images.py dev
@@ -636,10 +647,12 @@ dev-smoke-full:
 # `just dev-apply` (scoped by render, T-6135) and `just dev-smoke`. A red rollout or smoke holds
 # its releases in the ConfigMap jc-apply-red: the next per-change apply of a held release is
 # refused until the full dev-apply and a green dev-smoke clear it. `dry=true` prints the releases
-# and their `helmfile diff` only.
+# and their `helmfile diff` only. While the model spend guard holds, agent-runner-proxy runs at 0
+# replicas outside helmfile, so a sync would bring it back and reopen model spend: it is left out
+# (named on stdout) unless `spend_guard=off` says the guard was lifted.
 # Apply one change to dev: only the releases a pin moved, smoked in a minute
 [group('dev cluster')]
-dev-apply-pins base='' dry='false':
+dev-apply-pins base='' dry='false' spend_guard='on':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
@@ -654,11 +667,20 @@ dev-apply-pins base='' dry='false':
 	if [ "$planned" -eq 3 ]; then
 		echo "dev-apply-pins: more than pins since ${base:0:12}; the full just dev-apply and just dev-smoke instead"
 		[ "{{ dry }}" = true ] && exit 0
-		just dev-apply
+		just dev-apply false "{{ spend_guard }}"
 		exec just dev-smoke
 	fi
 	[ "$planned" -eq 0 ] || exit "$planned"
 	mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d')
+	case "{{ spend_guard }}" in
+	on)
+		if grep -qxF agent-runner-proxy <<<"$moved"; then
+			echo "skipping agent-runner-proxy: the spend guard keeps it at 0 replicas (spend_guard=off syncs it; once the guard lifts, just dev-apply true off brings it to HEAD)"
+			mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d;/^agent-runner-proxy$/d')
+		fi ;;
+	off) ;;
+	*) echo "spend_guard is on or off, not '{{ spend_guard }}'" >&2; exit 2 ;;
+	esac
 	selectors=()
 	for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
 	echo "pins ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
