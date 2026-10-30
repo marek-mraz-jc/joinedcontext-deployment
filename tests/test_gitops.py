@@ -572,7 +572,7 @@ def test_a_pin_step_that_pins_both_sources_passes(tmp_path):
     assert log.count("git push") == 2 and summary == ""
 
 
-def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None):
+def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None, binary=False):
     """scripts/portal-ui-pin.sh with docker answering `published` (True, False or the commits that
     have a bundle) and the compare API `compare` from the pinned bundle, `newer[base]` from others."""
     bin_dir = tmp_path / "bin"
@@ -585,7 +585,8 @@ def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None):
     for base, answer in answers.items():
         if answer is not None:
             (tmp_path / f"compare-{base}.json").write_text(json.dumps(answer))
-    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["ui"]["commit"]
+    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"][
+        "portal" if binary else "ui"]["commit"]
     # The stub writes the answer where `-o` points, as curl does; a base it has no answer for fails.
     (bin_dir / "curl").write_text(
         '#!/bin/sh\nwhile [ "$1" != -o ]; do shift; done\nout=$2; url=$3\n'
@@ -594,7 +595,8 @@ def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None):
     for stub in ("docker", "curl"):
         (bin_dir / stub).chmod(0o755)
     env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", GITHUB_TOKEN="")
-    return subprocess.run([str(ROOT / "scripts/portal-ui-pin.sh"), "c" * 40], env=env, capture_output=True, text=True)
+    args = [str(ROOT / "scripts/portal-ui-pin.sh"), *(["--binary"] if binary else []), "c" * 40]
+    return subprocess.run(args, env=env, capture_output=True, text=True)
 
 
 def test_a_portal_commit_with_its_own_ui_bundle_pins_that_bundle(tmp_path):
@@ -662,3 +664,105 @@ def test_a_newer_bundle_built_from_other_ui_files_is_refused(tmp_path, published
     result = _portal_ui_pin(tmp_path, published=published, compare=UI_SINCE_PINNED, newer=newer)
     assert result.returncode != 0 and result.stdout == ""
     assert reason in result.stderr, result.stderr
+
+
+def test_a_ui_only_portal_commit_keeps_the_pinned_binary(tmp_path):
+    """T-6158: a ui/-only push builds the bundle alone; the binary pinned now is the same code."""
+    pinned = yaml.safe_load((ROOT / "components/portal/images.yaml").read_text())["portal"]["portal"]
+    result = _portal_ui_pin(tmp_path, published=False, binary=True,
+                            compare={"status": "ahead", "files": [{"filename": "ui/src/App.tsx"}]})
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == [pinned["commit"], pinned["digest"]]
+
+
+@pytest.mark.parametrize("files, reason", [
+    (["ui/src/App.tsx", "src/main.rs"], "changed src/main.rs since the pinned portal binary"),
+    (["sdk/src/index.ts"], "changed sdk/src/index.ts since the pinned portal binary"),
+    (["public-docs/en/x.md"], "changed public-docs/en/x.md"),
+])
+def test_a_binary_of_other_code_is_refused_in_words(tmp_path, files, reason):
+    """T-6158: only a ui/ change leaves the pinned binary standing: the binary embeds sdk/ and docs."""
+    result = _portal_ui_pin(tmp_path, published=False, binary=True,
+                            compare={"status": "ahead", "files": [{"filename": f} for f in files]})
+    assert result.returncode != 0 and result.stdout == ""
+    assert reason in result.stderr, result.stderr
+
+
+def test_a_ui_only_portal_commit_moves_the_bundle_pin_alone(tmp_path):
+    """T-6158: pin-portal.sh over a commit that published only portal-ui moves the ui block's digest
+    and commit; the binary's digest, commit, docs and platform stay, so dev rolls out portal-ui alone."""
+    tree = tmp_path / "tree"
+    for part in ("scripts", "components/portal", "components/gitea-runner"):
+        shutil.copytree(ROOT / part, tree / part)
+    (tree / "scripts/check-builder-contract.py").write_text("")
+    (tree / "scripts/check-docs-pin.sh").write_text("#!/bin/sh\nexit 0\n")
+    before = (tree / "components/portal/images.yaml").read_text()
+    runner = (tree / "components/gitea-runner/images.yaml").read_text()
+    pins = yaml.safe_load(before)["portal"]
+    ui = "sha256:" + "f" * 64
+    commit = "c" * 40
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "docker").write_text(
+        '#!/bin/sh\ncase "$*" in\n'
+        f'  *imagetools*joinedcontext-portal-ui:{commit}) echo "Digest:    {ui}" ;;\n'
+        '  *imagetools*) exit 1 ;;\nesac\nexit 0\n')
+    compare = tmp_path / "compare.json"
+    compare.write_text(json.dumps({"status": "ahead", "files": [{"filename": "ui/src/App.tsx"}]}))
+    (bin_dir / "curl").write_text(
+        '#!/bin/sh\nfor a; do last=$a; done\ncase "$last" in\n'
+        f'  */compare/{pins["portal"]["commit"]}...{commit}*) while [ "$1" != -o ]; do shift; done; cat {compare} > "$2" ;;\n'
+        f'  */{pins["portal"]["commit"]}/public-docs/COMMIT) echo {pins["portal"]["docs"]} ;;\n'
+        f'  */{pins["portal"]["commit"]}/Cargo.toml) echo \'jc-core = {{ git = "https://github.com/marek-mraz-jc/joinedcontext-platform.git", rev = "{pins["portal"]["platform"]}" }}\' ;;\n'
+        '  *) exit 22 ;;\nesac\n')
+    for stub in ("docker", "curl"):
+        (bin_dir / stub).chmod(0o755)
+    env = dict(os.environ, PATH=f"{bin_dir}:{os.environ['PATH']}", GITHUB_TOKEN="")
+    result = subprocess.run([str(tree / "scripts/pin-portal.sh"), commit], env=env, capture_output=True, text=True, check=False)
+    assert result.returncode == 0, result.stdout + result.stderr
+    after = yaml.safe_load((tree / "components/portal/images.yaml").read_text())["portal"]
+    assert after["ui"]["digest"] == ui and after["ui"]["commit"] == commit
+    assert after["portal"] == pins["portal"]
+    assert after["mail-catcher"] == pins["mail-catcher"]
+    assert (tree / "components/gitea-runner/images.yaml").read_text() == runner
+
+
+def test_pin_images_pins_a_commit_that_built_only_the_portal_ui(monkeypatch, capsys):
+    """T-6158: a ui/-only commit publishes no binary; pin-images hands it to pin-portal.sh and checks
+    the signature of every digest pin-portal.sh wrote, the kept binary's included."""
+    module = _pin_images()
+    commit = "c" * 40
+    monkeypatch.setattr(module, "built", lambda repository: commit)
+    monkeypatch.setattr(module, "green", lambda *a: True)
+    monkeypatch.setattr(module, "published", lambda image, c: "sha256:" + "f" * 64 if image.endswith("-ui") else None)
+    checked = []
+    monkeypatch.setattr(module, "signed", lambda repository, image, digest: checked.append((image, digest)) or True)
+    ran = []
+    monkeypatch.setattr(module.subprocess, "run",
+                        lambda argv, **kw: ran.append(argv) or subprocess.CompletedProcess(argv, 0))
+    module.main("portal")
+    assert ran == [[str(ROOT / "scripts/pin-portal.sh"), commit]]
+    text = (ROOT / "components/portal/images.yaml").read_text()
+    assert ("joinedcontext-portal", module.written(text, "joinedcontext-portal")) in checked
+    assert ("joinedcontext-portal-ui", module.written(text, "joinedcontext-portal-ui")) in checked
+    assert "pin portal ccccccc" in capsys.readouterr().out
+    # an unsigned digest pin-portal.sh wrote goes back, and the run says why
+    monkeypatch.setattr(module, "signed", lambda repository, image, digest: image.endswith("-ui"))
+    ran.clear()
+    with pytest.raises(SystemExit, match="joinedcontext-portal@sha256:[0-9a-f]{64} carries no signature"):
+        module.main("portal")
+    assert ran[-1] == ["git", "checkout", "--", "components"]
+    # neither image published: nothing is asked of pin-portal.sh
+    monkeypatch.setattr(module, "published", lambda image, c: None)
+    ran.clear()
+    module.main("portal")
+    assert ran == [] and "neither the portal nor its UI bundle" in capsys.readouterr().err
+
+
+def test_only_the_portal_ui_release_reads_the_bundle_pin():
+    """T-6158: a ui/-only pin moves the `ui` block alone, and only the portal-ui release renders it,
+    so `just dev-apply-pins` syncs and waits for portal-ui alone (an nginx rollout in about a minute)."""
+    readers = re.compile(r'images[^\n]*"portal"[^\n]*"ui"|images\.portal\.ui')
+    found = sorted(str(p.relative_to(ROOT)) for base in ("components", "defaults") for p in (ROOT / base).rglob("*")
+                   if p.is_file() and p.suffix in (".gotmpl", ".yaml", ".tpl") and readers.search(p.read_text(errors="ignore")))
+    assert found == ["components/portal/values/ui/base-values.yaml.gotmpl"], found

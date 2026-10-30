@@ -261,9 +261,10 @@ portal:
     # it carries 9358512 (T-5295's datacube step, which the susr-* pipelines use since T-5382).
     platform: '31f4f95532552ee2eb6bc06b2c8f189372ec09ed'
   # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
-  # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, so `commit` is the
-  # newest such commit at or before portal.commit; scripts/pin-portal.sh moves both together and
-  # refuses a bundle whose files differ from that commit's (T-5297).
+  # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, and the binary
+  # only for one that changes anything outside ui/ (T-6158), so `commit` and portal.commit may
+  # differ either way: scripts/pin-portal.sh pins each from the newest commit that built it and
+  # refuses a pair whose ui/ and sdk/ files differ (T-5297); a ui/-only commit moves this block alone.
   ui:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
     tag: 'main'

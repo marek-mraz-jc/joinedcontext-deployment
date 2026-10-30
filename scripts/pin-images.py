@@ -36,7 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent
 OWNER = "marek-mraz-jc"
 ISSUER = "https://token.actions.githubusercontent.com"
 # Per source: its repository and the image paths its image.yml publishes under the commit's tag;
-# the first is required, the others are pinned when that commit built them.
+# the first is required, the others are pinned when that commit built them. The Portal's commit may
+# have built only its UI bundle (a ui/-only push, T-6158): pin-portal.sh then keeps the binary of
+# the newest commit before it that built one, when only ui/ changed since.
 SOURCES = {
     "platform": ("joinedcontext-platform", ["joinedcontext-platform", "joinedcontext-platform/checkouts",
                                             "joinedcontext-platform/model-tools"]),
@@ -105,6 +107,13 @@ def pin(text, image, digest, commit=None):
     return text, n
 
 
+def written(text, image):
+    """The digest the block naming `ghcr.io/OWNER/image` pins in `text`, or None."""
+    found = re.search(rf"repository: 'ghcr\.io/{OWNER}/{re.escape(image)}'\n(?:    .*\n)*?    digest: '(sha256:[0-9a-f]{{64}})'",
+                      text)
+    return found.group(1) if found else None
+
+
 def pin_files(pins, commit=None):
     """Pin every images.yaml; the paths that changed."""
     changed = []
@@ -137,7 +146,7 @@ def main(source, tier="dev"):
     for n, image in enumerate(images):
         digest = published(image, commit)
         if digest is None:
-            if n == 0:
+            if n == 0 and source != "portal":
                 print(f"{source} {commit[:7]}: {image} is not published yet; nothing pinned", file=sys.stderr)
                 return
             continue
@@ -147,6 +156,10 @@ def main(source, tier="dev"):
             sys.exit(f"{source} {commit[:7]}: {image}@{digest} has not passed the full tests (no full-tests "
                      f"attestation of {repository}'s promote.yml); a production tier pins only promoted images")
         pins[image] = digest
+    if source == "portal" and not pins.keys() & {"joinedcontext-portal", "joinedcontext-portal-ui"}:
+        print(f"{source} {commit[:7]}: neither the portal nor its UI bundle is published yet; nothing pinned",
+              file=sys.stderr)
+        return
     if source == "portal":
         # The builder contract check and the builders' own comment line are pin-portal.sh's.
         refused = subprocess.run([str(ROOT / "scripts/pin-portal.sh"), commit], cwd=ROOT, check=False)
@@ -156,6 +169,21 @@ def main(source, tier="dev"):
             print(f"{source} {commit[:7]}: pin-portal.sh refused (exit {refused.returncode}); nothing pinned",
                   file=sys.stderr)
             return
+        # pin-portal.sh may take the binary or the bundle of an earlier commit than the one checked
+        # above (T-6050, T-6158): whatever it wrote passes the same signature and tier checks.
+        text = (ROOT / "components/portal/images.yaml").read_text()
+        for image in ("joinedcontext-portal", "joinedcontext-portal-ui"):
+            digest = written(text, image)
+            problem = None
+            if digest is None:
+                problem = "no digest pinned"
+            elif not signed(repository, image, digest):
+                problem = f"{image}@{digest} carries no signature of {repository}'s image.yml on main"
+            elif tier == "production" and not attested(repository, image, digest):
+                problem = f"{image}@{digest} has not passed the full tests (no full-tests attestation)"
+            if problem:
+                subprocess.run(["git", "checkout", "--", "components"], cwd=ROOT, check=False)
+                sys.exit(f"{source} {commit[:7]}: {problem}; nothing pinned")
     elif not pin_files(pins, commit):
         print(f"{source} {commit[:7]}: already pinned", file=sys.stderr)
         return
