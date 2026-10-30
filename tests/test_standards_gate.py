@@ -204,3 +204,81 @@ def test_the_smoke_recipes_parse(name):
     run = subprocess.run(["just", "--dry-run", name], cwd=ROOT, capture_output=True, text=True, check=False,
                          env={**os.environ, "JUST_NO_DOTENV": "true"})
     assert run.returncode == 0, run.stderr
+
+
+def broker_repo(tmp_path, sha="abc1234"):
+    """A deployment checkout whose broker pin names Antares commit `sha` (T-6151)."""
+    repo = tmp_path / "deploy"
+    (repo / "components/context-broker").mkdir(parents=True)
+    (repo / gate.BROKER_IMAGES).write_text(f"x:\n  # Antares dev {sha} (dev-120, over aaaaaaa)\n    tag: 'dev-120'\n")
+    for args in (["init", "-q"], ["add", "-A"], ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "pin"]):
+        subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
+    return repo
+
+
+class FakeGh:
+    """gh for the sweep stage: answers the runs list from `pages` (one per call, the last repeats), records calls."""
+
+    def __init__(self, *pages):
+        self.pages, self.calls = list(pages), []
+
+    def __call__(self, *args):
+        self.calls.append(args)
+        if args[0] == "api":
+            return json.dumps({"workflow_runs": self.pages.pop(0) if len(self.pages) > 1 else self.pages[0]})
+        return ""
+
+
+def sweep_run(run_id, title, status="completed", conclusion="success"):
+    return {"id": run_id, "display_title": title, "status": status, "conclusion": conclusion,
+            "created_at": f"2026-10-30T0{run_id % 10}:00:00Z", "html_url": f"https://github.com/x/runs/{run_id}"}
+
+
+def test_the_antares_sweep_stage_is_last_and_runs_this_script(tmp_path):
+    args = argparse.Namespace(conformance=tmp_path, portal=tmp_path, requests=None, rate=1, duration="1s",
+                              only=None, rev="v1.2.3")
+    name, argv, env, _ = gate.stages(args, tmp_path)[-1]
+    assert name == "antares-sweep" == gate.REQUIRED[-1]
+    assert argv[1:] == [str(SCRIPT), "antares-sweep", "v1.2.3"] and env == {}
+
+
+def test_a_green_sweep_of_the_pinned_commit_passes_and_is_named_in_the_record(tmp_path, capsys):
+    repo = broker_repo(tmp_path)
+    fake = FakeGh([sweep_run(7, "sweep abc0000"), sweep_run(5, "sweep abc1234def0"), sweep_run(3, "sweep nothex1")])
+    assert gate.antares_sweep("HEAD", wait=True, call=fake, cwd=repo) == 0
+    out = capsys.readouterr().out
+    assert "  ok  sweep run 5 of Antares abc1234: https://github.com/x/runs/5" in out
+    assert [c[0] for c in fake.calls] == ["api"], "a green run dispatches nothing"
+    # the run lands in the record as a case of the stage
+    assert "antares-sweep::sweep run 5 of Antares abc1234" in gate.cases("antares-sweep", tmp_path, out)
+
+
+def test_a_red_sweep_refuses_and_says_how_to_go_on(tmp_path, capsys):
+    repo = broker_repo(tmp_path)
+    fake = FakeGh([sweep_run(9, "sweep abc1234", conclusion="failure"), sweep_run(4, "sweep abc1234", conclusion="cancelled")])
+    assert gate.antares_sweep("HEAD", wait=True, call=fake, cwd=repo) == 1
+    out = capsys.readouterr().out
+    assert "FAIL  sweep run 9 of Antares abc1234: failure" in out and "gh run rerun 9" in out
+    assert gate.cases("antares-sweep", tmp_path, out) == {"antares-sweep::sweep run 9 of Antares abc1234": "fail"}
+
+
+def test_without_a_sweep_the_gate_dispatches_one_and_waits_for_it(tmp_path, capsys):
+    repo = broker_repo(tmp_path)
+    fake = FakeGh([], [], [sweep_run(11, "sweep abc1234", status="in_progress", conclusion=None)],
+                  [sweep_run(11, "sweep abc1234")])
+    naps = []
+    assert gate.antares_sweep("HEAD", wait=True, call=fake, sleep=naps.append, cwd=repo) == 0
+    dispatches = [c for c in fake.calls if c[0] == "workflow"]
+    assert dispatches == [("workflow", "run", "sweep.yml", "-R", gate.ANTARES_REPO, "--ref", "dev", "-f", "sha=abc1234")]
+    assert len(naps) == 3 and "ok  sweep run 11" in capsys.readouterr().out
+    # started by `run` without waiting: one dispatch, then back
+    fake = FakeGh([])
+    assert gate.antares_sweep("HEAD", wait=False, call=fake, cwd=repo) == 0
+    assert [c[0] for c in fake.calls] == ["api", "workflow"]
+
+
+def test_a_running_sweep_is_never_dispatched_twice(tmp_path):
+    repo = broker_repo(tmp_path)
+    fake = FakeGh([sweep_run(12, "sweep abc1234", status="queued", conclusion=None)])
+    assert gate.antares_sweep("HEAD", wait=False, call=fake, cwd=repo) == 0
+    assert [c[0] for c in fake.calls] == ["api"]
