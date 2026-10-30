@@ -13,7 +13,10 @@ NGSILD_TOKEN and WRITE_ENDPOINT are set, OGC API Features ETS + GeoJSON, OData, 
 WebSocket, MCP), the roundtrip (tests/roundtrip, T-5914: one t-roundtrip- Entity written through NGSI-LD
 on the conformance Endpoint with NGSILD_TOKEN, read back through every served surface current, temporal
 and stream, then deleted), DCAT-AP SHACL of dev's CKAN, the Portal live sweep (every journey, MQTT included, the critic-* shot walks not)
-and the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests). Before the first stage the
+the k6 API mix at --rate for --duration (p95 < 500 ms, 0 failed requests), and antares-sweep (T-6151): a green
+run of the Antares weekly sweep (sweep.yml, every check that left Antares's per-push gate) on the exact commit the
+broker pin names. The run dispatches that sweep at its start when the commit has none, so it runs beside the
+other stages; the stage waits for it and names the run in the record. Before the first stage the
 run refuses in seconds when a stage would only fail on setup: ANTARES_DIR not at the Antares commit the
 candidate's broker pin names (ogc, odata, dcat), no NGSILD_TOKEN (roundtrip), a demo password of the sweep
 missing. Each stage ends after --stage-timeout seconds (--sweep-timeout for the sweep; its process group is
@@ -44,6 +47,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
@@ -58,12 +62,15 @@ SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
 # The critic-* walks record 1440 + 400 shots and timings for the UI critic tasks (T-5523, T-5982); they
 # judge no release and took 1,619 s of the first record's sweep hour, so the gate's sweep leaves them out.
 SWEEP_SKIP = r"/critic-[a-z]+\.spec\.ts$"
-REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load")
+REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load", "antares-sweep")
 # What a stage needs from the caller's environment, or it fails on setup after hours instead of seconds.
 NEEDS_ANTARES = ("ogc", "odata", "dcat")
 NEEDS_ENV = {"roundtrip": ("NGSILD_TOKEN",),
              "portal-sweep": ("PORTAL_PASSWORD", "APPROVER_PASSWORD", "VIEWER_PASSWORD", "EDITOR_PASSWORD")}
 BROKER_IMAGES = "components/context-broker/images.yaml"
+# Antares's weekly sweep (T-6151): its run name is `sweep <commit>`, its `sha` input a commit on dev.
+ANTARES_REPO = "marek-mraz-jc/Antares-NGSI-LD-Context-Broker"
+SWEEP = "sweep.yml"
 # The write-here read-everywhere Endpoint (T-5914): the conformance space nothing publishes, written only
 # by the conformance ServiceAccount (Policy conformance-write); WRITE_ENDPOINT overrides its slug.
 CONFORMANCE_ENDPOINT = ROOT / "components/context-gateway/seed/banskabystrica/endpoint-conformance.yaml"
@@ -135,6 +142,58 @@ def preflight(rev: str, names: list[str], env=os.environ, cwd: Path = ROOT) -> d
     return extra
 
 
+# ---------------------------------------------------------------------------- the Antares sweep
+
+
+def gh(*args: str) -> str:
+    """`gh` with the caller's GH_TOKEN; a failure refuses with gh's own message."""
+    try:
+        done = subprocess.run(["gh", *args], capture_output=True, text=True, check=False, timeout=120)
+    except (OSError, subprocess.TimeoutExpired) as e:
+        raise Refused(f"gh {' '.join(args[:2])}: {e}") from e
+    if done.returncode:
+        raise Refused(f"gh {' '.join(args[:2])}: {done.stderr.strip()[:300]}")
+    return done.stdout
+
+
+def sweep_runs(sha: str, call=gh) -> list[dict]:
+    """The sweep.yml runs of Antares commit `sha` (7-40 hex either side), newest first."""
+    data = json.loads(call("api", f"repos/{ANTARES_REPO}/actions/workflows/{SWEEP}/runs?per_page=100"))
+    runs = []
+    for run in data.get("workflow_runs", []):
+        named = run.get("display_title", "").removeprefix("sweep ")
+        if re.fullmatch(r"[0-9a-f]{7,40}", named) and (named.startswith(sha) or sha.startswith(named)):
+            runs.append(run)
+    return sorted(runs, key=lambda r: r.get("created_at", ""), reverse=True)
+
+
+def antares_sweep(rev: str, wait: bool, call=gh, sleep=time.sleep, poll: float = 60, cwd: Path = ROOT) -> int:
+    """0 when the broker commit `rev` pins has a green sweep (printed as an `ok` case naming the run), 1 when its
+    newest finished sweep is red. Without one it dispatches a sweep of that commit; `wait` polls until it ends."""
+    _, sha = broker_commit(rev, cwd)
+    dispatched = False
+    while True:
+        runs = sweep_runs(sha, call)
+        green = next((r for r in runs if r.get("conclusion") == "success"), None)
+        if green:
+            print(f"  ok  sweep run {green['id']} of Antares {sha}: {green.get('html_url', '')}", flush=True)
+            return 0
+        running = [r for r in runs if r.get("status") != "completed"]
+        red = next((r for r in runs if r.get("conclusion") in ("failure", "timed_out", "startup_failure")), None)
+        if red and not running:
+            print(f"  FAIL  sweep run {red['id']} of Antares {sha}: {red['conclusion']}, {red.get('html_url', '')}; "
+                  f"fix it on Antares dev and pin the fix, or rerun a flake: gh run rerun {red['id']} -R {ANTARES_REPO}",
+                  flush=True)
+            return 1
+        if not running and not dispatched:
+            call("workflow", "run", SWEEP, "-R", ANTARES_REPO, "--ref", "dev", "-f", f"sha={sha}")
+            dispatched = True
+            print(f"antares-sweep: dispatched {SWEEP} on Antares {sha}", flush=True)
+        if not wait:
+            return 0
+        sleep(poll)
+
+
 # ---------------------------------------------------------------------------- the stages
 
 
@@ -163,6 +222,8 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
                  {"JC_K6_SCRIPT": "api-mix-100rps.js", "JC_K6_REQUESTS": str(requests),
                   "JC_K6_RATE": str(args.rate), "JC_K6_DURATION": args.duration, "JC_K6_P95_MS": "500",
                   "JC_REPORTS_DIR": str(load)}, conf))
+    plan.append(("antares-sweep", [sys.executable, str(Path(__file__).resolve()), "antares-sweep",
+                                   getattr(args, "rev", "HEAD")], {}, ROOT))
     return [s for s in plan if not args.only or s[0] in args.only]
 
 
@@ -397,6 +458,12 @@ def run(args) -> int:
     known = known_red()
     plan = stages(args, out)
     extra = preflight(args.rev, [s[0] for s in plan])
+    if any(s[0] == "antares-sweep" for s in plan):
+        # started now so it runs beside the other stages; the stage itself waits for it
+        try:
+            antares_sweep(args.rev, wait=False)
+        except Refused as e:
+            print(f"release gate: antares-sweep not started: {e}", flush=True)
     results: list[dict] = []
     for name, argv, env, cwd in plan:
         print(f"release gate: {name} ...", flush=True)
@@ -604,6 +671,8 @@ def main(argv: list[str] | None = None) -> int:
     # The sweep runs one worker over ~154 spec files: the first record (b629a881) ran 20 of them, critic-*
     # left out, in 1,874 s (94 s each), so the whole sweep needs ~14,400 s; 18,000 leaves 25 %.
     r.add_argument("--sweep-timeout", type=float, default=18000, help="seconds for the portal-sweep stage")
+    w = sub.add_parser("antares-sweep", help="the stage: a green Antares sweep of the pinned broker commit")
+    w.add_argument("rev", nargs="?", default="HEAD")
     c = sub.add_parser("check")
     c.add_argument("rev", nargs="?", default="HEAD")
     c.add_argument("--records", type=Path, default=RECORDS)
@@ -611,6 +680,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "run":
             return run(args)
+        if args.command == "antares-sweep":
+            return antares_sweep(args.rev, wait=True)
         rec = check(args.rev, args.records)
         print(f"release gate: green record {rec['sha'][:12]} of {rec['finished']} covers {args.rev}")
         return 0

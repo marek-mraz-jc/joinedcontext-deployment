@@ -729,8 +729,9 @@ dev-smoke-component component:
 	./scripts/smoke-component.sh "{{ dev_domain }}" dev "{{ component }}"
 
 # T-5899: after dev-apply of <rev>, every standard (reads and writes), the Portal live sweep and the
-# k6 mix at <rate>/s (8: under the edge's 10/s per address, T-5900). Credentials only from the
-# environment (ANTARES_DIR, NGSILD_TOKEN,
+# k6 mix at <rate>/s (8: under the edge's 10/s per address, T-5900), and a green Antares weekly sweep
+# of the pinned broker commit (T-6151; GH_TOKEN dispatches one when it has none). Credentials only from the
+# environment (ANTARES_DIR, NGSILD_TOKEN, GH_TOKEN,
 # WRITE_ENDPOINT, the sweep's *_PASSWORD from the secrets mount; ANTARES_DIR at the Antares commit the
 # candidate's broker pins); it refuses in seconds when one is missing, and each stage stops after an hour.
 # See scripts/standards-gate.py.
