@@ -1,42 +1,58 @@
 name: ci
-# The fast lane, on every push (ci-full and pinned-images run daily beside it): render and gate every
-# environment in a single job, run the tests in another, scan the history for secrets. Every
-# tool is downloaded once; the environments loop inside the job instead of a matrix, which
-# paid the setup four times over.
+# The fast lane, on every push: render and gate the environments a change touches in one job, run
+# the tests that read the changed files in another, scan the history for secrets (T-6152, owner
+# 2026-10-30: push to dev under 5 minutes). scripts/ci/changes.py picks the set. The weekly sweep
+# and the release gate call this workflow with `full: true` (sweep.yml): every environment, every
+# test file in six shards, the BBSK demo, the kyverno apply, the model datasets and renovate. Every
+# tool is downloaded once; the environments loop inside the job instead of a matrix.
 on:
   pull_request:
   push:
     branches: [main]
     paths-ignore: ["**.md"]
+  workflow_call:
+    inputs:
+      full: { description: "every environment and every check", type: boolean, default: false }
+      ref: { description: "the commit or tag to check out (the release gate's tag)", type: string, default: "" }
 permissions: { contents: read }
 # On main a run is never cancelled: the watcher pins an image every few minutes, and each pin
 # used to cancel the run before it, so main went an hour without a finished run. One run
 # finishes, the newest push waits behind it (GitHub keeps one pending run per group).
-concurrency: { group: "ci-${{ github.ref }}", cancel-in-progress: "${{ github.ref != 'refs/heads/main' }}" }
+concurrency: { group: "ci-${{ inputs.full && 'sweep-' || '' }}${{ github.ref }}", cancel-in-progress: "${{ github.ref != 'refs/heads/main' }}" }
 # Every tool version and checksum comes from tools.env, loaded by .github/actions/tools (T-4954).
 jobs:
   changes:
-    # T-6110: a range whose every file is a components/<c>/images.yaml (a pin) takes the short set:
-    # render and gate every environment (the render job, unchanged), verify the pinned signatures,
-    # check the docs pin and run the tests that read an images.yaml, in one job instead of six
-    # shards. Any other file, or a base git cannot read, is the full set (scripts/ci/changes.py).
+    # T-6110, T-6152: the tests that read the changed files run in one job, and the render job renders
+    # dev plus the environments a change names; a file every render or test reads, a file no test
+    # names, or a base git cannot read is the full set (scripts/ci/changes.py). `full: true` (the
+    # sweep, the release gate) passes no base, which is the full set.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      pins_only: ${{ steps.changes.outputs.pins_only }}
-      pin_tests: ${{ steps.changes.outputs.pin_tests }}
+      full: ${{ steps.changes.outputs.full }}
+      tests: ${{ steps.changes.outputs.tests }}
+      envs: ${{ steps.changes.outputs.envs }}
+      pins: ${{ steps.changes.outputs.pins }}
+      demo: ${{ steps.changes.outputs.demo }}
+      shards: ${{ steps.changes.outputs.shards }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with: { fetch-depth: 0 }
+        with: { fetch-depth: 0, ref: "${{ inputs.ref }}" }
       - id: changes
         env:
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          BASE: ${{ inputs.full && 'full' || (github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before) }}
         run: python3 scripts/ci/changes.py "$BASE" "$GITHUB_SHA" | tee -a "$GITHUB_OUTPUT"
   render:
+    needs: changes
     runs-on: ubuntu-latest
-    timeout-minutes: 25  # nine environments since T-4956, about 30 s each
+    timeout-minutes: 25  # nine environments since T-4956, about 2 min each, three at a time
+    env:
+      # unset (tasks/autocheck without changes.py) renders every environment and the demo
+      RENDER_ENVS: ${{ needs.changes.outputs.envs }}
+      RENDER_DEMO: ${{ needs.changes.outputs.demo }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: "${{ inputs.ref }}" }
       # every action is a commit and every publish grant sits on its job (T-5564)
       - run: python3 scripts/ci/check-workflow-pins.py --selftest && python3 scripts/ci/check-workflow-pins.py
       - uses: ./.github/actions/tools
@@ -80,7 +96,7 @@ jobs:
           helmfile -f .ci/kyverno/helmfile.yaml.gotmpl list --output json | python3 scripts/ci/check-chart-pins.py -
           # minimal and broker-only: the two small component profiles (T-4856); dev and smartcity
           # (production) the hosted clusters (T-4956). smoke-test needs a CI pipeline's env.
-          mapfile -t environments < .ci/golden/ENVIRONMENTS
+          read -ra environments <<< "${RENDER_ENVS:-$(tr '\n' ' ' < .ci/golden/ENVIRONMENTS)}"
           # The renders run three at a time (T-5552: 497 s one after another); a failed render
           # prints its log and names its environment. The gates then run per environment.
           echo "::group::render ${environments[*]}"
@@ -109,7 +125,7 @@ jobs:
         run: |
           set -eu
           golden_red=""
-          mapfile -t environments < .ci/golden/ENVIRONMENTS
+          read -ra environments <<< "${RENDER_ENVS:-$(tr '\n' ' ' < .ci/golden/ENVIRONMENTS)}"
           for env in "${environments[@]}"; do
             echo "::group::${env}"
             cat "rendered/${env}.log"
@@ -131,6 +147,8 @@ jobs:
         # same gates: kubeconform, digest pins, the admission policies, no plaintext secret.
         run: |
           set -eu
+          # a change outside demos/ leaves the demo to the sweep (scripts/ci/changes.py)
+          if [ "${RENDER_DEMO:-true}" != true ]; then echo "no change to the BBSK demo"; exit 0; fi
           for env in dev smartcity; do
             echo "::group::demo-bbsk ${env}"
             helmfile -f demos/bbsk/helmfile.yaml.gotmpl -e "${env}" list --output json | python3 scripts/ci/check-chart-pins.py -
@@ -170,14 +188,18 @@ jobs:
     # +-20 % from run to run (keycloak admin permissions 377 -> 785 s), and shard 1 was cancelled (T-5886).
     # actions: read lets the shard download this run's base-renders artifact (T-6111).
     permissions: { contents: read, actions: read }
-    # Shard 0 is the pin set (T-6110): the test files that read a moved images.yaml, whole.
+    # T-6152: the scoped set (the test files that read the changed files) is split the same way, one
+    # shard per 15 measured minutes of it (scripts/ci/changes.py shards); the full set takes six.
     needs: changes
-    strategy: { fail-fast: false, matrix: { shard: "${{ fromJSON(needs.changes.outputs.pins_only == 'true' && '[0]' || '[1, 2, 3, 4, 5, 6]') }}" } }
-    name: tests (${{ matrix.shard == 0 && 'pins' || format('{0}/6', matrix.shard) }})
+    strategy: { fail-fast: false, matrix: { shard: "${{ fromJSON(needs.changes.outputs.shards) }}" } }
+    name: tests (${{ needs.changes.outputs.full == 'true' && 'full' || 'scoped' }} ${{ matrix.shard }}/${{ strategy.job-total }})
+    env:
+      # `*` in the full set: every test file (scripts/ci/test-shard.py files); empty: none reads the change
+      JC_TEST_FILES: ${{ needs.changes.outputs.full == 'true' && '*' || needs.changes.outputs.tests }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         # The whole history: a credential deleted in the last commit is still a credential.
-        with: { fetch-depth: 0 }
+        with: { fetch-depth: 0, ref: "${{ inputs.ref }}" }
       - uses: ./.github/actions/tools
       - name: kyverno cli
         run: |
@@ -212,7 +234,7 @@ jobs:
           sudo install -m 0755 conftest /usr/local/bin/conftest
           rm -f gitleaks.tar.gz conftest.tar.gz gitleaks conftest
       - name: gitleaks over the whole history
-        if: matrix.shard <= 1
+        if: matrix.shard == 1
         # Was the `gitleaks` job (reusable-gitleaks.yml); same ruleset, same scope, one billed
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
@@ -222,7 +244,7 @@ jobs:
         # The Portal's /docs is the docs commit pinned beside its digest; the pinned Portal and
         # platform commits and this tree are checked out and that docs commit's own checkers
         # run against them. tests/test_docs_pin.py proves it red on a page the code lacks.
-        if: matrix.shard <= 1
+        if: matrix.shard == 1
         run: scripts/check-docs-pin.sh
       - name: the images the tests run
         # tests/test_observability_collector.py runs `otelcol validate` on the rendered
@@ -272,8 +294,9 @@ jobs:
         if: matrix.shard == 1
         run: kyverno test .ci/policies
       - name: kyverno apply on the rendered local, production and add-on manifests (OPS-40)
-        if: matrix.shard == 1
-        # Shift-left: what admission would refuse is refused here first, on every pull request.
+        if: matrix.shard == 1 && inputs.full
+        # What admission would refuse is refused before production: the weekly sweep and the release
+        # gate (T-6152: 100 s a push, no catch of its own in 7 days; conftest gates every render).
         run: .ci/policies/verify-kyverno-policies.sh
       # One worker per core: each smoke-script case runs the whole script against stubs, and in
       # series the suite passed the job's 10 minutes once T-2592 and T-2601 added cases, which
@@ -324,23 +347,22 @@ jobs:
           fi
       # A file heavier than a quarter of a shard's share runs in every shard, a sixth of its tests
       # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
-      # The pin set verifies every platform digest the dev render pins, as `just dev-apply` does
+      # A moved pin verifies every platform digest the dev render pins, as `just dev-apply` does
       # before it syncs (T-5564): a pin reaches dev without the six shards, never without this.
       - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
-        if: matrix.shard == 0
+        if: needs.changes.outputs.pins == 'true' && matrix.shard == 1
       - name: the pinned images carry our workflows' signatures (T-5564)
-        if: matrix.shard == 0
+        if: needs.changes.outputs.pins == 'true' && matrix.shard == 1
         run: |
           helmfile -f deployment/helmfile.yaml -e dev repos >/dev/null
           scripts/verify-pinned-images.py dev
       - name: pytest
         env:
-          JC_TEST_SHARD: ${{ matrix.shard != 0 && format('{0}/6', matrix.shard) || '' }}
-          PIN_TESTS: ${{ needs.changes.outputs.pin_tests }}
+          JC_TEST_SHARD: ${{ format('{0}/{1}', matrix.shard, strategy.job-total) }}
         run: |
-          if [ "${{ matrix.shard }}" = 0 ]; then files="$PIN_TESTS"; else files=$(python3 scripts/ci/test-shard.py "${{ matrix.shard }}" 6); fi
-          # an empty list would run every file of tests/ under the pin set's single job
-          : "${files:?no test file chosen}"
+          files=$(python3 scripts/ci/test-shard.py "${{ matrix.shard }}" "${{ strategy.job-total }}")
+          # an empty list would run every file of tests/
+          if [ -z "$files" ]; then echo "no test file for this shard (scripts/ci/changes.py, test-shard.py)"; exit 0; fi
           # shellcheck disable=SC2086 # one word per test file
           pytest -q -n auto --dist loadgroup --durations=30 --junitxml=pytest-${{ matrix.shard }}.xml $files
       - name: the test images pulled
@@ -351,7 +373,7 @@ jobs:
           [ "$(cat /tmp/test-images.rc 2>/dev/null)" = 0 ] || { echo "::error::pulling the test images failed: a registry failure, not a test"; exit 1; }
       # Each test's seconds, for the test-durations job below (T-5551).
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always() && matrix.shard != 0
+        if: always() && needs.changes.outputs.full == 'true'
         with:
           name: test-durations-${{ matrix.shard }}
           path: pytest-${{ matrix.shard }}.xml
@@ -360,10 +382,10 @@ jobs:
       # How each seed pipeline creates history rows, per pipeline x type x attribute, with a verdict
       # (T-4844); tests/test_temporal_audit.py fails on a row that is not ok, the report is the table.
       - name: temporal audit of the seeds
-        if: matrix.shard == 1 && always()
+        if: matrix.shard == 1 && always() && needs.changes.outputs.full == 'true'
         run: python3 scripts/temporal-audit.py --out temporal-audit.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: matrix.shard == 1 && always()
+        if: matrix.shard == 1 && always() && needs.changes.outputs.full == 'true'
         with:
           name: temporal-audit
           path: temporal-audit.json
@@ -372,7 +394,7 @@ jobs:
     # The .ci/test-durations.json the shards of this main run add up to (T-5551: the table went
     # stale in four days and shard 1 ran 1,192 s against 544 s for shard 2). It prints the diff
     # and keeps the table as an artifact; a person commits it when the shards drift.
-    if: always() && needs.changes.outputs.pins_only != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: always() && needs.changes.outputs.full == 'true' && (inputs.full || github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [changes, tests]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -396,13 +418,13 @@ jobs:
     # must name the broken slot. Left out: the models with no Entity class (nothing to test) and
     # the two generated open-data models whose bare `label: {sk: ...}` annotations linkml_runtime
     # cannot load (/workspace/chyby.md, scripts/open-data/generate.py).
-    # a pin moves no model (T-6110)
-    needs: changes
-    if: needs.changes.outputs.pins_only != 'true'
+    # The weekly sweep and the release gate only (T-6152: 158 s a push, no catch in 7 days).
+    if: inputs.full
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: "${{ inputs.ref }}" }
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with: { python-version: "3.11" }
       - name: the Model Tools commit
@@ -422,11 +444,14 @@ jobs:
           python3 "$RUNNER_TEMP/platform/tools/model-tools/src/gen_datasets.py" "${models[@]}"
   renovate:
     # renovate.json is valid for the pinned Renovate (T-4954); a config Renovate rejects
-    # opens no update PR at all, which reads exactly like nothing to update.
+    # opens no update PR at all, which reads exactly like nothing to update. The weekly sweep and
+    # the release gate only (T-6152).
+    if: inputs.full
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: "${{ inputs.ref }}" }
       - uses: ./.github/actions/tools
         with: { helmfile: "false" }
       # npx resolves renovate's dependency ranges afresh each run: --before keeps it to releases

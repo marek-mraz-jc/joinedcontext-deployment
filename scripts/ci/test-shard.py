@@ -22,6 +22,7 @@ A file heavier than a quarter of one shard's share goes to every shard, and the 
 so no one file pins a shard (T-5886: test_smoke_script.py weighed 1,393 s of a 3,300 s share).
 """
 import json
+import os
 import re
 import statistics
 import sys
@@ -44,6 +45,15 @@ DURATION = re.compile(r"^(\d+(?:\.\d+)?)s (?:call|setup|teardown)\s+(?:tests/)?(
 
 
 def files() -> list[str]:
+    """Every test file (JC_TEST_FILES unset or `*`), or the ones JC_TEST_FILES names (tests/<name>,
+    space-separated, maybe none): the scoped set of scripts/ci/changes.py, split the same way (T-6152)."""
+    chosen = os.environ.get("JC_TEST_FILES")
+    if chosen is None or chosen.strip() == "*":
+        return all_files()
+    return sorted(Path(f).name for f in chosen.split())
+
+
+def all_files() -> list[str]:
     return sorted(p.name for p in (ROOT / "tests").glob("test_*.py"))
 
 
@@ -87,7 +97,7 @@ def durations(report: Path) -> dict[str, float]:
     """Seconds per test file in one shard's junit report or `pytest --durations=0` log."""
     totals: dict[str, float] = {}
     if report.suffix == ".xml":
-        known = set(files())
+        known = set(all_files())
         for case in ET.parse(report).iter("testcase"):
             # classname is the module path, then the class: tests.test_x.TestY
             name = next((f"{p}.py" for p in case.get("classname", "").split(".") if f"{p}.py" in known), None)
@@ -111,7 +121,7 @@ def record(reports: list[Path], old: dict[str, float] | None = None) -> dict[str
     # A file no report names keeps its old weight (a shard that did not finish); one never measured,
     # or only of tests pytest's log hides (under 5 ms), weighs nothing
     old = old or {}
-    return {name: round(totals[name] if name in totals else old.get(name, 0.0), 1) for name in files()}
+    return {name: round(totals[name] if name in totals else old.get(name, 0.0), 1) for name in all_files()}
 
 
 def main(argv: list[str]) -> int:

@@ -76,8 +76,8 @@ def test_the_gate_waits_on_production_and_holds_no_cluster_credential():
     assert on["push"] == {"tags": ["v*"]} and "workflow_dispatch" in on and "schedule" not in on
     assert flow["permissions"] == {"contents": "read"}
     assert flow["jobs"]["approve"]["environment"] == "production"
-    assert flow["jobs"]["approve"]["needs"] == "diff"
+    assert flow["jobs"]["approve"]["needs"] == ["diff", "sweep"]
     assert "secrets." not in text  # no repository or environment secret is read
-    runs = [step["run"] for job in flow["jobs"].values() for step in job["steps"] if "run" in step]
+    runs = [step["run"] for job in flow["jobs"].values() for step in job.get("steps", []) if "run" in step]
     for word in ("KUBECONFIG", "kubectl", " sync", " apply"):
         assert not [r for r in runs if word in r.replace("`just prod-apply`", "")], word
