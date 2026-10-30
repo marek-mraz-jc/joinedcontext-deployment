@@ -191,7 +191,7 @@ def test_the_recipes_gate_prod_on_a_tag_and_record_every_apply():
     prod = text[text.index("\nprod-apply:"):text.index("\nprod-smoke:")]
     assert prod.index("just _prod-guard") < prod.index("release.py verify HEAD") < prod.index("helmfile")
     assert "release.py record smartcity smartcity" in prod
-    dev = text[text.index("\ndev-apply:"):text.index("\n_smoke ")]
+    dev = text[text.index("\ndev-apply full="):text.index("\n_smoke ")]
     assert dev.index("wait-rollouts.sh dev") < dev.index("release.py record dev dev")
     assert 'release.py show "{{ namespace }}"' in text[text.index("\n_smoke "):text.index("\ndev-smoke:")]
     assert 'git tag --annotate "$tag"' in text

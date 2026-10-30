@@ -151,7 +151,7 @@ if [ ! -e "$mark" ]; then touch "$mark"; echo "getting Rekor public keys: creati
 
 def test_both_applies_verify_before_they_sync():
     justfile = (ROOT / "justfile").read_text()
-    for recipe, env in (("dev-apply", "dev"), ("prod-apply", "smartcity")):
+    for recipe, env in (("dev-apply full='false'", "dev"), ("prod-apply", "smartcity")):
         body = justfile.split(f"\n{recipe}:\n", 1)[1].split("\n\n", 1)[0]
         assert body.index(f"verify-pinned-images.py {env}") < body.index(f"-e {env} sync"), recipe
 

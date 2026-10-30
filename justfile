@@ -479,17 +479,41 @@ _dev-assemble:
 	cp .ci/example-deployments/helmfile.yaml deployment/helmfile.yaml
 	cp -r .ci/example-deployments/environments/. deployment/environments/
 
-# Apply the dev environment to the dev cluster and wait for every rollout
+# Apply the dev environment to the dev cluster and wait for every rollout. Syncs only the
+# releases whose render moved since the commit dev last recorded (T-6135); the whole
+# environment when that cannot be judged safely (scripts/apply-pins.py plan) or with full=true.
 [group('dev cluster')]
-dev-apply:
+dev-apply full='false':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
+	started=$(date -u +%s)
+	selectors=()
+	if [ "{{ full }}" = true ]; then
+		plan=full
+	else
+		base=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.commit}' 2>/dev/null || true)
+		# a base applied from a dirty tree is no base: its render is unknown
+		describe=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.describe}' 2>/dev/null || true)
+		case "$describe" in *-dirty) base="" ;; esac
+		# any failure of the planner is a full sync, never a skipped one
+		plan=$(./scripts/apply-pins.py plan dev "$base") || plan=full
+	fi
+	if [ "$plan" != full ]; then
+		mapfile -t releases < <(printf '%s' "$plan" | sed '/^$/d')
+		for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
+		echo "dev-apply ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
+	else
+		echo "dev-apply: full sync"
+	fi
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
 	./scripts/verify-pinned-images.py dev
-	helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}}
+	if [ "$plan" = full ] || [ "${#selectors[@]}" -gt 0 ]; then
+		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
+	fi
 	./scripts/wait-rollouts.sh dev
+	echo "dev-apply synced and rolled out in $(( $(date -u +%s) - started )) s"
 	# What dev runs now, who applied it and when (T-4955); dev-smoke prints it.
 	./scripts/release.py record dev dev
 

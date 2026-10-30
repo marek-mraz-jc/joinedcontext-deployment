@@ -34,7 +34,10 @@ def test_dev_apply_runs_helmfile_with_four_and_takes_an_override():
         done = subprocess.run(
             ["just", "--dry-run", "dev-apply"], cwd=ROOT, env=env, capture_output=True, text=True, check=True
         )
-        return [line for line in (done.stdout + done.stderr).splitlines() if line.startswith("helmfile")]
+        lines = (line.strip() for line in (done.stdout + done.stderr).splitlines())
+        return [line for line in lines if line.startswith("helmfile")]
 
-    assert dry_run() == ["helmfile -f deployment/helmfile.yaml -e dev sync --concurrency 4"]
-    assert dry_run(JC_HELMFILE_CONCURRENCY="2") == ["helmfile -f deployment/helmfile.yaml -e dev sync --concurrency 2"]
+    # the selectors are empty on a full sync (T-6135)
+    sync = 'helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {} "${{selectors[@]}}"'
+    assert dry_run() == [sync.format(4)]
+    assert dry_run(JC_HELMFILE_CONCURRENCY="2") == [sync.format(2)]
