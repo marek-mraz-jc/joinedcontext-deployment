@@ -2,13 +2,18 @@
 """The releases a range changes, for `just dev-apply` (T-6135) and `just dev-apply-pins` (T-6110).
 
     scripts/apply-pins.py plan <environment> <base>       "full", or the releases whose render moved since <base>
-    scripts/apply-pins.py releases <environment> <base>   the same for a pin-only range (refuses any other file)
-    scripts/apply-pins.py components <environment> <release>...  the components of those releases
+    scripts/apply-pins.py releases <environment> <base>   `<release> <component> local|remote` per release a
+                                                          pin-only range moved (refuses any other file)
 
 An images.yaml feeds every component's values (`.Values.images`, defaults/environment), so the
 Portal's pin also moves agent-runner, gitea-runner and mqtt-brokers objects. Guessing by
-component would miss those; `releases` renders the environment at <base> (a git worktree) and
+component would miss those. `plan` renders the environment at <base> (a git worktree) and
 at HEAD, one directory per release, and names each release with an object added or changed.
+`releases` (T-6155, the per-change path) compares the merged values helmfile hands each release
+instead (`helmfile write-values`, half a render's time): a pin-only range changes no chart and no
+helmfile, so a release renders anything new only when its values moved. `local` marks a release
+whose chart is a directory of its component, which `helmfile sync --skip-deps` syncs without
+adding a chart repository.
 Secret values and checksum/* annotations are masked as scripts/release-diff.py masks them: the
 secrets chart invents fresh values on every render.
 
@@ -23,19 +28,20 @@ assembled defaults), a failed render, a release added or removed, or a CustomRes
 added, removed or changed. An empty range plans no release.
 
 `releases` refuses (exit 3) a range that touches any file other than a components/<c>/images.yaml.
-Both need deployment/ assembled at HEAD (`just _dev-assemble`) and the environment's chart
-repositories added.
+Both need deployment/ assembled at HEAD (`just _dev-assemble`); `plan` also needs the
+environment's chart repositories added.
 """
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
-import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -145,7 +151,55 @@ def releases(environment: str, base: str) -> list[str]:
         others = [f for f in files if not changes.PIN.match(f)]
         raise Refused(f"{base[:12]}..HEAD changes more than pins ({', '.join(others[:5])}); "
                       "run the full `just dev-apply`")
-    return _renders(environment, base, lambda old, new, again: moved(old, new, again))
+    with _base_tree(base) as tree:
+        with ThreadPoolExecutor(2) as pool:
+            for job in [pool.submit(write_values, tree, environment, tree.parent / "old"),
+                        pool.submit(write_values, ROOT, environment, tree.parent / "new")]:
+                job.result()
+        return values_moved(tree.parent / "old", tree.parent / "new")
+
+
+VALUES = ('{{ .Release.Namespace }}/{{ .Release.Name }}/{{ index .Release.Labels "component" }}/'
+          '{{ .Release.Chart | urlquery }}.yaml')
+
+
+def write_values(tree: Path, environment: str, out: Path) -> None:
+    """Each release's merged values to out/<namespace>/<release>/<component>/<chart, url-quoted>.yaml."""
+    done = subprocess.run(
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", environment, "write-values", "--skip-deps",
+         "--output-file-template", f"{out}/{VALUES}"],
+        cwd=tree, capture_output=True, text=True, check=False)
+    if done.returncode:
+        raise Refused(f"write-values of {environment} in {tree} failed:\n{done.stderr[-4000:]}")
+
+
+def release_values(out: Path) -> dict[str, tuple[str, str, object]]:
+    """`namespace/release` -> (component, chart, merged values)."""
+    found = {}
+    for path in out.glob("*/*/*/*.yaml"):
+        namespace, name, component = path.parts[-4:-1]
+        found[f"{namespace}/{name}"] = (component, urllib.parse.unquote_plus(path.stem),
+                                        yaml.safe_load(path.read_text(encoding="utf-8")))
+    return found
+
+
+def values_moved(old: Path, new: Path) -> list[str]:
+    """`<release> <component> local|remote` for each release whose values, chart or component moved."""
+    before, after = release_values(old), release_values(new)
+    if not after:
+        raise Refused("write-values wrote no release")
+    if before.keys() != after.keys():
+        names = sorted(before.keys() ^ after.keys())
+        raise Refused(f"releases added or removed: {', '.join(names[:5])}; run the full `just dev-apply`")
+    out = set()
+    for key, (component, chart, _) in after.items():
+        if before[key] == after[key]:
+            continue
+        if component == "<no value>":
+            raise Refused(f"no component label on the release {key}")
+        local = (ROOT / "components" / component / chart).is_dir()
+        out.add(f"{key.split('/', 1)[1]} {component} {'local' if local else 'remote'}")
+    return sorted(out)
 
 
 def plan(environment: str, base: str) -> list[str]:
@@ -165,39 +219,29 @@ def plan(environment: str, base: str) -> list[str]:
 
 def _renders(environment: str, base: str, judge) -> list[str]:
     """Renders base once and HEAD twice, and hands the three directories to `judge`."""
+    with _base_tree(base) as tree:
+        tmp = tree.parent
+        # the renders at once: each waits on chart pulls and helm, not on one core
+        with ThreadPoolExecutor(3) as pool:
+            for job in [pool.submit(render, tree, environment, tmp / "old"),
+                        pool.submit(render, ROOT, environment, tmp / "new"),
+                        pool.submit(render, ROOT, environment, tmp / "again")]:
+                job.result()
+        return judge(tmp / "old", tmp / "new", tmp / "again")
+
+
+@contextlib.contextmanager
+def _base_tree(base: str):
+    """<base> checked out and assembled in a git worktree under a scratch directory."""
     with tempfile.TemporaryDirectory(prefix="apply-pins-") as tmp:
-        tmp = Path(tmp)
-        git("worktree", "add", "--detach", "-q", str(tmp / "base"), base)
+        tree = Path(tmp) / "base"
+        git("worktree", "add", "--detach", "-q", str(tree), base)
         try:
-            subprocess.run(["just", "_dev-assemble"], cwd=tmp / "base", check=True, capture_output=True,
+            subprocess.run(["just", "_dev-assemble"], cwd=tree, check=True, capture_output=True,
                            env={**os.environ, "JUST_NO_DOTENV": "true"})
-            # the renders at once: each waits on chart pulls and helm, not on one core
-            with ThreadPoolExecutor(3) as pool:
-                for job in [pool.submit(render, tmp / "base", environment, tmp / "old"),
-                            pool.submit(render, ROOT, environment, tmp / "new"),
-                            pool.submit(render, ROOT, environment, tmp / "again")]:
-                    job.result()
-            return judge(tmp / "old", tmp / "new", tmp / "again")
+            yield tree
         finally:
-            git("worktree", "remove", "--force", str(tmp / "base"))
-
-
-def components(environment: str, names: list[str]) -> list[str]:
-    """The `component` label helmfile gives each named release (commonLabels of its helmfile)."""
-    done = subprocess.run(["helmfile", "-f", "deployment/helmfile.yaml", "-e", environment, "list", "--output", "json"],
-                          cwd=ROOT, capture_output=True, text=True, check=False)
-    if done.returncode:
-        raise Refused(f"helmfile list of {environment} failed:\n{done.stderr[-2000:]}")
-    return owners(json.loads(done.stdout), names)
-
-
-def owners(listing: list[dict], names: list[str]) -> list[str]:
-    label = {r["name"]: dict(kv.split(":", 1) for kv in r["labels"].split(",") if ":" in kv).get("component")
-             for r in listing}
-    unknown = [n for n in names if not label.get(n)]
-    if unknown:
-        raise Refused(f"no component label on the release(s) {', '.join(unknown)}")
-    return sorted({label[n] for n in names})
+            git("worktree", "remove", "--force", str(tree))
 
 
 def main(argv: list[str]) -> int:
@@ -210,8 +254,6 @@ def main(argv: list[str]) -> int:
             except Refused as e:
                 print(f"apply-pins: full sync: {e}", file=sys.stderr)
                 print(FULL)
-        elif len(argv) >= 2 and argv[0] == "components":
-            print("\n".join(components(argv[1], argv[2:])))
         else:
             print(__doc__.split("\n\n")[1], file=sys.stderr)
             return 2

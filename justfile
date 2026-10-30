@@ -643,6 +643,9 @@ dev-smoke-full:
 # sync only the releases whose objects moved, wait for their workloads alone, record, and smoke
 # their components (rollouts, routes, edge security headers). T-6155: the per-change path, run for
 # each pin commit as it lands; it prints the seconds from the commit to dev running it smoked.
+# The plan compares each release's merged values (helmfile write-values) at <base> and HEAD; the
+# signature check renders the moved releases alone; a sync of local charts only skips the chart
+# repositories (--skip-deps), and the prepare hook stands down (a pin moves no namespace).
 # A range with any file besides a components/<c>/images.yaml takes the full way instead:
 # `just dev-apply` (scoped by render, T-6135) and `just dev-smoke`. A red rollout or smoke holds
 # its releases in the ConfigMap jc-apply-red: the next per-change apply of a held release is
@@ -657,6 +660,7 @@ dev-apply-pins base='' dry='false' spend_guard='on':
 	set -euo pipefail
 	just _dev-guard
 	just _dev-assemble
+	started=$(date -u +%s)
 	committed=$(git log -1 --format=%ct HEAD)
 	base="{{ base }}"
 	[ -n "$base" ] || base=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.commit}')
@@ -671,16 +675,22 @@ dev-apply-pins base='' dry='false' spend_guard='on':
 		exec just dev-smoke
 	fi
 	[ "$planned" -eq 0 ] || exit "$planned"
-	mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d')
+	# one row per moved release: <release> <component> local|remote
+	rows=$(printf '%s\n' "$moved" | sed '/^$/d')
 	case "{{ spend_guard }}" in
 	on)
-		if grep -qxF agent-runner-proxy <<<"$moved"; then
+		if grep -q '^agent-runner-proxy ' <<<"$rows"; then
 			echo "skipping agent-runner-proxy: the spend guard keeps it at 0 replicas (spend_guard=off syncs it; once the guard lifts, just dev-apply true off brings it to HEAD)"
-			mapfile -t releases < <(printf '%s' "$moved" | sed '/^$/d;/^agent-runner-proxy$/d')
+			rows=$(sed '/^agent-runner-proxy /d' <<<"$rows")
 		fi ;;
 	off) ;;
 	*) echo "spend_guard is on or off, not '{{ spend_guard }}'" >&2; exit 2 ;;
 	esac
+	mapfile -t releases < <(awk 'NF {print $1}' <<<"$rows")
+	components=$(awk 'NF {print $2}' <<<"$rows" | sort -u)
+	# Every moved chart a directory of its component: no chart repository to add, no dependency to build.
+	skip_deps=()
+	awk 'NF && $3 != "local" {exit 1}' <<<"$rows" && skip_deps=(--skip-deps)
 	selectors=()
 	for r in "${releases[@]}"; do selectors+=(--selector "name=$r"); done
 	echo "pins ${base:0:12}..$(git rev-parse --short=12 HEAD): ${releases[*]:-no release moved}"
@@ -700,15 +710,19 @@ dev-apply-pins base='' dry='false' spend_guard='on':
 	fi
 	rc=0
 	if [ "${#releases[@]}" -gt 0 ]; then
-		# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
-		./scripts/verify-pinned-images.py dev
-		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
+		# Every platform digest the synced releases render carries our workflows' signature, or
+		# nothing is applied (T-5564): the render of those releases alone, not of all of dev.
+		render=$(mktemp)
+		trap 'rm -f "$render"' EXIT
+		./scripts/render.sh dev "$render" --deployed "${selectors[@]}"
+		./scripts/verify-pinned-images.py dev --render "$render" --scoped
+		# A pin moves no namespace: the prepare hook (namespaces, mesh annotations) has nothing to do.
+		JC_PREPARE_SKIP=pins helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${skip_deps[@]}" "${selectors[@]}"
 		./scripts/wait-rollouts.sh dev 600 "${releases[@]}" || rc=1
+		echo "dev-apply-pins: planned, verified, synced and rolled out in $(( $(date -u +%s) - started )) s"
 	fi
 	if [ "$rc" -eq 0 ]; then
 		./scripts/release.py record dev dev
-		components=""
-		[ "${#releases[@]}" -eq 0 ] || components=$(./scripts/apply-pins.py components dev "${releases[@]}")
 		for c in $components; do
 			just dev-smoke-component "$c" || rc=1
 		done
