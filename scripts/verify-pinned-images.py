@@ -13,6 +13,13 @@ stops before it changes the cluster.
   scripts/verify-pinned-images.py <environment>          render, then verify (deployment/ assembled)
   scripts/verify-pinned-images.py <env> --render FILE    verify an existing render
 
+  scripts/verify-pinned-images.py <env> --scanned       also the scan record production needs (T-6154)
+
+`--scanned` (the release gate and `just prod-apply`): every digest a repository in SCANNED published
+must also carry the CycloneDX SBOM and the vuln-scan attestation of that repository's
+image-scan.yml on main, which attests only after its HIGH/CRITICAL gate passed. Dev pins a digest
+as soon as image.yml signed it; the scan runs beside, and production waits for it.
+
 `--registry` and `--key` exist for the offline selftest (tests/test_verify_pinned_images.py): a
 throwaway registry on localhost and a local key pair stand in for ghcr.io and the keyless identity.
 """
@@ -45,6 +52,24 @@ IDENTITY = (
 )
 
 
+# Image paths under OWNER (and their sub-paths) whose repository's image-scan.yml attests what
+# its image.yml pushed (T-6154). Antares and the deployment's own images scan in their own lanes.
+SCANNED = {
+    "joinedcontext-platform": "joinedcontext-platform",  # with /checkouts and /model-tools
+    "joinedcontext-portal": "joinedcontext-portal",
+    "joinedcontext-portal-ui": "joinedcontext-portal",
+    "joinedcontext-app-builder": "joinedcontext-portal",
+    "joinedcontext-app-builder-rust": "joinedcontext-portal",
+}
+VULN_SCAN = "https://joinedcontext.com/attestations/vuln-scan/v1"
+
+
+def scanner(image: str, registry: str) -> str | None:
+    """The repository whose image-scan.yml must have attested `image` (repo@digest), or None."""
+    path = image.split("@", 1)[0].removeprefix(f"{registry}/{OWNER}/")
+    return next((repo for prefix, repo in SCANNED.items() if path == prefix or path.startswith(prefix + "/")), None)
+
+
 def references(render: str, registry: str):
     """(every pinned image of ours as `repo@digest`, every `image:` of ours that is not pinned)."""
     prefix = re.escape(f"{registry}/{OWNER}/")
@@ -60,15 +85,17 @@ def references(render: str, registry: str):
     return sorted(pinned), sorted(unpinned)
 
 
-def cosign_verify(image: str, key: str | None) -> str | None:
-    """None when the signature holds, else the reason cosign gave."""
+def cosign_verify(image: str, key: str | None, command=("verify",), identity: str | None = None) -> str | None:
+    """None when the signature (or, with `command` verify-attestation, the attestation) holds,
+    else the reason cosign gave. `identity` asks for that one signer instead of any of IDENTITY."""
     trust = ["--key", key, "--insecure-ignore-tlog=true"] if key else [
-        "--certificate-oidc-issuer", ISSUER, "--certificate-identity-regexp", IDENTITY]
+        "--certificate-oidc-issuer", ISSUER,
+        *(["--certificate-identity", identity] if identity else ["--certificate-identity-regexp", IDENTITY])]
     for attempt in range(3):
         try:
-            run = subprocess.run(["cosign", "verify", *trust, image], check=False, capture_output=True, text=True, timeout=120)
+            run = subprocess.run(["cosign", *command, *trust, image], check=False, capture_output=True, text=True, timeout=120)
         except subprocess.TimeoutExpired:
-            return "cosign verify did not answer within 120 s"
+            return f"cosign {command[0]} did not answer within 120 s"
         if run.returncode == 0:
             return None
         # Parallel cosigns contend for the one local Sigstore trust cache; a locked cache says nothing about
@@ -80,7 +107,22 @@ def cosign_verify(image: str, key: str | None) -> str | None:
     return lines[-1] if lines else f"cosign exited {run.returncode}"
 
 
-def problems(render: str, registry: str, key: str | None) -> tuple[int, list[str]]:
+def scan_problems(image: str, registry: str, key: str | None) -> list[str]:
+    """What the scan record of `image` lacks; empty when its repository has no image-scan.yml."""
+    repo = scanner(image, registry)
+    if repo is None:
+        return []
+    identity = f"https://github.com/{OWNER}/{repo}/.github/workflows/image-scan.yml@refs/heads/main"
+    found = []
+    for kind in ("cyclonedx", VULN_SCAN):
+        why = cosign_verify(image, key, ("verify-attestation", "--type", kind), identity)
+        if why is not None:
+            found.append(f"{image} has no {kind} attestation of {repo}'s image-scan.yml ({why}); production "
+                         "takes only a digest that passed the scan: wait for or rerun image-scan.yml on its commit")
+    return found
+
+
+def problems(render: str, registry: str, key: str | None, scanned: bool = False) -> tuple[int, list[str]]:
     pinned, unpinned = references(render, registry)
     found = [f"{image} is not pinned by digest: pin it with scripts/pin-images.py" for image in unpinned]
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -90,6 +132,9 @@ def problems(render: str, registry: str, key: str | None) -> tuple[int, list[str
                     f"{image} carries no signature from a {OWNER} workflow ({why}); "
                     "pin a digest the image workflow signed (scripts/pin-images.py)"
                 )
+        if scanned:
+            for more in pool.map(lambda i: scan_problems(i, registry, key), pinned):
+                found.extend(more)
     return len(pinned), found
 
 
@@ -105,6 +150,7 @@ def main() -> int:
     parser.add_argument("--render", type=Path, help="an existing render of the environment")
     parser.add_argument("--registry", default="ghcr.io")
     parser.add_argument("--key", help="verify against this public key instead of the keyless identity")
+    parser.add_argument("--scanned", action="store_true", help="also require the image-scan.yml attestations (production)")
     args = parser.parse_args()
     if shutil.which("cosign") is None:
         print("verify-pinned-images: cosign is not installed, so no signature can be verified", file=sys.stderr)
@@ -113,7 +159,7 @@ def main() -> int:
         path = args.render or Path(scratch) / f"{args.environment}.yaml"
         if args.render is None:
             render(args.environment, path)
-        checked, found = problems(path.read_text(), args.registry, args.key)
+        checked, found = problems(path.read_text(), args.registry, args.key, args.scanned)
     for problem in found:
         print(f"verify-pinned-images: {problem}", file=sys.stderr)
     if found:

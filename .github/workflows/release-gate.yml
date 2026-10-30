@@ -62,6 +62,11 @@ jobs:
             git worktree add --detach "${RUNNER_TEMP}/previous" "refs/tags/${PREVIOUS}"
             (cd "${RUNNER_TEMP}/previous" && just _dev-assemble && scripts/render.sh smartcity "${RUNNER_TEMP}/previous.yaml" --deployed)
           fi
+      # Every digest of ours is signed, and each the platform's image-scan.yml covers passed it
+      # (SBOM + vuln-scan attestations): dev pins before the scan, production never (T-6154).
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+      - name: pinned images are signed and scanned
+        run: python3 scripts/verify-pinned-images.py smartcity --render "${RUNNER_TEMP}/release.yaml" --scanned
       - name: job summary
         env:
           TAG: ${{ steps.tag.outputs.tag }}
