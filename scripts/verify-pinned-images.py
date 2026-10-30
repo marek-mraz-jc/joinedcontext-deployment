@@ -52,9 +52,15 @@ IDENTITY = (
 )
 
 
-# Repositories whose image-scan.yml attests what their image.yml pushed (T-6154), keyed by the
-# image path under OWNER: the repository and its image paths.
-SCANNED = {"joinedcontext-platform": "joinedcontext-platform"}
+# Image paths under OWNER (and their sub-paths) whose repository's image-scan.yml attests what
+# its image.yml pushed (T-6154). Antares and the deployment's own images scan in their own lanes.
+SCANNED = {
+    "joinedcontext-platform": "joinedcontext-platform",  # with /checkouts and /model-tools
+    "joinedcontext-portal": "joinedcontext-portal",
+    "joinedcontext-portal-ui": "joinedcontext-portal",
+    "joinedcontext-app-builder": "joinedcontext-portal",
+    "joinedcontext-app-builder-rust": "joinedcontext-portal",
+}
 VULN_SCAN = "https://joinedcontext.com/attestations/vuln-scan/v1"
 
 

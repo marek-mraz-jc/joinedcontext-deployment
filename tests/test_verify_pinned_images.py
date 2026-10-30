@@ -196,7 +196,8 @@ def test_a_preview_or_branch_signature_is_refused(workflow):
 
 def test_scanned_asks_the_platform_image_scan_for_both_attestations(tmp_path):
     # T-6154: production takes a platform digest only with the SBOM and vuln-scan attestations of
-    # the platform's image-scan.yml on main; dev (no --scanned) never asks.
+    # its repository's image-scan.yml on main (the Portal's for the builders); Antares scans in its
+    # own lane; dev (no --scanned) never asks.
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     log = tmp_path / "cosign.log"
@@ -210,9 +211,10 @@ case "$1 $*" in verify-attestation*"$REFUSE"*) echo "none of the attestations ma
     d = lambda c: "sha256:" + c * 64
     gateway = f"ghcr.io/{OWNER}/joinedcontext-platform@{d('1')}"
     checkouts = f"ghcr.io/{OWNER}/joinedcontext-platform/checkouts@{d('2')}"
-    portal = f"ghcr.io/{OWNER}/joinedcontext-portal@{d('3')}"
+    builder = f"ghcr.io/{OWNER}/joinedcontext-app-builder-rust@{d('3')}"
+    broker = f"ghcr.io/{OWNER}/antares-ngsi-ld-context-broker@{d('4')}"
     render = tmp_path / "render.yaml"
-    render.write_text(pod(gateway, checkouts, portal))
+    render.write_text(pod(gateway, checkouts, builder, broker))
     env = {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}", "REFUSE": d("2")}
 
     assert verify(render, env=env).returncode == 0
@@ -222,11 +224,13 @@ case "$1 $*" in verify-attestation*"$REFUSE"*) echo "none of the attestations ma
     result = verify(render, "--scanned", env=env)
 
     asked = [call for call in log.read_text().splitlines() if call.startswith("verify-attestation")]
-    identity = f"--certificate-identity https://github.com/{OWNER}/joinedcontext-platform/.github/workflows/image-scan.yml@refs/heads/main"
+    scan = "--certificate-identity https://github.com/{}/{}/.github/workflows/image-scan.yml@refs/heads/main"
     assert sorted((c.split()[2], c.split()[-1]) for c in asked) == sorted(
         (kind, image) for kind in ("cyclonedx", "https://joinedcontext.com/attestations/vuln-scan/v1")
-        for image in (gateway, checkouts))
-    assert all(identity in c for c in asked)
+        for image in (gateway, checkouts, builder))
+    for call in asked:
+        repo = "joinedcontext-portal" if builder in call else "joinedcontext-platform"
+        assert scan.format(OWNER, repo) in call
     assert result.returncode == 1
     assert f"{checkouts} has no cyclonedx attestation" in result.stderr
     assert "vuln-scan/v1 attestation" in result.stderr and gateway not in result.stderr
