@@ -1,0 +1,50 @@
+name: sweep
+# The checks that left the push path (T-6152, owner 2026-10-30: push to dev under 5 minutes; the
+# security sweeps run before production and weekly when there is a commit): ci.yml with
+# `full: true` (every environment rendered and gated, every test file in six shards, the BBSK demo,
+# the kyverno apply, the model datasets, renovate) and the trivy scan of every pinned image.
+# Weekly, and only when main moved since the last green sweep; the release gate calls it on the
+# release tag and refuses the release unless it is green (release-gate.yml). A dispatch always runs.
+on:
+  schedule: [{ cron: "17 3 * * 1" }]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref: { description: "the commit or tag to sweep", type: string, default: "" }
+permissions: { contents: read }
+jobs:
+  moved:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: { contents: read, actions: read }
+    outputs:
+      run: ${{ steps.moved.outputs.run }}
+    steps:
+      - id: moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCHEDULED: ${{ github.event_name == 'schedule' }}
+        run: |
+          set -eu
+          last=""
+          if [ "$SCHEDULED" = true ]; then
+            last=$(gh run list -R "$GITHUB_REPOSITORY" -w sweep.yml -b main -s success -L 1 --json headSha --jq '.[0].headSha // ""')
+          fi
+          if [ -n "$last" ] && [ "$last" = "$GITHUB_SHA" ]; then
+            echo "main has not moved since the green sweep of ${last}"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+  ci:
+    needs: moved
+    if: needs.moved.outputs.run == 'true'
+    permissions: { contents: read, actions: read }
+    uses: ./.github/workflows/ci.yml
+    with: { full: true, ref: "${{ inputs.ref }}" }
+  pinned-images:
+    needs: moved
+    if: needs.moved.outputs.run == 'true'
+    permissions: { contents: read, packages: read }
+    uses: ./.github/workflows/pinned-images.yml
+    with: { ref: "${{ inputs.ref }}" }

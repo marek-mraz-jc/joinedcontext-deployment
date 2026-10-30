@@ -85,10 +85,18 @@ jobs:
           name: release-diff-${{ steps.tag.outputs.tag }}
           path: ${{ runner.temp }}/release-diff-full.md
           retention-days: 30
+  sweep:
+    # Every check that left the push path (T-6152): every environment, every test file, kyverno
+    # apply, the model datasets, renovate and the trivy scan of every pin, on the release tag. A red
+    # sweep holds the approval, so no release reaches production without a green run of them.
+    needs: diff
+    permissions: { contents: read, actions: read, packages: read }
+    uses: ./.github/workflows/sweep.yml
+    with: { ref: "refs/tags/${{ needs.diff.outputs.tag }}" }
   approve:
     # The environment's required reviewer (owner) approves in the Actions UI; deployments to it are
     # limited to v* tags and main by its deployment policy.
-    needs: diff
+    needs: [diff, sweep]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: production

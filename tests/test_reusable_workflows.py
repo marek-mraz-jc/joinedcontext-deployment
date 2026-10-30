@@ -399,20 +399,23 @@ def test_a_broker_caller_counts_only_in_its_components_namespace(conftest_binary
         assert result.returncode == 1 and f"not {ns}" in result.stdout, (ns, result.stdout)
 
 
-def test_every_pull_request_runs_kyverno_apply_on_the_rendered_manifests():
-    """OPS-40: `kyverno apply` against rendered Helmfile manifests runs before a pull request is
-    admitted, in the lane that runs on every pull request, not in a dispatch-only one."""
+def test_kyverno_apply_on_the_rendered_manifests_runs_before_every_release():
+    """OPS-40: `kyverno apply` against rendered Helmfile manifests runs in ci.yml's full set, which
+    the weekly sweep and the release gate run (T-6152: off the push path, never off the release)."""
     ci = yaml.safe_load((WORKFLOWS / "ci.yml").read_text())
     triggers = ci.get("on", ci.get(True))
     assert "pull_request" in triggers, "ci.yml is the pull-request lane"
-    runs = [
-        step.get("run", "")
-        for job in ci["jobs"].values()
-        for step in job.get("steps", [])
-    ]
-    assert any(".ci/policies/verify-kyverno-policies.sh" in run for run in runs), (
-        "no pull-request step applies the Kyverno policies to the rendered manifests"
-    )
+    assert triggers["workflow_call"]["inputs"]["full"]["type"] == "boolean"
+    steps = [step for job in ci["jobs"].values() for step in job.get("steps", [])]
+    apply = [s for s in steps if ".ci/policies/verify-kyverno-policies.sh" in s.get("run", "")]
+    assert apply and all("inputs.full" in s.get("if", "") for s in apply), "kyverno apply belongs to the full set"
+    assert any(s.get("run") == "kyverno test .ci/policies" and s.get("if") == "matrix.shard == 1" for s in steps)
+    sweep = yaml.safe_load((WORKFLOWS / "sweep.yml").read_text())
+    assert sweep["jobs"]["ci"]["uses"] == "./.github/workflows/ci.yml" and sweep["jobs"]["ci"]["with"]["full"] is True
+    assert sweep["jobs"]["pinned-images"]["uses"] == "./.github/workflows/pinned-images.yml"
+    gate = yaml.safe_load((WORKFLOWS / "release-gate.yml").read_text())
+    assert gate["jobs"]["sweep"]["uses"] == "./.github/workflows/sweep.yml"
+    assert "sweep" in gate["jobs"]["approve"]["needs"], "a release is approved only after a green sweep"
     script = (ROOT / ".ci/policies/verify-kyverno-policies.sh").read_text()
     for env in ("local", "production"):
         assert f"scripts/render.sh {env}" in script, env

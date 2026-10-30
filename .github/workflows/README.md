@@ -29,8 +29,13 @@ only once nothing is meant to grow into that lane (T-2415).
 Within this repository the same workflows are called by path
 (`uses: ./.github/workflows/reusable-gitleaks.yml`); this repository runs the same scan as a step of the `tests` job of `ci.yml` (one billed job fewer, T-0521).
 
-`ci.yml` is the only lane that runs on its own: one render job over the four environments and one
-test job. This repository is private and its Actions minutes are metered, so `ci-full.yml` (Kyverno
+`ci.yml` runs on every push and pull request with the set `scripts/ci/changes.py` picks (T-6152): the
+render job renders and gates `dev` plus the environments a change names, and one test job runs the test
+files that read the changed files. A file every render or test reads, a file no test names or an
+unreadable range takes the full set: every environment, six test shards, the BBSK demo. `sweep.yml` runs
+`ci.yml` with `full: true` (adding the kyverno apply, the model datasets and renovate) and
+`pinned-images.yml` weekly when `main` moved since its last green run, on dispatch, and from the release
+gate on the release tag. This repository is private and its Actions minutes are metered, so `ci-full.yml` (Kyverno
 on the rendered output, the eight k3d deployment variants, the nightly k3d deployment) runs on
 `workflow_dispatch` only until the minutes are back; `kyverno test .ci/policies` also runs in the
 test job, and the dev cluster (`just dev-apply` + `just dev-smoke`) is what proves a deployment
@@ -40,7 +45,7 @@ before anyone relies on it.
 schedule (T-0051, OPS-01, OPS-04). It renders `smartcity` at the tag and at the previous release tag,
 writes the difference to the job summary through `scripts/release-diff.py` (Secret values redacted, the
 whole diff as an artifact), then waits on the GitHub environment `production`, whose required reviewer
-signs off. It holds no cluster credential and applies nothing: prod-deployer applies the approved tag
+signs off; the approval waits on a green `sweep.yml` of the tag as well. It holds no cluster credential and applies nothing: prod-deployer applies the approved tag
 from the sandbox with `just prod-apply` (owner decision 2026-10-24).
 
 ## What a caller has to know
