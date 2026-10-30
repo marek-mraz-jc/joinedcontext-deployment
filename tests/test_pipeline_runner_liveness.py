@@ -3,8 +3,8 @@ stopped and the other streams, and every other project's runner, keep running.
 
 Bento cannot free a stream whose step loops: DELETE /streams/{id} hangs and leaves it listed
 `"active":false` with its core still held. The Portal caps each run (run_queue.rs) and deletes
-it; the runner's liveness command fails on a stream held stopped two probes in a row, and the
-kubelet's restart frees the core. A memory bomb meets the container's own limit. The chaos test
+it; the runner's liveness command fails on a stream still listed stopped ten minutes later, and
+the kubelet's restart frees the core. A memory bomb meets the container's own limit. The chaos test
 runs the pinned image under the probe the chart renders, one container per project as the
 `runner.project` release is one process per project.
 """
@@ -62,18 +62,25 @@ def test_the_runner_lives_by_a_stop_that_ends(dev):
     assert (probe["periodSeconds"], probe["failureThreshold"]) == (60, 2)
 
 
-def probe_command():
-    """The command base-values renders, read from its YAML block (it holds no template)."""
+PATIENCE = 600
+
+
+def probe_command(patience=PATIENCE):
+    """The command base-values renders, read from its YAML block (it holds no template); a
+    docker test shortens the ten minutes a stopped stream may stay listed."""
     text = (ROOT / "components/pipeline-runner/values/runner/base-values.yaml.gotmpl").read_text()
     start = text.index("  liveness:\n    exec:")
     end = text.index("\n    periodSeconds", start)
-    return yaml.safe_load(text[start:end])["liveness"]["exec"]
+    command = yaml.safe_load(text[start:end])["liveness"]["exec"]
+    rendered = f"-v keep={PATIENCE} "
+    assert rendered in command[2]
+    return [*command[:2], command[2].replace(rendered, f"-v keep={patience} ")]
 
 
 def test_the_probe_command_is_the_one_the_chart_renders():
     command = probe_command()
     assert command[:2] == ["sh", "-c"]
-    assert "comm -12 /tmp/stopped /tmp/stopped.now" in command[2]
+    assert "http://127.0.0.1:4195/streams" in command[2]
 
 
 def stopped(name, uptime):
@@ -85,20 +92,24 @@ RUNNING = {"helsinki.feed": {"active": True, "uptime": 812.4, "uptime_str": "13m
 
 @pytest.fixture
 def probe(tmp_path):
-    """Runs the rendered probe over /streams answers read from fixtures: a `wget` on PATH
-    prints the next answer, and the probe keeps its state under tmp_path instead of /tmp."""
+    """Runs the rendered probe over /streams answers read from fixtures at a given clock: a
+    `wget` and a `date` on PATH print the next answer and the time, and the probe keeps its
+    state under tmp_path instead of /tmp. Returns (alive, what the probe printed)."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    answer = tmp_path / "streams.json"
-    wget = bin_dir / "wget"
-    wget.write_text(f"#!/bin/sh\ncat {answer}\n")
-    wget.chmod(0o755)
+    answer, clock = tmp_path / "streams.json", tmp_path / "clock"
+    for name, body in (("wget", f"cat {answer}"), ("date", f"cat {clock}")):
+        stub = bin_dir / name
+        stub.write_text(f"#!/bin/sh\n{body}\n")
+        stub.chmod(0o755)
     command = probe_command()[2].replace("/tmp/", f"{tmp_path}/")
 
-    def run(streams):
+    def run(streams, at):
         answer.write_text(json.dumps(streams, separators=(",", ":")))
+        clock.write_text(f"{1_793_000_000 + at}\n")
         env = {"PATH": f"{bin_dir}:/usr/bin:/bin"}
-        return subprocess.run(["sh", "-c", command], env=env, check=False).returncode == 0
+        done = subprocess.run(["sh", "-c", command], env=env, check=False, capture_output=True, text=True)
+        return done.returncode == 0, done.stdout
 
     return run
 
@@ -106,27 +117,64 @@ def probe(tmp_path):
 def test_two_runs_of_one_pipeline_each_seen_finished_keep_the_runner_alive(probe):
     # T-6140: helsinki.hsl-departures runs often under one stream id; each probe saw a different
     # run that had just finished, and the id-only probe restarted the runner every ~40 min.
-    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 15.204118553)})
-    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 14.871903377)})
-    assert probe({**RUNNING, **stopped("helsinki.hsl-departures", 15.002771649)})
+    for minute, uptime in enumerate((15.204118553, 14.871903377, 15.002771649) * 5):
+        alive, _ = probe({**RUNNING, **stopped("helsinki.hsl-departures", uptime)}, at=60 * minute)
+        assert alive, f"minute {minute}"
 
 
-def test_a_stream_held_stopped_across_two_probes_fails_the_probe(probe):
+def test_a_finished_run_the_portal_deletes_minutes_late_keeps_the_runner_alive(probe):
+    # T-6140 07:22Z: one finished run listed across three probes restarted ~300 streams. The
+    # Portal deletes a finished run on its queue tick, which under load came minutes late.
+    late = stopped("praha.pid-vehicles", 50.16)
+    for minute in range(10):
+        alive, said = probe({**RUNNING, **late}, at=60 * minute)
+        assert alive and said == "", f"minute {minute}"
+    assert probe(RUNNING, at=600) == (True, "")
+
+
+def test_a_stream_held_stopped_ten_minutes_fails_the_probe_and_names_it(probe):
     held = stopped("helsinki.loop", 6.012405858)
-    assert probe({**RUNNING, **held}), "the first sight of a stopped stream is a finished run"
-    assert not probe({**RUNNING, **held}), "the same stopped stream a probe later never ended"
+    assert probe({**RUNNING, **held}, at=0)[0], "the first sight of a stopped stream is a finished run"
+    assert probe({**RUNNING, **held}, at=540)[0], "nine minutes is the Portal still deleting"
+    alive, said = probe({**RUNNING, **held, **stopped("a.once", 1.5)}, at=600)
+    assert not alive, "the same stopped stream ten minutes later never ended"
+    assert "helsinki.loop (uptime 6.012405858 s, stopped 600 s)" in said
+    assert "a.once" not in said, "only the held stream is named"
+    assert not probe({**RUNNING, **held}, at=660)[0], "it keeps failing until the restart"
 
 
 def test_runs_and_deletes_between_probes_keep_the_runner_alive(probe):
-    assert probe(RUNNING)
-    assert probe({**RUNNING, **stopped("a.once", 0.000664608)})
-    assert probe(RUNNING)
-    assert probe({})
+    assert probe(RUNNING, at=0)[0]
+    assert probe({**RUNNING, **stopped("a.once", 0.000664608)}, at=60)[0]
+    assert probe(RUNNING, at=120)[0]
+    assert probe({}, at=180)[0]
+    # The same id and uptime back later is a new sighting, not the old one held.
+    assert probe({**RUNNING, **stopped("a.once", 0.000664608)}, at=900)[0]
+
+
+def test_a_state_file_from_the_older_probe_counts_as_a_first_sighting(probe, tmp_path):
+    # /tmp outlives a container restart; the id-only probe wrote lines without a time.
+    (tmp_path / "stopped").write_text('"helsinki.loop":{"active":false,"uptime":6.01\n')
+    assert probe({**RUNNING, **stopped("helsinki.loop", 6.01)}, at=0)[0]
+
+
+def test_a_streams_api_that_does_not_answer_fails_the_probe(tmp_path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "wget").write_text("#!/bin/sh\nexit 1\n")
+    (bin_dir / "wget").chmod(0o755)
+    command = probe_command()[2].replace("/tmp/", f"{tmp_path}/")
+    done = subprocess.run(["sh", "-c", command], env={"PATH": f"{bin_dir}:/usr/bin:/bin"},
+                          check=False, capture_output=True, text=True)
+    assert done.returncode != 0 and "did not answer" in done.stdout
 
 
 def image():
     pin = yaml.safe_load((ROOT / "components/pipeline-runner/images.yaml").read_text())["pipeline-runner"]["runner"]
     return f"{pin['repository']}:{pin['tag']}@{pin['digest']}"
+
+
+PROBE_PATIENCE = 2
 
 
 class Runner:
@@ -165,7 +213,9 @@ class Runner:
         return answer, time.monotonic() - began
 
     def live(self):
-        result = subprocess.run(["docker", "exec", self.name, *probe_command()], check=False, capture_output=True)
+        """The rendered probe with a patience of PROBE_PATIENCE seconds instead of ten minutes."""
+        result = subprocess.run(["docker", "exec", self.name, *probe_command(PROBE_PATIENCE)],
+                                check=False, capture_output=True)
         return result.returncode == 0
 
     def cpu(self):
@@ -237,8 +287,9 @@ def test_a_looping_stream_is_stopped_and_every_other_stream_runs_on(runners):
     assert answers_within_2s(b)["b.good"]["active"] is True
     assert a.call("GET", "/streams/a.good")["active"] is True
 
-    # Held stopped at two probes in a row: liveness fails and the kubelet restarts the process.
+    # Held stopped past the patience: liveness fails and the kubelet restarts the process.
     assert a.live(), "the first sight of a stopped stream is a finished run"
+    time.sleep(PROBE_PATIENCE + 1)
     assert not a.live(), "the same stream still held is a stop that never ended"
     a.restarted()
     assert a.live()
@@ -274,7 +325,8 @@ def test_a_pipeline_run_again_under_its_id_between_probes_keeps_the_runner_alive
     second = answers_within_2s(a)["a.often"]
     assert second["active"] is False and second["uptime"] != first["uptime"]
     assert a.live(), "a new run that finished is not the earlier run held"
-    assert not a.live(), "the same finished run still listed a probe later is held"
+    time.sleep(PROBE_PATIENCE + 1)
+    assert not a.live(), "the same finished run still listed past the patience is held"
 
 
 @requires_docker
