@@ -40,3 +40,41 @@ gitea:
               - user: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 # preview.steward@hel.fi
             role: steward
             scope: { project: praha }
+        # Data writes are decided by Policies (owner 2026-10-30 07:2xZ): preview.steward reads and
+        # edits every type of each project's main space. No `information` = every type.
+        projects__helsinki__spaces__helsinki__policies__preview-steward-write.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: Policy
+          metadata:
+            name: preview-steward-write
+            namespace: helsinki
+            title: { en: The owner's preview user reads and edits every type of the space (dev only) }
+          spec:
+            contextSpaceRef: { kind: ContextSpace, name: helsinki }
+            assigner: did:web:{orgDomain}
+            assignee: { kind: user, id: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 } # preview.steward@hel.fi
+            operations: [retrieveOps, updateAttrs, createEntity, deleteEntity]
+        projects__banskabystrica__spaces__banskabystrica-mesto__policies__preview-steward-write.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: Policy
+          metadata:
+            name: preview-steward-write
+            namespace: banskabystrica
+            title: { en: The owner's preview user reads and edits every type of the space (dev only) }
+          spec:
+            contextSpaceRef: { kind: ContextSpace, name: banskabystrica-mesto }
+            assigner: did:web:banskabystrica.sk
+            assignee: { kind: user, id: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 } # preview.steward@hel.fi
+            operations: [retrieveOps, updateAttrs, createEntity, deleteEntity]
+        projects__praha__spaces__praha-mesto__policies__preview-steward-write.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: Policy
+          metadata:
+            name: preview-steward-write
+            namespace: praha
+            title: { en: The owner's preview user reads and edits every type of the space (dev only) }
+          spec:
+            contextSpaceRef: { kind: ContextSpace, name: praha-mesto }
+            assigner: did:web:praha.eu
+            assignee: { kind: user, id: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 } # preview.steward@hel.fi
+            operations: [retrieveOps, updateAttrs, createEntity, deleteEntity]
