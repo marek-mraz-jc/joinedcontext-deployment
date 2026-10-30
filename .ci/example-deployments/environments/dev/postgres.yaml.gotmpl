@@ -43,12 +43,15 @@ postgres:
     # before. Two days, not 30 (T-5772): the store's volume sits on the node disk Postgres runs on,
     # and the pipelines write about 40 G of WAL a day (2026-10-26: 98 G of WAL in two days, the disk
     # at 88 %). Seven days would hold about 280 G of a 306 G disk. Dev's data comes back from the
-    # seeds; the drill restores to its own run's time, so two days of bases and WAL cover it.
+    # seeds; the drill restores to its own run's time, so a day of bases and WAL covers it.
+    # One day, not two (T-6144): barman keeps the base before the window, so 2d held three 13G
+    # bases and ~2.5 days of gzip WAL (61G, ~24G a day at 4.2 GB/h raw): 99G, the disk at 88 %
+    # (2026-10-30). 1d keeps two bases and ~1.5 days of WAL, about 63G, the disk near 75 %.
     # Prod (smartcity) and the production profile keep their own values (test_postgres_backup.py).
     backups:
       enabled: true
       target: 'artifact-store'
-      retentionPolicy: '2d'
+      retentionPolicy: '1d'
   # The nightly pg_dumpall onto a node volume, on dev beside the archive above, so the monthly
   # drill rehearses restoring the only backup prod (smartcity) has today (T-5556). Dev only: prod
   # sets it in its own global values. Without the broker's 81 GB and CKAN's datastore (measured
