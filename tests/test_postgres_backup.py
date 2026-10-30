@@ -162,10 +162,11 @@ def test_apps_db_and_the_store_let_the_archive_through_on_dev(dev):
     assert [p["port"] for r in egress for p in r["ports"]] == [9000]
 
 
-def test_dev_keeps_two_days_of_backups_and_production_keeps_thirty(rendered, production):
-    """T-5772: dev's WAL archive (about 40 G a day) shares the node disk with Postgres, so dev keeps
-    two days. The override is dev's alone: production keeps 30 days."""
+def test_dev_keeps_one_day_of_backups_and_production_keeps_thirty(rendered, production):
+    """T-5772, T-6144: dev's WAL archive (about 24 G a day) and its 13 G bases share the node disk
+    with Postgres; 2d held three bases and filled the disk to 88 %, so dev keeps one day. The
+    override is dev's alone: production keeps 30 days."""
     dev = [d for d in rendered("dev") if d.get("kind") == "Cluster" and d["metadata"]["name"] == "postgres-cluster"]
     assert len(dev) == 1
-    assert dev[0]["spec"]["backup"]["retentionPolicy"] == "2d"
+    assert dev[0]["spec"]["backup"]["retentionPolicy"] == "1d"
     assert only(production, "Cluster")["spec"]["backup"]["retentionPolicy"] == "30d"
