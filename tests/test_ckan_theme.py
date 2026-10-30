@@ -1131,11 +1131,9 @@ def test_the_footer_offers_the_assistant_as_a_disclosure_a_keyboard_opens():
     assert '<details class="jc-assistant" id="jc-assistant">' in footer and "<span>{{ h.jc_t('assistant') }}</span></summary>" in footer
     assert 'title="{{ h.jc_t(\'assistant\') }}"' in footer and 'loading="lazy"' in footer
     assert 'referrerpolicy="no-referrer"' in footer
-    # T-4280: the chat opens in Slovak or the visitor's own choice in it; the page's language
-    # (T-4253) no longer reaches it.
+    # The chat opens in the page's language (owner 2026-10-30, replacing T-4280).
     # T-4635: embed mode, so the chat's header carries the ✕ that closes the panel.
-    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1&amp;scheme=light"' in footer
-    assert "lang=" not in footer.split("<iframe", 1)[1].split(">", 1)[0]
+    assert '<iframe src="{{ widget }}?embed=1&amp;dock=1&amp;lang={{ h.lang() }}&amp;scheme=light"' in footer
 
 
 def test_the_assistant_leaves_the_page_room_and_takes_a_phone_s_whole_screen():
@@ -2092,7 +2090,7 @@ def render(template, theme, **context):
     sources = {k: re.sub(r"{%\s*snippet [^%]*%}", "", v) for k, v in sources.items()}
     env = jinja2.Environment(loader=jinja2.DictLoader(sources), autoescape=True)
     h = types.SimpleNamespace(jc_assistants=theme.jc_assistants, jc_t=theme.jc_t, jc_mcp_install=theme.jc_mcp_install,
-                              jc_page=theme.jc_page,
+                              jc_page=theme.jc_page, lang=lambda: "en",
                               jc_assistant_widget=lambda publisher: context.get("widget"),
                               url_for=lambda name, **kw: "/assistants" + ("/" + kw["id"] if "id" in kw else ""),
                               url_for_static=lambda path: path)
