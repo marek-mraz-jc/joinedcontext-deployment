@@ -1,0 +1,42 @@
+---
+gitea:
+  bootstrap:
+    rawValues:
+      seed:
+        # Dev only (owner 2026-10-30, live preview): the Keycloak dev user preview.steward
+        # (created by hand in the dev realm, never in prod) holds the steward role in the three
+        # demo projects, as demo.steward does. Remove these files the day the owner closes the
+        # preview; the seed then deletes them from the configuration repository (T-2392).
+        users__assignments__preview-stewards-helsinki.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: RoleBinding
+          metadata:
+            name: preview-stewards-helsinki
+            namespace: org
+          spec:
+            subjects:
+              - user: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 # preview.steward@hel.fi
+            role: steward
+            scope: { project: helsinki }
+        users__assignments__preview-stewards-banskabystrica.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: RoleBinding
+          metadata:
+            name: preview-stewards-banskabystrica
+            namespace: org
+          spec:
+            subjects:
+              - user: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 # preview.steward@hel.fi
+            role: steward
+            scope: { project: banskabystrica }
+        users__assignments__preview-stewards-praha.yaml: |
+          apiVersion: joinedcontext.com/v1alpha1
+          kind: RoleBinding
+          metadata:
+            name: preview-stewards-praha
+            namespace: org
+          spec:
+            subjects:
+              - user: 168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586 # preview.steward@hel.fi
+            role: steward
+            scope: { project: praha }
