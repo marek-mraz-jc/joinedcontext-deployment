@@ -90,6 +90,11 @@ hooks:
           echo "Skipping prepare hook for helmfile command: $cmd"
           exit 0
         fi
+        # just dev-apply-pins (T-6155): a pin-only sync moves no namespace and no annotation
+        if [ "${JC_PREPARE_SKIP:-}" = pins ]; then
+          echo "Skipping prepare hook: a pin-only sync changes no namespace"
+          exit 0
+        fi
         {{- if gt (len $namespaceNames) 0 }}
         {{- range $ns := $namespaceNames }}
         {{- if $createNamespaces }}

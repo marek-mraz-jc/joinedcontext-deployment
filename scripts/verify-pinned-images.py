@@ -12,6 +12,7 @@ stops before it changes the cluster.
 
   scripts/verify-pinned-images.py <environment>          render, then verify (deployment/ assembled)
   scripts/verify-pinned-images.py <env> --render FILE    verify an existing render
+  scripts/verify-pinned-images.py <env> --render FILE --scoped   a render of some releases, which may name none
 
   scripts/verify-pinned-images.py <env> --scanned       also the scan record production needs (T-6154)
 
@@ -151,6 +152,8 @@ def main() -> int:
     parser.add_argument("--registry", default="ghcr.io")
     parser.add_argument("--key", help="verify against this public key instead of the keyless identity")
     parser.add_argument("--scanned", action="store_true", help="also require the image-scan.yml attestations (production)")
+    parser.add_argument("--scoped", action="store_true",
+                        help="the render holds only some releases (just dev-apply-pins): naming none of our images is fine")
     args = parser.parse_args()
     if shutil.which("cosign") is None:
         print("verify-pinned-images: cosign is not installed, so no signature can be verified", file=sys.stderr)
@@ -165,7 +168,7 @@ def main() -> int:
     if found:
         print(f"verify-pinned-images: {len(found)} problem(s) in {args.environment}; nothing was applied", file=sys.stderr)
         return 1
-    if checked == 0:
+    if checked == 0 and not args.scoped:
         print(f"verify-pinned-images: the {args.environment} render names no {OWNER} image", file=sys.stderr)
         return 1
     print(f"verify-pinned-images: {checked} {OWNER} digest(s) of {args.environment} carry our signature")
