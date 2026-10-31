@@ -37,7 +37,7 @@ rules:
     resources: [daemonsets, deployments, statefulsets]
     verbs: [get, list]
   - apiGroups: [argoproj.io]
-    resources: [applications]
+    resources: [applications, appprojects]
     verbs: [get, list]
   - apiGroups: [autoscaling]
     resources: [horizontalpodautoscalers]
