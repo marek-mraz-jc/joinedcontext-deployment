@@ -591,11 +591,23 @@ def test_the_job_mounts_every_project_s_seed_and_the_releases_split_it(dev):
     job = one(dev, "Job", "gitea-bootstrap")["spec"]["template"]["spec"]
     seed = next(v for v in job["volumes"] if v["name"] == "seed")
     assert {s["configMap"]["name"] for s in seed["projected"]["sources"]} == set(rendered)
-    assert [n for n in rendered if n.startswith("gitea-bootstrap-seed")] == ["gitea-bootstrap-seed"]
+    assert "gitea-bootstrap-seed" in rendered
+    indexed = set()
+    for seed_dir in ("helsinki", "banskabystrica", "bbsk", "praha", "zilina", "slovensko"):
+        index = yaml.safe_load((ROOT / f"components/context-gateway/seed/{seed_dir}/index.yaml").read_text())
+        indexed |= {p.replace("/", "__") for p in index.values()}
     for name, cm in rendered.items():
         release = cm["metadata"]["labels"]["app.kubernetes.io/instance"]
         if name == "gitea-bootstrap-seed":
             assert release == "gitea-bootstrap" and not any(k.startswith("projects__") for k in cm["data"])
+            continue
+        # A project file an environment adds to the bootstrap seed (dev's preview-steward-write
+        # Policies, T-6166) is the chart's own per-project group; never a file of a seed index.
+        grouped = re.fullmatch(r"gitea-bootstrap-seed-([a-z0-9-]+)", name)
+        if grouped:
+            assert release == "gitea-bootstrap"
+            assert all(k.startswith(f"projects__{grouped[1]}__") for k in cm["data"]), name
+            assert not set(cm["data"]) & indexed, f"{name} holds a seed index file"
             continue
         shard, part = re.fullmatch(r"gitea-seed-s(\d+)-(.+)", name).groups()
         project = re.sub(r"--\d+$", "", part)
