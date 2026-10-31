@@ -203,7 +203,7 @@ def test_an_unchanged_secrets_release_is_skipped_although_it_renders_fresh_value
     (None, "no full sync recorded"),
     ("", "no full sync recorded"),
     ("yesterday", "no full sync recorded"),
-    (f"{datetime.now(UTC) - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 7.0 h ago"),
+    (f"{datetime.now(UTC) - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 7."),  # collected before it runs: 7.0 or 7.1 h
 ])
 def test_the_periodic_full_sync_converges_drift(monkeypatch, tmp_path, full_at, reason):
     # a scoped plan judges the render, never live objects: drift waits for the periodic full sync
