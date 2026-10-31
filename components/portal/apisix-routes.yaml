@@ -110,18 +110,9 @@ portal-public-docs:
   priority: 5
   pluginConfig: portal-public
 
-# The public documentation (T-4063, API/00 §1): the API chapter and the User Guide, server-rendered
-# by the Portal from the pages it was built with, so a citizen with no account can read how to use
-# a public Endpoint. The Portal serves no other chapter on this path. The plugin config is
-# portal-public's: a session is read when there is one and nobody is redirected.
-portal-public-guide:
-  name: portal-public-guide
-  description: The public API and User Guide pages, edge session optional
-  upstream: portal.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "portal") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
-  uri: '/docs/*'
-  subDomain: portal
-  priority: 5
-  pluginConfig: portal-public
+# The documentation (T-4063, API/00 §1) has no route of its own since T-6200: `/docs/*` is
+# portal-ui's, so a visitor is sent to sign in like on every other Portal page, and the Portal
+# itself refuses a request without a session.
 
 # The public setup page of a named MCP server (T-4169): `/connect/{project}/{name}`, a page with no
 # login in front that asks the server's own address for its tools as an anonymous caller would, and

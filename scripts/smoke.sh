@@ -891,21 +891,16 @@ else
 	skip "portal bundle (route portal-public-assets not configured in this instance)"
 fi
 
-echo "public documentation"
-if has_route portal-public-guide; then
-	# T-4063: a citizen reads how to use a public Endpoint with no account, from the apex address
-	# as the API pages print it; the apex redirects to the Portal host, which answers the page.
-	guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
-	for _ in 1 2 3; do
-		case $guide in *'<title>Live Updates over WebSocket</title>'*) break ;; esac
-		wait_429 "$(curl -sS -o /dev/null -w '%header{x-ratelimit-reset}' --max-time 20 "$portal/docs/" 2>/dev/null)"
-		guide=$(curl -sSL --max-time 20 "$base/docs/API/07-websocket" 2>/dev/null || true)
-	done
+echo "documentation"
+if has_route portal-ui; then
+	# T-6200: the API chapter and the User Guide are for signed-in people only; /docs/* has no
+	# route of its own, so portal-ui's login answers a visitor before the Portal is reached.
+	guide=$(curl -sS --max-time 20 "$portal/docs/API/07-websocket" 2>/dev/null || true)
 	case $guide in
-	*'<title>Live Updates over WebSocket</title>'*) ok "the WebSocket guide reads without signing in" ;;
-	*) ko "the WebSocket guide does not read without signing in" ;;
+	*'<title>Live Updates over WebSocket</title>'*) ko "the WebSocket guide reads without signing in" ;;
+	*) ok "the WebSocket guide does not read without signing in" ;;
 	esac
-	status 404 "no Operations page is public" "$portal/docs/Operations/00-intro"
+	status 302 "a visitor asking for a guide page is sent to sign in" "$portal/docs/User-Guide/01-getting-started"
 fi
 
 echo "catalogue"

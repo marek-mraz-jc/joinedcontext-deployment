@@ -63,8 +63,6 @@ EXPECTED_ROUTES = {
     },
     # T-5627: the front door, exact path; the Portal sends a visitor without a session to /catalogue.
     "portal-home": {"uri": "/", "priority": 5, "upstream_id": "portal-home", "host": PORTAL_HOST},
-    # T-4063: the API and User Guide pages, edge session optional.
-    "portal-public-guide": {"uri": "/docs/*", "priority": 5, "upstream_id": "portal-public-guide", "host": PORTAL_HOST},
     # T-3105: the gateway delivers the Portal's live-update notifications here, no login (API/01 §32).
     "portal-live-notify": {
         "uri": "/live-notify/*", "priority": 5, "upstream_id": "portal-live-notify", "host": PORTAL_HOST,
@@ -236,9 +234,13 @@ def test_the_public_pages_pass_a_visitor_without_a_session(apisix_config, path):
 
 
 @requires_helmfile
-@pytest.mark.parametrize("path", ["/projects/demo/home", "/home", "/projects", "/glossary/x", "/glossaryx", "/accessibility-admin"])
+@pytest.mark.parametrize("path", [
+    "/projects/demo/home", "/home", "/projects", "/glossary/x", "/glossaryx", "/accessibility-admin",
+    "/docs/API/07-websocket", "/docs/User-Guide/01-getting-started",
+])
 def test_every_other_portal_page_keeps_the_login(apisix_config, path):
-    """T-5293: the public pages are exact paths; a private page beside them still logs in first."""
+    """T-5293: the public pages are exact paths; a private page beside them still logs in first.
+    T-6200: the documentation under /docs is for signed-in people only."""
     _, parsed = apisix_config
     assert unauth_action_on_portal_host(parsed, path) == ("portal-ui", "auth"), path
 
