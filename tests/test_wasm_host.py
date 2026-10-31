@@ -88,6 +88,9 @@ def test_each_shard_reads_its_own_placement_key_and_login_from_files_never_varia
     assert env["JC_WASM_PLACEMENTS"].startswith(mounts["placement"] + "/")
     assert env["JC_WASM_S3_KEY_FILE"].startswith(mounts["store"] + "/")
     assert env["JC_WASM_DB_PASSWORD_FILE"] == mounts["db"] + "/password"
+    # T-6195: file links on the Apps' hosts, never the store's in-cluster address.
+    assert env["JC_WASM_APPS_HOST"].startswith("apps.") and "svc.cluster.local" not in env["JC_WASM_APPS_HOST"]
+    assert "JC_WASM_S3_PUBLIC_ENDPOINT" not in env
 
 
 def test_the_edge_and_the_portal_alone_reach_a_shard_and_a_shard_reaches_the_gateway_the_database_the_store_its_token_service_and_the_portal(docs):
