@@ -108,10 +108,6 @@ ROUTE_CLASSES = {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "a public Endpoint's API documentation (T-3265): the page holds no data, it reads the OpenAPI document the gateway generates under the caller's rights",
     },
-    "portal-public-guide": {
-        "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
-        "why": "the API chapter and the User Guide (T-4063): pages the Portal was built with, the same for everyone and holding no data; no other chapter is served on the path",
-    },
     "portal-public-connect": {
         "reach": EDGE_SESSION, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "a public named MCP server's setup page (T-4169): the same bundle for everyone, holding no data; it asks the server's own address for its tools without credentials",
