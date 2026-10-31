@@ -217,6 +217,24 @@ def test_a_pod_that_asks_for_a_token_without_a_reason_is_refused(pod_security, t
 
 @requires_kyverno
 @requires_helm
+def test_a_projected_api_token_without_a_reason_is_refused(pod_security, tmp_path):
+    """F-R2DEP3-002: automount off and the same token mounted as a projected volume."""
+    failed = failed_rules(pod_security, FIXTURES / "api-token-projected-unjustified-pod.yaml",
+                          CNPG_SA, tmp_path)
+    assert "api-token-needs-a-reason" in failed
+
+
+@requires_kyverno
+@requires_helm
+def test_a_projected_token_for_another_audience_needs_no_reason(pod_security, tmp_path):
+    """A token bound to Keycloak's audience is refused by the API server: no API client."""
+    failed = failed_rules(pod_security, FIXTURES / "keycloak-audience-token-pod.yaml",
+                          CNPG_SA, tmp_path)
+    assert "api-token-needs-a-reason" not in failed
+
+
+@requires_kyverno
+@requires_helm
 def test_a_pod_outside_this_deployment_keeps_its_token(pod_security, tmp_path):
     """traefik, cert-manager and kyverno itself are API clients by trade. A cluster-wide
     token mutation would break them on their next restart."""
@@ -278,6 +296,17 @@ def test_every_rendered_job_satisfies_the_policies_this_cluster_enforces(rendere
     )
 
 
+def api_audience_tokens(spec: dict) -> list[str]:
+    """Volumes projecting a ServiceAccount token with no audience: the API server's own, the
+    same API client token automount would mount (F-R2DEP3-002)."""
+    return [
+        volume["name"]
+        for volume in spec.get("volumes") or []
+        for source in (volume.get("projected") or {}).get("sources") or []
+        if "serviceAccountToken" in source and not (source["serviceAccountToken"] or {}).get("audience")
+    ]
+
+
 @pytest.mark.parametrize("env", ["local", "dev", "production"])
 def test_every_workload_that_mounts_an_api_token_justifies_it(rendered, env):
     """`justify-api-token-access` refuses a pod that mounts a ServiceAccount token without
@@ -295,7 +324,7 @@ def test_every_workload_that_mounts_an_api_token_justifies_it(rendered, env):
             continue
         template = doc["spec"]["template"]
         spec = template["spec"]
-        if spec.get("automountServiceAccountToken") is not True:
+        if spec.get("automountServiceAccountToken") is not True and not api_audience_tokens(spec):
             continue
         reason = (template["metadata"].get("annotations") or {}).get(
             "security.joinedcontext.com/api-access-reason"

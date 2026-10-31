@@ -17,6 +17,10 @@ podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 podAnnotations:
+  # justify-api-token-access: the projected kube-api-token below (bound to no RBAC).
+  security.joinedcontext.com/api-access-reason: >-
+    The kubernetes identity provider reads the cluster's issuer discovery with its own token to
+    verify federated ServiceAccount tokens; Keycloak's ServiceAccount is bound to no role.
   config.linkerd.io/skip-outbound-ports: "25,465,587,7800,57800"
   config.linkerd.io/skip-inbound-ports: "7800,57800"
   {{- /* The theme is copied in at start-up and Keycloak caches it, so a changed theme or
