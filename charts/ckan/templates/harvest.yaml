@@ -21,7 +21,9 @@ metadata:
   labels:
     {{- include "ckan.labels" (dict "root" $ "part" $part) | nindent 4 }}
 spec:
-  schedule: {{ $.Values.harvest.schedule | quote }}
+  # A source may name its own minute, so two harvests (each up to 1Gi, both reading the
+  # gateway through one edge address) do not start together (T-6218).
+  schedule: {{ .schedule | default $.Values.harvest.schedule | quote }}
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
@@ -82,7 +84,7 @@ spec:
                 - name: OD_HIDDEN
                   value: {{ keys ($.Values.hidden | default dict) | sortAlpha | toJson | quote }}
                 - name: HARVEST_CONFIG
-                  value: {{ merge (dict "source" (printf "%s-%s" (.kind | default "nkod") .name)) (omit . "name") | toJson | quote }}
+                  value: {{ merge (dict "source" (printf "%s-%s" (.kind | default "nkod") .name)) (omit . "name" "schedule") | toJson | quote }}
               command: [python3, -c]
               args:
                 - {{ printf "%s\n%s" ($.Files.Get "files/od-standards.py") ($.Files.Get (printf "files/harvest-%s.py" (.kind | default "nkod"))) | toJson }}

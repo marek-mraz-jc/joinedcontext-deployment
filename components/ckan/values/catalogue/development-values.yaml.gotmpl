@@ -126,6 +126,8 @@ harvest:
     # list (103 datasets); its DCAT feeds are per layer and name the publisher `{{"{{"}}source{{"}}"}}`.
     - name: bbsk
       kind: hub
+      # Half an hour after banskabystrica's (harvest.schedule), never beside it (T-6218).
+      schedule: '53 3 * * *'
       hub: https://opendata.bbsk.sk
       allowedHosts: [opendata.bbsk.sk, services-eu1.arcgis.com, www.arcgis.com]
       organization: bbsk

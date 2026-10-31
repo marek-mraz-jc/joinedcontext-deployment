@@ -239,7 +239,7 @@ jobs:
         # job fewer on a metered private repository (T-0521). The reusable workflow stays for
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
-      - run: pip install --quiet pytest pytest-xdist pyyaml "jsonschema>=4.18" pyshacl jinja2 linkml==1.12.0
+      - run: pip install --quiet --require-hashes --no-deps -r .github/requirements-tests.txt
       - name: the docs this release serves hold for the code it runs (T-4483, TS-19)
         # The Portal's /docs is the docs commit pinned beside its digest; the pinned Portal and
         # platform commits and this tree are checked out and that docs commit's own checkers

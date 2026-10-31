@@ -283,6 +283,21 @@ OWL_ARTIFACT = {
 
 @requires_docker
 @requires_helm
+def test_an_address_the_turtle_writer_cannot_write_is_left_out_and_the_catalogue_still_writes(serialize, shapes):
+    """T-6218 (R2DEP1 F-008): a spatial, source, licence or service address with a space or a
+    quote is an IRI rdflib refuses to write, and one such record made /catalog.ttl a 500 for every
+    dataset, as the media type did in T-4586. The profile leaves such an address out."""
+    bad = "https://opendata.praha.eu/a b\"c"
+    service = dict(OWL_ARTIFACT, id="c3f0a3e2-0000-4000-8000-000000000003", format="NGSI-LD",
+                   url=bad, mimetype="application/ld+json")
+    graph = serialize("catalog", PROFILES, extras={"spatial_uri": bad, "license_url": bad,
+                                                    "source": json.dumps([bad])}, resources=[service])
+    assert check.violations(graph, shapes, DCAT.Catalog) == []
+    assert not [o for o in graph.objects() if " " in str(o) and isinstance(o, URIRef)]
+
+
+@requires_docker
+@requires_helm
 def test_a_media_type_with_a_parameter_is_its_bare_iana_type_and_the_catalogue_still_writes(serialize, shapes):
     """T-4586: /catalog.ttl answered 500 because `text/turtle; profile="owl"` became an IRI with a
     space and quotes. The register names the bare type; a profile that is no IRI is dropped, one
