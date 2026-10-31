@@ -10,6 +10,7 @@ private must never come back to someone else.
 import http.server
 import itertools
 import json
+import re
 import shutil
 import socket
 import subprocess
@@ -28,7 +29,8 @@ pytestmark = pytest.mark.xdist_group("docker-apisix-cache")
 
 ROOT = Path(__file__).resolve().parent.parent
 ROUTES = (ROOT / "components/context-gateway/apisix-routes.yaml").read_text()
-ROUTE = yaml.safe_load(ROUTES.replace("{{", "#").replace("}}", ""))["api-context-endpoint"]
+ALL = yaml.safe_load(ROUTES.replace("{{", "#").replace("}}", ""))
+ROUTE, HISTORY, BULK = ALL["api-context-endpoint"], ALL["api-context-endpoint-history"], ALL["api-context-endpoint-bulk"]
 VALUES = ROOT / "components/context-gateway/values/gateway/base-values.yaml.gotmpl"
 
 
@@ -46,8 +48,25 @@ def test_only_the_anonymous_data_host_route_caches():
     for var in ("$host", "$request_uri", "$http_accept", "$http_accept_language", "$http_accept_encoding",
                 "$http_ngsild_results_restricted"):
         assert var in cache["cache_key"], var
-    # One route: the apex and Portal-host routes carry bearers and never cache.
-    assert ROUTES.count("proxy-cache:") == 1
+    # The data host's plain reads and its history (T-6185): the apex and Portal-host routes carry
+    # bearers and never cache, and the bulk route's `file.*` exports are never stored.
+    assert ROUTES.count("proxy-cache:") == 2
+    assert "proxy-cache" not in BULK["plugins"]
+
+
+def test_the_history_route_caches_as_the_reads_do_and_keeps_the_bulk_limit():
+    """T-6185: the temporal history leaves the bulk route for one of its own on the data host, with
+    the reads' cache block and the bulk route's concurrency limit; the exports stay where they were."""
+    assert (HISTORY["subDomain"], HISTORY["uri"], HISTORY["pluginConfig"]) == ("api", "/api/endpoint/*", "context-endpoint")
+    assert HISTORY["plugins"]["proxy-cache"] == ROUTE["plugins"]["proxy-cache"]
+    assert HISTORY["plugins"]["limit-conn"] == BULK["plugins"]["limit-conn"]
+    assert HISTORY["timeout"] == BULK["timeout"] and HISTORY["priority"] > BULK["priority"]
+    history = re.compile(HISTORY["vars"][0][2])
+    assert history.search("/api/endpoint/abc/ngsi-ld/v1/temporal/entities")
+    assert history.search("/api/endpoint/abc/ngsi-ld/v1/temporal/entities/urn:ngsi-ld:T:1")
+    for path in ("/api/endpoint/abc/file.csv", "/api/endpoint/abc/ngsi-ld/v1/entities",
+                 "/api/endpoint/file.csv/mcp", "/api/endpoint/abc/ws"):
+        assert not history.search(path), path
 
 
 @requires_helmfile
@@ -64,8 +83,10 @@ def test_every_cache_zone_a_route_names_is_one_the_apisix_config_declares(render
     assert named and named <= zones, (named, zones)
 
 
-def test_the_gateway_marks_anonymous_reads_public_for_five_seconds():
-    assert 'JC_GATEWAY_PUBLIC_MAX_AGE: "5"' in VALUES.read_text()
+def test_the_gateway_marks_anonymous_reads_public_for_a_minute():
+    # T-6185: the gateway's upper bound (PUBLIC_MAX_AGE_LIMIT), so one hour's views of a chart
+    # share its history reads; a revoked public grant reaches anonymous readers 60 s late at most.
+    assert 'JC_GATEWAY_PUBLIC_MAX_AGE: "60"' in VALUES.read_text()
 
 
 class Gateway(http.server.BaseHTTPRequestHandler):
@@ -105,9 +126,12 @@ def edge(tmp_path_factory):
                                      "apisix:\n  proxy_cache:\n    cache_ttl: 10s\n    zones:\n"
                                      "    - name: disk_cache_one\n      memory_size: 50m\n      disk_size: 1G\n"
                                      "      disk_path: /tmp/disk_cache_one\n      cache_levels: \"1:2\"\n")
-    rules = {"routes": [{"id": "r", "uri": "/api/endpoint/*",
-                         "upstream": {"type": "roundrobin", "nodes": {f"upstream:{server.server_port}": 1}},
-                         "plugins": {"proxy-cache": ROUTE["plugins"]["proxy-cache"]}}]}
+    upstream = {"type": "roundrobin", "nodes": {f"upstream:{server.server_port}": 1}}
+    # The committed blocks of the three data-host routes, at their committed priorities; one
+    # upstream copy each (a shared dict dumps as a YAML alias, and APISIX then drops the routes).
+    rules = {"routes": [{"id": name, "uri": route["uri"], "priority": route["priority"], "upstream": dict(upstream),
+                         "plugins": route["plugins"], **({"vars": route["vars"]} if "vars" in route else {})}
+                        for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK))]}
     (tmp / "apisix.yaml").write_text(yaml.safe_dump(rules) + "#END\n")
     port = free_port()
     name = f"apisix-api-cache-{port}"
@@ -183,3 +207,23 @@ def test_a_read_with_a_link_context_neither_reads_nor_fills_the_cache(edge):
     again, headers = get(url, Link=context)
     assert again["n"] not in (linked["n"], plain["n"]) and headers.get("Apisix-Cache-Status") != "HIT"
     assert get(url)[0] == plain
+
+
+def test_an_anonymous_history_read_is_kept_and_a_token_or_a_session_is_never_served_from_it(edge):
+    url = edge + "/api/endpoint/s/ngsi-ld/v1/temporal/entities?type=A&timerel=after&timeAt=2026-10-31T06:00:00Z"
+    first, _ = get(url)
+    again, headers = get(url)
+    assert again == first and headers["Apisix-Cache-Status"] == "HIT"
+    with_token, headers = get(url, Authorization="Bearer person")
+    assert with_token["n"] != first["n"] and headers.get("Apisix-Cache-Status") != "HIT"
+    with_cookie, headers = get(url, Cookie="session=person")
+    assert with_cookie["n"] != first["n"] and headers.get("Apisix-Cache-Status") != "HIT"
+    assert get(url)[0] == first
+
+
+def test_an_export_is_never_stored_although_the_gateway_marks_it_public(edge):
+    # The gateway marks an anonymous file.* export `public, max-age=N` as it does a read (T-6185).
+    url = edge + "/api/endpoint/s/file.csv?type=A"
+    one, _ = get(url)
+    two, headers = get(url)
+    assert one["n"] != two["n"] and headers.get("Apisix-Cache-Status") is None

@@ -304,6 +304,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "api-context-endpoint's bulk exports (T-4717): the same chain, 10 at once per client",
     },
+    "api-context-endpoint-history": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "api-context-endpoint's temporal history (T-6185): the bulk route's 10 at once, anonymous answers kept at the edge",
+    },
     "api-mcp-hub": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "context-mcp-hub on the data host (T-4630): the gateway decides each call as the named Endpoint's own",

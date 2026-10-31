@@ -258,6 +258,9 @@ def test_space_reads_and_writes_count_apart(rendered):
             # T-5611: the realm's discovery documents drop registration_endpoint and keep the
             # config's headers (tests/test_keycloak_discovery.py).
             assert "labels" not in route and set(route["plugins"]) == {"response-rewrite"}, route["id"]
+        elif route["id"] == "api-context-endpoint-history":
+            # T-6185: the data host's history keeps the bulk limit and the reads' edge cache.
+            assert "labels" not in route and set(route["plugins"]) == {"limit-conn", "proxy-cache"}, route["id"]
         elif route["id"] == "api-context-endpoint":
             # T-5900: the data host keeps the edge cache of anonymous reads (tests/test_edge_api_cache.py).
             assert "labels" not in route and set(route["plugins"]) == {"proxy-cache"}, route["id"]
