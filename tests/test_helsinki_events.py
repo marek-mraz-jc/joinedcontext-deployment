@@ -27,12 +27,21 @@ FIXTURE = Path(__file__).resolve().parent / "fixtures/helsinki/linked-events/upc
 URN = "urn:ngsi-ld:{}:hel.fi:helsinki:{}"
 
 
-def processors(first: str, page: str) -> list[dict]:
-    """The mapping with its mode fixed by `first` (the step that reads the clock) and every
-    request to the register answered by the mapping `page`."""
+#: The ask of the space answered as if it held every target a page links.
+HOLDS_ALL = ('meta held = this.map_each(e -> [e.superEvent.object.or(null), e.refPointOfInterest.object.or(null)])'
+             '.flatten().filter(t -> t != null).join(" ")')
+
+
+def processors(first: str, page: str, held: list[str] | None = None) -> list[dict]:
+    """The mapping with its mode fixed by `first` (the step that reads the clock), every request
+    to the register answered by the mapping `page`, and the ask of the space which link targets
+    it holds answered by `held` (every target when None; an empty list is also a failed ask)."""
     steps = yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]
     assert "now()" in steps[1]["mapping"], "the second step chooses the sweep by the clock"
     steps[1] = {"mapping": first}
+    asks = [i for i, step in enumerate(steps) if "try" in step.get("branch", {}).get("processors", [{}])[0]]
+    assert len(asks) == 1, "one ask of the space for the link targets"
+    steps[asks[0]] = {"mapping": HOLDS_ALL if held is None else f"meta held = {json.dumps(' '.join(held))}"}
     for step in steps:
         if "branch" in step:
             assert step["branch"]["processors"][-1]["http"]["url"].startswith("https://api.hel.fi/linkedevents/v1/event/?")
@@ -40,9 +49,9 @@ def processors(first: str, page: str) -> list[dict]:
     return steps
 
 
-def run(document: bytes, first: str, page: str = "root = {}") -> tuple[list[dict], str]:
+def run(document: bytes, first: str, page: str = "root = {}", held: list[str] | None = None) -> tuple[list[dict], str]:
     config = {"input": {"stdin": {"scanner": {"to_the_end": {}}}},
-              "pipeline": {"processors": processors(first, page)},
+              "pipeline": {"processors": processors(first, page, held)},
               "output": {"stdout": {"codec": "lines"}}, "logger": {"level": "info", "format": "logfmt"}}
     result = subprocess.run(
         ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
@@ -84,6 +93,20 @@ def test_the_recorded_page_maps_to_valid_events_and_drops_each_bad_row_by_reason
     assert museum["thematic"]["value"][0] == "everyday"
     # The publisher is the source a per-source count reads back (T-5666).
     assert museum["dataProvider"] == {"type": "Property", "value": "ahjo:u4804001010"}
+
+
+@requires_docker
+def test_an_event_links_only_targets_the_space_holds_and_is_written_either_way():
+    """F-R2BNT3-004: the gateway refuses a whole Event whose link names an entity the space does
+    not hold (DM-70). A link to an unheld parent or venue is left out and the event still lands."""
+    dance_id = URN.format("Event", "helsinki-agpg4hzhzq")
+    venue = URN.format("PointOfInterest", "servicemap-48547")
+    events, _ = run(FIXTURE.read_bytes(), FULL, held=[venue])
+    dance = {e["id"]: e for e in events}[dance_id]
+    assert dance["refPointOfInterest"]["object"] == venue and "superEvent" not in dance
+    failed, _ = run(FIXTURE.read_bytes(), FULL, held=[])
+    assert {e["id"] for e in failed} == {e["id"] for e in events}
+    assert not any("superEvent" in e or "refPointOfInterest" in e for e in failed)
 
 
 @requires_docker

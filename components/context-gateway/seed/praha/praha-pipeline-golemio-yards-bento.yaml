@@ -50,13 +50,15 @@ pipeline:
             map words {
               root = if this.type() == "string" { this.trim().re_replace_all("\\s+", " ") } else { "" }
             }
+            # Only a police desk is named after its unit when the record has no name of its own.
+            let set = this.set
             let rows = this.features.map_each(f -> {
               "c": f.geometry.coordinates.catch(null),
               "p": f.properties.catch({}),
               "key": f.properties.id.catch("").string().apply("slug"),
               "at": f.properties.updated_at.apply("at").catch("")
             }).map_each(r -> r.assign({
-              "name": if r.p.name.apply("words") != "" { r.p.name.apply("words") } else if r.p.note.apply("words") != "" {
+              "name": if r.p.name.apply("words") != "" { r.p.name.apply("words") } else if $set == "police" && r.p.note.apply("words") != "" {
                 "Městská policie Praha: %v%v".format(r.p.note.apply("words"), if r.p.address.street_address.apply("words") != "" { ", " + r.p.address.street_address.apply("words") } else { "" })
               } else { "" }
             }))

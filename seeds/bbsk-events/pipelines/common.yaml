@@ -100,8 +100,14 @@
     # The organizer the feed names, else the body whose calendar this is (the inventory row); an aggregator's
     # row names none, so its event keeps no organizer (owner 2026-10-22: optional). Name and web site only: a feed's
     # organizer e-mail or phone may be a person's and stays on the source's page.
+    # E-mails and phone numbers, Slovak and Czech: national with a leading 0 (0905 123 456), international with or
+    # without a space (+421 905 123 456, +420222333444) and a Czech national number, which has no leading 0
+    # (222 333 444, 777123456), for every store the tail serves (praha-akce too, F-R2BNT3-002).
+    map uncontactable {
+      root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+42[01] ?|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\b[2-7][0-9]{2} ?[0-9]{3} ?[0-9]{3}\\b", "") }
+    }
     map uncontact {
-      root = if this == null { null } else { this.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
+      root = if this == null { null } else { this.apply("uncontactable").re_replace_all("(?i)\\b(tel|mobil|e-?mail|kontakt)\\.?:?", "").re_replace_all("\\s+", " ").re_replace_all("^[ ,;:-]+|[ ,;:-]+$", "").(t -> if t == "" { null } else { t }) }
     }
     let named = this.organizer.name.or(null).apply("text").apply("uncontact")
     let organizer = if $named != null { { "name": $named.slice(0, [$named.length(), 300].min()), "url": this.organizer.url.or(null).apply("link") }.filter(kv -> kv.value != null) } else { @events.organizer }
@@ -148,7 +154,7 @@
       # A source that states no licence gives its facts only: what, when, where and the link back
       # (integrator 2026-10-20, T-4894); its text stays on its own page.
       # Contact e-mails and phone numbers stay on the source's page: they may name a person.
-      "description": if @events.facts_only { null } else { this.description.apply("text").(d -> if d != null { d.re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
+      "description": if @events.facts_only { null } else { this.description.apply("text").apply("uncontactable").(d -> if d != null { d.re_replace_all("\\s+", " ").trim() } else { null }).(d -> if d != null && d != "" { d.slice(0, [d.length(), 2000].min()) } else { null }).apply("prop") },
       "url": $link.apply("prop"),
       "organizer": $organizer.apply("prop"),
       "source": { "type": "Property", "value": @events.source },

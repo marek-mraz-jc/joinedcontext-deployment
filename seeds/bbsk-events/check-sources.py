@@ -29,12 +29,26 @@ MAX_BYTES = 4_000_000
 TIMEOUT = 20
 
 
+class SameHostRedirect(urllib.request.HTTPRedirectHandler):
+    """Follows a redirect only to https on the host asked: robots.txt was read for that host alone."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        to = urllib.parse.urlsplit(urllib.parse.urljoin(req.full_url, newurl))
+        if to.scheme != "https" or to.hostname != urllib.parse.urlsplit(req.full_url).hostname:
+            raise urllib.error.HTTPError(req.full_url, code, f"redirect off the host to {to.scheme}://{to.hostname}", headers, fp)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+OPENER = urllib.request.build_opener(SameHostRedirect)
+
+
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        return r.headers.get("content-type", ""), r.read(MAX_BYTES).decode(
-            "utf-8", "replace"
-        )
+    with OPENER.open(req, timeout=TIMEOUT) as r:
+        body = r.read(MAX_BYTES + 1)
+        if len(body) > MAX_BYTES:
+            raise ValueError(f"the answer is larger than {MAX_BYTES} bytes, more than a source page should be")
+        return r.headers.get("content-type", ""), body.decode("utf-8", "replace")
 
 
 def today():

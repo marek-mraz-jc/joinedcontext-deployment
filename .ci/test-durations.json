@@ -38,6 +38,7 @@
  "test_barcelona_urbanism.py": 18.1,
  "test_barcelona_weather_forecast.py": 9.9,
  "test_basemap.py": 0.0,
+ "test_bbsk_check_sources.py": 0.5,
  "test_bbsk_events.py": 22.5,
  "test_bbsk_events_geocode.py": 0.1,
  "test_bbsk_events_pipelines.py": 109.3,
