@@ -6,7 +6,9 @@ cluster does with them is `dev-smoke`'s.
 """
 
 import json
+import re
 from pathlib import Path
+from urllib.parse import unquote
 
 import pytest
 import yaml
@@ -212,3 +214,25 @@ def test_keycloak_makes_the_subtree_root_and_the_administrator():
     users = yaml.safe_load((ROOT / "components/keycloak/demo-users.yaml").read_text())
     assert users["demo.barcelona"]["groups"] == ["barcelona"]
     assert users["demo.barcelona"]["realmRoles"] == ["portal-approver"]
+
+
+def test_every_open_data_bcn_query_with_a_limit_fails_the_run_when_its_answer_reaches_it():
+    """F-R2BNT1-004 (T-6215): a DataStore SQL query ends in LIMIT N, so an answer of N rows may be
+    cut short. Its mapping refuses such an answer, or the rows past N vanish without a word."""
+    unguarded, limits = [], 0
+    for pipeline in sorted(BARCELONA.glob("barcelona-pipeline-*.yaml")):
+        if pipeline.name.endswith("-bento.yaml"):
+            continue
+        bento = pipeline.with_name(pipeline.stem + "-bento.yaml").read_text()
+        sql = bento
+        ref = (yaml.safe_load(pipeline.read_text())["spec"].get("source") or {}).get("dataSourceRef")
+        for source in BARCELONA.glob("barcelona-datasource-*.yaml"):
+            doc = yaml.safe_load(source.read_text())
+            if ref and doc["metadata"]["name"] == ref["name"]:
+                sql += unquote(doc["spec"].get("http", {}).get("url", ""))
+        for n in sorted(set(re.findall(r"\bLIMIT (\d+)", sql))):
+            limits += 1
+            if f"length() >= {n} " not in bento:
+                unguarded.append(f"{pipeline.name}: LIMIT {n}")
+    assert not unguarded, unguarded
+    assert limits >= 5, "the agenda, equipaments, traffic counters, accidents and trees queries are checked"

@@ -28,13 +28,18 @@ pipeline:
           let at = "%sT%s:00".format(this.day, this.time.or("00:00")).ts_parse("2006-01-02T15:04:05")
           root = "%sT%s:00%s".format(this.day, this.time.or("00:00"), $at.ts_format("Z07:00", "Europe/Bratislava"))
         }
+        # WordPress renders a title as HTML: tags off, then entities to text, as the shared events
+        # tail does (`text`), so `&#8211;` is a dash and `<em>` never reaches the name.
+        map title {
+          root = this.or("").string().strip_html().unescape_html().trim()
+        }
         map clock {
           root = if this.or("").string().re_match("^[0-2][0-9]:[0-5][0-9]$") { this } else { null }
         }
-        root = this.or([]).filter(e -> e.id.type() == "number" && e.title.rendered.or("").trim() != "" && e.meta.date_start.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") && e.event_categories.or([]).apply("category") != null).map_each(e -> {
+        root = this.or([]).filter(e -> e.id.type() == "number" && e.title.rendered.apply("title") != "" && e.meta.date_start.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") && e.event_categories.or([]).apply("category") != null).map_each(e -> {
           "id": "urn:ngsi-ld:%v:%v:%v:event-%v".format("Event", "banskabystrica.sk", env("JC_SPACE"), e.id.int64()),
           "type": "Event",
-          "name": { "type": "LanguageProperty", "languageMap": { "sk": e.title.rendered.unescape_html().trim() } },
+          "name": { "type": "LanguageProperty", "languageMap": { "sk": e.title.rendered.apply("title") } },
           "startDate": { "type": "Property", "value": { "day": e.meta.date_start, "time": e.meta.time_start.apply("clock") }.apply("local") },
           "startTime": if e.meta.time_start.apply("clock") == null { null } else { { "type": "Property", "value": e.meta.time_start } },
           "endDate": if e.meta.date_end.or("").string().re_match("^[0-9]{4}-[0-9]{2}-[0-9]{2}$") { { "type": "Property", "value": { "day": e.meta.date_end, "time": e.meta.time_end.apply("clock") }.apply("local") } } else { null },

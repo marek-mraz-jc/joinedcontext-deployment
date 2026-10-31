@@ -22,6 +22,8 @@ pipeline:
           throw("the trees answer is %d bytes, more than the 2 MiB read".format(content().length()))
         } else if this.success.or(false) != true {
           throw("Open Data BCN refused the trees query: %s".format(this.error.format_json(no_indent: true).or("no reason given")))
+        } else if this.result.records.or([]).length() >= 1000 {
+          throw("the trees answered %d rows, the LIMIT 1000 of its query: raise it, or the rows past it are dropped".format(this.result.records.length()))
         } else { this.result.records.or([]) }
         let placed = $rows.map_each(r -> {
           "id": r.id.or("").string().trim(),

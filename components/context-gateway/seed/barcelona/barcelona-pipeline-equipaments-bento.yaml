@@ -85,6 +85,8 @@ pipeline:
             throw("the family answer is over 16 MiB")
           } else if this.success.or(false) != true {
             throw("Open Data BCN refused the query: %s".format(this.error.format_json(no_indent: true).or("no reason given")))
+          } else if this.result.records.or([]).length() >= 20000 {
+            throw("the family answered %d rows, the LIMIT 20000 of its query: raise it, or the rows past it are dropped".format(this.result.records.length()))
           } else { this.result.records.or([]) }
     # A family the portal refuses is logged and left out of this run; the others still write.
     - catch:

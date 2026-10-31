@@ -8,7 +8,8 @@ pipeline:
   processors:
     # An answer over 16 MiB is not the agenda; an empty agenda is a broken source, not a quiet
     # city; an agenda whose newest change is older than three days (three of its daily updates)
-    # is stale. Each fails the run visibly instead of writing nothing or old rows.
+    # is stale; an answer of 20000 rows reached the LIMIT of the bcn-agenda query and may be cut
+    # short. Each fails the run visibly instead of writing nothing, old rows or part of them.
     - mapping: |
         let rows = this.result.records.or([])
         let newest = $rows.map_each(r -> r.modified.or("")).sort().index(-1).or("")
@@ -19,6 +20,8 @@ pipeline:
           throw("Open Data BCN refused the agenda query: %s".format(this.error.format_json(no_indent: true).or("no reason given")))
         } else if $rows.length() == 0 {
           throw("the Barcelona agendas list no current activity: nothing is written")
+        } else if $rows.length() >= 20000 {
+          throw("the Barcelona agendas answered %d rows, the LIMIT 20000 of the bcn-agenda query: raise it, or the rows past it are dropped".format($rows.length()))
         } else if $newest < $floor {
           throw("the Barcelona agendas are stale: the newest change is %s, more than three days old".format($newest))
         } else { $rows }
