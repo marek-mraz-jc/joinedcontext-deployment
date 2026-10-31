@@ -43,7 +43,11 @@
 {{- if and $logo (not (regexMatch "^[A-Za-z0-9._-]+\\.svg$" $logo)) }}
 {{- fail (printf "branding.logo must be an .svg file name, not %q" $logo) }}
 {{- end }}
-{{- if regexMatch "(?i)<script|<foreignobject|\\son[a-z]+\\s*=|javascript:" $logoSvg }}
+{{- /* A plain drawing and nothing that runs (F-R2DEP2-004): no scripting element, no event
+       attribute however it is separated from the tag (`<svg/onload=`), no character or entity
+       reference that could spell `javascript:` past this check, and no link out of the file
+       (`href` to anything but a `#fragment` of the drawing itself). */}}
+{{- if regexMatch "(?i)<(script|foreignobject|iframe|embed|object|handler)[\\s/>]|<!|[\\s/\"'`]on[a-z]+\\s*=|javascript:|&#|&[a-z][a-z0-9]*;|href\\s*=\\s*[\"']?[^\"'#\\s]" $logoSvg }}
 {{- fail "branding.logoSvg carries script; the logo is served from the login origin and must be a plain drawing" }}
 {{- end }}
 {{- $hasLogo := and $logo $logoSvg }}

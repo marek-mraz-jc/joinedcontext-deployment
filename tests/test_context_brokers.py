@@ -120,6 +120,12 @@ def test_no_broker_reaches_another_brokers_database(docs):
         # Prometheus too, where monitoring.prometheusNamespace names its namespace (not on dev).
         assert {"context-gateway-gateway", "portal-portal"} <= callers <= {"context-gateway-gateway", "portal-portal", "prometheus"}
         assert f"context-broker-{other}" not in json.dumps(db) + json.dumps(pod)
+        # F-R2DEP2-017: a further broker delivers a notification straight to its subscriber, as
+        # `main` does, on the same ports to the same public range; nowhere inside the cluster.
+        def delivery(spec):
+            return [(rule["to"], rule["ports"]) for rule in spec["egress"]
+                    if any("ipBlock" in p for p in rule.get("to", []))]
+        assert delivery(pod) == delivery(policies["context-broker"]["spec"]), delivery(pod)
     # Neither reaches the platform's cluster, which only `main` does.
     platform = [d for d in policies.values() if d["spec"]["podSelector"].get("matchLabels", {}).get("cnpg.io/cluster") == "postgres-cluster"]
     assert "context-broker-archive" not in json.dumps(platform) and "context-broker-sensors" not in json.dumps(platform)

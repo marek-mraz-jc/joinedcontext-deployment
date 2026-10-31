@@ -30,17 +30,9 @@ model-tools:
         - protocol: TCP
           port: 53
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            # The public internet only: no pod, node, service, API server or metadata address
-            # behind 443, whatever URL an import was handed (T-2559).
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-              - 169.254.0.0/16
-              - 127.0.0.0/8
-              - 100.64.0.0/10
+        # The public internet only: no pod, node, service, API server or metadata address
+        # behind 443, whatever URL an import was handed (T-2559).
+        - publicInternet: true
       ports:
         - protocol: TCP
           port: 443

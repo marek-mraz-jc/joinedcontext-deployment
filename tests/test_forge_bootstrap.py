@@ -12,6 +12,7 @@ testable is that its script is valid shell and that every branch of it is guarde
 the last test reads.
 """
 
+import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -103,6 +104,21 @@ def test_the_job_may_touch_only_the_secrets_it_writes(local):
     )
     assert binding["roleRef"]["kind"] == "Role", "a ClusterRole here would be namespace-wide"
     assert [s["name"] for s in binding["subjects"]] == ["gitea-bootstrap"]
+
+    # F-R2DEP2-005: `create` cannot name a Secret, so an admission policy holds it to the token
+    # Secrets and to types the cluster fills with nothing (never service-account-token).
+    policy = next(d for d in local if d.get("kind") == "ValidatingAdmissionPolicy"
+                  and d["metadata"]["name"].endswith("-gitea-bootstrap-secrets"))
+    namespace = binding["metadata"]["namespace"]
+    assert policy["spec"]["failurePolicy"] == "Fail"
+    assert policy["spec"]["matchConditions"][0]["expression"] == (
+        f'request.userInfo.username == "system:serviceaccount:{namespace}:gitea-bootstrap"')
+    check = policy["spec"]["validations"][0]["expression"]
+    assert "object.metadata.name in " + json.dumps(sorted(TOKEN_SECRETS), separators=(",", ":")) in check, check
+    assert 'object.type in ["Opaque", "kubernetes.io/dockerconfigjson"]' in check, check
+    bound = next(d for d in local if d.get("kind") == "ValidatingAdmissionPolicyBinding"
+                 and d["spec"]["policyName"] == policy["metadata"]["name"])
+    assert bound["spec"]["validationActions"] == ["Deny"]
 
 
 @requires_helmfile

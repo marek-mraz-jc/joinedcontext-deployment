@@ -200,6 +200,19 @@ def test_the_applications_move_to_their_own_organization_and_machine_user(script
 
 
 @requires_helmfile
+def test_a_configuration_repository_named_like_an_application_stays_where_it_is(script, tmp_path):
+    """F-R2DEP2-016: the move takes `{project}_{name}` repositories; a configRepo whose name
+    holds `_` is the configuration itself and never leaves its organization."""
+    forge = Forge(tmp_path, {})
+    held = state(forge)
+    held["repos"] = {"helsinki_bikes": {"files": {}, "head": "c" * 40}}
+    forge.state.write_text(json.dumps(held))
+    run = forge.run(script, REPO="city_config", **APART)
+    assert run.returncode == 0, run.stderr
+    assert state(forge)["moved"] == {"helsinki_bikes": "joinedcontext-apps"}
+
+
+@requires_helmfile
 def test_a_reader_of_the_configuration_reads_every_application_in_their_own_organization(script, tmp_path):
     """T-3030, PF-79, AP-78: after the move the apps organization had no readers team, so no
     reader opened an App's repository. The Job gives it the same read-only teams, including every

@@ -37,12 +37,14 @@ context-space:
               end
             end
           end
-    # Class 2 (authenticated API): 1,200 requests per minute per client identity.
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity and address.
+    # The bearer alone let a caller with a fresh made-up bearer per request open a fresh bucket
+    # each time (F-R2DEP2-003); the address keeps that caller to one bucket per bearer it sends.
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
@@ -189,12 +191,13 @@ context-space-portal:
               end
             end
           end
-    # Class 2 (authenticated API): 1,200 requests per minute per client identity.
+    # Class 2 (authenticated API): 1,200 requests per minute per client identity and address,
+    # as on context-space (F-R2DEP2-003).
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true

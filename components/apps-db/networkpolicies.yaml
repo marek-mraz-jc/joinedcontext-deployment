@@ -47,6 +47,9 @@ apps-db:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
   ingress:

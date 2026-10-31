@@ -241,6 +241,13 @@ def test_keycloak_accepts_the_gateway_without_the_mesh(rendered, env):
     peers = [peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name")
              for d in docs for rule in d["spec"].get("ingress") or [] for peer in rule.get("from") or []]
     assert "context-gateway-gateway" in peers, peers
+    # F-R2DEP2-002: every rule names its ports; a rule without them opens JGroups (7800, 57800).
+    for d in docs:
+        for rule in d["spec"].get("ingress") or []:
+            assert rule.get("ports"), (d["metadata"]["name"], rule)
+            names = {peer.get("podSelector", {}).get("matchLabels", {}).get("app.kubernetes.io/name") for peer in rule.get("from") or []}
+            if d["metadata"]["name"] == "keycloak" and "keycloakx" not in names:
+                assert {p["port"] for p in rule["ports"]} == {8080}, (d["metadata"]["name"], rule)
 
 
 MESH_PORTS = {4143, 4190, 4191}

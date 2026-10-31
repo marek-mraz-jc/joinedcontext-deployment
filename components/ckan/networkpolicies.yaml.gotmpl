@@ -11,12 +11,26 @@ ckan-sso:
     - Egress
   egress:
     # The realm's discovery document, its token endpoint and its userinfo endpoint. The
-    # issuer is a public host, so it is named by address: 443 for the edge, and 8443 for the
-    # kube-proxy DNAT a request from inside the cluster to its own public address takes (the
-    # forge's policy documents the same pair).
+    # issuer is a public host: an edge in front of the cluster on 443, or the cluster's own
+    # public address, which the node rewrites to the ingress controller's pod on its container
+    # port (8443 for Traefik, 443 for ingress-nginx) before this rule is evaluated, as for the
+    # harvest. That pod is the one private address CKAN reaches over HTTPS (F-R2DEP2-012).
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - publicInternet: true
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
       ports:
         - protocol: TCP
           port: 443

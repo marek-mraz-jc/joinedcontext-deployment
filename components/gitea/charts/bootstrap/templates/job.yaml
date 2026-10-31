@@ -327,6 +327,32 @@ spec:
               grant "$PORTAL_USER" write "$REPO"
               grant "$GATEWAY_USER" read "$REPO"
 
+              # protect <repository>: its branch rule (PF-105, CC-41, PF-87): only the Portal's
+              #     identity pushes to `main` or merges into it, an approval a later commit
+              #     invalidates is dropped, and nothing merges over an outdated base. No forge
+              #     approval is asked for: the Verdict is the Portal's, and a forge approval would
+              #     be the Portal approving itself. Nobody overrides the rule, the administrator
+              #     included. Created on 404, patched on 200, every run, so the whitelist follows
+              #     the user it names. The organization repository and every project repository
+              #     of layout 2 this Job makes or keeps: `{slug}-writers` write a project's
+              #     repository, so without its rule a writer pushed to `main` past the Verdict.
+              rule="{\"enable_push\":true,\"enable_push_whitelist\":true,\"push_whitelist_usernames\":[\"$PORTAL_USER\"],\"push_whitelist_deploy_keys\":false,\"enable_force_push\":false,\"enable_merge_whitelist\":true,\"merge_whitelist_usernames\":[\"$PORTAL_USER\"],\"enable_bypass_allowlist\":false,\"required_approvals\":0,\"dismiss_stale_approvals\":true,\"block_on_outdated_branch\":true,\"block_on_rejected_reviews\":true,\"block_admin_merge_override\":true}"
+              protect() {
+                status=$(forge_code GET "/api/v1/repos/$ORG/$1/branch_protections/$BRANCH")
+                case "$status" in
+                  404)
+                    status=$(forge_code POST "/api/v1/repos/$ORG/$1/branch_protections" \
+                      -d "{\"rule_name\":\"$BRANCH\",${rule#\{}")
+                    [ "$status" = 201 ] || { echo "protecting $BRANCH of $ORG/$1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                    echo "$BRANCH of $ORG/$1 is protected" ;;
+                  200)
+                    status=$(forge_code PATCH "/api/v1/repos/$ORG/$1/branch_protections/$BRANCH" -d "$rule")
+                    [ "$status" = 200 ] || { echo "updating the rule of $BRANCH of $ORG/$1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
+                    echo "the rule of $BRANCH of $ORG/$1 is current" ;;
+                  *) echo "the forge answered $status for the rule of $BRANCH of $ORG/$1" >&2; cat $WORK/body >&2; exit 1 ;;
+                esac
+              }
+
               # 3d. Each project repository's two teams (PF-87, T-2647): `{slug}-readers` reads and
               #     `{slug}-writers` writes that repository and no other. The Portal fills their
               #     members from the project's bindings; the teams are made here because creating a
@@ -359,6 +385,7 @@ spec:
               # one to hold.
               for slug in ${PROJECT_TEAMS:-}; do
                 ensure_repo "$slug"
+                protect "$slug"
                 project_team "$slug" readers read
                 project_team "$slug" writers write
               done
@@ -510,6 +537,8 @@ spec:
                 repositories "$ORG" > $WORK/repos
                 for name in $(cat $WORK/repos); do
                   case "$name" in
+                    # The configuration repository itself stays, whatever its name holds.
+                    "$REPO") ;;
                     *_*)
                       status=$(forge_code POST "/api/v1/repos/$ORG/$name/transfer" -d "{\"new_owner\":\"$APPS_ORG\"}")
                       case "$status" in
@@ -729,27 +758,8 @@ spec:
                 if [ "$moved" = 1 ]; then restart $RUNNER_RESTART; fi
               fi
 
-              # 4c. The branch rule of the organization repository (PF-105, CC-41): only the
-              #     Portal's identity pushes to `main` or merges into it, an approval a later
-              #     commit invalidates is dropped, and nothing merges over an outdated base. No
-              #     forge approval is asked for: the Verdict is the Portal's, and a forge approval
-              #     would be the Portal approving itself. Nobody overrides the rule, the
-              #     administrator included. Created on 404, patched on 200, every run, so the
-              #     whitelist follows the user it names.
-              rule="{\"enable_push\":true,\"enable_push_whitelist\":true,\"push_whitelist_usernames\":[\"$PORTAL_USER\"],\"push_whitelist_deploy_keys\":false,\"enable_force_push\":false,\"enable_merge_whitelist\":true,\"merge_whitelist_usernames\":[\"$PORTAL_USER\"],\"enable_bypass_allowlist\":false,\"required_approvals\":0,\"dismiss_stale_approvals\":true,\"block_on_outdated_branch\":true,\"block_on_rejected_reviews\":true,\"block_admin_merge_override\":true}"
-              status=$(forge_code GET "/api/v1/repos/$ORG/$REPO/branch_protections/$BRANCH")
-              case "$status" in
-                404)
-                  status=$(forge_code POST "/api/v1/repos/$ORG/$REPO/branch_protections" \
-                    -d "{\"rule_name\":\"$BRANCH\",${rule#\{}")
-                  [ "$status" = 201 ] || { echo "protecting $BRANCH of $ORG/$REPO failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                  echo "$BRANCH of $ORG/$REPO is protected" ;;
-                200)
-                  status=$(forge_code PATCH "/api/v1/repos/$ORG/$REPO/branch_protections/$BRANCH" -d "$rule")
-                  [ "$status" = 200 ] || { echo "updating the rule of $BRANCH failed: $status" >&2; cat $WORK/body >&2; exit 1; }
-                  echo "the rule of $BRANCH is current" ;;
-                *) echo "the forge answered $status for the rule of $BRANCH" >&2; cat $WORK/body >&2; exit 1 ;;
-              esac
+              # 4c. The branch rule of the organization repository (PF-105, CC-41); `protect` above.
+              protect "$REPO"
 
               # 5. The seed: the manifests the gateway serves from its own ConfigMap, committed
               #    under the paths the Portal reads, so the two halves of the platform agree on
@@ -954,6 +964,7 @@ spec:
                   [ -d "$dir" ] || continue
                   slug=$(basename "$dir")
                   ensure_repo "$slug"
+                  protect "$slug"
                   grant "$PORTAL_USER" write "$slug"
                   grant "$GATEWAY_USER" read "$slug"
                   seed_repo "$slug" "${dir%/}"

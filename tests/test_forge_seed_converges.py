@@ -389,6 +389,12 @@ def test_layout_2_seeds_the_organization_and_one_repository_per_project(script, 
     assert helsinki[MANIFEST].splitlines() == [".jc/layout", "project.yaml", "shared/mesto-kpi.yaml"]
     assert repos["helsinki"]["private"] is True
     assert set(repos) == {"helsinki", "bbsk"}
+    # F-R2DEP2-001: `{slug}-writers` write a project repository, so its `main` carries the
+    # organization repository's rule: only the Portal pushes or merges there.
+    rules = json.loads(forge.state.read_text())["rules"]
+    for slug in ("helsinki", "bbsk"):
+        assert rules[f"{slug}/main"]["push_whitelist_usernames"] == ["jc-portal"], slug
+        assert rules[f"{slug}/main"] == {**rules["configuration/main"], "rule_name": "main"}, slug
 
     second = forge.run(script, LAYOUT="2")
     assert second.returncode == 0, second.stderr

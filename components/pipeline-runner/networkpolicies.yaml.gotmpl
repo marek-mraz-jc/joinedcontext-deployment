@@ -19,13 +19,10 @@ pipeline-tokens:
   egress:
     # The Kubernetes API, for TokenRequest (Keycloak's rule says the same): not a pod, so named
     # by address; k3s serves it on 6443, the port the policy sees after the Service's DNAT.
-    # global.kubeApiCidrs narrows it to the API server's endpoints (`kubectl get endpoints
+    # global.kubeApiCidrs (the `kubeApi` peer) narrows it to the API server's endpoints (`kubectl get endpoints
     # kubernetes`), so a stolen token service reaches no other 6443 (F-BNT3-003).
     - to:
-        {{- range .Values.global.kubeApiCidrs | default (list "0.0.0.0/0") }}
-        - ipBlock:
-            cidr: {{ . | quote }}
-        {{- end }}
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 6443

@@ -204,7 +204,14 @@ def test_argocd_and_its_root_render_in_the_addons_environment_within_600_mi(rend
     docs = rendered("addons")
     argocd = [d for d in docs if d["metadata"].get("namespace") == "argocd"]
     [app] = [d for d in argocd if d["kind"] == "Application"]
-    assert app["metadata"]["name"] == "addons" and app["spec"]["project"] == "default"
+    assert app["metadata"]["name"] == "addons" and app["spec"]["project"] == "addons-root"
+    # F-R2DEP2-014: its own AppProject bounds it to the deployment repository and the
+    # platform's AppProject and Applications in argocd, not `default`, which bounds nothing.
+    [project] = [d for d in argocd if d["kind"] == "AppProject" and d["metadata"]["name"] == "addons-root"]
+    assert project["spec"]["sourceRepos"] == [app["spec"]["source"]["repoURL"]]
+    assert project["spec"]["destinations"] == [{"server": "https://kubernetes.default.svc", "namespace": "argocd"}]
+    assert project["spec"]["clusterResourceWhitelist"] == []
+    assert {k["kind"] for k in project["spec"]["namespaceResourceWhitelist"]} == {"Application", "AppProject"}
     assert app["spec"]["source"]["path"] == "gitops/chart"
     assert app["spec"]["source"]["helm"]["valueFiles"] == ["../addons.yaml", "../hold.yaml", "../hold-addons.yaml"]
     assert app["spec"]["source"]["helm"]["ignoreMissingValueFiles"] is True
@@ -766,3 +773,12 @@ def test_only_the_portal_ui_release_reads_the_bundle_pin():
     found = sorted(str(p.relative_to(ROOT)) for base in ("components", "defaults") for p in (ROOT / base).rglob("*")
                    if p.is_file() and p.suffix in (".gotmpl", ".yaml", ".tpl") and readers.search(p.read_text(errors="ignore")))
     assert found == ["components/portal/values/ui/base-values.yaml.gotmpl"], found
+
+
+def test_every_component_reads_the_values_profile_before_the_profile():
+    """F-R2DEP2-018: an installation with `valuesProfile` (smartcity carries dev's values on the
+    production profile, T-4678) loads that profile's values file in every component, Argo CD's
+    included; a component reading `profile` alone loaded the other one."""
+    bare = [str(p.relative_to(ROOT)) for p in sorted((ROOT / "components").glob("*/helmfile.yaml.gotmpl"))
+            if re.search(r"\{\{ *\$root\.global\.profile *\}\}-values", p.read_text())]
+    assert not bare, bare

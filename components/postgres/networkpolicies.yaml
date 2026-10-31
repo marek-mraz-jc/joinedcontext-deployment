@@ -56,6 +56,9 @@ postgres:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
   ingress:
@@ -166,6 +169,9 @@ postgres-operator-egress:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
 
@@ -238,6 +244,9 @@ postgres-drill:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
   ingress:
@@ -246,3 +255,31 @@ postgres-drill:
             matchLabels:
               app.kubernetes.io/name: cloudnative-pg
           componentNamespace: postgres.operator
+
+# The drill's job only talks to the API server: it counts rows through `kubectl exec`, never
+# over the database port. Its token may exec into the primary, so it reaches no internet host:
+# the API server's addresses on 6443 alone, the port the policy sees after the DNAT (F-R2DEP3-009).
+database-dr-drill:
+  podSelector:
+    app.kubernetes.io/component: database-dr-drill
+    app.kubernetes.io/name: databases
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - kubeApi: true
+      ports:
+        - protocol: TCP
+          port: 6443
