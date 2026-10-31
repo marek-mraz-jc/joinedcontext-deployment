@@ -124,5 +124,5 @@ stringData:
 ## Limitations
 
 - Roles are currently scoped to the `public` schema only
-- The chart assumes the cluster admin secret is named `{cluster.name}-app`
+- The chart assumes the cluster admin secret is named `{cluster.name}-superuser`
 - The chart connects to the read-write service endpoint: `{cluster.name}-rw`

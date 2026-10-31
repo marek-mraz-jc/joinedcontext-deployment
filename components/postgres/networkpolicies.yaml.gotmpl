@@ -19,3 +19,35 @@ postgres-from-branch-previews:
         - protocol: TCP
           port: 4143
 {{- end }}
+
+# The drill's job only talks to the API server: it counts rows through `kubectl exec`, never
+# over the database port. Its token may exec into the primary, so the API rule names the API
+# server's addresses (global.kubeApiCidrs) on 6443 alone, the port the policy sees after the
+# Service's DNAT (as pipeline-runner's token service): no internet host on 443 (F-R2DEP3-009).
+database-dr-drill:
+  podSelector:
+    app.kubernetes.io/component: database-dr-drill
+    app.kubernetes.io/name: databases
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        {{- range .Values.global.kubeApiCidrs | default (list "0.0.0.0/0") }}
+        - ipBlock:
+            cidr: {{ . | quote }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 6443

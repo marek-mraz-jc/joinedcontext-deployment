@@ -707,9 +707,22 @@ def _token_service_api_cidrs(docs):
                   for peer in rule.get("to") or [] if "ipBlock" in peer)
 
 
-@pytest.mark.parametrize(("env", "cidrs"), [("dev", ["0.0.0.0/0"]), ("smartcity", ["10.255.0.1/32"])])
+@pytest.mark.parametrize(("env", "cidrs"), [("dev", ["10.255.0.101/32"]), ("smartcity", ["10.255.0.1/32"])])
 def test_the_token_service_reaches_the_api_server_at_the_environment_s_addresses(rendered, env, cidrs):
     """The token service asks the Kubernetes API for a pipeline's ServiceAccount token on 6443.
     `global.kubeApiCidrs` names the API server's addresses where an environment knows them
     (smartcity), so the rule opens 6443 there only; the default keeps it open (F-BNT3-003)."""
     assert _token_service_api_cidrs(rendered(env)) == cidrs
+
+
+@pytest.mark.parametrize(("env", "cidrs"), [("dev", ["10.255.0.101/32"]), ("smartcity", ["10.255.0.1/32"]),
+                                            ("local", ["0.0.0.0/0"])])
+def test_the_dr_drill_reaches_only_the_api_server(rendered, env, cidrs):
+    """F-R2DEP3-009: the drill's token may exec into the primary as superuser, and its egress
+    opened every internet host on 443. It reaches the API server's addresses on 6443 alone."""
+    groups = egress_rules_by_selector(rendered(env))
+    drill = next(rules for selector, rules in groups.items()
+                 if dict(selector).get("app.kubernetes.io/component") == "database-dr-drill")
+    blocks = [(peer["ipBlock"]["cidr"], sorted(p["port"] for p in rule.get("ports") or []))
+              for rule in drill for peer in rule.get("to") or [] if "ipBlock" in peer]
+    assert blocks == [(cidr, [6443]) for cidr in cidrs]
