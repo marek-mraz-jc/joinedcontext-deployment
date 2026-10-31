@@ -56,6 +56,9 @@ postgres:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
   ingress:
@@ -166,6 +169,9 @@ postgres-operator-egress:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
 
@@ -238,6 +244,9 @@ postgres-drill:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443
   ingress:
@@ -274,5 +283,8 @@ database-dr-drill:
       ports:
         - protocol: TCP
           port: 443
+    - to:
+        - kubeApi: true
+      ports:
         - protocol: TCP
           port: 6443

@@ -79,3 +79,44 @@ subjects:
     name: {{ include "bootstrap.fullname" $ }}
     namespace: {{ $.Release.Namespace }}
 {{- end }}
+{{- /*
+  The bound on `create` (F-R2DEP2-005). RBAC cannot name what a Job may create, so the rule
+  above lets it create any Secret, a `service-account-token` one too, which the cluster fills
+  with the token of whichever ServiceAccount it names; `get` on that name would then hand the
+  Job that token. This policy holds the Job to the Secrets it writes: the names the Role reads,
+  of type Opaque or (a registry pull Secret, AP-108) dockerconfigjson.
+*/}}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: {{ .Release.Namespace }}-{{ include "bootstrap.fullname" . }}-secrets
+  labels:
+    {{- include "bootstrap.labels" . | nindent 4 }}
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["secrets"]
+        operations: ["CREATE", "UPDATE"]
+  matchConditions:
+    - name: the-bootstrap-job
+      expression: request.userInfo.username == "system:serviceaccount:{{ .Release.Namespace }}:{{ include "bootstrap.fullname" . }}"
+  validations:
+    - expression: >-
+        object.metadata.name in {{ $secretNames | uniq | sortAlpha | toJson }}
+        && (!has(object.type) || object.type in ["Opaque", "kubernetes.io/dockerconfigjson"])
+      messageExpression: >-
+        "The forge bootstrap writes only its token Secrets, Opaque or dockerconfigjson, not " + request.namespace + "/" + request.name + " (F-R2DEP2-005)."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: {{ .Release.Namespace }}-{{ include "bootstrap.fullname" . }}-secrets
+  labels:
+    {{- include "bootstrap.labels" . | nindent 4 }}
+spec:
+  policyName: {{ .Release.Namespace }}-{{ include "bootstrap.fullname" . }}-secrets
+  validationActions: [Deny]

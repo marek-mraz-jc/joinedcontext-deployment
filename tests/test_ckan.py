@@ -646,8 +646,12 @@ def test_the_realm_egress_is_the_login_s_and_closes_with_it(rendered, rendered_v
     assert policy["spec"]["policyTypes"] == ["Egress"]
     assert policy["spec"]["podSelector"]["matchLabels"]["app.kubernetes.io/component"] == "ckan"
     assert [(p["protocol"], p["port"]) for rule in policy["spec"]["egress"] for p in rule["ports"]] == [
-        ("TCP", 443), ("TCP", 8443),
+        ("TCP", 443), ("TCP", 443), ("TCP", 8443),
     ]
+    # F-R2DEP2-012: 443 to public addresses, and the ingress controller's pod for the DNAT.
+    public, ingress = policy["spec"]["egress"]
+    assert "224.0.0.0/4" in public["to"][0]["ipBlock"]["except"] and "10.0.0.0/8" in public["to"][0]["ipBlock"]["except"]
+    assert "ipBlock" not in ingress["to"][0]
     container = ckan_container(on)
     assert "oidc_pkce" in env_of(container)["CKAN__PLUGINS"]
     assert container["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-ckan:2.11.6@sha256:")

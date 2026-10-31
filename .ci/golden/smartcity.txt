@@ -1,9 +1,11 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-gitea-bootstrap-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-edge
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-workloads
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-gitea-bootstrap-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-edge

@@ -50,8 +50,7 @@ prometheus-operator:
           port: 8080
   egress:
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 6443
@@ -85,8 +84,7 @@ kube-state-metrics:
           port: 8080
   egress:
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 6443

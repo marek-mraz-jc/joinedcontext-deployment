@@ -36,8 +36,8 @@ context-space-read:
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
@@ -93,8 +93,8 @@ context-space-portal-read:
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true
@@ -296,8 +296,8 @@ api-context-space-read:
     limit-count:
       count: 1200
       time_window: 60
-      key_type: var
-      key: http_authorization
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
       rejected_code: 429
       policy: local
       show_limit_quota_header: true

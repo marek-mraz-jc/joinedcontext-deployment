@@ -52,6 +52,17 @@ spec:
           || !has(c.securityContext.privileged) || c.securityContext.privileged == false)
       messageExpression: >-
         "A workload the Portal writes shares nothing with the node: no hostPath, host namespace or privileged container, not in " + request.namespace + "/" + request.name + " (AP-117)."
+    # Beyond the node's namespaces (F-R2DEP2-024): no added capability, no port on the node and
+    # no explicit privilege escalation. Pod Security admits these in the apps namespaces only;
+    # elsewhere Kyverno was the one check, and a webhook can fail open.
+    - expression: >-
+        variables.containers.all(c, (!has(c.ports) || c.ports.all(p, !has(p.hostPort) || p.hostPort == 0))
+          && (!has(c.securityContext)
+            || ((!has(c.securityContext.capabilities) || !has(c.securityContext.capabilities.add)
+                 || size(c.securityContext.capabilities.add) == 0)
+              && (!has(c.securityContext.allowPrivilegeEscalation) || c.securityContext.allowPrivilegeEscalation == false))))
+      messageExpression: >-
+        "A workload the Portal writes adds no capability, binds no host port and allows no privilege escalation, not in " + request.namespace + "/" + request.name + " (AP-117)."
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicyBinding

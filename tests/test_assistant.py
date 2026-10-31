@@ -8,7 +8,8 @@ its database, the forge, DNS and public web addresses only."""
 
 import pytest
 
-PRIVATE = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8", "100.64.0.0/10"}
+# The `publicInternet` peer of components/networkpolicies (F-R2DEP2-023).
+PRIVATE = {"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "169.254.0.0/16", "127.0.0.0/8", "100.64.0.0/10", "0.0.0.0/8", "198.18.0.0/15", "224.0.0.0/4"}
 
 
 def add_assistant(tree):
