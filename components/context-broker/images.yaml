@@ -241,6 +241,9 @@ context-broker:
     # size estimate when the exact scan fails (T-6159). No migration, no new runtime key. Rollback: dev-113.
     # Antares dev 13dc5d9 (dev-118, over 9d1f190: train T-6204): the tenant size estimate falls back to the entity
     # count when the split by type passes its bound. No migration, no new runtime key. Rollback: dev-117.
-    # Signed by ship.yml on dev at 13dc5d9 (run 41230973198).
-    tag: 'dev-118'
-    digest: 'sha256:0e8adf39f7c9d85ac3c9681d9e90dc6c0cb10d2db593301ce2be81a3c490f06d'
+    # Antares dev 49924e5 (dev-120, over 13dc5d9: trains T-6211 T-6212): per-type write grants, the subscriber's
+    # context on notify checks, trust headers dropped on forwards, keyset sweep (T-6211); the confirmed
+    # fixes of review R2ANT2 (T-6212). No migration, no new runtime key. Rollback: dev-118.
+    # Signed by ship.yml on dev at 49924e5 (run 41235905178).
+    tag: 'dev-120'
+    digest: 'sha256:7b6a3e721a4ee89f191c640ff3a8b69cc8992584d6cf4ca256e9a7b64f437a70'
