@@ -39,7 +39,8 @@ TYPES = ("ParticipatoryProcess", "Proposal", "BudgetProject", "Result", "Meeting
 # A pass: (suffix, light, schedule, period, title suffix sk, en).
 PASSES = (
     ("", False, "{m} 2 * * *", "24h", "", ""),
-    ("-hlasovanie", True, "{m} * * * *", "1h", " (hlasovanie)", " (voting)"),
+    # Not in hour 2: the full pass crawls the same instance then and writes BudgetProject too (F-R2BNT3-011).
+    ("-hlasovanie", True, "{m} 0,1,3-23 * * *", "1h", " (hlasovanie)", " (voting)"),
 )
 
 

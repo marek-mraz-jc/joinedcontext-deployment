@@ -357,6 +357,31 @@ def test_generate_check_is_clean_and_one_row_is_one_instance():
         assert "__BASE__" not in bento and bento.count(f"url: {base}") == 6
 
 
+
+def fires(schedule: str) -> set[tuple[int, int]]:
+    """The (hour, minute) pairs of a five-field cron line whose minute and hour are numbers, lists,
+    ranges or `*` (the decidim passes use nothing else)."""
+    def field(text: str, top: int) -> set[int]:
+        if text == "*":
+            return set(range(top))
+        out = set()
+        for part in text.split(","):
+            low, _, high = part.partition("-")
+            out |= set(range(int(low), int(high or low) + 1))
+        return out
+    minute, hour, *_ = schedule.split()
+    return {(h, m) for h in field(hour, 24) for m in field(minute, 60)}
+
+
+def test_the_full_and_the_voting_pass_of_an_instance_never_start_in_the_same_minute():
+    """F-R2BNT3-011: both passes crawl one instance at its one-second pace, and the full pass also
+    writes BudgetProject; at 02:07 the two used to run at once."""
+    for row in (HERE / "instances.csv").read_text().strip().splitlines()[1:]:
+        inst = row.split(",")[0]
+        full, light = (seed(f"slovensko-pipeline-decidim-{inst}{s}.yaml")["spec"]["schedule"] for s in ("", "-hlasovanie"))
+        assert not fires(full) & fires(light), (inst, full, light)
+
+
 def seed(name):
     return yaml.safe_load((SEED / name).read_text())
 

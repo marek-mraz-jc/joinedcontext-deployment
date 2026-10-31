@@ -11,7 +11,7 @@ metadata:
 spec:
   class: auto
   period: 1h
-  schedule: "7 * * * *"
+  schedule: "7 0,1,3-23 * * *"
   source:
     dataSourceRef: { kind: DataSource, name: decidim-tvormespolu-hlasovanie }
   targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:slovensko-participacia:slovensko-participacia-zapis
