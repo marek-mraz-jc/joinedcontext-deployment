@@ -178,7 +178,8 @@ pipeline:
             { "type": "Property", "value": {
               "streetAddress": u.street,
               "postalCode": u.unit.address_zip.or(null),
-              "addressLocality": u.unit.address_city.or({}).fi.or(null),
+              # Service Map has no city field; every unit is one the request filters by municipality=helsinki.
+              "addressLocality": "Helsinki",
               "addressCountry": "FI"
             }.filter(entry -> entry.value != null && entry.value != "") }
           },

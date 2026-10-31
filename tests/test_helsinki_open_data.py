@@ -724,3 +724,18 @@ def test_a_news_item_is_the_article_extension_with_its_guid_as_identifier():
     # Without its identifier the extension refuses the item.
     bare = {k: v for k, v in articles[0].items() if k != "identifier"}
     assert any("identifier" in e for e in open_data.sdm_errors("extensions/Article", bare))
+
+
+def test_the_services_mapping_reads_only_the_unit_fields_its_requests_ask_for():
+    """F-R2BNT3-005: `address_city` is no Service Map field and in neither `only=` list, so every
+    address lost its locality. Each list (the DataSource's and the page request's) must name every
+    `unit.<field>` the mapping reads, and both filter to Helsinki, which the locality states."""
+    mapping = (HELSINKI / "helsinki-pipeline-services-bento.yaml").read_text()
+    source = yaml.safe_load((HELSINKI / "helsinki-datasource-services.yaml").read_text())["spec"]["http"]["url"]
+    read = set(re.findall(r"\bunit\.([a-z_]+)", mapping))
+    urls = [source, *re.findall(r"url: (https://api\.hel\.fi/servicemap/v2/unit/\S+)", mapping)]
+    assert len(urls) == 2 and read
+    for url in urls:
+        assert "municipality=helsinki" in url, url
+        only = set(re.search(r"[?&]only=([^&]+)", url).group(1).split(","))
+        assert read <= only, (url, sorted(read - only))
