@@ -45,6 +45,10 @@ env:
   JC_WASM_S3_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
   JC_WASM_S3_KEY_FILE: /etc/jc-wasm/store/access-key
   JC_WASM_S3_SECRET_FILE: /etc/jc-wasm/store/secret-key
+  # Presigned URLs name the App's own host, https://{name}.apps.<domain>/api/_jc/files/<key>, which
+  # the edge routes to this shard like the rest of /api/*, so the store keeps no address in the
+  # open (T-6195, PF-32). An image without this variable ignores it.
+  JC_WASM_APPS_HOST: "apps.{{ $global.domain }}"
   # The address in the open, the login's generated password from its file (AP-144).
   JC_WASM_DB_URL: "postgresql://wasm_host_{{ $shard }}@apps-db-rw.{{ $appsDb }}.svc.cluster.local:5432/apps?sslmode=require"
   JC_WASM_DB_PASSWORD_FILE: /etc/jc-wasm/db/password
