@@ -157,9 +157,14 @@ local_detail=""
 
 # The result goes two ways: one JSON line in this pod's log, and the ConfigMap $RESULT that an
 # operator or a check reads without the log.
+# One JSON string: backslashes and quotes escaped, control characters dropped. The details carry
+# database and table names, which may hold either; a bare one broke the patch or added a "result"
+# of its own (F-R2DEP3-015).
+j() { printf '"%s"' "$(printf '%s' "$1" | tr -d '\000-\037' | sed 's/\\/\\\\/g; s/"/\\"/g')"; }
+
 record() {
   at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-  fields="\"result\":\"$verdict\",\"rtoSeconds\":\"$rto\",\"rpoSeconds\":\"$rpo\",\"pitrTarget\":\"$pitr_target\",\"pitrRtoSeconds\":\"$pitr_rto\",\"pitrDetail\":\"$pitr_detail\",\"localDump\":\"$local_dump\",\"localDumpRtoSeconds\":\"$local_rto\",\"localDumpBytes\":\"$local_bytes\",\"localDumpDetail\":\"$local_detail\",\"at\":\"$at\",\"detail\":\"$detail\""
+  fields="\"result\":$(j "$verdict"),\"rtoSeconds\":$(j "$rto"),\"rpoSeconds\":$(j "$rpo"),\"pitrTarget\":$(j "$pitr_target"),\"pitrRtoSeconds\":$(j "$pitr_rto"),\"pitrDetail\":$(j "$pitr_detail"),\"localDump\":$(j "$local_dump"),\"localDumpRtoSeconds\":$(j "$local_rto"),\"localDumpBytes\":$(j "$local_bytes"),\"localDumpDetail\":$(j "$local_detail"),\"at\":$(j "$at"),\"detail\":$(j "$detail")"
   echo "{\"event\":\"dr-drill\",\"cluster\":\"$SOURCE\",$fields}"
   kubectl patch configmap "$RESULT" --type merge -p "{\"data\":{$fields}}" >/dev/null ||
     echo "the result could not be written to configmap/$RESULT" >&2
