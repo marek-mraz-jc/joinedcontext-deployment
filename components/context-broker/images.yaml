@@ -239,6 +239,8 @@ context-broker:
     # Antares dev 9d1f190 (dev-117, over 7375b1c: trains T-6143 T-6151 T-6159 T-6182): liveness /q/health answers
     # 503 STORE_WEDGED after 300 s of a fully held pool while a fresh connection works (T-6182), the big-tenant
     # size estimate when the exact scan fails (T-6159). No migration, no new runtime key. Rollback: dev-113.
-    # Signed by ship.yml on dev at 9d1f190 (run 41187247353).
-    tag: 'dev-117'
-    digest: 'sha256:4bec8cefad1e20a2c65832126ad729d91438e1f55ccc578162961e77163315f5'
+    # Antares dev 13dc5d9 (dev-118, over 9d1f190: train T-6204): the tenant size estimate falls back to the entity
+    # count when the split by type passes its bound. No migration, no new runtime key. Rollback: dev-117.
+    # Signed by ship.yml on dev at 13dc5d9 (run 41230973198).
+    tag: 'dev-118'
+    digest: 'sha256:0e8adf39f7c9d85ac3c9681d9e90dc6c0cb10d2db593301ce2be81a3c490f06d'
