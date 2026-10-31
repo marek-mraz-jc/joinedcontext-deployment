@@ -15,7 +15,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE = "4a1de6980a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
-RECENT = f"{datetime.now(UTC) - timedelta(hours=1):%Y-%m-%dT%H:%M:%SZ}"
+NOW = datetime(2026, 10, 31, 14, 0, 59, tzinfo=UTC)  # one second before a minute boundary (T-6199)
+RECENT = f"{NOW - timedelta(hours=1):%Y-%m-%dT%H:%M:%SZ}"
 
 spec = importlib.util.spec_from_file_location("apply_scoped", ROOT / "scripts/apply-pins.py")
 apply_pins = importlib.util.module_from_spec(spec)
@@ -66,7 +67,7 @@ def change(**moved):
     return out
 
 
-def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE, full_at=RECENT, listed=()):
+def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE, full_at=RECENT, listed=(), now=NOW):
     """The plan for a range touching `files` whose HEAD renders `head` (and `again` the second time)."""
     def renders(environment, base, judge):
         dirs = [tmp_path / "old", tmp_path / "new", tmp_path / "again"]
@@ -79,7 +80,7 @@ def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE, full_at=RECE
     monkeypatch.setattr(apply_pins, "component_releases",
                         lambda environment, components: apply_pins.releases_of(list(listed), components))
     try:
-        return apply_pins.plan("dev", base, full_at)
+        return apply_pins.plan("dev", base, full_at, now)
     except apply_pins.Refused as e:
         return f"full: {e}"
 
@@ -203,7 +204,9 @@ def test_an_unchanged_secrets_release_is_skipped_although_it_renders_fresh_value
     (None, "no full sync recorded"),
     ("", "no full sync recorded"),
     ("yesterday", "no full sync recorded"),
-    (f"{datetime.now(UTC) - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 7."),  # collected before it runs: 7.0 or 7.1 h
+    (f"{NOW - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 7.0 h ago (every 6 h)"),
+    # the boundary: a full sync exactly JC_FULL_SYNC_HOURS ago is due
+    (f"{NOW - timedelta(hours=6):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 6.0 h ago (every 6 h)"),
 ])
 def test_the_periodic_full_sync_converges_drift(monkeypatch, tmp_path, full_at, reason):
     # a scoped plan judges the render, never live objects: drift waits for the periodic full sync
@@ -216,6 +219,21 @@ def test_the_full_sync_interval_is_set_by_the_environment(monkeypatch):
     monkeypatch.setenv("JC_FULL_SYNC_HOURS", "1")
     assert apply_pins.full_sync_due("2026-10-31T07:30:00Z", at) is None
     assert "every 1 h" in apply_pins.full_sync_due("2026-10-31T06:59:00Z", at)
+
+
+def test_the_plan_reads_the_clock_it_is_given(monkeypatch, tmp_path):
+    # one injected `now` per plan: a run crossing a minute boundary judges the same age (T-6199)
+    monkeypatch.delenv("JC_FULL_SYNC_HOURS", raising=False)
+    full_at = f"{NOW - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}"
+    for run in range(200):
+        at = NOW + timedelta(minutes=run // 2, seconds=run % 2)  # hh:mm:59, then hh:mm+1:00
+        got = plan(monkeypatch, tmp_path, ["components/portal/images.yaml"], change(), full_at=full_at, now=at)
+        assert got == f"full: {apply_pins.full_sync_due(full_at, at)}", got
+
+
+def test_dev_apply_reads_the_real_clock_once():
+    text = (ROOT / "scripts/apply-pins.py").read_text()
+    assert text.count("datetime.now(") == 1 and "datetime.now(UTC))" in text[text.index("def main("):]
 
 
 def test_dev_apply_reads_and_stamps_the_last_full_sync():

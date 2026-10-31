@@ -215,22 +215,22 @@ def values_moved(old: Path, new: Path) -> list[str]:
     return sorted(out)
 
 
-def full_sync_due(full_at: str, now: datetime | None = None) -> str | None:
+def full_sync_due(full_at: str | None, now: datetime) -> str | None:
     """Why the periodic full sync is due, or None while the last one (`fullSyncAt`) is recent."""
     hours = float(os.environ.get("JC_FULL_SYNC_HOURS") or FULL_SYNC_HOURS)
     try:
         at = datetime.strptime(full_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
     except (TypeError, ValueError):
         return f"no full sync recorded ({full_at or 'none'})"
-    age = ((now or datetime.now(UTC)) - at).total_seconds() / 3600
+    age = (now - at).total_seconds() / 3600
     return f"the last full sync ran {age:.1f} h ago (every {hours:g} h)" if age >= hours else None
 
 
-def plan(environment: str, base: str, full_at: str | None = None) -> list[str]:
-    """The releases `just dev-apply` syncs for base..HEAD; Refused names why it must be a full sync."""
+def plan(environment: str, base: str, full_at: str | None, now: datetime) -> list[str]:
+    """The releases `just dev-apply` syncs for base..HEAD at `now`; Refused names why it must be a full sync."""
     if not re.fullmatch(r"[0-9a-f]{40}", base or ""):
         raise Refused(f"no trusted applied commit ({base or 'none recorded'})")
-    due = full_sync_due(full_at)
+    due = full_sync_due(full_at, now)
     if due:
         raise Refused(due)
     files = changes.changed(base, "HEAD")
@@ -302,7 +302,7 @@ def main(argv: list[str]) -> int:
             print("\n".join(releases(argv[1], argv[2])))
         elif len(argv) in (3, 4) and argv[0] == "plan":
             try:
-                print("\n".join(plan(argv[1], argv[2], argv[3] if len(argv) == 4 else None)))
+                print("\n".join(plan(argv[1], argv[2], argv[3] if len(argv) == 4 else None, datetime.now(UTC))))
             except Refused as e:
                 print(f"apply-pins: full sync: {e}", file=sys.stderr)
                 print(FULL)
