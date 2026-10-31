@@ -695,6 +695,47 @@ api-context-endpoint-bulk:
       key: '$http_authorization $remote_addr'
       rejected_code: 429
 
+# T-6185: the temporal history of the data host, split off api-context-endpoint-bulk so the edge
+# keeps an anonymous history read as api-context-endpoint keeps the other reads (the same
+# proxy-cache block, read its comment there). The chart host starts each window on the whole hour,
+# so one hour's views of a chart ask one URL and only the first reaches the broker. The `file.*`
+# exports stay on the bulk route without a cache: the gateway marks them public too, and a many-MB
+# export would push every history read out of the disk zone. The same 10 at once per address and
+# bearer as the bulk route, counted apart (APISIX counts per route): history and exports hold 10
+# each, and the gateway's own 10 per caller (API/07 §3) still bounds both together.
+api-context-endpoint-history:
+  name: api-context-endpoint-history
+  description: Temporal history reads of the data host's Endpoint surface, 10 at once per client, anonymous answers kept at the edge
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/ngsi-ld/v1/temporal/"]]
+  subDomain: api
+  priority: 22
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 300
+  plugins:
+    limit-conn:
+      conn: 10
+      burst: 0
+      default_conn_delay: 0.1
+      key_type: var_combination
+      key: '$http_authorization $remote_addr'
+      rejected_code: 429
+    proxy-cache:
+      cache_strategy: disk
+      cache_zone: disk_cache_one
+      cache_key: ["$host", "$request_uri", "$http_accept", "$http_accept_language", "$http_accept_encoding", "$http_ngsild_results_restricted"] # yamllint disable-line rule:line-length
+      cache_bypass: ["$http_cookie", "$http_authorization", "$http_link", "$http_prefer", "$http_ngsild_tenant"] # yamllint disable-line rule:line-length
+      no_cache: ["$http_cookie", "$http_authorization", "$http_link", "$http_prefer", "$http_ngsild_tenant"] # yamllint disable-line rule:line-length
+      cache_method: ["GET", "HEAD"]
+      cache_http_status: [200]
+      cache_control: true
+      cache_ttl: 5
+      hide_cache_headers: false
+
 # Class 4 (T-4717): the bulk exports, `{endpoint}/file.*` and the temporal history, hold their
 # connection for minutes, so 10 at once per address and bearer bounds them where a count per
 # minute does not. Only here: a limit-conn on the whole surface held every WebSocket and every
