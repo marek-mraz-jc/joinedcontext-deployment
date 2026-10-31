@@ -964,7 +964,8 @@ image="docker.io/busybox:1.38@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41
 # One probe pod, parameterised by the command it runs: probe_overrides <pod-name> <command-json>.
 # It has to stay OUT of the mesh: a meshed probe only completes a TCP handshake with its
 # own outbound proxy on localhost, so `nc -z` reports success no matter what the policy
-# does. The opt-out carries the reason the justify-linkerd-inject-opt-out policy asks for.
+# does. The opt-out carries the reason the justify-linkerd-inject-opt-out policy asks for, and the
+# probe mounts no API token, which justify-api-token-access refuses without a reason (T-6220).
 probe_overrides() {
 	cat <<JSON
 {
@@ -975,6 +976,7 @@ probe_overrides() {
     }
   },
   "spec": {
+    "automountServiceAccountToken": false,
     "securityContext": {"runAsNonRoot": true, "runAsUser": 65534, "seccompProfile": {"type": "RuntimeDefault"}},
     "containers": [{
       "name": "$1",
