@@ -22,3 +22,6 @@ spec:
     projects: [helsinki]
     accessLevel: [public]
   audience: public
+  # search_documents over hel.fi and the data portal's dataset pages (MF-57, T-6167): one
+  # address answers a dataset question and a city-website question; public sources only.
+  knowledgeSources: [web, data-portal]

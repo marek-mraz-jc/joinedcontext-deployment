@@ -20,6 +20,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -63,7 +64,11 @@ def http_end_snippet(maintenance: dict[str, int] | None = None) -> str:
             break
         if line.strip().startswith("{{"):
             continue
-        body.append(line[8:].replace("{{ $this.trustedProxyCidr }}", "10.42.0.0/16"))
+        body.append(
+            line[8:]
+            .replace("{{ $this.trustedProxyCidr }}", "10.42.0.0/16")
+            .replace('{{ $global.domain | replace "." "[.]" }}', "example[.]org")
+        )
     text = "\n".join(body)
     hosts = "".join(f"\n  {host} {seconds};" for host, seconds in (maintenance or {}).items())
     return text.replace('map $host $jc_maintenance {\n  default "";', 'map $host $jc_maintenance {\n  default "";' + hosts)
@@ -119,7 +124,7 @@ def test_the_refusal_carries_the_headers_a_refusal_needs():
 
 def html_pages(snippet: str) -> dict[str, str]:
     """T-4201: the refusal page per language, by the named location that answers it."""
-    return dict(re.findall(r"location @too_many_requests_html_(\w+) \{.*?return 429 '(<!doctype html>.*?)';", snippet, re.S))
+    return dict(re.findall(r"location @too_many_requests_html_(\w+) \{.*?return 429 '(<!doctype html>.*?)';", snippet, re.DOTALL))
 
 
 def test_a_browser_gets_a_page_in_its_language():
@@ -141,7 +146,7 @@ def test_a_browser_gets_a_page_in_its_language():
     for lang in ("sk", "cs", "de"):
         assert f'if ($jc_refusal_lang ~* "^\\s*{lang}") {{' in snippet, lang
     # Each page's location sets the headers a refusal needs, and a CSP that allows nothing to load.
-    for block in re.findall(r"location @too_many_requests_\w+ \{(.*?)\n        \}", snippet, re.S):
+    for block in re.findall(r"location @too_many_requests_\w+ \{(.*?)\n\}", snippet, re.DOTALL):
         assert "add_header Retry-After $jc_refusal_retry_after always;" in block
         assert 'add_header X-Content-Type-Options "nosniff" always;' in block
         assert 'add_header Cache-Control "no-store, no-cache, must-revalidate" always;' in block
@@ -523,3 +528,110 @@ def test_the_pinned_image_puts_the_header_floor_on_every_answer(tmp_path, render
         status, headers, _ = answer(base + "/no-route-serves-this", {"Host": f"map.{apps}"})
         assert status == 404 and "Permissions-Policy" not in headers
         assert headers["Strict-Transport-Security"].startswith("max-age=31536000")
+
+
+def test_a_refusal_the_edge_writes_carries_the_routes_cors():
+    """T-6170: a page on a platform host read the edge's 429 as a network error (no
+    Access-Control-Allow-Origin), never saw `Retry-After`, and its chart stayed blank. Each
+    retryable refusal answers the Origins the routes' `cors` admits, and no other."""
+    snippet = server_snippet()
+    blocks = re.findall(r"location @(too_many_requests_\w+|jc_50[234]_\w+) \{(.*?)\n\}", snippet, re.DOTALL)
+    assert len(blocks) == 11, [name for name, _ in blocks]
+    for name, block in blocks:
+        assert "add_header Access-Control-Allow-Origin $jc_refusal_origin always;" in block, name
+        assert "add_header Access-Control-Expose-Headers Retry-After always;" in block, name
+        assert "add_header Vary Origin always;" in block, name
+        assert "Access-Control-Allow-Credentials" not in block, name
+    mapped = re.search(r"map \$http_origin \$jc_refusal_origin \{(.*?)\n        \}", VALUES.read_text(), re.DOTALL)
+    assert mapped, "the origin map is in the http block"
+    assert 'default "";' in mapped.group(1)
+    # The same allow-list as the routes' `cors`: https, a host under the domain, dots escaped.
+    assert '"~^https://[^@/]+\\.{{ $global.domain | replace "." "[.]" }}$" $http_origin;' in mapped.group(1)
+
+
+def test_the_pinned_image_hands_a_refusal_to_a_platform_page_only(tmp_path):
+    rules = """
+routes:
+  - uri: /probe
+    plugins:
+      limit-req:
+        rate: 1
+        burst: 0
+        key_type: var
+        key: remote_addr
+        rejected_code: 429
+    upstream:
+      nodes:
+        "127.0.0.1:9": 1
+      type: roundrobin
+#END
+"""
+    with pinned_apisix(tmp_path, rules) as base:
+        url = base + "/probe"
+        status, headers, _ = answer(url, {"Origin": "https://opendata.example.org"})
+        assert status == 502, "inside the limit the call reaches the (closed) upstream"
+        assert headers.get("Access-Control-Allow-Origin") == "https://opendata.example.org", headers
+        for page in ({}, {"Accept": "text/html"}):
+            status, headers, _ = answer(url, {**page, "Origin": "https://opendata.example.org"})
+            assert status == 429
+            assert headers.get("Access-Control-Allow-Origin") == "https://opendata.example.org", headers
+            assert headers.get("Access-Control-Expose-Headers") == "Retry-After", headers
+            assert "Origin" in headers.get("Vary", ""), headers
+            assert "Access-Control-Allow-Credentials" not in headers, headers
+        for foreign in ("https://example.org.evil.net", "https://evilexample.org", "https://opendataXexample.org",
+                        "http://opendata.example.org", "https://a@b.example.org", "null"):
+            status, headers, _ = answer(url, {"Origin": foreign})
+            assert status == 429, foreign
+            assert "Access-Control-Allow-Origin" not in headers, foreign
+        status, headers, _ = answer(url)
+        assert status == 429 and "Access-Control-Allow-Origin" not in headers, headers
+
+
+def test_the_pinned_image_gives_a_held_connection_back_after_an_edge_error(tmp_path, rendered):
+    """T-6170: an `error_page` redirect skipped APISIX's log phase, so every 502 or 504 the edge
+    wrote and every later plugin's 429 kept its `limit-conn` slot for good: prod's temporal
+    route admitted 5 of its 10 per client. The committed global rules hold the context across
+    the redirect; the limit still bounds what runs at once."""
+    cm = next(
+        d for d in rendered("local")
+        if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "apisix-standalone-base"
+    )
+    global_rules = [
+        r for r in yaml.safe_load(cm["data"]["apisix.yaml"])["global_rules"]
+        if r["id"] in ("edge-not-found", "edge-headers")
+    ]
+    assert len(global_rules) == 2
+    conn = {"conn": 2, "burst": 0, "default_conn_delay": 0.1, "key_type": "var",
+            "key": "remote_addr", "rejected_code": 429}
+    streamed = {"disable_proxy_buffering": True}
+    rules = yaml.safe_dump({
+        "global_rules": global_rules,
+        "routes": [
+            # The bulk routes stream (`proxy-buffering`), which is APISIX's own redirect first.
+            {"id": "probe", "uri": "/probe", "plugins": {"limit-conn": conn, "proxy-buffering": streamed},
+             "upstream": {"nodes": {"127.0.0.1:9": 1}, "type": "roundrobin"}},
+            {"id": "counted", "uri": "/counted",
+             "plugins": {"limit-conn": conn,
+                         "limit-count": {"count": 1, "time_window": 60, "key_type": "var",
+                                         "key": "remote_addr", "rejected_code": 429,
+                                         "policy": "local", "show_limit_quota_header": True}},
+             "upstream": {"nodes": {"127.0.0.1:9": 1}, "type": "roundrobin"}},
+            {"id": "slow", "uri": "/slow",
+             "plugins": {"limit-conn": conn, "proxy-buffering": streamed, "proxy-rewrite": {"uri": "/hold"}},
+             "upstream": {"nodes": {"127.0.0.1:9080": 1}, "type": "roundrobin"}},
+            {"id": "hold", "uri": "/hold",
+             "plugins": {"fault-injection": {"delay": {"duration": 2},
+                                             "abort": {"http_status": 200, "body": "ok"}}},
+             "upstream": {"nodes": {"127.0.0.1:9": 1}, "type": "roundrobin"}},
+        ],
+    }) + "#END\n"
+
+    def together(url: str, n: int) -> list[int]:
+        with ThreadPoolExecutor(n) as pool:
+            return sorted(pool.map(lambda _: answer(url)[0], range(n)))
+
+    with pinned_apisix(tmp_path, rules) as base:
+        assert [answer(base + "/probe")[0] for _ in range(5)] == [502] * 5, "each 502 gave its slot back"
+        assert [answer(base + "/counted")[0] for _ in range(4)] == [502, 429, 429, 429]
+        assert together(base + "/slow", 3) == [200, 200, 429], "two at once, as configured"
+        assert together(base + "/slow", 2) == [200, 200], "an answer of the route gave its slot back"
