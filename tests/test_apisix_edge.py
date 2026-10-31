@@ -260,10 +260,11 @@ def test_space_reads_and_writes_count_apart(rendered):
             assert "labels" not in route and set(route["plugins"]) == {"response-rewrite"}, route["id"]
         elif route["id"] == "api-context-endpoint-history":
             # T-6185: the data host's history keeps the bulk limit and the reads' edge cache.
-            assert "labels" not in route and set(route["plugins"]) == {"limit-conn", "proxy-cache"}, route["id"]
+            assert "labels" not in route and set(route["plugins"]) == {"limit-conn", "proxy-buffering", "proxy-cache"}, route["id"]
         elif route["id"] == "api-context-endpoint":
             # T-5900: the data host keeps the edge cache of anonymous reads (tests/test_edge_api_cache.py).
-            assert "labels" not in route and set(route["plugins"]) == {"proxy-cache"}, route["id"]
+            # Buffered, or proxy-cache stores nothing (T-6185).
+            assert "labels" not in route and set(route["plugins"]) == {"proxy-buffering", "proxy-cache"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
