@@ -460,6 +460,8 @@ HEALTHY_STATUSES = [
     ["pipelines/test", 200],
     ["/entities?", 200],
     ["/ckan", 302],
+    # /docs/* has no public route: portal-ui's login answers a visitor (T-6200).
+    ["/docs/User-Guide/", 302],
     ["-X DELETE", 204],
     ["smoke-not-a-urn", 400],
     ["entities/urn", 200],
@@ -2058,3 +2060,15 @@ def test_seeded_mqtt_brokers_that_do_not_run_fail_the_run(tmp_path):
     result = run(tmp_path, dict(HEALTHY, mqttBrokers=[], mqttNamespace=""), "https://example.test", "https://idm.example.test")
     assert result.returncode == 1 and "the seed declares 2 MqttBroker(s), 0 run in no namespace (no broker-template" in result.stdout, result.stdout
     assert "skip  mqtt edge brokers" not in result.stdout
+
+
+def test_a_public_guide_page_fails_the_run(tmp_path):
+    """T-6200: the documentation is for signed-in people; a guide the edge serves to a visitor
+    is a red run, by page body and by status."""
+    bodies = [["/docs/API/07-websocket", "<title>Live Updates over WebSocket</title>"]]
+    statuses = [["/docs/User-Guide/", 200]]
+    spec = dict(EDGE_ONLY, bodies=bodies + HEALTHY["bodies"], statuses=statuses + HEALTHY["statuses"])
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "FAIL  the WebSocket guide reads without signing in" in result.stdout
+    assert "FAIL  a visitor asking for a guide page is sent to sign in (expected 302, got 200)" in result.stdout
