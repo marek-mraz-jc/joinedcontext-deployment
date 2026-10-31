@@ -132,12 +132,29 @@ def helm_template(branding):
         {"logo": "../logo.svg", "logoSvg": "<svg/>"},
         {"logo": "logo.svg", "logoSvg": '<svg onload="alert(1)"/>'},
         {"logo": "logo.svg", "logoSvg": "<svg><script>alert(1)</script></svg>"},
+        # F-R2DEP2-004: the event attribute after a slash or a quote, a reference that spells
+        # `javascript:`, an entity declared in the file, and a link out of the drawing.
+        {"logo": "logo.svg", "logoSvg": "<svg/onload=alert(1)>"},
+        {"logo": "logo.svg", "logoSvg": '<svg><g id="a"/onclick="alert(1)"></g></svg>'},
+        {"logo": "logo.svg", "logoSvg": '<svg><a href="javascript&#58;alert(1)"><path/></a></svg>'},
+        {"logo": "logo.svg", "logoSvg": '<!DOCTYPE svg [<!ENTITY x "x">]><svg>&x;</svg>'},
+        {"logo": "logo.svg", "logoSvg": '<svg><use href="https://evil.example/x.svg#a"/></svg>'},
+        {"logo": "logo.svg", "logoSvg": '<svg><image xlink:href="data:image/svg+xml;base64,PHN2Zz4="/></svg>'},
     ],
 )
 def test_a_branding_value_that_is_not_a_colour_font_or_drawing_stops_the_render(branding):
     result = helm_template(branding)
     assert result.returncode != 0, result.stdout
     assert "branding." in result.stderr
+
+
+@pytest.mark.parametrize("logo", sorted((PROJECT_ROOT / ".ci/example-deployments/environments").glob("*/branding/logo.svg")))
+def test_a_plain_drawing_with_a_local_reference_renders(logo):
+    """The guard refuses what runs, not what draws: the shipped logos and a gradient that
+    points at a `#fragment` of its own file still render."""
+    for svg in (logo.read_text(), '<svg><linearGradient id="g"/><use href="#g"/><rect fill="url(#g)"/></svg>'):
+        result = helm_template({"logo": "logo.svg", "logoSvg": svg})
+        assert result.returncode == 0, result.stderr
 
 
 def test_a_light_primary_colour_gets_dark_button_text():

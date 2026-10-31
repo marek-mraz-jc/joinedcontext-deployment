@@ -229,7 +229,7 @@ def test_space_reads_and_writes_count_apart(rendered):
         assert read["priority"] > write["priority"], route_id
         assert set(read["plugins"]) == {"limit-count"}, route_id
         limit = read["plugins"]["limit-count"]
-        assert (limit["count"], limit["key"], limit["rejected_code"]) == (count, "http_authorization", 429)
+        assert (limit["count"], limit["key"], limit["rejected_code"]) == (count, "$http_authorization $remote_addr", 429)
     for route in routes.values():
         if route["id"] in ANONYMOUS_ROUTE_LIMITS:
             # A fixed per-IP count for callers without a bearer (T-4141): no rate class, so the
@@ -682,3 +682,20 @@ def test_every_answer_gets_the_header_floor_where_nothing_set_it(rendered):
     ):
         assert f'h["{header}"] == nil' in lua and f'h["{header}"] = "{value}"' in lua, header
     assert re.search(r'local apps = "\.apps\.[a-z0-9.-]+"', lua), "the App hosts keep their own policy"
+
+
+@pytest.mark.parametrize("env", ["local", "dev"])
+def test_an_apps_ingress_may_carry_what_the_edge_ingress_carries(rendered, env):
+    """F-R2DEP2-006: the Portal copies the edge Ingress's class and annotations into each App's
+    Ingress (app_hosts.rs), and the portal-edge admission policy admits those alone. An
+    annotation added to the edge Ingress and not to that list would stop every App publishing."""
+    docs = rendered(env)
+    policy = next(d for d in docs if d.get("kind") == "ValidatingAdmissionPolicy"
+                  and d["metadata"]["name"].endswith("-portal-edge"))
+    checks = " ".join(v["expression"] for v in policy["spec"]["validations"])
+    edge = [d for d in docs if d.get("kind") == "Ingress" and d["metadata"]["name"].startswith("apisix")]
+    assert edge, "no edge Ingress rendered"
+    for ingress in edge:
+        assert f'object.spec.ingressClassName == "{ingress["spec"]["ingressClassName"]}"' in checks
+        for key in ingress["metadata"].get("annotations") or {}:
+            assert f'"{key}"' in checks, f"{key} of {ingress['metadata']['name']} is not admitted on an App's Ingress"

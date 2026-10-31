@@ -107,8 +107,7 @@ wasm-host-tokens:
     # The Kubernetes API, for TokenRequest: not a pod, so named by address; k3s serves it on 6443,
     # the port the policy sees after the Service's DNAT.
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 6443

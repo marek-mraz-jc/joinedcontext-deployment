@@ -34,15 +34,7 @@ context-broker:
     # range is excepted: a subscription cannot steer the broker at the cluster, the node or a
     # metadata service (G11, T-3882). A subscriber inside this cluster needs its own rule.
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-              - 169.254.0.0/16
-              - 127.0.0.0/8
-              - 100.64.0.0/10
+        - publicInternet: true
       ports:
         - protocol: TCP
           port: 80

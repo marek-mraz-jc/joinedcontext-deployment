@@ -24,10 +24,10 @@ argocd:
           port: 8080
     # The metrics of the controller, the server and the repo server (§2.9).
     - from:
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
       ports:
         - protocol: TCP
           port: 8082
@@ -55,22 +55,13 @@ argocd:
     # The Kubernetes API: not a pod, so named by address; k3s serves it on 6443, and the policy
     # sees that port after the Service's DNAT.
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 6443
     # The public internet only: no pod, node, service or metadata address behind 443.
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-              - 169.254.0.0/16
-              - 127.0.0.0/8
-              - 100.64.0.0/10
+        - publicInternet: true
       ports:
         - protocol: TCP
           port: 443

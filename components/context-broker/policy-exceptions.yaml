@@ -21,5 +21,8 @@ spec:
       - resources:
           kinds:
             - Deployment
+          # `main` and every broker of global.contextBrokers (context-broker-{name}), which
+          # renders the same base values (F-R2DEP2-019).
           names:
             - context-broker
+            - context-broker-*

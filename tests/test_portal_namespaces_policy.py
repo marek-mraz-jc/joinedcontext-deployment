@@ -216,9 +216,15 @@ TOKEN_VOLUME = {"name": "t", "projected": {"sources": [{"serviceAccountToken": {
         {"hostIPC": True},
         {"containers": [{"name": "app", "image": "x", "securityContext": {"privileged": True}}]},
         {"initContainers": [{"name": "init", "image": "x", "securityContext": {"privileged": True}}]},
+        # F-R2DEP2-024: what Pod Security refuses only in the apps namespaces.
+        {"containers": [{"name": "app", "image": "x", "securityContext": {"capabilities": {"add": ["SYS_ADMIN"]}}}]},
+        {"initContainers": [{"name": "init", "image": "x", "securityContext": {"capabilities": {"add": ["NET_ADMIN"]}}}]},
+        {"containers": [{"name": "app", "image": "x", "ports": [{"containerPort": 80, "hostPort": 80}]}]},
+        {"containers": [{"name": "app", "image": "x", "securityContext": {"allowPrivilegeEscalation": True}}]},
     ],
     ids=["another-accounts-token", "token-by-default", "projected-token", "host-path", "host-network",
-         "host-pid", "host-ipc", "privileged", "privileged-init"],
+         "host-pid", "host-ipc", "privileged", "privileged-init", "added-capability", "added-capability-init",
+         "host-port", "privilege-escalation"],
 )
 @pytest.mark.parametrize("kind", ["Deployment", "Job"])
 def test_a_workload_with_a_token_or_the_node_is_refused_to_the_portal(workload_policy, tmp_path, pod, kind):
@@ -230,6 +236,14 @@ def test_a_workload_with_a_token_or_the_node_is_refused_to_the_portal(workload_p
     if spec.get("automountServiceAccountToken") is None:
         del spec["automountServiceAccountToken"]
     assert judged(workload_policy, resource, tmp_path) == "fail"
+
+
+def test_a_hardened_workload_with_a_container_port_passes(workload_policy, tmp_path):
+    """The bound refuses what reaches the node, not what every App writes."""
+    resource = workload(containers=[{"name": "app", "image": "x", "ports": [{"containerPort": 8080}],
+                                     "securityContext": {"allowPrivilegeEscalation": False,
+                                                         "capabilities": {"drop": ["ALL"]}}}])
+    assert judged(workload_policy, resource, tmp_path) == "pass"
 
 
 def test_someone_elses_workload_is_not_the_policys_business(workload_policy, tmp_path):
@@ -340,6 +354,34 @@ def test_an_edge_object_beyond_an_apps_host_is_refused_to_the_portal(edge_policy
     """T-5702 (F-DEP1-001): RBAC lets the Portal create any Ingress and Certificate in the APISIX
     namespace; an Ingress straight to another Service would skip the edge, and a Certificate
     naming a platform Secret would overwrite it."""
+    assert judged(edge_policy, resource, tmp_path) == "fail"
+
+
+def annotated(annotations: dict, ingress_class: str = "traefik") -> dict:
+    resource = app_ingress()
+    resource["metadata"]["annotations"] = annotations
+    resource["spec"]["ingressClassName"] = ingress_class
+    return resource
+
+
+EDGE_ANNOTATIONS = {"ingress.kubernetes.io/affinity": "cookie",
+                    "traefik.ingress.kubernetes.io/router.tls.options": "dev-apisix-bsi-tr-02102@kubernetescrd",
+                    "nginx.ingress.kubernetes.io/proxy-buffer-size": "16k"}
+
+
+def test_an_apps_ingress_keeps_the_edges_class_and_annotations(edge_policy, tmp_path):
+    """F-R2DEP2-006: app_hosts.rs copies the edge Ingress's class and annotations; those pass."""
+    assert judged(edge_policy, annotated(EDGE_ANNOTATIONS), tmp_path) == "pass"
+
+
+@pytest.mark.parametrize("resource", [
+    annotated({**EDGE_ANNOTATIONS, "nginx.ingress.kubernetes.io/server-snippet": "location / { return 200; }"}),
+    annotated({"traefik.ingress.kubernetes.io/router.middlewares": "dev-keycloak-strip@kubernetescrd"}),
+    annotated(EDGE_ANNOTATIONS, ingress_class="nginx-internal"),
+], ids=["nginx-snippet", "foreign-middleware", "other-class"])
+def test_an_apps_ingress_that_changes_the_edge_is_refused_to_the_portal(edge_policy, tmp_path, resource):
+    """F-R2DEP2-006: with the class or an annotation of its own choosing, an Ingress the Portal
+    writes would change what the edge does beyond routing to APISIX."""
     assert judged(edge_policy, resource, tmp_path) == "fail"
 
 

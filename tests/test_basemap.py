@@ -131,10 +131,8 @@ def test_the_refresh_reaches_only_public_addresses():
     """The refresh job fetches from the internet on 443, never inside the cluster or the node's
     networks (the CKAN harvest's rule): its open egress block leaves out every private range."""
     policies = yaml.safe_load((COMPONENT / "networkpolicies.yaml").read_text())
-    blocks = [peer["ipBlock"] for rule in policies["basemap-refresh"]["egress"]
-              for peer in rule["to"] if "ipBlock" in peer]
-    assert blocks, "the refresh job has no internet egress"
-    for block in blocks:
-        assert block["cidr"] == "0.0.0.0/0"
-        assert set(block.get("except", [])) >= {
-            "10.0.0.0/8", "100.64.0.0/10", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.168.0.0/16"}, block
+    peers = [peer for rule in policies["basemap-refresh"]["egress"] for peer in rule["to"]]
+    # The shared `publicInternet` peer (components/networkpolicies, F-R2DEP2-023) excepts every
+    # private range; no other address range is named.
+    assert {"publicInternet": True} in peers, "the refresh job has no internet egress"
+    assert not [peer for peer in peers if "ipBlock" in peer], peers

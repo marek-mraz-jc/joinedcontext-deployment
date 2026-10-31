@@ -12,10 +12,10 @@ argocd-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               app.kubernetes.io/name: prometheus
+          namespaceFrom: monitoring.monitoring.prometheusNamespace
       ports:
         - port: 4143
           protocol: TCP

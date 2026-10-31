@@ -85,4 +85,5 @@ def test_keycloak_reaches_the_api_server_and_https_only_on_public_addresses(rend
         if peer.get("ipBlock", {}).get("cidr") == "0.0.0.0/0"
         for port in rule.get("ports", [])
     )
-    assert open_to_world == [(443, tuple(sorted(PRIVATE))), (6443, ())], open_to_world
+    # 6443 is the `kubeApi` peer: every address where global.kubeApiCidrs names none.
+    assert open_to_world == [(443, tuple(sorted(PRIVATE | {"0.0.0.0/8", "198.18.0.0/15", "224.0.0.0/4"}))), (6443, ())], open_to_world

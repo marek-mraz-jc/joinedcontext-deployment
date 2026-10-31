@@ -25,8 +25,7 @@ sandbox-reaper:
         - protocol: TCP
           port: 53
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - kubeApi: true
       ports:
         - protocol: TCP
           port: 443
