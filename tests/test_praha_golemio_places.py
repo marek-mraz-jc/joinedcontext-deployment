@@ -148,6 +148,19 @@ def test_a_record_without_a_name_or_a_bad_web_address_is_handled():
 
 
 @requires_docker
+@pytest.mark.parametrize("name", [n for n in SETS if n != "police"])
+def test_only_a_police_desk_falls_back_to_the_city_police_name(name):
+    """F-R2BNT3-006: the six feeds share one template, and a nameless record with a note was named
+    "Městská policie Praha: <note>" in every one of them, a library or a playground too."""
+    def edit(features):
+        features[0]["properties"]["name"] = ""
+        features[0]["properties"]["note"] = "vchod z ulice"
+    places = run(name, edited(name, edit))
+    assert str(RECORDED[name]["features"][0]["properties"]["id"]) not in places
+    assert not any("Městská policie" in json.dumps(e, ensure_ascii=False) for e in places.values())
+
+
+@requires_docker
 @pytest.mark.parametrize("document,reason", [
     ({"type": "FeatureCollection", "features": []}, "listed no place"),
     ({"error_message": "Forbidden", "error_status": 403}, "not a feature list"),
