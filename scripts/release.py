@@ -180,7 +180,9 @@ def kubectl(*args: str, stdin: str | None = None) -> str:
     return done.stdout
 
 
-def record(namespace: str, environment: str, cwd: Path = ROOT) -> dict:
+def record(namespace: str, environment: str, cwd: Path = ROOT, full: bool = False) -> dict:
+    """Writes jc-release. `fullSyncAt` is when the last full sync ran (scripts/apply-pins.py plans a
+    full one once it is old): a full apply sets it, a scoped one carries it over."""
     sha = git("rev-parse", "HEAD", cwd=cwd)
     tags = [t for t in git("tag", "--points-at", sha, "--list", "v*", cwd=cwd).split() if VERSION.match(t)]
     who = git("config", "user.email", cwd=cwd, check=False) or getpass.getuser()
@@ -188,6 +190,16 @@ def record(namespace: str, environment: str, cwd: Path = ROOT) -> dict:
             "describe": git("describe", "--tags", "--always", "--dirty", cwd=cwd),
             "environment": environment, "appliedBy": who,
             "appliedAt": f"{datetime.now(UTC):%Y-%m-%dT%H:%M:%SZ}"}
+    if full:
+        data["fullSyncAt"] = data["appliedAt"]
+    else:
+        try:
+            before = json.loads(kubectl("-n", namespace, "get", "configmap", RECORD, "-o", "json")).get("data") or {}
+        except (Refused, OSError, ValueError):
+            before = {}
+        # unreadable: no fullSyncAt, so the next dev-apply is a full sync
+        if before.get("fullSyncAt"):
+            data["fullSyncAt"] = before["fullSyncAt"]
     manifest = {"apiVersion": "v1", "kind": "ConfigMap",
                 "metadata": {"name": RECORD, "namespace": namespace,
                              "labels": {"app.kubernetes.io/part-of": "joinedcontext",
@@ -216,6 +228,7 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("record")
     r.add_argument("namespace")
     r.add_argument("environment")
+    r.add_argument("--full", action="store_true", help="the apply was a full sync")
     sub.add_parser("show").add_argument("namespace")
     sub.add_parser("changelog").add_argument("--check", action="store_true")
     args = p.parse_args(argv)
@@ -225,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "verify":
             print(verify(args.rev))
         elif args.command == "record":
-            print(json.dumps(record(args.namespace, args.environment)))
+            print(json.dumps(record(args.namespace, args.environment, full=args.full)))
         elif args.command == "show":
             print(show(args.namespace))
         else:
