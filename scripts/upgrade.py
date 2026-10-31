@@ -114,6 +114,13 @@ def backup_method(cluster: dict) -> str | None:
     return None
 
 
+def backup_name(cluster: str, version: str, stamp: str) -> str:
+    """A Backup's name: a DNS label (lower-case alphanumerics and `-`, 63 at most, alphanumeric at
+    both ends), so a long cluster name or a `+build` version cannot make the backup step fail."""
+    name = re.sub(r"[^a-z0-9-]", "-", f"{cluster}-pre-{version}-{stamp}".lower())
+    return name[:63].strip("-")
+
+
 def changed_releases(before: list[dict], after: list[dict]) -> list[tuple[str, str, int]]:
     """(name, namespace, previous revision) of every release `helm list` shows advanced."""
     old = {(r["name"], r["namespace"]): int(r["revision"]) for r in before}
@@ -196,7 +203,7 @@ class Upgrade:
             if not method:
                 continue
             ns, name = cluster["metadata"]["namespace"], cluster["metadata"]["name"]
-            backup = f"{name}-pre-{self.version.replace('.', '-')}-{stamp}"[:63]
+            backup = backup_name(name, self.version, stamp)
             manifest = {"apiVersion": "postgresql.cnpg.io/v1", "kind": "Backup",
                         "metadata": {"name": backup, "namespace": ns,
                                      "labels": {"joinedcontext.com/upgrade": self.version.replace("+", "-")}},

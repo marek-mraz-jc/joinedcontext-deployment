@@ -15,6 +15,7 @@ import sys
 import textwrap
 from pathlib import Path
 
+import re
 import pytest
 import yaml
 
@@ -284,3 +285,13 @@ def test_release_notes_read_every_pin_and_refuse_one_without_a_digest(tmp_path):
 def test_the_real_pins_all_carry_a_digest():
     notes = __import__("release-notes")
     assert len(notes.images(ROOT / "components")) > 20
+
+
+@pytest.mark.parametrize("cluster, version", [
+    ("a" * 51, "v1.2.3"),               # the 63rd character lands on a `-` (F-R2DEP3-022)
+    ("postgres-cluster", "v1.2.3+build.7"),  # `+` is no DNS character
+    ("x" * 70, "v1.0.0"),
+])
+def test_a_backup_name_is_a_dns_label_whatever_the_cluster_and_version(cluster, version):
+    name = upgrade.backup_name(cluster, version, "20261031120000")
+    assert re.fullmatch(r"[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?", name), name
