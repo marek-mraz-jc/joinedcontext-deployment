@@ -124,22 +124,29 @@ probes:
   # range over millions) holds a core, and Bento cannot free it: DELETE /streams/{id} hangs and
   # leaves the stream listed `"active":false` while /ping and every other stream go on
   # (measured on 1.22.0, 2026-10-25). The Portal deletes a run past its cap and stops starting
-  # it; a stream still held stopped two probes in a row fails this one, and the restart frees
-  # the core. A finished run is deleted within the Portal's next queue tick, seconds, so it is
-  # never seen twice a minute apart; a streams API that does not answer fails it too. A stream
-  # is told by its id and its uptime: Bento freezes `uptime` when a stream stops and starts it
-  # again on the next run under the same id, so two runs of one frequent pipeline that each
-  # finished just before a probe are two streams, not one held (T-6140: dev restarted every
-  # ~40 min and turned every dev-smoke red), while a stop that never ends keeps its uptime.
+  # it; a stream still listed stopped ten minutes later fails this probe, and the restart frees
+  # the core. A stream is told by its id and its uptime: Bento freezes `uptime` when a stream
+  # stops and starts it again on the next run under the same id, so two runs of one frequent
+  # pipeline are two streams, while a stop that never ends keeps its uptime. The ten minutes
+  # are the Portal's slack: it deletes a finished run on its queue tick, one tick after another,
+  # and under load a finished run stayed listed past two probes a minute apart, which
+  # restarted every stream on the runner (T-6140: dev every ~40 min, every dev-smoke red). A
+  # held stream costs a core for those minutes, a restart costs every project's runs. The
+  # probe prints what it held, so the kubelet's event names the stream; a streams API that
+  # does not answer fails it too.
   liveness:
     exec:
       - sh
       - -c
       - >-
-        l=$(wget -qO- -T 5 http://127.0.0.1:4195/streams) || exit 1;
-        echo "$l" | grep -o '"[^"]*":{"active":false,"uptime":[^,}]*' | sort > /tmp/stopped.now;
-        touch /tmp/stopped; held=$(comm -12 /tmp/stopped /tmp/stopped.now);
-        mv /tmp/stopped.now /tmp/stopped; test -z "$held"
+        l=$(wget -qO- -T 5 http://127.0.0.1:4195/streams) || { echo "the streams API did not answer"; exit 1; };
+        touch /tmp/stopped; : > /tmp/stopped.now;
+        echo "$l" | grep -o '"[^"]*":{"active":false,"uptime":[^,}]*' |
+        awk -v now="$(date +%s)" -v keep=600 'BEGIN { while ((getline line < "/tmp/stopped") > 0) { if (split(line, f, "\t") == 2) first[f[1]] = f[2] } }
+        { s = ($0 in first) ? first[$0] : now; print $0 "\t" s > "/tmp/stopped.now";
+        if (now - s >= keep) { split($0, p, "\""); u = $0; sub(/.*:/, "", u); held = held " " p[2] " (uptime " u " s, stopped " (now - s) " s)" } }
+        END { if (held != "") { print "streams stopped " keep " s or more and not deleted:" held; exit 1 } }';
+        r=$?; mv /tmp/stopped.now /tmp/stopped; exit $r
     periodSeconds: 60
     timeoutSeconds: 10
     failureThreshold: 2
