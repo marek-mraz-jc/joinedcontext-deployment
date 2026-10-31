@@ -246,6 +246,17 @@ apisix:
           "" 60;
           default $sent_http_x_ratelimit_reset;
         }
+        # T-6170: the Origin a refusal the edge writes itself (429, 502, 503, 504) hands its answer
+        # to, by the `cors` rule of the routes (`allow_origins_by_regex` in apisix-plugins.yaml):
+        # an https page on a host under this platform's domain, with its dots escaped, and no
+        # other. The named locations run after the plugin chain, so the route's `cors` headers
+        # never reach them: without this a page on the open data host read an edge 429 as a
+        # network error, never saw `Retry-After`, and the chart stayed blank. No credentials are
+        # allowed (the routes send none either) and the answer holds no data, only the refusal.
+        map $http_origin $jc_refusal_origin {
+          default "";
+          "~^https://[^@/]+\.{{ $global.domain | replace "." "[.]" }}$" $http_origin;
+        }
       # The body ceiling belongs here, in the server block, and not above: APISIX's own
       # `client_max_body_size 0` is already in the http block and nginx refuses to start on a
       # duplicate in the same block (T-2263). `0` reads as "no limit" for a body with a
@@ -315,11 +326,31 @@ apisix:
           set $jc_refusal html_de;
         }
         error_page 429 = @too_many_requests_$jc_refusal;
+        # T-6170: an `error_page` is an internal redirect, which empties `ngx.ctx`, and APISIX's
+        # log phase lives in its own locations, not in these named ones: a request a `limit-conn`
+        # had admitted and that ended here (a 502 or 504 the edge wrote, a later plugin's 429)
+        # never gave its slot back. Prod's temporal route admitted 5 of its 10 per client that
+        # way. The `edge-not-found` global rule holds the context of a request on a route with a
+        # `limit-conn` under `$request_id` (which survives the redirect), `edge-headers` drops it
+        # when the answer is the route's own, and this block, inherited only by the named
+        # locations (APISIX's locations set their own), runs APISIX's log phase for the rest.
+        log_by_lua_block {
+          local held = package.loaded["jc.edge.held"]
+          local ctx = held and held:get(ngx.var.request_id)
+          if ctx then
+            held:delete(ngx.var.request_id)
+            ngx.ctx.api_ctx = ctx
+            apisix.http_log_phase()
+          end
+        }
         location @too_many_requests_html_sk {
           internal;
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_refusal_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -333,6 +364,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_refusal_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -346,6 +380,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_refusal_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -359,6 +396,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_refusal_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -371,6 +411,9 @@ apisix:
           internal;
           default_type application/problem+json;
           add_header Retry-After $jc_refusal_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -447,6 +490,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -459,6 +505,9 @@ apisix:
           internal;
           default_type application/problem+json;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -472,6 +521,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -487,6 +539,9 @@ apisix:
           internal;
           default_type application/problem+json;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -503,6 +558,9 @@ apisix:
           default_type text/html;
           charset utf-8;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;
@@ -515,6 +573,9 @@ apisix:
           internal;
           default_type application/problem+json;
           add_header Retry-After $jc_retry_after always;
+          add_header Access-Control-Allow-Origin $jc_refusal_origin always;
+          add_header Access-Control-Expose-Headers Retry-After always;
+          add_header Vary Origin always;
           add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-Frame-Options "DENY" always;

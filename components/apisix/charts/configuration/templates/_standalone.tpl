@@ -37,7 +37,11 @@
            are the edge's (`__Host-jc_edge`, its chunks `__Host-jc_edge2`.., `__Host-jc_edge_apps`,
            `__Host-jc_edge_app_{name}`) and an App host's (`__Host-jc_app_{name}`); every other
            cookie, the Portal's `__Host-jc_session` and `__Host-jc_csrf` among them, passes. One
-           rule holds both, because APISIX drops a plugin two global rules name. */}}
+           rule holds both, because APISIX drops a plugin two global rules name. T-6170: it also
+           holds the context of a request on a route with a `limit-conn` under `$request_id`, so
+           the server block's log phase can give the slot back when the answer ends in one of the
+           edge's error pages (an `error_page` redirect empties `ngx.ctx`); `edge-headers` drops
+           the entry when the route answers itself. Bounded (20 000 per worker, 15 min). */}}
       - id: edge-not-found
         plugins:
           serverless-pre-function:
@@ -47,6 +51,15 @@
                 return function(conf, ctx)
                   if ctx.matched_route == nil then
                     return ngx.exit(404)
+                  end
+                  local plugins = ctx.matched_route.value.plugins
+                  if plugins and plugins["limit-conn"] then
+                    local held = package.loaded["jc.edge.held"]
+                    if not held then
+                      held = require("resty.lrucache").new(20000)
+                      package.loaded["jc.edge.held"] = held
+                    end
+                    held:set(ngx.var.request_id, ctx, 900)
                   end
                   local raw = ngx.req.get_headers()["Cookie"]
                   if raw == nil then
@@ -78,6 +91,10 @@
             functions:
               - >-
                 return function()
+                  local held = package.loaded["jc.edge.held"]
+                  if held then
+                    held:delete(ngx.var.request_id)
+                  end
                   local h = ngx.header
                   if h["Strict-Transport-Security"] == nil then
                     h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
