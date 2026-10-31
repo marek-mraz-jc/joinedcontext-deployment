@@ -9,6 +9,9 @@
   var LIMIT_BYTES = 20 * 1024 * 1024;
   var TIMEOUT_MS = 15000;
   var PAGE = 1000;
+  // T-6170: reads one page runs at once, across its chart frames. The edge holds a client to 10
+  // bulk and history reads at once; a dataset page with six charts asked for six and lost one.
+  var READS = 4;
   var MAX_DAYS = 31;
   var SLUG = /^[a-z0-9]{16,64}$/;
   var NAME = /^[A-Za-z][A-Za-z0-9_-]{0,127}$/;
@@ -202,6 +205,53 @@
     return error;
   }
 
+  // One of the page's READS slots for `run` (a function returning a promise), held until it
+  // settles. Every chart frame of a page shares an origin, so Web Locks count them together;
+  // without them (an old browser, node) the slots are this frame's alone.
+  var held = 0;
+  var queued = [];
+  function slot(run) {
+    var locks = root.navigator && root.navigator.locks;
+    if (locks && typeof locks.request === "function") {
+      var free = function (i) {
+        // Every slot taken: wait in line for one of them.
+        if (i === READS) return locks.request("jc-viz-read-" + Math.floor(Math.random() * READS), run);
+        return locks.request("jc-viz-read-" + i, { ifAvailable: true }, function (lock) {
+          return lock ? run() : free(i + 1);
+        });
+      };
+      return free(0);
+    }
+    return new Promise(function (resolve) {
+      if (held < READS) {
+        held += 1;
+        resolve();
+      } else queued.push(resolve);
+    }).then(run).finally(function () {
+      var next = queued.shift();
+      if (next) next();
+      else held -= 1;
+    });
+  }
+
+  // T-6170: one more try after a 429 or a network error (a refusal without CORS reads as one),
+  // after Retry-After capped at 2 s, or 1 s, plus up to 0.5 s so the charts do not come back
+  // together. A second refusal is the reader's to see.
+  function retried(fetcher, url, options) {
+    var again = function (seconds) {
+      var wait = Math.min(seconds > 0 ? seconds : 1, 2) * 1000 + Math.random() * 500;
+      return new Promise(function (resolve) { setTimeout(resolve, wait); }).then(function () {
+        return fetcher(url, options);
+      });
+    };
+    return fetcher(url, options).then(function (r) {
+      return r.status === 429 ? again(+r.headers.get("Retry-After")) : r;
+    }, function (error) {
+      if (error && error.name === "AbortError") throw error;
+      return again(0);
+    });
+  }
+
   // A JSON or text answer, stopped once the budget's bytes are spent.
   function read(response, budget) {
     if (!response.ok) {
@@ -330,8 +380,10 @@
     var budget = { rows: LIMIT_ROWS, bytes: LIMIT_BYTES };
     var stopAt = deadline || Date.now() + TIMEOUT_MS - 3000;
     var open = function (url) {
-      return fetcher(url, { credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) {
-        return read(r, budget).then(function (text) { return { response: r, text: text }; });
+      return slot(function () {
+        return retried(fetcher, url, { credentials: "omit", referrerPolicy: "no-referrer" }).then(function (r) {
+          return read(r, budget).then(function (text) { return { response: r, text: text }; });
+        });
       });
     };
     var get = function (url) {

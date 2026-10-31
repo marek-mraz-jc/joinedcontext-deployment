@@ -6,7 +6,7 @@
  "test_alert_notes.py": 12.4,
  "test_alert_rules.py": 46.4,
  "test_api_host.py": 177.6,
- "test_apisix_429_contract.py": 68.3,
+ "test_apisix_429_contract.py": 95.0,
  "test_apisix_edge.py": 188.2,
  "test_apisix_routes.py": 39.4,
  "test_app_registry.py": 84.8,

@@ -202,3 +202,67 @@ test("a 206 that never ends stops at the limits with a partial note; a next wind
   const first = async () => cut(Array.from({ length: 51 }, (_, i) => series(`urn:${i}`, Array.from({ length: 1000 }, (_, j) => [j, "x"]))));
   await assert.rejects(host.load(view(pm), API, "en", first, NOW), /50,000 rows/);
 });
+
+// T-6170: the edge refuses a client past 10 history reads at once; a dataset page of six charts
+// lost one to a 429 the browser could not read, and the chart stayed blank.
+const refusal = (retryAfter) => ({ ok: false, status: 429, headers: { get: (name) => (name === "Retry-After" ? retryAfter : null) } });
+const temp = { source: "temporal", type: "WeatherObserved", attrs: ["temperature"], last: "P1D" };
+const reading = [{ id: "urn:a", type: "WeatherObserved", temperature: { type: "Property", values: [[9.1, "2026-10-18T10:00:00Z"]] } }];
+
+test("a 429 or a network error is tried once more, a second refusal reaches the reader", async () => {
+  for (const first of [() => refusal("0"), () => { throw new TypeError("Failed to fetch"); }]) {
+    let calls = 0;
+    const fetcher = async (url) => {
+      if (!url.includes("/temporal/")) return answer([]);
+      calls += 1;
+      return calls === 1 ? first() : answer(reading);
+    };
+    const started = Date.now();
+    const data = await host.load(view(temp), API, "en", fetcher, NOW);
+    assert.equal(calls, 2);
+    assert.deepEqual(data.rows.map((r) => r.temperature), [9.1]);
+    assert.ok(Date.now() - started >= 1000, "it waits before the second try");
+  }
+  let calls = 0;
+  const always = async (url) => (url.includes("/temporal/") ? (calls += 1, refusal("1")) : answer([]));
+  await assert.rejects(host.load(view(temp), API, "en", always, NOW), (error) => error.status === 429);
+  assert.equal(calls, 2, "one retry, not a loop");
+  const aborted = async () => { throw Object.assign(new Error("aborted"), { name: "AbortError" }); };
+  await assert.rejects(host.load(view(temp), API, "en", aborted, NOW), (error) => error.name === "AbortError");
+});
+
+// Web Locks as a browser grants them: one holder per name, `ifAvailable` answers null at once.
+const webLocks = () => {
+  const lines = new Map(); // a held name -> the requests waiting for it
+  const release = (name) => { const next = lines.get(name).shift(); if (next) next(); else lines.delete(name); };
+  const request = (name, options, run) => {
+    if (typeof options === "function") return request(name, {}, options);
+    if (lines.has(name) && options.ifAvailable) return Promise.resolve().then(() => run(null));
+    const granted = lines.has(name) ? new Promise((resolve) => lines.get(name).push(resolve)) : (lines.set(name, []), Promise.resolve());
+    return granted.then(() => run({ name })).finally(() => release(name));
+  };
+  return { request };
+};
+
+for (const [label, locks] of [["in one frame", null], ["across frames (Web Locks)", webLocks()]]) {
+  test(`six charts read at most four at once, ${label}`, async (t) => {
+    if (locks) {
+      const before = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+      Object.defineProperty(globalThis, "navigator", { value: { locks }, configurable: true });
+      t.after(() => (before ? Object.defineProperty(globalThis, "navigator", before) : delete globalThis.navigator));
+    }
+    let open = 0;
+    let most = 0;
+    const fetcher = async (url) => {
+      open += 1;
+      most = Math.max(most, open);
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      open -= 1;
+      return answer(url.includes("/temporal/") ? reading : []);
+    };
+    const charts = await Promise.all(Array.from({ length: 6 }, () => host.load(view(temp), API, "en", fetcher, NOW)));
+    assert.equal(charts.length, 6);
+    assert.ok(charts.every((c) => c.rows.length === 1));
+    assert.equal(most, 4);
+  });
+}
