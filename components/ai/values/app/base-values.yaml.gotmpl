@@ -8,7 +8,6 @@
 # - [x] Named port, Service; the route is in apisix-routes.yaml (ai.{domain})
 
 image: {{ $images.server | toJson }}
-host: {{ printf "ai.%s" $global.domain | quote }}
 domain: {{ $global.domain | quote }}
 
 serviceMesh:

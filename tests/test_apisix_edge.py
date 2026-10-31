@@ -346,12 +346,13 @@ def test_the_edge_client_secret_reaches_apisix_from_a_secret_only(rendered):
     annotations = deployment["spec"]["template"]["metadata"]["annotations"]
     assert "443" in annotations["config.linkerd.io/skip-outbound-ports"].split(",")
     policy = next(d for d in docs if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "apisix")
-    internet = [
+    # The hop is DNATed to the ingress controller's pod, which the rule names (T-6218).
+    issuer = [
         {p["port"] for p in rule["ports"]}
         for rule in policy["spec"]["egress"]
-        if any("ipBlock" in to for to in rule.get("to", []))
+        if any("traefik" in str(to.get("podSelector")) for to in rule.get("to", []))
     ]
-    assert internet and {443, 8443} <= internet[0], internet
+    assert issuer and {443, 8443} <= issuer[0], issuer
 
 
 

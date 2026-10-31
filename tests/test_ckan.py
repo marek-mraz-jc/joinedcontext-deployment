@@ -508,6 +508,19 @@ def test_the_api_token_job_writes_one_secret_and_reaches_two_things(rendered):
     assert ports == [53, 53, 443, 5000, 6443]
 
 
+def test_no_two_harvests_start_together(rendered):
+    """T-6218 (R2DEP1 F-011): each harvest may take 1Gi and reads the gateway through one edge
+    address, so the sources of one catalogue run at different minutes; the minute is the
+    CronJob's, never part of the harvest's own configuration."""
+    crons = [d for d in rendered("dev") if d.get("kind") == "CronJob" and "-harvest-" in d["metadata"]["name"]]
+    assert len(crons) >= 2
+    schedules = [c["spec"]["schedule"] for c in crons]
+    assert len(set(schedules)) == len(schedules), schedules
+    for cron in crons:
+        env = {e["name"]: e for e in cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["env"]}
+        assert "schedule" not in json.loads(env["HARVEST_CONFIG"]["value"])
+
+
 @requires_helmfile
 def test_the_harvest_writes_with_the_token_and_reaches_only_public_443(rendered):
     """T-4151: the city's NKOD harvest is a CronJob on the catalogue's pinned image, with the
@@ -705,3 +718,14 @@ def test_the_catalogue_speaks_slovak_and_offers_the_publishers_languages(rendere
     env = env_of(ckan_container(rendered("dev")))
     assert env.get("CKAN__LOCALE_DEFAULT") == "sk"
     assert env.get("CKAN__LOCALES_OFFERED", "").split() == ["sk", "en", "cs", "fi", "hu"]
+
+
+@requires_helm
+def test_a_value_the_chart_never_renders_is_refused(tmp_path):
+    """T-6218 (R2DEP1 F-022): `ckan.envSecret` was in the values and the schema, but no template
+    read it, so a secret set there never reached CKAN. The strict schema now refuses it."""
+    values_file = tmp_path / "values.yaml"
+    values_file.write_text(yaml.dump(CHART_BASE_VALUES | {"ckan": CHART_BASE_VALUES["ckan"] | {"envSecret": {"X": "y"}}}))
+    result = subprocess.run(["helm", "template", "ckan-catalogue", str(CHART), "-f", str(values_file)],
+                            capture_output=True, text=True)
+    assert result.returncode != 0 and "envSecret" in result.stderr, result.stderr

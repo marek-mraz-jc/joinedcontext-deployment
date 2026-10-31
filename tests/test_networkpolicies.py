@@ -713,3 +713,45 @@ def test_the_token_service_reaches_the_api_server_at_the_environment_s_addresses
     `global.kubeApiCidrs` names the API server's addresses where an environment knows them
     (smartcity), so the rule opens 6443 there only; the default keeps it open (F-BNT3-003)."""
     assert _token_service_api_cidrs(rendered(env)) == cidrs
+
+
+def _only_the_ingress_controller(peer):
+    names = {value for expression in peer.get("podSelector", {}).get("matchExpressions", [])
+             for value in expression["values"]}
+    return "ipBlock" not in peer and names and names <= {"traefik", "ingress-nginx"}
+
+
+@pytest.mark.parametrize("env", ENVIRONMENTS)
+def test_the_internet_opens_only_where_a_workload_calls_it(rendered, env):
+    """T-6218 (R2DEP1 F-004, F-005, F-016, F-017): the edge reaches the public issuer through the
+    ingress controller the host is DNATed to, and nothing else on the internet; the ACME solver is
+    called by that controller alone; the agent proxy's 8443 is that controller's port, not the
+    internet's; apps-db opens 443 only to archive to an external store, which none of these
+    environments does (dev archives to the in-cluster store)."""
+    docs = [d for d in rendered(env) if d.get("kind") == "NetworkPolicy"]
+    groups = egress_rules_by_selector(docs)
+
+    def egress(name):
+        return [rule for selector, rules in groups.items() if dict(selector).get("app.kubernetes.io/name") == name
+                for rule in rules]
+
+    edge = egress("apisix")
+    assert edge, "apisix has no egress policy"
+    assert not [r for r in edge if any("ipBlock" in p for p in r.get("to") or [])], "the edge reaches the internet"
+    issuer = [r for r in edge if {443, 8443} <= {p["port"] for p in r.get("ports") or []}]
+    assert issuer and all(_only_the_ingress_controller(p) for r in issuer for p in r["to"])
+
+    (solver,) = [d for d in docs if d["metadata"]["name"] == "acme-http01-solver"]
+    assert all(_only_the_ingress_controller(p) for r in solver["spec"]["ingress"] for p in r["from"])
+
+    proxy = egress("agent-runner-proxy")
+    assert proxy or env != "dev", "the agent proxy has no egress policy"
+    for rule in proxy:
+        if 8443 in {p["port"] for p in rule.get("ports") or []}:
+            assert all(_only_the_ingress_controller(p) for p in rule["to"]), rule
+
+    apps_db = [rule for selector, rules in groups.items() if dict(selector).get("cnpg.io/cluster") == "apps-db"
+               for rule in rules]
+    for rule in apps_db:
+        if any("ipBlock" in p for p in rule.get("to") or []):
+            assert 443 not in {p["port"] for p in rule.get("ports") or []}, f"apps-db reaches the internet on 443 in {env}"
