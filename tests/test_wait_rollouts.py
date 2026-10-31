@@ -10,8 +10,9 @@ from pathlib import Path
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "wait-rollouts.sh"
 
 KUBECTL = """#!/usr/bin/env bash
+[ -n "$CALLS" ] && echo "$*" >>"$CALLS"
 case "$*" in
-  "get ns -o name") echo namespace/dev ;;
+  "get ns -o name") printf '%s\\n' ${NAMESPACES:-namespace/dev} ;;
   "get pod "*) [ "$LIVE_OWNER" = gone ] && exit 1; printf '%s' "$LIVE_OWNER" ;;
   *deletionTimestamp*) printf '%s' "$DELETING" ;;
   "get jobs"*) printf '%s' "$JOBS" ;;
@@ -22,11 +23,12 @@ esac
 """
 
 
-def run(tmp_path: Path, deleting: str, jobs: str = "lane-29840325|||lane|2026-10-24T08:00:00Z\n", late: str = "", live_owner: str = "") -> subprocess.CompletedProcess:
+def run(tmp_path: Path, deleting: str, jobs: str = "lane-29840325|||lane|2026-10-24T08:00:00Z\n", late: str = "", live_owner: str = "", namespaces: str = "") -> subprocess.CompletedProcess:
     stub = tmp_path / "kubectl"
     stub.write_text(KUBECTL)
     stub.chmod(0o755)
-    env = dict(os.environ, PATH=f"{tmp_path}:{os.environ['PATH']}", DELETING=deleting, JOBS=jobs, LATE=late, LIVE_OWNER=live_owner)
+    env = dict(os.environ, PATH=f"{tmp_path}:{os.environ['PATH']}", DELETING=deleting, JOBS=jobs, LATE=late, LIVE_OWNER=live_owner,
+               NAMESPACES=namespaces, CALLS=str(tmp_path / "calls.log"))
     return subprocess.run(["bash", str(SCRIPT), "dev", "5"], env=env, capture_output=True, text=True)
 
 
@@ -93,3 +95,12 @@ def test_a_late_pod_that_no_job_owns_still_fails_the_apply(tmp_path):
     done = run(tmp_path, "old-7f5c\n", late=LATE, live_owner="")
     assert done.returncode == 1
     assert "--- not ready: dev/token-29861355-w8scj" in done.stdout
+
+
+def test_only_the_instance_s_own_namespaces_are_waited_on(tmp_path):
+    # F-R2DEP3-017: `^(dev|dev-|...)` without an end anchor took `development` and `devops-x`.
+    names = "namespace/dev namespace/dev-helsinki-apps namespace/development namespace/devops-x namespace/jc-operators"
+    run(tmp_path, deleting="old-7f5c", namespaces=names)
+    asked = (tmp_path / "calls.log").read_text()
+    assert "-n dev-helsinki-apps " in asked and "-n jc-operators " in asked, asked
+    assert "development" not in asked.replace("get ns -o name", "") and "devops-x" not in asked
