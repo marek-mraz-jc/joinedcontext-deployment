@@ -49,8 +49,9 @@ def test_a_service_address_is_the_registers_fields_and_a_missing_one_stays_out()
     document["results"] = [first, with_city, without_street]
     written = {e["id"].rsplit("-", 1)[1]: e for e in accepted(run("services", document))}
     assert address(written[str(first["id"])]) == {
-        "streetAddress": first["street_address"]["fi"], "postalCode": first["address_zip"], "addressCountry": "FI",
-    }
+        "streetAddress": first["street_address"]["fi"], "postalCode": first["address_zip"],
+        "addressLocality": "Helsinki", "addressCountry": "FI",
+    }  # every Service Map unit is in Helsinki, named whether the register says so or not (F-R2BNT3-005)
     assert address(written["999001"])["addressLocality"] == "Helsinki"
     assert "address" not in written["999002"]
 
