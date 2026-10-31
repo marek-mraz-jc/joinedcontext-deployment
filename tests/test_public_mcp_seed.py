@@ -164,3 +164,15 @@ def test_helsinkis_public_assistant_reads_through_its_server():
     spec = deployments[0]["spec"]
     assert spec["mcpServer"] == "helsinki/otvorene-data"
     assert "connectors" not in spec and "scope" not in spec
+
+
+def test_helsinkis_server_searches_the_city_website_and_the_data_portal():
+    """One address for Claude: datasets and hel.fi pages (MF-57, T-6167)."""
+    docs = [d for _, d in manifests(SEED / "helsinki")]
+    server = next(d for d in docs if d["kind"] == "McpServer" and d["metadata"]["name"] == "otvorene-data")
+    attached = server["spec"]["knowledgeSources"]
+    assert attached == ["web", "data-portal"]
+    sources = {d["metadata"]["name"]: d["spec"] for d in docs if d["kind"] == "KnowledgeSource"}
+    for name in attached:
+        # a public server attaches only public sources: an anonymous caller reads every passage
+        assert sources[name]["visibility"] == "public", name
