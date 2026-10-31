@@ -96,14 +96,21 @@ apisix:
           port: 8080
     # The openid-connect plugin of the edge login (ADR-N-019) calls the PUBLIC issuer host:
     # discovery, the token endpoint, the JWKS and userinfo. The `iss` claim carries that host,
-    # so the in-cluster Keycloak Service above is no substitute. The same two facts the
-    # Portal's policy documents apply here: kube-proxy DNATs the node address to the ingress
-    # controller's POD IP before this rule is evaluated, so no `except` for the cluster
-    # CIDRs; and the port the rule sees is the controller's container port (ingress-nginx
-    # binds 443, Traefik 8443).
+    # so the in-cluster Keycloak Service above is no substitute. kube-proxy DNATs that host to
+    # the ingress controller's POD before this rule is evaluated, on the controller's container
+    # port (ingress-nginx binds 443, Traefik 8443), so the controller is the one peer: the edge
+    # reaches no other address on the internet (T-6218; wasm-host's realm hop is the same).
     - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
       ports:
         - protocol: TCP
           port: 443
@@ -112,17 +119,26 @@ apisix:
 
 # cert-manager solves the HTTP-01 challenge for the ingress certificate with an
 # ephemeral pod in this namespace. Let's Encrypt calls it from the internet through
-# the ingress controller, so the default-deny has to make room for exactly that pod
-# and port. It exists only for the length of one challenge and serves one random token.
+# the ingress controller, so the default-deny has to make room for exactly that pod,
+# port and peer. It exists only for the length of one challenge and serves one random token.
 acme-http01-solver:
   podSelector:
     acme.cert-manager.io/http01-solver: 'true'
   policyTypes:
     - Ingress
   ingress:
+    # Only the ingress controller proxies the challenge to it, as for 9080 (T-6218).
     - from:
-        - ipBlock:
-            cidr: 0.0.0.0/0
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: [traefik, kube-system, ingress-nginx]
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [traefik, ingress-nginx]
       ports:
         - protocol: TCP
           port: 8089

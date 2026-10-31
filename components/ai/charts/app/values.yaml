@@ -2,8 +2,7 @@
 image: {repository: '', tag: '', digest: ''}
 imagePullPolicy: IfNotPresent
 
-# ai.{domain}; the page asks assistant.{domain} and frames viz.{domain}.
-host: ''
+# The page is ai.{domain}; it asks assistant.{domain} and frames viz.{domain}.
 domain: ''
 
 serviceMesh:

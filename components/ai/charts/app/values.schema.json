@@ -22,9 +22,6 @@
     "imagePullPolicy": {
       "type": "string"
     },
-    "host": {
-      "type": "string"
-    },
     "domain": {
       "type": "string"
     },

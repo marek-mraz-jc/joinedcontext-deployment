@@ -248,3 +248,39 @@ def test_recreate_stops_the_old_pod_without_a_rolling_block(tmp_path):
 def test_an_unknown_update_strategy_fails_the_render(tmp_path):
     with pytest.raises(subprocess.CalledProcessError):
         render_workload(tmp_path, {"updateStrategy": "OnDelete"})
+
+
+def test_every_value_a_template_reads_is_in_the_strict_schema():
+    """T-6218 (R2DEP1 F-009, W-008): the schema refuses any key it does not list, so a template
+    branch reading an unlisted key can never run and setting the key fails the render."""
+    import json
+    import re
+    schema = json.loads((CHART / "values.schema.json").read_text())
+    missing = set()
+    for template in (CHART / "templates").glob("*"):
+        for path in re.findall(r"\.Values((?:\.[A-Za-z_][A-Za-z0-9_]*)+)", template.read_text()):
+            node = schema
+            for key in path.strip(".").split("."):
+                properties = node.get("properties")
+                if properties is None:
+                    break
+                if key not in properties:
+                    missing.add(f"{template.name}: .Values{path}")
+                    break
+                node = properties[key]
+    assert not missing, sorted(missing)
+
+
+@requires_helm
+def test_the_startup_probe_asks_what_liveness_asks(tmp_path):
+    """T-6218 (R2DEP1 F-010): a workload whose liveness is a command is held by a startup probe
+    running that command, not an HTTP GET of a path it may not serve."""
+    command = ["/bin/sh", "-c", "test -f /tmp/alive"]
+    docs = render_workload(tmp_path, {"probes": {"enabled": True, "liveness": {"exec": command},
+                                                 "startup": {"failureThreshold": 20}}})
+    container = find_resource(docs, "Deployment")["spec"]["template"]["spec"]["containers"][0]
+    assert container["startupProbe"]["exec"]["command"] == command
+    assert "httpGet" not in container["startupProbe"]
+    plain = render_workload(tmp_path, {"probes": {"enabled": True, "startup": {"failureThreshold": 20}}})
+    container = find_resource(plain, "Deployment")["spec"]["template"]["spec"]["containers"][0]
+    assert container["startupProbe"]["httpGet"]["path"] == "/"

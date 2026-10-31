@@ -123,15 +123,18 @@ spec:
             periodSeconds: {{ .Values.probes.readiness.periodSeconds | default 5 }}
             timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds | default 3 }}
             failureThreshold: {{ .Values.probes.readiness.failureThreshold | default 3 }}
-            {{- if .Values.probes.readiness.initialDelaySeconds }}
-            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-            {{- end }}
           {{- with .Values.probes.startup }}
           # Holds liveness off while the process prepares before it listens (a migration on boot).
+          # It asks what liveness asks, a command where liveness runs one (T-6218).
           startupProbe:
+            {{- with $.Values.probes.liveness.exec }}
+            exec:
+              command: {{- toYaml . | nindent 16 }}
+            {{- else }}
             httpGet:
               path: {{ $.Values.probes.liveness.path | default "/" }}
               port: {{ $.Values.containerPort }}
+            {{- end }}
             periodSeconds: {{ .periodSeconds | default 15 }}
             timeoutSeconds: {{ .timeoutSeconds | default 3 }}
             failureThreshold: {{ .failureThreshold }}

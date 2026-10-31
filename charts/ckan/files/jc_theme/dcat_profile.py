@@ -17,7 +17,7 @@ from rdflib.namespace import RDF, RDFS, SKOS, XSD
 from ckanext.dcat.profiles import DCAT, DCT, FOAF, SPDX, VCARD, CleanedURIRef, RDFProfile
 from ckanext.dcat.utils import resource_uri
 
-from ckanext_jc_theme.plugin import BRANDING, _sources
+from ckanext_jc_theme.plugin import BRANDING, _is_url, _sources
 
 PROV = Namespace("http://www.w3.org/ns/prov#")
 EU = "http://publications.europa.eu/resource/authority/"
@@ -84,10 +84,6 @@ def _extra(dataset_dict, key):
     return None
 
 
-def _iri(value):
-    return isinstance(value, str) and value.startswith(("http://", "https://"))
-
-
 def _media_type(value):
     """(`type/subtype`, profile IRI or None) of a CKAN mimetype. The IANA register names the bare
     type; a parameter such as `text/turtle; profile="owl"` kept in the IRI is a space and quotes,
@@ -101,7 +97,7 @@ def _media_type(value):
     for param in params.split(";"):
         key, _, val = param.partition("=")
         val = val.strip().strip('"')
-        if key.strip().lower() == "profile" and _iri(val) and not re.search(r'[\s"<>]', val):
+        if key.strip().lower() == "profile" and _is_url(val):
             profile = val
     return bare, profile
 
@@ -123,7 +119,7 @@ class JcDcatApProfile(RDFProfile):
                 g.add((dataset_ref, DCT.description, title))
 
         spatial = _extra(dataset_dict, "spatial_uri")
-        if _iri(spatial) and (dataset_ref, DCT.spatial, None) not in g:
+        if _is_url(spatial) and (dataset_ref, DCT.spatial, None) not in g:
             g.add((dataset_ref, DCT.spatial, URIRef(spatial)))
             g.add((URIRef(spatial), RDF.type, DCT.Location))
 
@@ -142,11 +138,10 @@ class JcDcatApProfile(RDFProfile):
             g.add((point, RDF.type, VCARD.Kind))
 
         # The original datasets (T-4417), each a dcat:Dataset as the shapes ask, with the title
-        # and description the Endpoint gives it (T-4436), else its address; a literal the EU
-        # profile may have written goes.
+        # and description the Endpoint gives it (T-4436), else its address. What the EU profile
+        # wrote goes: a literal, or an address `_sources` refuses (T-6218).
         for source in list(g.objects(dataset_ref, DCT.source)):
-            if isinstance(source, Literal):
-                g.remove((dataset_ref, DCT.source, source))
+            g.remove((dataset_ref, DCT.source, source))
         for url, title, description in _sources(_extra(dataset_dict, "source")):
             g.add((dataset_ref, DCT.source, URIRef(url)))
             g.add((URIRef(url), RDF.type, DCAT.Dataset))
@@ -214,12 +209,12 @@ class JcDcatApProfile(RDFProfile):
                     g.add((checksum, SPDX.algorithm, iri))
                     g.add((iri, RDF.type, SPDX.ChecksumAlgorithm))
 
-        if _iri(licence) and (distribution, DCT.license, None) not in g:
+        if _is_url(licence) and (distribution, DCT.license, None) not in g:
             g.add((distribution, DCT.license, URIRef(licence)))
             g.add((URIRef(licence), RDF.type, DCT.LicenseDocument))
 
         url = resource_dict.get("url")
-        if label in SERVICES and _iri(url):
+        if label in SERVICES and _is_url(url):
             service = BNode()
             g.add((distribution, DCAT.accessService, service))
             g.add((service, RDF.type, DCAT.DataService))

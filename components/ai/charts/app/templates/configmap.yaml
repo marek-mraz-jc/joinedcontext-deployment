@@ -1,4 +1,3 @@
-{{- if not .Values.host }}{{ fail "ai: host is required" }}{{ end }}
 {{- if not .Values.domain }}{{ fail "ai: domain is required" }}{{ end }}
 {{- $api := printf "https://assistant.%s" .Values.domain }}
 {{- $frames := printf "frame-src https://viz.%s; " .Values.domain }}

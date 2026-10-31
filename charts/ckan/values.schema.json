@@ -95,9 +95,6 @@
         "env": {
           "type": "object"
         },
-        "envSecret": {
-          "type": "object"
-        },
         "resources": {
           "type": "object"
         },

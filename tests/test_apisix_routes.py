@@ -439,12 +439,14 @@ def test_every_route_upstream_is_a_pod_apisix_is_allowed_to_reach(rendered):
     }
     # A peer selector is a subset of the pod's labels, not the whole set: the policy that
     # names only `app.kubernetes.io/name` still selects a pod the Service picks by two labels.
+    # A peer selecting by matchExpressions alone (the ingress controller of the issuer hop) is
+    # no route upstream and is left out: read as an empty label set it would match every pod.
     allowed = [
         (frozenset(peer["podSelector"]["matchLabels"].items()), port["port"])
         for policy in docs
         if policy.get("kind") == "NetworkPolicy" and selects(policy, apisix_labels)
         for rule in policy["spec"].get("egress", [])
-        for peer in rule.get("to", []) if "podSelector" in peer
+        for peer in rule.get("to", []) if peer.get("podSelector", {}).get("matchLabels")
         for port in rule.get("ports", [])
     ]
     services = {

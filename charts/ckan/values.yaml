@@ -54,7 +54,6 @@ ckan:
   dcat:
     enabled: false
   env: {}
-  envSecret: {}
   resources: {}
   # How long a stopping CKAN keeps serving before uWSGI is told to stop, and how long its mesh
   # proxy waits beyond that for the requests the pause let in (T-3008, T-3032). The grace
