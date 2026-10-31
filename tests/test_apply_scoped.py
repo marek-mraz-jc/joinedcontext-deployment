@@ -7,6 +7,7 @@ RBAC or Kyverno change unapplied.
 """
 
 import importlib.util
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE = "4a1de6980a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+RECENT = f"{datetime.now(UTC) - timedelta(hours=1):%Y-%m-%dT%H:%M:%SZ}"
 
 spec = importlib.util.spec_from_file_location("apply_scoped", ROOT / "scripts/apply-pins.py")
 apply_pins = importlib.util.module_from_spec(spec)
@@ -64,7 +66,7 @@ def change(**moved):
     return out
 
 
-def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE):
+def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE, full_at=RECENT, listed=()):
     """The plan for a range touching `files` whose HEAD renders `head` (and `again` the second time)."""
     def renders(environment, base, judge):
         dirs = [tmp_path / "old", tmp_path / "new", tmp_path / "again"]
@@ -74,8 +76,10 @@ def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE):
 
     monkeypatch.setattr(apply_pins.changes, "changed", lambda b, h: files)
     monkeypatch.setattr(apply_pins, "_renders", renders)
+    monkeypatch.setattr(apply_pins, "component_releases",
+                        lambda environment, components: apply_pins.releases_of(list(listed), components))
     try:
-        return apply_pins.plan("dev", base)
+        return apply_pins.plan("dev", base, full_at)
     except apply_pins.Refused as e:
         return f"full: {e}"
 
@@ -101,12 +105,13 @@ def test_a_range_syncs_only_the_releases_whose_render_moved(monkeypatch, tmp_pat
 @pytest.mark.parametrize("files, head, reason", [
     (["components/viz/values/server/base-values.yaml.gotmpl"],
      {**BEFORE, "viz-server": [deployment("viz", "v")]}, "releases added at HEAD: viz-server"),
-    (["components/viz/component.yaml"], change(), "changes how helmfile builds releases"),
     (["components/secrets/charts/secrets-generator/values.yaml"], change(**{"gitea-seed": None}),
      "releases gone at HEAD: gitea-seed"),
     (["components/operator/charts.yaml"], change(**{"operator-crds": [crd("v2")]}),
      "operator-crds changes CustomResourceDefinition -/endpoints.jc.example"),
-    (["components/portal/helmfile.yaml.gotmpl"], change(), "changes how helmfile builds releases"),
+    (["deployment/helmfile.yaml"], change(), "changes how helmfile builds releases"),
+    (["components/portal/images.yaml", "components/prepare/helmfile.yaml.gotmpl", ".ci/example-deployments/helmfile.yaml"],
+     change(), "changes how helmfile builds releases (.ci/example-deployments/helmfile.yaml)"),
     (["defaults/deployment/environments/default.yaml"], change(), "changes how helmfile builds releases"),
     (["components/portal/images.yaml"], change(), "no trusted applied commit"),
     (None, change(), "cannot read the range"),
@@ -124,7 +129,7 @@ def test_a_failed_render_is_a_full_sync(monkeypatch, capsys):
         raise apply_pins.Refused("render of dev in /tmp/x failed:\nError: chart not found")
 
     monkeypatch.setattr(apply_pins, "_renders", fails)
-    assert apply_pins.main(["plan", "dev", BASE]) == 0
+    assert apply_pins.main(["plan", "dev", BASE, RECENT]) == 0
     out = capsys.readouterr()
     assert out.out.strip() == "full"
     assert "full sync: render of dev" in out.err
@@ -154,3 +159,67 @@ def test_dev_apply_falls_back_to_a_full_sync_and_keeps_its_gates():
     assert "*-dirty) base=\"\"" in body
     order = ["_dev-guard", "verify-pinned-images.py dev", "-e dev sync", "wait-rollouts.sh dev", "release.py record dev dev"]
     assert [body.index(s) for s in order] == sorted(body.index(s) for s in order)
+
+
+LISTED = [
+    {"name": "portal-portal", "installed": True, "labels": "chart:portal,component:portal,name:portal-portal"},
+    {"name": "portal-ui", "installed": True, "labels": "component:portal,name:portal-ui"},
+    {"name": "portal-mail-catcher", "installed": False, "labels": "component:portal,name:portal-mail-catcher"},
+    {"name": "gitea-seed", "installed": True, "labels": "component:gitea,name:gitea-seed"},
+    {"name": "secrets-db-portal", "installed": True, "labels": "component:secrets,name:secrets-db-portal"},
+]
+
+
+def test_a_mixed_batch_names_exactly_the_releases_it_changes(monkeypatch, tmp_path):
+    # T-6187, the 0ca12ec4 range: a pin, a seed edit, a chart edit and a component helmfile edit
+    # (the prepare hook, a component with no release) was a full sync of 369 releases
+    files = ["components/portal/images.yaml", "seeds/bbsk/pipelines/air.yaml",
+             "components/keycloak/charts/realm/templates/realm.yaml", "components/prepare/helmfile.yaml.gotmpl"]
+    head = change(**{"portal-portal": [deployment("portal", "p@sha256:2")],
+                     "gitea-seed": [config("seed", {"bbsk.yaml": "a: 2"})],
+                     "keycloak-keycloak": [deployment("keycloak", "k@sha256:1"), config("realm", {"x": "2"})]})
+    assert plan(monkeypatch, tmp_path, files, head, listed=LISTED) == [
+        "gitea-seed", "keycloak-keycloak", "portal-portal"]
+
+
+@pytest.mark.parametrize("structure", ["components/portal/helmfile.yaml.gotmpl", "components/portal/component.yaml"])
+def test_a_component_helmfile_change_syncs_that_components_installed_releases(monkeypatch, tmp_path, structure):
+    # hooks, needs and conditions do not show in the render: every release of the component goes
+    assert plan(monkeypatch, tmp_path, [structure], change(), listed=LISTED) == ["portal-portal", "portal-ui"]
+
+
+def test_an_unchanged_secrets_release_is_skipped_although_it_renders_fresh_values(monkeypatch, tmp_path):
+    # a portal pin beside the generator's random Secret (both HEAD renders differ): masked as
+    # scripts/release-diff.py masks it, the secrets release renders identically and is skipped
+    head = change(**{"secrets-db-portal": [secret("db", "Yg==")], "portal-portal": [deployment("portal", "p@sha256:2")]})
+    again = change(**{"secrets-db-portal": [secret("db", "Yw==")], "portal-portal": [deployment("portal", "p@sha256:2")]})
+    got = plan(monkeypatch, tmp_path, ["components/portal/images.yaml"], head, again, listed=LISTED)
+    assert got == ["portal-portal"]
+    masked = apply_pins.objects(tmp_path / "new" / "secrets-db-portal")["Secret dev/db"][1]
+    assert "Yg==" not in masked
+
+
+@pytest.mark.parametrize("full_at, reason", [
+    (None, "no full sync recorded"),
+    ("", "no full sync recorded"),
+    ("yesterday", "no full sync recorded"),
+    (f"{datetime.now(UTC) - timedelta(hours=7):%Y-%m-%dT%H:%M:%SZ}", "the last full sync ran 7.0 h ago"),
+])
+def test_the_periodic_full_sync_converges_drift(monkeypatch, tmp_path, full_at, reason):
+    # a scoped plan judges the render, never live objects: drift waits for the periodic full sync
+    got = plan(monkeypatch, tmp_path, ["components/portal/images.yaml"], change(), full_at=full_at)
+    assert got.startswith("full: ") and reason in got, got
+
+
+def test_the_full_sync_interval_is_set_by_the_environment(monkeypatch):
+    at = datetime(2026, 10, 31, 8, 0, tzinfo=UTC)
+    monkeypatch.setenv("JC_FULL_SYNC_HOURS", "1")
+    assert apply_pins.full_sync_due("2026-10-31T07:30:00Z", at) is None
+    assert "every 1 h" in apply_pins.full_sync_due("2026-10-31T06:59:00Z", at)
+
+
+def test_dev_apply_reads_and_stamps_the_last_full_sync():
+    text = (ROOT / "justfile").read_text()
+    body = text[text.index("\ndev-apply full="):text.index("\n_smoke ")]
+    assert "{.data.fullSyncAt}" in body and 'apply-pins.py plan dev "$base" "$full_at"' in body
+    assert '--full)' in body[body.index("release.py record dev dev"):]

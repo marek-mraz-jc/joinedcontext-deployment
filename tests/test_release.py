@@ -186,6 +186,17 @@ def test_record_writes_tag_sha_and_who_applied_and_show_prints_it(repo, kubectl_
     assert release.show("smartcity").startswith("release: v0.1.0 (v0.1.0) applied by ops@example.org at ")
 
 
+def test_a_full_apply_stamps_full_sync_at_and_a_scoped_one_carries_it(repo, kubectl_stub):
+    # T-6187: apply-pins.py plans a full sync once fullSyncAt is old, so a scoped record keeps it
+    assert "fullSyncAt" not in release.record("dev", "dev", cwd=repo)
+    full = release.record("dev", "dev", cwd=repo, full=True)
+    assert full["fullSyncAt"] == full["appliedAt"]
+    commit(repo, "T-0401: change")
+    scoped = release.record("dev", "dev", cwd=repo)
+    assert scoped["fullSyncAt"] == full["fullSyncAt"]
+    assert json.loads(kubectl_stub.read_text())["data"]["fullSyncAt"] == full["fullSyncAt"]
+
+
 def test_the_recipes_gate_prod_on_a_tag_and_record_every_apply():
     text = (ROOT / "justfile").read_text()
     prod = text[text.index("\nprod-apply:"):text.index("\nprod-smoke:")]
