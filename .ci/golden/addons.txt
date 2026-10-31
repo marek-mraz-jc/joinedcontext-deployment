@@ -27,6 +27,7 @@ apps/v1/Deployment argocd/argocd-repo-server
 apps/v1/Deployment argocd/argocd-server
 apps/v1/StatefulSet addons/keycloak-app-keycloakx
 apps/v1/StatefulSet argocd/argocd-application-controller
+argoproj.io/v1alpha1/AppProject argocd/addons-root
 argoproj.io/v1alpha1/Application argocd/addons
 autoscaling/v2/HorizontalPodAutoscaler addons/apisix
 autoscaling/v2/HorizontalPodAutoscaler addons/keycloak-app-keycloakx

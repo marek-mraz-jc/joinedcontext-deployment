@@ -1,4 +1,5 @@
 admissionregistration.k8s.io/v1/MutatingWebhookConfiguration -/cnpg-mutating-webhook-configuration
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-gitea-bootstrap-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-edge
@@ -6,6 +7,7 @@ admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/sandbox-reaper-reaper-preview-names
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-gitea-bootstrap-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-portal-edge
