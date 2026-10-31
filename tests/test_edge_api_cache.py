@@ -31,6 +31,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ROUTES = (ROOT / "components/context-gateway/apisix-routes.yaml").read_text()
 ALL = yaml.safe_load(ROUTES.replace("{{", "#").replace("}}", ""))
 ROUTE, HISTORY, BULK = ALL["api-context-endpoint"], ALL["api-context-endpoint-history"], ALL["api-context-endpoint-bulk"]
+MCP = ALL["api-context-endpoint-mcp"]
 VALUES = ROOT / "components/context-gateway/values/gateway/base-values.yaml.gotmpl"
 PLUGINS = yaml.safe_load((ROOT / "components/context-gateway/apisix-plugins.yaml").read_text()
                          .replace("{{", "#").replace("}}", ""))
@@ -80,9 +81,23 @@ def test_every_caching_route_buffers_after_its_plugin_config_merges():
     for name, route in caching.items():
         merged = {**PLUGINS[route["pluginConfig"]]["plugins"], **route["plugins"]}
         assert merged["proxy-buffering"] == {"disable_proxy_buffering": False}, name
-    # The exports keep streaming.
-    merged = {**PLUGINS[BULK["pluginConfig"]]["plugins"], **BULK["plugins"]}
-    assert merged["proxy-buffering"]["disable_proxy_buffering"] is True
+    # The exports and the MCP streams keep streaming.
+    for route in (BULK, MCP):
+        merged = {**PLUGINS[route["pluginConfig"]]["plugins"], **route.get("plugins", {})}
+        assert merged["proxy-buffering"]["disable_proxy_buffering"] is True
+
+
+def test_the_mcp_path_leaves_the_buffered_reads_route():
+    """T-6185 review: the reads route buffers for its cache, which would hold an MCP SSE answer
+    until it ends; `{endpoint}/mcp` keeps the plain chain on a route of its own above it."""
+    assert (MCP["subDomain"], MCP["uri"], MCP["pluginConfig"]) == ("api", ROUTE["uri"], ROUTE["pluginConfig"])
+    assert MCP["priority"] > ROUTE["priority"] and "plugins" not in MCP
+    assert MCP["timeout"] == ROUTE["timeout"] and MCP["keepalivePool"] == ROUTE["keepalivePool"]
+    mcp = re.compile(MCP["vars"][0][2])
+    assert mcp.search("/api/endpoint/abc/mcp")
+    for path in ("/api/endpoint/abc/mcp/x", "/api/endpoint/abc/ngsi-ld/v1/entities?q=mcp",
+                 "/api/endpoint/abc/ngsi-ld/v1/temporal/entities", "/api/endpoint/mcp"):
+        assert not mcp.search(path), path
 
 
 @requires_helmfile
@@ -105,6 +120,9 @@ def test_the_gateway_marks_anonymous_reads_public_for_a_minute():
     assert 'JC_GATEWAY_PUBLIC_MAX_AGE: "60"' in VALUES.read_text()
 
 
+STREAM_PAUSE = 4
+
+
 class Gateway(http.server.BaseHTTPRequestHandler):
     counter = itertools.count()
 
@@ -118,6 +136,18 @@ class Gateway(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps({"n": n, "auth": self.headers.get("Authorization"), "link": self.headers.get("Link"),
                                      "lang": self.headers.get("Accept-Language")}).encode())
+
+    def do_POST(self):
+        # An MCP answer as the gateway streams it: one event now, the next after a pause.
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(b"event: message\ndata: {\"first\": true}\n\n")
+        self.wfile.flush()
+        time.sleep(STREAM_PAUSE)
+        self.wfile.write(b"event: message\ndata: {\"last\": true}\n\n")
+        self.wfile.flush()
 
     def log_message(self, *args):
         pass
@@ -147,13 +177,13 @@ def edge(tmp_path_factory):
     # upstream copy each (a shared dict dumps as a YAML alias, and APISIX then drops the routes).
     # Each route keeps its chain's proxy-buffering through plugin_config_id, as on dev: without it
     # this test kept answers dev never stored (T-6185).
-    chains = {route["pluginConfig"] for route in (ROUTE, HISTORY, BULK)}
+    chains = {route["pluginConfig"] for route in (ROUTE, HISTORY, BULK, MCP)}
     rules = {"plugin_configs": [{"id": chain, "plugins": {"proxy-buffering": dict(PLUGINS[chain]["plugins"]["proxy-buffering"])}}
                                 for chain in sorted(chains)],
              "routes": [{"id": name, "uri": route["uri"], "priority": route["priority"], "upstream": dict(upstream),
-                         "plugin_config_id": route["pluginConfig"], "plugins": route["plugins"],
+                         "plugin_config_id": route["pluginConfig"], "plugins": route.get("plugins", {}),
                          **({"vars": route["vars"]} if "vars" in route else {})}
-                        for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK))]}
+                        for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK), ("mcp", MCP))]}
     (tmp / "apisix.yaml").write_text(yaml.safe_dump(rules) + "#END\n")
     port = free_port()
     name = f"apisix-api-cache-{port}"
@@ -249,3 +279,18 @@ def test_an_export_is_never_stored_although_the_gateway_marks_it_public(edge):
     one, _ = get(url)
     two, headers = get(url)
     assert one["n"] != two["n"] and headers.get("Apisix-Cache-Status") is None
+
+
+def test_an_mcp_stream_reaches_the_client_before_it_ends(edge):
+    # T-6185 review: on the buffered reads route nginx held the first event until the upstream closed.
+    request = urllib.request.Request(edge + "/api/endpoint/s/mcp", data=b"{}", method="POST",
+                                     headers={"Content-Type": "application/json",
+                                              "Accept": "application/json, text/event-stream"})
+    started = time.monotonic()
+    with urllib.request.urlopen(request, timeout=10) as answer:
+        assert answer.headers["Content-Type"].startswith("text/event-stream")
+        assert answer.headers.get("Apisix-Cache-Status") is None
+        first = answer.readline()
+        waited = time.monotonic() - started
+        assert first == b"event: message\n" and waited < STREAM_PAUSE / 2, (first, waited)
+        assert b'"last": true' in answer.read()

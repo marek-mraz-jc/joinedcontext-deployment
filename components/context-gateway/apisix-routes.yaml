@@ -472,6 +472,30 @@ api-context-endpoint:
       cache_ttl: 5
       hide_cache_headers: false
 
+# T-6185 review: api-context-endpoint buffers for its cache, and nginx then holds an SSE answer
+# until it ends. `{endpoint}/mcp` is the one path of the surface the gateway may answer as
+# `text/event-stream` (Streamable HTTP, platform mcp/endpoint.rs), and the gateway sets no
+# `X-Accel-Buffering`, so it keeps a route of its own on the plain chain: unbuffered, as the
+# chain's comment wants SSE, and never cached. The rest of api-context-endpoint, limits and
+# timeouts included.
+api-context-endpoint-mcp:
+  name: api-context-endpoint-mcp
+  description: Endpoint MCP of the data host's surface, streamed unbuffered and never cached
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/mcp$"]]
+  subDomain: api
+  priority: 21
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 60
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
 api-mcp-hub:
   name: api-mcp-hub
   description: The MCP hub on the data host
