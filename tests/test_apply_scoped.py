@@ -130,7 +130,9 @@ def test_a_failed_render_is_a_full_sync(monkeypatch, capsys):
         raise apply_pins.Refused("render of dev in /tmp/x failed:\nError: chart not found")
 
     monkeypatch.setattr(apply_pins, "_renders", fails)
-    assert apply_pins.main(["plan", "dev", BASE, RECENT]) == 0
+    # main() reads the wall clock, so the last full sync is an hour before now, not before NOW
+    recent = f"{datetime.now(UTC) - timedelta(hours=1):%Y-%m-%dT%H:%M:%SZ}"
+    assert apply_pins.main(["plan", "dev", BASE, recent]) == 0
     out = capsys.readouterr()
     assert out.out.strip() == "full"
     assert "full sync: render of dev" in out.err
