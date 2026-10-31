@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """The releases a range changes, for `just dev-apply` (T-6135) and `just dev-apply-pins` (T-6110).
 
-    scripts/apply-pins.py plan <environment> <base>       "full", or the releases whose render moved since <base>
+    scripts/apply-pins.py plan <environment> <base> [<fullSyncAt>]
+                                                          "full", or the releases whose render moved since <base>
     scripts/apply-pins.py releases <environment> <base>   `<release> <component> local|remote` per release a
                                                           pin-only range moved (refuses any other file)
 
@@ -23,9 +24,16 @@ deterministic Secrets included, is compared byte for byte.
 
 `plan` answers "full" (the reason on stderr) whenever a scoped sync could leave a change
 unapplied: no trusted base (none recorded, a dirty one, an unreadable range), a change to how
-helmfile builds releases (a helmfile template, a component.yaml with its needs and hooks, the
-assembled defaults), a failed render, a release added or removed, or a CustomResourceDefinition
-added, removed or changed. An empty range plans no release.
+helmfile builds releases outside one component (deployment/, the assembled defaults, the example
+helmfile), a failed render, a release added or removed, a CustomResourceDefinition added, removed
+or changed, or no full sync recorded within JC_FULL_SYNC_HOURS (default 6): a scoped sync judges
+the render, never the live objects, so the periodic full sync is what converges drift and objects
+deleted by hand. An empty range plans no release.
+
+A component's own helmfile or component.yaml (T-6187) changes its releases' hooks, needs and
+conditions, which the render does not show: `plan` adds every installed release labelled with
+that component (`helmfile list`) to the releases whose render moved, instead of a full sync of all
+~370 releases (0ca12ec4: one comment in the prepare hook upgraded 369 releases in 1781 s).
 
 `releases` refuses (exit 3) a range that touches any file other than a components/<c>/images.yaml.
 Both need deployment/ assembled at HEAD (`just _dev-assemble`); `plan` also needs the
@@ -36,6 +44,7 @@ from __future__ import annotations
 
 import contextlib
 import importlib.util
+import json
 import os
 import re
 import subprocess
@@ -43,6 +52,7 @@ import sys
 import tempfile
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
@@ -70,6 +80,9 @@ FULL = "full"
 # rather than what it renders: a scoped sync cannot be judged from the render.
 STRUCTURE = re.compile(r"(^|/)helmfile[^/]*\.(ya?ml|gotmpl)$|^components/[^/]+/component\.yaml$"
                        r"|^defaults/deployment/|^\.ci/example-deployments/helmfile\.yaml$")
+# A structure file inside one component changes only that component's releases.
+COMPONENT = re.compile(r"^components/([^/]+)/")
+FULL_SYNC_HOURS = 6
 
 
 def objects(release_dir: Path) -> dict[str, tuple[str, str]]:
@@ -202,19 +215,58 @@ def values_moved(old: Path, new: Path) -> list[str]:
     return sorted(out)
 
 
-def plan(environment: str, base: str) -> list[str]:
+def full_sync_due(full_at: str, now: datetime | None = None) -> str | None:
+    """Why the periodic full sync is due, or None while the last one (`fullSyncAt`) is recent."""
+    hours = float(os.environ.get("JC_FULL_SYNC_HOURS") or FULL_SYNC_HOURS)
+    try:
+        at = datetime.strptime(full_at, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC)
+    except (TypeError, ValueError):
+        return f"no full sync recorded ({full_at or 'none'})"
+    age = ((now or datetime.now(UTC)) - at).total_seconds() / 3600
+    return f"the last full sync ran {age:.1f} h ago (every {hours:g} h)" if age >= hours else None
+
+
+def plan(environment: str, base: str, full_at: str | None = None) -> list[str]:
     """The releases `just dev-apply` syncs for base..HEAD; Refused names why it must be a full sync."""
     if not re.fullmatch(r"[0-9a-f]{40}", base or ""):
         raise Refused(f"no trusted applied commit ({base or 'none recorded'})")
+    due = full_sync_due(full_at)
+    if due:
+        raise Refused(due)
     files = changes.changed(base, "HEAD")
     if files is None:
         raise Refused(f"cannot read the range {base[:12]}..HEAD")
     structure = [f for f in files if STRUCTURE.search(f)]
-    if structure:
-        raise Refused(f"{base[:12]}..HEAD changes how helmfile builds releases ({', '.join(structure[:5])})")
+    shared = [f for f in structure if not COMPONENT.match(f)]
+    if shared:
+        raise Refused(f"{base[:12]}..HEAD changes how helmfile builds releases ({', '.join(shared[:5])})")
     if not files:
         return []
-    return _renders(environment, base, scoped)
+    names = _renders(environment, base, scoped)
+    components = {COMPONENT.match(f).group(1) for f in structure}
+    if components:
+        names = sorted(set(names) | set(component_releases(environment, components)))
+    return names
+
+
+def component_releases(environment: str, components: set[str]) -> list[str]:
+    """The installed releases at HEAD labelled with one of `components`."""
+    done = subprocess.run(
+        ["helmfile", "-f", "deployment/helmfile.yaml", "-e", environment, "list", "--skip-charts", "--output", "json"],
+        cwd=ROOT, capture_output=True, text=True, check=False)
+    if done.returncode:
+        raise Refused(f"helmfile list of {environment} failed:\n{done.stderr[-4000:]}")
+    return releases_of(json.loads(done.stdout), components)
+
+
+def releases_of(listed: list[dict], components: set[str]) -> list[str]:
+    """Names of the installed releases in a `helmfile list --output json` whose component label is in `components`."""
+    out = []
+    for r in listed:
+        labels = dict(kv.split(":", 1) for kv in (r.get("labels") or "").split(",") if ":" in kv)
+        if r.get("installed") and labels.get("component") in components:
+            out.append(r["name"])
+    return sorted(out)
 
 
 def _renders(environment: str, base: str, judge) -> list[str]:
@@ -248,9 +300,9 @@ def main(argv: list[str]) -> int:
     try:
         if len(argv) == 3 and argv[0] == "releases":
             print("\n".join(releases(argv[1], argv[2])))
-        elif len(argv) == 3 and argv[0] == "plan":
+        elif len(argv) in (3, 4) and argv[0] == "plan":
             try:
-                print("\n".join(plan(argv[1], argv[2])))
+                print("\n".join(plan(argv[1], argv[2], argv[3] if len(argv) == 4 else None)))
             except Refused as e:
                 print(f"apply-pins: full sync: {e}", file=sys.stderr)
                 print(FULL)

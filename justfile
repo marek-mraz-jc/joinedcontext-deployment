@@ -500,8 +500,10 @@ dev-apply full='false' spend_guard='on':
 		# a base applied from a dirty tree is no base: its render is unknown
 		describe=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.describe}' 2>/dev/null || true)
 		case "$describe" in *-dirty) base="" ;; esac
+		# a full sync at least every JC_FULL_SYNC_HOURS (6) converges drift the render cannot see (T-6187)
+		full_at=$(kubectl -n dev get configmap jc-release -o jsonpath='{.data.fullSyncAt}' 2>/dev/null || true)
 		# any failure of the planner is a full sync, never a skipped one
-		plan=$(./scripts/apply-pins.py plan dev "$base") || plan=full
+		plan=$(./scripts/apply-pins.py plan dev "$base" "$full_at") || plan=full
 	fi
 	if [ "$plan" != full ]; then
 		mapfile -t releases < <(printf '%s' "$plan" | sed '/^$/d')
@@ -525,8 +527,9 @@ dev-apply full='false' spend_guard='on':
 	fi
 	./scripts/wait-rollouts.sh dev
 	echo "dev-apply synced and rolled out in $(( $(date -u +%s) - started )) s"
-	# What dev runs now, who applied it and when (T-4955); dev-smoke prints it.
-	./scripts/release.py record dev dev
+	# What dev runs now, who applied it and when (T-4955); dev-smoke prints it. A full sync also
+	# stamps fullSyncAt, which the next plans read.
+	./scripts/release.py record dev dev $([ "$plan" = full ] && echo --full)
 
 # The checks dev-smoke and prod-smoke share, against one instance (its domain and namespace)
 [group('dev cluster')]
