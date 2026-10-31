@@ -445,5 +445,7 @@ def test_no_workflow_or_recipe_runs_an_install_script_or_an_unpinned_package():
     for path, text in texts.items():
         assert not re.search(r"\|\s*(ba)?sh\b", text), path
         for line in re.findall(r"pip install[^\n]*", text):
-            # ci.yml's test jobs hold contents: read only; their pins are its own follow-up.
-            assert "--require-hashes" in line or path.name == "ci.yml", (path, line)
+            # The one exception installs the Model Tools checkout of .ci/model-tools.lock (a commit),
+            # whose own dependencies are not hash-locked yet (chyby.md, T-6218).
+            local = path.name == "ci.yml" and "platform/tools/model-tools" in line
+            assert "--require-hashes" in line or local, (path, line)
