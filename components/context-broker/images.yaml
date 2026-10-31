@@ -244,6 +244,8 @@ context-broker:
     # Antares dev 49924e5 (dev-120, over 13dc5d9: trains T-6211 T-6212): per-type write grants, the subscriber's
     # context on notify checks, trust headers dropped on forwards, keyset sweep (T-6211); the confirmed
     # fixes of review R2ANT2 (T-6212). No migration, no new runtime key. Rollback: dev-118.
-    # Signed by ship.yml on dev at 49924e5 (run 41235905178).
-    tag: 'dev-120'
-    digest: 'sha256:7b6a3e721a4ee89f191c640ff3a8b69cc8992584d6cf4ca256e9a7b64f437a70'
+    # Antares dev 35d8f61 (dev-122, over 49924e5: trains T-6213 R2ANT3 and T-6214 R2ANT4 review fixes in sql,
+    # ops, store, notifier, ws, odata and cql2). No migration, no new runtime key. Rollback: dev-120.
+    # Signed by ship.yml on dev at 35d8f61 (run 41244691089).
+    tag: 'dev-122'
+    digest: 'sha256:7a2ead8302eb50326aca7488c9e50d77a2ad9da533f270e2d583419680f24781'
