@@ -10,6 +10,7 @@ counted by its reason. Without a container runtime the Bento cases skip.
 
 import copy
 import json
+import re
 import subprocess
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -109,6 +110,19 @@ def test_an_empty_stale_or_refused_answer_fails_the_run_instead_of_writing(doc, 
     # message, so the endpoint never sees an empty or an old list.
     assert message in log, log
     assert events == [] or all("id" not in e for e in events)
+
+
+@requires_docker
+def test_an_answer_that_reaches_the_query_limit_fails_the_run_instead_of_writing_part_of_the_agenda():
+    """F-R2BNT1-004 (T-6215): the query ends in LIMIT N, so N rows may be a cut list."""
+    source = yaml.safe_load((BARCELONA / "barcelona-datasource-agenda.yaml").read_text())
+    limit = int(re.search(r"\bLIMIT (\d+)$", parse_qs(urlsplit(source["spec"]["http"]["url"]).query)["sql"][0]).group(1))
+    row = answer()["result"]["records"][0]
+    events, log, _ = run(answer(records=[{**row, "id": str(i)} for i in range(limit)]))
+    assert f"the Barcelona agendas answered {limit} rows, the LIMIT {limit}" in log, log[-2000:]
+    assert events == [] or all("id" not in e for e in events)
+    events, log, code = run(answer(records=[{**row, "id": str(i)} for i in range(limit - 1)]))
+    assert code == 0 and "LIMIT" not in log, log[-2000:]
 
 
 def test_the_datasource_reads_the_three_agendas_in_one_query_from_open_data_bcn():

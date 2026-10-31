@@ -2,9 +2,10 @@
 # Only metadata.name, publicId, model and its day's cost differ from `data`, which renders from
 # dev's ckan.catalogue (components/ckan/seed/assistant.yaml.gotmpl, T-4636)
 # (tests/test_public_assistant_seed.py holds it to that). Its $4 a day is its own, never the
-# visitors': one address may spend a tenth of it (chat/mod.rs VISITOR_COST_SHARE), so the frozen
-# iteration set and the 25-question rerun of T-4729 fit one run; the key's stop line still binds.
-# Removed after the T-4359 runs.
+# visitors': like `data` (T-5928) one address may spend all of it (visitorSharePercent 100), paced
+# by the per-client minute, hour and day, so the frozen iteration set and the 25-question rerun of
+# T-4729 fit one run; the key's stop line still binds. The conformance publish gate still asks it
+# (tests/assistant/publish_gate.py EVAL_ID); prod leaves every data-eval-* out (T-4678).
 apiVersion: joinedcontext.com/v1alpha1
 kind: AssistantDeployment
 metadata:

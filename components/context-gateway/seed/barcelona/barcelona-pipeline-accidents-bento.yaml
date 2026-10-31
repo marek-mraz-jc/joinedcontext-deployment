@@ -112,7 +112,7 @@ pipeline:
                   rate_limit: barcelona_opendata
               - mapping: |
                   let answer = if content().length() > 8388608 { throw("the accident details answer is %d bytes, more than the 8 MiB read".format(content().length())) } else { content().string().parse_json().catch({}) }
-                  root = if $answer.success.or(false) != true { throw("Open Data BCN refused the accident details query: %s".format($answer.error.format_json(no_indent: true).or("no reason given"))) } else { $answer.result.records.or([]).filter(r -> r.id.or("").type() == "string").map_each(r -> { r.id: r }).squash() }
+                  root = if $answer.success.or(false) != true { throw("Open Data BCN refused the accident details query: %s".format($answer.error.format_json(no_indent: true).or("no reason given"))) } else if $answer.result.records.or([]).length() >= 50000 { throw("the accident details answered %d rows, the LIMIT 50000 of its query: raise it, or the rows past it are dropped".format($answer.result.records.length())) } else { $answer.result.records.or([]).filter(r -> r.id.or("").type() == "string").map_each(r -> { r.id: r }).squash() }
             result_map: root.details = this
         - mapping: |
             # The city's labels, in Catalan, stay as the city writes them (accidentKind, accidentCause,

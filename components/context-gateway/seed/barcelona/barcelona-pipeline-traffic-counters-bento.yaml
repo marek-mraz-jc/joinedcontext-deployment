@@ -58,7 +58,7 @@ pipeline:
             rate_limit: barcelona_opendata
         - mapping: |
             let answer = if content().length() > 4194304 { throw("the counter readings answer is %d bytes, more than the 4 MiB read".format(content().length())) } else { content().string().parse_json().catch({}) }
-            let rows = if $answer.success.or(false) != true { throw("Open Data BCN refused the counter readings query: %s".format($answer.error.format_json(no_indent: true).or("no reason given"))) } else { $answer.result.records.or([]) }
+            let rows = if $answer.success.or(false) != true { throw("Open Data BCN refused the counter readings query: %s".format($answer.error.format_json(no_indent: true).or("no reason given"))) } else if $answer.result.records.or([]).length() >= 5000 { throw("the counter readings answered %d rows, the LIMIT 5000 of its query: raise it, or the rows past it are dropped".format($answer.result.records.length())) } else { $answer.result.records.or([]) }
             let bbox = [2.04, 41.3, 2.24, 41.48]
             let numbered = $rows.filter(r -> r.id.or("").string().trim().re_match("^[0-9A-Za-z][0-9A-Za-z-]{0,19}$"))
             let measured = $numbered.filter(r -> r.imd.or("").string().trim().re_match("^[0-9]{1,9}$"))

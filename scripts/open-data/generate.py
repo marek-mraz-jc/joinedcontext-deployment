@@ -1111,7 +1111,10 @@ SUPPLIER_STREET = {"adresa", "ulicaACislo", "sidloDodavatela"}
 def impersonal(e: dict) -> None:
     """Takes the personal columns out of a dataset's mapping before anything is written from it."""
     street = SUPPLIER_STREET if SUPPLIERS.match(e["name"]) else set()
-    e["hashed"] = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
+    # Only a row-hash id reads the dropped columns; a keyed id never does, so its query stops
+    # asking for them and its public `source` link names none (F-R2BNT1-007).
+    if not e["entityId"].get("keys"):
+        e["hashed"] = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
     e["properties"] = {a: p for a, p in e["properties"].items() if not PERSONAL.match(a) and a not in street}
 
 

@@ -6,7 +6,7 @@
 # 2026-10-15; `ind_kli` is the number in its identifier): 11898 Banská Bystrica-Zelená, 2.3 km
 # from the square, and 11894 Donovaly, the resort above the city.
 #
-# Units from aws1min_metadata.json: `t` °C, `tlak` hPa, `vlh_rel` % (written 0 to 1),
+# Units from aws1min_metadata.json: `t` °C, `tlak` hPa, `vlh_rel` % (0 to 100, published as 0 to 1),
 # `vie_pr_rych` m/s, `vie_vp_smer` degrees, `zra_uhrn` mm per minute. `minuta` is called SEČ, but
 # SHMÚ writes Bratislava wall time minus one hour: UTC+1 in summer, UTC in winter (T-5645: on
 # 2026-10-25, the day CEST ended, global radiation `zglo` at Zelená rose at 06:15 on 10-24 and at

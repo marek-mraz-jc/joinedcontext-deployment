@@ -148,6 +148,18 @@ def test_a_post_filed_only_under_the_overviews_is_not_an_event():
 
 
 @requires_docker
+def test_a_title_holding_markup_is_published_as_its_text_and_a_title_of_markup_alone_is_no_event():
+    # F-R2BNT1-002 (T-6215): WordPress allows inline tags in a title; the name is the text a reader sees.
+    def edit(d):
+        d[0]["title"]["rendered"] = "Koncert <em>Lúčnica</em>&nbsp;&#8211; <b>2026</b>"
+        d[1]["title"]["rendered"] = "<br />"
+    events = run("podujatia", events_edited(edit))
+    assert len(events) == 4
+    first = next(e for e in events if e["id"].endswith("-117711"))
+    assert first["name"]["languageMap"]["sk"] == "Koncert Lúčnica\u00a0– 2026"
+
+
+@requires_docker
 def test_an_event_the_city_gives_no_start_day_is_left_out_never_dated():
     # T-4570: a start date is the source's own, never one the mapping makes up.
     def edit(d):

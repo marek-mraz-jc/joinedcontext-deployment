@@ -111,6 +111,27 @@ def test_no_generated_pipeline_or_model_publishes_a_persons_contact_or_a_supplie
     assert not found, found
 
 
+def test_a_keyed_dataset_never_asks_its_source_for_a_column_it_dropped_as_personal():
+    """F-R2BNT1-007 (T-6215): only a row-hash id reads the columns impersonal() drops. A keyed id
+    does not, so neither its query nor the public `source` link that repeats it names them."""
+    raw = [e for e in yaml.safe_load(generate.MAPPING.read_text())["datasets"]
+           if e["status"] == "mapped" and (e.get("existing") or {}).get("covers") != "whole"]
+    asked, keyed = [], 0
+    for e in raw:
+        kept = entry(e["name"])
+        gone = {p["column"] for a, p in e["properties"].items() if a not in kept["properties"]}
+        if not gone or not e["entityId"].get("keys"):
+            continue
+        keyed += 1
+        slug = SLUGS[e["name"]]
+        for path in (SEED / e["org"]).glob(f"{e['org']}-od-*-{slug}*.yaml"):
+            fields = {f for line in path.read_text().splitlines() if "outFields=" in line
+                      for f in urllib.parse.unquote(line.split("outFields=")[1].split("&")[0]).split(",")}
+            asked += [f"{path.name}: {c}" for c in sorted(gone & fields)]
+    assert keyed, "no keyed dataset drops a column: this test checks nothing"
+    assert not asked, asked
+
+
 def test_dropping_a_personal_column_keeps_each_id_and_lets_the_next_replace_remove_it():
     """T-5697: the Entities on dev already hold the personal columns. A replace rewrites only the
     Entities its batch names and refuses one holding an attribute the view does not show (T-5236), so
