@@ -2553,7 +2553,7 @@ classes:
       (CPSV-AP Evidence base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
       label:
         tag: label
         value:
@@ -2933,7 +2933,7 @@ classes:
       extension AdministrativeArea (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
       label:
         tag: label
         value:
@@ -2963,7 +2963,7 @@ classes:
       extension HeritageArea (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/HeritageArea
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/HeritageArea
       label:
         tag: label
         value:
@@ -2980,7 +2980,7 @@ classes:
       built, as the Smart Data Model extension TrafficSignalJunction (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/TrafficSignalJunction
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/TrafficSignalJunction
       label:
         tag: label
         value:
@@ -3010,7 +3010,7 @@ classes:
       (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
       label:
         tag: label
         value:

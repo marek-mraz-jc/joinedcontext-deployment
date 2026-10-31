@@ -398,3 +398,21 @@ def test_the_indicator_pipeline_reads_exactly_the_cubes_its_compute_uses():
     assert query["type"] == "KeyPerformanceIndicator"
     assert set(re.findall(r'"([^"]+)"', query["q"])) == used
     assert query["q"].startswith('dataSet==')
+
+
+@requires_docker
+def test_a_web_address_gets_https_and_text_that_is_none_is_left_out():
+    """T-6216: the register writes "www.x.sk" without a scheme and sometimes two addresses in one
+    cell; the mapping made each http:// and "www.a.sk; www.b.sk" one broken URL."""
+    cells = ["www.ocova.sk", "www.ddadsszvolen.sk; www. symbia.sk", "http://obec.sk/a", "nie je", None]
+
+    def put(d):
+        for feature, cell in zip(d["features"], cells):
+            feature["properties"]["Webová_adresa"] = cell
+            feature["properties"]["Kapacita"] = 1
+            feature["properties"]["Druh_poskytovanej_sociálnej_slu"] = f"služba {cell}"
+    urls = {e["name"]["value"].split(",")[0]: e.get("url", {}).get("value") for e in run("socialne-sluzby", edited("socialne-sluzby", put))
+            if e["name"]["value"].startswith("služba ")}
+    assert urls == {"služba www.ocova.sk": "https://www.ocova.sk",
+                    "služba www.ddadsszvolen.sk; www. symbia.sk": "https://www.ddadsszvolen.sk",
+                    "služba http://obec.sk/a": "http://obec.sk/a", "služba nie je": None, "služba None": None}

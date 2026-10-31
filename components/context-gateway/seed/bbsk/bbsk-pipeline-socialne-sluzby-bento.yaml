@@ -18,6 +18,13 @@ pipeline:
             _ => null,
           }
         }
+        # The register writes a web address without its scheme ("www.ocova.sk"), sometimes two of
+        # them ("www.a.sk; www.b.sk"): the first one gets https (24 of 25 sampled hosts answer it,
+        # 2026-10-31, T-6216); anything else that is no web address is left out.
+        map web {
+          let w = this.or("").string().trim().re_replace_all("[;,\\s].*$", "")
+          root = if $w.re_match("^https?://[^\\s]+$") { $w } else if $w.re_match("^www\\.[^\\s/]+\\.[a-z]{2,}(/[^\\s]*)?$") { "https://" + $w } else { null }
+        }
         map provider {
           root = match this {
             "obec/mesto" => "municipality",
@@ -44,7 +51,7 @@ pipeline:
             "addressCountry": "SK"
           }.filter(f -> f.value != "") } },
           "districtName": if p."Okres_sociálnej_služby".or("").trim() == "" { null } else { { "type": "Property", "value": p."Okres_sociálnej_služby".trim() } },
-          "url": if p."Webová_adresa".or("").trim() == "" { null } else { { "type": "Property", "value": if p."Webová_adresa".trim().re_match("^https?://") { p."Webová_adresa".trim() } else { "http://" + p."Webová_adresa".trim() } } },
+          "url": if p."Webová_adresa".apply("web") == null { null } else { { "type": "Property", "value": p."Webová_adresa".apply("web") } },
           "dataProvider": { "type": "Property", "value": "Banskobystrický samosprávny kraj, opendata.bbsk.sk (CC BY-SA 4.0)" },
           "source": { "type": "Property", "value": "https://opendata.bbsk.sk/" }
         }.filter(entry -> entry.value != null)).unique(e -> e.id)

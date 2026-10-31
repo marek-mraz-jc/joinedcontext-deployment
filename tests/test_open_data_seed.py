@@ -93,17 +93,22 @@ def test_the_committed_seed_is_what_the_mapping_generates():
 
 
 def test_no_generated_pipeline_or_model_publishes_a_persons_contact_or_a_suppliers_street():
-    """ADR-N-054, T-5697: a director's or statutory representative's name, phone and e-mail, and a
-    supplier's street (a sole trader's home), never reach the public od spaces. A pipeline may still
+    """ADR-N-054, T-5697: a director's or statutory representative's name, phone and e-mail, a
+    supplier's street (a sole trader's home) and a health operator's seat and contact (T-6216) never
+    reach the public od spaces. A pipeline may still
     read such a column into its id hash; the model keeps the name only as a deprecated slot."""
     personal = re.compile(r'^\s*"(riaditel\w*|statutar\w*)"\s*:', re.M | re.I)
     street = re.compile(r'^\s*"(adresa|ulicaACislo|sidloDodavatela)"\s*:', re.M)
+    # A pharmacy's or health facility's operator can be one person: its seat, telephone and e-mail (T-6216).
+    health = re.compile(r'^\s*"(sidlo\w+|\w*[Tt]elefon\w*|\w*[Ee]mail\w*)"\s*:', re.M)
     found = []
     for path in sorted(SEED.glob("*/*-od-pipeline-*-bento.yaml")):
         text = path.read_text()
         found += [f"{path.name}: {m.group(0).strip()}" for m in personal.finditer(text)]
         if re.search(r"-od-pipeline-(dodavatelia|dotacie-2|faktury|objednavky|zmluvy)-bento", path.name):
             found += [f"{path.name}: {m.group(0).strip()}" for m in street.finditer(text)]
+        if re.search(r"-od-pipeline-zoznam-(lekarni|zdravotnickych-zariadeni)-v-bbk-bento", path.name):
+            found += [f"{path.name}: {m.group(0).strip()}" for m in health.finditer(text)]
     for path in sorted(SEED.glob("*/*-otvorene-data.linkml.yaml")):
         slots = yaml.safe_load(path.read_text())["slots"]
         found += [f"{path.name}: {a}" for a, s in slots.items()
@@ -1361,3 +1366,13 @@ def test_no_seed_or_generator_asks_ckan_for_a_datastore_table():
     writers = [str(p.relative_to(ROOT)) for d in ("scripts", "seeds") for p in (ROOT / d).rglob("*.py")
                if re.search(r"datastore:\s*\{", p.read_text())]
     assert writers == [], "a generator writes publish.ckan.datastore"
+
+
+def test_every_link_to_this_repository_names_the_account_that_serves_it():
+    """T-6216: 39 upstream_source links named github.com/marek-mraz/joinedcontext-deployment, which
+    answers 404; the repository lives at marek-mraz-jc (the venues CSV link already named it)."""
+    roots = [SEED, generate.MAPPING.parent]
+    dead = [f"{p.relative_to(r)}" for r in roots for p in sorted(r.rglob("*"))
+            if p.is_file() and p.suffix in {".yaml", ".jsonld", ".json", ".py"}
+            and "github.com/marek-mraz/joinedcontext-deployment" in p.read_text(errors="ignore")]
+    assert not dead, dead

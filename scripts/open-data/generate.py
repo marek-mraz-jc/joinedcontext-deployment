@@ -56,7 +56,7 @@ LANGS = ("sk", "cs", "en", "de")
 EXTENSIONS = SDM / "extensions"
 # Where an extension and the source's own columns name their terms (T-4328's jc:).
 JC = "https://joinedcontext.com/models/"
-EXTENSION_URL = "https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions"
+EXTENSION_URL = "https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions"
 # Extensions a city space's own model needs beside the mapping's (T-4338): the class of that
 # space's LinkML names the attributes the extension adds.
 SPACE_EXTENSIONS = {
@@ -196,7 +196,8 @@ RETIRED = {
         "Grant": ["statutarnyZastupca", "ulicaACislo"],
         "Invoice": ["adresa"],
         "Organization": ["adresa", "riaditel", "riaditelEmail", "riaditelPevnaLinka", "riaditelPracMobil", "statutari", "ulicaACislo"],
-        "PointOfInterest": ["riaditel", "riaditelEmail", "riaditelMobilnyTelefon", "riaditelPevnaLinka"],
+        "PointOfInterest": ["eMailZariadenia", "riaditel", "riaditelEmail", "riaditelMobilnyTelefon", "riaditelPevnaLinka",
+                            "sidloPoskytovatela", "sidloPrevadzkovatela", "telefonZariadeniaVerejny", "verejnyEmail", "verejnyTelefon"],
         "PurchaseOrder": ["adresa"],
     },
 }
@@ -207,7 +208,8 @@ REVISED = {slug: "2026-10-27" for slug in (
     "zmluvy", "organizacna-struktura", "materske-skoly-v-banskobystrickom-kraji",
     "kontakty-na-miestne-samospravy-v-bbk", "stredne-skoly-v-banskobystrickom-kraji", "dodavatelia",
     "stredne-skoly-v-bbk-odbory-a-pocet-stude", "skoly-a-skolske-zariadenia-v-zriadovatel",
-    "vysoke-skoly-v-banskobystrickom-kraji", "zakladne-skoly-v-banskobystrickom-kraji")}
+    "vysoke-skoly-v-banskobystrickom-kraji", "zakladne-skoly-v-banskobystrickom-kraji")} | {
+    slug: "2026-10-31" for slug in ("zoznam-lekarni-v-bbk", "zoznam-zdravotnickych-zariadeni-v-bbk")}
 # What a visitor reads for the common slots, in each language the widget speaks (T-4682).
 COMMON_LABELS = {
     "dataProvider": {"sk": "Poskytovateľ údajov", "cs": "Poskytovatel dat", "en": "Data provider", "de": "Datenanbieter"},
@@ -1106,13 +1108,19 @@ def sdm_schema(e: dict) -> Path:
 PERSONAL = re.compile(r"^(riaditel|statutar)", re.IGNORECASE)
 SUPPLIERS = re.compile(r"^bbsk-(dodavatelia|dotacie|faktury|objednavky|zmluvy)-")
 SUPPLIER_STREET = {"adresa", "ulicaACislo", "sidloDodavatela"}
+# A pharmacy's or health facility's operator can be one licensed person (22 of 266 pharmacy
+# operators carry no legal form, 2026-10-31): its seat is that person's home and its telephone
+# and e-mail reach them, which the curated nemocnice mapping never reads either (T-6216).
+HEALTH = re.compile(r"^bbsk-zoznam-(lekarni|zdravotnickych-zariadeni)-v-bbk-")
+HEALTH_CONTACT = {"verejnyTelefon", "verejnyEmail", "sidloPrevadzkovatela",
+                  "telefonZariadeniaVerejny", "eMailZariadenia", "sidloPoskytovatela"}
 
 
 def impersonal(e: dict) -> None:
     """Takes the personal columns out of a dataset's mapping before anything is written from it."""
-    street = SUPPLIER_STREET if SUPPLIERS.match(e["name"]) else set()
+    gone = {*(SUPPLIER_STREET if SUPPLIERS.match(e["name"]) else ()), *(HEALTH_CONTACT if HEALTH.match(e["name"]) else ())}
     e["hashed"] = {a: p["column"] for a, p in e["properties"].items() if "template" not in p}
-    e["properties"] = {a: p for a, p in e["properties"].items() if not PERSONAL.match(a) and a not in street}
+    e["properties"] = {a: p for a, p in e["properties"].items() if not PERSONAL.match(a) and a not in gone}
 
 
 def render() -> dict[Path, str]:

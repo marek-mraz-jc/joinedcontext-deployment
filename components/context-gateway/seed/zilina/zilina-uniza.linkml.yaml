@@ -192,7 +192,7 @@ classes:
       Model extension Article (CPSV-AP Evidence base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article
     slots:
       - identifier
       - name

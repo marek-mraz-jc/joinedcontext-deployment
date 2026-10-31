@@ -827,8 +827,8 @@ shortDescr	Krátky popis	Krátký popis	Short description	Kurzbeschreibung
 sidlo		Sídlo	Seat	Sitz
 sidloDodavatela	Sídlo dodávateľa	Sídlo dodavatele	Supplier's seat	Sitz des Lieferanten
 sidloObjednavatela		Sídlo objednatele	Client's seat	Sitz des Auftraggebers
-sidloPoskytovatela		Sídlo poskytovatele	Provider's seat	Sitz des Anbieters
-sidloPrevadzkovatela		Sídlo provozovatele	Operator's seat	Sitz des Betreibers
+sidloPoskytovatela	Sídlo poskytovateľa	Sídlo poskytovatele	Provider's seat	Sitz des Anbieters
+sidloPrevadzkovatela	Sídlo prevádzkovateľa	Sídlo provozovatele	Operator's seat	Sitz des Betreibers
 skodaVEUR	Škoda v EUR	Škoda v EUR	Damage in EUR	Schaden in EUR
 skola		Škola	School	Schule
 skolskaJedalen		Školní jídelna	School canteen	Schulkantine
@@ -945,7 +945,7 @@ talianskyAbs	Taliansky jazyk (počet)	Italský jazyk (počet)	Italian language (
 tazkoZraneni		Těžce zranění	Seriously injured	Schwerverletzte
 tazkoZraneniUcastnici	Ťažko zranení účastníci	Těžce zranění účastníci	Seriously injured participants	Schwerverletzte Beteiligte
 telefon	Telefón	Telefon	Telephone	Telefon
-telefonZariadeniaVerejny		Telefon zařízení veřejný	Facility public phone	Öffentliches Telefon der Einrichtung
+telefonZariadeniaVerejny	Telefón zariadenia verejný	Telefon zařízení veřejný	Facility public phone	Öffentliches Telefon der Einrichtung
 telefonneCisloVsobecne1	Telefónne číslo – všeobecné 1	Telefonní číslo – obecné 1	General phone 1	Allgemeine Telefonnummer 1
 telefonneCisloVsobecne2	Telefónne číslo – všeobecné 2	Telefonní číslo – obecné 2	General phone 2	Allgemeine Telefonnummer 2
 telephone	Telefón	Telefon	Telephone	Telefon
@@ -1031,8 +1031,8 @@ vdovecVdova	Vdovec/vdova (%)	Vdovec/vdova (%)	Widowed (%)	Verwitwet (%)
 vdovecVdovaAbs	Vdovec/vdova (počet)	Vdovec/vdova (počet)	Widowed (count)	Verwitwet (Anzahl)
 vecnaOblast		Věcná oblast	Subject area	Sachgebiet
 vek		Věk	Age	Alter
-verejnyEmail		Veřejný e-mail	Public e-mail	Öffentliche E-Mail
-verejnyTelefon		Veřejný telefon	Public phone	Öffentliches Telefon
+verejnyEmail	Verejný e-mail	Veřejný e-mail	Public e-mail	Öffentliche E-Mail
+verejnyTelefon	Verejný telefón	Veřejný telefon	Public phone	Öffentliches Telefon
 vietnamska	Vietnamská národnosť (%)	Vietnamská národnost (%)	Vietnamese nationality (%)	Vietnamesische Nationalität (%)
 vietnamskaAbs	Vietnamská národnosť (počet)	Vietnamská národnost (počet)	Vietnamese nationality (count)	Vietnamesische Nationalität (Anzahl)
 vietnamsky	Vietnamský jazyk (%)	Vietnamský jazyk (%)	Vietnamese language (%)	Vietnamesische Sprache (%)

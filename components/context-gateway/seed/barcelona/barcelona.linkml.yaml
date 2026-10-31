@@ -2249,7 +2249,7 @@ classes:
       Model extension AdministrativeArea (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
     slots:
       - name
       - districtCode

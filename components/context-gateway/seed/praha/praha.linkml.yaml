@@ -2141,7 +2141,7 @@ classes:
       (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea
       label:
         tag: label
         value:
@@ -2158,7 +2158,7 @@ classes:
       extension BudgetLine (CPSV-AP Cost base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/BudgetLine
       label:
         tag: label
         value:
@@ -2221,7 +2221,7 @@ classes:
       EmissionSource (PointOfInterest base). The operator is not read: some are private persons.
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/EmissionSource
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/EmissionSource
       label:
         tag: label
         value:
@@ -2249,7 +2249,7 @@ classes:
       Data Model extension RadonRiskArea (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RadonRiskArea
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RadonRiskArea
       label:
         tag: label
         value:
@@ -2266,7 +2266,7 @@ classes:
       (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/FloodZone
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/FloodZone
       label:
         tag: label
         value:
@@ -2283,7 +2283,7 @@ classes:
       (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/NoiseZone
       label:
         tag: label
         value:
@@ -2300,7 +2300,7 @@ classes:
       (PointOfInterest base).
     is_a: Entity
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/FloodDefence
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/FloodDefence
       label:
         tag: label
         value:

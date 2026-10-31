@@ -2567,19 +2567,6 @@ slots:
           de: Allgemeine E-Mail 2
         annotations:
           generated: sk cs en de
-  eMailZariadenia:
-    description: The source column `E_mail_zariadenia`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: E-mail zariadenia
-          cs: E-mail zařízení
-          en: Facility e-mail
-          de: E-Mail der Einrichtung
-        annotations:
-          generated: sk cs en de
   ePFRV:
     description: The source column `EPFRV`.
     range: float
@@ -10453,32 +10440,6 @@ slots:
           de: Sitz des Auftraggebers
         annotations:
           generated: cs en de
-  sidloPoskytovatela:
-    description: The source column `Sídlo_poskytovateľa`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Sídlo poskytovateľa
-          cs: Sídlo poskytovatele
-          en: Provider's seat
-          de: Sitz des Anbieters
-        annotations:
-          generated: cs en de
-  sidloPrevadzkovatela:
-    description: The source column `Sídlo_prevádzkovateľa`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Sídlo prevádzkovateľa
-          cs: Sídlo provozovatele
-          en: Operator's seat
-          de: Sitz des Betreibers
-        annotations:
-          generated: cs en de
   skodaVEUR:
     description: The source column `Škoda_v_EUR`.
     range: integer
@@ -11989,19 +11950,6 @@ slots:
           de: Telefon
         annotations:
           generated: sk cs en de
-  telefonZariadeniaVerejny:
-    description: The source column `Telefón_zariadenia_verejný`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Telefón zariadenia verejný
-          cs: Telefon zařízení veřejný
-          en: Facility public phone
-          de: Öffentliches Telefon der Einrichtung
-        annotations:
-          generated: cs en de
   telefonneCisloVsobecne1:
     description: The source column `Telefónne_číslo___všobecné_1`.
     annotations:
@@ -12976,32 +12924,6 @@ slots:
           cs: Věcná oblast
           en: Subject area
           de: Sachgebiet
-        annotations:
-          generated: cs en de
-  verejnyEmail:
-    description: The source column `Verejný_email`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Verejný email
-          cs: Veřejný e-mail
-          en: Public e-mail
-          de: Öffentliche E-Mail
-        annotations:
-          generated: cs en de
-  verejnyTelefon:
-    description: The source column `Verejný_telefón`.
-    annotations:
-      ngsi_ld_kind: Property
-      label:
-        tag: label
-        value:
-          sk: Verejný telefón
-          cs: Veřejný telefon
-          en: Public phone
-          de: Öffentliches Telefon
         annotations:
           generated: cs en de
   vietnamska:
@@ -14025,6 +13947,20 @@ slots:
           de: Vertretungsberechtigte
         annotations:
           generated: sk cs en de
+  eMailZariadenia:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: E-mail zariadenia
+          cs: E-mail zařízení
+          en: Facility e-mail
+          de: E-Mail der Einrichtung
+        annotations:
+          generated: sk cs en de
   riaditelMobilnyTelefon:
     description: An attribute an earlier version of the mapping wrote; the next run removes it.
     deprecated: No mapping writes it any more; kept so a replace may remove it.
@@ -14037,6 +13973,76 @@ slots:
           cs: Ředitel – mobilní telefon
           en: Director – mobile phone
           de: Direktor – Mobiltelefon
+        annotations:
+          generated: sk cs en de
+  sidloPoskytovatela:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Sídlo poskytovateľa
+          cs: Sídlo poskytovatele
+          en: Provider's seat
+          de: Sitz des Anbieters
+        annotations:
+          generated: sk cs en de
+  sidloPrevadzkovatela:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Sídlo prevádzkovateľa
+          cs: Sídlo provozovatele
+          en: Operator's seat
+          de: Sitz des Betreibers
+        annotations:
+          generated: sk cs en de
+  telefonZariadeniaVerejny:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Telefón zariadenia verejný
+          cs: Telefon zařízení veřejný
+          en: Facility public phone
+          de: Öffentliches Telefon der Einrichtung
+        annotations:
+          generated: sk cs en de
+  verejnyEmail:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Verejný e-mail
+          cs: Veřejný e-mail
+          en: Public e-mail
+          de: Öffentliche E-Mail
+        annotations:
+          generated: sk cs en de
+  verejnyTelefon:
+    description: An attribute an earlier version of the mapping wrote; the next run removes it.
+    deprecated: No mapping writes it any more; kept so a replace may remove it.
+    annotations:
+      ngsi_ld_kind: Property
+      label:
+        tag: label
+        value:
+          sk: Verejný telefón
+          cs: Veřejný telefon
+          en: Public phone
+          de: Öffentliches Telefon
         annotations:
           generated: sk cs en de
 classes:
@@ -14071,7 +14077,7 @@ classes:
     - typObce
     - vYMERA
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/AdministrativeArea/context.jsonld
   Bridge:
     class_uri: https://joinedcontext.com/models/Bridge
     description: One row of Mosty v správe BBRSC (public view).
@@ -14108,7 +14114,7 @@ classes:
     - vynimocnaZatazitelnostT
     - zatazitelnostNaJednuNapravu
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Bridge/context.jsonld
   CommitteeSeat:
     class_uri: https://joinedcontext.com/models/CommitteeSeat
     description: One row of Komisie zastupiteľstva Banskobystrického samosprávneho kraja.
@@ -14121,7 +14127,7 @@ classes:
     - pozicia
     - poznamka
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CommitteeSeat/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CommitteeSeat/context.jsonld
   Contract:
     class_uri: https://joinedcontext.com/models/Contract
     description: One row of Zmluvy.
@@ -14152,7 +14158,7 @@ classes:
     - sumaVEUR
     - zdrojNazov
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
   CouncilMeeting:
     class_uri: https://joinedcontext.com/models/CouncilMeeting
     description: One row of Zasadnutia samosprávy.
@@ -14172,7 +14178,7 @@ classes:
     - nazovSamospravy
     - organSamospravy
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
   CouncilVote:
     class_uri: https://joinedcontext.com/models/CouncilVote
     description: One row of Hlasovania poslancov.
@@ -14191,7 +14197,7 @@ classes:
     - volebneObdobie
     - zasadnutie
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilVote/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilVote/context.jsonld
   CycleRoute:
     class_uri: https://joinedcontext.com/models/CycleRoute
     description: One row of Cykloturistické trasy - línie; Cykloturistické trasy - línie - povrchy.
@@ -14218,7 +14224,7 @@ classes:
     - typ
     - zdroj
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CycleRoute/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CycleRoute/context.jsonld
   Grant:
     class_uri: https://joinedcontext.com/models/Grant
     description: One row of Dotácie; PPA platby.
@@ -14274,7 +14280,7 @@ classes:
     - vyplatenaSumaSpoluSucet
     - ziadatel
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
   Invoice:
     class_uri: https://joinedcontext.com/models/Invoice
     description: One row of Faktúry.
@@ -14296,7 +14302,7 @@ classes:
     - rok
     - suma
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Invoice/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Invoice/context.jsonld
   KeyPerformanceIndicator:
     class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Hustota obyvateľstva (2021); Hustota obyvateľstva v obciach BBK; Obyvateľstvo podľa
@@ -14820,7 +14826,7 @@ classes:
     - otvoreneDo
     - otvoreneOd
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/OfficeHours/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/OfficeHours/context.jsonld
   Organization:
     class_uri: https://smartdatamodels.org/dataModel.Organization/Organization
     description: One row of Dodávatelia; Kontakty na miestne samosprávy v BBK; Materské školy v Banskobystrickom
@@ -15015,7 +15021,7 @@ classes:
     - vybavovatelPeticie
     - zverejnenieVysledkuVybavenia
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Petition/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Petition/context.jsonld
   PointOfInterest:
     class_uri: https://smartdatamodels.org/dataModel.PointOfInterest/PointOfInterest
     description: One row of Cyklosčítače - miesta; Cykloturistické trasy - nosič/infotabuľa/odpočívadlo/značenie;
@@ -15234,7 +15240,7 @@ classes:
     - zauzivanyNazovKratky
     - zauzivanyNazovUpraveny
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicInvestment/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicInvestment/context.jsonld
   PublicOrganization:
     class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/PublicOrganization
     description: One row of Príspevkové rozpočtové a iné organizácie samosprávy.
@@ -15301,7 +15307,7 @@ classes:
     - utvarOvZP
     - zeleneObstaravanie
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicProcurement/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PublicProcurement/context.jsonld
   PurchaseOrder:
     class_uri: https://joinedcontext.com/models/PurchaseOrder
     description: One row of Objednávky.
@@ -15319,7 +15325,7 @@ classes:
     - rok
     - suma
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld
   RiverBasin:
     class_uri: https://joinedcontext.com/models/RiverBasin
     description: One row of Povodia Banskobystrického kraja.
@@ -15353,7 +15359,7 @@ classes:
     - wiseEvolut
     - zoneType
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RiverBasin/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RiverBasin/context.jsonld
   RoadAccident:
     class_uri: https://smartdatamodels.org/dataModel.Transportation/RoadAccident
     description: One row of Cyklisti_nehodovosť; Nehodovosť v BBK.
@@ -15430,7 +15436,7 @@ classes:
     - vyhradnaZatazitelnostT
     - vynimocnaZatazitelnostT
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/context.jsonld
   Rule:
     class_uri: https://smartdatamodels.org/dataModel.CPSV-AP/Rule
     description: One row of Zoznam účinných všeobecne záväzných nariadení (VZN).
@@ -15489,4 +15495,4 @@ classes:
     - typ
     - vYMERA
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/WaterBodyStatus/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/WaterBodyStatus/context.jsonld

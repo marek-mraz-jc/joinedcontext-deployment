@@ -1520,7 +1520,7 @@ classes:
     - title
     - url
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Article/context.jsonld
   Contract:
     class_uri: https://joinedcontext.com/models/Contract
     description: One row of Zmluvy BB.
@@ -1544,7 +1544,7 @@ classes:
     - zmluvneStrany
     - zmluvneStranySUdajomICO
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Contract/context.jsonld
   CouncilMeeting:
     class_uri: https://joinedcontext.com/models/CouncilMeeting
     description: One row of Zasadnutia orgánov samosprávy.
@@ -1560,7 +1560,7 @@ classes:
     - organSamospravy
     - rok
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/CouncilMeeting/context.jsonld
   Garden:
     class_uri: https://smartdatamodels.org/dataModel.ParksAndGardens/Garden
     description: One row of DTM_BB-register-verejnej-zelene-1.
@@ -1603,7 +1603,7 @@ classes:
     - typ
     - ziadatel
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/Grant/context.jsonld
   KeyPerformanceIndicator:
     class_uri: https://smartdatamodels.org/dataModel.KeyPerformanceIndicator/KeyPerformanceIndicator
     description: One row of Počet občanov podľa dňa narodenia; Počet občanov podľa veku; Prírastky a úbytky občanov
@@ -1682,4 +1682,4 @@ classes:
     - objednavkaSpolu
     - textObjednavky
     annotations:
-      upstream_source: https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld
+      upstream_source: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/PurchaseOrder/context.jsonld

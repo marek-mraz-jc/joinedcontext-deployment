@@ -140,7 +140,7 @@
     "value": "vynimocnaZatazitelnostT"
   },
   "@context": [
-    "https://github.com/marek-mraz/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/context.jsonld",
+    "https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/scripts/open-data/sdm/extensions/RoadStructure/context.jsonld",
     "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.8.jsonld"
   ]
 }

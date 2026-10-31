@@ -115,6 +115,7 @@ pipeline:
           }
           root = if $v == null { null } else { { "type": "Property", "value": $v } }
         }
+        let mapping_rev = "2026-10-31"
         let local = "zoznam-lekarni-v-bbk-" + [this.properties."IdZZ"].map_each(v -> v.string()).join("-").re_replace_all("[^A-Za-z0-9._~-]", "-").slice(0, 80)
         root = {
           "id": "urn:ngsi-ld:%v:%v:%v:%v".format("PointOfInterest", "bbsk.sk", env("JC_SPACE"), $local),
@@ -126,11 +127,8 @@ pipeline:
           "mesto": this.properties."Mesto".apply("string"),
           "pSC": this.properties."PSČ".apply("string"),
           "okres": this.properties."Okres".apply("string"),
-          "verejnyTelefon": this.properties."Verejný_telefón".apply("string"),
-          "verejnyEmail": this.properties."Verejný_email".apply("string"),
           "prevadzkovatel": this.properties."Prevádzkovateľ".apply("string"),
           "iCO": this.properties."IČO".apply("string"),
-          "sidloPrevadzkovatela": this.properties."Sídlo_prevádzkovateľa".apply("string"),
           "pondelok": this.properties."Pondelok".apply("string"),
           "utorok": this.properties."Utorok".apply("string"),
           "streda": this.properties."Streda".apply("string"),
