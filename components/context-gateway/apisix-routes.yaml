@@ -455,6 +455,11 @@ api-context-endpoint:
   # `disk_cache_one` (on the pod's /tmp): a route naming another zone is dropped whole, and every
   # read of the data host answered the edge's 404 on dev (2026-10-28, `memory_cache`).
   plugins:
+    # context-endpoint turns nginx buffering off for SSE and exports, and an unbuffered answer
+    # never enters proxy_cache (APISIX execs its @disable_proxy_buffering location): the cache
+    # stored nothing on dev until this route plugin replaced the chain's (T-6185, 2026-10-31).
+    proxy-buffering:
+      disable_proxy_buffering: false
     proxy-cache:
       cache_strategy: disk
       cache_zone: disk_cache_one
@@ -724,6 +729,9 @@ api-context-endpoint-history:
       key_type: var_combination
       key: '$http_authorization $remote_addr'
       rejected_code: 429
+    # Buffered, or proxy-cache stores nothing: read the reads route's comment.
+    proxy-buffering:
+      disable_proxy_buffering: false
     proxy-cache:
       cache_strategy: disk
       cache_zone: disk_cache_one

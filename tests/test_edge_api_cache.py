@@ -32,6 +32,8 @@ ROUTES = (ROOT / "components/context-gateway/apisix-routes.yaml").read_text()
 ALL = yaml.safe_load(ROUTES.replace("{{", "#").replace("}}", ""))
 ROUTE, HISTORY, BULK = ALL["api-context-endpoint"], ALL["api-context-endpoint-history"], ALL["api-context-endpoint-bulk"]
 VALUES = ROOT / "components/context-gateway/values/gateway/base-values.yaml.gotmpl"
+PLUGINS = yaml.safe_load((ROOT / "components/context-gateway/apisix-plugins.yaml").read_text()
+                         .replace("{{", "#").replace("}}", ""))
 
 
 def test_only_the_anonymous_data_host_route_caches():
@@ -67,6 +69,20 @@ def test_the_history_route_caches_as_the_reads_do_and_keeps_the_bulk_limit():
     for path in ("/api/endpoint/abc/file.csv", "/api/endpoint/abc/ngsi-ld/v1/entities",
                  "/api/endpoint/file.csv/mcp", "/api/endpoint/abc/ws"):
         assert not history.search(path), path
+
+
+def test_every_caching_route_buffers_after_its_plugin_config_merges():
+    """APISIX sends an unbuffered request through its @disable_proxy_buffering location, where
+    proxy_cache stores nothing: the chain's `disable_proxy_buffering: true` killed both data-host
+    caches on dev (T-6185, 2026-10-31). A route plugin replaces the chain's plugin of that name."""
+    caching = {name: r for name, r in ALL.items() if "proxy-cache" in r.get("plugins", {})}
+    assert set(caching) == {"api-context-endpoint", "api-context-endpoint-history"}
+    for name, route in caching.items():
+        merged = {**PLUGINS[route["pluginConfig"]]["plugins"], **route["plugins"]}
+        assert merged["proxy-buffering"] == {"disable_proxy_buffering": False}, name
+    # The exports keep streaming.
+    merged = {**PLUGINS[BULK["pluginConfig"]]["plugins"], **BULK["plugins"]}
+    assert merged["proxy-buffering"]["disable_proxy_buffering"] is True
 
 
 @requires_helmfile
@@ -129,8 +145,14 @@ def edge(tmp_path_factory):
     upstream = {"type": "roundrobin", "nodes": {f"upstream:{server.server_port}": 1}}
     # The committed blocks of the three data-host routes, at their committed priorities; one
     # upstream copy each (a shared dict dumps as a YAML alias, and APISIX then drops the routes).
-    rules = {"routes": [{"id": name, "uri": route["uri"], "priority": route["priority"], "upstream": dict(upstream),
-                         "plugins": route["plugins"], **({"vars": route["vars"]} if "vars" in route else {})}
+    # Each route keeps its chain's proxy-buffering through plugin_config_id, as on dev: without it
+    # this test kept answers dev never stored (T-6185).
+    chains = {route["pluginConfig"] for route in (ROUTE, HISTORY, BULK)}
+    rules = {"plugin_configs": [{"id": chain, "plugins": {"proxy-buffering": dict(PLUGINS[chain]["plugins"]["proxy-buffering"])}}
+                                for chain in sorted(chains)],
+             "routes": [{"id": name, "uri": route["uri"], "priority": route["priority"], "upstream": dict(upstream),
+                         "plugin_config_id": route["pluginConfig"], "plugins": route["plugins"],
+                         **({"vars": route["vars"]} if "vars" in route else {})}
                         for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK))]}
     (tmp / "apisix.yaml").write_text(yaml.safe_dump(rules) + "#END\n")
     port = free_port()
