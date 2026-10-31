@@ -170,3 +170,37 @@ pipeline:
 
     # One request per page rather than one per event.
     - archive: { format: json_array }
+
+    # The gateway refuses a whole Event whose link names an entity the space does not hold (DM-70):
+    # a parent event that is already over is not in the upcoming list, and a venue outside
+    # Helsinki or without a name is no unit the services pipeline writes. On 2026-10-31, 43 of 266
+    # sampled events were missing on dev so (F-R2BNT3-004). The page asks the space which of its
+    # targets it holds and keeps only those links; a failed ask writes the page without them, and
+    # the nightly full sweep puts them back.
+    - branch:
+        request_map: |
+          let targets = this.map_each(e -> [e.superEvent.object.or(null), e.refPointOfInterest.object.or(null)]).flatten().filter(t -> t != null).unique()
+          root = if $targets.length() == 0 { deleted() } else { {
+            "type": "Query",
+            "entities": $targets.map_each(id -> { "id": id, "type": id.split(":").index(2) })
+          } }
+        processors:
+          - try:
+              - http:
+                  url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
+                  verb: POST
+                  headers: { Content-Type: application/json }
+                  oauth2:
+                    enabled: true
+                    client_key: ${JC_CLIENT_ID}
+                    client_secret: ${JC_CLIENT_SECRET}
+                    token_url: ${JC_TOKEN_URL}
+                  timeout: 20s
+                  rate_limit: pipeline_egress
+              - mapping: 'root = { "held": this.map_each(e -> e.id) }'
+          - catch:
+              - mapping: 'root = { "held": [] }'
+        result_map: meta held = this.held.join(" ")
+    - mapping: |
+        let held = @held.or("").split(" ")
+        root = this.map_each(e -> e.filter(kv -> !["superEvent", "refPointOfInterest"].contains(kv.key) || $held.contains(kv.value.object)))
