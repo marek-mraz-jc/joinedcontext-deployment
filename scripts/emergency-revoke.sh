@@ -181,12 +181,30 @@ admin_token() {
 		return 0
 	fi
 	[ -n "${KEYCLOAK_ADMIN_USER:-}" ] && [ -n "${KEYCLOAK_ADMIN_PASSWORD:-}" ] || return 1
-	curl -sS --max-time 10 \
+	# printf is a builtin: the password reaches curl's stdin without a process argv.
+	printf '%s' "$KEYCLOAK_ADMIN_PASSWORD" | curl -sS --max-time 10 \
 		-d "client_id=admin-cli" -d "grant_type=password" \
 		--data-urlencode "username=$KEYCLOAK_ADMIN_USER" \
-		--data-urlencode "password=$KEYCLOAK_ADMIN_PASSWORD" \
+		--data-urlencode "password@-" \
 		"$idm/realms/master/protocol/openid-connect/token" |
 		sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p'
+}
+
+# A Keycloak admin call: the bearer rides in a curl config on stdin, as forge_api's token does.
+kc_api() {
+	curl -sS --max-time 10 -K - "$@" <<<"header = \"Authorization: Bearer $token\""
+}
+
+# The id of the first object of a Keycloak list answer. Keycloak answers on one line with nested
+# objects (a client's protocolMappers, a user's federatedIdentities) that carry ids of their own,
+# so a text match picks the wrong one: JSON is read as JSON.
+first_id() {
+	python3 -c 'import json, sys
+try:
+    found = json.load(sys.stdin)
+    print(found[0]["id"] if isinstance(found, list) and found else "")
+except (ValueError, KeyError, TypeError):
+    pass'
 }
 
 # A client the platform declares (edge, portal-api, gateway, grafana, gitea …) has its secret in
@@ -239,14 +257,11 @@ if [ -n "$user" ] || [ -n "$service_account" ]; then
 	else
 		api="$idm/admin/realms/$instance"
 		if [ -n "$user" ]; then
-			id=$(curl -sS --max-time 10 -H "Authorization: Bearer $token" \
-				"$api/users?username=$user&exact=true" |
-				sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
+			id=$(kc_api "$api/users?username=$user&exact=true" | first_id)
 			if [ -z "$id" ]; then
 				ko "user $user not found in realm $instance"
 			else
-				code=$(curl -sS --max-time 10 -o /dev/null -w '%{http_code}' -X POST \
-					-H "Authorization: Bearer $token" "$api/users/$id/logout")
+				code=$(kc_api -o /dev/null -w '%{http_code}' -X POST "$api/users/$id/logout")
 				case "$code" in
 				20*) step "sessions of $user logged out" ;;
 				*) ko "logout of $user answered $code" ;;
@@ -254,17 +269,14 @@ if [ -n "$user" ] || [ -n "$service_account" ]; then
 			fi
 		fi
 		if [ -n "$service_account" ]; then
-			id=$(curl -sS --max-time 10 -H "Authorization: Bearer $token" \
-				"$api/clients?clientId=$service_account" |
-				sed -n 's/.*"id":"\([^"]*\)".*/\1/p' | head -1)
+			id=$(kc_api "$api/clients?clientId=$service_account" | first_id)
 			if [ -z "$id" ]; then
 				ko "client $service_account not found in realm $instance"
 			else
 				# Rotating the secret is what stops the client credentials grant. The new
 				# secret is never printed: it lives in a variable until it is written into
 				# the platform's copies of the client's Secret, if there are any.
-				answer=$(curl -sS --max-time 10 -w '\n%{http_code}' -X POST \
-					-H "Authorization: Bearer $token" "$api/clients/$id/client-secret")
+				answer=$(kc_api -w '\n%{http_code}' -X POST "$api/clients/$id/client-secret")
 				code=${answer##*$'\n'}
 				case "$code" in
 				20*)
@@ -286,8 +298,8 @@ if [ -n "$verify_url" ] && [ -n "$verify_token_file" ]; then
 	deadline=$((started + bound))
 	code=""
 	while :; do
-		code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 \
-			-H "Authorization: Bearer $(cat "$verify_token_file")" "$verify_url" 2>/dev/null) || code="curl-error"
+		code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 -K - "$verify_url" 2>/dev/null \
+			<<<"header = \"Authorization: Bearer $(<"$verify_token_file")\"") || code="curl-error"
 		case "$code" in
 		401 | 403) break ;;
 		esac

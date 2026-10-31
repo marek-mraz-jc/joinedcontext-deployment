@@ -36,6 +36,13 @@ ns = args[args.index("-n") + 1] if "-n" in args else None
 out = next((a for a in args if a.startswith("jsonpath=")), "")
 if args[:3] == ["get", "secret", "-A"]:
     print("\n".join(n for n, v in state["copies"].items() if v is not None))
+elif "get" in args and "secret" in args and ns is not None and "json" in args:
+    value = state["copies"].get(ns)
+    if value is None:
+        sys.exit(1)
+    sys.stdout.write(json.dumps({"apiVersion": "v1", "kind": "Secret", "type": "Opaque",
+        "metadata": {"name": "s", "namespace": ns, "uid": "u", "resourceVersion": "1"},
+        "data": {"key": base64.b64encode(value.encode()).decode()}}))
 elif "get" in args and "secret" in args and ns is not None:
     value = state["copies"].get(ns)
     if value is None:
@@ -51,6 +58,11 @@ elif "get" in args and "secret" in args and ns is not None:
         sys.stdout.write(base64.b64encode(b"portal").decode())
     else:
         sys.stdout.write(base64.b64encode(value.encode()).decode())
+elif "create" in args and "-f" in args:
+    secret = json.loads(sys.stdin.read())
+    assert "resourceVersion" not in secret["metadata"], "create refuses a resourceVersion"
+    state["copies"][ns] = base64.b64decode(secret["data"]["key"]).decode()
+    save()
 elif "delete" in args and "secret" in args:
     state["copies"][ns] = None
     state.get("previous", {}).pop(ns, None)
@@ -91,6 +103,8 @@ args = sys.argv[1:]
 with open(os.environ["STUB_CALLS"], "a") as log:
     log.write("helmfile " + " ".join(args) + "\n")
 selector = args[args.index("-l") + 1]
+if selector in state.get("syncFails", []):
+    sys.exit(1)
 if selector.startswith("secret-name=") or selector in ("release=gitea-bootstrap", "release=" + state.get("saRelease", "-")):
     value = state["regenerate"]
     for ns in state["copies"]:
@@ -205,6 +219,16 @@ def test_a_client_secret_keycloak_never_received_fails_the_run(tmp_path):
     result, _, _ = run(tmp_path, {"configPushes": False}, *CLIENT)
     assert result.returncode == 1
     assert "still accepted" in result.stdout
+
+
+@pytest.mark.parametrize("failing", ["secret-name=keycloak-client-portal-api", "release=keycloak-config"])
+def test_a_failed_apply_puts_the_old_secret_back_in_every_copy(tmp_path, failing):
+    """F-R2DEP3-010: every copy was deleted before the apply, so a failed sync left no Secret."""
+    result, calls, state = run(tmp_path, {"syncFails": [failing]}, *CLIENT)
+    assert result.returncode == 2
+    assert "the old keycloak-client-portal-api is back in every copy" in result.stderr
+    assert state["copies"] == {"keycloak": OLD, "portal": OLD}
+    assert not any("rollout restart" in c for c in calls)
 
 
 def test_a_copy_that_survives_the_apply_stops_the_run(tmp_path):

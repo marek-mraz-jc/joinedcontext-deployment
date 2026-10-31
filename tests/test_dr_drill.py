@@ -257,6 +257,16 @@ def test_a_database_short_of_rows_or_missing_fails_the_drill(production, tmp_pat
     assert log[-1] == "delete postgres-cluster-drill"
 
 
+@pytest.mark.parametrize("text", ['x","result":"passed","y":"\\', "tab\there\nnewline", "plain"])
+def test_a_result_field_is_one_json_string_whatever_a_name_holds(text):
+    # F-R2DEP3-015: the result JSON was built by concatenation, so a database or table name
+    # holding `"` broke the patch, or carried a later "result" key of its own.
+    script = Path(__file__).resolve().parent.parent / "components/postgres/charts/databases/files/dr-drill.sh"
+    j = next(line for line in script.read_text().splitlines() if line.startswith("j() {"))
+    said = subprocess.run(["sh", "-c", j + '\nj "$1"', "sh", text], capture_output=True, text=True, check=True).stdout
+    assert json.loads(said) == "".join(c for c in text if ord(c) >= 0x20)
+
+
 def test_a_restore_that_never_becomes_ready_fails_and_is_deleted(production, tmp_path):
     code, result, log = run(production, tmp_path, {"portal": ("1", "1")}, ready=False)
     assert code != 0 and result["result"] == "failed"

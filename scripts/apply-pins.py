@@ -33,7 +33,9 @@ deleted by hand. An empty range plans no release.
 A component's own helmfile or component.yaml (T-6187) changes its releases' hooks, needs and
 conditions, which the render does not show: `plan` adds every installed release labelled with
 that component (`helmfile list`) to the releases whose render moved, instead of a full sync of all
-~370 releases (0ca12ec4: one comment in the prepare hook upgraded 369 releases in 1781 s).
+~370 releases (0ca12ec4: one comment in the prepare hook upgraded 369 releases in 1781 s). A
+component with no release of its own (prepare: namespaces and mesh annotations, a hook the scoped
+sync skips with JC_PREPARE_SKIP=pins) is the exception: its change is a full sync.
 
 `releases` refuses (exit 3) a range that touches any file other than a components/<c>/images.yaml.
 Both need deployment/ assembled at HEAD (`just _dev-assemble`); `plan` also needs the
@@ -43,6 +45,7 @@ environment's chart repositories added.
 from __future__ import annotations
 
 import contextlib
+import functools
 import importlib.util
 import json
 import os
@@ -245,18 +248,29 @@ def plan(environment: str, base: str, full_at: str | None, now: datetime) -> lis
     names = _renders(environment, base, scoped)
     components = {COMPONENT.match(f).group(1) for f in structure}
     if components:
+        # A component with no release of its own (prepare: the namespace and proxy-annotation
+        # hooks) acts on every release, so a scoped sync of its releases would sync nothing.
+        bare = sorted(c for c in components if not component_releases(environment, {c}))
+        if bare:
+            raise Refused(f"{base[:12]}..HEAD changes the hooks of {', '.join(bare)}, which installs no release of its own")
         names = sorted(set(names) | set(component_releases(environment, components)))
     return names
 
 
 def component_releases(environment: str, components: set[str]) -> list[str]:
     """The installed releases at HEAD labelled with one of `components`."""
+    return releases_of(_listed(environment), components)
+
+
+@functools.cache
+def _listed(environment: str) -> list[dict]:
+    """`helmfile list --output json` at HEAD, read once per run."""
     done = subprocess.run(
         ["helmfile", "-f", "deployment/helmfile.yaml", "-e", environment, "list", "--skip-charts", "--output", "json"],
         cwd=ROOT, capture_output=True, text=True, check=False)
     if done.returncode:
         raise Refused(f"helmfile list of {environment} failed:\n{done.stderr[-4000:]}")
-    return releases_of(json.loads(done.stdout), components)
+    return json.loads(done.stdout)
 
 
 def releases_of(listed: list[dict], components: set[str]) -> list[str]:

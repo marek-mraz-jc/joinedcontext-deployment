@@ -35,6 +35,15 @@ args = sys.argv[1:]
 # The method, the headers and the request body all separate two calls to one URL
 # (anonymous vs bearer, create vs delete), so the whole command line is the key.
 line = " ".join(args)
+if os.environ.get("STUB_ARGV"):
+    with open(os.environ["STUB_ARGV"], "a") as log:
+        log.write(line + "\\n")
+# A form field curl reads from a file (`name@/dev/fd/N`, the script's pipes) is part of the request
+# as curl sends it, so the body matchers see it as `name=<value>`.
+for arg in args:
+    name, at, path = arg.partition("@")
+    if at and path.startswith("/dev/fd/"):
+        line += " %s=%s" % (name, open(path).read())
 
 DEFAULT_HEADERS = (
     "HTTP/2 200\\r\\nserver: APISIX\\r\\n"
@@ -1472,6 +1481,21 @@ def test_a_probe_that_reports_no_window_fails_the_run(tmp_path):
     result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  the egress probe printed no settle window" in result.stdout
+
+
+def test_no_password_or_client_secret_rides_on_a_command_line(tmp_path):
+    # F-R2DEP3-003: the Keycloak master admin password and the client secrets went in curl argv,
+    # readable in /proc by any process on the smoke host (prod-smoke runs this too).
+    argv = tmp_path / "argv.log"
+    secrets = {"JC_SMOKE_ADMIN_PASSWORD": "adm1n-pass-value", "JC_SMOKE_CLIENT_SECRET": "client-secret-value",
+               "JC_SMOKE_DEMO_PASSWORD": "demo-pass-value"}
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test",
+                 extra_env={**secrets, "STUB_ARGV": str(argv)})
+    logged = argv.read_text()
+    assert "grant_type=password" in logged, "the run reached the password grants"
+    for value in secrets.values():
+        assert value not in logged, f"{value} rode on a curl command line"
+    assert "ok    client_credentials token" in result.stdout
 
 
 def test_missing_client_secret_fails_the_run(tmp_path):

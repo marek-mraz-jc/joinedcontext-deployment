@@ -10,7 +10,7 @@ slug="${1:?usage: wait-rollouts.sh <instance-slug> [timeout] [release...]}"
 timeout="${2:-600}"
 shift $(( $# < 2 ? $# : 2 ))
 
-namespaces=$(kubectl get ns -o name | sed 's|namespace/||' | grep -E "^(${slug}|${slug}-|jc-operators$)" || true)
+namespaces=$(kubectl get ns -o name | sed 's|namespace/||' | grep -E "^(${slug}|${slug}-.+|jc-operators)$" || true)
 [ -n "$namespaces" ] || { echo "no namespaces for instance '${slug}'" >&2; exit 1; }
 
 deadline=$(( $(date +%s) + timeout ))

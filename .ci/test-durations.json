@@ -228,6 +228,7 @@
  "test_postgres_local_backup.py": 66.5,
  "test_postgres_memory_budget.py": 46.9,
  "test_postgres_recovery.py": 28.6,
+ "test_postgres_role_job.py": 5.9,
  "test_postgres_tuning.py": 2.4,
  "test_praha_areas.py": 21.7,
  "test_praha_bicycle_counters.py": 12.1,

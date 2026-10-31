@@ -86,6 +86,9 @@ global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
 
   instanceSlug: dev
+  # The API server's endpoint (worker-t6220, kubectl get endpoints kubernetes, 2026-10-31):
+  # the rules of the pods holding an API token open 6443 to it alone (F-R2DEP3-009).
+  kubeApiCidrs: [10.255.0.101/32]
 
   # Scraped by the prometheus component's own Prometheus, alerts through Alertmanager (T-5154).
   metrics:

@@ -172,10 +172,11 @@ LISTED = [
 
 
 def test_a_mixed_batch_names_exactly_the_releases_it_changes(monkeypatch, tmp_path):
-    # T-6187, the 0ca12ec4 range: a pin, a seed edit, a chart edit and a component helmfile edit
-    # (the prepare hook, a component with no release) was a full sync of 369 releases
+    # T-6187, the 0ca12ec4 range: a pin, a seed edit and a chart edit were a full sync of 369
+    # releases. That range also moved the prepare hook, which a scoped sync skips
+    # (JC_PREPARE_SKIP=pins): that one file is a full sync now (F-R2DEP3-011).
     files = ["components/portal/images.yaml", "seeds/bbsk/pipelines/air.yaml",
-             "components/keycloak/charts/realm/templates/realm.yaml", "components/prepare/helmfile.yaml.gotmpl"]
+             "components/keycloak/charts/realm/templates/realm.yaml"]
     head = change(**{"portal-portal": [deployment("portal", "p@sha256:2")],
                      "gitea-seed": [config("seed", {"bbsk.yaml": "a: 2"})],
                      "keycloak-keycloak": [deployment("keycloak", "k@sha256:1"), config("realm", {"x": "2"})]})
@@ -187,6 +188,13 @@ def test_a_mixed_batch_names_exactly_the_releases_it_changes(monkeypatch, tmp_pa
 def test_a_component_helmfile_change_syncs_that_components_installed_releases(monkeypatch, tmp_path, structure):
     # hooks, needs and conditions do not show in the render: every release of the component goes
     assert plan(monkeypatch, tmp_path, [structure], change(), listed=LISTED) == ["portal-portal", "portal-ui"]
+
+
+def test_a_change_to_a_component_without_releases_is_a_full_sync(monkeypatch, tmp_path):
+    # F-R2DEP3-011: prepare's helmfile holds the namespace and proxy-annotation hooks and no
+    # release, so the scoped plan synced nothing and the change waited for the 6 h full sync.
+    got = plan(monkeypatch, tmp_path, ["components/prepare/helmfile.yaml.gotmpl"], change(), listed=LISTED)
+    assert got.startswith("full: ") and "changes the hooks of prepare" in got, got
 
 
 def test_an_unchanged_secrets_release_is_skipped_although_it_renders_fresh_values(monkeypatch, tmp_path):

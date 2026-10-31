@@ -66,12 +66,13 @@ spec = json.load(open(os.environ["STUB_SPEC"]))
 line = " ".join(sys.argv[1:])
 with open(os.environ["STUB_CALLS"], "a") as log:
     log.write("curl " + line + "\\n")
+# A secret must come on stdin (a -K - config or an @- field), never in argv.
+config = sys.stdin.read() if "-K" in sys.argv or "@-" in line else ""
+if config:
+    with open(os.environ["STUB_CALLS"], "a") as log:
+        log.write(("forge-config " if "/api/v1/repos/" in line else "stdin ") + config.strip() + "\\n")
 
 if "/api/v1/repos/" in line:
-    # The forge token must come on stdin (-K -), never in argv.
-    config = sys.stdin.read() if "-K" in sys.argv else ""
-    with open(os.environ["STUB_CALLS"], "a") as log:
-        log.write("forge-config " + config.strip() + "\\n")
     if "-X DELETE" in line:
         sys.stdout.write("{}\\n" + str(spec.get("deleteStatus", 200)))
     elif spec.get("policyAt", True):
@@ -90,7 +91,7 @@ elif "/client-secret" in line:
 elif "/logout" in line:
     sys.stdout.write(str(spec.get("adminWriteStatus", 204)))
 else:
-    calls = sum(1 for l in open(os.environ["STUB_CALLS"]) if "Authorization: Bearer" in l and "/api/endpoint/" in l)
+    calls = sum(1 for l in open(os.environ["STUB_CALLS"]) if l.startswith("curl ") and "/api/endpoint/" in l)
     still_open = spec.get("refusedAfter", 1)
     sys.stdout.write("200" if calls <= still_open - 1 else str(spec.get("refusedStatus", 403)))
 '''
@@ -239,7 +240,8 @@ def test_the_refusal_is_measured_and_passes_inside_the_bound(tmp_path):
     result, calls = revoke_policy(tmp_path, {"refusedAfter": 1, "checkoutsArgs": CHECKOUTS_ARGS}, "--bound", "5")
     assert result.returncode == 0, result.stdout + result.stderr
     assert "is refused (403)" in result.stdout
-    assert any("/api/endpoint/" in c and "Authorization: Bearer" in c for c in calls)
+    assert any(c.startswith("curl ") and "/api/endpoint/" in c for c in calls)
+    assert "stdin header = \"Authorization: Bearer compromised.jwt.value\"" in calls
 
 
 def test_a_credential_still_accepted_after_the_bound_fails_the_run(tmp_path):
@@ -263,6 +265,49 @@ def test_no_token_or_password_is_ever_printed(tmp_path):
     printed = result.stdout + result.stderr
     for secret in (env_secret, "admin.token.value", "compromised.jwt.value", FORGE_TOKEN):
         assert secret not in printed, f"{secret} reached the console"
+
+
+
+def test_no_password_or_token_rides_on_a_command_line(tmp_path):
+    # F-R2DEP3-004: the admin password, the admin bearer and the compromised token went in
+    # curl argv, readable in /proc by any process on the operator's host.
+    os.environ["KEYCLOAK_ADMIN_TOKEN"] = ""
+    os.environ["KEYCLOAK_ADMIN_USER"] = "admin"
+    os.environ["KEYCLOAK_ADMIN_PASSWORD"] = "sup3r-admin-password"
+    try:
+        result, calls = revoke_policy(
+            tmp_path, {"refusedAfter": 1, "checkoutsArgs": CHECKOUTS_ARGS},
+            "--user", "jana.kovacova", "--service-account", "conformance",
+            "--idm", "https://idm.example.test",
+        )
+    finally:
+        for key in ("KEYCLOAK_ADMIN_TOKEN", "KEYCLOAK_ADMIN_USER", "KEYCLOAK_ADMIN_PASSWORD"):
+            del os.environ[key]
+    assert result.returncode == 0, result.stdout + result.stderr
+    argv = [c for c in calls if c.startswith(("curl ", "kubectl "))]
+    for secret in ("sup3r-admin-password", "admin.token.value", "compromised.jwt.value"):
+        assert not any(secret in c for c in argv), f"{secret} rode on a command line"
+    assert any(c.startswith("stdin ") and "admin.token.value" in c for c in calls)
+    assert any(c.startswith("stdin ") and "compromised.jwt.value" in c for c in calls)
+    assert "stdin sup3r-admin-password" in calls, "the password goes on stdin, without a newline"
+    assert any("/admin/realms/dev/users/user-uuid/logout" in c for c in calls)
+
+
+def test_the_client_secret_rotated_is_the_clients_own_not_a_mappers(tmp_path):
+    # F-R2DEP3-001: Keycloak answers a client on one line with its protocolMappers after it; a
+    # greedy sed took the last "id", a mapper's, and the rotation answered 404.
+    lookup = ('[{"id":"client-uuid","clientId":"conformance","protocolMappers":'
+              '[{"id":"mapper-uuid","name":"audience"}]}]')
+    users = ('[{"id":"user-uuid","username":"jana.kovacova",'
+             '"federatedIdentities":[{"id":"idp-link-uuid"}]}]')
+    result, calls = run(
+        tmp_path, {"clientLookup": lookup, "userLookup": users},
+        "--instance", "dev", "--user", "jana.kovacova",
+        "--service-account", "conformance", "--idm", "https://idm.example.test",
+    )
+    assert any("/admin/realms/dev/clients/client-uuid/client-secret" in c for c in calls), calls
+    assert any("/admin/realms/dev/users/user-uuid/logout" in c for c in calls), calls
+    assert not any("mapper-uuid" in c or "idp-link-uuid" in c for c in calls)
 
 
 # T-2841: a platform client's secret lives in the generated Secret `keycloak-client-<client>`,

@@ -192,3 +192,19 @@ def test_the_assistant_draws_its_maps_and_charts_on_this_host(dev):
     pod = one(dev, "Deployment", "jc-assistant")["spec"]["template"]["spec"]
     env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
     assert env["JC_ASSISTANT_VIZ_URL"] == f"https://{HOST}"
+
+
+def test_every_location_with_headers_of_its_own_repeats_the_shared_ones():
+    """nginx drops the server's add_header set in a location with one of its own: the pages lost
+    Cross-Origin-Opener-Policy and Permissions-Policy (F-R2DEP3-020, curl -I viz.dev, 2026-10-31)."""
+    conf = (FILES / "nginx.conf").read_text()
+    server_level = [l.strip() for l in conf.split("location", 1)[0].splitlines() if l.startswith("    add_header")]
+    server_level += [l.strip() for l in conf.split("location = /healthz")[1].split("}", 1)[1].split("location")[0].splitlines()
+                     if l.startswith("    add_header")]
+    shared = [l for l in server_level if not l.startswith(("add_header Content-Security-Policy", "add_header Cache-Control"))]
+    assert len(shared) == 4, shared
+    for block in re.findall(r"\n    location ([^{]+)\{(.*?)\n    \}", conf, re.S):
+        name, body = block
+        if "add_header" in body:
+            missing = [h for h in shared if h not in body]
+            assert not missing, f"location {name.strip()} drops {missing}"

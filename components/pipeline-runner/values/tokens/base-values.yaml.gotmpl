@@ -79,6 +79,12 @@ extraVolumeMounts:
     mountPath: /var/run/secrets/kubernetes.io/serviceaccount
     readOnly: true
 
+# justify-api-token-access: the projected API token above is how it calls TokenRequest.
+podAnnotations:
+  security.joinedcontext.com/api-access-reason: >-
+    Mints a short TokenRequest token for the pipelines' own ServiceAccounts (create on
+    serviceaccounts/token in that namespace alone) to present to Keycloak as a client assertion.
+
 # No grant in its own namespace: its one grant, `create` on serviceaccounts/token, is in the
 # namespace of the pipelines' ServiceAccounts alone (charts/identities, part `identities`).
 rbac:

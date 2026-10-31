@@ -255,23 +255,46 @@ if [ "$class" = external ]; then
 	exit 0
 fi
 
+# Each copy as it stands, held in memory (never on disk or a command line) until the new value
+# is in place: a failed apply puts the old Secret back instead of leaving its readers with none
+# at their next restart (F-R2DEP3-010).
+declare -A saved
 for ns in $namespaces; do
-	kubectl -n "$ns" delete secret "$secret" --wait=true >/dev/null || die "deleting $secret in $ns failed"
+	saved[$ns]=$(kubectl -n "$ns" get secret "$secret" -o json | python3 -c 'import json, sys
+s = json.load(sys.stdin)
+m = s["metadata"]
+s["metadata"] = {k: m[k] for k in ("name", "namespace", "labels", "annotations") if k in m}
+print(json.dumps({k: s[k] for k in ("apiVersion", "kind", "metadata", "type", "data") if k in s}))') ||
+		die "reading $secret in $ns failed; nothing was deleted"
+done
+restore_and_die() {
+	local ns
+	for ns in $namespaces; do
+		kubectl -n "$ns" delete secret "$secret" --ignore-not-found --wait=true >/dev/null
+		kubectl -n "$ns" create -f - <<<"${saved[$ns]}" >/dev/null ||
+			printf 'rotate-secret: %s in %s could not be put back: re-create it before any reader restarts\n' "$secret" "$ns" >&2
+	done
+	die "$1; the old $secret is back in every copy"
+}
+
+for ns in $namespaces; do
+	kubectl -n "$ns" delete secret "$secret" --wait=true >/dev/null || restore_and_die "deleting $secret in $ns failed"
 done
 
 if [ "$class" = forge ]; then
-	helmfile -f "$helmfile_file" -e "$instance" -l release=gitea-bootstrap sync >/dev/null || die "the forge bootstrap did not mint a new token"
+	helmfile -f "$helmfile_file" -e "$instance" -l release=gitea-bootstrap sync >/dev/null || restore_and_die "the forge bootstrap did not mint a new token"
 elif [ "$class" = catalogue ]; then
-	helmfile -f "$helmfile_file" -e "$instance" -l "release=$release" sync >/dev/null || die "the catalogue release $release did not mint a new token"
+	helmfile -f "$helmfile_file" -e "$instance" -l "release=$release" sync >/dev/null || restore_and_die "the catalogue release $release did not mint a new token"
 else
-	helmfile -f "$helmfile_file" -e "$instance" -l "secret-name=$secret" sync >/dev/null || die "the generator release of $secret did not apply"
+	helmfile -f "$helmfile_file" -e "$instance" -l "secret-name=$secret" sync >/dev/null || restore_and_die "the generator release of $secret did not apply"
 fi
 if [ "${push_config:-0}" = 1 ]; then
-	helmfile -f "$helmfile_file" -e "$instance" -l release=keycloak-config sync >/dev/null || die "keycloak-config-cli did not push the new client secret"
+	helmfile -f "$helmfile_file" -e "$instance" -l release=keycloak-config sync >/dev/null || restore_and_die "keycloak-config-cli did not push the new client secret"
 fi
 
 new=$(value_of "$first")
-[ -n "$new" ] || die "$secret was not made again in $first"
+[ -n "$new" ] || restore_and_die "$secret was not made again in $first"
+unset saved
 [ "$new" != "$old" ] || die "$secret holds the old value after the apply; a copy survived somewhere"
 for ns in $namespaces; do
 	[ "$(value_of "$ns")" = "$new" ] || die "the copy in $ns differs from the one in $first"

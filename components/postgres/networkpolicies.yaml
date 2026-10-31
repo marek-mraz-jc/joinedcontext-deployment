@@ -257,7 +257,8 @@ postgres-drill:
           componentNamespace: postgres.operator
 
 # The drill's job only talks to the API server: it counts rows through `kubectl exec`, never
-# over the database port.
+# over the database port. Its token may exec into the primary, so it reaches no internet host:
+# the API server's addresses on 6443 alone, the port the policy sees after the DNAT (F-R2DEP3-009).
 database-dr-drill:
   podSelector:
     app.kubernetes.io/component: database-dr-drill
@@ -277,12 +278,6 @@ database-dr-drill:
           port: 53
         - protocol: TCP
           port: 53
-    - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-      ports:
-        - protocol: TCP
-          port: 443
     - to:
         - kubeApi: true
       ports:

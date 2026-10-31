@@ -63,12 +63,21 @@ spec:
         failureAction: KYVERNO_FAILURE_ACTION
         message: >-
           Pod mounts a Kubernetes API token without a justification. Set
-          spec.automountServiceAccountToken to false, or explain why this
+          spec.automountServiceAccountToken to false and project no
+          serviceAccountToken without an audience, or explain why this
           workload must reach the API in the annotation
           security.joinedcontext.com/api-access-reason.
         deny:
           conditions:
-            all:
+            any:
               - key: '{{ to_string(request.object.spec.automountServiceAccountToken) }}'
                 operator: NotEquals
                 value: 'false'
+              # The same token mounted by hand: a projected serviceAccountToken with no
+              # audience is the API server's own. A token bound to another audience (the
+              # realm's) is refused by the API server and needs no reason.
+              # ponytail: an audience naming the API server itself is not caught; list the
+              # cluster's API audiences here if a chart ever needs one.
+              - key: '{{ length((request.object.spec.volumes || `[]`)[].projected.sources[] | [?serviceAccountToken && !(serviceAccountToken.audience)]) }}'
+                operator: GreaterThan
+                value: 0
