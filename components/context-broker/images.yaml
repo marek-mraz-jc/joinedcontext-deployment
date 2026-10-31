@@ -236,5 +236,9 @@ context-broker:
     # apply (t5835/ on the postgres volume, 20261029T2315Z). No new runtime key (ANTARES_POLICY_SUBJECT_HEADERS
     # is already set). Rollback: dev-101 (the store ignores missing migrations) and that dump restored.
     # Signed by ship.yml on dev at 7375b1c (run 40955556681).
-    tag: 'dev-113'
-    digest: 'sha256:da7856c1f8cce9ec1b99c3e0429fd230b4c10dfe044eb903f05f41a9041a40c8'
+    # Antares dev 9d1f190 (dev-117, over 7375b1c: trains T-6143 T-6151 T-6159 T-6182): liveness /q/health answers
+    # 503 STORE_WEDGED after 300 s of a fully held pool while a fresh connection works (T-6182), the big-tenant
+    # size estimate when the exact scan fails (T-6159). No migration, no new runtime key. Rollback: dev-113.
+    # Signed by ship.yml on dev at 9d1f190 (run 41187247353).
+    tag: 'dev-117'
+    digest: 'sha256:4bec8cefad1e20a2c65832126ad729d91438e1f55ccc578162961e77163315f5'
