@@ -112,17 +112,21 @@ spec:
 
           echo "Creating role ${ROLE_NAME} for database ${PGDATABASE}..."
 
-          # Create the role if it doesn't exist
-          psql -v ON_ERROR_STOP=1 <<-EOSQL
-            DO \$\$
-            BEGIN
-              IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${ROLE_NAME}') THEN
-                CREATE ROLE "${ROLE_NAME}" WITH LOGIN PASSWORD '${ROLE_PASSWORD}';
-              ELSE
-                ALTER ROLE "${ROLE_NAME}" WITH LOGIN PASSWORD '${ROLE_PASSWORD}';
-              END IF;
-            END
-            \$\$;
+          # The password reaches psql from its environment (\getenv), never a command line or SQL
+          # text the shell builds: %L quotes it, %I the name. The statement that carries it stays out
+          # of pg_stat_statements and the server log (F-R2DEP3-014). A role made earlier with more
+          # rights loses them here, so the check below can fail the Job (F-R2DEP3-016).
+          psql -v ON_ERROR_STOP=1 <<-'EOSQL'
+            SET pg_stat_statements.track_utility = off;
+            SET log_statement = 'none';
+            SET log_min_error_statement = 'panic';
+            \getenv role_name ROLE_NAME
+            \getenv role_password ROLE_PASSWORD
+            SELECT format(
+              CASE WHEN EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'role_name')
+                THEN 'ALTER ROLE %I WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD %L'
+                ELSE 'CREATE ROLE %I WITH LOGIN PASSWORD %L' END,
+              :'role_name', :'role_password') \gexec
           EOSQL
 
           echo "Configuring permissions for ${ROLE_NAME}..."
@@ -169,12 +173,13 @@ spec:
 
           # Verify the role has no access to other databases by ensuring no extra privileges
           echo "Verifying role is limited to database ${PGDATABASE}..."
-          psql -v ON_ERROR_STOP=1 -t <<-EOSQL | grep -q "^0$" && echo "✓ Role has no system-level privileges" || echo "⚠ Warning: Role may have additional privileges"
+          psql -v ON_ERROR_STOP=1 -t <<-EOSQL | grep -q "^ *0$" || { echo "ERROR: role ${ROLE_NAME} holds superuser, createrole or createdb"; exit 1; }
             SELECT count(*)
             FROM pg_roles
             WHERE rolname = '${ROLE_NAME}'
               AND (rolsuper = true OR rolcreaterole = true OR rolcreatedb = true);
           EOSQL
+          echo "✓ Role has no system-level privileges"
 
           echo "Database role setup completed successfully!"
 {{- end }}
