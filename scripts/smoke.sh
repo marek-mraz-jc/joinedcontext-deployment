@@ -280,8 +280,10 @@ token=""
 if [ -z "$client_secret" ]; then
 	ko "no client secret for $client_id (set JC_SMOKE_CLIENT_SECRET or point KUBECONFIG at the instance)"
 else
+	# A secret goes to curl through a pipe (`name@<(printf ...)`, printf is a builtin), never as
+	# an argv word another process on this host can read in /proc (F-R2DEP3-003).
 	token=$(curl -sS --max-time 20 -d grant_type=client_credentials -d "client_id=$client_id" \
-		--data-urlencode "client_secret=$client_secret" \
+		--data-urlencode "client_secret@"<(printf %s "$client_secret") \
 		"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 		sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	if [ -n "$token" ]; then ok "client_credentials token from realm $realm"; else ko "no access_token for $client_id in realm $realm"; fi
@@ -311,8 +313,8 @@ elif [ -z "$client_secret" ]; then
 	ko "demo user login needs the $client_id client secret"
 else
 	demo_token=$(curl -sS --max-time 20 -d grant_type=password \
-		-d "client_id=$client_id" --data-urlencode "client_secret=$client_secret" \
-		-d "username=$demo_login" --data-urlencode "password=$demo_password" \
+		-d "client_id=$client_id" --data-urlencode "client_secret@"<(printf %s "$client_secret") \
+		-d "username=$demo_login" --data-urlencode "password@"<(printf %s "$demo_password") \
 		"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 		sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	if [ -n "$demo_token" ]; then ok "demo user $demo_login logs in with a password grant"; else ko "demo user $demo_login cannot log in with a password grant"; fi
@@ -331,7 +333,7 @@ if [ -z "$admin_password" ]; then
 	skip "edge client audience (no admin secret: set JC_SMOKE_ADMIN_PASSWORD or point KUBECONFIG at the instance)"
 else
 	admin_token=$(curl -sS --max-time 20 -d grant_type=password -d client_id=admin-cli \
-		-d "username=$admin_user" --data-urlencode "password=$admin_password" \
+		-d "username=$admin_user" --data-urlencode "password@"<(printf %s "$admin_password") \
 		"$idm/realms/master/protocol/openid-connect/token" 2>/dev/null |
 		sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	edge_client=$(curl -sS --max-time 20 -H "Authorization: Bearer $admin_token" "$idm/admin/realms/$realm/clients?clientId=edge" 2>/dev/null || true)
@@ -423,8 +425,8 @@ o=m[-1]&15
 print(str((struct.unpack(">I",m[o:o+4])[0]&0x7FFFFFFF)%10**6).zfill(6),end="")')
 		fi
 		steward_token=$(curl -sS --max-time 20 -d grant_type=password \
-			-d "client_id=$client_id" --data-urlencode "client_secret=$client_secret" \
-			-d "username=demo.steward@${org}" --data-urlencode "password=$steward_password" \
+			-d "client_id=$client_id" --data-urlencode "client_secret@"<(printf %s "$client_secret") \
+			-d "username=demo.steward@${org}" --data-urlencode "password@"<(printf %s "$steward_password") \
 			${steward_totp:+-d "totp=$steward_totp"} \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
@@ -547,7 +549,7 @@ if has_route context-endpoint; then
 		ko "no client secret for $ep_client (set JC_SMOKE_ENDPOINT_CLIENT_SECRET or point KUBECONFIG at the instance)"
 	else
 		ep_token=$(curl -sS --max-time 20 -d grant_type=client_credentials -d "client_id=$ep_client" \
-			--data-urlencode "client_secret=$ep_secret" \
+			--data-urlencode "client_secret@"<(printf %s "$ep_secret") \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 		if [ -n "$ep_token" ]; then ok "client_credentials token for $ep_client"; else ko "no access_token for $ep_client in realm $realm"; fi
@@ -1389,7 +1391,7 @@ else
 	if [ -n "$fn_assertion" ]; then
 		fn_token=$(curl -sS --max-time 20 -d grant_type=client_credentials \
 			-d client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer \
-			--data-urlencode "client_assertion=$fn_assertion" \
+			--data-urlencode "client_assertion@"<(printf %s "$fn_assertion") \
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi
