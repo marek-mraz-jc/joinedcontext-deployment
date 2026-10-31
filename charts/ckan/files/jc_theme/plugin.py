@@ -809,7 +809,11 @@ def _extras(pkg):
 
 
 def _is_url(value):
-    return isinstance(value, str) and value.startswith(("https://", "http://"))
+    """An absolute http(s) address both a page link and the DCAT writer can carry: one space,
+    quote or angle bracket in an IRI makes rdflib refuse the whole Turtle document, so a single
+    record would turn /catalog.ttl into a 500 for every dataset (T-4586, T-6218)."""
+    return isinstance(value, str) and value.startswith(("https://", "http://")) \
+        and not re.search(r'[\s"<>{}|\\^`]', value)
 
 
 def _sources(value):

@@ -100,3 +100,15 @@ def test_every_answer_of_the_server_states_the_header_floor(dev):
     assert conf.count("add_header Content-Security-Policy") == conf.count("add_header Permissions-Policy") == 2
     default = re.search(r"\n    add_header Content-Security-Policy \"([^\"]+)\"", conf).group(1)
     assert default == "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+
+
+def test_the_chart_needs_the_domain_alone(tmp_path):
+    """T-6218 (R2DEP1 F-021): `host` was required and rendered nowhere; the page's hosts all come
+    from `domain`."""
+    if shutil.which("helm") is None:
+        pytest.skip("no helm")
+    chart = Path(__file__).resolve().parent.parent / "components/ai/charts/app"
+    result = subprocess.run(["helm", "template", "ai", str(chart), "--set", "domain=example.test"],
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert "https://assistant.example.test" in result.stdout
