@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -196,13 +197,45 @@ def test_a_range_with_more_than_pins_is_refused(monkeypatch):
     assert apply_pins.releases("dev", "abc1234") == []
 
 
-def test_each_release_maps_to_its_component_label():
-    listing = [{"name": "portal-portal", "labels": "chart:portal,component:portal,release:portal-portal"},
-               {"name": "networkpolicies-portal", "labels": "component:networkpolicies,name:networkpolicies-portal"},
-               {"name": "bare", "labels": ""}]
-    assert apply_pins.owners(listing, ["portal-portal", "networkpolicies-portal"]) == ["networkpolicies", "portal"]
-    with pytest.raises(apply_pins.Refused, match="bare"):
-        apply_pins.owners(listing, ["bare"])
+def write_values(root, key, values):
+    namespace, name, component, chart = key.split("/", 3)
+    (root / namespace / name / component).mkdir(parents=True)
+    (root / namespace / name / component / f"{chart}.yaml").write_text(yaml.safe_dump(values))
+
+
+def test_a_pin_moves_the_releases_whose_values_moved(tmp_path):
+    old, new = tmp_path / "old", tmp_path / "new"
+    for root, digest in ((old, "sha256:1"), (new, "sha256:2")):
+        write_values(root, "dev/portal-portal/portal/..%2F..%2Fcharts%2Fworkload", {"image": {"digest": digest}})
+        write_values(root, "dev/keycloak-app/keycloak/cc2-codecentric%2Fkeycloakx", {"image": digest})
+        write_values(root, "dev/networkpolicies-portal/networkpolicies/.%2Fcharts%2Fnetworkpolicies", {"a": 1})
+    assert apply_pins.values_moved(old, new) == ["keycloak-app keycloak remote", "portal-portal portal local"]
+    # a local chart is a directory of its component
+    root = tmp_path / "repo"
+    (root / "components/portal/charts/p").mkdir(parents=True)
+    write_values(old, "dev/portal-ui/portal/charts%2Fp", {"d": 1})
+    write_values(new, "dev/portal-ui/portal/charts%2Fp", {"d": 2})
+    apply_pins.ROOT, kept = root, apply_pins.ROOT
+    try:
+        assert "portal-ui portal local" in apply_pins.values_moved(old, new)
+    finally:
+        apply_pins.ROOT = kept
+
+
+def test_a_release_added_removed_or_unlabelled_is_refused(tmp_path):
+    old, new = tmp_path / "old", tmp_path / "new"
+    write_values(old, "dev/a/a/c", {"d": 1})
+    write_values(new, "dev/a/a/c", {"d": 1})
+    write_values(new, "dev/b/b/c", {"d": 1})
+    with pytest.raises(apply_pins.Refused, match="dev/b"):
+        apply_pins.values_moved(old, new)
+    write_values(old, "dev/b/<no value>/c", {"d": 1})
+    write_values(old, "dev/c/<no value>/c", {"d": 1})
+    write_values(new, "dev/c/<no value>/c", {"d": 2})
+    with pytest.raises(apply_pins.Refused, match="no component label on the release dev/c"):
+        apply_pins.values_moved(old, new)
+    with pytest.raises(apply_pins.Refused, match="no release"):
+        apply_pins.values_moved(old, tmp_path / "none")
 
 
 def test_a_pin_reruns_the_tests_of_its_images_and_of_every_images_yaml():
@@ -222,9 +255,19 @@ def test_a_pin_reruns_the_tests_of_its_images_and_of_every_images_yaml():
 
 HELMFILE_STUB = """#!/usr/bin/env bash
 # template: one release directory per component, its object the component's images.yaml;
-# list: the component label of each; diff and sync: the arguments they were given.
+# write-values: each release's values file at the output template, its values the component's
+# images.yaml, chart charts/w (a directory of a and agent-runner, a repository chart for b);
+# diff and sync: the arguments they were given.
 set -eu
 case " $* " in
+  *" write-values "*)
+    tpl=""; prev=""
+    for a in "$@"; do [ "$prev" = --output-file-template ] && tpl="$a"; prev="$a"; done
+    for r in a-x b-x agent-runner-proxy; do
+      c=${r%-*}
+      mkdir -p "${tpl%%"{{"*}dev/$r/$c"
+      cp "components/$c/images.yaml" "${tpl%%"{{"*}dev/$r/$c/charts%2Fw.yaml"
+    done ;;
   *" template "*)
     out=""; prev=""
     for a in "$@"; do [ "$prev" = --output-dir ] && out="$a"; prev="$a"; done
@@ -233,9 +276,7 @@ case " $* " in
       mkdir -p "$out/$r"
       { echo "kind: ConfigMap"; echo "metadata: {name: $c}"; echo "data:"; sed 's/^/  /' "components/$c/images.yaml"; } > "$out/$r/t.yaml"
     done ;;
-  *" list "*) echo '[{"name":"a-x","labels":"component:a"},{"name":"b-x","labels":"component:b"},'\
-'{"name":"agent-runner-proxy","labels":"component:agent-runner"}]' ;;
-  *) echo "HELMFILE $*" ;;
+  *) echo "HELMFILE ${JC_PREPARE_SKIP:+JC_PREPARE_SKIP=$JC_PREPARE_SKIP }$*" ;;
 esac
 """
 
@@ -262,7 +303,7 @@ def tree(tmp_path):
         src, dst = ROOT / rel, work / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
-    for name in ("verify-pinned-images.py", "wait-rollouts.sh", "release.py", "smoke-component.sh"):
+    for name in ("verify-pinned-images.py", "wait-rollouts.sh", "release.py", "smoke-component.sh", "render.sh"):
         # a component named in $STUB_DIR/red-smoke fails its smoke
         (work / "scripts" / name).write_text(f'#!/bin/sh\necho "RAN {name} $*"\n'
                                              f'grep -qx "{name} $*" "$STUB_DIR/fail" 2>/dev/null && exit 1; exit 0\n')
@@ -273,6 +314,9 @@ def tree(tmp_path):
         (stubs / name).chmod(0o755)
     for c in ("a", "b", "agent-runner"):
         (work / "components" / c).mkdir(parents=True)
+        if c != "b":
+            (work / "components" / c / "charts/w").mkdir(parents=True)
+            (work / "components" / c / "charts/w/Chart.yaml").write_text("name: w\n")
         (work / "components" / c / "images.yaml").write_text("digest: '1'\n")
     git(work, "init", "-q")
     git(work, "config", "user.email", "t@example.com")
@@ -303,11 +347,18 @@ def test_dev_apply_pins_syncs_only_the_release_the_pin_moved(tree):
     assert "name=b-x" not in dry.stdout and "sync" not in dry.stdout and "RAN" not in dry.stdout
     done = just(work, env)
     assert done.returncode == 0, done.stderr
-    assert "HELMFILE -f deployment/helmfile.yaml -e dev sync --concurrency 4 --selector name=a-x\n" in done.stdout
-    lines = [line for line in done.stdout.splitlines() if line.startswith("RAN")]
-    # T-6155: the wait covers the synced release alone, not every workload of dev (CNPG included)
-    assert lines == ["RAN verify-pinned-images.py dev", "RAN wait-rollouts.sh dev 600 a-x", "RAN release.py record dev dev",
+    # T-6155: a local chart syncs without chart repositories or dependency builds, and a pin moves no
+    # namespace, so the prepare hook stands down
+    assert ("HELMFILE JC_PREPARE_SKIP=pins -f deployment/helmfile.yaml -e dev sync --concurrency 4 --skip-deps "
+            "--selector name=a-x\n") in done.stdout
+    lines = [re.sub(r" /\S+", " RENDER", line) for line in done.stdout.splitlines() if line.startswith("RAN")]
+    # T-6155: the render, its signature check and the wait cover the synced release alone, not
+    # every workload of dev (CNPG included)
+    assert lines == ["RAN render.sh dev RENDER --deployed --selector name=a-x",
+                     "RAN verify-pinned-images.py dev --render RENDER --scoped",
+                     "RAN wait-rollouts.sh dev 600 a-x", "RAN release.py record dev dev",
                      "RAN smoke-component.sh dev.joinedcontext.com dev a"]
+    assert re.search(r"planned, verified, synced and rolled out in \d+ s", done.stdout)
     assert "running on dev and smoked" in done.stdout and "HOLD" not in done.stdout
 
 
@@ -331,6 +382,27 @@ def test_a_range_with_more_than_pins_takes_the_full_apply_and_smoke(tree):
     assert "RAN smoke-component" not in out
 
 
+def test_a_repository_chart_syncs_with_its_repositories(tree):
+    work, env = tree
+    for c in ("a", "b"):
+        (work / f"components/{c}/images.yaml").write_text("digest: '2'\n")
+    git(work, "commit", "-qam", "pin a and b")
+    done = just(work, env)
+    assert done.returncode == 0, done.stderr
+    assert "sync --concurrency 4 --selector name=a-x --selector name=b-x\n" in done.stdout
+    assert "RAN smoke-component.sh dev.joinedcontext.com dev b" in done.stdout
+
+
+def test_the_prepare_hook_stands_down_for_a_pin_only_sync():
+    hook = (ROOT / "components/prepare/helmfile.yaml.gotmpl").read_text()
+    assert 'if [ "${JC_PREPARE_SKIP:-}" = pins ]; then' in hook
+    text = (ROOT / "justfile").read_text()
+    pins = text[text.index("\ndev-apply-pins "):text.index("\ndev-smoke-component ")]
+    assert pins.count("JC_PREPARE_SKIP=pins helmfile") == 1
+    full = text[text.index("\ndev-apply full"):text.index("\n_smoke ")]
+    assert "JC_PREPARE_SKIP" not in full
+
+
 def pin_a_and_the_proxy(work):
     for c in ("a", "agent-runner"):
         (work / f"components/{c}/images.yaml").write_text("digest: '2'\n")
@@ -343,7 +415,7 @@ def test_the_spend_guard_keeps_agent_runner_proxy_out_of_a_pin_apply(tree):
     done = just(work, env)
     assert done.returncode == 0, done.stderr
     assert "skipping agent-runner-proxy: the spend guard" in done.stdout
-    assert "sync --concurrency 4 --selector name=a-x\n" in done.stdout
+    assert "sync --concurrency 4 --skip-deps --selector name=a-x\n" in done.stdout
     assert "name=agent-runner-proxy" not in done.stdout
     assert "RAN wait-rollouts.sh dev 600 a-x\n" in done.stdout
     assert "smoke-component.sh dev.joinedcontext.com dev agent-runner" not in done.stdout

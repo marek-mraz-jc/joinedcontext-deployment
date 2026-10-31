@@ -490,6 +490,9 @@ v1/ConfigMap dev/cnpg-controller-manager-config
 v1/ConfigMap dev/cnpg-default-monitoring
 v1/ConfigMap dev/demo-feed
 v1/ConfigMap dev/gitea-bootstrap-seed
+v1/ConfigMap dev/gitea-bootstrap-seed-banskabystrica
+v1/ConfigMap dev/gitea-bootstrap-seed-helsinki
+v1/ConfigMap dev/gitea-bootstrap-seed-praha
 v1/ConfigMap dev/gitea-runner
 v1/ConfigMap dev/gitea-runner-build-node
 v1/ConfigMap dev/gitea-runner-build-rust
