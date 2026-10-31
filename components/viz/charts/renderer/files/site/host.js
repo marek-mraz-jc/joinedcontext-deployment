@@ -10,6 +10,7 @@
   var TIMEOUT_MS = 15000;
   var PAGE = 1000;
   var MAX_DAYS = 31;
+  var HOUR = 3600000;
   var SLUG = /^[a-z0-9]{16,64}$/;
   var NAME = /^[A-Za-z][A-Za-z0-9_-]{0,127}$/;
   var LINK = {
@@ -118,7 +119,9 @@
             type: s.type,
             attrs: attrs.join(","),
             timerel: "after",
-            timeAt: new Date(now - window).toISOString().replace(/\.\d{3}Z$/, "Z"),
+            // from the whole hour (T-6171), so a page view in the same hour asks the same URL and
+            // the edge may answer it from its cache of anonymous reads
+            timeAt: new Date(Math.floor((now - window) / HOUR) * HOUR).toISOString().replace(/\.\d{3}Z$/, "Z"),
             format: aggregated ? "aggregatedValues" : "temporalValues",
             aggrMethods: aggregated ? s.aggrMethod : undefined,
             aggrPeriodDuration: aggregated ? s.aggrPeriod : undefined,
@@ -355,6 +358,8 @@
     if (request.kind === "temporal") {
       var merged = merger(request);
       var partial = false;
+      // The names are read beside the history, not after it (T-6171): 40-600 ms each.
+      var map = names(request.type);
       // `block`: the entities the first window of this entity page listed; a full one (PAGE)
       // continues with the next entities once its windows are read.
       var windowOf = function (url, offset, block) {
@@ -377,9 +382,8 @@
           return null;
         });
       };
-      return windowOf(request.url, 0, null).then(function () {
-        return names(request.type);
-      }).then(function (map) {
+      return Promise.all([map, windowOf(request.url, 0, null)]).then(function (got) {
+        var map = got[0];
         var out = rowsFromTemporal(merged.entities, request, map);
         var data = { format: "json", rows: count(out, { rows: LIMIT_ROWS }) };
         if (partial) {
@@ -411,6 +415,23 @@
     });
   }
 
+  // Resolves once `element` comes within a screen of the reader's viewport (T-6171): the frames of
+  // a dataset page below the fold read nothing until scrolled near, so the table above them is
+  // ready first. An observer in a frame measures against the top-level viewport; under a page of
+  // another site the margin does not apply (Intersection Observer §3.2) and the read starts once
+  // the frame shows.
+  function near(element, Observer) {
+    return new Promise(function (resolve) {
+      if (typeof Observer !== "function") return resolve();
+      var seen = new Observer(function (entries) {
+        if (!entries.some(function (e) { return e.isIntersecting; })) return;
+        seen.disconnect();
+        resolve();
+      }, { rootMargin: "100% 0px" });
+      seen.observe(element);
+    });
+  }
+
   function main() {
     var where = parseHash(location.hash);
     var h = hosts(location.hostname);
@@ -432,12 +453,7 @@
     if (location.hash === "#show") return show(h, frame, fail);
     if (!where) return fail("This page draws a chart of the open-data catalogue; the address names none.");
     if (where.inline) document.body.classList.add("inline");
-    var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
-    var fetcher = function (url, options) {
-      options.signal = controller.signal;
-      return fetch(url, options);
-    };
+    // Heard from the start: the renderer says it is ready when it loads, before the read begins.
     var ready = new Promise(function (resolve) {
       window.addEventListener("message", function (event) {
         // The renderer runs in an opaque origin, so its messages come from "null"; the source
@@ -452,6 +468,19 @@
         if (data.type === "jc-viz-error") fail(String(data.message || "The chart could not be drawn."));
       });
     });
+    near(document.body, root.IntersectionObserver).then(function () { draw(where, h, frame, lang, fail, ready); });
+    window.addEventListener("resize", resize);
+  }
+
+  // Reads the view and its rows and hands them to the renderer, within the page's 15 s.
+  function draw(where, h, frame, lang, fail, ready) {
+    var status = document.getElementById("status");
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
+    var fetcher = function (url, options) {
+      options.signal = controller.signal;
+      return fetch(url, options);
+    };
     fetcher(h.data + "/api/3/action/resource_view_show?" + query({ id: where.id }), { credentials: "omit", referrerPolicy: "no-referrer" })
       .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("The chart is not published.")); })
       .then(function (body) {
@@ -485,7 +514,6 @@
         fail(error && error.name === "AbortError" ? "The data took longer than 15 seconds." : String(error.message || error));
       })
       .then(function () { clearTimeout(timer); });
-    window.addEventListener("resize", resize);
   }
 
   // `#show`: the assistant's widget hands one spec and its rows by message (ADR-N-053 §2.9). A
@@ -568,6 +596,7 @@
     nextWindow: nextWindow,
     rowsFromOgc: rowsFromOgc,
     named: named,
+    near: near,
     load: load
   };
   if (typeof module === "object" && module.exports) module.exports = root.jcHost;

@@ -39,6 +39,12 @@ const TEMPORAL = Object.keys(STATIONS).map((id, n) => ({
   id, type: "WeatherObserved",
   temperature: { type: "Property", avg: hours("2026-10-17T16:02:33Z", [9.02, 8.6, 9.2, 8.5, 7.2, 7.1, 7.7, 8.3, 7.8, 7.1, 6.5, 6.6].map((v) => v + n * 3)) }
 }));
+// T-6171: helsinki-weather as jcctl's automatic chart now reads it, 21 stations of hourly
+// averages over a week (168 each, 3,528 rows), past the renderer's canvas threshold.
+const WEEK = Array.from({ length: 21 }, (_, n) => ({
+  id: `urn:ngsi-ld:WeatherObserved:hel-${n}`, type: "WeatherObserved",
+  temperature: { type: "Property", avg: hours("2026-10-11T16:00:00Z", Array.from({ length: 168 }, (_, i) => 4 + n / 4 + 3 * Math.sin(i / 4))) }
+}));
 const ODATA = {
   value: [
     { id: Object.keys(STATIONS)[0], dateObserved: "2026-10-18T15:40:00Z", name: null, temperature: 11.5 },
@@ -104,6 +110,12 @@ const SPECS = {
   dataUrl: [odata, { $schema: VL, data: { url: "https://evil.example/rows.csv" }, mark: "bar" }],
   javascriptHref: [odata, { $schema: VL, data: { name: "source" }, mark: "bar", encoding: { href: { value: "javascript:alert(1)" } } }],
   windowExpr: [odata, { $schema: VL, data: { name: "source" }, transform: [{ calculate: "window.location.href", as: "x" }], mark: "bar" }],
+  week: [{ source: "temporal", type: "WeatherObserved", attrs: ["temperature"], last: "P7D", aggrMethod: "avg", aggrPeriod: "PT1H" }, {
+    $schema: VL, data: { name: "source" }, mark: { type: "line", point: { opacity: 0 } },
+    encoding: { x: { field: "observedAt", type: "temporal", title: null }, y: { field: "temperature", type: "quantitative", scale: { zero: false } },
+      color: { field: "name", type: "nominal", title: null },
+      tooltip: [{ field: "observedAt", type: "temporal" }, { field: "temperature", type: "quantitative", format: ".1f" }, { field: "name", type: "nominal" }] }
+  }],
   // T-5432: soil temperature at two depths, one attribute with an instance per datasetId.
   soil: [{ source: "temporal", type: "WeatherObserved", attrs: ["soilTemperature"], last: "P7D" }, {
     $schema: VL, data: { name: "source" }, mark: { type: "line", point: true },
@@ -155,7 +167,7 @@ export async function serve(context, { trustless = false } = {}) {
       const key = url.pathname.split("/").pop();
       return route.fulfill({
         status: 200, contentType: "text/html",
-        body: `<!doctype html><title>dataset</title><iframe id="viz" data-jc-viz="https://${VIZ}" style="width:100%;height:420px;border:0"
+        body: `<!doctype html><title>dataset</title>${url.searchParams.has("below") ? '<div id="table" style="height:3000px">table</div>' : ""}<iframe id="viz" data-jc-viz="https://${VIZ}" style="width:100%;height:420px;border:0"
           sandbox="allow-scripts allow-same-origin allow-downloads" src="https://${VIZ}/#${ids[key]}&inline&lang=sk"></iframe>
           <script>${readFileSync(path.join(here, "../../../charts/ckan/files/jc_theme/public__jc-viz.js"), "utf8")}</script>`
       });
@@ -188,6 +200,9 @@ export async function serve(context, { trustless = false } = {}) {
       }
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("type") === "AirQualityObserved") return route.fulfill(windowed(url));
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("attrs") === "soilTemperature") return json(SOIL);
+      // the week: a window over two days back, read as hourly averages
+      if (url.pathname === `${base}ngsi-ld/v1/temporal/entities` && url.searchParams.get("aggrPeriodDuration") === "PT1H"
+        && Date.now() - Date.parse(url.searchParams.get("timeAt")) > 2 * 86400e3) return json(WEEK);
       if (url.pathname === `${base}ngsi-ld/v1/temporal/entities`) return json(TEMPORAL);
       if (url.pathname === `${base}ngsi-ld/v1/entities`) return json(NAMES);
       if (url.pathname === `${base}odata/v4/WeatherObserved`) return json(ODATA);
@@ -411,5 +426,44 @@ for (const [name, width] of [["desktop", 1440], ["phone", 400]]) {
     await expect(host(page).locator("#status")).toHaveAttribute("role", "status");
     await expect(renderer(page).locator("svg .mark-line").first()).toBeAttached({ timeout: 15000 });
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/partial-${width}.png`, fullPage: true });
+  });
+  // T-6171: the automatic chart of a week, hourly averages from the whole hour, drawn on canvas.
+  test(`week: 21 stations of hourly averages draw on canvas, the names read beside the history (${name})`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 700 });
+    const requests = await serve(context);
+    const started = Date.now();
+    await page.goto(`https://data.${DOMAIN}/dataset/week`);
+    await expect(renderer(page).locator("canvas.marks")).toBeVisible({ timeout: 15000 });
+    const drawn = Date.now() - started;
+    expect(await renderer(page).locator("svg .mark-symbol").count()).toBe(0);
+    const history = requests.filter((u) => u.pathname.endsWith("/temporal/entities"));
+    expect(history).toHaveLength(1);
+    expect(history[0].searchParams.get("aggrMethods")).toBe("avg");
+    expect(history[0].searchParams.get("timeAt")).toMatch(/T\d\d:00:00Z$/);
+    expect(requests.filter((u) => u.pathname.endsWith("/ngsi-ld/v1/entities"))).toHaveLength(1);
+    await expect(host(page).locator("#status")).toBeHidden();
+    console.log(`week ${width}: drawn ${drawn} ms after navigation`);
+    // No marker is drawn, yet each reading keeps its tooltip: the points are there, transparent.
+    const box = await renderer(page).locator("canvas.marks").boundingBox();
+    let shown = false;
+    for (let x = box.x + 60; x < box.x + 240 && !shown; x += 2) {
+      await page.mouse.move(x, box.y + 30);
+      shown = await renderer(page).locator("#vg-tooltip-element.visible").count() > 0;
+    }
+    expect(shown).toBe(true);
+    await expect(renderer(page).locator("#vg-tooltip-element")).toContainText("hel-");
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/week-${width}.png`, fullPage: true });
+  });
+  test(`below the fold: a chart frame reads nothing until scrolled to (${name})`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height: 700 });
+    const requests = await serve(context);
+    await page.goto(`https://data.${DOMAIN}/dataset/week?below`);
+    await expect(host(page).locator("#title")).toBeAttached();
+    await page.waitForTimeout(1000);
+    const api = () => requests.filter((u) => u.hostname === `api.${DOMAIN}` || u.pathname.endsWith("resource_view_show"));
+    expect(api()).toEqual([]);
+    await page.locator("#viz").scrollIntoViewIfNeeded();
+    await expect(renderer(page).locator("canvas.marks")).toBeVisible({ timeout: 15000 });
+    expect(api().length).toBeGreaterThan(0);
   });
 }

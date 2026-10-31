@@ -23,6 +23,14 @@
   };
   var loader = { load: refused, sanitize: refused, http: refused, file: refused };
 
+  // SVG while a chart is small, so its labels stay text a screen reader reads; canvas past
+  // CANVAS_ROWS (T-6171), where SVG made 13-18k nodes per chart and held every frame of the page
+  // on the one renderer thread for seconds. The frame's title and the table link name it then.
+  var CANVAS_ROWS = 2000;
+  function renderer(rows) {
+    return rows > CANVAS_ROWS ? "canvas" : "svg";
+  }
+
   function draw(message) {
     var errors = self.jcRefuse(message.spec, domain);
     if (errors.length) throw new Error("The chart was refused: " + errors[0].pointer + " — " + errors[0].rule + ".");
@@ -32,7 +40,7 @@
       ast: true,
       expr: vega.expressionInterpreter,
       loader: loader,
-      renderer: "svg",
+      renderer: renderer(rows.length),
       // Export only: no source, no compiled spec, no "open in the editor" (which posts the spec
       // to another site).
       actions: { export: true, source: false, compiled: false, editor: false },

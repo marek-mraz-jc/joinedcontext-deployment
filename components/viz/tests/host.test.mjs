@@ -137,7 +137,7 @@ test("a 206 window follows Link intervalafter on the Endpoint and merges one ser
     return cut([series("urn:a", [[45, "2026-10-21T05:00:00Z"], [8, "2026-10-23T03:00:00Z"]]), series("urn:b", [[3, "2026-10-23T03:00:00Z"]])], {}, 200);
   };
   const data = await host.load(view(pm), API, "en", fetcher, NOW);
-  assert.equal(asked[1], `${API}${next}`);
+  assert.equal(asked.filter((u) => u.includes("/temporal/"))[1], `${API}${next}`);
   assert.deepEqual(no2(data.rows), [
     ["urn:a", "2026-10-16T06:00:00Z", 30], ["urn:a", "2026-10-21T04:00:00Z", 29], ["urn:a", "2026-10-21T05:00:00Z", 45], ["urn:a", "2026-10-23T03:00:00Z", 8],
     ["urn:b", "2026-10-16T06:00:00Z", 1], ["urn:b", "2026-10-21T08:00:00Z", 2], ["urn:b", "2026-10-23T03:00:00Z", 3]]);
@@ -176,6 +176,7 @@ test("a 206 with Content-Range alone continues after its end and keeps the bound
     return cut([series("urn:a", [[29, "2026-10-21T08:00:00Z"], [8, "2026-10-23T03:00:00Z"]])], {}, 200);
   };
   const data = await host.load(view(pm), API, "en", fetcher, NOW);
+  asked.splice(0, asked.length, ...asked.filter((u) => u.includes("/temporal/")));
   assert.ok(asked[1].startsWith(`${base}ngsi-ld/v1/temporal/entities?`) && asked[1].includes("timeAt=2026-10-21T08%3A00%3A00Z"), asked[1]);
   assert.deepEqual(no2(data.rows), [["urn:a", "2026-10-16T06:00:00Z", 30], ["urn:a", "2026-10-21T08:00:00Z", 29], ["urn:a", "2026-10-23T03:00:00Z", 8]]);
 });
@@ -201,4 +202,52 @@ test("a 206 that never ends stops at the limits with a partial note; a next wind
   await assert.rejects(host.load(view(pm), API, "en", off, NOW), /not on the Endpoint/);
   const first = async () => cut(Array.from({ length: 51 }, (_, i) => series(`urn:${i}`, Array.from({ length: 1000 }, (_, j) => [j, "x"]))));
   await assert.rejects(host.load(view(pm), API, "en", first, NOW), /50,000 rows/);
+});
+
+// T-6171: helsinki-weather's six charts each read a week to the second, so no answer could be
+// shared, each read its names only after its history, and every frame read at once on load.
+test("a window starts on the whole hour, so one hour's page views ask one URL", () => {
+  const at = (now) => new URL(host.firstRequest(pm, SLUG, API, now).url).searchParams.get("timeAt");
+  assert.equal(at(Date.parse("2026-10-18T16:59:59.250Z")), "2026-10-11T16:00:00Z");
+  assert.equal(at(Date.parse("2026-10-18T16:00:00Z")), "2026-10-11T16:00:00Z");
+  assert.equal(at(Date.parse("2026-10-18T17:00:01Z")), "2026-10-11T17:00:00Z");
+});
+
+test("the names are asked beside the history, not after it", async () => {
+  const asked = [];
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  const fetcher = async (url) => {
+    asked.push(url.includes("/temporal/") ? "history" : "names");
+    if (!url.includes("/temporal/")) return answer([{ id: "urn:a", name: "Kaisaniemi" }]);
+    await held;
+    return answer([series("urn:a", [[3, "2026-10-17T10:00:00Z"]])]);
+  };
+  const loading = host.load(view(pm), API, "en", fetcher, NOW);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(asked.sort(), ["history", "names"], "both in flight before the history answers");
+  release();
+  const data = await loading;
+  assert.equal(data.rows[0].name, "Kaisaniemi");
+});
+
+test("a frame reads nothing until it comes near the viewport", async () => {
+  let fire;
+  let options;
+  let disconnected = false;
+  class Observer {
+    constructor(callback, o) { fire = callback; options = o; }
+    observe() {}
+    disconnect() { disconnected = true; }
+  }
+  let ready = false;
+  const waiting = host.near({}, Observer).then(() => { ready = true; });
+  fire([{ isIntersecting: false }]);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(ready, false, "still below the fold");
+  fire([{ isIntersecting: true }]);
+  await waiting;
+  assert.ok(ready && disconnected);
+  assert.equal(options.rootMargin, "100% 0px");
+  await host.near({}, undefined); // no observer: read at once
 });
