@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -1487,3 +1488,21 @@ def test_a_point_outside_the_country_of_the_store_is_dropped():
     events = run(offline(steps, {}), page, "praha-akce")
     # Bratislava's point is outside Czechia: the event is kept without a point, never with the wrong one.
     assert len(events) == 2 and all("location" not in e for e in events)
+
+
+@requires_docker
+def test_the_shared_tail_strips_slovak_and_czech_phone_numbers_and_keeps_dates_and_prices():
+    """F-R2BNT3-002: praha-akce runs the same tail, and the Slovak-only pattern published Czech
+    numbers and every international number written with a space after the country code."""
+    block = re.search(r"^( *)map uncontactable \{\n.*?^\1\}\n", RESOURCES.read_text(encoding="utf-8"), re.M | re.S)
+    assert block, "the tail defines the one contact scrub its organizer and description share"
+    texts = ["Volejte +420 222 333 444 nebo 777123456.", "Tel. 0905 123 456, +421 905 123 456, +421905123456.",
+             "Pište na info@akce.cz.", "Vstupné 150 Kč, 19. 10. 2026 od 18.00, sál 2, kapacita 1200."]
+    mapping = textwrap.dedent(block.group(0)) + "root = {\"t\": this.apply(\"uncontactable\")}"
+    result = subprocess.run(["docker", "run", "--rm", "-i", BENTO, "blobl", mapping],
+                            input="\n".join(json.dumps(t) for t in texts), capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr
+    out = [json.loads(line)["t"] for line in result.stdout.splitlines() if line.strip()]
+    assert len(out) == 4, result.stdout + result.stderr
+    assert not any(ch.isdigit() for ch in out[0] + out[1]) and "@" not in out[2], out
+    assert out[3] == texts[3]
