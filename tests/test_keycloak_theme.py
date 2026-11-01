@@ -287,7 +287,7 @@ def title_of(header, client):
              f"quay.io/keycloak/keycloak@{digest}",
              "-cp", "/opt/keycloak/lib/lib/main/org.freemarker.freemarker-2.3.35.jar",
              "/work/RenderTitle.java", "/work/page.ftl", client],
-            capture_output=True, text=True, timeout=300,
+            capture_output=True, text=True, timeout=300, check=False,
         )
     assert result.returncode == 0, result.stderr
     return result.stdout.strip()
