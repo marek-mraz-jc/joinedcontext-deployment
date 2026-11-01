@@ -9,7 +9,8 @@ import path from "node:path";
 import { shots, CATALOGUE, serve } from "./explore-hosts.mjs";
 
 const frame = (page) => page.frameLocator("#explore");
-const LABELS = { sk: ["Názov", "Začiatok", "Miesto", "Adresa", "Organizátor", "Web"], en: ["Name", "Start", "Venue", "Address", "Organizer", "Web"] };
+// The id and the type lead every grid, then the name (T-6210), then the model's order.
+const LABELS = { sk: ["ID", "Typ", "Názov", "Začiatok", "Miesto", "Adresa", "Organizátor", "Web"], en: ["ID", "Type", "Name", "Start", "Venue", "Address", "Organizer", "Web"] };
 
 for (const width of [1440, 400]) {
   for (const lang of ["sk", "en"]) {
@@ -32,7 +33,7 @@ for (const width of [1440, 400]) {
           const read = requests.map((r) => r.url).find((u) => u.pathname.endsWith("/entities") && u.searchParams.get("orderBy") === "startDate");
           expect(read?.searchParams.get("q")).toMatch(/^!startDate\|startDate>="\d{4}-\d{2}-\d{2}"$/);
           if (sort === "name") {
-            await f.getByRole("button", { name: new RegExp(`${LABELS[lang][0]}$`) }).first().click();
+            await f.getByRole("button", { name: new RegExp(`${LABELS[lang][2]}$`) }).first().click();
             await expect.poll(() => requests.some((r) => r.url.searchParams.get("orderBy") === "name")).toBe(true);
           }
           // The model's opening query shows as text; the column filters come back by unticking it.
@@ -60,8 +61,10 @@ for (const width of [1440, 400]) {
             table.querySelector("tbody td .jc-grid-cell").appendChild(probe);
             const ch = probe.getBoundingClientRect().width;
             probe.remove();
-            const ths = [...table.querySelectorAll("thead tr:first-child th")];
-            return { ch, name: ths[0].getBoundingClientRect().width, venue: ths[2].getBoundingClientRect().width, web: ths[5].getBoundingClientRect().width };
+            // The cap holds on each cell's box: the header also takes its share of the width the
+            // table spreads over its columns to fill the frame, which depends on how many it has.
+            const widest = (at) => Math.max(...[...table.querySelectorAll("tbody tr")].map((tr) => tr.children[at]?.querySelector(".jc-grid-cell")?.getBoundingClientRect().width ?? 0));
+            return { ch, name: widest(2), venue: widest(4), web: widest(7) };
           });
           expect(widths.name).toBeLessThanOrEqual(widths.ch * 40 + 48);
           expect(widths.venue).toBeLessThanOrEqual(widths.ch * 28 + 48);
@@ -197,7 +200,7 @@ for (const width of [1440, 400]) {
     const day = `${week.getFullYear()}-${String(week.getMonth() + 1).padStart(2, "0")}-${String(week.getDate()).padStart(2, "0")}`;
     await expect.poll(() => requests.some((r) => r.url.searchParams.get("q") === `startDate>=${day}` && r.url.searchParams.get("limit") === "20")).toBe(true);
     const heads = (await grid.locator("thead tr").first().locator("th").allInnerTexts()).map((t) => t.replace(/[⋮↑↓]/g, "").trim());
-    expect(heads).toEqual(["Názov", "Začiatok"]);
+    expect(heads).toEqual(["ID", "Typ", "Názov", "Začiatok"]);
     await page.screenshot({ path: path.join(shots, `publishedtable-${width}-default.png`), fullPage: true });
     const before = requests.length;
     await f.getByRole("button", { name: "Zrušiť filtre" }).click();
