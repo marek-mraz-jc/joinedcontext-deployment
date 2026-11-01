@@ -44,16 +44,6 @@ rules:
     resources: [clusters]
     resourceNames: [{{ $drill }}]
     verbs: [get, delete, watch, list]
-  # `kubectl exec` reads the pod before it opens the stream: without `get` on the same names
-  # every psql of the drill was refused and the drill never listed a database (dev 2026-11-01, T-6298).
-  - apiGroups: ['']
-    resources: [pods]
-    resourceNames:
-      {{- range $n := until 9 }}
-      - {{ $.Values.cluster.name }}-{{ add1 $n }}
-      {{- end }}
-      - {{ $drill }}-1
-    verbs: [get]
   - apiGroups: ['']
     resources: [pods/exec]
     resourceNames:

@@ -413,12 +413,9 @@ def test_the_drill_creates_no_pod_and_execs_only_into_the_clusters(env, request)
     with it could start a pod as any ServiceAccount of the namespace with any Secret."""
     docs = request.getfixturevalue(env)
     rules = one(docs, "Role", NAME)["rules"]
-    names = sorted([f"postgres-cluster-{n}" for n in range(1, 10)] + ["postgres-cluster-drill-1"])
-    pods = [r for r in rules if "pods" in r["resources"]]
-    # `kubectl exec` reads the pod first (T-6298): only `get`, only on the pods it execs into.
-    assert [(r["resources"], r["verbs"], sorted(r["resourceNames"])) for r in pods] == [(["pods"], ["get"], names)]
+    assert not [r for r in rules if "pods" in r["resources"]], "no pod rights at all"
     exec_names = next(r for r in rules if r["resources"] == ["pods/exec"])["resourceNames"]
-    assert sorted(exec_names) == names
+    assert sorted(exec_names) == sorted([f"postgres-cluster-{n}" for n in range(1, 10)] + ["postgres-cluster-drill-1"])
     assert "dump-pod.yaml" not in one(docs, "ConfigMap", f"{NAME}-script")["data"]
 
 
