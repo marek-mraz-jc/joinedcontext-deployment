@@ -1,8 +1,8 @@
 name: image-decidim
 # The participation platform image: stock Decidim plus the realm sign-in (T-6316, ADR-N-065).
-# Run by hand only while the six HIGH findings Decidim 0.31.6 pins stand (ADR-N-065 section 4):
+# Run by hand only while the HIGH finding Decidim 0.32.2 pins stands (rubyzip, ADR-N-065 section 4):
 # on push and schedule every run would end red at the gate below. Put these two lines back
-# under `on:` once a Decidim release lifts the pins or the owner accepts the six in writing:
+# under `on:` once a Decidim release lifts the pin or the owner accepts it in writing:
 #   push: { branches: [main], paths: ["images/decidim/**", ".github/workflows/image-decidim.yml"] }
 #   schedule: [{ cron: "30 4 1 * *" }]
 # The repository is public, so its minutes are not metered (T-3289).
@@ -29,7 +29,7 @@ jobs:
           file: images/decidim/Dockerfile
           load: true
           tags: joinedcontext-decidim:scan
-          # No cache: the `apt-get upgrade` and `bundle lock --update` layers must read today's
+          # No cache: the generator, `apt-get upgrade` and `bundle lock --update` layers must read today's
           # archive and today's gem index, never a cached layer (T-5372).
           no-cache: true
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
@@ -47,7 +47,7 @@ jobs:
           file: images/decidim/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/joinedcontext-decidim:0.31.6
+            ghcr.io/${{ github.repository_owner }}/joinedcontext-decidim:0.32.2
             ghcr.io/${{ github.repository_owner }}/joinedcontext-decidim:${{ github.sha }}
           provenance: true
           sbom: true
@@ -78,6 +78,6 @@ jobs:
           echo "pin this in components/decidim/images.yaml (web and sidekiq):" >> "$GITHUB_STEP_SUMMARY"
           echo '```yaml' >> "$GITHUB_STEP_SUMMARY"
           echo "    repository: 'ghcr.io/${{ github.repository_owner }}/joinedcontext-decidim'" >> "$GITHUB_STEP_SUMMARY"
-          echo "    tag: '0.31.6'" >> "$GITHUB_STEP_SUMMARY"
+          echo "    tag: '0.32.2'" >> "$GITHUB_STEP_SUMMARY"
           echo "    digest: '${{ steps.push.outputs.digest }}'" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

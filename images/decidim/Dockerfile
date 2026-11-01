@@ -1,78 +1,87 @@
-# The participation platform image (T-6316, ADR-N-065): stock Decidim plus the one gem a Keycloak
-# sign-in needs, run as a user of its own.
+# The participation platform image (T-6316, T-6321, ADR-N-065): stock Decidim plus the one gem a
+# Keycloak sign-in needs, run as a user of its own.
 #
-# `decidim/decidim` is the generated application the Decidim project publishes. It carries
-# OmniAuth strategies for Facebook, X and Google only, runs as root and ships the generator's
-# `config/master.key`. This layer adds `omniauth_openid_connect`, the initializer that registers
-# the realm as the one sign-in provider (joinedcontext.rb), the bootstrap that creates the one
-# organization (bootstrap.rb), deletes the shipped key (SECRET_KEY_BASE comes from a Secret, so
-# Rails never reads the credentials file) and drops root. No Ruby of ours beyond configuration.
-FROM ghcr.io/decidim/decidim:0.31.6@sha256:df6cfb6caa80a908681259bd953bb4535e6529b7afa5c99fcf49f35009c96f85 AS build
+# Decidim publishes no image past 0.31.6, and 0.31.6 pins gems with HIGH findings (puma ~> 6.5,
+# ransack ~> 4.2.0, shakapacker ~> 8.3.0 ...). So this builds what the Decidim project's own image
+# build does (github.com/decidim/docker, Dockerfile-generator + Dockerfile): the `decidim` generator
+# on the Ruby of the release's .ruby-version line writes the application, Node compiles its packs.
+# Then it adds `omniauth_openid_connect`, the initializer that registers the realm as the one
+# sign-in provider (joinedcontext.rb) and the bootstrap that creates the one organization
+# (bootstrap.rb), drops the generator's `config/master.key` (SECRET_KEY_BASE comes from a Secret,
+# so Rails never reads the credentials file) and copies the result onto the slim Ruby image, which
+# carries no compiler, no Node and no root process. No Ruby of ours beyond configuration.
+FROM node:22.23.4-trixie-slim@sha256:2117f713a417f3aff682ac8f5bc2ebbdf1beed51f36e67ab1e0fd3866b6d2d8f AS node
+
+# Decidim 0.32.2 asks for Ruby ~> 3.4.0; 3.4.12 is the newest patch release.
+FROM ruby:3.4.12-trixie@sha256:27125a2b30782f1ec4230d3aaf545d5b167e8beb11da4a11ff5ceeb8cb44a36c AS build
+
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+# charlock_holmes builds against ICU; booting the app for the generator loads libvips.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libicu-dev libvips42t64 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# The generator boots the application in development, so it installs the development gems; the
+# step after it drops them. Pinned like every other dependency here (OPS-27): Decidim 0.32.2 is from 2026-10-22,
+# omniauth_openid_connect 0.8.0 from 2024-07-04.
+RUN gem install decidim --version 0.32.2 --no-document \
+    && decidim --queue sidekiq /code
 
 WORKDIR /code
 
-# Pinned like every other dependency here (OPS-27); 0.8.0 is from 2024-07-04. The lock update
-# moves, inside the ranges Decidim 0.31.6 declares, every gem trivy finds a fixed release of
-# (Rails 7.2.4 for the Active Storage file-access CVEs, nokogiri, rack, net-imap, erb, uri ...),
-# plus resolv and zlib, which Ruby 3.3.4 ships as default gems with known holes: the Gemfile
-# names the fixed releases, so Bundler loads those, and the superseded default copies are deleted
-# (their code is never loaded once the lockfile names a newer one). What Decidim pins to a
-# vulnerable line (puma ~> 6.5, ransack ~> 4.2.0, rubyzip ~> 2.3.0, shakapacker ~> 8.3.0,
-# oauth through omniauth-twitter) stays until Decidim moves it: ADR-N-065 section 4.
-RUN bundle config set --local frozen false \
-    && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
-    && bundle add resolv --version '>= 0.3.2' --skip-install \
-    && bundle add zlib --version '>= 3.1.2' --skip-install \
+# The generator copies Decidim's own lockfile, so the lock update moves, inside the ranges Decidim
+# 0.32.2 declares, every gem trivy finds a fixed release of. rubyzip stays on 2.3: decidim-core
+# asks ~> 2.0 and doc2text ~> 2.3.0 (T-6321 lists what is left).
+# faker: production eager-loads Decidim's seed classes (decidim-core lib/decidim/seeds.rb), which
+# require it, and only decidim-dev, a development gem, depends on it; same range as decidim-dev.
+RUN bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
+    && bundle add faker --version '~> 3.2' --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
-         addressable bcrypt concurrent-ruby crass css_parser erb faraday jwt net-imap nokogiri \
-         oauth2 puma rack rexml uri websocket-driver resolv zlib \
+         concurrent-ruby crass css_parser erb faraday jwt net-imap nokogiri oauth oauth2 puma \
+         rack ransack websocket-driver \
+    && bundle config set --local without development:test \
     && bundle install \
+    && RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile \
     && bundle clean --force \
     && bundle config set --local frozen true \
-    && rm -f /usr/local/lib/ruby/gems/3.3.0/specifications/default/resolv-0.3.0.gemspec \
-             /usr/local/lib/ruby/gems/3.3.0/specifications/default/zlib-3.1.1.gemspec \
-             /usr/local/lib/ruby/gems/3.3.0/specifications/default/erb-4.0.3.gemspec \
-             /usr/local/lib/ruby/gems/3.3.0/specifications/default/uri-0.13.0.gemspec \
-    && rm -rf /usr/local/lib/ruby/gems/3.3.0/specifications/net-imap-0.4.9.1.gemspec \
-              /usr/local/lib/ruby/gems/3.3.0/gems/net-imap-0.4.9.1 \
-              /usr/local/lib/ruby/gems/3.3.0/specifications/rexml-3.2.8.gemspec \
-              /usr/local/lib/ruby/gems/3.3.0/gems/rexml-3.2.8 \
+    && rm -rf node_modules tmp/cache log/* \
     && rm -f config/master.key config/credentials.yml.enc \
-    && rm -rf /usr/local/bundle/cache /root/.bundle
-
-# Node built the packs in public/decidim-packs; nothing runs it at runtime, and its modules
-# carried 140 of the base's findings.
-RUN rm -rf /code/node_modules /usr/lib/node_modules \
-    && apt-get purge -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Debian's fixes for the base's packages, so the scan below sees today's archive (T-5372: never
-# from a cached layer, the workflow builds with no cache for this step's sake).
-RUN apt-get update \
-    && apt-get -y --no-install-recommends upgrade \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /usr/local/bundle/cache /usr/local/bundle/plugins/yard_plugin.rb
 
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
 COPY bootstrap.rb db/joinedcontext_bootstrap.rb
 
+FROM ruby:3.4.12-slim-trixie@sha256:caf086d19bf11fabd2af8bf33cb84007acc9655f31ea2cd129e754d05f374c27
+
+# The shared libraries the gems' native extensions load (pg, charlock_holmes, ruby-vips), and
+# Debian's fixes for the base's packages, so the scan sees today's archive (T-5372: never from a
+# cached layer, the workflow builds with no cache for this step's sake).
+RUN apt-get update \
+    && apt-get -y --no-install-recommends upgrade \
+    && apt-get install -y --no-install-recommends libpq5 libicu76 libvips42t64 \
+    && rm -rf /var/lib/apt/lists/*
+
 # The writable places a Rails process needs, owned by the runtime user; everything else stays
 # root's and read-only to it. /code/storage is the attachments claim in the cluster.
 RUN groupadd --system --gid 10001 decidim \
-    && useradd --system --uid 10001 --gid decidim --home-dir /code --shell /usr/sbin/nologin decidim \
-    && mkdir -p tmp log storage public/uploads \
+    && useradd --system --uid 10001 --gid decidim --home-dir /code --shell /usr/sbin/nologin decidim
+
+COPY --from=build /usr/local/bundle /usr/local/bundle
+COPY --from=build /code /code
+WORKDIR /code
+RUN mkdir -p tmp log storage public/uploads \
     && chown -R 10001:10001 tmp log storage public/uploads
 
-# One layer of what the steps above left: the files they deleted are gone from the image too,
-# instead of sitting in the base's layers (5.0 GB unflattened). The base's environment, then ours.
-FROM scratch
-COPY --from=build / /
-WORKDIR /code
-ENV PATH=/usr/local/bundle/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    LANG=C.UTF-8 \
+ENV LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    GEM_HOME=/usr/local/bundle \
-    BUNDLE_APP_CONFIG=/usr/local/bundle \
     RAILS_ENV=production \
     RAILS_SERVE_STATIC_FILES=true \
     RAILS_LOG_TO_STDOUT=1 \

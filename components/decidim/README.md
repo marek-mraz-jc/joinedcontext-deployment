@@ -1,6 +1,6 @@
 # Decidim
 
-The city's own participation platform (ADR-N-065, docs Deployment/18): Decidim 0.31 on
+The city's own participation platform (ADR-N-065, docs Deployment/18): Decidim 0.32 on
 `participacia.{domain}`, every person signing in through the instance's realm. Its public
 GraphQL API at `/api` is what the participation harvester reads (T-5065, T-6317).
 
