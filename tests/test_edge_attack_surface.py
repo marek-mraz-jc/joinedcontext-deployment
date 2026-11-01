@@ -252,6 +252,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "an open-data catalogue is public reading; writing is CKAN's own session",
     },
+    "decidim": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "the participation platform is public reading; signing in is Decidim's own realm login (OIDC), writing its own session, and the edge refuses /system, sign-up, password and invitation pages (T-6316)",
+    },
     "ckan-webassets": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",
