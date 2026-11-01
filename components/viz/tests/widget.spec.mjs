@@ -36,22 +36,25 @@ for (const width of [1440, 400]) {
             await f.getByRole("button", { name: new RegExp(`${LABELS[lang][2]}$`) }).first().click();
             await expect.poll(() => requests.some((r) => r.url.searchParams.get("orderBy") === "name")).toBe(true);
           }
-          // The model's opening query shows as text; the column filters come back by unticking it.
-          await expect(f.getByRole("textbox").filter({ hasText: "" }).first()).toBeVisible();
+          // The model's opening query is folded under the Query button (T-6303), which shows it as text.
+          const query = f.getByRole("button", { name: lang === "sk" ? "Dopyt" : "Query", exact: true });
+          await expect(query).toHaveAttribute("aria-pressed", "false");
+          await query.click();
+          await expect(f.getByRole("textbox").first()).toHaveValue(/^!startDate\|startDate>=/);
           if (filter === "open") {
-            await f.getByRole("checkbox", { name: lang === "sk" ? "Upraviť ako text" : "Edit as text" }).uncheck();
-            // On a phone the filter row folds under its button (T-5415).
-            if (width === 400) await f.getByRole("button", { name: lang === "sk" ? /^Filtre/ : /^Filters/ }).click();
-            const select = grid.locator("thead select").first();
-            await select.selectOption({ index: 1 });
-            await select.focus();
+            // The conditions sit in the Filter panel (T-6303); on a phone it opens under the toolbar, in the reader's window.
+            await f.locator("summary").filter({ hasText: /^Filter/ }).click();
+            await f.getByRole("button", { name: lang === "sk" ? "Pridať podmienku" : "Add condition", exact: true }).click();
+            const field = f.getByRole("combobox", { name: lang === "sk" ? "Pole" : "Field", exact: true });
+            await field.selectOption({ index: 1 });
+            await expect(field).toBeInViewport();
           }
           // Every body row has as many cells as the header row.
           const cells = await grid.locator("tbody tr").evaluateAll((trs) => trs.map((tr) => tr.children.length));
           const headCount = await grid.locator("thead tr").first().locator("th").count();
           expect(new Set(cells)).toEqual(new Set([headCount]));
           // Readable filter controls.
-          const fonts = await grid.locator("thead select").evaluateAll((all) => all.map((s) => parseFloat(getComputedStyle(s).fontSize)));
+          const fonts = await f.locator("details[open] select").evaluateAll((all) => all.map((s) => parseFloat(getComputedStyle(s).fontSize)));
           if (filter === "open") expect(fonts.length).toBeGreaterThan(0);
           for (const size of fonts) expect(size).toBeGreaterThanOrEqual(14);
           // A 500-character name or venue never widens its column past its cap (40ch, 28ch), plus padding.
@@ -159,7 +162,7 @@ for (const width of [1440, 400]) {
   });
 }
 
-// T-5196, DM-134: a model's default filter opens as filled inputs the reader can clear, with its page
+// T-5196, DM-134: a model's default filter opens as the Filter panel's condition (T-6303) the reader can clear, with its page
 // length and a numbered pager; nothing in the widget names the type.
 for (const width of [1440, 400]) {
   test(`presented ${width}: the default filter fills the inputs, reset clears them`, async ({ page, context }) => {
@@ -169,16 +172,19 @@ for (const width of [1440, 400]) {
     const f = frame(page);
     const grid = f.getByRole("grid");
     await expect(grid.locator("tbody tr")).toHaveCount(10, { timeout: 20000 });
-    await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("10");
-    // On a phone the filter row folds under its button, which counts the default filter (T-5415).
-    if (width === 400) await f.getByRole("button", { name: "Filtre (1)" }).click();
-    const op = f.getByRole("combobox", { name: "Filter: Začiatok" });
+    await expect.poll(() => requests.some((r) => r.url.searchParams.get("limit") === "10")).toBe(true);
+    // The default filter opens as the Filter panel's condition, which the button counts (T-6303).
+    await f.locator("summary").filter({ hasText: /^Filter\s*1$/ }).click();
+    await expect(f.getByRole("combobox", { name: "Pole", exact: true })).toHaveValue("startDate");
+    const op = f.getByRole("combobox", { name: "Operátor", exact: true });
     await expect(op).toHaveValue("gte");
     await expect.poll(() => requests.some((r) => /^startDate>=\d{4}-\d{2}-\d{2}$/.test(r.url.searchParams.get("q") ?? ""))).toBe(true);
     await expect(f.getByRole("button", { name: "Strana 2" })).toBeVisible();
     await page.screenshot({ path: path.join(shots, `presented-${width}-default.png`), fullPage: true });
+    await page.keyboard.press("Escape");
     await f.getByRole("button", { name: "Zrušiť filtre" }).click();
-    await expect(op).toHaveValue("");
+    await expect(f.locator("summary").filter({ hasText: /^Filter$/ })).toBeVisible();
+    await expect(op).toHaveCount(0);
     await expect(f.getByRole("button", { name: "Zrušiť filtre" })).toHaveCount(0);
     await page.screenshot({ path: path.join(shots, `presented-${width}-reset.png`), fullPage: true });
   });
@@ -194,7 +200,7 @@ for (const width of [1440, 400]) {
     const f = frame(page);
     const grid = f.getByRole("grid");
     await expect(grid).toBeVisible({ timeout: 20000 });
-    await expect(f.getByRole("combobox", { name: "Záznamov na stranu" })).toHaveValue("20");
+    await expect(grid.locator("tbody tr")).toHaveCount(20);
     const now = new Date();
     const week = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
     const day = `${week.getFullYear()}-${String(week.getMonth() + 1).padStart(2, "0")}-${String(week.getDate()).padStart(2, "0")}`;
