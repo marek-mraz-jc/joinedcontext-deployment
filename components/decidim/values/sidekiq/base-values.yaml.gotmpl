@@ -1,0 +1,72 @@
+---
+{{- $global := .Values.global }}
+{{- $web := .Values.decidim.web }}
+{{- $images := index .Values.images "decidim" "sidekiq" }}
+{{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- $host := printf "%s.%s" $web.subDomain $global.domain }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem` (the image runs as 10001)
+# - [x] Health -> Sidekiq serves nothing to probe; a dead process restarts the container
+# - [x] Standard labels
+# - [x] ServiceAccount with least privilege -> none
+# - [x] Secrets by reference only, the web's environment (values/env.yaml.tpl)
+
+fullnameOverride: decidim-sidekiq
+nameOverride: decidim-sidekiq
+
+serviceAccount:
+  create: false
+  automountServiceAccountToken: false
+
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+
+service:
+  enabled: false
+
+probes:
+  enabled: false
+
+# Sidekiq finishes the job in hand on TERM within its own 25 s timeout.
+terminationGracePeriodSeconds: 35
+preStopSleepSeconds: 0
+
+{{- $ctx := dict "global" $global "web" $web "pg" $pg "host" $host }}
+{{- $env := (tpl (readFile "../env.yaml.tpl") $ctx | fromYaml).env }}
+env:
+  {{- range $env }}{{ if hasKey . "value" }}
+  {{ .name }}: {{ .value | quote }}
+  {{- end }}{{ end }}
+  SIDEKIQ_CONCURRENCY: "3"
+envSecret:
+  {{- range $env }}{{ if hasKey . "valueFrom" }}
+  {{ .name }}: { secret: {{ .valueFrom.secretKeyRef.name }}, key: {{ .valueFrom.secretKeyRef.key }} }
+  {{- end }}{{ end }}
+
+# The web's attachments claim: exports and image variants are written where the web serves them.
+extraVolumes:
+  - name: storage
+    persistentVolumeClaim:
+      claimName: decidim-web-files
+  - name: rails-tmp
+    emptyDir: { sizeLimit: 512Mi }
+  - name: rails-log
+    emptyDir: { sizeLimit: 64Mi }
+extraVolumeMounts:
+  - { name: storage, mountPath: /code/storage }
+  - { name: rails-tmp, mountPath: /code/tmp }
+  - { name: rails-log, mountPath: /code/log }
+
+podSecurityContext:
+  {{ merge (dict "runAsUser" 10001 "runAsGroup" 10001 "fsGroup" 10001) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

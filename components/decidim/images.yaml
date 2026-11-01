@@ -1,0 +1,22 @@
+---
+decidim:
+  # images/decidim/Dockerfile: decidim/decidim 0.31.6 plus omniauth_openid_connect, the realm
+  # initializer and the organization bootstrap, run as 10001, flattened. Published, signed and
+  # scanned by .github/workflows/image-decidim.yml, whose run summary prints the pin.
+  # This digest is the T-6316 local build measured on kind (the same Dockerfile); nothing
+  # installs the component until T-6317 replaces it with the digest the workflow published,
+  # because no environment that deploys lists `decidim` before then.
+  web:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-decidim'
+    tag: '0.31.6'
+    digest: 'sha256:4db05308ededa1a2d699bebbdec019aa15aa1f165b529ef1ec2060cfb3137392'
+  # The same image, started as Sidekiq; one pin for both, so they never run two releases.
+  sidekiq:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-decidim'
+    tag: '0.31.6'
+    digest: 'sha256:4db05308ededa1a2d699bebbdec019aa15aa1f165b529ef1ec2060cfb3137392'
+  # The Redis the catalogue runs (components/ckan/images.yaml), re-pinned with it.
+  redis:
+    repository: 'docker.io/library/redis'
+    tag: '7-alpine'
+    digest: 'sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499'

@@ -1,0 +1,11 @@
+---
+component: decidim
+parts:
+  # The participation platform (ADR-N-065, T-6316): Decidim's Rails application, behind the edge
+  # on participacia.{domain}. Its init container migrates the database and creates the one
+  # organization before puma starts.
+  - name: web
+  # Decidim's background jobs (mail, notifications, exports, reminders), the same image.
+  - name: sidekiq
+  # Sidekiq's queue, Action Cable and the Rails cache; nothing on disk.
+  - name: redis

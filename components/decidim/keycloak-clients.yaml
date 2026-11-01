@@ -1,0 +1,21 @@
+---
+# Browser sign-in for the participation platform (ADR-N-065): Decidim's OmniAuth OpenID Connect
+# strategy, registered as provider `keycloak`, with PKCE. Its secret reaches the pods as
+# keycloak-client-decidim, like every confidential client's.
+decidim:
+  # What the login page names ("Sign in to {name} · {organization}"): a key the login theme
+  # translates (components/keycloak/charts/theme).
+  name: ${jcClientParticipation}
+  description: Confidential client of the participation platform (Decidim) for human login
+  subdomain: participacia
+  redirectPath: /users/auth/keycloak/callback
+  componentNamespaces:
+    - decidim
+  rawValues:
+    publicClient: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: false
+    serviceAccountsEnabled: false
+    attributes:
+      pkce.code.challenge.method: S256

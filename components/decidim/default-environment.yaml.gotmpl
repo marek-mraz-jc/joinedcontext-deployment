@@ -1,0 +1,34 @@
+---
+{{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "decidim") }}
+decidim:
+  web:
+    enabled: true
+    namespace: {{ $ns }}
+    # participacia.{domain}: its own host, because Decidim builds every link from the
+    # organization's host (ADR-N-065).
+    subDomain: participacia
+    # The organization the bootstrap creates on the first rollout: its name per the default
+    # locale, the locales it offers, the prefix of every reference (JC-PROP-2026-11-1).
+    organization:
+      name: Participácia
+      defaultLocale: sk
+      locales: [sk, en]
+      referencePrefix: JC
+    # The e-mail address of the realm person who administers the organization. The bootstrap
+    # gives that address an admin account with no usable password: it is reached only by
+    # signing in through the realm with the same verified address. Empty: no admin yet.
+    adminEmail: ""
+    # Outgoing mail (confirmations, notifications). Empty `address`: Decidim sends none.
+    # The password comes from a Secret the operator creates (`passwordSecret`, key `password`).
+    smtp:
+      address: ""
+      port: 587
+      username: ""
+      from: ""
+      passwordSecret: ""
+  sidekiq:
+    enabled: true
+    namespace: {{ $ns }}
+  redis:
+    enabled: true
+    namespace: {{ $ns }}
