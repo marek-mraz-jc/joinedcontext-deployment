@@ -123,9 +123,24 @@ SHARING_PEOPLE = {
 }
 
 
+def test_every_seeded_person_holds_the_realm_default_roles(rendered):
+    """The people Job creates each person by a partial import, which grants no default roles,
+    and keycloak-config-cli keeps only the roles a user lists. Without the default composite a
+    person holds no offline_access, and a sign-in that asks for a refresh token (claude.ai, every
+    CIMD connector) fails at code-to-token with not_allowed (T-6301)."""
+    realm = realm_of(rendered, "dev")
+    people = human_users(realm)
+    assert people
+    for name, user in people.items():
+        assert user["realmRoles"][0] == f"default-roles-{realm['realm']}", name
+    assert "offline_access" in realm["defaultRoles"]
+
+
 def test_development_profile_seeds_the_demo_users(rendered):
     realm = realm_of(rendered, "dev")
-    users = human_users(realm)
+    users = {
+        name: {**u, "realmRoles": u["realmRoles"][1:]} for name, u in human_users(realm).items()
+    }
     # A Yellow change needs an approver who is not its author (CC-34), so the demo has two —
     # and a fourth person who proposes and decides nothing, so the plain self-approval refusal
     # can be played by somebody it applies to (T-2231).
