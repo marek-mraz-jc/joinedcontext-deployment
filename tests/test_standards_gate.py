@@ -171,6 +171,8 @@ def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, mo
     seen = {}
     monkeypatch.setattr(gate, "candidate", lambda rev: {"sha": "a" * 40, "images": {}})
     monkeypatch.setattr(gate, "preflight", lambda rev, names: {})
+    monkeypatch.setattr(gate, "dev_commit", lambda: "a" * 40)
+    monkeypatch.setattr(gate, "moved", lambda *a: [])
     monkeypatch.setattr(gate, "run_stage", lambda name, *a: seen.setdefault(name, a[-1]) and
                         {"name": name, "verdict": "pass", "problems": [], "cases": {}})
     monkeypatch.setattr(gate, "record_of", lambda *a: {"green": False, "sha": "a" * 40})
@@ -282,3 +284,122 @@ def test_a_running_sweep_is_never_dispatched_twice(tmp_path):
     fake = FakeGh([sweep_run(12, "sweep abc1234", status="queued", conclusion=None)])
     assert gate.antares_sweep("HEAD", wait=False, call=fake, cwd=repo) == 0
     assert [c[0] for c in fake.calls] == ["api"]
+
+
+# ---------------------------------------------------------------------------- T-6318: the hold on dev
+
+
+def pins_repo(tmp_path):
+    """A deployment checkout with three commits: base, a gateway pin, then a Portal pin."""
+    repo = tmp_path / "pins"
+    git = lambda *a: subprocess.run(["git", *a], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+    shas = []
+    for portal, gateway in (("1", "1"), ("1", "2"), ("2", "2")):
+        for component, digest in (("portal", portal), ("context-gateway", gateway)):
+            path = repo / "components" / component / "images.yaml"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f"image: {{repository: ghcr.io/x/{component}, tag: a, digest: sha256:{digest * 64}}}\n")
+        if not shas:
+            git("init", "-q")
+        git("add", "-A")
+        git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "pin")
+        shas.append(git("rev-parse", "HEAD"))
+    return repo, shas
+
+
+def hold(root, components, until="2999-01-01T00:00:00Z"):
+    root.mkdir(parents=True, exist_ok=True)
+    (root / gate.HOLD).write_text(json.dumps({"sha": "c" * 40, "stage": "x", "components": components,
+                                              "until": until}))
+
+
+def test_the_hold_only_shrinks_and_frees_the_pins_after_the_last_stage_that_measures_them():
+    order = list(gate.REQUIRED)
+    held = [gate.holding(order[i:]) for i in range(len(order))]
+    assert held[0] == ["*"] and held[order.index("portal-sweep")] == ["*"]
+    assert held[order.index("load")] == sorted(gate.DATA_PLANE)
+    assert held[order.index("antares-sweep")] == [], "the GitHub sweep holds no dev pod"
+    assert set(gate.MEASURES) == set(gate.REQUIRED), "every stage says what it measures"
+
+
+def test_a_pin_range_is_held_only_where_it_moves_a_held_component(tmp_path):
+    repo, (base, gw, portal) = pins_repo(tmp_path)
+    root = tmp_path / "records"
+    assert gate.held(base, portal, root, repo) == [], "no running gate holds nothing"
+    hold(root, ["portal"])
+    assert gate.held(base, gw, root, repo) == [], "a gateway pin passes a Portal hold"
+    assert gate.held(gw, portal, root, repo) == ["portal"]
+    hold(root, ["*"])
+    assert gate.held(base, gw, root, repo) == ["context-gateway"]
+    hold(root, [])
+    assert gate.held(base, portal, root, repo) == []
+    hold(root, ["*"], until="2026-11-01T07:00:00Z")
+    assert gate.held(base, portal, root, repo) == [], "a dead gate's hold expires"
+    (root / gate.HOLD).write_text("{not json")
+    with pytest.raises(gate.Refused, match="unreadable hold"):
+        gate.held(base, portal, root, repo)
+    hold(root, "*")
+    with pytest.raises(gate.Refused, match="no component list"):
+        gate.held(base, portal, root, repo)
+
+
+def test_held_exits_one_naming_the_held_components_and_zero_when_free(tmp_path, monkeypatch, capsys):
+    repo, (base, gw, portal) = pins_repo(tmp_path)
+    root = tmp_path / "records"
+    hold(root, ["portal", "context-broker"])
+    monkeypatch.setattr(gate, "ROOT", repo)
+    monkeypatch.setattr(gate.held, "__defaults__", (gate.RECORDS, repo, None))
+    assert gate.main(["held", gw, portal, "--records", str(root)]) == 1
+    assert "held by the release gate of cccccccccccc (x, until 2999-01-01T00:00:00Z): portal" in capsys.readouterr().out
+    assert gate.main(["held", base, gw, "--records", str(root)]) == 0
+    assert capsys.readouterr().out.strip() == "free"
+
+
+def gate_args(tmp_path, only):
+    return argparse.Namespace(conformance=tmp_path, portal=tmp_path, requests=None, rate=8, duration="5m",
+                              only=only, stage_timeout=60, sweep_timeout=60, rev="HEAD", records=tmp_path / "rec")
+
+
+def test_a_stage_under_which_dev_moved_a_component_it_measures_is_red_and_the_hold_is_released(tmp_path, monkeypatch):
+    repo, (base, gw, portal) = pins_repo(tmp_path)
+    monkeypatch.setattr(gate, "ROOT", repo)
+    monkeypatch.setattr(gate.moved, "__defaults__", (repo,))
+    monkeypatch.setattr(gate, "candidate", lambda rev: {"sha": base, "images": []})
+    monkeypatch.setattr(gate, "preflight", lambda rev, names: {})
+    monkeypatch.setattr(gate, "antares_sweep", lambda *a, **k: 0)
+    # dev runs the candidate through the preflight and ws; the Portal pin lands while antares-sweep waits,
+    # the gateway pin under mcp (a hand apply the hold refused)
+    readings = iter([base, base, base, base, gw, portal, portal])
+    monkeypatch.setattr(gate, "dev_commit", lambda: next(readings))
+    holds = {}
+
+    def stage(name, *a):
+        holds[name] = json.loads((tmp_path / "rec" / gate.HOLD).read_text())["components"]
+        return {"name": name, "verdict": "pass", "problems": [], "cases": {name: "pass"}, "known_red": {},
+                "seconds": 0}
+
+    monkeypatch.setattr(gate, "run_stage", stage)
+    assert gate.run(gate_args(tmp_path, ["ws", "mcp", "antares-sweep"])) == 1
+    rec = json.loads((tmp_path / "rec" / base / "record.json").read_text())
+    verdicts = {s["name"]: (s["verdict"], s["dev"], s["problems"]) for s in rec["stages"]}
+    assert verdicts["ws"] == ("pass", [base, base], [])
+    assert verdicts["mcp"][0] == "fail" and verdicts["mcp"][1] == [base, gw]
+    assert verdicts["mcp"][2] == [f"dev ran other pins of context-gateway (deployment {gw[:12]}) under this stage"]
+    assert verdicts["antares-sweep"] == ("pass", [portal, portal], []), "a Portal pin lands beside the GitHub sweep"
+    assert holds == {"ws": sorted(gate.DATA_PLANE), "mcp": sorted(gate.DATA_PLANE), "antares-sweep": []}
+    assert not (tmp_path / "rec" / gate.HOLD).exists(), "the finished run holds nothing"
+    assert rec["sha"] == base, "the record still names the candidate it judged"
+
+
+def test_the_gate_refuses_in_seconds_when_dev_runs_other_pins_or_records_none(tmp_path, monkeypatch):
+    repo, (base, gw, _) = pins_repo(tmp_path)
+    monkeypatch.setattr(gate.moved, "__defaults__", (repo,))
+    monkeypatch.setattr(gate, "candidate", lambda rev: {"sha": base, "images": []})
+    monkeypatch.setattr(gate, "preflight", lambda rev, names: {})
+    monkeypatch.setattr(gate, "dev_commit", lambda: gw)
+    with pytest.raises(gate.Refused, match=r"dev runs other pins than .* for context-gateway: `just dev-apply"):
+        gate.run(gate_args(tmp_path, ["ws"]))
+    monkeypatch.setattr(gate, "dev_commit", lambda: (_ for _ in ()).throw(gate.Refused("dev records no applied commit")))
+    with pytest.raises(gate.Refused, match="no applied commit"):
+        gate.run(gate_args(tmp_path, ["ws"]))
+    assert not (tmp_path / "rec" / gate.HOLD).exists()
