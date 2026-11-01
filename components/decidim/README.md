@@ -12,7 +12,9 @@ helmfile apply -i --selector component=decidim
 ## What it deploys
 
 Three releases of `charts/workload`, one image (`images/decidim`, published by
-`.github/workflows/image-decidim.yml`):
+`.github/workflows/image-decidim.yml`, run by hand only: it scans the image before it pushes,
+and the six HIGH findings of ADR-N-065 section 4 stop it until Decidim lifts its gem pins or the
+owner accepts them; its push and schedule triggers sit in a comment beside `on:`):
 
 - **decidim-web**: puma on 3000 behind the edge. Its init container `migrate` runs
   `bin/rails db:migrate` and `db/joinedcontext_bootstrap.rb`, which creates the one
