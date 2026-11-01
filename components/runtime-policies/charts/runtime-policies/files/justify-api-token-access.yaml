@@ -26,6 +26,53 @@ metadata:
 spec:
   background: false
   rules:
+    # The API server's ServiceAccount admission plugin runs before this webhook: a Pod that
+    # left the field unset arrives with the token already mounted (volume kube-api-access-*,
+    # mounted in every container), and setting the field below removes none of it. So the
+    # injected volume and its mounts go too, or the Pod keeps a token the field says it lacks
+    # and the projected-token check below refuses it (ci-full 41294209744: no apisix pod).
+    - name: drop-injected-api-token
+      match:
+        any:
+          - resources:
+              kinds: [Pod]
+              operations: [CREATE]
+              namespaces: KYVERNO_NAMESPACES
+      preconditions:
+        all:
+          - key: '{{ request.object.metadata.annotations."security.joinedcontext.com/api-access-reason"
+              || '''' }}'
+            operator: Equals
+            value: ''
+          # Only where the plugin injected it: a Pod that asked for a token (true) is refused below.
+          - key: '{{ to_string(request.object.spec.automountServiceAccountToken) }}'
+            operator: Equals
+            value: 'null'
+      mutate:
+        foreach:
+          - list: request.object.spec.volumes[?starts_with(name, 'kube-api-access-')]
+            patchStrategicMerge:
+              spec:
+                volumes:
+                  - name: '{{ element.name }}'
+                    $patch: delete
+          - list: request.object.spec.containers
+            patchStrategicMerge:
+              spec:
+                containers:
+                  - name: '{{ element.name }}'
+                    volumeMounts:
+                      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+                        $patch: delete
+          - list: request.object.spec.initContainers || `[]`
+            patchStrategicMerge:
+              spec:
+                initContainers:
+                  - name: '{{ element.name }}'
+                    volumeMounts:
+                      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+                        $patch: delete
+
     - name: default-api-token-off
       match:
         any:
