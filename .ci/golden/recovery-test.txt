@@ -44,6 +44,7 @@ autoscaling/v2/HorizontalPodAutoscaler jc/apisix
 autoscaling/v2/HorizontalPodAutoscaler jc/context-gateway
 autoscaling/v2/HorizontalPodAutoscaler jc/keycloak-app-keycloakx
 batch/v1/CronJob jc/gitea-lane-token
+batch/v1/CronJob jc/keycloak-admin-permissions-sync
 batch/v1/CronJob jc/postgres-cluster-dr-drill
 batch/v1/CronJob jc/sandbox-reaper-reaper
 batch/v1/Job jc/artifact-store-bucket

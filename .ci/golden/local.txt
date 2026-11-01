@@ -41,6 +41,7 @@ apps/v1/Deployment local/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet local/artifact-store
 apps/v1/StatefulSet local/keycloak-app-keycloakx
 batch/v1/CronJob local/gitea-lane-token
+batch/v1/CronJob local/keycloak-admin-permissions-sync
 batch/v1/CronJob local/postgres-cluster-dr-drill
 batch/v1/CronJob local/sandbox-reaper-reaper
 batch/v1/Job local/artifact-store-bucket
