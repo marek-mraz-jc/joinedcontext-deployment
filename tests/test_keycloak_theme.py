@@ -8,8 +8,11 @@ colours and the logo come from the branding block.
 
 import base64
 import json
+import os
 import re
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -237,3 +240,73 @@ def test_the_account_console_speaks_slovak_with_keys_keycloak_knows(rendered):
     for key in ("personalInfo", "selectALocale", "choose", "jumpToSection", "general", "signingIn"):
         assert key in sk, key
     assert sk["error-invalid-length"].count("{{") == 3
+
+
+RENDER_TITLE = """\
+import freemarker.core.HTMLOutputFormat;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+
+public class RenderTitle {
+    public static void main(String[] args) throws Exception {
+        Configuration cfg = new Configuration(Configuration.VERSION_2_3_32);
+        cfg.setOutputFormat(HTMLOutputFormat.INSTANCE);
+        Template page = new Template("page", new StringReader(Files.readString(Path.of(args[0]))), cfg);
+        StringWriter out = new StringWriter();
+        page.process(Map.of("client", args[1]), out);
+        System.out.print(out);
+    }
+}
+"""
+
+
+def title_of(header, client):
+    """Render the theme's own title lines under Keycloak's FreeMarker (HTML output format)
+    for a page whose header section is `header`."""
+    template = (THEME / "files/login__template.ftl").read_text()
+    start = template.index("<#assign titleText")
+    end = template.index("</title>", start) + len("</title>")
+    images = (PROJECT_ROOT / "components/keycloak/images.yaml").read_text()
+    digest = re.search(r"digest: '(sha256:[0-9a-f]{64})'", images).group(1)
+    page = (
+        '<#macro layout><#assign signIn=false org="Banská Bystrica">'
+        '<#assign header><#nested "header"></#assign>' + template[start:end] + "</#macro>"
+        '<@layout; section><#if section == "header">' + header + "</#if></@layout>"
+    )
+    with tempfile.TemporaryDirectory() as work:
+        Path(work, "RenderTitle.java").write_text(RENDER_TITLE)
+        Path(work, "page.ftl").write_text(page)
+        result = subprocess.run(
+            ["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}",
+             "-v", f"{work}:/work:ro", "--entrypoint", "java",
+             f"quay.io/keycloak/keycloak@{digest}",
+             "-cp", "/opt/keycloak/lib/lib/main/org.freemarker.freemarker-2.3.35.jar",
+             "/work/RenderTitle.java", "/work/page.ftl", client],
+            capture_output=True, text=True, timeout=300, check=False,
+        )
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+@pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
+def test_a_header_wrapped_in_an_element_gives_a_title_of_its_text_alone():
+    """T-6306: keycloak.v2's consent page header is `<p>Grant Access to {client}</p>`, and the
+    title element shows markup as text: the tab read "<p> Grant Access to Claude </p>"."""
+    header = "<!-- template: login-oauth-grant.ftl -->\n<p>\n  Grant Access to ${client}\n</p>"
+    assert title_of(header, "Claude") == "<title>Grant Access to Claude · Banská Bystrica</title>"
+
+
+@pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
+def test_a_client_name_with_markup_stays_text_in_the_title():
+    """A client's name is whatever its registration says (CIMD): it reaches the title as
+    escaped text and cannot open an element in the page head."""
+    title = title_of("<p>Grant Access to ${client}</p>", "Evil</title><script>alert(1)</script> & co")
+    assert title == (
+        "<title>Grant Access to Evil&lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt; &amp; co"
+        " · Banská Bystrica</title>"
+    )
