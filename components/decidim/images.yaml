@@ -1,9 +1,9 @@
 ---
 decidim:
-  # images/decidim/Dockerfile: decidim/decidim 0.31.6 plus omniauth_openid_connect, the realm
-  # initializer and the organization bootstrap, run as 10001, flattened. Published, signed and
-  # scanned by .github/workflows/image-decidim.yml, whose run summary prints the pin.
-  # This digest is the T-6316 local build measured on kind (the same Dockerfile); nothing
+  # images/decidim/Dockerfile: Decidim 0.32.2 generated on Ruby 3.4.12 (T-6321) plus
+  # omniauth_openid_connect, the realm initializer and the organization bootstrap, run as 10001.
+  # Published, signed and scanned by .github/workflows/image-decidim.yml, whose run summary prints
+  # the pin. This digest is still the T-6316 0.31.6 local build measured on kind; nothing
   # installs the component until T-6317 replaces it with the digest the workflow published,
   # because no environment that deploys lists `decidim` before then.
   web:

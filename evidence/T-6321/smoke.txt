@@ -1,0 +1,6 @@
+decidim bootstrap: organization 1 on decidim.local, locales sk,en, registration existing, admin present
+up: 200
+*  Environment: production
+* Listening on http://0.0.0.0:3000
+sign-in providers: users/auth/keycloak only; packs css 200; decidim.version null (Decidim hides the version from the API by default)
+sha256:5e90205c916a96bb566116c0f003a5f7057cdd9ba6564c32514fd3935598cd46 10001:10001

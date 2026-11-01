@@ -173,4 +173,8 @@ def test_the_image_drops_root_and_the_shipped_key():
     assert "rm -f config/master.key config/credentials.yml.enc" in dockerfile
     assert dockerfile.rstrip().splitlines()[-1].startswith("CMD")
     assert "USER 10001:10001" in dockerfile
-    assert "FROM ghcr.io/decidim/decidim:0.31.6@sha256:" in dockerfile
+    assert "gem install decidim --version 0.32.2 " in dockerfile
+    # The runtime stage is the slim Ruby image: no compiler, no Node, pinned by digest.
+    final = dockerfile.split("\nFROM ")[-1]
+    assert final.startswith("ruby:3.4.12-slim-trixie@sha256:")
+    assert "node" not in final.split("\n", 1)[0]
