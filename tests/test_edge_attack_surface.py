@@ -254,7 +254,7 @@ ROUTE_CLASSES = {
     },
     "decidim": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
-        "why": "the participation platform is public reading; signing in is Decidim's own realm login (OIDC), writing its own session, and the edge refuses /system, sign-up, password and invitation pages (T-6316)",
+        "why": "participation is public reading; Decidim signs people in through the realm itself, and the edge refuses its system console, local password reset, invitations and sign-up (ADR-N-065 §3, T-6316)",
     },
     "ckan-webassets": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
