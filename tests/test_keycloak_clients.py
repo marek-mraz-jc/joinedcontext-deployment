@@ -123,9 +123,24 @@ SHARING_PEOPLE = {
 }
 
 
+def test_every_seeded_person_holds_the_realm_default_roles(rendered):
+    """The people Job creates each person by a partial import, which grants no default roles,
+    and keycloak-config-cli keeps only the roles a user lists. Without the default composite a
+    person holds no offline_access, and a sign-in that asks for a refresh token (claude.ai, every
+    CIMD connector) fails at code-to-token with not_allowed (T-6301)."""
+    realm = realm_of(rendered, "dev")
+    people = human_users(realm)
+    assert people
+    for name, user in people.items():
+        assert user["realmRoles"][0] == f"default-roles-{realm['realm']}", name
+    assert "offline_access" in realm["defaultRoles"]
+
+
 def test_development_profile_seeds_the_demo_users(rendered):
     realm = realm_of(rendered, "dev")
-    users = human_users(realm)
+    users = {
+        name: {**u, "realmRoles": u["realmRoles"][1:]} for name, u in human_users(realm).items()
+    }
     # A Yellow change needs an approver who is not its author (CC-34), so the demo has two —
     # and a fourth person who proposes and decides nothing, so the plain self-approval refusal
     # can be played by somebody it applies to (T-2231).
@@ -430,10 +445,21 @@ def test_a_connector_token_names_one_connector_and_the_connectors_door_alone(loc
     ]
     assert not [m for m in others if "portal-connectors" in json.dumps(m)]
     # The two fixed connector clients may ask for it; a client the realm creates by CIMD gets it
-    # as its only optional scope.
+    # and `offline_access` (claude.ai asks for a refresh token on every sign-in, T-6301) as its
+    # only optional scopes.
     for client_id in ["mcp-mobile", "mcp-local"]:
         assert "connector" in realm_clients[client_id]["optionalClientScopes"]
-    assert local_realm["defaultOptionalClientScopes"] == ["connector"]
+    assert local_realm["defaultOptionalClientScopes"] == ["connector", "offline_access"]
+
+
+def test_the_realm_optional_scopes_reach_no_managed_client(realm_clients):
+    """T-6301: Keycloak links `defaultOptionalClientScopes` to a client created without its own
+    list. Every keycloak-config-cli client names its list, so `offline_access` stays on the
+    clients that chose it."""
+    lacking = [c for c, client in realm_clients.items() if "optionalClientScopes" not in client]
+    assert not lacking, lacking
+    offline = {c for c, client in realm_clients.items() if "offline_access" in client["optionalClientScopes"]}
+    assert offline == {"mcp-hub", "mcp-mobile"}, offline
 
 
 def test_only_the_known_ai_clients_sign_in_by_their_client_id_url(local_realm):

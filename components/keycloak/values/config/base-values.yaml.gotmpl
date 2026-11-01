@@ -125,7 +125,8 @@ config:
       ssoSessionIdleTimeoutRememberMe: 0
       ssoSessionMaxLifespanRememberMe: 0
       # An offline token lapses 30 days unused and 60 days after its login however often it is
-      # used (T-5568); only the MCP connector clients may ask for one (optionalClientScopes).
+      # used (T-5568); only the MCP connector clients and the CIMD clients may ask for one
+      # (optionalClientScopes, defaultOptionalClientScopes, T-6301).
       offlineSessionIdleTimeout: 2592000
       offlineSessionMaxLifespanEnabled: true
       offlineSessionMaxLifespan: 5184000
@@ -423,9 +424,14 @@ config:
       # token changes. The scope stays optional until RFC 8707 resource indicators land.
       # A client that signs in by its client id URL (CIMD: claude.ai, Claude Code, VS Code) is
       # created on its first login with the realm's default scopes; of the optional ones it may
-      # ask only for `connector` (T-5954).
+      # ask only for `connector` (T-5954) and `offline_access`, which claude.ai adds to every
+      # sign-in for its refresh token (T-6301): the offline session lapses by the realm's
+      # offlineSession* settings above, and the Portal still refuses a revoked or expired
+      # connector on every /c call. Every keycloak-config-cli client below and every client the
+      # Portal makes carries its own list, so this list reaches the CIMD clients alone.
       defaultOptionalClientScopes:
         - connector
+        - offline_access
       # CIMD (T-5954, ADR-N-064 §3.3): a client id that is an https URL on one of these hosts is
       # fetched, and its document's exact redirect URIs are the only ones it gets. The executor
       # checks every URI of a document: the loopback hosts are callbacks of Claude Code and VS
@@ -632,8 +638,12 @@ config:
               secretData: '{"value":"$(USER_TOTP_{{ $name | upper | replace "." "_" }})"}'
               credentialData: '{"subType":"totp","digits":6,"counter":0,"period":30,"algorithm":"HmacSHA256"}'
             {{- end }}
+          {{- /* The people Job creates each person by a partial import, which grants no default
+                 roles, and the import keeps only the roles listed here (it leaves the realm's
+                 default composite alone). So the composite is listed: without it a person holds
+                 no offline_access and every refresh-token sign-in (claude.ai) fails (T-6301). */}}
           realmRoles:
-            {{- toYaml ($user.realmRoles | default list) | nindent 12 }}
+            {{- toYaml (prepend ($user.realmRoles | default list) (printf "default-roles-%s" $global.instanceSlug)) | nindent 12 }}
           {{- /* `platformReaders: false` keeps a test person out of the default group (T-4911). */}}
           {{- $readers := ne (toString (index $user "platformReaders")) "false" }}
           {{- $groups := concat (ternary (list "platform-readers") (list) $readers) (index $user "groups" | default list) }}
@@ -657,7 +667,7 @@ config:
               value: "$(USER_PASSWORD_INITIAL)"
               temporary: false
           realmRoles:
-            {{- toYaml (.realmRoles | default list) | nindent 12 }}
+            {{- toYaml (prepend (.realmRoles | default list) (printf "default-roles-%s" $global.instanceSlug)) | nindent 12 }}
           groups:
             - /platform-readers
             {{- range (.groups | default list) }}
