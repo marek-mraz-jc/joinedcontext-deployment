@@ -246,6 +246,8 @@ context-broker:
     # fixes of review R2ANT2 (T-6212). No migration, no new runtime key. Rollback: dev-118.
     # Antares dev 35d8f61 (dev-122, over 49924e5: trains T-6213 R2ANT3 and T-6214 R2ANT4 review fixes in sql,
     # ops, store, notifier, ws, odata and cql2). No migration, no new runtime key. Rollback: dev-120.
-    # Signed by ship.yml on dev at 35d8f61 (run 41244691089).
-    tag: 'dev-122'
-    digest: 'sha256:7a2ead8302eb50326aca7488c9e50d77a2ad9da533f270e2d583419680f24781'
+    # Antares dev a9a9299 (dev-124, over 35d8f61: antares-sql builds without postgres again, T-6204 follow-up;
+    # T-6277 broker sessions SET effective_io_concurrency = 256, Helsinki Tree q count 15.9 s -> 1.6 s).
+    # No migration, no new runtime key. Rollback: dev-122. Signed by ship.yml on dev at a9a9299 (run 41258864228).
+    tag: 'dev-124'
+    digest: 'sha256:fce65731a5e71608da3019e85ad7a6fc9a4801deed090690d03cef6f0fcb34a7'
