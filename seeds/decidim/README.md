@@ -11,6 +11,7 @@ meetings, debates and surveys. Read anonymously, no login, no personal data.
 | `instances.csv` | one row per Decidim instance: name, base URL, language, scope, town, provider |
 | `pipeline.yaml` | the Bento mapping every instance runs, unchanged (comments in it explain each step) |
 | `generate.py` | writes each row's DataSource, daily Pipeline, hourly budgets-only Pipeline, both mappings, the index lines and the catalogue source; `--check` fails on a stale file |
+| `inventory.py` | every public Decidim instance of the decidim.org list: robots.txt, version, spaces, record counts by component (ids only), whether `author` reaches an anonymous client; plus the harvest's counts on dev and prod. `python3 -I seeds/decidim/inventory.py --out <dir>` (~40 min, 1 request/s per host; `--host <h>` for one instance) |
 | `../../tests/test_decidim.py` | the mapping run in Bento against a stand-in Decidim (0.29 and 0.27 answers), the model's JSON Schema, robots.txt, the personal-data filter, the seed |
 
 Add an instance: one row in `instances.csv`, then `python3 seeds/decidim/generate.py`. Nothing else
@@ -32,13 +33,15 @@ reads everything; the hourly pass reads only the budgets of processes running th
 move within an hour during a vote. Each entity carries `expiresAt` three days ahead, so a record the
 platform hides or deletes leaves within three days.
 
-## Instances found (2026-10-21)
+## Instances found (2026-10-21, inventory 2026-11-01 in T-6315)
 
 | instance | Decidim | API | note |
 |---|---|---|---|
 | tvormespolu.banskabystrica.sk (Banská Bystrica, "Spoločne tvorme Banskú Bystricu") | 0.29.5 | public `/api` | 19 processes, 0 assemblies. Proposals and budget projects answer `null` to an anonymous client, so they come from the list pages. `/open-data/download` redirects to a blob that answers `NoSuchKey`. The old host spolupracovna.banskabystrica.sk redirects here. |
 | Trnava ("Tvorme spoločne Trnavu") | n/a | n/a | not found: participacia.trnava.sk answers 404 on `/api`, tvormespolocnetrnavu.sk does not resolve. |
 | bbsk.sk/participativne-planovanie | n/a | n/a | the region runs no Decidim. |
+| decidim.spotter.cz (Czech, "Rozhodování") | 0.26.2 | public `/api` | 23 processes, 5 assemblies, 9 proposals, 21 debates; budgets answer `null`. Not harvested yet. |
+| zapojsa.trencin.sk (Trenčín) | n/a | n/a | gone: the decidim.org list points at a 2023 web.archive.org copy. |
 
 GLOBSEC's 2025 report on participatory democracy in Slovakia names Banská Bystrica as the Slovak town
 on Decidim. A further instance goes in as a row once its host answers `{ decidim { version } }`.
