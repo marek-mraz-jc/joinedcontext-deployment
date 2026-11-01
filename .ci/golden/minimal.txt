@@ -27,6 +27,7 @@ apps/v1/Deployment minimal/portal
 apps/v1/Deployment minimal/portal-ui
 apps/v1/Deployment minimal/postgres-operator-cloudnative-pg
 apps/v1/StatefulSet minimal/keycloak-app-keycloakx
+batch/v1/CronJob minimal/keycloak-admin-permissions-sync
 batch/v1/CronJob minimal/postgres-cluster-dr-drill
 batch/v1/Job minimal/keycloak-admin-permissions
 batch/v1/Job minimal/keycloak-config-keycloak-config-cli

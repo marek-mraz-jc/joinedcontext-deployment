@@ -34,6 +34,7 @@ argoproj.io/v1alpha1/AppProject argocd/addons-root
 argoproj.io/v1alpha1/Application argocd/addons
 autoscaling/v2/HorizontalPodAutoscaler addons/apisix
 autoscaling/v2/HorizontalPodAutoscaler addons/keycloak-app-keycloakx
+batch/v1/CronJob addons/keycloak-admin-permissions-sync
 batch/v1/CronJob addons/postgres-cluster-dr-drill
 batch/v1/Job addons/keycloak-admin-permissions
 batch/v1/Job addons/keycloak-config-keycloak-config-cli

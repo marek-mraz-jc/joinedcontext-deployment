@@ -3,6 +3,9 @@ image: ""
 keycloakUrl: ""
 realm: ""
 principal: portal-api
+# How often the CronJob links new Endpoint scopes between syncs (T-6388): the wait a connector
+# sees for a new Endpoint, so the Portal's refusal names it.
+schedule: "*/5 * * * *"
 serviceAccount: keycloak-app-keycloakx
 admin:
   username: ""

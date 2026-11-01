@@ -16,6 +16,10 @@
     "principal": {
       "type": "string"
     },
+    "schedule": {
+      "type": "string",
+      "minLength": 9
+    },
     "serviceAccount": {
       "type": "string"
     },

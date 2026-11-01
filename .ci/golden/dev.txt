@@ -66,6 +66,7 @@ batch/v1/CronJob dev/basemap-tiles
 batch/v1/CronJob dev/ckan-harvest-banskabystrica
 batch/v1/CronJob dev/ckan-harvest-bbsk
 batch/v1/CronJob dev/gitea-lane-token
+batch/v1/CronJob dev/keycloak-admin-permissions-sync
 batch/v1/CronJob dev/postgres-cluster-dr-drill
 batch/v1/CronJob dev/postgres-cluster-local-backup
 batch/v1/CronJob dev/sandbox-reaper-reaper

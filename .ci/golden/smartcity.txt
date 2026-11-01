@@ -58,6 +58,7 @@ batch/v1/CronJob smartcity/basemap-tiles
 batch/v1/CronJob smartcity/ckan-harvest-banskabystrica
 batch/v1/CronJob smartcity/ckan-harvest-bbsk
 batch/v1/CronJob smartcity/gitea-lane-token
+batch/v1/CronJob smartcity/keycloak-admin-permissions-sync
 batch/v1/CronJob smartcity/postgres-cluster-dr-drill
 batch/v1/CronJob smartcity/postgres-cluster-local-backup
 batch/v1/Job smartcity/apps-db-local-backup-now

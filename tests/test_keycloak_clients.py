@@ -751,6 +751,22 @@ def test_the_portal_writes_only_the_clients_it_manages(rendered, env):
     assert any(d.get("kind") == "NetworkPolicy" and "keycloak-admin-permissions" in d["metadata"]["name"] for d in docs)
 
 
+@pytest.mark.parametrize("env", ["local", "production", "dev"])
+def test_the_endpoint_scope_link_also_runs_every_five_minutes(rendered, env):
+    """T-6388: the Portal creates an Endpoint's `endpoint:{slug}` scope at once and the deny keeps
+    it from linking it, so a CronJob runs the hook's script on a clock: the pod the Job runs, the
+    hook's ConfigMap, one run at a time, and a connector reads a new Endpoint minutes after Live."""
+    docs = rendered(env)
+    job = next(d for d in docs if d.get("kind") == "Job" and d["metadata"]["name"] == "keycloak-admin-permissions")
+    cron = next(d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "keycloak-admin-permissions-sync")
+    assert cron["spec"]["schedule"] == "*/5 * * * *"
+    assert cron["spec"]["concurrencyPolicy"] == "Forbid"
+    assert "annotations" not in cron["metadata"], "the CronJob is a release object, never a hook"
+    assert cron["spec"]["jobTemplate"]["spec"]["template"] == job["spec"]["template"]
+    volumes = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["volumes"]
+    assert {"name": "script", "configMap": {"name": "keycloak-admin-permissions"}} in volumes
+
+
 # --- T-3311 (EP-103): the Portal asks the gateway's access/simulate with its own token ----------
 
 
