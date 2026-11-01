@@ -197,6 +197,21 @@ def test_a_pod_that_never_asked_for_a_token_does_not_get_one(pod_security, tmp_p
 
 @requires_kyverno
 @requires_helm
+def test_a_token_the_api_server_injected_is_taken_away(pod_security, tmp_path):
+    """The ServiceAccount admission plugin mounts kube-api-access-* before Kyverno sees the Pod,
+    so setting the field alone left the token mounted and the projected-token check refused
+    every such Pod: no apisix pod in any k3d job of ci-full 41294209744."""
+    fixture = FIXTURES / "api-token-injected-pod.yaml"
+    pod = mutated(pod_security, fixture, tmp_path)
+    assert pod["spec"]["automountServiceAccountToken"] is False
+    assert [v["name"] for v in pod["spec"]["volumes"]] == ["conf"]
+    for c in pod["spec"]["containers"] + pod["spec"]["initContainers"]:
+        assert [m["name"] for m in c.get("volumeMounts") or []] in (["conf"], []), c["name"]
+    assert "api-token-needs-a-reason" not in failed_rules(pod_security, fixture, CNPG_SA, tmp_path)
+
+
+@requires_kyverno
+@requires_helm
 def test_a_justified_pod_keeps_its_token(pod_security, tmp_path):
     """Taking the token from the CloudNativePG instance manager would stop it watching its
     own Cluster; the annotation is how that stays visible instead of hard-coded."""
