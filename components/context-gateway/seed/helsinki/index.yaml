@@ -33,6 +33,7 @@ helsinki-policy-bikes-ops-steward.yaml: projects/helsinki/spaces/helsinki/polici
 helsinki-policy-bikes-ops-read.yaml: projects/helsinki/spaces/helsinki/policies/bikes-ops-read.yaml
 helsinki-policy-steward-import-journey.yaml: projects/helsinki/spaces/helsinki/policies/steward-import-journey.yaml
 helsinki-policy-steward-row-journey.yaml: projects/helsinki/spaces/helsinki/policies/steward-row-journey.yaml
+helsinki-policy-steward-versions.yaml: projects/helsinki/spaces/helsinki/policies/steward-versions.yaml
 helsinki-policy-public-transport.yaml: projects/helsinki/spaces/helsinki/policies/public-transport.yaml
 helsinki-policy-public-all.yaml: projects/helsinki/spaces/helsinki/policies/public-all.yaml
 helsinki-policy-public-all-history.yaml: projects/helsinki/spaces/helsinki/policies/public-all-history.yaml
