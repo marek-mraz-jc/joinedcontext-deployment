@@ -179,6 +179,40 @@ def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, mo
     monkeypatch.setattr(gate, "write", lambda rec, root: tmp_path)
     gate.run(args)
     assert seen == {"portal-sweep": 18000, "ws": 3600}, seen
+    # without --sweep-timeout the stage gets the cap of its counted tests
+    seen.clear()
+    monkeypatch.setattr(gate, "sweep_tests", lambda *a: 330)
+    gate.run(argparse.Namespace(**{**vars(args), "sweep_timeout": None}))
+    assert seen == {"portal-sweep": gate.sweep_cap(330), "ws": 3600}, seen
+
+
+def test_the_sweep_cap_holds_the_measured_sweep_with_a_quarter_to_spare():
+    # T-6354: gate 39a90ab9 ran 291 of 324 tests in 17,304 s at one worker and hit the fixed 18,000 s cap
+    assert 17304 / 291 <= gate.SWEEP_TEST_S
+    cap = gate.sweep_cap(324)
+    assert 324 * gate.SWEEP_TEST_S <= 0.75 * cap, cap
+    assert not 324 * gate.SWEEP_TEST_S <= 0.75 * 18000  # the old cap, red by the same rule
+    assert gate.sweep_cap(400) > cap  # it grows with the sweep
+
+
+def test_the_gate_counts_the_sweep_before_it_sizes_the_stage(tmp_path):
+    listing = tmp_path / "sweep.sh"
+    listing.write_text('#!/bin/sh\n[ -n "$SWEEP_LIST" ] || exit 9\necho "  [chromium] > a.spec.ts:1:1 > x"\n'
+                       'echo "Total: 330 tests in 129 files"\n')
+    listing.chmod(0o755)
+    assert gate.sweep_tests([str(listing)], {}, tmp_path, tmp_path / "out/list.txt") == 330
+    assert gate.sweep_stage_cap([str(listing)], {}, tmp_path, tmp_path / "list.txt") == gate.sweep_cap(330)
+    # a sweep.sh that knows no SWEEP_LIST would run the whole sweep: it is never started
+    old = tmp_path / "old.sh"
+    old.write_text(f"#!/bin/sh\ntouch {tmp_path / 'ran'}\n")
+    old.chmod(0o755)
+    assert gate.sweep_tests([str(old)], {}, tmp_path, tmp_path / "old.txt") is None
+    assert not (tmp_path / "ran").exists()
+    assert gate.sweep_stage_cap([str(old)], {}, tmp_path, tmp_path / "old.txt") == gate.sweep_cap(gate.SWEEP_TESTS)
+    failing = tmp_path / "failing.sh"
+    failing.write_text('#!/bin/sh\n# SWEEP_LIST\necho "Total: 3 tests in 1 file"\nexit 1\n')
+    failing.chmod(0o755)
+    assert gate.sweep_tests([str(failing)], {}, tmp_path, tmp_path / "f.txt") is None
 
 
 def test_the_per_apply_smoke_leaves_the_two_data_sweeps_to_the_hourly_recipe_and_the_gate():
