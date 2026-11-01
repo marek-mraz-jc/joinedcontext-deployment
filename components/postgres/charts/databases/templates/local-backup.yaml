@@ -24,7 +24,7 @@ template:
     restartPolicy: Never
     automountServiceAccountToken: false
     securityContext:
-      {{- toYaml $r.Values.securityDefaults.podSecurityContext | nindent 6 }}
+      {{- include "database.localBackupPodSecurityContext" $r | nindent 6 }}
     volumes:
     - name: home
       emptyDir: {}

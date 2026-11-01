@@ -60,3 +60,13 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+The pod securityContext of the two pods that mount the local-backup volume: the dump Job and the
+drill. On an SELinux node each pod relabels a local-path volume to its own random MCS categories
+on mount, so the drill could not open what the dump wrote ("Permission denied" on a 0777 dir,
+prod 2026-11-01, T-6298). One fixed pair for both, still container_t.
+*/}}
+{{- define "database.localBackupPodSecurityContext" -}}
+{{- toYaml (merge (dict "seLinuxOptions" (dict "level" "s0:c217,c602")) (deepCopy .Values.securityDefaults.podSecurityContext)) }}
+{{- end }}

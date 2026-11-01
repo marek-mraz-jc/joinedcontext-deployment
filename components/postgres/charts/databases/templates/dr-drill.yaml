@@ -194,7 +194,7 @@ spec:
           automountServiceAccountToken: false
           enableServiceLinks: false
           securityContext:
-            {{- toYaml $.Values.securityDefaults.podSecurityContext | nindent 12 }}
+            {{- include "database.localBackupPodSecurityContext" $ | nindent 12 }}
           {{- if $local }}
           {{- /*
             The newest nightly dump restored with the cluster's own image before the drill
