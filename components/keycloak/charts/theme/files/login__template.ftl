@@ -52,9 +52,12 @@
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
         </#list>
     </#if>
-    <#-- keycloak.v2 opens every page with an HTML comment naming its template, and a comment
-         inside the title element is shown as text: the title leaves it out. -->
-    <#assign titleText = header?markup_string?replace("<!--.*?-->", "", "rs")?trim>
+    <#-- The title element shows markup as text: keycloak.v2 opens every page with an HTML
+         comment naming its template and some headers wrap their text in an element
+         (login-oauth-grant.ftl: <p>), so the title keeps the header's text alone. What is left
+         is escaped HTML text (entities, no tag): the last replace makes sure no "<" remains,
+         so no value can open an element in the page head. -->
+    <#assign titleText = header?markup_string?replace("<!--.*?-->", "", "rs")?replace("<[^>]*>", " ", "r")?replace("<", "&lt;")?replace("\\s+", " ", "r")?trim>
     <title><#if signIn>${msg("jcSignInTo", app, org)}<#else>${titleText?no_esc} · ${org}</#if></title>
     <link rel="icon" href="${url.resourcesPath}/img/${properties.jcFavicon!'favicon.ico'}" />
     <#if properties.stylesCommon?has_content>
