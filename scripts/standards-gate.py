@@ -75,6 +75,12 @@ SUITES = ("ngsi-ld", "ogc", "odata", "sta", "ical", "ws", "mcp")
 # The critic-* walks record 1440 + 400 shots and timings for the UI critic tasks (T-5523, T-5982); they
 # judge no release and took 1,619 s of the first record's sweep hour, so the gate's sweep leaves them out.
 SWEEP_SKIP = r"/critic-[a-z]+\.spec\.ts$"
+# The sweep stage's cap follows its size (T-6354): gate 39a90ab9 ran 291 of its 324 tests in 17,304 s at
+# Playwright's one worker (59.5 s each, reds waiting out their timeouts included) and hit the old fixed 18,000 s.
+# The cap is the counted tests times that, with 25 % room; SWEEP_TESTS stands in when the count fails.
+SWEEP_TEST_S = 60
+SWEEP_ROOM = 0.75
+SWEEP_TESTS = 324
 REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load", "antares-sweep")
 # What a stage needs from the caller's environment, or it fails on setup after hours instead of seconds.
 NEEDS_ANTARES = ("ogc", "odata", "dcat")
@@ -325,6 +331,35 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
     return [s for s in plan if not args.only or s[0] in args.only]
 
 
+def sweep_cap(tests: int) -> int:
+    """Seconds the portal-sweep stage gets for `tests` tests: the measured time each, 25 % room left."""
+    return round(tests * SWEEP_TEST_S / SWEEP_ROOM)
+
+
+def sweep_tests(argv: list[str], env: dict, cwd: Path, log: Path) -> int | None:
+    """How many tests the sweep stage `argv` runs: sweep.sh with SWEEP_LIST=1 prints Playwright's list into
+    `log`, ending "Total: N tests in M files". None when it cannot tell; a sweep.sh without SWEEP_LIST would
+    run the whole sweep, so it is not started at all."""
+    try:
+        if "SWEEP_LIST" not in Path(argv[0]).read_text():
+            return None
+    except OSError:
+        return None
+    log.parent.mkdir(parents=True, exist_ok=True)
+    code, _ = execute(argv, cwd, {**os.environ, **env, "SWEEP_LIST": "1"}, log, 120)
+    found = re.findall(r"^Total: (\d+) tests? in \d+ files?$", log.read_text(errors="replace"), re.MULTILINE)
+    return int(found[-1]) if code == 0 and found else None
+
+
+def sweep_stage_cap(argv: list[str], env: dict, cwd: Path, log: Path) -> int:
+    """The portal-sweep stage's cap from its counted tests, SWEEP_TESTS when the count fails; printed."""
+    tests = sweep_tests(argv, env, cwd, log)
+    cap = sweep_cap(tests or SWEEP_TESTS)
+    print(f"release gate: portal-sweep lists {tests if tests else f'no count (taking {SWEEP_TESTS})'} tests: "
+          f"{cap} s at {SWEEP_TEST_S} s each with 25 % room", flush=True)
+    return cap
+
+
 def write_endpoint() -> str:
     """The roundtrip stage's Endpoint slug: WRITE_ENDPOINT, else the seeded conformance Endpoint's."""
     slug = os.environ.get("WRITE_ENDPOINT", "").strip()
@@ -434,7 +469,7 @@ def execute(argv, cwd, env, log: Path, timeout: float) -> tuple[int, str]:
                     break
                 except (ProcessLookupError, subprocess.TimeoutExpired):
                     continue
-            return 124, f"timed out after {int(timeout)} s (--stage-timeout); stopped"
+            return 124, f"timed out after {int(timeout)} s (its stage cap); stopped"
 
 
 def run_stage(name, argv, env, cwd, out: Path, known: list | None = None, timeout: float = 3600) -> dict:
@@ -572,7 +607,9 @@ def run(args) -> int:
         for i, (name, argv, env, cwd) in enumerate(plan):
             print(f"release gate: {name} ...", flush=True)
             stage_env = {**env, **{k: v for k, v in extra.items() if name in NEEDS_ANTARES}}
-            timeout = args.sweep_timeout if name == "portal-sweep" else args.stage_timeout
+            timeout = args.stage_timeout
+            if name == "portal-sweep":
+                timeout = args.sweep_timeout or sweep_stage_cap(argv, env, cwd, out / name / "list.txt")
             write_hold(root, cand["sha"], name, holding(s[0] for s in plan[i:]), timeout)
             before = dev_reading(cand["sha"], name)
             result = run_stage(name, argv, stage_env, cwd, out, known, timeout)
@@ -792,9 +829,9 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--portal", type=Path, default=ROOT.parent / "joinedcontext-portal")
     r.add_argument("--records", type=Path, default=RECORDS)
     r.add_argument("--stage-timeout", type=float, default=3600, help="seconds per stage before it is stopped red")
-    # The sweep runs one worker over ~154 spec files: the first record (b629a881) ran 20 of them, critic-*
-    # left out, in 1,874 s (94 s each), so the whole sweep needs ~14,400 s; 18,000 leaves 25 %.
-    r.add_argument("--sweep-timeout", type=float, default=18000, help="seconds for the portal-sweep stage")
+    # Without it the cap follows the sweep's size: its counted tests x SWEEP_TEST_S / SWEEP_ROOM (T-6354).
+    r.add_argument("--sweep-timeout", type=float, help="seconds for the portal-sweep stage "
+                   f"(default: its listed tests x {SWEEP_TEST_S} s with 25 %% room)")
     h = sub.add_parser("held", help="exit 1 when a running gate holds a component base..head moves")
     h.add_argument("base")
     h.add_argument("head")
