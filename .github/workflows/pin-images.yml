@@ -2,11 +2,13 @@ name: pin-images
 # ADR-N-056 §2.4, OPS-57: pin the images of the newest commit platform and Portal `main` built
 # (image.yml runs on each green ci of main, T-6154) once their ci is green, cosign verifies the signature of
 # their own image.yml on main, and the dev render passes; Argo CD takes the pin commit from here.
-# Antares stays a hand pin (its pins carry migration notes). The repositories are public: the
-# workflow's own token is enough. A push made with that token starts no ci run, so the dev render
-# below is the pin commit's gate.
+# Antares dev's newest green ship.yml image is pinned the same way when its range brings no migration
+# and no new ANTARES_ key (T-6330); any other range prints why and stays the deployer's hand pin
+# (pin-dispatch-cron notes @deployer). The repositories are public: the workflow's own token is
+# enough. A push made with that token starts no ci run, so the dev render below is the pin
+# commit's gate.
 on:
-  # platform image.yml's notify job, the moment a commit's images are signed (T-6154; the
+  # platform/Portal image.yml or Antares ship.yml finished green (supervisor pin-dispatch-cron, T-6154, T-6330; the
   # cron stays as the fallback while that dispatch token is missing or a dispatch is lost)
   repository_dispatch:
     types: [image-pushed]
@@ -36,7 +38,7 @@ jobs:
           # A skipped source fails the run after the other source was tried, so tasks/ci files a
           # ci-red: 10-23..10-25 every run skipped both sources and stayed green (T-5686).
           skipped=""
-          for source in platform portal; do
+          for source in platform portal antares; do
             message=$(python3 scripts/pin-images.py "$source")
             git diff --quiet -- components && continue
             just _dev-assemble
