@@ -32,6 +32,19 @@ The ETSI TTF suite never runs here (owner rule). Credentials come only from the 
 caller set from the secrets mount (ANTARES_DIR, NGSILD_TOKEN, the *_PASSWORD of the sweep); the
 record holds no environment.
 
+The hold (T-6318): dev's pins may move while a long stage runs, but never under a stage that
+measures them. Before each stage the run writes $JC_RELEASE_GATE_DIR/.hold.json: the components
+(components/<c>/images.yaml) that stage and every later one measure (MEASURES), so the hold only
+shrinks during a run, and an `until` after which a gate that died stops holding. The supervisor's
+pin-apply cron asks `held <base> <head>` before `just dev-apply-pins` and applies only a range whose
+pins the hold leaves free:
+
+  scripts/standards-gate.py held <base> <head>  # exit 1 naming the held components, 0 when free
+
+The run also refuses to start unless dev's ConfigMap jc-release names a commit with the candidate's
+pins, and reads it again before and after every stage: a stage under which a component it measures
+ran other pins (a hand apply, a race) is red, so a record still judges the candidate's images only.
+
 `check` is the step `just prod-apply` runs after `release.py verify`: it passes only when a green
 record names the same image pins and either the same commit or an ancestor that differs from it
 only in what `release.py cut` writes (releases/, CHANGELOG.md).
@@ -75,6 +88,16 @@ SWEEP = "sweep.yml"
 # by the conformance ServiceAccount (Policy conformance-write); WRITE_ENDPOINT overrides its slug.
 CONFORMANCE_ENDPOINT = ROOT / "components/context-gateway/seed/banskabystrica/endpoint-conformance.yaml"
 KNOWN_RED = ROOT / ".ci/release-gate-known-red.txt"
+# What each stage measures on dev, by components/<c>/images.yaml ("*": every component). The smoke and the
+# Portal sweep cross everything; the standards suites, the roundtrip and the load read the data plane, whose
+# views the Portal reconciler writes (a Portal restart re-reconciles them under a running suite); dcat reads the
+# CKAN the Portal publishes to; antares-sweep runs on GitHub against the pinned broker commit and reads no dev pod.
+DATA_PLANE = ("context-broker", "context-gateway", "portal")
+MEASURES = {"dev-smoke": ("*",), "portal-sweep": ("*",), "dcat": ("ckan", *DATA_PLANE), "antares-sweep": (),
+            **{name: DATA_PLANE for name in (*SUITES, "roundtrip", "load")}}
+HOLD = ".hold.json"
+# Past a stage's timeout the run stops it and moves on within seconds; a hold older than that is a dead gate's.
+HOLD_SLACK = 600
 TASK_ID = re.compile(r"T-\d{4,}")
 
 
@@ -89,16 +112,25 @@ def git(*args: str, cwd: Path = ROOT) -> str:
     return done.stdout.strip()
 
 
+def pins(rev: str, cwd: Path = ROOT) -> dict[str, str]:
+    """component -> the text of its components/<component>/images.yaml at `rev`."""
+    out = {}
+    for path in git("ls-tree", "-r", "--name-only", rev, "components", cwd=cwd).splitlines():
+        found = re.fullmatch(r"components/([^/]+)/images\.yaml", path)
+        if found:
+            out[found.group(1)] = git("show", f"{rev}:{path}", cwd=cwd)
+    return out
+
+
 def images_at(rev: str, cwd: Path = ROOT) -> list[str]:
     """The image pins of `rev`, read by release-notes.py from that commit's components/*/images.yaml."""
     spec = importlib.util.spec_from_file_location("release_notes", ROOT / "scripts/release-notes.py")
     notes = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(notes)
     with tempfile.TemporaryDirectory() as tmp:
-        for path in git("ls-tree", "-r", "--name-only", rev, "components", cwd=cwd).splitlines():
-            if re.fullmatch(r"components/[^/]+/images\.yaml", path):
-                (Path(tmp) / path).parent.mkdir(parents=True, exist_ok=True)
-                (Path(tmp) / path).write_text(git("show", f"{rev}:{path}", cwd=cwd))
+        for component, text in pins(rev, cwd).items():
+            (Path(tmp) / "components" / component).mkdir(parents=True, exist_ok=True)
+            (Path(tmp) / "components" / component / "images.yaml").write_text(text)
         return notes.images(Path(tmp) / "components")
 
 
@@ -140,6 +172,72 @@ def preflight(rev: str, names: list[str], env=os.environ, cwd: Path = ROOT) -> d
     if problems:
         raise Refused("; ".join(problems))
     return extra
+
+
+# ---------------------------------------------------------------------------- the hold on dev
+
+
+def dev_commit() -> str:
+    """The deployment commit dev's last green apply recorded (ConfigMap jc-release, scripts/release.py)."""
+    done = subprocess.run(["kubectl", "-n", "dev", "get", "configmap", "jc-release", "-o",
+                           "jsonpath={.data.commit}"], capture_output=True, text=True, check=False)
+    sha = done.stdout.strip()
+    if done.returncode or not re.fullmatch(r"[0-9a-f]{40}", sha):
+        raise Refused(f"dev records no applied commit (ConfigMap dev/jc-release: {done.stderr.strip() or 'no commit'}): "
+                      "finish `just dev-apply <rev>` first")
+    return sha
+
+
+def moved(cand: str, dev: str, measured, cwd: Path = ROOT) -> list[str]:
+    """The measured components whose pins differ between the candidate and what dev runs."""
+    if dev != cand and subprocess.run(["git", "cat-file", "-e", f"{dev}^{{commit}}"], cwd=cwd,
+                                      capture_output=True, check=False).returncode:
+        git("fetch", "-q", "origin", dev, cwd=cwd)
+    a, b = pins(cand, cwd), pins(dev, cwd)
+    names = set(a) | set(b) if "*" in measured else set(measured)
+    return sorted(c for c in names if a.get(c) != b.get(c))
+
+
+def holding(names) -> list[str]:
+    """What the stages `names` (the running one and every later one) measure, together."""
+    held = {c for n in names for c in MEASURES[n]}
+    return ["*"] if "*" in held else sorted(held)
+
+
+def write_hold(root: Path, sha: str, stage: str, components: list[str], seconds: float) -> None:
+    until = datetime.fromtimestamp(time.time() + seconds + HOLD_SLACK, UTC).strftime("%FT%TZ")
+    root.mkdir(parents=True, exist_ok=True)
+    tmp = root / f"{HOLD}.{os.getpid()}"
+    tmp.write_text(json.dumps({"sha": sha, "stage": stage, "components": components, "until": until,
+                               "pid": os.getpid(), "host": os.uname().nodename}) + "\n")
+    os.replace(tmp, root / HOLD)
+
+
+def release_hold(root: Path, sha: str) -> None:
+    path = root / HOLD
+    try:
+        mine = json.loads(path.read_text()).get("sha") == sha
+    except (OSError, ValueError):
+        return
+    if mine:
+        path.unlink(missing_ok=True)
+
+
+def held(base: str, head: str, root: Path = RECORDS, cwd: Path = ROOT, now: float | None = None) -> list[str]:
+    """The components base..head moves that a running gate holds; [] when the range may be applied."""
+    try:
+        hold = json.loads((root / HOLD).read_text())
+    except FileNotFoundError:
+        return []
+    except (OSError, ValueError) as e:
+        raise Refused(f"unreadable hold {root / HOLD}: {e}") from e
+    until = datetime.strptime(str(hold.get("until", "")), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=UTC).timestamp()
+    if (time.time() if now is None else now) >= until:
+        return []
+    components = hold.get("components")
+    if not isinstance(components, list):
+        raise Refused(f"hold {root / HOLD} names no component list")
+    return moved(base, head, components, cwd)
 
 
 # ---------------------------------------------------------------------------- the Antares sweep
@@ -458,6 +556,11 @@ def run(args) -> int:
     known = known_red()
     plan = stages(args, out)
     extra = preflight(args.rev, [s[0] for s in plan])
+    # the candidate is what dev runs, or the record would name images no stage measured
+    other = moved(cand["sha"], dev_commit(), ("*",))
+    if other:
+        raise Refused(f"dev runs other pins than {cand['sha'][:12]} for {', '.join(other)}: "
+                      f"`just dev-apply {cand['sha'][:12]}` first")
     if any(s[0] == "antares-sweep" for s in plan):
         # started now so it runs beside the other stages; the stage itself waits for it
         try:
@@ -465,16 +568,37 @@ def run(args) -> int:
         except Refused as e:
             print(f"release gate: antares-sweep not started: {e}", flush=True)
     results: list[dict] = []
-    for name, argv, env, cwd in plan:
-        print(f"release gate: {name} ...", flush=True)
-        stage_env = {**env, **{k: v for k, v in extra.items() if name in NEEDS_ANTARES}}
-        timeout = args.sweep_timeout if name == "portal-sweep" else args.stage_timeout
-        results.append(run_stage(name, argv, stage_env, cwd, out, known, timeout))
-        print(f"release gate: {name} {results[-1]['verdict']} {'; '.join(results[-1]['problems'])}", flush=True)
-        rec = record_of(cand, results, known, root, started, args)
-        folder = write(rec, root)
+    try:
+        for i, (name, argv, env, cwd) in enumerate(plan):
+            print(f"release gate: {name} ...", flush=True)
+            stage_env = {**env, **{k: v for k, v in extra.items() if name in NEEDS_ANTARES}}
+            timeout = args.sweep_timeout if name == "portal-sweep" else args.stage_timeout
+            write_hold(root, cand["sha"], name, holding(s[0] for s in plan[i:]), timeout)
+            before = dev_reading(cand["sha"], name)
+            result = run_stage(name, argv, stage_env, cwd, out, known, timeout)
+            ran_on = [before, dev_reading(cand["sha"], name)]
+            result["dev"] = [r[0] for r in ran_on]
+            result["problems"] += [p for _, p in ran_on if p and p not in result["problems"]]
+            if result["problems"]:
+                result["verdict"] = result["cases"][name] = "fail"
+            results.append(result)
+            print(f"release gate: {name} {result['verdict']} {'; '.join(result['problems'])}", flush=True)
+            rec = record_of(cand, results, known, root, started, args)
+            folder = write(rec, root)
+    finally:
+        release_hold(root, cand["sha"])
     print(f"release gate {cand['sha'][:12]}: {'GREEN' if rec['green'] else 'RED'}; report {folder / 'report.md'}")
     return 0 if rec["green"] else 1
+
+
+def dev_reading(sha: str, stage: str) -> tuple[str | None, str]:
+    """(dev's commit, a problem when it ran other pins of what `stage` measures, or was unreadable)."""
+    try:
+        dev = dev_commit()
+        other = moved(sha, dev, MEASURES[stage])
+    except Refused as e:
+        return None, str(e)
+    return dev, "" if not other else f"dev ran other pins of {', '.join(other)} (deployment {dev[:12]}) under this stage"
 
 
 def record_of(cand: dict, results: list[dict], known: list, root: Path, started: str, args) -> dict:
@@ -671,6 +795,10 @@ def main(argv: list[str] | None = None) -> int:
     # The sweep runs one worker over ~154 spec files: the first record (b629a881) ran 20 of them, critic-*
     # left out, in 1,874 s (94 s each), so the whole sweep needs ~14,400 s; 18,000 leaves 25 %.
     r.add_argument("--sweep-timeout", type=float, default=18000, help="seconds for the portal-sweep stage")
+    h = sub.add_parser("held", help="exit 1 when a running gate holds a component base..head moves")
+    h.add_argument("base")
+    h.add_argument("head")
+    h.add_argument("--records", type=Path, default=RECORDS)
     w = sub.add_parser("antares-sweep", help="the stage: a green Antares sweep of the pinned broker commit")
     w.add_argument("rev", nargs="?", default="HEAD")
     c = sub.add_parser("check")
@@ -680,6 +808,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "run":
             return run(args)
+        if args.command == "held":
+            busy = held(args.base, args.head, args.records)
+            hold = json.loads((args.records / HOLD).read_text()) if busy else {}
+            print(f"held by the release gate of {hold.get('sha', '')[:12]} ({hold.get('stage')}, until "
+                  f"{hold.get('until')}): {', '.join(busy)}" if busy else "free")
+            return 1 if busy else 0
         if args.command == "antares-sweep":
             return antares_sweep(args.rev, wait=True)
         rec = check(args.rev, args.records)

@@ -751,7 +751,9 @@ dev-smoke-component component:
 # environment (ANTARES_DIR, NGSILD_TOKEN, GH_TOKEN,
 # WRITE_ENDPOINT, the sweep's *_PASSWORD from the secrets mount; ANTARES_DIR at the Antares commit the
 # candidate's broker pins); it refuses in seconds when one is missing, and each stage stops after an hour.
-# See scripts/standards-gate.py.
+# The run holds dev only for the components its remaining stages measure (.hold.json, T-6318): the supervisor's
+# pin-apply cron asks `standards-gate.py held` and lands other pins meanwhile; a stage under which a pin it
+# measures moved anyway is red. See scripts/standards-gate.py.
 # Run the release gate on dev: its green record is what prod-apply asks for
 [group('dev cluster')]
 release-gate rev='HEAD' rate='8' duration='5m':

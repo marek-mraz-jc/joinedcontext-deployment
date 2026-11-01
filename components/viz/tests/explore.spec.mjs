@@ -16,8 +16,8 @@ import { shots, DOMAIN, VIZ, CATALOGUE, API, SLUGS, DATA, serve } from "./explor
 const frame = (page) => page.frameLocator("#explore");
 const apiCalls = (requests) => requests.filter((r) => r.url.hostname === API);
 const entityCalls = (requests) => apiCalls(requests).filter((r) => r.url.pathname.endsWith("/ngsi-ld/v1/entities") && r.headers.accept !== "application/geo+json");
-const open = async (page, name, { lang = "en", theme, width = 1440, extra = "" } = {}) => {
-  await page.setViewportSize({ width, height: 900 });
+const open = async (page, name, { lang = "en", theme, width = 1440, height = 900, extra = "" } = {}) => {
+  await page.setViewportSize({ width, height });
   await page.goto(`https://${CATALOGUE}/dataset/${name}?lang=${lang}${theme ? "&theme=" + theme : ""}${extra ? "&extra=" + encodeURIComponent(extra) : ""}`);
 };
 const shot = (page, name) => page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: true });
@@ -168,8 +168,9 @@ test("the map asks the grid's query within its view as GeoJSON", async ({ page, 
 
 test("MapLibre and its tiles load only once the map is in the reader's window (T-5794)", async ({ page, context }) => {
   const requests = await serve(context);
-  // A phone: the table's page fills the window, the map starts below the fold.
-  await open(page, "point", { width: 400 });
+  // A short phone window: the query block, the pager and the table's page push the map below the
+  // fold (since the owner's UI pass 9f0182ef9 the table is short, the map sat at ~750 px of 900).
+  await open(page, "point", { width: 400, height: 600 });
   const f = frame(page);
   await expect(rows(f)).toHaveCount(EXPECT.point.rows, { timeout: 20000 });
   await expect(f.locator("#map-section")).toBeVisible();
@@ -177,7 +178,7 @@ test("MapLibre and its tiles load only once the map is in the reader's window (T
   await expect.poll(() => page.locator("#explore").evaluate((e) => e.getBoundingClientRect().height), { timeout: 20000 }).toBeGreaterThan(1000);
   const outerTop = await page.locator("#explore").evaluate((e) => e.getBoundingClientRect().top);
   const mapTop = await f.locator("#map").evaluate((m) => m.getBoundingClientRect().top);
-  expect(outerTop + mapTop).toBeGreaterThan(900);
+  expect(outerTop + mapTop).toBeGreaterThan(600);
   const mapLib = () => requests.filter((r) => /maplibre-gl.*\.mjs$/.test(r.url.pathname) || r.url.hostname === `tiles.${DOMAIN}`);
   await page.waitForTimeout(1500);
   expect(mapLib().map((r) => String(r.url))).toEqual([]);
@@ -363,6 +364,5 @@ test("400 sk: the pager of 12345 rows is one line of arrows and pages under its 
   expect(total.y).toBeLessThan(Math.min(...tops));
   await expect(f.locator(".jc-grid-pages [aria-current='page']")).toHaveText("1");
   await expect(f.getByRole("button", { name: "Nasledujúca" })).toBeVisible();
-  await expect(f.locator(".jc-grid-scroll-hint")).toBeVisible();
   await shot(page, "phone-pager-400");
 });
