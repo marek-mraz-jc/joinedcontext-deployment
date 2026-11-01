@@ -67,4 +67,4 @@ agent-runner:
     # (T-2362, T-2363, T-2364). On top of 462a1ba.
     # platform 6c2e439: an Endpoint's publish.ckan carries the licence the organization chose, and
     # jcctl publishes in the space's language under the instance's title (T-2465). On top of 12b32e8.
-    digest: 'sha256:181c9db4b518770698b0428c72b82ff66aee0d5f652836f6b33208d64d61fabc'
+    digest: 'sha256:b35dacf47c0138ce87aeedfd05fca8d8681f53ec6b6afeaf3c16467f35194582'
