@@ -133,14 +133,16 @@ test("Data API lists the view's addresses, CSV with its query and order", async 
 });
 
 for (const width of [1440, 400]) {
-  test(`${width}: Columns names each column's type and description; the full window opens and leaves by Escape`, async ({ page, context }) => {
+  test(`${width}: Hide fields names each column; the full window opens and leaves by Escape`, async ({ page, context }) => {
     await serve(context);
     await open(page, "point", { width });
     const f = frame(page);
     await expect(f.getByRole("grid")).toBeVisible({ timeout: 20000 });
-    await f.getByText("Columns", { exact: true }).first().click();
-    await expect(f.getByText("The availableBikeNumber of the BikeHireDockingStation")).toBeVisible();
+    // Hide fields names each column by its title (T-6303: the schema descriptions left with the Columns list).
+    await f.locator("summary").filter({ hasText: /^Hide fields/ }).click();
+    await expect(f.getByRole("checkbox", { name: /available ?bike ?number/i })).toBeInViewport();
     await shot(page, `fields-${width}`);
+    await page.keyboard.press("Escape");
     await f.getByRole("button", { name: "Full window" }).click();
     await expect(f.getByRole("dialog", { name: /endpoint/i })).toBeVisible();
     await shot(page, `full-${width}`);
@@ -168,17 +170,17 @@ test("the map asks the grid's query within its view as GeoJSON", async ({ page, 
 
 test("MapLibre and its tiles load only once the map is in the reader's window (T-5794)", async ({ page, context }) => {
   const requests = await serve(context);
-  // A short phone window: the query block, the pager and the table's page push the map below the
-  // fold (since the owner's UI pass 9f0182ef9 the table is short, the map sat at ~750 px of 900).
-  await open(page, "point", { width: 400, height: 600 });
+  // A short phone window: the toolbar, the pager and the table's page push the map below the fold
+  // (the owner's UI pass 9f0182ef9 made the table short; T-6303 folded the query block: ~565 px).
+  await open(page, "point", { width: 400, height: 500 });
   const f = frame(page);
   await expect(rows(f)).toHaveCount(EXPECT.point.rows, { timeout: 20000 });
   await expect(f.locator("#map-section")).toBeVisible();
   // The frame takes its content's height from the frame's message.
-  await expect.poll(() => page.locator("#explore").evaluate((e) => e.getBoundingClientRect().height), { timeout: 20000 }).toBeGreaterThan(1000);
+  await expect.poll(() => page.locator("#explore").evaluate((e) => e.getBoundingClientRect().height), { timeout: 20000 }).toBeGreaterThan(500);
   const outerTop = await page.locator("#explore").evaluate((e) => e.getBoundingClientRect().top);
   const mapTop = await f.locator("#map").evaluate((m) => m.getBoundingClientRect().top);
-  expect(outerTop + mapTop).toBeGreaterThan(600);
+  expect(outerTop + mapTop).toBeGreaterThan(500);
   const mapLib = () => requests.filter((r) => /maplibre-gl.*\.mjs$/.test(r.url.pathname) || r.url.hostname === `tiles.${DOMAIN}`);
   await page.waitForTimeout(1500);
   expect(mapLib().map((r) => String(r.url))).toEqual([]);
@@ -319,12 +321,12 @@ test("a point opens the same card; the fold holds the id and the API links; the 
   await expect(f.locator("#detail")).toBeHidden();
 });
 
-// T-5415: the owner's phone. At 400 px nothing scrolls the page sideways, the two selects and the
-// Data API / Embed buttons have one width each, the type reads in Slovak from the model's label,
-// the query hint quotes this type's own attribute, the filter row folds under one button and the
+// T-5415: the owner's phone. At 400 px nothing scrolls the page sideways, the Data API / Embed
+// buttons have one width, the type reads in Slovak from the model's label, the query hint quotes
+// this type's own attribute, the Filter panel opens in the reader's window (T-6303, T-6319) and the
 // pager is one line under its count.
 for (const theme of ["light", "dark"]) {
-  test(`400 ${theme} sk: one width per control, Slovak type, own query example, one-line pager (T-5415)`, async ({ page, context }) => {
+  test(`400 ${theme} sk: one width per button, Slovak type, own query example, the Filter panel in view, one-line pager (T-5415)`, async ({ page, context }) => {
     await serve(context);
     await open(page, "stations", { lang: "sk", theme, width: 400 });
     const f = frame(page);
@@ -332,20 +334,20 @@ for (const theme of ["light", "dark"]) {
     const overflow = (doc) => doc.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(await overflow(page)).toBeLessThanOrEqual(0);
     expect(await overflow(f.locator("html"))).toBeLessThanOrEqual(0);
-    const selects = f.locator("select[id^='endpoint-data-']");
-    await expect(selects).toHaveCount(2);
-    const [a, b] = [await selects.nth(0).boundingBox(), await selects.nth(1).boundingBox()];
-    expect(Math.abs(a.width - b.width)).toBeLessThanOrEqual(1);
-    expect(Math.abs(a.x - b.x)).toBeLessThanOrEqual(1);
+    const select = f.locator("select[id^='endpoint-data-']");
+    await expect(select).toHaveCount(1);
     const buttons = f.locator(".page-head .page-button:visible");
     const widths = await buttons.evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().width)));
     expect(new Set(widths).size).toBe(1);
-    await expect(selects.nth(0).locator("option:checked")).toHaveText("Stanica");
+    await expect(select.locator("option:checked")).toHaveText("Stanica");
+    // The query and its hint fold under the Query button (T-6303).
+    await f.getByRole("button", { name: "Dopyt", exact: true }).click();
     await expect(f.locator(".jc-grid-query-hint code")).toHaveText('name=="Stanica 1"');
     await expect(f.locator(".jc-grid-query-value")).toHaveText("všetky záznamy");
-    await expect(f.locator(".jc-grid-filter-row")).toBeHidden();
-    await f.getByRole("button", { name: "Filtre" }).click();
-    await expect(f.locator(".jc-grid-filter-row")).toBeVisible();
+    // The conditions open from the Filter button, under the toolbar and in the reader's window.
+    await f.locator("summary").filter({ hasText: /^Filter/ }).click();
+    await expect(f.getByRole("button", { name: "Pridať podmienku", exact: true })).toBeInViewport();
+    expect(await overflow(f.locator("html"))).toBeLessThanOrEqual(0);
     // The dataset page shrinks the assistant's corner to its icon while the frame is in view (jc-viz.js).
     await expect(page.locator("body")).toHaveClass(/jc-corner-compact/);
     await shot(page, `phone-stations-400-${theme}`);
