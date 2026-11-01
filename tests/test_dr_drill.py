@@ -577,3 +577,21 @@ def test_an_excluded_database_is_neither_counted_nor_dumped(dev, smartcity, tmp_
     assert (tmp_path / "dumpall.args").read_text().split() == ["--clean", "--if-exists", "--exclude-database=antares"]
     counts, = backup.glob("*.counts")
     assert counts.read_text() == "portal.public.t|3\n"
+
+
+@pytest.mark.parametrize("env", ["dev", "smartcity"])
+def test_the_drill_and_the_dump_share_one_selinux_level(env, request):
+    """T-6298: on an SELinux node each pod relabels the local-path volume to its own random MCS
+    categories, so the drill read "Permission denied" on the dump the backup pod had written
+    (prod 2026-11-01). Both pods carry one fixed level, still container_t and unprivileged."""
+    docs = request.getfixturevalue(env)
+    drill = pod_of(docs)
+    dump = one(docs, "CronJob", "postgres-cluster-local-backup")["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    for pod in (drill, dump):
+        assert pod["securityContext"]["seLinuxOptions"] == {"level": "s0:c217,c602"}
+        assert pod["securityContext"]["runAsNonRoot"] is True
+        for c in pod["containers"] + pod.get("initContainers", []):
+            assert "seLinuxOptions" not in c.get("securityContext", {}), "no spc_t or other type override"
+            assert not c["securityContext"].get("privileged")
+    backup = next(m for m in drill["initContainers"][0]["volumeMounts"] if m["mountPath"] == "/backup")
+    assert backup["readOnly"] is True
