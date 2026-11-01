@@ -250,8 +250,10 @@ context-broker:
     # T-6312 attribute write judgement bound only where views reads it (each feature alone builds again);
     # T-6277 Q count test warm-up). No migration, no new runtime key. Rollback: dev-124.
     # Signed by ship.yml on dev at 84e5915 (run 41288339133).
-    tag: 'dev-127'
-    digest: 'sha256:56a50fb2aac06e9163940784e9188f6a2f918adb31be6d487a238d05fcf6f149'
+    # Antares dev 05a4a8a (dev-128, over 84e5915: T-6327). No migration, no new runtime key
+    # (pinned by pin-images, T-6330). Rollback: dev-127. Signed by ship.yml on dev at 05a4a8a (run 41299390776).
+    tag: 'dev-128'
+    digest: 'sha256:59f1c4e57baf93d804a036bb143eb0589e05039412b66dbf476f1091e7addb82'
     # The Antares dev commit this digest is the ship.yml image of: scripts/pin-images.py antares judges the
     # range from here and moves it with the digest (T-6330).
-    commit: '84e59157cefb50ba583d7a3eeb0d75f420d0a514'
+    commit: '05a4a8ab48201e7d8152d35afbfd37a8fec61d05'
