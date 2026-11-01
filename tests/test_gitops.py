@@ -539,7 +539,7 @@ def test_the_pin_bot_checks_the_docs_pin_before_it_commits():
 
 
 def _pin_step(tmp_path, docs_ok: bool):
-    """pin-images.yml's pin step with every tool stubbed: both sources change, the render passes."""
+    """pin-images.yml's pin step with every tool stubbed: every source changes, the render passes."""
     workflow = yaml.safe_load((ROOT / ".github/workflows/pin-images.yml").read_text())
     step = next(s for s in workflow["jobs"]["pin"]["steps"] if s.get("name") == "pin, render, check the docs, commit")
     bin_dir, scripts = tmp_path / "bin", tmp_path / "scripts"
@@ -563,20 +563,22 @@ def _pin_step(tmp_path, docs_ok: bool):
     return result, log.read_text(), summary.read_text() if summary.exists() else ""
 
 
-def test_a_pin_skipped_on_the_docs_check_fails_the_run_after_both_sources(tmp_path):
+def test_a_pin_skipped_on_the_docs_check_fails_the_run_after_every_source(tmp_path):
     """T-5686: 10-23..10-25 every run skipped both sources on check-docs-pin.sh and ended green."""
     result, log, summary = _pin_step(tmp_path, docs_ok=False)
     assert result.returncode == 1, result.stdout
-    assert "not pinned: platform portal" in result.stdout
+    assert "not pinned: platform portal antares" in result.stdout
     assert "git commit" not in log
     assert "platform: pin platform: the pinned docs do not hold" in summary
     assert "portal: pin portal: the pinned docs do not hold" in summary
+    assert "antares: pin antares: the pinned docs do not hold" in summary
 
 
-def test_a_pin_step_that_pins_both_sources_passes(tmp_path):
+def test_a_pin_step_that_pins_every_source_passes(tmp_path):
+    # platform, portal and (T-6330) Antares
     result, log, summary = _pin_step(tmp_path, docs_ok=True)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert log.count("git push") == 2 and summary == ""
+    assert log.count("git push") == 3 and summary == ""
 
 
 def _portal_ui_pin(tmp_path, published, compare, newer: dict | None = None, binary=False):
