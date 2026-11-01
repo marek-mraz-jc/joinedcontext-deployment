@@ -258,8 +258,10 @@ context-broker:
     # new runtime key ANTARES_RETENTION_AUDIT with default P2Y, so the deployment sets nothing; the broker builds an
     # observed_at index CONCURRENTLY at start and gives up after 10 s. Rollback: dev-129. Hand pin (new key).
     # Signed by ship.yml on dev at de08327 (run 41310288042).
-    tag: 'dev-130'
-    digest: 'sha256:caf6476c852f95f68aadb76d4a272879fa6bd7b96001e04ee19f52becaf2c57c'
+    # Antares dev ef22d76 (dev-131, over de08327: T-6338). No migration, no new runtime key
+    # (pinned by pin-images, T-6330). Rollback: dev-130. Signed by ship.yml on dev at ef22d76 (run 41312558844).
+    tag: 'dev-131'
+    digest: 'sha256:25d7c3ad441d5ac94244124d33e4e5d74c0f89a16652d0193f72ff7c84851407'
     # The Antares dev commit this digest is the ship.yml image of: scripts/pin-images.py antares judges the
     # range from here and moves it with the digest (T-6330).
-    commit: 'de0832740e1137c498438f24e4460b67fb78bc44'
+    commit: 'ef22d763699beebe4f5f3c6e7ebdf64218746f78'
