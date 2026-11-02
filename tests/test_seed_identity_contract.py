@@ -364,10 +364,11 @@ def test_the_heartbeat_check_reads_durations_as_the_portal_does():
 
 PEOPLE = yaml.safe_load((SEED.parent.parent / "keycloak/demo-users.yaml").read_text())
 # The demo people `platform-readers` made viewer of `hel` before T-6415: every account in the
-# default group, less the two members T-6408 added (they carry an Organization subgroup).
+# default group, less the two members T-6408 added (they carry an Organization subgroup) and the
+# people of another Organization's root group, whom a Helsinki binding may not name (PF-123).
+OTHER_ORGANIZATIONS = {"zilina", "barcelona", "bratislava"}
 PF61_READERS = {
-    "demo.steward", "demo.viewer", "demo.approver", "demo.editor", "demo.zilina",
-    "demo.barcelona", "demo.bratislava", "demo.janitor", "demo.probe",
+    "demo.steward", "demo.viewer", "demo.approver", "demo.editor", "demo.janitor", "demo.probe",
 }
 
 
@@ -387,12 +388,14 @@ def test_no_binding_makes_the_default_group_a_project_person():
 
 
 def test_the_people_who_read_hel_through_pf61_are_named_viewers():
-    """No demo person loses a project: each one who read `hel` through `platform-readers` is a
-    subject of `viewers` by their Keycloak id, and nobody else is (no project added)."""
+    """Each Helsinki person who read `hel` through `platform-readers` is a subject of `viewers` by
+    their Keycloak id, and nobody else is (no project added). Another Organization's people lose
+    `hel`: PF-123 keeps a binding inside its Organization."""
     readers = {
         name for name, user in PEOPLE.items()
         if str(user.get("platformReaders")) != "False"
         and not any("/" in group for group in user["groups"])
+        and not OTHER_ORGANIZATIONS & set(user["groups"])
     }
     assert readers == PF61_READERS, sorted(readers ^ PF61_READERS)
     [viewers] = [doc["spec"] for _path, doc in manifests("RoleBinding") if doc["metadata"]["name"] == "viewers"]

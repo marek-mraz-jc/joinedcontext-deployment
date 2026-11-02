@@ -2,8 +2,9 @@
 # `platform-readers`, the realm's default group, was viewer here (PF-61), so every account
 # read every project of `hel`. A person created in the realm is now a member and reaches no
 # project until someone binds a role; these are the demo people who read through the old
-# binding, by their fixed Keycloak ids (PF-126), so none of them loses a project. The forge
-# keeps mapping `platform-readers` onto its readers team (PF-79).
+# binding, by their fixed Keycloak ids (PF-126). The administrators of zilina, barcelona and
+# bratislava read Helsinki no more: a binding never names another Organization's people (PF-123).
+# The forge keeps mapping `platform-readers` onto its readers team (PF-79).
 apiVersion: joinedcontext.com/v1alpha1
 kind: RoleBinding
 metadata:
@@ -15,9 +16,6 @@ spec:
     - user: de300000-0000-4000-8000-000000000002 # demo.viewer
     - user: de300000-0000-4000-8000-000000000003 # demo.approver
     - user: de300000-0000-4000-8000-000000000004 # demo.editor
-    - user: de300000-0000-4000-8000-000000000005 # demo.zilina
-    - user: de300000-0000-4000-8000-000000000006 # demo.barcelona
-    - user: de300000-0000-4000-8000-000000000007 # demo.bratislava
     - user: de300000-0000-4000-8000-000000000008 # demo.janitor
     - user: de300000-0000-4000-8000-000000000009 # demo.probe
   role: viewer
