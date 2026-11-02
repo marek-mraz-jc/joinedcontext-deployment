@@ -86,6 +86,16 @@ context-gateway:
       ports:
         - protocol: TCP
           port: 8080
+    # Each MCP tool call, as an OTLP log record to the collector for the projects' Activity
+    # (T-5322); the other half is the collector's ingress rule naming this pod.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: observability-collector
+          componentNamespace: observability
+      ports:
+        - protocol: TCP
+          port: 4318
     # The git-sync sidecar clones the configuration repository out of the forge (T-0278).
     - to:
         - podSelector:

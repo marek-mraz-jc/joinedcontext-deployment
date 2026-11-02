@@ -40,9 +40,11 @@ NODE_REQUEST_BUDGET_MIB = 12.5 * 1024
 # render's 12232Mi on 2026-10-28.
 NODE_ALLOCATABLE_MIB = 14136272 / 1024
 KIT_REQUESTS_MIB = 990
-# (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi.
+# (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi. dev's limit moved
+# on 2026-11-02 for observability-collector (T-6431): 512Mi plus its proxy's 250Mi, the price of
+# gateway MCP calls in a project's Activity; it books 128Mi plus its proxy's 10Mi of requests.
 CEILINGS = {
-    "dev": (NODE_REQUEST_BUDGET_MIB, 44544),
+    "dev": (NODE_REQUEST_BUDGET_MIB, 45312),
     "smartcity": (NODE_REQUEST_BUDGET_MIB, 43008),
     "production": (37120, 67584),
 }
