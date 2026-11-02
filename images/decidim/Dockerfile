@@ -68,6 +68,10 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
 COPY bootstrap.rb db/joinedcontext_bootstrap.rb
 COPY check-zip.rb db/joinedcontext_check_zip.rb
+COPY site.rb db/joinedcontext_site.rb
+COPY site db/joinedcontext_site
+COPY locale-sk.yml config/locales/joinedcontext.sk.yml
+COPY footer-legal.html.erb app/views/layouts/decidim/footer/_main_legal.html.erb
 
 FROM ruby:3.4.12-slim-trixie@sha256:caf086d19bf11fabd2af8bf33cb84007acc9655f31ea2cd129e754d05f374c27
 

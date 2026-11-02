@@ -1,0 +1,16 @@
+# Decidim 0.32.2's Slovak strings that read wrong on the site (T-6453).
+sk:
+  decidim:
+    participatory_spaces:
+      highlighted_meetings:
+        # Decidim's sk text carries %{count}, which the view never passes.
+        see_all: Zobraziť všetky stretnutia
+    pages:
+      home:
+        footer_sub_hero:
+          # Decidim's sk text has no space after "na".
+          footer_sub_hero_headline: Vitajte na platforme %{organization}.
+  time:
+    # Slovak clocks run 24 hours; Decidim's formats print %p after %H.
+    am: ""
+    pm: ""
