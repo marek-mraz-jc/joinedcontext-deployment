@@ -94,6 +94,8 @@ CHOSEN = {
     ("barcelona/barcelona", "EVChargingStation"): "P30D",
     # Bratislava's pedestrian counters keep a month of days, as its cyclist counters (T-5273).
     ("bratislava/bratislava", "CrowdFlowObserved"): "P30D",
+    # HSL's scheduled departures keep two years of days, the series a daily indicator reads (T-6467).
+    ("helsinki/helsinki", "GtfsDailyDepartures"): "P730D",
     # Barcelona's forecast days keep a month of Meteocat's issues (T-5413).
     ("barcelona/barcelona", "WeatherForecast"): "P30D",
 }

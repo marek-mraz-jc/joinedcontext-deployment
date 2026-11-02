@@ -32,6 +32,7 @@ spec:
         # HSL's GTFS static feed (T-3890).
         - type: GtfsStation
         - type: GtfsAgency
+        - type: GtfsDailyDepartures
         - type: GtfsRoute
         - type: GtfsShape
         # Fintraffic LIIPI's park and ride sites of the HSL area (T-3894).

@@ -17,6 +17,7 @@ SEED = Path(__file__).resolve().parent.parent / "components/context-gateway/seed
 # PublicTransportRoute (TransitRoute before T-4329) carries no Relationship: it is HSL's stops of
 # one line, keyed by the GtfsRoute's id.
 # GtfsShape has no entity on dev yet; GTFS draws a shape for the trips of one route.
+# GtfsDailyDepartures carries no Relationship either: it counts the GtfsRoute lines of one mode.
 REFERENCES = {
     "WasteContainer": {"WasteContainerIsle"},
     "WasteContainerIsle": {"AdministrativeArea"},
@@ -24,6 +25,7 @@ REFERENCES = {
     "GtfsStop": {"GtfsStation"},
     "PublicTransportRoute": {"GtfsRoute"},
     "GtfsShape": {"GtfsRoute"},
+    "GtfsDailyDepartures": {"GtfsRoute"},
     "Vehicle": {"GtfsStop"},
     "Alert": {"GtfsStop", "GtfsRoute"},
     "OffStreetParking": {"GtfsStation"},

@@ -41,6 +41,7 @@ spec:
       # not one per run (T-4844, DM-108, DM-109; scripts/temporal-audit.py).
       attributes:
         dateObserved: { record: onChange, heartbeat: P7D }
+        districtCode: { record: onChange, heartbeat: P7D }
         location: { record: onChange, heartbeat: P7D }
         name: { record: onChange, heartbeat: P7D }
         source: { record: onChange, heartbeat: P7D }
@@ -77,6 +78,14 @@ spec:
       history: 'off'
     - entityType: GtfsRoute
       history: 'off'
+    # A value a day per mode: the history is the series a daily indicator or chart reads (T-6467).
+    - entityType: GtfsDailyDepartures
+      history: P730D
+      # Written on every run without an observedAt: one row per change and one a week, as above.
+      attributes:
+        dataProvider: { record: onChange, heartbeat: P7D }
+        source: { record: onChange, heartbeat: P7D }
+        transportMode: { record: onChange, heartbeat: P7D }
     - entityType: GtfsShape
       history: 'off'
     - entityType: GtfsStation
