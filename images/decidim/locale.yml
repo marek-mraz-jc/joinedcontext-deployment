@@ -1,12 +1,22 @@
 # Decidim 0.32.2's strings that read wrong on the site (T-6453).
 sk:
+  activemodel:
+    attributes:
+      # Decidim's sk text says Štát, a country, for a proposal's state (T-6449).
+      collaborative_draft:
+        state: Stav
+      proposal:
+        state: Stav
   decidim:
     proposals:
       models:
         proposal:
           fields:
             official_proposal: Oficiálny návrh
+            state: Stav
       proposals:
+        filters:
+          state: Stav
         orders:
           label: "Zoradiť návrhy podľa:"
     participatory_spaces:
