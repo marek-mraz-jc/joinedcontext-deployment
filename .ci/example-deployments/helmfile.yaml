@@ -17,6 +17,9 @@ environments:
   # The production instance smartcity.joinedcontext.com (T-4678).
   smartcity:
     values: []
+  # The stage instance stage.joinedcontext.com (T-6443).
+  stage:
+    values: []
   recovery-test:
     values: []
   # The render surface of the optional add-ons; see environments/addons/global.yaml.gotmpl.
@@ -39,6 +42,7 @@ helmfiles:
           - smoke-test
           - dev
           - smartcity
+          - stage
           - recovery-test
           - addons
           - minimal

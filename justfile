@@ -1019,6 +1019,46 @@ prod-smoke:
 	just _smoke-sweeps "{{ prod_domain }}" smartcity || rc=1
 	exit "$rc"
 
+# ---------------------------------------------------------------------------
+# The stage instance (T-6443): its own cluster with its own secrets, a copy of smartcity under
+# stage.joinedcontext.com. Run with KUBECONFIG set to the stage kubeconfig; the guard refuses others.
+# ---------------------------------------------------------------------------
+
+stage_domain := 'stage.joinedcontext.com'
+stage_node_ip := '2.31.157.248'
+
+# Refuse to touch anything but the stage cluster
+[group('stage cluster')]
+_stage-guard:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	ip="{{ stage_node_ip }}"
+	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
+	case "$server" in
+		"https://${ip}:"*|"https://${ip}") ;;
+		*) echo "refusing: current kube context points at '${server:-<none>}', not the stage cluster ($ip)" >&2; exit 1 ;;
+	esac
+
+# Apply the stage environment to the stage cluster and wait for every rollout
+[group('stage cluster')]
+stage-apply:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _stage-guard
+	just _dev-assemble
+	./scripts/verify-pinned-images.py stage
+	helmfile -f deployment/helmfile.yaml -e stage sync --concurrency {{helmfile_concurrency}}
+	./scripts/wait-rollouts.sh stage
+	./scripts/release.py record stage stage
+
+# Verify the stage instance (scripts/smoke.sh and the shared checks; no demo login exists there)
+[group('stage cluster')]
+stage-smoke:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just _stage-guard
+	JC_SMOKE_NO_TEST_WRITER=1 just _smoke "{{ stage_domain }}" stage
+
 # Moves the `dev-green` branch forward to that commit (never back, never forced).
 # Record a commit as green on dev: run after a green `just dev-apply` + `just dev-smoke` of it
 [group('prod cluster')]

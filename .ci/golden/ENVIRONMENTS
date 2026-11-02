@@ -3,6 +3,7 @@ production
 staging
 dev
 smartcity
+stage
 recovery-test
 addons
 minimal

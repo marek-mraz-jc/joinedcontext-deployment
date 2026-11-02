@@ -1,0 +1,7 @@
+---
+context-gateway:
+  gateway:
+    rawValues:
+      env:
+        # As smartcity (T-5781): stage carries prod's seeds and their catalogue reads.
+        JC_GATEWAY_MAX_IN_FLIGHT_PER_CALLER: "96"
