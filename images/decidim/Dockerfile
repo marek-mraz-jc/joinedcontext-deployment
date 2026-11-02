@@ -65,7 +65,7 @@ FROM ruby:3.4.12-slim-trixie@sha256:caf086d19bf11fabd2af8bf33cb84007acc9655f31ea
 # Debian's fixes for the base's packages, so the scan sees today's archive (T-5372: never from a
 # cached layer, the workflow builds with no cache for this step's sake).
 RUN apt-get update \
-    && apt-get -y --no-install-recommends upgrade \
+    && apt-get upgrade -y --no-install-recommends \
     && apt-get install -y --no-install-recommends libpq5 libicu76 libvips42t64 \
     && rm -rf /var/lib/apt/lists/*
 
