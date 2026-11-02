@@ -117,6 +117,8 @@ seed:
 {{- /* The ConfigMaps values/seed renders, named by the same layout (values/seed-layout.tpl, T-4431). */}}
 {{- $sources := list "context-gateway/seed/helsinki" "context-gateway/seed/banskabystrica" "context-gateway/seed/bbsk" "context-gateway/seed/praha" "context-gateway/seed/zilina" "context-gateway/seed/barcelona" "context-gateway/seed/bratislava" "context-gateway/seed/slovensko" }}
 {{- if has "agent-runner" .Values.components }}{{ $sources = append $sources "agent-runner/seed" }}{{ end }}
+{{- /* The platform's own Decidim, its harvester and its assistant (T-6449). */}}
+{{- if has "decidim" .Values.components }}{{ $sources = append $sources "decidim/seed" }}{{ end }}
 {{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
 {{- range $path, $_ := $assistants }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ end }}

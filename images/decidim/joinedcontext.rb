@@ -10,6 +10,15 @@ Rails.application.config.filter_parameters += [:name, :nickname, :personal_url, 
 # redirect, and the edge sends X-Forwarded-Proto: https.
 Rails.application.config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
+# The assistant's launcher and its chat frame come from the assistant host and nowhere else
+# (T-6449, layouts/decidim/_head_extra); unset ASSISTANT_ORIGIN leaves the policy stock.
+if ENV["ASSISTANT_ORIGIN"].present?
+  Decidim.content_security_policies_extra = {
+    "script-src" => [ENV.fetch("ASSISTANT_ORIGIN")],
+    "frame-src" => [ENV.fetch("ASSISTANT_ORIGIN")]
+  }
+end
+
 # The realm as the one sign-in provider. Unset OIDC_ISSUER leaves Decidim's own providers alone,
 # which is how the bootstrap Job runs.
 if ENV["OIDC_ISSUER"].present?

@@ -17,6 +17,11 @@ meetings, debates and surveys. Read anonymously, no login, no personal data.
 Add an instance: one row in `instances.csv`, then `python3 seeds/decidim/generate.py`. Nothing else
 changes; the space, its model, Endpoints and Policy are shared.
 
+The row `participacia` is the platform's own Decidim (T-6449), whose host is each environment's: its
+files go to `components/decidim/seed/` with dev's host, which the forge seed's rewrites move, and
+only an environment listing the `decidim` component loads them. Its one full
+pass runs hourly, and the shared Endpoint's title and source list keep naming the towns alone.
+
 ## How a run reads an instance
 
 1. `robots.txt` (a 5xx fails the run; `/api` disallowed for `*` or `joinedcontext-platform` fails it).

@@ -182,6 +182,18 @@ def test_the_image_drops_root_and_the_shipped_key():
     assert "node" not in final.split("\n", 1)[0]
 
 
+def test_the_layout_loads_the_launcher_from_the_assistant_host_alone():
+    # The Dockerfile puts the partial where Decidim looks for it, and only the assistant host joins
+    # the script and frame policy; both stay off without ASSISTANT_ORIGIN.
+    image = PROJECT_ROOT / "images/decidim"
+    assert "COPY head_extra.html.erb app/views/layouts/decidim/_head_extra.html.erb" in (image / "Dockerfile").read_text()
+    partial = (image / "head_extra.html.erb").read_text()
+    assert 'data: { lang: I18n.locale }' in partial and 'if ENV["ASSISTANT_ORIGIN"].present?' in partial
+    ruby = (image / "joinedcontext.rb").read_text()
+    assert re.search(r'if ENV\["ASSISTANT_ORIGIN"\]\.present\?\n  Decidim\.content_security_policies_extra = \{\n'
+                     r'    "script-src" => \[ENV\.fetch\("ASSISTANT_ORIGIN"\)\],\n    "frame-src" => \[ENV\.fetch\("ASSISTANT_ORIGIN"\)\]\n  \}', ruby)
+
+
 def test_the_image_widens_only_the_rubyzip_line_and_ships_no_key():
     """T-6448: the one declared range the image moves is decidim-core's rubyzip, past
     CVE-2026-85396, and a Decidim release that rewrites the line stops the build."""
@@ -214,6 +226,35 @@ def test_the_realm_person_who_administers_decidim_holds_nothing_else(rendered, e
     assert not any(
         "de300000-" in str(u.get("id")) for d in docs if d.get("kind") == "ConfigMap" for u in [d.get("data") or {}]
     )
+
+
+@requires_helmfile
+def test_each_page_names_the_assistant_of_its_own_environment(rendered):
+    env = env_of(pod(rendered("addons"), "decidim-web")["containers"][0])
+    assert env["ASSISTANT_ORIGIN"]["value"] == "https://assistant.addons.example.org"
+    assert env["ASSISTANT_PUBLIC_ID"]["value"] == "participacia"
+
+
+def forge_seed(docs):
+    """The files of the forge seed ConfigMaps of one render, by their path with `__` for `/`."""
+    return {k: v for d in docs if d and d.get("kind") == "ConfigMap" and re.fullmatch(r"gitea-seed-s\d+-.*", d["metadata"]["name"])
+            for k, v in (d.get("data") or {}).items()}
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment, domain", [("stage", "stage.joinedcontext.com"), ("smartcity", "smartcity.joinedcontext.com")])
+def test_the_forge_seed_carries_the_environments_own_decidim_host(rendered, environment, domain):
+    files = forge_seed(rendered(environment))
+    assistant = yaml.safe_load(files["projects__slovensko__assistant__deployments__participacia.yaml"])
+    assert assistant["spec"]["allowedOrigins"] == [f"https://participacia.{domain}"]
+    bento = files["projects__slovensko__pipelines__decidim-participacia__bento.yaml"]
+    assert f"url: https://participacia.{domain}/api" in bento
+    assert "dev.joinedcontext.com" not in bento
+
+
+@requires_helmfile
+def test_dev_runs_no_decidim_so_its_forge_holds_no_harvester_of_it(rendered):
+    assert not [k for k in forge_seed(rendered("dev")) if "participacia" in k and "slovensko-participacia" not in k]
 
 
 @requires_helmfile

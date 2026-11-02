@@ -14,6 +14,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 SEED = ROOT / "components/context-gateway/seed/slovensko"
+# The platform's own Decidim (T-6449): one row, written apart from the towns' because only an environment
+# that runs the decidim component loads this folder; the forge seed's rewrites move dev's host to its own.
+OWN = "participacia"
+OWN_SEED = ROOT / "components/decidim/seed"
 NS = "slovensko"
 SPACE = "slovensko-participacia"
 TARGET = f"urn:ngsi-ld:Endpoint:joinedcontext.com:{SPACE}:{SPACE}-zapis"
@@ -42,6 +46,7 @@ PASSES = (
     # Not in hour 2: the full pass crawls the same instance then and writes BudgetProject too (F-R2BNT3-011).
     ("-hlasovanie", True, "{m} 0,1,3-23 * * *", "1h", " (hlasovanie)", " (voting)"),
 )
+OWN_PASSES = (("", False, "{m} * * * *", "1h", "", ""),)
 
 
 def rows() -> list[dict]:
@@ -63,7 +68,8 @@ def documents(i: int, row: dict) -> dict[str, str]:
     files = {}
     mapping = (HERE / "pipeline.yaml").read_text()
     host = row["base_url"].removeprefix("https://")
-    for suffix, light, schedule, period, sk, en in PASSES:
+    # The instance is ours and small, so its one full pass runs hourly and no voting pass is needed.
+    for suffix, light, schedule, period, sk, en in OWN_PASSES if row["name"] == OWN else PASSES:
         name = f"decidim-{row['name']}{suffix}"
         cfg = {
             "instance": row["name"], "base": row["base_url"], "locale": row["locale"], "scope": row["scope"],
@@ -141,7 +147,7 @@ spec:
 def index_lines(found: list[dict]) -> list[str]:
     out = []
     for row in found:
-        for suffix, *_ in PASSES:
+        for suffix, *_ in OWN_PASSES if row["name"] == OWN else PASSES:
             name = f"decidim-{row['name']}{suffix}"
             out += [
                 f"{NS}-datasource-{name}.yaml: projects/{NS}/datasources/{name}.yaml",
@@ -190,17 +196,23 @@ def with_block(text: str, begin: str, end: str, block: list[str]) -> str:
 
 
 def wanted() -> tuple[dict[Path, str], list[Path]]:
-    found = rows()
+    every = rows()
+    # ponytail: the shared Endpoint's title, organization and source list name the towns alone, on
+    # every environment; a per-environment copy of it comes when a catalogue reader needs one.
+    found = [row for row in every if row["name"] != OWN]
     files = {}
-    for i, row in enumerate(found):
-        files.update({SEED / k: v for k, v in documents(i, row).items()})
+    for i, row in enumerate(every):
+        folder = OWN_SEED if row["name"] == OWN else SEED
+        files.update({folder / k: v for k, v in documents(i, row).items()})
+    own = OWN_SEED / "index.yaml"
+    files[own] = with_block(own.read_text(), INDEX_BEGIN, INDEX_END, index_lines([row for row in every if row["name"] == OWN]))
     index = SEED / "index.yaml"
     files[index] = with_block(index.read_text(), INDEX_BEGIN, INDEX_END, index_lines(found))
     endpoint = SEED / f"{NS}-endpoint-participacia.yaml"
     text = with_block(endpoint.read_text(), SOURCES_BEGIN, SOURCES_END, sources(found))
     text = with_block(text, TITLE_BEGIN, TITLE_END, title(found))
     files[endpoint] = with_block(text, ORGANIZATION_BEGIN, ORGANIZATION_END, organization(found))
-    stale = [p for p in SEED.glob(f"{NS}-*-decidim-*.yaml") if p not in files]
+    stale = [p for folder in (SEED, OWN_SEED) for p in folder.glob(f"{NS}-*-decidim-*.yaml") if p not in files]
     return files, stale
 
 
