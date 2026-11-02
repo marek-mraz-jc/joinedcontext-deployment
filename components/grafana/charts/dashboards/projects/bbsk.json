@@ -32,7 +32,7 @@
         "x": 0,
         "y": 0,
         "w": 12,
-        "h": 20
+        "h": 16
       },
       "targets": [
         {
@@ -50,7 +50,8 @@
           ],
           "lang": "sk",
           "limit": 100,
-          "idPattern": ".*:obyvatelstvo-stav-.*"
+          "idPattern": ".*:obyvatelstvo-stav-.*",
+          "customQuery": "currentValue>=0"
         }
       ],
       "transformations": [
@@ -75,7 +76,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "Žiadne údaje"
+          "noValue": "–"
         },
         "overrides": [
           {
@@ -109,7 +110,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 100
+                "value": 110
               },
               {
                 "id": "unit",
@@ -147,7 +148,7 @@
         "x": 12,
         "y": 0,
         "w": 12,
-        "h": 20
+        "h": 16
       },
       "targets": [
         {
@@ -165,7 +166,8 @@
           ],
           "lang": "sk",
           "limit": 100,
-          "idPattern": ".*:emisie-tuhe-km2-.*"
+          "idPattern": ".*:emisie-tuhe-km2-.*",
+          "customQuery": "currentValue>=0"
         }
       ],
       "transformations": [
@@ -190,7 +192,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "noValue": "Žiadne údaje"
+          "noValue": "–"
         },
         "overrides": [
           {
@@ -224,7 +226,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 100
+                "value": 110
               },
               {
                 "id": "unit",

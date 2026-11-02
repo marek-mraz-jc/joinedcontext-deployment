@@ -58,7 +58,7 @@
           "unit": "locale",
           "custom": {
             "showPoints": "always",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "fillOpacity": 0,
             "spanNulls": true,
             "pointSize": 4
@@ -71,7 +71,7 @@
       "options": {
         "legend": {
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true,
           "calcs": [
             "lastNotNull",
@@ -88,7 +88,7 @@
     },
     {
       "id": 2,
-      "title": "PM2.5 by station (6 h average)",
+      "title": "PM2.5 by station, µg/m³ (6 h average)",
       "description": "Finnish Meteorological Institute stations, µg/m³. Endpoint helsinki-air-quality, public.",
       "type": "timeseries",
       "datasource": {
@@ -123,10 +123,10 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "conμgm3",
+          "unit": "none",
           "custom": {
             "showPoints": "never",
-            "lineWidth": 2,
+            "lineWidth": 1,
             "fillOpacity": 0,
             "spanNulls": true
           },
@@ -221,7 +221,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 64
+                "value": 76
               },
               {
                 "id": "unit",
@@ -267,7 +267,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 64
+                "value": 76
               },
               {
                 "id": "unit",
