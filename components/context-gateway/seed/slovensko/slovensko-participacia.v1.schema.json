@@ -1,7 +1,7 @@
 {
   "$id": "https://joinedcontext.com/models/slovensko/slovensko-participacia",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "definitions": {
     "BudgetProject": {
       "additionalProperties": false,
@@ -46,7 +46,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "The category the platform files the record under, `Životné prostredie`.",
+          "description": "The category the platform files the record under, `\u017divotn\u00e9 prostredie`.",
           "type": [
             "string",
             "null"
@@ -201,7 +201,7 @@
       "description": "One debate of a process, its question and dates; the contributions are not kept.",
       "properties": {
         "category": {
-          "description": "The category the platform files the record under, `Životné prostredie`.",
+          "description": "The category the platform files the record under, `\u017divotn\u00e9 prostredie`.",
           "type": [
             "string",
             "null"
@@ -244,6 +244,9 @@
         },
         "endDate": {
           "description": "When it ends, a date or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2027-12-30"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -330,6 +333,9 @@
         },
         "startDate": {
           "description": "When it starts, a date (`2026-05-01`) or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2026-05-01"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -436,8 +442,16 @@
           "description": "Where it is, as the platform writes it; the town is the instance's.",
           "x-ngsi-ld-kind": "Property"
         },
+        "attendeesCount": {
+          "description": "How many people attended a closed meeting, once that is public. Only the platform's own Decidim sends it.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "category": {
-          "description": "The category the platform files the record under, `Životné prostredie`.",
+          "description": "The category the platform files the record under, `\u017divotn\u00e9 prostredie`.",
           "type": [
             "string",
             "null"
@@ -448,6 +462,14 @@
           "description": "Whether the meeting is over and its minutes are published.",
           "type": [
             "boolean",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
+        "closingReport": {
+          "description": "The minutes of a closed meeting, once they are public. Only the platform's own Decidim sends them.",
+          "type": [
+            "string",
             "null"
           ],
           "x-ngsi-ld-kind": "Property"
@@ -479,6 +501,9 @@
         },
         "endDate": {
           "description": "When it ends, a date or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2027-12-30"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -520,7 +545,14 @@
           "x-ngsi-ld-kind": "GeoProperty"
         },
         "meetingType": {
-          "$ref": "#/definitions/MeetingType",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MeetingType"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "How people attend, `in_person`, `online` or `hybrid`.",
           "x-ngsi-ld-kind": "Property"
         },
@@ -579,6 +611,9 @@
         },
         "startDate": {
           "description": "When it starts, a date (`2026-05-01`) or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2026-05-01"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": "string",
           "x-ngsi-ld-kind": "Property"
@@ -657,6 +692,9 @@
         },
         "endDate": {
           "description": "When it ends, a date or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2027-12-30"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -712,7 +750,14 @@
           "x-ngsi-ld-kind": "Property"
         },
         "processType": {
-          "$ref": "#/definitions/ParticipatorySpaceType",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ParticipatorySpaceType"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Whether the space is a participatory process or a standing assembly.",
           "x-ngsi-ld-kind": "Property"
         },
@@ -743,6 +788,9 @@
         },
         "startDate": {
           "description": "When it starts, a date (`2026-05-01`) or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2026-05-01"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -751,7 +799,14 @@
           "x-ngsi-ld-kind": "Property"
         },
         "status": {
-          "$ref": "#/definitions/ProcessStatus",
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProcessStatus"
+            },
+            {
+              "type": "null"
+            }
+          ],
           "description": "Whether the process has not started, runs or is over, from its dates on the day of the run.",
           "x-ngsi-ld-kind": "Property"
         },
@@ -854,6 +909,9 @@
         },
         "endDate": {
           "description": "When it ends, a date or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2027-12-30"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -863,6 +921,9 @@
         },
         "startDate": {
           "description": "When it starts, a date (`2026-05-01`) or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2026-05-01"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -899,7 +960,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "category": {
-          "description": "The category the platform files the record under, `Životné prostredie`.",
+          "description": "The category the platform files the record under, `\u017divotn\u00e9 prostredie`.",
           "type": [
             "string",
             "null"
@@ -1004,6 +1065,14 @@
           ],
           "x-ngsi-ld-kind": "Property"
         },
+        "proposalAnswer": {
+          "description": "The town's published answer to the proposal. Only the platform's own Decidim sends it, because the public API hides it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-ngsi-ld-kind": "Property"
+        },
         "proposalState": {
           "description": "The town's answer as Decidim's state token: `not_answered`, `evaluating`, `accepted`, `rejected`, `withdrawn`, or a token the instance defined itself. Empty when only the page was readable; `stateLabel` then holds what the page shows.",
           "type": [
@@ -1088,7 +1157,7 @@
       "description": "One result the town reports on (Decidim accountability), with its progress and dates.",
       "properties": {
         "category": {
-          "description": "The category the platform files the record under, `Životné prostredie`.",
+          "description": "The category the platform files the record under, `\u017divotn\u00e9 prostredie`.",
           "type": [
             "string",
             "null"
@@ -1122,6 +1191,9 @@
         },
         "endDate": {
           "description": "When it ends, a date or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2027-12-30"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -1234,6 +1306,9 @@
         },
         "startDate": {
           "description": "When it starts, a date (`2026-05-01`) or an RFC 3339 instant with its offset.",
+          "examples": [
+            "2026-05-01"
+          ],
           "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2}))?$",
           "type": [
             "string",
@@ -1389,9 +1464,9 @@
       "type": "object"
     }
   },
-  "metamodel_version": "1.11.0",
+  "metamodel_version": "1.12.0",
   "title": "slovensko-participacia",
   "type": "object",
   "version": null,
-  "x-generator-version": "linkml-1.11.1"
+  "x-generator-version": "linkml-1.12.0"
 }

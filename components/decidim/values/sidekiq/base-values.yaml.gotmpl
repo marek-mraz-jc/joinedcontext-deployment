@@ -46,10 +46,13 @@ env:
   {{ .name }}: {{ .value | quote }}
   {{- end }}{{ end }}
   SIDEKIQ_CONCURRENCY: "3"
+  JOINEDCONTEXT_TOKEN_URL: {{ printf "https://idm.%s/realms/%s/protocol/openid-connect/token" $global.domain $global.instanceSlug | quote }}
+  JOINEDCONTEXT_CLIENT_ID: slovensko-decidim-publish
 envSecret:
   {{- range $env }}{{ if hasKey . "valueFrom" }}
   {{ .name }}: { secret: {{ .valueFrom.secretKeyRef.name }}, key: {{ .valueFrom.secretKeyRef.key }} }
   {{- end }}{{ end }}
+  JOINEDCONTEXT_CLIENT_SECRET: { secret: keycloak-client-slovensko-decidim-publish, key: client-secret }
 
 # The web's attachments claim: exports and image variants are written where the web serves them.
 extraVolumes:
