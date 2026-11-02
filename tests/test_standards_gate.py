@@ -167,6 +167,7 @@ def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, mo
                               sweep_timeout=18000, rev="HEAD", records=tmp_path)
     env = {name: env for name, _, env, _ in gate.stages(args, tmp_path)}["portal-sweep"]
     skip = re.compile(env["SWEEP_SKIP"])
+    assert env["SWEEP_WORKERS"] == str(gate.SWEEP_WORKERS)
     assert skip.search("e2e/live/critic-policy.spec.ts") and not skip.search("e2e/live/mqtt-device.spec.ts")
     seen = {}
     monkeypatch.setattr(gate, "candidate", lambda rev: {"sha": "a" * 40, "images": {}})
@@ -183,16 +184,27 @@ def test_the_sweep_leaves_the_critic_walks_out_and_gets_its_own_cap(tmp_path, mo
     seen.clear()
     monkeypatch.setattr(gate, "sweep_tests", lambda *a: 330)
     gate.run(argparse.Namespace(**{**vars(args), "sweep_timeout": None}))
-    assert seen == {"portal-sweep": gate.sweep_cap(330), "ws": 3600}, seen
+    # tmp_path holds no sweep.sh that reads SWEEP_WORKERS, so the stage is sized for one worker
+    assert seen == {"portal-sweep": gate.sweep_cap(330, 1), "ws": 3600}, seen
 
 
 def test_the_sweep_cap_holds_the_measured_sweep_with_a_quarter_to_spare():
     # T-6354: gate 39a90ab9 ran 291 of 324 tests in 17,304 s at one worker and hit the fixed 18,000 s cap
     assert 17304 / 291 <= gate.SWEEP_TEST_S
-    cap = gate.sweep_cap(324)
+    cap = gate.sweep_cap(324, 1)
     assert 324 * gate.SWEEP_TEST_S <= 0.75 * cap, cap
     assert not 324 * gate.SWEEP_TEST_S <= 0.75 * 18000  # the old cap, red by the same rule
-    assert gate.sweep_cap(400) > cap  # it grows with the sweep
+    assert gate.sweep_cap(400, 1) > cap  # it grows with the sweep
+
+
+def test_the_parallel_sweep_cap_spreads_the_measured_work_over_the_workers():
+    # T-6404: gate f1d9eceb listed 328 tests and held dev's pins for its 26,240 s one-worker cap (~7.3 h)
+    assert gate.sweep_cap(328, 1) == 26240
+    cap = gate.sweep_cap(328)
+    assert 328 * gate.SWEEP_TEST_S / gate.SWEEP_WORKERS <= 0.75 * cap, cap
+    assert cap < 2 * 3600, cap
+    # the longest spec runs on one worker whatever the count: walk-dialogs took 2,298 s in gate 39a90ab9
+    assert cap > 2298
 
 
 def test_the_gate_counts_the_sweep_before_it_sizes_the_stage(tmp_path):
@@ -201,14 +213,20 @@ def test_the_gate_counts_the_sweep_before_it_sizes_the_stage(tmp_path):
                        'echo "Total: 330 tests in 129 files"\n')
     listing.chmod(0o755)
     assert gate.sweep_tests([str(listing)], {}, tmp_path, tmp_path / "out/list.txt") == 330
-    assert gate.sweep_stage_cap([str(listing)], {}, tmp_path, tmp_path / "list.txt") == gate.sweep_cap(330)
+    assert gate.sweep_stage_cap([str(listing)], {}, tmp_path, tmp_path / "list.txt") == gate.sweep_cap(330, 1)
+    # a sweep.sh that reads SWEEP_WORKERS (T-6404) gets the cap of that many workers
+    parallel = tmp_path / "parallel.sh"
+    parallel.write_text(listing.read_text().replace("exit 9\n", "exit 9\n: \"${SWEEP_WORKERS:-4}\"\n"))
+    parallel.chmod(0o755)
+    assert gate.sweep_stage_cap([str(parallel)], {}, tmp_path, tmp_path / "par.txt") == gate.sweep_cap(330)
+    assert gate.sweep_cap(330) < gate.sweep_cap(330, 1)
     # a sweep.sh that knows no SWEEP_LIST would run the whole sweep: it is never started
     old = tmp_path / "old.sh"
     old.write_text(f"#!/bin/sh\ntouch {tmp_path / 'ran'}\n")
     old.chmod(0o755)
     assert gate.sweep_tests([str(old)], {}, tmp_path, tmp_path / "old.txt") is None
     assert not (tmp_path / "ran").exists()
-    assert gate.sweep_stage_cap([str(old)], {}, tmp_path, tmp_path / "old.txt") == gate.sweep_cap(gate.SWEEP_TESTS)
+    assert gate.sweep_stage_cap([str(old)], {}, tmp_path, tmp_path / "old.txt") == gate.sweep_cap(gate.SWEEP_TESTS, 1)
     failing = tmp_path / "failing.sh"
     failing.write_text('#!/bin/sh\n# SWEEP_LIST\necho "Total: 3 tests in 1 file"\nexit 1\n')
     failing.chmod(0o755)

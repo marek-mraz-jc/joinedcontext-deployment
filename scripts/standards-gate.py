@@ -81,6 +81,10 @@ SWEEP_SKIP = r"/critic-[a-z]+\.spec\.ts$"
 SWEEP_TEST_S = 60
 SWEEP_ROOM = 0.75
 SWEEP_TESTS = 324
+# sweep.sh runs SWEEP_WORKERS specs at once since T-6404 (the Portal's e2e/live/stateGroups.ts keeps specs that
+# share state apart): the cap divides the measured one-worker time by them. A Portal pin whose sweep.sh knows no
+# SWEEP_WORKERS still runs on one worker and gets the one-worker cap.
+SWEEP_WORKERS = 4
 REQUIRED = ("dev-smoke", *SUITES, "roundtrip", "dcat", "portal-sweep", "load", "antares-sweep")
 # What a stage needs from the caller's environment, or it fails on setup after hours instead of seconds.
 NEEDS_ANTARES = ("ogc", "odata", "dcat")
@@ -317,7 +321,7 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
                   "OUT": str(out / "dcat"), "PAUSE": "0"}, conf))
     plan.append(("portal-sweep", [str(portal / "ui/e2e/live/sweep.sh")],
                  {"PORTAL_URL": f"https://portal.{DOMAIN}", "SWEEP_OUT": str(out / "portal-sweep"),
-                  "TASKS_DIR": "", "SWEEP_SKIP": SWEEP_SKIP}, portal / "ui"))
+                  "TASKS_DIR": "", "SWEEP_SKIP": SWEEP_SKIP, "SWEEP_WORKERS": str(SWEEP_WORKERS)}, portal / "ui"))
     load = out / "load"
     requests = args.requests or load / "requests.tsv"
     script = (f"set -euo pipefail; [ -s {quote(requests)} ] || python3 tests/k6/make_requests.py "
@@ -331,9 +335,18 @@ def stages(args, out: Path) -> list[tuple[str, list[str], dict, Path]]:
     return [s for s in plan if not args.only or s[0] in args.only]
 
 
-def sweep_cap(tests: int) -> int:
-    """Seconds the portal-sweep stage gets for `tests` tests: the measured time each, 25 % room left."""
-    return round(tests * SWEEP_TEST_S / SWEEP_ROOM)
+def sweep_cap(tests: int, workers: int = SWEEP_WORKERS) -> int:
+    """Seconds the portal-sweep stage gets for `tests` tests on `workers` workers: the measured time each,
+    spread over the workers, 25 % room left."""
+    return round(tests * SWEEP_TEST_S / max(workers, 1) / SWEEP_ROOM)
+
+
+def sweep_workers(argv: list[str]) -> int:
+    """How many workers the sweep stage `argv` runs on: SWEEP_WORKERS when its sweep.sh reads it, else one."""
+    try:
+        return SWEEP_WORKERS if "SWEEP_WORKERS" in Path(argv[0]).read_text() else 1
+    except OSError:
+        return 1
 
 
 def sweep_tests(argv: list[str], env: dict, cwd: Path, log: Path) -> int | None:
@@ -354,9 +367,10 @@ def sweep_tests(argv: list[str], env: dict, cwd: Path, log: Path) -> int | None:
 def sweep_stage_cap(argv: list[str], env: dict, cwd: Path, log: Path) -> int:
     """The portal-sweep stage's cap from its counted tests, SWEEP_TESTS when the count fails; printed."""
     tests = sweep_tests(argv, env, cwd, log)
-    cap = sweep_cap(tests or SWEEP_TESTS)
+    workers = sweep_workers(argv)
+    cap = sweep_cap(tests or SWEEP_TESTS, workers)
     print(f"release gate: portal-sweep lists {tests if tests else f'no count (taking {SWEEP_TESTS})'} tests: "
-          f"{cap} s at {SWEEP_TEST_S} s each with 25 % room", flush=True)
+          f"{cap} s at {SWEEP_TEST_S} s each on {workers} worker{'s' if workers > 1 else ''} with 25 % room", flush=True)
     return cap
 
 
