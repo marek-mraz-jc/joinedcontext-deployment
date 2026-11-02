@@ -90,7 +90,14 @@ routes=$(kubectl get configmap apisix-standalone-base -n "$slug" -o jsonpath='{.
 has_route() { grep -q "^  - id: $1\$" <<<"$routes"; }
 # The ConfigMap holding a project's seed (its first part): gitea-seed-s<release>-<project> since the
 # seed is packed by size over its releases (T-4431), gitea-seed-<project> before.
-seed_cm() { kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n "s|^configmap/\(gitea-seed-\(s[0-9]*-\)\{0,1\}$1\)\$|\1|p" | head -1; }
+# One seed file of a project, wherever its release's parts hold it: a grown seed moves files between
+# gitea-seed-<project> and gitea-seed-<project>--N (dev 2026-11-02: three helsinki Endpoints moved, six red checks).
+seed_file() {
+	local cm
+	for cm in $(kubectl get configmaps -n "$slug" -o name 2>/dev/null | sed -n "s|^configmap/\(gitea-seed-\(s[0-9]*-\)\{0,1\}$1\(--[0-9]*\)\{0,1\}\)\$|\1|p"); do
+		kubectl get configmap "$cm" -n "$slug" -o jsonpath="{.data${2:+.$2}}" 2>/dev/null
+	done
+}
 
 # status <expected> <description> <curl args...>
 # A 429 is the edge's per-IP budget, which every agent on this host's address spends as well
@@ -472,7 +479,7 @@ print(str((struct.unpack(">I",m[o:o+4])[0]&0x7FFFFFFF)%10**6).zfill(6),end="")')
 		# its own, the janitor's pattern (seed/helsinki/helsinki-role-janitor.yaml, T-2627, T-2817),
 		# and one of it per kind is a take in flight. What a person made on dev is not residue,
 		# whatever its name, so a generated app's endpoint or an upload leaves the check green.
-		seed=$(kubectl get configmap "$(seed_cm helsinki)" -n "$slug" -o 'jsonpath={.data}' 2>/dev/null)
+		seed=$(seed_file helsinki)
 		for kind in "endpoints Endpoint projects__helsinki__spaces__[a-z0-9-]*__endpoints__[a-z0-9-]*\.yaml" \
 			"pipelines Pipeline projects__helsinki__pipelines__[a-z0-9-]*__pipeline\.yaml" \
 			"spaces ContextSpace projects__helsinki__spaces__[a-z0-9-]*__space\.yaml"; do
@@ -529,10 +536,10 @@ if has_route context-endpoint; then
 	# gateway serves the forge's checkout), the same way the route table comes from APISIX: a
 	# slug written into this script would drift from the seed, and a made-up one cannot exist
 	# (slugs are 26+ base32 characters). A seed key is the repository path with `/` as `__`.
-	ep="${JC_SMOKE_ENDPOINT:-$(kubectl get configmap "$(seed_cm banskabystrica)" -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	ep="${JC_SMOKE_ENDPOINT:-$(seed_file banskabystrica "projects__banskabystrica__spaces__ovzdusie__endpoints__public-air\.yaml" | sed -n 's/^ *slug: *//p' | head -1)}"
 	# The writes go to the conformance space's own Endpoint (F-BNT1-002), never to public-air,
 	# whose space holds the published EEA readings; public-air is read below, anonymously.
-	cep="${JC_SMOKE_WRITE_ENDPOINT:-$(kubectl get configmap "$(seed_cm banskabystrica)" -n "$slug" -o jsonpath='{.data.projects__banskabystrica__spaces__conformance__endpoints__conformance\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)}"
+	cep="${JC_SMOKE_WRITE_ENDPOINT:-$(seed_file banskabystrica "projects__banskabystrica__spaces__conformance__endpoints__conformance\.yaml" | sed -n 's/^ *slug: *//p' | head -1)}"
 	# Writes are bound to the conformance ServiceAccount (GW22): its client_credentials token
 	# carries the slug as audience and an azp the gateway resolves to the manifest (PF-45, PF-46).
 	# The apisix-gateway token above is minted for the Portal and names no account here.
@@ -620,7 +627,7 @@ echo "helsinki space"
 # answers NGSI-LD, MCP and the model's LinkML; the streams of the resident runner fill it. The
 # slugs come from the forge's seed the way the ovzdusie one does above.
 if has_route context-endpoint; then
-	slug_of() { kubectl get configmap "$(seed_cm helsinki)" -n "$slug" -o jsonpath="{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1; }
+	slug_of() { seed_file helsinki "projects__helsinki__spaces__helsinki__endpoints__helsinki-$1\.yaml" | sed -n 's/^ *slug: *//p' | head -1; }
 	all=$(slug_of all)
 	if [ -z "$all" ]; then
 		skip "helsinki endpoints (no Helsinki seed on the gateway in this instance)"
@@ -736,7 +743,7 @@ echo "ogc api features"
 # A kind no seeded Endpoint has is a skip naming it.
 if has_route context-endpoint; then
 	seed_slug() { # project space endpoint
-		kubectl get configmap "$(seed_cm "$1")" -n "$slug" -o jsonpath="{.data.projects__$1__spaces__$2__endpoints__$3\.yaml}" 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1
+		seed_file "$1" "projects__$1__spaces__$2__endpoints__$3\.yaml" | sed -n 's/^ *slug: *//p' | head -1
 	}
 	ogc_row() { # kind endpoint-name slug hidden-attribute|"" bearer|""
 		local kind="$1" name="$2" ep="$3" hidden="$4" auth=() root conf coll head type body verdict
@@ -1428,7 +1435,7 @@ else
 			"$idm/realms/$realm/protocol/openid-connect/token" 2>/dev/null |
 			sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 	fi
-	fn_slug=$(kubectl get configmap "$(seed_cm helsinki)" -n "$slug" -o jsonpath='{.data.projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml}' 2>/dev/null | sed -n 's/^ *slug: *//p' | head -1)
+	fn_slug=$(seed_file helsinki "projects__helsinki__spaces__helsinki__endpoints__helsinki-all\.yaml" | sed -n 's/^ *slug: *//p' | head -1)
 	if [ -z "$fn_token" ]; then
 		ko "no client_credentials token for portal-api, so no function was invoked"
 	elif [ -z "$fn_slug" ]; then

@@ -140,6 +140,9 @@ elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-s
     name = "".join(itertools.takewhile(lambda c: c.isalnum() or c == "-", line.split("endpoints__helsinki-", 1)[1]))
     # The OGC rows' Endpoints (T-3957) are seeded beside the ones the residue count lists.
     seeded = spec.get("helsinkiSeed", {}).get(name) or spec.get("ogcSeed", {}).get(name)
+    # A grown seed moves a file to a later part of its release (dev 2026-11-02).
+    if args[2].endswith("--2") != (name in spec.get("seedInLaterPart", [])):
+        seeded = None
     sys.stdout.write("spec:\\n  slug: %s\\n" % seeded if seeded else "")
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-seed-") and "jsonpath={.data}" in line:
     # The seed's file names, for the residue count (T-0667): one Helsinki endpoint per seeded slug.
@@ -174,7 +177,7 @@ elif args[0] == "get" and args[1] == "configmaps" and "-o name" in line:
     for app in spec.get("sampleApps", ["helsinki-bikes", "helsinki-events", "helsinki-alerts"]):
         sys.stdout.write("configmap/gitea-sample-apps-%s\\n" % app)
     # The projects' seed, each named by the release the layout packed it into (T-4431).
-    for part in ("s1-banskabystrica", "s4-helsinki", "s4-helsinki-mobility", "s2-bbsk--2"):
+    for part in ("s1-banskabystrica", "s4-helsinki", "s4-helsinki--2", "s4-helsinki-mobility", "s2-bbsk--2"):
         sys.stdout.write("configmap/gitea-seed-%s\\n" % part)
 elif args[0] == "get" and args[1] == "configmap" and args[2].startswith("gitea-sample-apps-") and "go-template" in line:
     # A sample app's file names: its grants (T-2667) when the spec gives it any.
@@ -726,6 +729,13 @@ def test_a_cluster_without_the_mesh_skips_its_check(tmp_path):
     assert "skip  linkerd (no pod in it on this cluster)" in result.stdout
     assert "skip  linkerd-cni (no pod in it on this cluster)" in result.stdout
     assert "linkerd pods not Ready" not in result.stdout
+
+
+def test_an_endpoint_moved_to_a_later_seed_part_is_still_found(tmp_path):
+    """A grown seed moves files between gitea-seed-<project> and its --N parts (dev 2026-11-02)."""
+    moved = dict(HEALTHY, seedInLaterPart=["events", "bikes", "transport"])
+    result = run(tmp_path, moved, "https://example.test", "https://idm.example.test")
+    assert "names no type in its access document" not in result.stdout
 
 
 def test_an_instance_without_the_helsinki_seed_skips_its_checks(tmp_path):
