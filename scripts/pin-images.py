@@ -72,10 +72,12 @@ def built(repository):
 
 
 def green(repository, workflow, commit):
-    """The workflow's newest run on the commit finished green."""
+    """The workflow's newest run on the commit that did not skip finished green.
+
+    A workflow_run trigger from another workflow leaves a skipped run on top of the real one."""
     out = run("gh", "run", "list", "-R", f"{OWNER}/{repository}", "--workflow", workflow, "--commit", commit,
-              "--json", "status,conclusion", "--limit", "1").stdout
-    runs = json.loads(out or "[]")
+              "--json", "status,conclusion", "--limit", "10").stdout
+    runs = [r for r in json.loads(out or "[]") if r["conclusion"] != "skipped"]
     return bool(runs) and runs[0]["status"] == "completed" and runs[0]["conclusion"] == "success"
 
 

@@ -129,3 +129,19 @@ def test_the_deployed_broker_block_records_its_commit():
     spec.loader.exec_module(module)
     commit, tag = module.antares_pinned((ROOT / "components/context-broker/images.yaml").read_text())
     assert commit and tag and tag.startswith("dev-")
+
+
+@pytest.mark.parametrize(
+    "runs, answer",
+    [
+        ([("completed", "skipped"), ("completed", "success")], True),
+        ([("completed", "skipped"), ("completed", "failure"), ("completed", "success")], False),
+        ([("in_progress", ""), ("completed", "success")], False),
+        ([("completed", "skipped")], False),
+        ([], False),
+    ],
+)
+def test_a_skipped_run_hides_no_image_run(pin, monkeypatch, runs, answer):
+    stdout = json.dumps([{"status": status, "conclusion": conclusion} for status, conclusion in runs])
+    monkeypatch.setattr(pin, "run", lambda *args, **kwargs: type("Done", (), {"stdout": stdout}))
+    assert pin.green("joinedcontext-portal", "image.yml", "a" * 40) is answer
