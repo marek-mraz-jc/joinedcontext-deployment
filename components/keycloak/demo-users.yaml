@@ -93,8 +93,8 @@ demo.janitor:
   groups: []
 # The App probe (T-2795, AP-136): opens every published App as that App's own people do. The
 # project groups admit it to the gateway's project-list Endpoints, each App's default group
-# (components/gitea/apps/*/grants/users/groups/*-viewer.yaml) to a `roles` App, and the realm's
-# default `platform-readers` makes it a viewer like everyone; it proposes and approves nothing.
+# (components/gitea/apps/*/grants/users/groups/*-viewer.yaml) to a `roles` App, and the seed's
+# `viewers` binding names it a viewer of `hel` (T-6415); it proposes and approves nothing.
 demo.probe:
   id: de300000-0000-4000-8000-000000000009
   firstName: Demo
