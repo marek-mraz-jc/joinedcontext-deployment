@@ -273,8 +273,10 @@ context-broker:
     # Antares dev f31d852 (dev-137, over b46464f: T-6432). Migration 0031 (DROP POLICY tenant_update ON attr_versions,
     # rollback compatible). New key ANTARES_POLICY_SUBJECT_FROM: unset keeps today's behaviour, T-6433 sets it.
     # Hand pin. Rollback: dev-136. Signed by ship.yml on dev at f31d852 (run 41432030286).
-    tag: 'dev-137'
-    digest: 'sha256:abd27424b9c7fce2e128b557c9bcf50197ff59a0a43ce0dd2a6093f196a6e49e'
+    # Antares dev f2291c5 (dev-138, over f31d852: T-6371). No migration, no new runtime key
+    # (pinned by pin-images, T-6330). Rollback: dev-137. Signed by ship.yml on dev at f2291c5 (run 41470809179).
+    tag: 'dev-138'
+    digest: 'sha256:db1712f10cadd568db5104c756b7470bcea1af2dd7d70005b6fdb2bc4fa29970'
     # The Antares dev commit this digest is the ship.yml image of: scripts/pin-images.py antares judges the
     # range from here and moves it with the digest (T-6330).
-    commit: 'f31d852c85675b38f7e611f0e966912d1bbc6bdd'
+    commit: 'f2291c573346974519b3d34f2d48e3e1ed088533'
