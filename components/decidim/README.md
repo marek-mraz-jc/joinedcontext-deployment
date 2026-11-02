@@ -24,6 +24,19 @@ under `images/decidim` and monthly):
 
 PostgreSQL comes from CloudNativePG through `databases.yaml`: database and role `decidim`.
 
+
+## The city's site (T-6453)
+
+`decidim.web.site.content: true` runs `images/decidim/site.rb` after the bootstrap on every rollout.
+It sets name, colours, time zone, logo, favicon, home page blocks and a privacy page, and creates each
+process of `images/decidim/site/content.yml` that is not there yet, whole, in one transaction: a
+rerun adds nothing, and what an admin changed in a process stays. `demoNotice: true` adds the demo
+banner and the footer line. Stage shows the notice and takes the content with the first main-signed image that holds the site; prod has both off until the owner approves stage. The
+logo and images in `images/decidim/site/` are drawn for this site, because the licence of the city's
+own logo is not on record: replace the files to change them. An attachment already on the claim is
+kept, so a new file needs the old one removed in the admin first. Content comes from the public record of
+tvormespolu.banskabystrica.sk, without the proposer contact lines those pages open with.
+
 ## Sign-in
 
 `keycloak-clients.yaml` declares the confidential client `decidim` (standard flow, PKCE); the

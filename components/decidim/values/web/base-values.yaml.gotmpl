@@ -63,12 +63,13 @@ envSecret:
   {{ .name }}: { secret: {{ .valueFrom.secretKeyRef.name }}, key: {{ .valueFrom.secretKeyRef.key }} }
   {{- end }}{{ end }}
 
-# Migrations, then the one organization (images/decidim/bootstrap.rb), before puma starts.
+# Migrations, the one organization (images/decidim/bootstrap.rb), then the city's site when the
+# environment asks for it (images/decidim/site.rb), before puma starts.
 extraInitContainers:
   - name: migrate
     image: {{ $images.repository }}:{{ $images.tag }}@{{ $images.digest }}
     imagePullPolicy: IfNotPresent
-    command: ["sh", "-c", "bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb"]
+    command: ["sh", "-c", "bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && if [ \"$DECIDIM_SITE_CONTENT\" = true ]; then bin/rails runner db/joinedcontext_site.rb; fi"]
     env:
       {{- $env | toYaml | nindent 6 }}
     securityContext:
@@ -80,6 +81,8 @@ extraInitContainers:
       - { name: tmp, mountPath: /tmp }
       - { name: rails-tmp, mountPath: /code/tmp }
       - { name: rails-log, mountPath: /code/log }
+      # The site's logo and images are attachments.
+      - { name: files, mountPath: /code/storage }
 
 persistence:
   enabled: true
