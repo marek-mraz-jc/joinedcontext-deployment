@@ -48,6 +48,13 @@ env:
   valueFrom: { secretKeyRef: { name: keycloak-client-decidim, key: client-secret } }
 - name: OIDC_REDIRECT_URI
   value: {{ printf "https://%s/users/auth/keycloak/callback" .host | quote }}
+# What the admin page offers and where a write may go; the realm client's half is Sidekiq's alone
+# (values/sidekiq), because only Sidekiq writes.
+- name: JOINEDCONTEXT_GATEWAY_HOST
+  value: {{ printf "api.%s" $global.domain | quote }}
+{{- $publish := $web.publish }}
+- name: JOINEDCONTEXT_ENDPOINTS
+  value: {{ list (dict "name" $publish.name "title" $publish.title "url" (printf "https://api.%s/api/endpoint/%s" $global.domain $publish.endpointSlug) "space" $publish.space "instance" $publish.instance "scope" $publish.scope "locality" $publish.locality "provider" $publish.provider) | toJson | quote }}
 {{- if $web.assistantPublicId }}
 - name: ASSISTANT_ORIGIN
   value: {{ printf "https://assistant.%s" $global.domain | quote }}
