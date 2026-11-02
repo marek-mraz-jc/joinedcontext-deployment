@@ -33,15 +33,13 @@ grafana:
           port: 53
         - protocol: TCP
           port: 53
-    # The Prometheus that scrapes this installation. It is not one of this repository's
-    # components — the monitoring component configures an Operator that is already on the
-    # cluster — so the peer is named by the pod label that Operator sets rather than by a
-    # namespace this file cannot template.
+    # The Prometheus that scrapes this installation: by the pod label its Operator sets, in the
+    # one namespace grafana.grafana.prometheusNamespace names.
     - to:
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               app.kubernetes.io/name: prometheus
+          namespaceFrom: grafana.grafana.prometheusNamespace
       ports:
         - protocol: TCP
           port: 9090
