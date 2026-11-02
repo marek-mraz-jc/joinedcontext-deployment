@@ -65,6 +65,8 @@ global:
   # true seeds no TOTP for that person: they enrol their own device at first sign-in, as a
   # production realm's people do (T-6448). false is for a test instance a script signs in to.
   participationStewardEnrols: false
+  # The person agents sign in as where no demo people exist (T-6449); empty means none.
+  walkerUserId: ""
 
   # Whether Helmfile should create the namespaces automatically
   createNamespaces: true
