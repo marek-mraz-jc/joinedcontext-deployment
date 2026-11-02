@@ -2,7 +2,7 @@
 
 The Portal lists a project as the sample when its Project manifest carries the label
 `joinedcontext.com/sample: "true"`, to those who may read it and no one else. On dev that is
-banskabystrica, which every signed-in person reads through the `viewers` binding; no other seeded
+banskabystrica, which the demo people read through the `viewers` binding; no other seeded
 project carries the label, so "Try it with sample data" always opens the same project.
 """
 
@@ -28,9 +28,10 @@ def test_banskabystrica_alone_is_the_sample():
     assert labelled == {"banskabystrica"}
 
 
-def test_the_sample_is_read_by_every_signed_in_person():
-    """`platform-readers`, the group every account lands in, is a viewer of the sample's whole
-    organization, so a newcomer opens it read-only and may do nothing more there."""
+def test_the_sample_is_read_by_the_named_viewers_and_no_default_group():
+    """The `viewers` binding names the demo people a viewer of the sample's organization, so they
+    open it read-only. A newcomer is a member and reaches no project (ADR-N-067 2.1, T-6415):
+    `platform-readers`, the group every account lands in, is bound nowhere."""
     organization = projects()["banskabystrica"]["spec"]["organizationRef"]
     bindings = [
         doc["spec"]
@@ -41,6 +42,7 @@ def test_the_sample_is_read_by_every_signed_in_person():
     assert any(
         spec["role"] == "viewer"
         and spec.get("scope", {}).get("organization") == organization
-        and {"group": "platform-readers", "source": "provider"} in spec["subjects"]
+        and any("user" in subject for subject in spec["subjects"])
         for spec in bindings
-    ), "a newcomer could not open the sample: platform-readers views no organization it is in"
+    ), "nobody reads the sample: no viewer binding names a person at its organization"
+    assert not [s for spec in bindings for s in spec["subjects"] if s.get("group") == "platform-readers"]

@@ -259,8 +259,12 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
         for _path, doc in manifests("RoleBinding")
         if any(subject.get("user") == janitor for subject in doc["spec"]["subjects"])
     ]
-    assert [doc["spec"]["role"] for doc in held] == ["janitor"], "the janitor holds its own role alone"
-    assert held[0]["spec"]["scope"] == {"project": "helsinki"}
+    # Beside its own role the janitor reads `hel` as `viewers` names it: the read it held through
+    # `platform-readers` before PF-61 ended (T-6415), no more.
+    by_role = {doc["spec"]["role"]: doc for doc in held}
+    assert sorted(by_role) == ["janitor", "viewer"], "the janitor holds its own role and the old read alone"
+    assert by_role["viewer"]["metadata"]["name"] == "viewers"
+    assert by_role["janitor"]["spec"]["scope"] == {"project": "helsinki"}
     patterns = []
     for rule in roles["janitor"]["spec"]["rules"]:
         assert set(rule["verbs"]) == {"approve", "delete"}, "the janitor proposes and reads nothing"
@@ -286,7 +290,7 @@ def test_the_janitor_reaches_journey_residue_and_nothing_seeded():
     # sample apps. A year-suffixed table of another project (`bratislava-rozpocet-prijmy-2019`, T-5676)
     # stays outside it.
     apps = SEED.parent.parent / "gitea/apps"
-    project = held[0]["spec"]["scope"]["project"]
+    project = by_role["janitor"]["spec"]["scope"]["project"]
     seeded = {
         doc["metadata"]["name"]
         for path in [*SEED.glob(f"{project}/*.yaml"), *apps.glob("*/app.yaml"), *apps.glob("*/grants/**/*.yaml")]
@@ -354,3 +358,73 @@ def test_every_on_change_recording_has_a_heartbeat():
 def test_the_heartbeat_check_reads_durations_as_the_portal_does():
     assert all(map(_duration_ok, ("PT1M", "PT1H", "P7D", "P30D", "P3650D")))
     assert not any(map(_duration_ok, (None, "PT30S", "P3651D", "P", "PT", "1h")))
+
+
+# --- ADR-N-067 2.1 (T-6415): PF-61 ends, viewers are named ------------------------------------
+
+PEOPLE = yaml.safe_load((SEED.parent.parent / "keycloak/demo-users.yaml").read_text())
+# The demo people `platform-readers` made viewer of `hel` before T-6415: every account in the
+# default group, less the two members T-6408 added (they carry an Organization subgroup).
+PF61_READERS = {
+    "demo.steward", "demo.viewer", "demo.approver", "demo.editor", "demo.zilina",
+    "demo.barcelona", "demo.bratislava", "demo.janitor", "demo.probe",
+}
+
+
+def subject_groups():
+    for path, doc in manifests("RoleBinding"):
+        for subject in doc["spec"]["subjects"]:
+            if "group" in subject:
+                yield path.name, subject["group"]
+
+
+def test_no_binding_makes_the_default_group_a_project_person():
+    """Every account lands in `platform-readers`, so a binding of it made every realm user a
+    viewer of every project of `hel` (PF-61). A member reaches no project until someone binds a
+    role (ADR-N-067 2.1)."""
+    bound = [(name, group) for name, group in subject_groups() if group == "platform-readers"]
+    assert not bound, bound
+
+
+def test_the_people_who_read_hel_through_pf61_are_named_viewers():
+    """No demo person loses a project: each one who read `hel` through `platform-readers` is a
+    subject of `viewers` by their Keycloak id, and nobody else is (no project added)."""
+    readers = {
+        name for name, user in PEOPLE.items()
+        if str(user.get("platformReaders")) != "False"
+        and not any("/" in group for group in user["groups"])
+    }
+    assert readers == PF61_READERS, sorted(readers ^ PF61_READERS)
+    [viewers] = [doc["spec"] for _path, doc in manifests("RoleBinding") if doc["metadata"]["name"] == "viewers"]
+    assert viewers["role"] == "viewer" and viewers["scope"] == {"organization": "hel"}
+    named = {subject["user"] for subject in viewers["subjects"]}
+    assert named == {DEMO_IDS[name] for name in PF61_READERS}, sorted(named)
+
+
+def assignees(spec: dict):
+    if "assignee" in spec:
+        yield spec["assignee"]
+    for rule in spec.get("rules") or []:
+        if "assignee" in rule:
+            yield rule["assignee"]
+
+
+def test_no_holder_of_a_root_group_grant_carries_jc_groups():
+    """With `jc_groups` in the token the PDP matches a `group` grant only as `/{org}/{group}`
+    (T-6409), so a grant naming a root group (a project group: bikes-ops-read `helsinki`,
+    kpi-shared-read `bbsk`) stops reaching a person the moment they join an Organization
+    subgroup. Rewrite those grants before such a person joins one; this keeps every read they
+    hold today."""
+    apps = SEED.parent.parent / "gitea/apps"
+    policies = [doc for _path, doc in manifests("Policy")] + [
+        doc for path in sorted(apps.rglob("*.yaml")) for doc in documents(path) if doc.get("kind") == "Policy"
+    ]
+    root = {
+        a["id"] for doc in policies for a in assignees(doc["spec"])
+        if a.get("kind") == "group" and "/" not in a.get("id", "")
+    }
+    assert {"helsinki", "bbsk"} <= root, sorted(root)
+    for name, user in PEOPLE.items():
+        if any("/" in group for group in user["groups"]):
+            held = root & set(user["groups"])
+            assert not held, f"{name} carries jc_groups and loses the grants of {sorted(held)}"
