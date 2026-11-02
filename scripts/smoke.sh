@@ -1152,8 +1152,8 @@ else
 	fi
 fi
 
-# A forged caller at the broker (T-4875): the broker believes the x-jc-* subject a request
-# carries, so only the gateway's and the Portal's mesh identities may reach its port. The probe
+# A forged caller at the broker (T-4875): only the gateway's and the Portal's mesh identities may
+# reach its port. The probe
 # wears the Portal's pod label, which the NetworkPolicies admit, and stays out of the mesh: the
 # Linkerd Server on 9090 is then the only thing that can refuse it. An HTTP status other than 403
 # or 101/200 means the proxy did not answer and nothing was measured.
@@ -1181,6 +1181,37 @@ else
 		ko "the forged-caller probe got no answer from the broker at $cb_ip:9090 (HTTP '${http_code}', WebSocket '${ws_code}'), so the refusal was not measured"
 	else
 		ko "a pod outside the gateway and the Portal reached the broker with a forged subject (HTTP $http_code, WebSocket $ws_code): it can read as anyone (T-4875)"
+	fi
+
+	# The second layer (T-6433): the one identity past that proxy outside ANTARES_POLICY_SUBJECT_FROM
+	# is the broker's own, admitted for its self-calls. A meshed pod wearing it forges a subject; the
+	# broker must drop the headers, so the read names nobody and gets 401, where a believed subject
+	# gets 200 or a policy 403. Its proxy never exits, so the pod is run detached, read and deleted.
+	forger="smoke-meshforge-$$"
+	cb_account=$(kubectl get pods -n "$slug" -l app.kubernetes.io/name=context-broker-broker -o jsonpath='{.items[0].spec.serviceAccountName}' 2>/dev/null)
+	meshed_overrides=$(probe_overrides "$forger" "[\"sh\", \"-c\", \"sleep 3; echo PROBE-RAN; $forge 'http://$cb_ip:9090/ngsi-ld/v1/entities?type=Smoke' 2>&1 | sed -n 's/^ *HTTP[^ ]* \\\\([0-9]*\\\\).*/HTTP-\\\\1/p'; echo PROBE-DONE\"]" |
+		sed -e '/opt-out-reason/d' -e 's/"linkerd.io\/inject": "disabled",/"linkerd.io\/inject": "enabled"/' \
+			-e "s/\"spec\": {/\"spec\": {\n    \"serviceAccountName\": \"$cb_account\",/" \
+			-e 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "portal-portal"},/')
+	kubectl run "$forger" -n "$slug" --restart=Never --image="$image" --overrides="$meshed_overrides" >/dev/null 2>&1 || true
+	forge_out=""
+	meshed_deadline=$(($(date +%s) + ${JC_SMOKE_MESHED_WAIT:-90}))
+	while :; do
+		forge_out=$(kubectl logs "$forger" -n "$slug" -c "$forger" 2>/dev/null || true)
+		grep -q PROBE-DONE <<<"$forge_out" && break
+		[ "$(date +%s)" -lt "$meshed_deadline" ] || break
+		sleep 3
+	done
+	kubectl delete pod "$forger" -n "$slug" --wait=false >/dev/null 2>&1 || true
+	http_code=$(printf '%s' "$forge_out" | sed -n 's/^HTTP-\([0-9]*\)\r*$/\1/p' | head -1)
+	if ! grep -q PROBE-DONE <<<"$forge_out"; then
+		ko "the meshed forged-caller probe never finished, so who the broker believes was not measured"
+	elif [ "$http_code" = 401 ]; then
+		ok "the broker drops a forged x-jc-subject from a meshed identity outside its list (401)"
+	elif [ -z "$http_code" ] || [ "$http_code" = 403 ]; then
+		ko "the meshed forged-caller probe was not admitted past the proxy (HTTP '${http_code}'), so who the broker believes was not measured"
+	else
+		ko "the broker believed a forged x-jc-subject from a meshed identity outside its list (HTTP $http_code): check ANTARES_POLICY_SUBJECT_FROM (T-6433)"
 	fi
 fi
 

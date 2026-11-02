@@ -190,6 +190,13 @@ elif args[0] == "get" and args[1] == "configmap":
         sys.stdout.write("  password: %s\\n" % spec["leakedCredential"])
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "apisix":
     sys.exit(0 if spec.get("edge", True) else 1)
+elif args[0] == "logs" and args[1].startswith("smoke-meshforge"):
+    if spec.get("meshForgerRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+        code = spec.get("meshForgerCode", 401)
+        if code is not None and open(os.environ["STUB_SPEC"] + ".meshforge").read() == "fits":
+            sys.stdout.write("HTTP-%s\\n" % code)
+        sys.stdout.write("PROBE-DONE\\n")
 elif args[0] == "logs" and "pipeline-runner-runner" in line:
     # T-4055: the runner's refusals, each `[age in seconds, line]`; `--since=Ns` shows those
     # at most N seconds old.
@@ -337,7 +344,8 @@ elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=apisix" 
     sys.stdout.write(spec.get("apisixPodIp", "10.42.0.9"))
 elif args[0] == "get" and args[1] == "pods" and "app.kubernetes.io/name=context-broker-broker" in line:
     # T-4875: the forged-caller probe aims at the broker pod's own address; "" is no pod.
-    sys.stdout.write(spec.get("brokerPodIp", "10.42.0.30"))
+    # T-6433: the meshed probe wears the pod's own ServiceAccount.
+    sys.stdout.write("context-broker-broker" if "serviceAccountName" in line else spec.get("brokerPodIp", "10.42.0.30"))
 elif args[0] == "get" and args[1] == "servers.policy.linkerd.io":
     sys.exit(0 if spec.get("brokerServer", True) else 1)
 elif args[0] == "run" and args[1].startswith("smoke-forger"):
@@ -350,6 +358,16 @@ elif args[0] == "run" and args[1].startswith("smoke-forger"):
     for kind, code in zip(("HTTP", "WS"), spec.get("forgerCodes", [403, 403]) if unmeshed and portal else []):
         if code is not None:
             sys.stdout.write("%s-%s\\n" % (kind, code))
+elif args[0] == "run" and args[1].startswith("smoke-meshforge"):
+    # T-6433: remembered for `logs`: the status only a meshed pod wearing the broker's
+    # ServiceAccount and the Portal's label gets.
+    pod = json.loads(next(a for a in args if a.startswith("--overrides=")).split("=", 1)[1])
+    fits = (pod["metadata"]["annotations"].get("linkerd.io/inject") == "enabled"
+            and "mesh.joinedcontext.com/opt-out-reason" not in pod["metadata"]["annotations"]
+            and pod["spec"]["serviceAccountName"] == "context-broker-broker"
+            and pod["metadata"]["labels"]["app.kubernetes.io/name"] == "portal-portal")
+    with open(os.environ["STUB_SPEC"] + ".meshforge", "w") as f:
+        f.write("fits" if fits else "")
 elif args[0] == "run" and args[1].startswith("smoke-edgepeer"):
     # T-0939: like the egress probe, it reports by what it prints. `edgePeerRan: False` is a
     # probe that never ran, which must not read as "the policy refused it".
@@ -2035,6 +2053,37 @@ def test_an_instance_without_a_meshed_broker_skips_the_forged_caller_probe(tmp_p
     for spec in (dict(HEALTHY, brokerServer=False), dict(HEALTHY, brokerPodIp="")):
         result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
         assert "broker callers (no meshed context broker with its Server in this instance)" in result.stdout
+
+
+def test_the_broker_dropping_a_meshed_forged_subject_passes(tmp_path):
+    """T-6433: past the proxy the broker's own identity forges a subject; it reads as nobody."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    the broker drops a forged x-jc-subject from a meshed identity" in result.stdout
+
+
+@pytest.mark.parametrize("code", [200, 500])
+def test_a_meshed_forged_subject_the_broker_believes_fails_the_run(tmp_path, code):
+    spec = dict(HEALTHY, meshForgerCode=code)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert f"the broker believed a forged x-jc-subject from a meshed identity outside its list (HTTP {code})" in result.stdout
+
+
+@pytest.mark.parametrize("code", [403, None])
+def test_a_meshed_forger_the_proxy_stopped_measures_nothing(tmp_path, code):
+    """T-6433: a 403 is the proxy or a believed subject's policy, never the proof of a drop."""
+    spec = dict(HEALTHY, meshForgerCode=code)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test")
+    assert result.returncode == 1
+    assert "so who the broker believes was not measured" in result.stdout
+
+
+def test_a_meshed_forger_that_never_finished_fails_the_run(tmp_path):
+    spec = dict(HEALTHY, meshForgerRan=False)
+    result = run(tmp_path, spec, "https://example.test", "https://idm.example.test",
+                 extra_env={"JC_SMOKE_MESHED_WAIT": "0"})
+    assert result.returncode == 1
+    assert "the meshed forged-caller probe never finished" in result.stdout
 
 
 def test_the_mqtt_brokers_serve_their_certificate_and_refuse_a_connect_without_a_token(tmp_path):

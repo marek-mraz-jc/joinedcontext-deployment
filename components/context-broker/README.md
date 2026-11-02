@@ -31,8 +31,10 @@ through `JC_GATEWAY_BROKER_URL_TEMPLATE` and `JC_PORTAL_BROKER_URL_TEMPLATE`.
 
 With the Linkerd mesh on, every broker also gets a Linkerd `Server` on 9090 with
 `accessPolicy: deny` and an `AuthorizationPolicy` that admits the `context-gateway` and `portal`
-ServiceAccounts alone (T-4875). The broker believes the `x-jc-*` subject headers a caller sends,
-and a meshed pod's connection lands on the proxy port the NetworkPolicy opens, so the proxy is what
-refuses a forged subject from any other pod. `policies/brokers.rego` refuses a broker
+ServiceAccounts alone (T-4875). A meshed pod's connection lands on the proxy port the NetworkPolicy
+opens, so the proxy refuses a forged subject from any other pod. Behind it,
+`ANTARES_POLICY_SUBJECT_FROM` names the same two mesh identities: the broker believes the `x-jc-*`
+subject headers from them alone, so an identity the Server admits for another reason, the broker's
+own, names nobody and gets 401 without the admin bearer. `policies/brokers.rego` refuses a broker
 `MeshTLSAuthentication` that names anyone else; Prometheus cannot scrape a meshed broker until its
 metrics move to a port of their own.

@@ -1,16 +1,19 @@
 """Who may call the context broker's port inside the mesh (T-4875).
 
-The broker believes the caller the `x-jc-*` headers name. `context-broker-allow-linkerd` opens the
-Linkerd inbound port 4143 to the gateway and the Portal, but a meshed pod's connection lands on
-that proxy whatever the NetworkPolicy says about 9090. The Linkerd `Server` on 9090 and its
-`AuthorizationPolicy` keep every identity but those two out, so a pod in any other namespace
-cannot forge a subject, on the API or on a WebSocket upgrade.
+`context-broker-allow-linkerd` opens the Linkerd inbound port 4143 to the gateway and the Portal,
+but a meshed pod's connection lands on that proxy whatever the NetworkPolicy says about 9090. The
+Linkerd `Server` on 9090 and its `AuthorizationPolicy` keep every identity but those two out, so a
+pod in any other namespace cannot forge a subject, on the API or on a WebSocket upgrade. Behind
+them `ANTARES_POLICY_SUBJECT_FROM` makes the broker believe the `x-jc-*` headers from those two
+alone (T-6433).
 
 Conftest reads one document at a time in CI, so the pairing is checked here, over the whole
 render; policies/brokers.rego checks that no broker's identity list grows.
 """
 
 import pytest
+
+from conftest import set_global
 
 ENVIRONMENTS = ("local", "dev", "production")
 CALLERS = {"context-gateway": "context-gateway", "portal": "portal"}
@@ -121,3 +124,51 @@ def test_the_named_identities_are_the_callers_own_service_accounts(
             if d.get("kind") == "Deployment" and d["metadata"]["name"] == deployment
         )
         assert pod["spec"]["template"]["spec"]["serviceAccountName"] == sa
+
+
+def broker_env(pod):
+    (container,) = [
+        c
+        for c in pod["spec"]["template"]["spec"]["containers"]
+        if c["name"] != "linkerd-proxy"
+    ]
+    return {e["name"]: e.get("value") for e in container.get("env", [])}
+
+
+def mesh_identity(docs, deployment, account):
+    namespace = namespace_of(docs, deployment)
+    return f"{account}.{namespace}.serviceaccount.identity.linkerd.cluster.local"
+
+
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_the_broker_believes_a_subject_from_its_two_callers_alone(rendered, environment):
+    """T-6433: the list is the Server's clients, without the broker's own identity."""
+    docs = rendered(environment)
+    brokers = [b for b in broker_pods(docs) if meshed(b)]
+    if not brokers:
+        pytest.skip(f"{environment} runs no meshed broker")
+    expected = {mesh_identity(docs, d, sa) for d, sa in CALLERS.items()}
+    for broker in brokers:
+        believed = broker_env(broker)["ANTARES_POLICY_SUBJECT_FROM"]
+        assert sorted(believed.split(",")) == sorted(expected), believed
+
+
+@pytest.mark.parametrize("environment", ENVIRONMENTS)
+def test_a_broker_outside_the_mesh_sets_no_subject_list(rendered, environment):
+    """Without a proxy any client can write `l5d-client-id`, so the list would prove nothing."""
+    for broker in broker_pods(rendered(environment)):
+        if not meshed(broker):
+            assert "ANTARES_POLICY_SUBJECT_FROM" not in broker_env(broker)
+
+
+def test_a_mesh_without_a_caller_renders_no_subject_list(rendered_variant):
+    """A set blank key is fatal at boot (Antares T-6432), so no caller means no key."""
+
+    def no_callers(tree):
+        set_global(tree, "serviceMesh.enable", True)
+        set_global(tree, "serviceMesh.type", "linkerd")
+
+    brokers = broker_pods(rendered_variant("broker-only", no_callers))
+    assert brokers and all(meshed(b) for b in brokers)
+    for broker in brokers:
+        assert "ANTARES_POLICY_SUBJECT_FROM" not in broker_env(broker)
