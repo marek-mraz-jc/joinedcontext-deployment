@@ -141,3 +141,20 @@ demo.bearer:
   realmRoles: []
   groups: []
   platformReaders: false
+# An Organization member with no project and no RoleBinding (ADR-N-067 2.2, T-6408): their token
+# carries `jc_org: [helsinki]` and `jc_groups: [/helsinki/members]`, and `groups` holds
+# `helsinki/members`, which matches no project, Group or grant name. demo.member is the T-4911
+# sharing person, so this one is demo.orgmember.
+demo.orgmember:
+  id: de300000-0000-4000-8000-00000000000f
+  firstName: Organization
+  lastName: Member
+  realmRoles: []
+  groups: [helsinki/members]
+# The same member in the data-access group /helsinki/traffic-analysts (ADR-N-067 2.7).
+demo.analyst:
+  id: de300000-0000-4000-8000-000000000010
+  firstName: Traffic
+  lastName: Analyst
+  realmRoles: []
+  groups: [helsinki/members, helsinki/traffic-analysts]

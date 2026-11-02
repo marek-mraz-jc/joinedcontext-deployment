@@ -157,6 +157,9 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.barcelona@hel.fi",
         # Hlavné mesto SR Bratislava's (T-5271).
         "demo.bratislava@hel.fi",
+        # Organization members with no project (ADR-N-067, T-6408).
+        "demo.orgmember@hel.fi",
+        "demo.analyst@hel.fi",
         *SHARING_PEOPLE,
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -212,6 +215,8 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-zilina",
         "keycloak-user-demo-barcelona",
         "keycloak-user-demo-bratislava",
+        "keycloak-user-demo-orgmember",
+        "keycloak-user-demo-analyst",
         *("keycloak-user-" + name.split("@")[0].replace(".", "-") for name in SHARING_PEOPLE),
     }
     for secret in secrets.values():
@@ -389,7 +394,7 @@ def test_an_mcp_connector_token_names_only_the_resource_it_asked_for(realm_clien
     assert client["defaultClientScopes"] == ["acr", "basic", "email", "profile"]
     mappers = {m["name"]: m for m in client["protocolMappers"]}
     # amr names how the caller signed in (T-5567, on every platform client); no audience mapper.
-    assert set(mappers) == {"groups", "realm-roles", "amr"}, "no audience mapper on the client itself"
+    assert set(mappers) == {"groups", "realm-roles", "amr", "jc_org", "jc_groups"}, "no audience mapper on the client itself"
     assert not [m for m in mappers.values() if m["protocolMapper"] == "oidc-audience-mapper"]
     realm_roles = mappers["realm-roles"]
     assert realm_roles["protocolMapper"] == "oidc-usermodel-realm-role-mapper"
@@ -425,7 +430,7 @@ def test_a_connector_token_names_one_connector_and_the_connectors_door_alone(loc
     assert attributes["include.in.token.scope"] == "true"
     assert attributes["display.on.consent.screen"] == "true"
     mappers = {m["name"]: m for m in scope["protocolMappers"]}
-    assert set(mappers) == {"portal-connectors-audience", "portal-api-audience", "groups", "amr"}
+    assert set(mappers) == {"portal-connectors-audience", "portal-api-audience", "groups", "amr", "jc_org", "jc_groups"}
     # portal-api exchanges the token for an Endpoint read: Keycloak's exchange refuses a subject
     # token whose `aud` lacks the requester ("Client is not within the token audience").
     assert mappers["portal-api-audience"]["config"]["included.client.audience"] == "portal-api"
@@ -539,7 +544,8 @@ def test_every_client_carries_the_groups_claim(realm_clients):
         assert len(mappers) == 1, f"{client_id} carries {len(mappers)} group mappers"
         config = mappers[0]["config"]
         assert config["claim.name"] == "groups", client_id
-        assert config["full.path"] == "false", f"{client_id}: the forge's team map names the group, not its path"
+        # ADR-N-067 2.2 (T-6408): a bare subgroup name `members` would match any Organization's.
+        assert config["full.path"] == "true", f"{client_id}: a subgroup must arrive as its path"
         assert config["access.token.claim"] == "true" and config["id.token.claim"] == "true", client_id
 
 

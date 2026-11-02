@@ -14,7 +14,7 @@
 {{- with $this.appsOrganization }}
 {{- $_ := set $orgs . $teams }}
 {{- end }}
-{{- $_ := set $groupTeamMap $group $orgs }}
+{{- $_ := set $groupTeamMap (printf "/%s" $group) $orgs }}
 {{- end }}
 {{- /* PF-87: each project repository is read through its own two teams. The Portal's
        reconciler creates the teams `{slug}-readers` and `{slug}-writers` and fills the Keycloak
@@ -23,7 +23,7 @@
 {{- range $slug := $this.projectTeams | default list }}
 {{- range $role := list "readers" "writers" }}
 {{- $name := printf "%s-%s" $slug $role }}
-{{- $_ := set $groupTeamMap $name (dict $global.configRepo.owner (list $name)) }}
+{{- $_ := set $groupTeamMap (printf "/%s" $name) (dict $global.configRepo.owner (list $name)) }}
 {{- end }}
 {{- end }}
 {{- /* Where merge hooks are delivered. The reconciler runs in the portal process
@@ -148,6 +148,8 @@ gitea:
       # lands in the forge team that reads the configuration repository, instead of meeting a
       # 404 on a private repository (PF-79). The teams themselves are created by the bootstrap
       # Job; a group with no team here changes nothing.
+      # The claim holds full paths (components/keycloak, ADR-N-067 2.2), so the map's keys and
+      # the admin group are `/{group}`.
       groupClaimName: groups
       groupTeamMap: '{{ $groupTeamMap | toJson }}'
       # A person the realm no longer holds in a mapped group leaves its team at their next
@@ -156,7 +158,7 @@ gitea:
       # the flag and ignores the word after it.
       groupTeamMapRemoval: true
       {{- with $this.adminGroup }}
-      adminGroup: {{ . | quote }}
+      adminGroup: {{ printf "/%s" . | quote }}
       {{- end }}
 
   config:

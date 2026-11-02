@@ -503,10 +503,25 @@ config:
               consentRequired: false
               config:
                 claim.name: groups
-                full.path: 'false'
+                full.path: 'true'
                 access.token.claim: 'true'
                 id.token.claim: 'false'
                 userinfo.token.claim: 'false'
+            {{- range $claim := list "jc_org" "jc_groups" }}
+            - name: {{ $claim }}
+              protocol: openid-connect
+              protocolMapper: oidc-usermodel-attribute-mapper
+              consentRequired: false
+              config:
+                user.attribute: {{ $claim }}
+                claim.name: {{ $claim }}
+                jsonType.label: String
+                multivalued: 'true'
+                aggregate.attrs: 'true'
+                access.token.claim: 'true'
+                id.token.claim: 'false'
+                userinfo.token.claim: 'false'
+            {{- end }}
             - name: amr
               protocol: openid-connect
               protocolMapper: oidc-amr-mapper
@@ -777,8 +792,11 @@ config:
                group and the Portal checks the binding (PF-50, PF-61), and the forge maps the
                same claim onto its teams (PF-79). Identity, never permission. A client's own
                mappers are added to this one, because `mergeOverwrite` would otherwise drop
-               the list the client did not repeat. Short names, not paths: the Portal strips a
-               leading slash either way, the forge's team map does not. */}}
+               the list the client did not repeat. Full paths (ADR-N-067 2.2): every reader
+               trims the one leading slash, so a root group reads as its name and a subgroup as
+               `{org}/{group}`, which no project, Group or grant name can equal (a `/` is no
+               DNS-1123 character); a bare subgroup name would match another Organization's
+               `members`. The forge's team map names `/{group}`. */}}
         {{- $groupsMapper := dict
           "name" "groups"
           "protocol" "openid-connect"
@@ -786,7 +804,7 @@ config:
           "consentRequired" false
           "config" (dict
             "claim.name" "groups"
-            "full.path" "false"
+            "full.path" "true"
             "access.token.claim" "true"
             "id.token.claim" "true"
             "userinfo.token.claim" "true")
@@ -804,7 +822,30 @@ config:
             "id.token.claim" "true"
             "introspection.token.claim" "true")
         }}
-        {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper $amrMapper) (index $rawValues "protocolMappers" | default list)) }}
+        {{- /* The person's Organizations and their groups in them (ADR-N-067 2.2, 2.7):
+               `jc_org` and `jc_groups` are attributes of each `/{org}/{group}` group, never of a
+               person. `aggregate.attrs` reads the person's own attribute of that name first,
+               which the realm's user profile refuses to hold (no unmanaged attributes:
+               `unmanagedAttributePolicy` stays unset, tests/test_keycloak_org_claims.py), so
+               only group membership feeds them. */}}
+        {{- $orgMappers := list }}
+        {{- range $claim := list "jc_org" "jc_groups" }}
+        {{- $orgMappers = append $orgMappers (dict
+          "name" $claim
+          "protocol" "openid-connect"
+          "protocolMapper" "oidc-usermodel-attribute-mapper"
+          "consentRequired" false
+          "config" (dict
+            "user.attribute" $claim
+            "claim.name" $claim
+            "jsonType.label" "String"
+            "multivalued" "true"
+            "aggregate.attrs" "true"
+            "access.token.claim" "true"
+            "id.token.claim" "true"
+            "userinfo.token.claim" "true")) }}
+        {{- end }}
+        {{- $_ := set $finalClient "protocolMappers" (concat (list $groupsMapper $amrMapper) $orgMappers (index $rawValues "protocolMappers" | default list)) }}
         {{- /* The gateway alone exchanges a caller's token for the brokers' audiences
                (ADR-N-047 §2.4, T-3999): standard token exchange V2 on its client, and the
                broker scopes above optional on it, so its own client_credentials token names no
@@ -850,9 +891,28 @@ config:
         {{- range ($this.organizations | default list) }}
         {{- $_ := set $declared . true }}
         {{- end }}
+        {{- /* The groups inside an Organization (ADR-N-067 2.2, 2.7), each carrying the
+               Organization's name and its own path as the attributes `jc_org` and `jc_groups`
+               the tokens read. A person names one as `{org}/{group}`, declared here only. */}}
+        {{- $orgGroups := $this.organizationGroups | default dict }}
+        {{- range $org, $_ := $orgGroups }}
+        {{- $_ := set $declared $org true }}
+        {{- end }}
         {{- range $group, $_ := $declared }}
+        {{- if not (contains "/" $group) }}
         - name: {{ $group }}
           path: /{{ $group }}
+          {{- with index $orgGroups $group }}
+          subGroups:
+            {{- range $sub := . }}
+            - name: {{ $sub }}
+              path: /{{ $group }}/{{ $sub }}
+              attributes:
+                jc_org: [{{ $group | quote }}]
+                jc_groups: [{{ printf "/%s/%s" $group $sub | quote }}]
+            {{- end }}
+          {{- end }}
+        {{- end }}
         {{- end }}
       defaultGroups:
         - /platform-readers
