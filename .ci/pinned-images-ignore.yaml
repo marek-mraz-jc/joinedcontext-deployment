@@ -523,6 +523,10 @@
   reason: "12.4.14 (2026-10-27, which clears CVE-2026-111497 and three of these rows) still carries the Go findings of 12.4.12, and 13.2.3 carries them and 60 more (trivy 0.70.0), so the pin stays on 12.4."
   task: T-3867
   expires: 2026-11-10
+- cve: CVE-2026-116587
+  image: docker.io/grafana/grafana
+  reason: "go-jose 4.1.4 inside the Grafana binary, fixed in 4.1.6; 12.4.14 is the newest 12.4 release, so only a Grafana release can move it. Sign-in is the realm's code flow behind the edge, and only signed-in people reach Grafana."
+  task: T-6504
 # ghcr.io/marek-mraz-jc/joinedcontext-grafana (docker.io/grafana/grafana plus the NGSI-LD datasource, T-6513): the same base, so the same rows.
 - cve: CVE-2026-21728
   image: ghcr.io/marek-mraz-jc/joinedcontext-grafana
@@ -532,6 +536,10 @@
 - cve: CVE-2026-28377
   image: ghcr.io/marek-mraz-jc/joinedcontext-grafana
   reason: "12.4.14 (2026-10-27, which clears CVE-2026-111497 and three of these rows) still carries the Go findings of 12.4.12, and 13.2.3 carries them and 60 more (trivy 0.70.0), so the pin stays on 12.4."
+  task: T-6513
+- cve: CVE-2026-116587
+  image: ghcr.io/marek-mraz-jc/joinedcontext-grafana
+  reason: "go-jose 4.1.4 inside the Grafana binary, fixed in 4.1.6; 12.4.14 is the newest 12.4 release, so only a Grafana release can move it. Sign-in is the realm's code flow behind the edge, and only signed-in people reach Grafana."
   task: T-6513
   expires: 2026-11-10
 # ghcr.io/cloudnative-pg/cloudnative-pg: 1.30.1 is the newest CloudNativePG (2026-09-23) and fixes 13 of the 17 HIGH rows of 1.30.0; these three (four package rows) need Go 1.27.2 and golang.org/x/net 0.60, which no CNPG release ships yet (trivy 0.58.1, 2026-10-11). The operator serves only the Kubernetes API webhook inside the cluster.

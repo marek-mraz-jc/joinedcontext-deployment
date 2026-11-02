@@ -356,6 +356,14 @@ def test_the_one_unsigned_plugin_is_the_pinned_one(addons):
     assert bases[1].endswith(":" + pinned["tag"] + "@" + BASE_DIGEST), pinned
 
 
+def test_the_image_gate_reads_the_expiring_excuses_and_prints_the_digest_first():
+    """The binary is upstream's, so its reviewed rows hold here too, with their expiry; a digest
+    printed after a red gate would leave nothing to pin or to read a new finding on."""
+    workflow = (PROJECT_ROOT / ".github/workflows/image-grafana.yml").read_text()
+    assert 'row["expires"] >= today' in workflow and "trivyignores: .trivyignore" in workflow
+    assert workflow.index("pin this in components/grafana") < workflow.index('exit-code: "1"')
+
+
 def test_the_hook_runs_from_the_mounted_script(addons):
     grafana = container(addons)
     assert grafana["lifecycle"]["postStart"]["exec"]["command"] == [
