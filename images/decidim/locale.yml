@@ -1,4 +1,4 @@
-# Decidim 0.32.2's Slovak strings that read wrong on the site (T-6453).
+# Decidim 0.32.2's strings that read wrong on the site (T-6453).
 sk:
   decidim:
     participatory_spaces:
@@ -16,5 +16,10 @@ sk:
           footer_sub_hero_headline: Vitajte na platforme %{organization}.
   time:
     # Slovak clocks run 24 hours; Decidim's formats print %p after %H.
+    am: ""
+    pm: ""
+en:
+  time:
+    # Decidim's formats print %p after a 24-hour %H: "17:00 PM".
     am: ""
     pm: ""

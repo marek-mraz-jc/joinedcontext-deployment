@@ -57,3 +57,21 @@ def test_no_contact_detail_or_titled_person_is_in_the_content():
 def test_the_assets_are_in_the_image(name):
     assert (ROOT / "site" / name).stat().st_size > 0
     assert "COPY site db/joinedcontext_site" in (ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+
+def test_every_site_file_reaches_its_place_in_the_image():
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    for line in (
+        "COPY site.rb db/joinedcontext_site.rb",
+        "COPY locale.yml config/locales/joinedcontext.yml",
+        "COPY theme.css public/joinedcontext-theme.css",
+        "COPY head-extra.html.erb app/views/layouts/decidim/_head_extra.html.erb",
+        "COPY footer-legal.html.erb app/views/layouts/decidim/footer/_main_legal.html.erb",
+    ):
+        assert line in dockerfile
+    assert "/joinedcontext-theme.css" in (ROOT / "head-extra.html.erb").read_text(encoding="utf-8")
+
+
+def test_each_phase_title_has_its_english_title():
+    titles = {step["title"] for process in PROCESSES for step in process["steps"]}
+    assert titles == set(CONTENT["step_titles_en"])

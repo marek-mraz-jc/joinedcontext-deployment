@@ -16,6 +16,8 @@ demo = ENV["DECIDIM_SITE_DEMO_NOTICE"] == "true"
 organization = Decidim::Organization.find_by!(host: ENV.fetch("DECIDIM_HOST"))
 
 sk = ->(text) { { "sk" => text } }
+# English where the file holds it; Decidim shows the Slovak text for the rest.
+titled = ->(item, english = item["title_en"]) { sk.call(item.fetch("title")).merge(english ? { "en" => english } : {}) }
 upload = lambda do |attachment, name, type|
   next if attachment.attached?
 
@@ -30,7 +32,7 @@ organization.assign_attributes(
   official_url: site.fetch("official_url"),
   time_zone: site.fetch("time_zone"),
   enable_omnipresent_banner: demo,
-  omnipresent_banner_title: demo ? site.fetch("demo_notice") : {},
+  omnipresent_banner_title: demo ? site.fetch("demo_banner") : {},
   omnipresent_banner_short_description: {},
   omnipresent_banner_url: demo ? "/pages/#{content.dig("privacy", "slug")}" : nil
 )
@@ -60,8 +62,8 @@ blocks.each do |manifest, weight|
   end
   block.save!
 end
-hero = Decidim::ContentBlock.find_by!(organization:, scope_name: :homepage, manifest_name: :hero)
-upload.call(hero.images_container.background_image, "hero.jpg", "image/jpeg")
+home_hero = Decidim::ContentBlock.find_by!(organization:, scope_name: :homepage, manifest_name: :hero)
+upload.call(home_hero.images_container.background_image, "hero.jpg", "image/jpeg")
 
 created = 0
 processes.each do |source|
@@ -82,16 +84,18 @@ processes.each do |source|
     )
     process.hero_image.attach(io: dir.join(source.fetch("image")).open, filename: source.fetch("image"), content_type: "image/jpeg")
     source.fetch("steps").each_with_index do |step, position|
-      process.steps.create!(title: sk.call(step.fetch("title")), description: sk.call(""), position:,
+      process.steps.create!(title: titled.call(step, content.dig("step_titles_en", step.fetch("title"))), description: sk.call(""), position:,
                             start_date: step["start"], end_date: step["end"]).tap { |item| item.update!(active: true) if step["active"] }
     end
     Decidim::ContentBlocksCreator.new(process).create_default!
     active = process.steps.find_by!(active: true).id.to_s
 
+    # Decidim's name for results breaks in a narrow sidebar and says less.
+    names = { accountability: { "sk" => "Výsledky", "en" => "Results" } }
     component = lambda do |manifest, step_settings = {}, settings = {}|
       Decidim::Component.create!(
         participatory_space: process, manifest_name: manifest, published_at: Time.current,
-        name: Decidim::Components::Namer.new(organization.available_locales, manifest).i18n_name,
+        name: names[manifest] || Decidim::Components::Namer.new(organization.available_locales, manifest).i18n_name,
         settings:, step_settings: { active => step_settings }
       )
     end
@@ -122,7 +126,7 @@ processes.each do |source|
     meetings = component.call(:meetings)
     source.fetch("meetings").each do |item|
       Decidim::Meetings::Meeting.create!(
-        component: meetings, author: organization, title: sk.call(item.fetch("title")),
+        component: meetings, author: organization, title: titled.call(item),
         description: sk.call("<p>#{item.fetch("description")}</p>"), location: sk.call(item.fetch("location")),
         location_hints: sk.call(""), address: item.fetch("address"),
         start_time: Time.zone.parse(item.fetch("start")), end_time: Time.zone.parse(item.fetch("end")),
@@ -155,6 +159,15 @@ processes.each do |source|
         start_date: item.fetch("start"), end_date: item.fetch("end")
       )
     end
+    # The page shows the process's own work, after what ContentBlocksCreator publishes.
+    %i(extra_data highlighted_proposals highlighted_meetings highlighted_results).each.with_index(100) do |manifest, weight|
+      block = Decidim::ContentBlock.find_or_initialize_by(organization:, scope_name: :participatory_process_homepage,
+                                                          scoped_resource_id: process.id, manifest_name: manifest)
+      block.update!(weight:, published_at: Time.current)
+    end
+    hero = Decidim::ContentBlock.find_by!(organization:, scope_name: :participatory_process_homepage,
+                                          scoped_resource_id: process.id, manifest_name: :hero)
+    hero.images_container.background_image.attach(io: dir.join(source.fetch("image")).open, filename: source.fetch("image"), content_type: "image/jpeg")
     created += 1
   end
 end

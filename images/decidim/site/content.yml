@@ -10,6 +10,9 @@ organization:
   demo_notice:
     sk: Toto je demo kópia na testovacom prostredí, nie oficiálny web mesta. Obsah je prevzatý z verejného záznamu a slúži na ukážku.
     en: This is a demo copy on a test environment, not the city's official site. The content comes from the public record and is shown as a sample.
+  demo_banner:
+    sk: Demo kópia na testovacom prostredí, nie oficiálny web mesta.
+    en: Demo copy on a test environment, not the city's official site.
   # The public site's primary colour; a darker shade carries links (7:1 on white); its grey.
   colors: { primary: "#d62426", secondary: "#a81c1e", tertiary: "#d1d1d1" }
   official_url: https://www.banskabystrica.sk
@@ -24,10 +27,18 @@ privacy:
   content:
     sk: <p>Prihlásenie zabezpečuje prihlasovacia služba platformy; samostatná registrácia tu nie je. Platforma ukladá len údaje potrebné na vaše príspevky a nastavenia účtu. Meno ani e-mail sa nezverejňujú v otvorených dátach a príspevky sa do dátového katalógu prenášajú bez osobných údajov.</p><p>Otázky k spracovaniu osobných údajov posielajte správcovi platformy mesta.</p>
     en: <p>Sign-in goes through the platform's sign-in service; there is no separate registration here. The platform stores only what your contributions and account settings need. Your name and e-mail are not published in open data, and contributions reach the data catalogue without personal data.</p><p>Send questions about personal data to the city's platform administrator.</p>
+step_titles_en:
+  Prvé diskusné fórum a vyhlásenie participatívneho rozpočtu: First discussion forum and launch of the budget
+  Konzultačné stretnutia s predkladateľmi: Consultations with proposers
+  Podávanie návrhov: Submitting proposals
+  Formálna kontrola návrhov: Formal check of proposals
+  Druhé diskusné fórum: Second discussion forum
+  Hlasovanie: Voting
+  Realizácia projektov: Delivering the projects
 processes:
 - slug: participatorybudget20262027
   image: process-open.jpg
-  promoted: true
+  promoted: false
   title: { sk: Participatívny rozpočet 2026/2027, en: Participatory budget 2026/2027 }
   subtitle: { sk: Podávanie návrhov je otvorené, en: Proposals are open }
   short_description:
@@ -57,8 +68,8 @@ processes:
   - { title: "Moderný street workout priestor na Slnečnej", state: "evaluating", body: "Verejné street workout ihrisko pre mládež, dospelých a seniorov zo sídliska, doplnok k existujúcemu detskému ihrisku." }
   - { title: "Workout ihrisko s detskými prvkami Šalková – priestor pre pohyb a šport pre všetkých", state: "evaluating", body: "Verejne prístupná workoutová zostava s detskými hernými prvkami a bezpečnými dopadovými plochami v areáli futbalového ihriska." }
   meetings:
-  - { title: "Participatívny rozpočet 2026 – 2027: stretnutie s občanmi v Radvani", location: "Zasadačka pri mestskom mládežníckom štadióne", address: "Sládkovičova 34, Banská Bystrica", start: "2026-06-23T17:00:00+02:00", end: "2026-06-23T19:00:00+02:00", description: "Predstavenie pravidiel ročníka a konzultácia námetov obyvateľov mestskej časti Radvaň." }
-  - { title: "Druhé diskusné fórum participatívneho rozpočtu", location: "Veľká sieň MsÚ", address: "Československej armády 26, Banská Bystrica", start: "2026-11-18T17:00:00+01:00", end: "2026-11-18T19:00:00+01:00", description: "Predkladatelia predstavia svoje návrhy a odborníci mestského úradu k nim povedia svoje stanovisko." }
+  - { title: "Participatívny rozpočet 2026 – 2027: stretnutie s občanmi v Radvani", title_en: "Participatory budget 2026–2027: residents' meeting in Radvaň", location: "Zasadačka pri mestskom mládežníckom štadióne", address: "Sládkovičova 34, Banská Bystrica", start: "2026-06-23T17:00:00+02:00", end: "2026-06-23T19:00:00+02:00", description: "Predstavenie pravidiel ročníka a konzultácia námetov obyvateľov mestskej časti Radvaň." }
+  - { title: "Druhé diskusné fórum participatívneho rozpočtu", title_en: "Second discussion forum of the participatory budget", location: "Veľká sieň MsÚ", address: "Československej armády 26, Banská Bystrica", start: "2026-11-18T17:00:00+01:00", end: "2026-11-18T19:00:00+01:00", description: "Predkladatelia predstavia svoje návrhy a odborníci mestského úradu k nim povedia svoje stanovisko." }
   projects:
   - { title: "Komunitný altánok", amount: 10000, description: "Návrh vo formálnej kontrole; suma je strop pravidiel ročníka." }
   - { title: "Moderný street workout priestor na Slnečnej", amount: 10000, description: "Návrh vo formálnej kontrole; suma je strop pravidiel ročníka." }
@@ -68,7 +79,7 @@ processes:
   - { title: "Príprava online hlasovania", progress: 0, status: "planned", start: 2027-01-12, end: 2027-01-31, description: "Hlasovanie o návrhoch, ktoré postúpia." }
 - slug: participatorybudget2026
   image: process-evaluation.jpg
-  promoted: true
+  promoted: false
   title: { sk: Participatívny rozpočet 2025/2026, en: Participatory budget 2025/2026 }
   subtitle: { sk: Vyhodnotenie a realizácia, en: Evaluation and delivery }
   short_description:
@@ -97,8 +108,8 @@ processes:
   - { title: "Amfik v Sásovej", state: "to_vote", body: "Lavičky na lúke pri križovatke Starohorskej a Rudohorskej, kde sa konajú hromadné podujatia, pre deti, seniorov a ľudí so zdravotným postihnutím." }
   - { title: "Pri jednom stole – spájanie generácií", state: "to_vote", body: "Kruhový zastrešený altánok so stolom a lavicami na mieste bývalého detského ihriska na Triede Hradca Králové, doplnený o trvalky a bylinky." }
   meetings:
-  - { title: "1. diskusné fórum participatívneho rozpočtu", location: "Mestský úrad, druhé poschodie", address: "Československej armády 26, 974 01 Banská Bystrica", start: "2025-03-26T16:00:00+01:00", end: "2025-03-26T18:00:00+01:00", description: "Vyhlásenie ročníka a diskusia o jeho podmienkach." }
-  - { title: "Predstavenie participatívneho rozpočtu 2025/2026 – Centrum", location: "Terasa baru U francúza", address: "Horná 12, 974 11 Banská Bystrica", start: "2025-06-25T17:00:00+02:00", end: "2025-06-25T19:00:00+02:00", description: "Stretnutie s obyvateľmi centra o tom, ako predložiť návrh." }
+  - { title: "1. diskusné fórum participatívneho rozpočtu", title_en: "First discussion forum of the participatory budget", location: "Mestský úrad, druhé poschodie", address: "Československej armády 26, 974 01 Banská Bystrica", start: "2025-03-26T16:00:00+01:00", end: "2025-03-26T18:00:00+01:00", description: "Vyhlásenie ročníka a diskusia o jeho podmienkach." }
+  - { title: "Predstavenie participatívneho rozpočtu 2025/2026 – Centrum", title_en: "Introducing the participatory budget 2025/2026: city centre", location: "Terasa baru U francúza", address: "Horná 12, 974 11 Banská Bystrica", start: "2025-06-25T17:00:00+02:00", end: "2025-06-25T19:00:00+02:00", description: "Stretnutie s obyvateľmi centra o tom, ako predložiť návrh." }
   projects:
   - { title: "Detské dopravné ihrisko – 2. etapa", amount: 10000, selected: true, description: "307 hlasov." }
   - { title: "Mini Pumptrack", amount: 10000, selected: true, description: "275 hlasov." }
@@ -143,8 +154,8 @@ processes:
   - { title: "Radvanská záhrada pri kostole", state: "accepted", body: "Záhrada s edukačnými prvkami na výučbu žiakov základných škôl: slnečné hodiny, zrážkomer a smerovník vetra." }
   - { title: "Komunitná záhrada Poľná - Malachovská cesta", state: "accepted", body: "Komunitná záhrada s bylinkami a relaxačnými prvkami, ktorá buduje vzťahy medzi susedmi." }
   meetings:
-  - { title: "Predstavenie projektových návrhov a diskusia s odborníkmi MsÚ", location: "Mestský úrad, zasadačka 290", address: "Československej armády 26, 974 01 Banská Bystrica", start: "2024-06-24T17:00:00+02:00", end: "2024-06-24T19:00:00+02:00", description: "Predkladatelia predstavili návrhy, odborníci mestského úradu k nim dali spätnú väzbu." }
-  - { title: "2. diskusné fórum participatívneho rozpočtu 2024", location: "Veľká sieň MsÚ", address: "Československej armády 26, Banská Bystrica", start: "2024-11-19T17:00:00+01:00", end: "2024-11-19T19:00:00+01:00", description: "Diskusia o návrhoch pred online hlasovaním." }
+  - { title: "Predstavenie projektových návrhov a diskusia s odborníkmi MsÚ", title_en: "Project proposals presented and discussed with city experts", location: "Mestský úrad, zasadačka 290", address: "Československej armády 26, 974 01 Banská Bystrica", start: "2024-06-24T17:00:00+02:00", end: "2024-06-24T19:00:00+02:00", description: "Predkladatelia predstavili návrhy, odborníci mestského úradu k nim dali spätnú väzbu." }
+  - { title: "2. diskusné fórum participatívneho rozpočtu 2024", title_en: "Second discussion forum of the participatory budget 2024", location: "Veľká sieň MsÚ", address: "Československej armády 26, Banská Bystrica", start: "2024-11-19T17:00:00+01:00", end: "2024-11-19T19:00:00+01:00", description: "Diskusia o návrhoch pred online hlasovaním." }
   projects:
   - { title: "Sakury na Fončorde", amount: 9000, selected: true, description: "281 hlasov. Výsadba okrasných čerešní v lokalite Na Stráni." }
   - { title: "RelaxPark Sásová", amount: 10000, selected: true, description: "275 hlasov." }
