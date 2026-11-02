@@ -4,18 +4,18 @@ gitea-runner:
     # The Portal release's builder image (AP-82), which also carries the forge's runner binary
     # and its loop (builder/Dockerfile of the portal repository). Published by the portal's
     # image.yml as joinedcontext-app-builder; digest read from the registry for the `main` tag.
-    # Pinned to portal 0ded3a3: build-app derives JC_APP_BUILD itself and lane.mjs has upload and
+    # Pinned to portal 618c8ef: build-app derives JC_APP_BUILD itself and lane.mjs has upload and
     # propose, the contract the seeded workflows call (T-2609, T-2633). Portal 7fc3df50: the same
     # builder and SDK, apt layers refreshed daily, curl 8.14.1-2+deb13u7 (CVE-2026-8286, T-3834). Portal 91c865f5: lane.mjs SDK-46 matches a
     # real data-jc-src stamp, not the SDK's own attribute name (T-3578).
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder'
     tag: 'main'
-    digest: 'sha256:81d32d95ba22617b7d7437aba77b8bcbeeb885f94a108460a96169b87b1028e2'
+    digest: 'sha256:9dd2b0170f251d28e0d92d85795deb1dcdaf1af94eac21d4a3a7d88de9a42d2b'
   # The rust-1.90 runner (AP-106): the same Dockerfile's `rust` stage, published by the portal's
-  # image.yml as joinedcontext-app-builder-rust. Pinned to portal 0ded3a3, the same commit as the
+  # image.yml as joinedcontext-app-builder-rust. Pinned to portal 618c8ef, the same commit as the
   # node runner (T-2633). gitea-runner.rust stays off until the node has room (T-2616).
   rust:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust'
     tag: 'main'
     # Portal 7fc3df50: same stage, rebuilt with the curl fix (T-3834). Portal 91c865f5 (T-3578).
-    digest: 'sha256:242a09eeba68cdf4f610838dd3fd7283e9e70e286c3f6640d357a811a14bc30c'
+    digest: 'sha256:22e709eb9b16b2cef0b2ccddf03c6affe7006d34e290b0bb72dc42111b954cf7'
