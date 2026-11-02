@@ -54,7 +54,7 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
     && grep -q '%q<rubyzip>.freeze, \["~> 3.4".freeze\]' /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle add faker --version '~> 3.2' --skip-install \
-    && bundle add decidim-joinedcontext --git https://github.com/marek-mraz-jc/decidim-module-joinedcontext --ref 3cfd7ed7a88083d49f07099d3793feb0e3a5100d --skip-install \
+    && bundle add decidim-joinedcontext --git https://github.com/marek-mraz-jc/decidim-module-joinedcontext --ref d94108bb9e8278964f01d8c2e133c70d550fe561 --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
          concurrent-ruby crass css_parser decidim-core doc2text erb faraday graphql jwt net-imap \
