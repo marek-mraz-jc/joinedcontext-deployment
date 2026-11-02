@@ -13,6 +13,7 @@ the last test reads.
 """
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -376,12 +377,12 @@ def test_project_visibility_is_a_setting_the_seed_spells_right(local):
 
 
 @requires_helmfile
-def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
-    """PF-56, PF-59, PF-61: reading is a verb, so a person with no binding reads nothing.
+def test_the_seed_binds_the_viewers_by_name_and_never_every_signed_in_person(local):
+    """PF-56, PF-59, ADR-N-067 2.1: reading is a verb, so a person with no binding reads nothing.
 
-    The binding's group and the Keycloak group everyone lands in are written in two
-    components and are the same string; when they drifted, every list of the demo answered
-    404 to the viewer and to the approver (dev-smoke, T-0906)."""
+    The viewers are people named one by one (T-6415). A group here would have to be
+    `platform-readers`, the realm's default group, which is PF-61: every account read every
+    project of `hel`."""
     seed = seed_configmap(local)["data"]
     role = yaml.safe_load(seed["users__roles__viewer.yaml"])
     assert role["kind"] == "Role" and role["metadata"]["name"] == "viewer"
@@ -393,20 +394,9 @@ def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
     binding = yaml.safe_load(seed["users__assignments__viewers.yaml"])
     assert binding["spec"]["role"] == "viewer"
     assert binding["spec"]["scope"] == {"organization": "hel"}
-    group = binding["spec"]["subjects"][0]["group"]
-
-    import base64
-    import json
-
-    realm = next(
-        d for d in local
-        if d.get("kind") == "Secret"
-        and d["metadata"]["name"].endswith("keycloak-config-cli-config-realms")
-    )
-    parsed = json.loads(base64.b64decode(realm["data"]["local.json"]))
-    assert f"/{group}" in parsed["defaultGroups"], (
-        f"the binding names the group {group!r}, which no signed-in person joins"
-    )
+    subjects = binding["spec"]["subjects"]
+    assert demo_id("demo.viewer") in [subject.get("user") for subject in subjects]
+    assert all(list(subject) == ["user"] for subject in subjects), subjects
 
 
 @requires_helmfile
@@ -663,8 +653,33 @@ def test_a_listed_project_has_its_repository_before_its_teams_are_given_it(scrip
     (created at layout 2 with its `.jc/layout`) before the first grant to it."""
     loop = script[script.index('for slug in ${PROJECT_TEAMS:-}; do'):]
     loop = loop[: loop.index("done")]
-    assert loop.index('ensure_repo "$slug"') < loop.index('project_team "$slug" readers read'), loop
-    assert script.index("ensure_repo() {") < script.index('for slug in ${PROJECT_TEAMS:-}; do')
+    assert loop.index('project_repo "$slug"') < loop.index('project_team "$slug" readers read'), loop
+    assert script.index("project_repo() {") < script.index('for slug in ${PROJECT_TEAMS:-}; do')
+
+
+@requires_helmfile
+def test_a_project_repository_grants_its_machine_users_before_its_rule_names_one(script):
+    """T-6438: the forge drops a whitelisted user without write access from a branch rule, with
+    no error. A rule set before the grant left a new repository with nobody who may push, so
+    the seed answered 403 and each retry repaired one project: every clean install failed
+    while dev, whose repositories already existed, never met it."""
+    step = script[script.index("project_repo() {"):]
+    step = step[: step.index("}")]
+    assert step.index("ensure_repo") < step.index('grant "$PORTAL_USER" write') < step.index("protect"), step
+    assert script.count('protect "$') == 2, "every project goes through project_repo, the organization repository alone"
+    assert script.index('grant "$PORTAL_USER" write "$REPO"') < script.index('protect "$REPO"')
+
+
+@requires_helmfile
+def test_a_failed_job_leaves_a_pod_to_read_and_no_secret_in_its_log(job, script):
+    """T-6438: under OnFailure the Job controller deleted the pod at the backoff limit, so eight
+    variants failed in ci-full with no log of why. The diagnostics print what a failed pod
+    said, so the script prints no credential."""
+    assert job["spec"]["template"]["spec"]["restartPolicy"] == "Never"
+    assert "set -x" not in script
+    printed = [line for line in script.splitlines() if re.search(r"\b(echo|printf)\b", line) and "$" in line]
+    leaks = [line for line in printed if re.search(r"\$\{?\w*(TOKEN|PASSWORD)\b", line)]
+    assert not leaks, leaks
 
 
 @requires_helmfile

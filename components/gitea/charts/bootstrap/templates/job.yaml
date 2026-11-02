@@ -32,7 +32,10 @@ spec:
         config.alpha.linkerd.io/proxy-enable-native-sidecar: "true"
         {{- end }}
     spec:
-      restartPolicy: OnFailure
+      # Never, not OnFailure: the Job controller deletes a pod restarting in place when the
+      # backoff limit is reached, and the log of the failure goes with it (T-6438). A failed pod
+      # stays readable until ttlSecondsAfterFinished, and the variants' diagnostics print it.
+      restartPolicy: Never
       serviceAccountName: {{ include "bootstrap.fullname" . }}
       automountServiceAccountToken: true
       securityContext:
@@ -380,12 +383,22 @@ spec:
                 status=$(forge_code PUT "/api/v1/teams/$team_id/repos/$ORG/$1")
                 [ "$status" = 204 ] || { echo "giving team $team the repository $ORG/$1 failed: $status" >&2; cat $WORK/body >&2; exit 1; }
               }
+              # project_repo <slug>: a project's repository, with its machine users, then its rule.
+              # In this order: the forge drops a whitelisted user without write access from the
+              # rule without a word, so a rule set first left a new repository with nobody who
+              # may push, and the seed answered 403 on every clean install (T-6438).
+              project_repo() {
+                ensure_repo "$1"
+                grant "$PORTAL_USER" write "$1"
+                grant "$GATEWAY_USER" read "$1"
+                protect "$1"
+              }
+
               # A project listed here before its seed is first pushed (the Zilina case, T-3181)
               # has no repository yet: it is created here, as step 5d would, so the teams have
               # one to hold.
               for slug in ${PROJECT_TEAMS:-}; do
-                ensure_repo "$slug"
-                protect "$slug"
+                project_repo "$slug"
                 project_team "$slug" readers read
                 project_team "$slug" writers write
               done
@@ -963,10 +976,7 @@ spec:
                 for dir in $WORK/seed-projects/*/; do
                   [ -d "$dir" ] || continue
                   slug=$(basename "$dir")
-                  ensure_repo "$slug"
-                  protect "$slug"
-                  grant "$PORTAL_USER" write "$slug"
-                  grant "$GATEWAY_USER" read "$slug"
+                  project_repo "$slug"
                   seed_repo "$slug" "${dir%/}"
                 done
               else
