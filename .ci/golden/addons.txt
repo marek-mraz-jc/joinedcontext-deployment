@@ -34,6 +34,7 @@ argoproj.io/v1alpha1/AppProject argocd/addons-root
 argoproj.io/v1alpha1/Application argocd/addons
 autoscaling/v2/HorizontalPodAutoscaler addons/apisix
 autoscaling/v2/HorizontalPodAutoscaler addons/keycloak-app-keycloakx
+batch/v1/CronJob addons/decidim-sync
 batch/v1/CronJob addons/keycloak-admin-permissions-sync
 batch/v1/CronJob addons/postgres-cluster-dr-drill
 batch/v1/Job addons/keycloak-admin-permissions
@@ -93,6 +94,8 @@ networking.k8s.io/v1/NetworkPolicy addons/decidim-redis-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/decidim-redis-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/decidim-sidekiq
 networking.k8s.io/v1/NetworkPolicy addons/decidim-sidekiq-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy addons/decidim-sync
+networking.k8s.io/v1/NetworkPolicy addons/decidim-sync-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/decidim-web
 networking.k8s.io/v1/NetworkPolicy addons/decidim-web-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/decidim-web-linkerd-control-plane
@@ -220,6 +223,7 @@ v1/Secret addons/keycloak-client-apisix-gateway
 v1/Secret addons/keycloak-client-decidim
 v1/Secret addons/keycloak-client-edge
 v1/Secret addons/keycloak-client-grafana
+v1/Secret addons/keycloak-client-slovensko-decidim-publish
 v1/Secret addons/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret addons/postgres-cluster-local-backup-key
 v1/Secret addons/prometheus-prometheus-token

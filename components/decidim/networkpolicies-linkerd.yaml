@@ -39,6 +39,11 @@ decidim-redis-allow-linkerd:
               app.kubernetes.io/name: decidim-sidekiq
               app.kubernetes.io/instance: decidim-sidekiq
           componentNamespace: decidim
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: decidim-sync
+              app.kubernetes.io/instance: decidim-sync
+          componentNamespace: decidim
       ports:
         - protocol: TCP
           port: 4143
@@ -63,6 +68,11 @@ postgres-linkerd-from-decidim:
             matchLabels:
               app.kubernetes.io/name: decidim-sidekiq
               app.kubernetes.io/instance: decidim-sidekiq
+          componentNamespace: decidim
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: decidim-sync
+              app.kubernetes.io/instance: decidim-sync
           componentNamespace: decidim
       ports:
         - protocol: TCP
@@ -110,6 +120,41 @@ decidim-sidekiq-linkerd-control-plane:
   podSelector:
     app.kubernetes.io/name: decidim-sidekiq
     app.kubernetes.io/instance: decidim-sidekiq
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+      ports:
+        - protocol: TCP
+          port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: decidim-redis
+              app.kubernetes.io/instance: decidim-redis
+          componentNamespace: decidim
+      ports:
+        - protocol: TCP
+          port: 4143
+decidim-sync-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: decidim-sync
+    app.kubernetes.io/instance: decidim-sync
   policyTypes:
     - Egress
   egress:

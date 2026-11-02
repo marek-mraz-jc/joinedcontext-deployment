@@ -16,6 +16,7 @@ import socket
 import subprocess
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -31,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ROUTES = (ROOT / "components/context-gateway/apisix-routes.yaml").read_text()
 ALL = yaml.safe_load(ROUTES.replace("{{", "#").replace("}}", ""))
 ROUTE, HISTORY, BULK = ALL["api-context-endpoint"], ALL["api-context-endpoint-history"], ALL["api-context-endpoint-bulk"]
-MCP = ALL["api-context-endpoint-mcp"]
+MCP, SCHEMA = ALL["api-context-endpoint-mcp"], ALL["api-context-endpoint-schema"]
 VALUES = ROOT / "components/context-gateway/values/gateway/base-values.yaml.gotmpl"
 PLUGINS = yaml.safe_load((ROOT / "components/context-gateway/apisix-plugins.yaml").read_text()
                          .replace("{{", "#").replace("}}", ""))
@@ -81,8 +82,8 @@ def test_every_caching_route_buffers_after_its_plugin_config_merges():
     for name, route in caching.items():
         merged = {**PLUGINS[route["pluginConfig"]]["plugins"], **route["plugins"]}
         assert merged["proxy-buffering"] == {"disable_proxy_buffering": False}, name
-    # The exports and the MCP streams keep streaming.
-    for route in (BULK, MCP):
+    # The exports and the MCP streams keep streaming; a schema read keeps its If-None-Match (T-6507).
+    for route in (BULK, MCP, SCHEMA):
         merged = {**PLUGINS[route["pluginConfig"]]["plugins"], **route.get("plugins", {})}
         assert merged["proxy-buffering"]["disable_proxy_buffering"] is True
 
@@ -98,6 +99,20 @@ def test_the_mcp_path_leaves_the_buffered_reads_route():
     for path in ("/api/endpoint/abc/mcp/x", "/api/endpoint/abc/ngsi-ld/v1/entities?q=mcp",
                  "/api/endpoint/abc/ngsi-ld/v1/temporal/entities", "/api/endpoint/mcp"):
         assert not mcp.search(path), path
+
+
+def test_the_schema_path_leaves_the_caching_reads_route():
+    """T-6507: `{endpoint}/schema/*` keeps the plain chain on a route of its own above the reads
+    route, the reads route's limits and timeouts with it, and only that path moves."""
+    assert (SCHEMA["subDomain"], SCHEMA["uri"], SCHEMA["pluginConfig"]) == ("api", ROUTE["uri"], ROUTE["pluginConfig"])
+    assert SCHEMA["priority"] > ROUTE["priority"] and "plugins" not in SCHEMA
+    assert SCHEMA["timeout"] == ROUTE["timeout"] and SCHEMA["keepalivePool"] == ROUTE["keepalivePool"]
+    schema = re.compile(SCHEMA["vars"][0][2])
+    for path in ("/api/endpoint/abc/schema/v1/linkml", "/api/endpoint/abc/schema/index.json"):
+        assert schema.search(path), path
+    for path in ("/api/endpoint/abc/ngsi-ld/v1/entities", "/api/endpoint/schema/mcp", "/api/endpoint/schema",
+                 "/api/endpoint/abc/ngsi-ld/v1/temporal/entities", "/api/endpoint/abc/file.csv"):
+        assert not schema.search(path), path
 
 
 @requires_helmfile
@@ -123,10 +138,24 @@ def test_the_gateway_marks_anonymous_reads_public_for_a_minute():
 STREAM_PAUSE = 4
 
 
+ARTIFACT_ETAG = '"artifact-1"'
+
+
 class Gateway(http.server.BaseHTTPRequestHandler):
     counter = itertools.count()
 
     def do_GET(self):
+        if "/schema/" in self.path:
+            # A schema artifact as handlers/schema_routes.rs serves it (EP-51): a 304 only when the
+            # reader's If-None-Match reaches this upstream.
+            matched = self.headers.get("If-None-Match") == ARTIFACT_ETAG
+            self.send_response(304 if matched else 200)
+            self.send_header("ETag", ARTIFACT_ETAG)
+            self.send_header("Cache-Control", "private, no-cache")
+            self.end_headers()
+            if not matched:
+                self.wfile.write(b"id: model\n")
+            return
         n = next(self.counter)
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -177,13 +206,14 @@ def edge(tmp_path_factory):
     # upstream copy each (a shared dict dumps as a YAML alias, and APISIX then drops the routes).
     # Each route keeps its chain's proxy-buffering through plugin_config_id, as on dev: without it
     # this test kept answers dev never stored (T-6185).
-    chains = {route["pluginConfig"] for route in (ROUTE, HISTORY, BULK, MCP)}
+    chains = {route["pluginConfig"] for route in (ROUTE, HISTORY, BULK, MCP, SCHEMA)}
     rules = {"plugin_configs": [{"id": chain, "plugins": {"proxy-buffering": dict(PLUGINS[chain]["plugins"]["proxy-buffering"])}}
                                 for chain in sorted(chains)],
              "routes": [{"id": name, "uri": route["uri"], "priority": route["priority"], "upstream": dict(upstream),
                          "plugin_config_id": route["pluginConfig"], "plugins": route.get("plugins", {}),
                          **({"vars": route["vars"]} if "vars" in route else {})}
-                        for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK), ("mcp", MCP))]}
+                        for name, route in (("reads", ROUTE), ("history", HISTORY), ("bulk", BULK), ("mcp", MCP),
+                                                 ("schema", SCHEMA))]}
     (tmp / "apisix.yaml").write_text(yaml.safe_dump(rules) + "#END\n")
     port = free_port()
     name = f"apisix-api-cache-{port}"
@@ -294,3 +324,17 @@ def test_an_mcp_stream_reaches_the_client_before_it_ends(edge):
         waited = time.monotonic() - started
         assert first == b"event: message\n" and waited < STREAM_PAUSE / 2, (first, waited)
         assert b'"last": true' in answer.read()
+
+
+def test_a_schema_artifact_read_with_its_etag_is_the_gateways_304(edge):
+    # T-6507, EP-51: nginx drops If-None-Match on the way to the upstream in any location with
+    # proxy_cache, so on the reads route the reader downloaded the artifact again.
+    url = edge + "/api/endpoint/s/schema/v1/linkml"
+    with urllib.request.urlopen(url, timeout=10) as answer:
+        assert answer.status == 200 and answer.read() == b"id: model\n"
+        tag = answer.headers["ETag"]
+        assert answer.headers["Cache-Control"] == "private, no-cache"
+    request = urllib.request.Request(url, headers={"If-None-Match": tag})
+    with pytest.raises(urllib.error.HTTPError) as second:
+        urllib.request.urlopen(request, timeout=10)
+    assert second.value.code == 304
