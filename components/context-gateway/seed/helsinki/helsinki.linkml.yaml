@@ -483,7 +483,8 @@ slots:
       upstream_source: https://github.com/smart-data-models/dataModel.Alert
   effect:
     slot_uri: jc:effect
-    description: What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.
+    description: What an HSL service alert does to the service, one of GTFS-RT's Effect values.
+    range: AlertEffect
     annotations:
       label:
         tag: label
@@ -496,7 +497,8 @@ slots:
       ngsi_ld_kind: Property
   cause:
     slot_uri: jc:cause
-    description: Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.
+    description: Why an HSL service alert is in force, one of GTFS-RT's Cause values.
+    range: AlertCause
     annotations:
       label:
         tag: label
@@ -510,6 +512,7 @@ slots:
   severity:
     slot_uri: sdm:severity
     description: How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).
+    range: AlertSeverity
     annotations:
       label:
         tag: label
@@ -3838,3 +3841,298 @@ enums:
           label:
             tag: label
             value: { fi: Geologisesti arvokas kohde, en: Valuable geological site }
+  AlertEffect:
+    description: What a public transport alert does to the service, GTFS-RT's Effect values as HSL publishes them.
+    permissible_values:
+      NO_SERVICE:
+        description: The service does not run.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Bez prevádzky
+              cs: Bez provozu
+              fi: Ei liikennöintiä
+              en: No service
+              de: Kein Betrieb
+      REDUCED_SERVICE:
+        description: The service runs with fewer departures.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Obmedzená prevádzka
+              cs: Omezený provoz
+              fi: Vähennetty liikenne
+              en: Reduced service
+              de: Eingeschränkter Betrieb
+      SIGNIFICANT_DELAYS:
+        description: The service runs with long delays.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Veľké meškania
+              cs: Velká zpoždění
+              fi: Merkittäviä viivästyksiä
+              en: Significant delays
+              de: Große Verspätungen
+      DETOUR:
+        description: The service runs on another route.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Obchádzka
+              cs: Objížďka
+              fi: Poikkeusreitti
+              en: Detour
+              de: Umleitung
+      ADDITIONAL_SERVICE:
+        description: Extra departures run.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Posilnená prevádzka
+              cs: Posílený provoz
+              fi: Lisäliikenne
+              en: Additional service
+              de: Zusätzlicher Betrieb
+      MODIFIED_SERVICE:
+        description: The timetable or the stops differ from the usual.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zmenená prevádzka
+              cs: Změněný provoz
+              fi: Muutettu liikenne
+              en: Modified service
+              de: Geänderter Betrieb
+      OTHER_EFFECT:
+        description: An effect GTFS-RT has no value for.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Iný dopad
+              cs: Jiný dopad
+              fi: Muu vaikutus
+              en: Other effect
+              de: Andere Auswirkung
+      UNKNOWN_EFFECT:
+        description: The publisher does not know the effect.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Neznámy dopad
+              cs: Neznámý dopad
+              fi: Tuntematon vaikutus
+              en: Unknown effect
+              de: Unbekannte Auswirkung
+      STOP_MOVED:
+        description: A stop has moved.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Presunutá zastávka
+              cs: Přesunutá zastávka
+              fi: Pysäkki siirretty
+              en: Stop moved
+              de: Haltestelle verlegt
+      NO_EFFECT:
+        description: The alert informs and the service does not change.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Bez dopadu
+              cs: Bez dopadu
+              fi: Ei vaikutusta
+              en: No effect
+              de: Keine Auswirkung
+      ACCESSIBILITY_ISSUE:
+        description: A step-free route or a lift is out of use.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Problém s bezbariérovosťou
+              cs: Problém s bezbariérovostí
+              fi: Esteettömyysongelma
+              en: Accessibility issue
+              de: Barrierefreiheit eingeschränkt
+  AlertCause:
+    description: Why a public transport alert is in force, GTFS-RT's Cause values as HSL publishes them.
+    permissible_values:
+      UNKNOWN_CAUSE:
+        description: The publisher does not know the cause.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Neznáma príčina
+              cs: Neznámá příčina
+              fi: Tuntematon syy
+              en: Unknown cause
+              de: Unbekannte Ursache
+      OTHER_CAUSE:
+        description: A cause GTFS-RT has no value for.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Iná príčina
+              cs: Jiná příčina
+              fi: Muu syy
+              en: Other cause
+              de: Andere Ursache
+      TECHNICAL_PROBLEM:
+        description: A vehicle or the infrastructure failed.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Technická porucha
+              cs: Technická závada
+              fi: Tekninen vika
+              en: Technical problem
+              de: Technische Störung
+      STRIKE:
+        description: Staff are on strike.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Štrajk
+              cs: Stávka
+              fi: Lakko
+              en: Strike
+              de: Streik
+      DEMONSTRATION:
+        description: A demonstration blocks the way.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Demonštrácia
+              cs: Demonstrace
+              fi: Mielenosoitus
+              en: Demonstration
+              de: Demonstration
+      ACCIDENT:
+        description: An accident happened on the way.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Nehoda
+              cs: Nehoda
+              fi: Onnettomuus
+              en: Accident
+              de: Unfall
+      HOLIDAY:
+        description: A public holiday changes the service.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Sviatok
+              cs: Svátek
+              fi: Pyhäpäivä
+              en: Holiday
+              de: Feiertag
+      WEATHER:
+        description: The weather affects the service.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Počasie
+              cs: Počasí
+              fi: Sää
+              en: Weather
+              de: Wetter
+      MAINTENANCE:
+        description: Planned maintenance of the track or the vehicles.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Údržba
+              cs: Údržba
+              fi: Huoltotyö
+              en: Maintenance
+              de: Wartung
+      CONSTRUCTION:
+        description: Construction work on the way.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Stavebné práce
+              cs: Stavební práce
+              fi: Rakennustyö
+              en: Construction
+              de: Bauarbeiten
+      POLICE_ACTIVITY:
+        description: A police operation on the way.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zásah polície
+              cs: Zásah policie
+              fi: Poliisitehtävä
+              en: Police activity
+              de: Polizeieinsatz
+      MEDICAL_EMERGENCY:
+        description: A medical emergency on the way.
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Zdravotná pohotovosť
+              cs: Zdravotní pohotovost
+              fi: Sairaskohtaus
+              en: Medical emergency
+              de: Medizinischer Notfall
+  AlertSeverity:
+    description: How much a public transport alert matters, the Smart Data Models values HSL's three GTFS-RT levels map to.
+    permissible_values:
+      informational:
+        description: For information (GTFS-RT INFO).
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Informačná
+              cs: Informační
+              fi: Tiedote
+              en: Informational
+              de: Information
+      medium:
+        description: A warning (GTFS-RT WARNING).
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Stredná
+              cs: Střední
+              fi: Varoitus
+              en: Medium
+              de: Mittel
+      high:
+        description: A severe disruption (GTFS-RT SEVERE).
+        annotations:
+          label:
+            tag: label
+            value:
+              sk: Vysoká
+              cs: Vysoká
+              fi: Vakava
+              en: High
+              de: Hoch
