@@ -185,6 +185,8 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
             "jc_workspace_open", "jc_workspace_preview_start"} <= named
     # T-5957: the integrate-pipeline path (portal src/agents/paths.rs) samples, tries and validates.
     assert {"jc_pipeline_sample_source", "jc_pipeline_try_mapping", "jc_pipeline_validate"} <= named
+    # T-6489: why a pipeline wrote nothing is read from its runs (portal paths.rs).
+    assert {"jc_pipeline_logs", "jc_pipeline_inspect"} <= named
     assert len(access["operations"]) == len(named), "an operation is listed once"
     # Never an agent's: approving, deleting, keys, whole projects, bringing a copy back (AG-11, AG-82).
     never = {"jc_change_approve", "jc_change_reject", "jc_resource_delete", "jc_project_delete",
@@ -193,7 +195,7 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
     assert not named & never, named & never
     assert not any("_key_" in name for name in named)
     assert all(set(grant["verbs"]) <= {"read", "propose"} for grant in access["kinds"])
-    assert {"Pipeline", "DataSource", "ContextSpace", "RoleBinding"} <= {grant["kind"] for grant in access["kinds"]}
+    assert {"Pipeline", "DataSource", "ContextSpace", "Role", "RoleBinding"} <= {grant["kind"] for grant in access["kinds"]}
 
 
 @requires_helmfile
