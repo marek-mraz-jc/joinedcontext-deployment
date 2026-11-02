@@ -160,6 +160,11 @@ env:
   # not: a gateway with a realm and no list refuses to start (T-5869, F-SEC1-024).
   JC_GATEWAY_REVOCATIONS_URL: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:9090/internal/revocations"
 {{- end }}
+{{- if has "observability" .Values.components }}
+  # Each MCP tool call, as an OTLP log record to the collector, which posts it to the Portal's
+  # Activity (T-5322): caller, tool, Endpoint and outcome, never arguments or values.
+  JC_GATEWAY_ACTIVITY_URL: "http://observability-collector.{{ .Values.observability.collector.namespace }}.svc.cluster.local:4318/v1/logs"
+{{- end }}
 {{- if has "assistant" .Values.components }}
   # `search_documents` (EP-133, EP-134, T-4659): the assistant's public-passage search on its
   # internal path, which the edge never routes (AG-119); without the URL the tool is listed
