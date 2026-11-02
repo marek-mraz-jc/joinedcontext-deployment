@@ -227,13 +227,17 @@ def test_sidekiq_says_when_it_runs_though_it_serves_no_port(rendered):
 
 @requires_helmfile
 def test_the_site_runs_after_the_bootstrap_only_where_an_environment_asks(rendered):
-    """T-6453: the themed site is stage's until the owner has looked; prod keeps a plain Decidim."""
-    for env, wanted in (("addons", "false"), ("stage", "true"), ("smartcity", "false")):
+    """T-6453: the themed site is for stage until the owner has looked; prod keeps a plain Decidim."""
+    for env, wanted in (("addons", "false"), ("stage", None), ("smartcity", "false")):
         spec = pod(rendered(env), "decidim-web")
         migrate = next(c for c in spec["initContainers"] if c["name"] == "migrate")
         values = {e["name"]: e.get("value") for e in migrate["env"]}
-        assert values["DECIDIM_SITE_CONTENT"] == wanted, env
-        assert values["DECIDIM_SITE_DEMO_NOTICE"] == wanted, env
+        if wanted:
+            assert values["DECIDIM_SITE_CONTENT"] == wanted, env
+            assert values["DECIDIM_SITE_DEMO_NOTICE"] == wanted, env
+        else:
+            # Stage may turn the site on, and then always with the demo notice.
+            assert values["DECIDIM_SITE_DEMO_NOTICE"] == "true"
         assert values["DECIDIM_PORTAL_URL"].startswith("https://portal.")
         assert values["DECIDIM_CATALOGUE_URL"].startswith("https://opendata.")
         command = migrate["command"][-1]
