@@ -1,8 +1,8 @@
 """T-5897: the platform's memory requests fit the node it runs on, and its limits stop growing.
 
-dev and smartcity (prod) are one 16 GB node each and render the development profile. The owner
-wants the platform to live there with headroom: what this deployment requests stays within
-12.5 GiB, which leaves 3.5 GiB of the node to k3s, the kernel, the kit's pods (Traefik 216Mi and
+dev is one 16 GB node and smartcity (prod) one 24 GB node, both rendering the development profile.
+The owner wants the platform to live there with headroom: what this deployment requests stays within
+12.5 GiB, which leaves dev 3.5 GiB of its node to k3s, the kernel, the kit's pods (Traefik 216Mi and
 Kyverno 247Mi measured on dev 2026-10-28), a helmfile sync and the nightly pipeline window.
 
 The sum counts every pod the render makes: each container of a Deployment, StatefulSet or
@@ -40,12 +40,17 @@ NODE_REQUEST_BUDGET_MIB = 12.5 * 1024
 # render's 12232Mi on 2026-10-28.
 NODE_ALLOCATABLE_MIB = 14136272 / 1024
 KIT_REQUESTS_MIB = 990
+# prod's cpx52 node (T-4677): allocatable 22172700Ki, kubectl describe node 2026-11-02.
+ALLOCATABLE_MIB = {"dev": NODE_ALLOCATABLE_MIB, "smartcity": 22172700 / 1024}
 # (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi. dev's limit moved
 # on 2026-11-02 for observability-collector (T-6431): 512Mi plus its proxy's 250Mi, the price of
 # gateway MCP calls in a project's Activity; it books 128Mi plus its proxy's 10Mi of requests.
+# smartcity's limit moved on 2026-11-02 for Decidim (T-6448, owner's order): web 1274Mi, Sidekiq
+# 1018Mi and Redis 410Mi with their proxies, Postgres 2Gi -> 2560Mi for their connections; it books
+# 1182Mi of requests.
 CEILINGS = {
     "dev": (NODE_REQUEST_BUDGET_MIB, 45312),
-    "smartcity": (NODE_REQUEST_BUDGET_MIB, 43008),
+    "smartcity": (NODE_REQUEST_BUDGET_MIB, 46080),
     "production": (37120, 67584),
 }
 
@@ -176,9 +181,9 @@ def test_the_node_keeps_room_for_the_largest_rolling_surge(rendered, env):
     requests, _, _ = sums(docs)
     surge, name = largest_surge(docs)
     booked = requests + KIT_REQUESTS_MIB + surge
-    assert booked <= NODE_ALLOCATABLE_MIB, (
+    assert booked <= ALLOCATABLE_MIB[env], (
         f"{env}: requests {requests:.0f}Mi + kit {KIT_REQUESTS_MIB}Mi + {name}'s surge pod {surge:.0f}Mi"
-        f" = {booked:.0f}Mi over the node's {NODE_ALLOCATABLE_MIB:.0f}Mi allocatable"
+        f" = {booked:.0f}Mi over the node's {ALLOCATABLE_MIB[env]:.0f}Mi allocatable"
     )
 
 

@@ -30,5 +30,6 @@ components:
 - {name: assistant, component: assistant, namespace: smartcity, wave: 23}
 - {name: basemap, component: basemap, namespace: smartcity, wave: 24}
 - {name: viz, component: viz, namespace: smartcity, wave: 25}
-- {name: probes, component: probes, namespace: smartcity, wave: 26}
-- {name: monitoring, component: monitoring, namespace: smartcity, wave: 27}
+- {name: decidim, component: decidim, namespace: smartcity, wave: 26}
+- {name: probes, component: probes, namespace: smartcity, wave: 27}
+- {name: monitoring, component: monitoring, namespace: smartcity, wave: 28}

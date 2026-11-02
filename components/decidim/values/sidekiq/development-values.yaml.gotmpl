@@ -15,3 +15,5 @@ resources:
 
 env:
   SIDEKIQ_CONCURRENCY: "2"
+  # Rails' pool, one connection per job thread: what tests/test_postgres_connection_budget.py counts.
+  RAILS_MAX_THREADS: "2"
