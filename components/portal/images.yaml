@@ -268,8 +268,8 @@ portal:
   ui:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
     tag: 'main'
-    digest: 'sha256:7132c2ae0f4e23d436829f1619e83d291dd82b41c1fe4ae070802bc86ebd20b0'
-    commit: '63cc459a13d0fb714d862c84e1342b63a90e2921'
+    digest: 'sha256:65a71670d8a12f608e4e1b1dcf3be69c419842c6f670482f8ca6ef75a5b905a7'
+    commit: '513909b16825a4c57742892aa20266a16702d81f'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
