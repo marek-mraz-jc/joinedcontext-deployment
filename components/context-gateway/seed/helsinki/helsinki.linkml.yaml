@@ -1394,6 +1394,15 @@ slots:
           de: Richtung
         annotations: { generated: sk cs en de }
       ngsi_ld_kind: Property
+  scheduledDepartures:
+    slot_uri: jc:scheduledDepartures
+    description: >-
+      The trips HSL's timetable starts on the day of this value's observedAt, each counted once at
+      its first stop.
+    range: integer
+    minimum_value: 0
+    annotations:
+      ngsi_ld_kind: Property
   transportMode:
     slot_uri: jc:transportMode
     description: What serves the stop or runs the line.
@@ -2723,7 +2732,7 @@ classes:
           cs: Měření kvality ovzduší
           en: Air quality reading
           de: Luftqualitätsmessung
-    slots: [name, dateObserved, pm10, pm25, airQualityIndex, stewardNote, source]
+    slots: [name, dateObserved, pm10, pm25, airQualityIndex, districtCode, stewardNote, source]
     slot_usage:
       name:
         rank: 1
@@ -3183,6 +3192,21 @@ classes:
       - page
       - dataProvider
       - source
+  GtfsDailyDepartures:
+    class_uri: jc:GtfsDailyDepartures
+    description: >-
+      One transport mode's scheduled departures for today from HSL's GTFS timetable. Its history
+      holds the earlier days.
+    is_a: Entity
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Denné odchody
+          cs: Denní odjezdy
+          en: Daily departures
+          de: Tägliche Abfahrten
+    slots: [transportMode, scheduledDepartures, dataProvider, source]
   GtfsShape:
     class_uri: sdm:GtfsShape
     description: >-

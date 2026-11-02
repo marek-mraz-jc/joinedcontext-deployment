@@ -72,8 +72,22 @@ def test_every_station_of_the_feed_is_one_entity_with_its_newest_reading(recorde
         "pm10": {"type": "Property", "value": 7.2, "unitCode": "GQ", "observedAt": "2026-09-22T12:00:00Z"},
         "pm25": {"type": "Property", "value": 1.9, "unitCode": "GQ", "observedAt": "2026-09-22T12:00:00Z"},
         "airQualityIndex": {"type": "Property", "value": 1, "observedAt": "2026-09-22T12:00:00Z"},
+        "districtCode": {"type": "Property", "value": "12"},
         "source": {"type": "Property", "value": "https://opendata.fmi.fi/wfs"},
     }
+
+
+@requires_docker
+def test_a_helsinki_station_names_its_district_and_a_neighbour_towns_station_names_none(recorded):
+    """T-6467: the area join of a KPI meets rows on an attribute's value, never on geometry. Each
+    code is the AdministrativeArea whose polygon holds the station's point (live, 2026-11-02)."""
+    districts = {entity_id.removeprefix(PREFIX): entity["districtCode"]["value"]
+                 for entity_id, entity in recorded.items() if "districtCode" in entity}
+    assert districts == {"kallio-2": "12", "mannerheimintie": "02", "teollisuuskatu": "22",
+                         "herttoniemi-2": "43", "vartiokyla-huivipolku": "45"}
+    names = {entity_id: entity["name"]["languageMap"]["fi"] for entity_id, entity in recorded.items()}
+    assert all(name.startswith("Helsinki") == ("districtCode" in recorded[entity_id])
+               for entity_id, name in names.items())
 
 
 @requires_docker
@@ -111,7 +125,7 @@ def test_a_single_member_answer_is_one_station_not_an_error():
     single = first + "</wfs:member>" + re.sub(r"<wfs:member>.*</wfs:member>", "", rest, flags=re.S)
     produced = run(single)
     assert [e["id"] for e in produced] == [PREFIX + "kallio-2"]
-    assert set(produced[0]) == {"id", "type", "name", "location", "dateObserved", "pm10", "source"}
+    assert set(produced[0]) == {"id", "type", "name", "location", "dateObserved", "pm10", "districtCode", "source"}
 
 
 def test_the_pipeline_datasource_and_class_are_seeded_together():
@@ -133,7 +147,8 @@ def test_the_model_declares_every_attribute_the_mapping_and_the_app_use():
     defs = schema.get("$defs") or schema["definitions"]
     properties = set(defs["AirQualityObserved"]["properties"])
     # The mapping's attributes, plus the steward's note the air-quality App writes.
-    for attr in ("name", "location", "dateObserved", "pm10", "pm25", "airQualityIndex", "source", "stewardNote"):
+    for attr in ("name", "location", "dateObserved", "pm10", "pm25", "airQualityIndex", "districtCode", "source",
+                 "stewardNote"):
         assert attr in properties, attr
 
 

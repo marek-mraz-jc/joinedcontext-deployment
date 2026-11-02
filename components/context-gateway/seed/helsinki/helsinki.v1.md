@@ -179,6 +179,7 @@ Specialises `Entity`.
 | `pm10` | Property | `float` |  | ug/m3 | `sdm:pm10` | Particulate matter up to 10 µm, the hour's mean at the station. |
 | `pm25` | Property | `float` |  | ug/m3 | `sdm:pm25` | Particulate matter up to 2.5 µm, the hour's mean at the station. |
 | `airQualityIndex` | Property | `float` |  |  | `sdm:airQualityIndex` | FMI's hourly air quality index, 1 (good) to 5 (very poor). |
+| `districtCode` | Property | `string` |  |  | `jc:districtCode` | The city's own code of the area: the district number, for a sub-district the full ten-digit code the city's statistics use for it, for a quarter the register's ten-digit quarter code, for a voting district the district number and a letter (049A). An HSL fare zone has none; its letter is its `fareZone`. The districts, sub-districts, quarters and voting-districts mappings write no area without it. |
 | `stewardNote` | Property | `string` |  |  | `jc:stewardNote` | A note by the person who keeps this data: what was checked, what looks wrong, whom to ask. No pipeline writes it and no pipeline overwrites it, so an application may offer it for editing without the next run taking the words back (AP-62). At most 500 characters and no angle brackets, because it is a note and not a document. |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -536,6 +537,25 @@ Specialises `Entity`.
 | `language` | Property | `string` |  |  | `sdm:language` | The agency's main language, a two-letter code. |
 | `phone` | Property | `string` |  |  | `sdm:phone` | The agency's public customer service number. |
 | `routes` | Relationship | [`GtfsRoute`](#gtfsroute) (list) |  |  | `jc:routes` | The lines the agency operates, computed from their operatedBy and never stored. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
+| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### GtfsDailyDepartures
+
+One transport mode's scheduled departures for today from HSL's GTFS timetable. Its history holds the earlier days.
+
+IRI: `jc:GtfsDailyDepartures`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `transportMode` | Property | [`TransportMode`](#transportmode) |  |  | `jc:transportMode` | What serves the stop or runs the line. |
+| `scheduledDepartures` | Property | `integer` |  |  | `jc:scheduledDepartures` | The trips HSL's timetable starts on the day of this value's observedAt, each counted once at its first stop. |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, as an application credits it beside the licence (CC BY 4.0 for every feed of this space). |
 | `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |

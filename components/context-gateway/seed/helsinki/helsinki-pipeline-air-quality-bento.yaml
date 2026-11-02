@@ -3,7 +3,10 @@
 # feed is FMI's simple WFS features, one element per station, hour and parameter, for the last
 # day; the stations' names and ids are not in it, so they are listed here by position, read once
 # from FMI's station register (stored query fmi::ef::stations). A station with no reading in the
-# feed is left out rather than written without values.
+# feed is left out rather than written without values. A station inside Helsinki names its
+# district: the `districtCode` of the AdministrativeArea its point lies in (live polygons,
+# 2026-11-02), so an indicator can meet the districts on that code. An Espoo or Vantaa station has
+# no Helsinki district and writes none.
 
 pipeline:
   processors:
@@ -14,11 +17,11 @@ pipeline:
         let domain = env("JC_ORG_DOMAIN")
         # Keyed by the feed's position with '_' for '.', because `get` reads a dot as a path.
         let stations = {
-          "60_18739 24_95060": { "id": "kallio-2", "name": "Helsinki Kallio 2", "coordinates": [24.9506, 60.18739] },
-          "60_16964 24_93924": { "id": "mannerheimintie", "name": "Helsinki Mannerheimintie", "coordinates": [24.93924, 60.16964] },
-          "60_19512 24_94480": { "id": "teollisuuskatu", "name": "Helsinki Teollisuuskatu", "coordinates": [24.9448, 60.19512] },
-          "60_19305 25_03704": { "id": "herttoniemi-2", "name": "Helsinki Herttoniemi 2", "coordinates": [25.03704, 60.19305] },
-          "60_22393 25_10244": { "id": "vartiokyla-huivipolku", "name": "Helsinki Vartiokylä Huivipolku", "coordinates": [25.10244, 60.22393] },
+          "60_18739 24_95060": { "id": "kallio-2", "name": "Helsinki Kallio 2", "coordinates": [24.9506, 60.18739], "district": "12" },
+          "60_16964 24_93924": { "id": "mannerheimintie", "name": "Helsinki Mannerheimintie", "coordinates": [24.93924, 60.16964], "district": "02" },
+          "60_19512 24_94480": { "id": "teollisuuskatu", "name": "Helsinki Teollisuuskatu", "coordinates": [24.9448, 60.19512], "district": "22" },
+          "60_19305 25_03704": { "id": "herttoniemi-2", "name": "Helsinki Herttoniemi 2", "coordinates": [25.03704, 60.19305], "district": "43" },
+          "60_22393 25_10244": { "id": "vartiokyla-huivipolku", "name": "Helsinki Vartiokylä Huivipolku", "coordinates": [25.10244, 60.22393], "district": "45" },
           "60_22024 24_81133": { "id": "leppavaara-lakkisepankuja", "name": "Espoo Leppävaara Läkkisepänkuja", "coordinates": [24.81133, 60.22024] },
           "60_17513 24_80034": { "id": "tapiola-4", "name": "Espoo Tapiola 4", "coordinates": [24.80034, 60.17513] },
           "60_31439 24_68486": { "id": "luukki", "name": "Espoo Luukki", "coordinates": [24.68486, 60.31439] },
@@ -53,5 +56,6 @@ pipeline:
           "airQualityIndex": if read.index == null { null } else {
             { "type": "Property", "value": read.index.ParameterValue.number(), "observedAt": read.index.Time }
           },
+          "districtCode": if read.station.district != null { { "type": "Property", "value": read.station.district } },
           "source": { "type": "Property", "value": "https://opendata.fmi.fi/wfs" }
         }.filter(entry -> entry.value != null))
