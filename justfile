@@ -523,6 +523,9 @@ dev-apply full='false' spend_guard='on':
 	# Every platform digest of the render carries our workflows' signature, or nothing is applied (T-5564).
 	./scripts/verify-pinned-images.py dev
 	if [ "$plan" = full ] || [ "${#selectors[@]}" -gt 0 ]; then
+		# The walker holds its walk while this stamp is newer than appliedAt (T-6425); no first
+		# record to stamp stops no apply.
+		./scripts/release.py start dev || true
 		helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${selectors[@]}"
 	fi
 	./scripts/wait-rollouts.sh dev
@@ -719,6 +722,7 @@ dev-apply-pins base='' dry='false' spend_guard='on':
 		trap 'rm -f "$render"' EXIT
 		./scripts/render.sh dev "$render" --deployed "${selectors[@]}"
 		./scripts/verify-pinned-images.py dev --render "$render" --scoped
+		./scripts/release.py start dev || true
 		# A pin moves no namespace: the prepare hook (namespaces, mesh annotations) has nothing to do.
 		JC_PREPARE_SKIP=pins helmfile -f deployment/helmfile.yaml -e dev sync --concurrency {{helmfile_concurrency}} "${skip_deps[@]}" "${selectors[@]}"
 		./scripts/wait-rollouts.sh dev 600 "${releases[@]}" || rc=1

@@ -6,6 +6,7 @@ tags, the pushes and the refusals are real git; `kubectl` is a stub that records
 
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
@@ -160,6 +161,8 @@ def kubectl_stub(tmp_path, monkeypatch):
         import json, sys
         if sys.argv[1] == "apply":
             open({str(tmp_path / 'applied.json')!r}, "w").write(sys.stdin.read())
+        elif sys.argv[3] == "patch":
+            open({str(tmp_path / 'patched.json')!r}, "w").write(json.dumps(sys.argv[4:]))
         elif sys.argv[4:6] == ["configmap", "jc-release"]:
             try:
                 print(open({str(tmp_path / 'applied.json')!r}).read())
@@ -195,6 +198,26 @@ def test_a_full_apply_stamps_full_sync_at_and_a_scoped_one_carries_it(repo, kube
     scoped = release.record("dev", "dev", cwd=repo)
     assert scoped["fullSyncAt"] == full["fullSyncAt"]
     assert json.loads(kubectl_stub.read_text())["data"]["fullSyncAt"] == full["fullSyncAt"]
+
+
+def test_an_apply_stamps_its_start_so_the_walker_sees_it_running(repo, kubectl_stub):
+    # T-6425: appliedAt is written when an apply ends; a walk that ended before the apply did saw
+    # nothing move and filed the 503 of the 07:1xZ k3s restart.
+    at = release.start("dev")
+    args = json.loads((kubectl_stub.parent / "patched.json").read_text())
+    assert args[:4] == ["configmap", "jc-release", "--type", "merge"]
+    assert json.loads(args[5]) == {"data": {"applyStartedAt": at}}
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", at)
+
+
+def test_every_dev_apply_stamps_its_start_before_it_syncs():
+    text = (ROOT / "justfile").read_text()
+    full = text[text.index("\ndev-apply full="):text.index("\n_smoke ")]
+    assert full.index("release.py start dev") < full.index("helmfile -f deployment/helmfile.yaml -e dev sync")
+    pins = text[text.index("\ndev-apply-pins "):]
+    assert pins.index("release.py start dev") < pins.index("helmfile -f deployment/helmfile.yaml -e dev sync")
+    # a dry run or an empty plan changes nothing, so it stamps nothing
+    assert pins.index('if [ "{{ dry }}" = true ]') < pins.index("release.py start dev")
 
 
 def test_the_recipes_gate_prod_on_a_tag_and_record_every_apply():

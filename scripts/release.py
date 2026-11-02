@@ -3,6 +3,7 @@
 
     scripts/release.py cut major|minor|patch [--push]   # from main as it is on origin
     scripts/release.py verify [<rev>]                    # prints the release tag of <rev>, or refuses
+    scripts/release.py start <namespace>                 # stamps applyStartedAt in jc-release
     scripts/release.py record <namespace> <environment>  # writes the ConfigMap jc-release
     scripts/release.py show <namespace>                  # prints it, for the smoke
     scripts/release.py changelog [--check]               # CHANGELOG.md from releases/*.md
@@ -209,6 +210,16 @@ def record(namespace: str, environment: str, cwd: Path = ROOT, full: bool = Fals
     return data
 
 
+def start(namespace: str) -> str:
+    """Stamps applyStartedAt (T-6425): an apply runs while the stamp is newer than appliedAt, which
+    only the end of an apply writes. `record`'s kubectl apply leaves the key alone. The walker
+    (portal ui/e2e/live/rollout-walk.sh) holds its walk on it, and a dead apply's stamp ages out there."""
+    at = f"{datetime.now(UTC):%Y-%m-%dT%H:%M:%SZ}"
+    kubectl("-n", namespace, "patch", "configmap", RECORD, "--type", "merge",
+            "-p", json.dumps({"data": {"applyStartedAt": at}}))
+    return at
+
+
 def show(namespace: str) -> str:
     try:
         data = json.loads(kubectl("-n", namespace, "get", "configmap", RECORD, "-o", "json")).get("data") or {}
@@ -225,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("part", choices=["major", "minor", "patch"])
     c.add_argument("--push", action="store_true")
     sub.add_parser("verify").add_argument("rev", nargs="?", default="HEAD")
+    sub.add_parser("start").add_argument("namespace")
     r = sub.add_parser("record")
     r.add_argument("namespace")
     r.add_argument("environment")
@@ -237,6 +249,8 @@ def main(argv: list[str] | None = None) -> int:
             cut(args.part, args.push)
         elif args.command == "verify":
             print(verify(args.rev))
+        elif args.command == "start":
+            print(start(args.namespace))
         elif args.command == "record":
             print(json.dumps(record(args.namespace, args.environment, full=args.full)))
         elif args.command == "show":
