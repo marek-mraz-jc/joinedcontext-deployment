@@ -9,7 +9,6 @@ header reaches the Portal carrying neither.
 Both run the pinned image, so both skip where there is no docker.
 """
 
-import gzip
 import json
 import shutil
 import socket
@@ -81,13 +80,18 @@ class _Portal(BaseHTTPRequestHandler):
         if self.path.endswith("/token"):
             self._json(b'{"access_token":"stub-token","token_type":"Bearer","expires_in":300}')
             return
-        if self.headers.get("content-encoding") == "gzip":
-            body = gzip.decompress(body)
-        type(self).batches.append({"auth": self.headers.get("authorization"), "body": json.loads(body)})
+        # The Portal's route is axum `Json<Value>` with no decompression layer: anything but plain
+        # JSON is its 400, which is what dev answered to every gzip batch the stub used to unpack.
+        try:
+            parsed = json.loads(body)
+        except ValueError:
+            self._json(b"{}", 400)
+            return
+        type(self).batches.append({"auth": self.headers.get("authorization"), "body": parsed})
         self._json(b"{}")
 
-    def _json(self, payload: bytes):
-        self.send_response(200)
+    def _json(self, payload: bytes, status: int = 200):
+        self.send_response(status)
         self.send_header("content-type", "application/json")
         self.send_header("content-length", str(len(payload)))
         self.end_headers()
@@ -285,6 +289,11 @@ def test_a_token_in_summary_or_details_is_redacted(exported):
 
 
 @requires_docker
+def test_a_batch_reaches_the_portal_as_plain_json(collector_config):
+    """The exporter's default is gzip, and the Portal refused every such batch on dev (T-6431)."""
+    assert collector_config["exporters"]["otlphttp/portal"]["compression"] == "none"
+
+
 def test_the_collector_authenticates_as_its_service_account(exported):
     """A token from the client-credentials grant, not an anonymous post (Deployment/05 §5)."""
     assert all(b["auth"] == "Bearer stub-token" for b in exported)

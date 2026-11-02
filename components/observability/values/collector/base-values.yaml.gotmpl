@@ -158,6 +158,9 @@ configMap:
           # The Portal owns the activity table and is its only writer (Deployment/05 section 5).
           logs_endpoint: "http://portal.{{ .Values.portal.portal.namespace }}.svc.cluster.local:8080/api/v1/activity"
           encoding: json
+          # The exporter gzips by default and the Portal's route reads plain JSON, so every gzip
+          # batch is its 400 (T-6431). Inside the cluster the bytes cost nothing.
+          compression: none
           auth:
             authenticator: oauth2client
 
