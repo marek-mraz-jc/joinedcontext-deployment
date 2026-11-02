@@ -16,6 +16,4 @@ spec:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-daily-departures }
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
   output: { type: GtfsDailyDepartures, mode: upsert }
-  quotas:
-    maxMemoryMb: 256
-    cpuMillicores: 200
+  quotas: { maxMemoryMb: 256, cpuMillicores: 200 }

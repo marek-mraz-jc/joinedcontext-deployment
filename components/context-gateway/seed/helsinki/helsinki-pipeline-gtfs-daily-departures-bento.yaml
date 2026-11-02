@@ -65,5 +65,5 @@ pipeline:
 
     # A failed mapping keeps its message, which here is the members themselves.
     - catch:
-        - log: { level: ERROR, message: "gtfs-daily-departures writes nothing: ${! error() }" }
+        - log: { level: ERROR, message: 'gtfs-daily-departures writes nothing: ${! error() }' }
         - mapping: root = deleted()

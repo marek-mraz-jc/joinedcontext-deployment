@@ -1402,6 +1402,13 @@ slots:
     range: integer
     minimum_value: 0
     annotations:
+      label:
+        tag: label
+        value:
+          sk: Plánované odchody
+          cs: Plánované odjezdy
+          en: Scheduled departures
+          de: Geplante Abfahrten
       ngsi_ld_kind: Property
   transportMode:
     slot_uri: jc:transportMode
