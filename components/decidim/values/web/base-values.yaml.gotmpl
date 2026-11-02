@@ -99,8 +99,10 @@ extraVolumeMounts:
   - { name: rails-tmp, mountPath: /code/tmp }
   - { name: rails-log, mountPath: /code/log }
 
+# One SELinux level on web and Sidekiq: they share the local-path volume, and a pod with its own
+# random level relabels it away from the other (T-6298), which broke every image on stage.
 podSecurityContext:
-  {{ merge (dict "runAsUser" 10001 "runAsGroup" 10001 "fsGroup" 10001) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+  {{ merge (dict "runAsUser" 10001 "runAsGroup" 10001 "fsGroup" 10001 "seLinuxOptions" (dict "level" "s0:c311,c742")) .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}

@@ -269,6 +269,15 @@ def test_sidekiq_says_when_it_runs_though_it_serves_no_port(rendered):
 
 
 @requires_helmfile
+def test_web_and_sidekiq_share_one_selinux_level(rendered):
+    """Both mount decidim-web-files; a random level per pod relabels it and the other is refused."""
+    docs = rendered("stage")
+    pods = [d["spec"]["template"]["spec"] for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] in ("decidim-web", "decidim-sidekiq")]
+    assert len(pods) == 2
+    assert len({p["securityContext"]["seLinuxOptions"]["level"] for p in pods}) == 1
+
+
+@requires_helmfile
 def test_the_site_runs_after_the_bootstrap_only_where_an_environment_asks(rendered):
     """T-6453: the themed site is for stage until the owner has looked; prod keeps a plain Decidim."""
     for env, wanted in (("addons", "false"), ("stage", None), ("smartcity", "false")):
