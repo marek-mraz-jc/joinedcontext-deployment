@@ -377,11 +377,10 @@ def test_project_visibility_is_a_setting_the_seed_spells_right(local):
 
 @requires_helmfile
 def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
-    """PF-56, PF-59, PF-61: reading is a verb, so a person with no binding reads nothing.
+    """PF-56, PF-59: reading is a verb, so a person with no binding reads nothing.
 
-    The binding's group and the Keycloak group everyone lands in are written in two
-    components and are the same string; when they drifted, every list of the demo answered
-    404 to the viewer and to the approver (dev-smoke, T-0906)."""
+    Since ADR-N-067 (T-6415) the viewers are named one by one: the realm's default group binds
+    no project, or every new account would read every project of the Organization again."""
     seed = seed_configmap(local)["data"]
     role = yaml.safe_load(seed["users__roles__viewer.yaml"])
     assert role["kind"] == "Role" and role["metadata"]["name"] == "viewer"
@@ -393,20 +392,7 @@ def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
     binding = yaml.safe_load(seed["users__assignments__viewers.yaml"])
     assert binding["spec"]["role"] == "viewer"
     assert binding["spec"]["scope"] == {"organization": "hel"}
-    group = binding["spec"]["subjects"][0]["group"]
-
-    import base64
-    import json
-
-    realm = next(
-        d for d in local
-        if d.get("kind") == "Secret"
-        and d["metadata"]["name"].endswith("keycloak-config-cli-config-realms")
-    )
-    parsed = json.loads(base64.b64decode(realm["data"]["local.json"]))
-    assert f"/{group}" in parsed["defaultGroups"], (
-        f"the binding names the group {group!r}, which no signed-in person joins"
-    )
+    assert all("user" in subject for subject in binding["spec"]["subjects"]), "no group is a viewer of every project"
 
 
 @requires_helmfile
