@@ -286,7 +286,7 @@ def run(domain: str, env: str, out: Path, rate: int = RATE, reader: Reader | Non
         def safe(slug):
             try:
                 sweep.endpoint(slug)
-            except Exception as error:  # one Endpoint's surprise must not end the walk of the others
+            except (AttributeError, KeyError, OSError, TypeError, ValueError) as error:  # one odd answer ends one Endpoint
                 sweep.row(slug, "-", "sweep", "broken", "", f"{type(error).__name__}: {error}"[:160])
 
         with ThreadPoolExecutor(workers) as pool:
