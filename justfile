@@ -945,6 +945,22 @@ dev-preview-isolation $slug $runner:
 	just _dev-guard
 	./scripts/preview.sh isolation "$slug" "$runner"
 
+# Hetzner clusters, one terraform module per cluster/hetzner/README.md (T-6444).
+# Plan a cluster and save the plan; refuses a plan that loses a server unless ALLOW_REPLACE=<name>
+[group('hetzner cluster')]
+cluster-plan name:
+	cluster/hetzner/cluster.sh plan {{ name }}
+
+# Apply the saved plan of this cluster, nothing else
+[group('hetzner cluster')]
+cluster-apply name:
+	cluster/hetzner/cluster.sh apply {{ name }}
+
+# Delete a cluster; refuses smartcity, asks the name typed twice
+[group('hetzner cluster')]
+cluster-destroy name:
+	cluster/hetzner/cluster.sh destroy {{ name }}
+
 # Wipe the platform off the dev cluster (announce it in AI_shared_folder.md first!)
 [group('dev cluster')]
 dev-destroy:

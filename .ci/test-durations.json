@@ -81,7 +81,7 @@
  "test_ckan_search_sk.py": 15.5,
  "test_ckan_table_view.py": 0.0,
  "test_ckan_theme.py": 128.1,
- "test_component_profiles.py": 23.4,
+ "test_cluster_hetzner.py": 2.0, "test_component_profiles.py": 23.4,
  "test_conftest_yaml.py": 3.1,
  "test_container_fixtures_grouped.py": 0.0,
  "test_context_broker.py": 0.4,

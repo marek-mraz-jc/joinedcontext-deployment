@@ -10,6 +10,7 @@ environments they render, or the full set.
         envs=<environments>    the environments the render job renders and gates
         pins=true|false        an images.yaml moved: verify the pinned signatures
         demo=true|false        render and gate the BBSK demo
+        cluster=true|false     cluster/hetzner moved: the cluster-hetzner job runs
         shards=[1,...]         the tests job's matrix: six for the full set, one per SHARD_SECONDS
                                of the scoped set's measured time
 
@@ -150,6 +151,7 @@ def main(argv: list[str]) -> int:
     print(f"envs={' '.join(s['envs'])}")
     print(f"pins={'true' if s['pins'] else 'false'}")
     print(f"demo={'true' if s['demo'] else 'false'}")
+    print(f"cluster={'true' if files is None or any(f.startswith('cluster/hetzner/') for f in files) else 'false'}")
     table = Path(".ci/test-durations.json")
     weights = json.loads(table.read_text(encoding="utf-8")) if table.exists() else {}
     print(f"shards={json.dumps(list(range(1, shards(s, weights) + 1)), separators=(',', ':'))}")

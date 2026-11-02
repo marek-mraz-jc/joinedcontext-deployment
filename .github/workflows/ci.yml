@@ -34,6 +34,7 @@ jobs:
       envs: ${{ steps.changes.outputs.envs }}
       pins: ${{ steps.changes.outputs.pins }}
       demo: ${{ steps.changes.outputs.demo }}
+      cluster: ${{ steps.changes.outputs.cluster }}
       shards: ${{ steps.changes.outputs.shards }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -172,6 +173,29 @@ jobs:
             rendered/*.yaml
             rendered-*.yaml
           retention-days: 3
+  cluster-hetzner:
+    # T-6444: the one kube-hetzner module. No token here, so nothing reads a Hetzner project.
+    needs: changes
+    if: needs.changes.outputs.cluster == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: "${{ inputs.ref }}" }
+      - uses: ./.github/actions/tools
+        with: { helmfile: "false" }
+      - name: terraform
+        run: |
+          curl --fail --retry 3 --retry-all-errors -sSLo terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+          echo "${TERRAFORM_CHECKSUM}  terraform.zip" | sha256sum --check --status
+          unzip -q terraform.zip terraform
+          sudo install -m 0755 terraform /usr/local/bin/terraform
+          rm -f terraform.zip terraform
+      - run: terraform fmt -check -recursive cluster/hetzner
+      - run: terraform -chdir=cluster/hetzner/module init -backend=false -input=false -lockfile=readonly
+      - run: terraform -chdir=cluster/hetzner/module validate
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 20  # ran 9m40 a run on 2026-09-25 and timed out at 10; back under budget is T-2895

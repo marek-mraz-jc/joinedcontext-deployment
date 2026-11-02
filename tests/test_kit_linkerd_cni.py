@@ -1,13 +1,13 @@
-"""T-5327: the kit copy of the Linkerd CNI HelmChart keeps the values dev and prod run.
+"""T-5327: the cluster module's Linkerd CNI HelmChart keeps the values dev and prod run.
 
-A node rebuilt from the kube-hetzner kit without this chart meshes pods with linkerd-init
+A node rebuilt without this chart meshes pods with linkerd-init
 (NET_ADMIN), which the Portal's PSS-restricted App namespaces refuse."""
 
 from pathlib import Path
 
 import yaml
 
-KIT = Path(__file__).resolve().parent.parent / "cluster/kube-hetzner"
+KIT = Path(__file__).resolve().parent.parent / "cluster/hetzner/module"
 MANIFEST = KIT / "extra-manifests/25-linkerd-cni.yaml.tpl"
 
 
@@ -41,7 +41,7 @@ def test_helmchart_is_pinned_and_carries_the_k3s_values():
     assert values["repairController"]["resources"]["memory"]["limit"] == "128Mi"
 
 
-def test_readme_names_the_control_plane_switch_and_the_kustomization_line():
-    readme = (KIT / "README.md").read_text()
-    assert "cniEnabled: true" in readme
-    assert "- 25-linkerd-cni.yaml" in readme
+def test_the_control_plane_turns_it_on_and_the_kustomization_lists_it():
+    assert "cniEnabled: true" in (KIT / "extra-manifests/30-linkerd.yaml.tpl").read_text()
+    kustomization = (KIT / "extra-manifests/kustomization.yaml.tpl").read_text()
+    assert kustomization.index("- 25-linkerd-cni.yaml") < kustomization.index("- 30-linkerd.yaml")
