@@ -173,7 +173,7 @@ class Stand(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def run(version="0.29.5", robots=None, light=False):
+def run(version="0.29.5", robots=None, light=False, labels=None):
     Stand.version, Stand.seen = version, []
     Stand.robots = robots or (200, "User-agent: *\nDisallow: /profiles/\nDisallow: /search\n")
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Stand)
@@ -186,6 +186,8 @@ def run(version="0.29.5", robots=None, light=False):
         config = json.loads(text)
         cfg = {"instance": "tvormespolu", "base": base, "locale": "sk", "scope": "/SK/BB/banska_bystrica",
                "locality": "Banská Bystrica", "provider": "Mesto Banská Bystrica", "light": light}
+        if labels:
+            cfg["stateLabels"] = labels
         config["input"] = {"generate": {"mapping": "root = " + json.dumps(cfg), "count": 1, "interval": ""}}
         # The runner rejects an errored message and the run fails (portal reconciler/streams.rs); a reject
         # here would replay forever, so the stand-in logs it and drops it.
@@ -256,6 +258,21 @@ def test_every_entity_fits_the_model(shape, request):
         assert e["scope"] == "/SK/BB/banska_bystrica"
         errors = [f"{list(x.path)}: {x.message}" for x in validator(e["type"]).iter_errors(plain(e))]
         assert errors == [], (e["id"], errors)
+
+
+@requires_docker
+def test_the_own_instance_words_a_state_the_api_answers_as_a_token():
+    entities, _, _ = run("0.27.6", labels={"accepted": "Prijatý"})
+    words = {e["proposalState"]["value"]: e.get("stateLabel") for e in by_type(entities)["Proposal"]}
+    assert words["accepted"]["value"] == "Prijatý"
+    assert words["withdrawn"] is None, "a token without words stays without a label"
+
+
+def test_the_own_state_labels_are_the_words_of_the_site():
+    source = (ROOT / "images/decidim/site.rb").read_text()
+    config = (ROOT / "components/decidim/seed/slovensko-datasource-decidim-participacia.yaml").read_text()
+    for token, words in re.findall(r'"(\w+)" => \[:\w+, "([^"]+)"', source):
+        assert f'\\"{token}\\": \\"{words}\\"' in config
 
 
 @requires_docker
