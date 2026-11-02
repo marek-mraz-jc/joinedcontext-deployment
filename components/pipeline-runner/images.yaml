@@ -9,4 +9,4 @@ pipeline-runner:
   tokens:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:e11965b94ddb93e034221c15eccfe967a8af46008fc5f2375243326d442f9650'
+    digest: 'sha256:e0e625eddde54b0e8786657ca7dc3442f30e99d43ed7f5cd6d7ef06d6b7cac08'
