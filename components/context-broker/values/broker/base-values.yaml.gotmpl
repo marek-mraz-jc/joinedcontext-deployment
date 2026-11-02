@@ -166,9 +166,11 @@ env:
   # The joinedcontext engine decides every request by them and the Portal's rule documents
   # (T-3768): a request naming nobody is the cluster's own and is refused outside the Context
   # Source clauses; the gateway's own hops speak as its client (T-3767). `x-jc-read-only` marks a
-  # read-only connector's token, refused every write (platform T-5955, S-49).
+  # read-only connector's token, refused every write (platform T-5955, S-49). `x-jc-member: true`
+  # marks a verified member of the Endpoint's Organization, what an `organization` assignee
+  # matches (ADR-N-067 2.3, Antares T-6419); a broker before T-6419 ignores it.
   ANTARES_POLICY: "joinedcontext"
-  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did,x-jc-read-only"
+  ANTARES_POLICY_SUBJECT_HEADERS: "x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did,x-jc-read-only,x-jc-member"
   {{- if and $mesh (dig "enabled" false $gateway) }}
   # The gateway's mesh identity (Linkerd sets l5d-client-id from its mTLS certificate): the only
   # caller whose JC-Provenance-* and X-Request-Id headers the broker stores in history
