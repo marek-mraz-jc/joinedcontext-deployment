@@ -1,0 +1,70 @@
+networkpolicies:
+  context-gateway-linkerd-control-plane:
+    egress:
+      - ports:
+          - port: 8080
+            protocol: TCP
+          - port: 8086
+            protocol: TCP
+          - port: 8090
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: linkerd
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: context-broker-broker
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: keycloak-app
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: portal-portal
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: assistant-worker
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: gitea-forge
+                app.kubernetes.io/name: gitea
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: context-gateway-gateway
+    policyTypes:
+      - Egress

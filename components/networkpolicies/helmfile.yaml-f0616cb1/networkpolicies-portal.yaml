@@ -1,0 +1,182 @@
+networkpolicies:
+  portal:
+    egress:
+      - ports:
+          - port: 5432
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: portal-ui
+      - ports:
+          - port: 1025
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mail-catcher
+      - ports:
+          - port: 5432
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: apps-db
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: keycloak-app
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: context-gateway-gateway
+      - ports:
+          - port: 9090
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: context-broker-broker
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: model-tools-tools
+      - ports:
+          - port: 9000
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: store
+      - ports:
+          - port: 5000
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: ckan
+                app.kubernetes.io/instance: ckan-catalogue
+                app.kubernetes.io/name: ckan
+      - ports:
+          - port: 4195
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: pipeline-runner-runner
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: wasm-host-shard
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+      - ports:
+          - port: 443
+            protocol: TCP
+          - port: 8443
+            protocol: TCP
+          - port: 6443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: apisix
+          - namespaceSelector:
+              matchLabels:
+                joinedcontext.com/managed-by: joinedcontext-portal
+            podSelector:
+              matchLabels:
+                joinedcontext.com/app: "true"
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: wasm-host-shard
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: keycloak-app
+        ports:
+          - port: 8080
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: portal-portal
+    policyTypes:
+      - Ingress
+      - Egress

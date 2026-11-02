@@ -1,0 +1,102 @@
+networkpolicies:
+  ckan:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+      - ports:
+          - port: 5432
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+      - ports:
+          - port: 8983
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: solr
+                app.kubernetes.io/instance: ckan-catalogue
+                app.kubernetes.io/name: ckan
+      - ports:
+          - port: 6379
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: redis
+                app.kubernetes.io/instance: ckan-catalogue
+                app.kubernetes.io/name: ckan
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: apisix
+        ports:
+          - port: 5000
+            protocol: TCP
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: api-token
+                app.kubernetes.io/instance: ckan-catalogue
+                app.kubernetes.io/name: ckan
+        ports:
+          - port: 5000
+            protocol: TCP
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: portal-portal
+        ports:
+          - port: 5000
+            protocol: TCP
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: harvest
+                app.kubernetes.io/instance: ckan-catalogue
+                app.kubernetes.io/name: ckan
+        ports:
+          - port: 5000
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/component: ckan
+      app.kubernetes.io/instance: ckan-catalogue
+      app.kubernetes.io/name: ckan
+    policyTypes:
+      - Ingress
+      - Egress

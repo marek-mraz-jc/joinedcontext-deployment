@@ -1,0 +1,4 @@
+image:
+  digest: sha256:101b4afd76732482eff9b95cae5f94bcf295e521fbec4e01b69c5421f3f3f3e5
+  repository: rancher/mirrored-library-busybox
+  tag: 1.37.0

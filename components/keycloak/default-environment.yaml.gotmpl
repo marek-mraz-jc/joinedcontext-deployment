@@ -43,7 +43,8 @@ keycloak:
       {{- else if .Values.global.participationStewardId }}
       # The one person a production realm seeds besides the owner (T-6448): the login that
       # administers Decidim (decidim.web.adminEmail) and nothing else. No group, no platform
-      # readers, no Portal role; a generated password and TOTP seed, read from its Secret.
+      # readers, no Portal role; a generated password read from its Secret, and a TOTP seed
+      # there too unless global.participationStewardEnrols has the person enrol at first sign-in.
       participacia.steward:
         id: {{ .Values.global.participationStewardId | quote }}
         firstName: Participácia
@@ -51,6 +52,7 @@ keycloak:
         realmRoles: [mfa-required]
         platformReaders: false
         groups: []
+        enrols: {{ .Values.global.participationStewardEnrols }}
       {{- else }}
       {}
       {{- end }}

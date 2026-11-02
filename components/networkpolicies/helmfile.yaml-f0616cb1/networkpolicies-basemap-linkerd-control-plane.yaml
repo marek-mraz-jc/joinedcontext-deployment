@@ -1,0 +1,32 @@
+networkpolicies:
+  basemap-linkerd-control-plane:
+    egress:
+      - ports:
+          - port: 8080
+            protocol: TCP
+          - port: 8086
+            protocol: TCP
+          - port: 8090
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: linkerd
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/instance: basemap-tiles
+      app.kubernetes.io/name: tiles
+    policyTypes:
+      - Egress

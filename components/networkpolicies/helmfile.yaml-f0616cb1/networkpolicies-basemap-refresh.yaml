@@ -1,0 +1,39 @@
+networkpolicies:
+  basemap-refresh:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+              except:
+                - 10.0.0.0/8
+                - 172.16.0.0/12
+                - 192.168.0.0/16
+                - 169.254.0.0/16
+                - 127.0.0.0/8
+                - 100.64.0.0/10
+                - 0.0.0.0/8
+                - 198.18.0.0/15
+                - 224.0.0.0/4
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/component: refresh
+      app.kubernetes.io/instance: basemap-tiles
+      app.kubernetes.io/name: tiles
+    policyTypes:
+      - Ingress
+      - Egress

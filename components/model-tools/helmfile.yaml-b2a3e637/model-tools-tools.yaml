@@ -1,0 +1,55 @@
+containerPort: 8080
+env:
+  MODEL_TOOLS_MODELS: /opt/model-tools/models
+  MODEL_TOOLS_PORT: "8080"
+  PYSTOW_HOME: /tmp/pystow
+fullnameOverride: model-tools
+image:
+  digest: sha256:8a79e3282336aa8507e54ed3ab9981db0b58c82a28c5ca0f1c0c08daf182fbc7
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools
+  tag: main
+nameOverride: model-tools-tools
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 10001
+  seccompProfile:
+    type: RuntimeDefault
+probes:
+  liveness:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    path: /healthz
+    periodSeconds: 15
+    timeoutSeconds: 3
+  readiness:
+    failureThreshold: 3
+    path: /healthz
+    periodSeconds: 5
+    timeoutSeconds: 3
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 640Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: true
+  name: http
+  port: 8080
+  targetPort: 8080
+  type: ClusterIP
+serviceAccount:
+  automountServiceAccountToken: false
+  create: false
+serviceMesh:
+  enabled: true

@@ -1,0 +1,20 @@
+networkpolicies:
+  dr-drill-linkerd:
+    egress:
+      - ports:
+          - port: 8080
+            protocol: TCP
+          - port: 8086
+            protocol: TCP
+          - port: 8090
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: linkerd
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/component: database-dr-drill
+      app.kubernetes.io/name: databases
+    policyTypes:
+      - Egress

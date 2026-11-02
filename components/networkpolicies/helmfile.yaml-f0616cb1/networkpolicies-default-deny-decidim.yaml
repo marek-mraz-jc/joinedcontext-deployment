@@ -1,0 +1,7 @@
+networkpolicies:
+  default-deny-decidim:
+    namespace: smartcity
+    podSelector: {}
+    policyTypes:
+      - Ingress
+      - Egress

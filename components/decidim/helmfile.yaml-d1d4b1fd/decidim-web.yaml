@@ -1,0 +1,187 @@
+containerPort: 3000
+env:
+  ASSISTANT_ORIGIN: https://assistant.smartcity.joinedcontext.com
+  ASSISTANT_PUBLIC_ID: participacia
+  DATABASE_URL: postgres://decidim@postgres-cluster-rw.smartcity.svc.cluster.local:5432/decidim?sslmode=require
+  DECIDIM_ADMIN_EMAIL: participacia.steward@hel.fi
+  DECIDIM_CATALOGUE_URL: https://opendata.smartcity.joinedcontext.com
+  DECIDIM_DEFAULT_LOCALE: sk
+  DECIDIM_HOST: participacia.smartcity.joinedcontext.com
+  DECIDIM_LOCALES: sk,en
+  DECIDIM_ORGANIZATION_NAME: Participácia
+  DECIDIM_PORTAL_URL: https://portal.smartcity.joinedcontext.com
+  DECIDIM_REFERENCE_PREFIX: JC
+  DECIDIM_SITE_CONTENT: "false"
+  DECIDIM_SITE_DEMO_NOTICE: "false"
+  OIDC_CLIENT_ID: decidim
+  OIDC_ISSUER: https://idm.smartcity.joinedcontext.com/realms/smartcity
+  OIDC_REDIRECT_URI: https://participacia.smartcity.joinedcontext.com/users/auth/keycloak/callback
+  RAILS_LOG_LEVEL: warn
+  RAILS_MAX_THREADS: "3"
+  REDIS_URL: redis://decidim-redis.smartcity.svc.cluster.local:6379/1
+  TMPDIR: /tmp/app
+envSecret:
+  DATABASE_PASSWORD:
+    key: password
+    secret: db-decidim
+  OIDC_CLIENT_SECRET:
+    key: client-secret
+    secret: keycloak-client-decidim
+  SECRET_KEY_BASE:
+    key: secret
+    secret: decidim-secret-key-base
+extraInitContainers:
+  - command:
+      - sh
+      - -c
+      - mkdir -m 700 -p "$TMPDIR" && bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && if [ "$DECIDIM_SITE_CONTENT" = true ]; then bin/rails runner db/joinedcontext_site.rb; fi
+    env:
+      - name: TMPDIR
+        value: /tmp/app
+      - name: DATABASE_URL
+        value: postgres://decidim@postgres-cluster-rw.smartcity.svc.cluster.local:5432/decidim?sslmode=require
+      - name: DATABASE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: db-decidim
+      - name: SECRET_KEY_BASE
+        valueFrom:
+          secretKeyRef:
+            key: secret
+            name: decidim-secret-key-base
+      - name: REDIS_URL
+        value: redis://decidim-redis.smartcity.svc.cluster.local:6379/1
+      - name: RAILS_LOG_LEVEL
+        value: warn
+      - name: RAILS_MAX_THREADS
+        value: "5"
+      - name: DECIDIM_HOST
+        value: participacia.smartcity.joinedcontext.com
+      - name: DECIDIM_ORGANIZATION_NAME
+        value: Participácia
+      - name: DECIDIM_DEFAULT_LOCALE
+        value: sk
+      - name: DECIDIM_LOCALES
+        value: sk,en
+      - name: DECIDIM_REFERENCE_PREFIX
+        value: JC
+      - name: DECIDIM_ADMIN_EMAIL
+        value: participacia.steward@hel.fi
+      - name: DECIDIM_SITE_CONTENT
+        value: "false"
+      - name: DECIDIM_SITE_DEMO_NOTICE
+        value: "false"
+      - name: DECIDIM_PORTAL_URL
+        value: https://portal.smartcity.joinedcontext.com
+      - name: DECIDIM_CATALOGUE_URL
+        value: https://opendata.smartcity.joinedcontext.com
+      - name: OIDC_ISSUER
+        value: https://idm.smartcity.joinedcontext.com/realms/smartcity
+      - name: OIDC_CLIENT_ID
+        value: decidim
+      - name: OIDC_CLIENT_SECRET
+        valueFrom:
+          secretKeyRef:
+            key: client-secret
+            name: keycloak-client-decidim
+      - name: OIDC_REDIRECT_URI
+        value: https://participacia.smartcity.joinedcontext.com/users/auth/keycloak/callback
+      - name: ASSISTANT_ORIGIN
+        value: https://assistant.smartcity.joinedcontext.com
+      - name: ASSISTANT_PUBLIC_ID
+        value: participacia
+    image: ghcr.io/marek-mraz-jc/joinedcontext-decidim:0.32.2@sha256:a68d5254e917bceea79edffe2806d9e97bcce632d35136f87c62a78c4ebfb01a
+    imagePullPolicy: IfNotPresent
+    name: migrate
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+    volumeMounts:
+      - mountPath: /tmp
+        name: tmp
+      - mountPath: /code/tmp
+        name: rails-tmp
+      - mountPath: /code/log
+        name: rails-log
+      - mountPath: /code/storage
+        name: files
+extraVolumeMounts:
+  - mountPath: /code/tmp
+    name: rails-tmp
+  - mountPath: /code/log
+    name: rails-log
+extraVolumes:
+  - emptyDir:
+      sizeLimit: 512Mi
+    name: rails-tmp
+  - emptyDir:
+      sizeLimit: 64Mi
+    name: rails-log
+fullnameOverride: decidim-web
+image:
+  digest: sha256:a68d5254e917bceea79edffe2806d9e97bcce632d35136f87c62a78c4ebfb01a
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/joinedcontext-decidim
+  tag: 0.32.2
+nameOverride: decidim-web
+persistence:
+  enabled: true
+  mountPath: /code/storage
+  size: 5Gi
+  storageClass: local-path
+podSecurityContext:
+  fsGroup: 10001
+  runAsGroup: 10001
+  runAsNonRoot: true
+  runAsUser: 10001
+  seccompProfile:
+    type: RuntimeDefault
+probes:
+  liveness:
+    failureThreshold: 3
+    initialDelaySeconds: 60
+    path: /up
+    periodSeconds: 20
+    timeoutSeconds: 5
+  readiness:
+    failureThreshold: 3
+    path: /up
+    periodSeconds: 10
+    timeoutSeconds: 5
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 640Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: true
+  name: http
+  port: 3000
+  targetPort: 3000
+  type: ClusterIP
+serviceAccount:
+  automountServiceAccountToken: false
+  create: false
+serviceMesh:
+  enabled: true
+updateStrategy: RollingUpdate

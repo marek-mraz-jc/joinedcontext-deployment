@@ -1,0 +1,54 @@
+appsBucket:
+  enabled: true
+  name: apps
+  retiredExpiryDays: 90
+  retiredPrefix: apps/retired/
+backupBucket:
+  credentialsSecret: postgres-backup-artifact-store
+  enabled: false
+  name: postgres-backups
+  prefixUsers: []
+bootstrapImage:
+  digest: sha256:ce44b800602264c12298bbf3399055a4cefdb9ed4a098abe564afe26e7071bce
+  repository: docker.io/amazon/aws-cli
+  tag: 2.37.12
+bucket: jc-artifacts
+console:
+  enabled: false
+fileCache:
+  expiryDays: 1
+  prefix: filecache/
+image:
+  digest: sha256:ed9210d6411d77ffceb70d94b964a3cb7d225983368bc25bebe01e995293dcc2
+  pullPolicy: IfNotPresent
+  repository: docker.io/rustfs/rustfs
+  tag: 1.0.4
+nameOverride: artifact-store
+objectLock:
+  defaultRetentionDays: 0
+  enabled: true
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+region: us-east-1
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 100m
+    memory: 832Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+serviceMesh:
+  enabled: true
+storage:
+  size: 10Gi
+  storageClass: local-path

@@ -1,0 +1,76 @@
+networkpolicies:
+  context-broker:
+    egress:
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+      - ports:
+          - port: 5432
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+      - ports:
+          - port: 80
+            protocol: TCP
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+              except:
+                - 10.0.0.0/8
+                - 172.16.0.0/12
+                - 192.168.0.0/16
+                - 169.254.0.0/16
+                - 127.0.0.0/8
+                - 100.64.0.0/10
+                - 0.0.0.0/8
+                - 198.18.0.0/15
+                - 224.0.0.0/4
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: context-gateway-gateway
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: portal-portal
+        ports:
+          - port: 9090
+            protocol: TCP
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+        ports:
+          - port: 9464
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: context-broker-broker
+    policyTypes:
+      - Ingress
+      - Egress

@@ -1,0 +1,29 @@
+cluster:
+  name: apps-db
+databases: {}
+localBackup:
+  ageRecipients:
+    - age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55
+  enabled: true
+  excludeDatabases: []
+  keepDays: 7
+  schedule: 45 2 * * *
+  size: 1Gi
+nameOverride: apps-db-backup
+roleJob:
+  image: ghcr.io/cloudnative-pg/postgis@sha256:a08a1c1795fcbee5bfc3e935f21be68f08700e4e1e7f3b6af5e11866617d9e61
+securityDefaults:
+  podSecurityContext:
+    fsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+statStatements:
+  preloaded: false

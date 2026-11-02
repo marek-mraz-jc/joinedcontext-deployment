@@ -1,0 +1,27 @@
+networkpolicies:
+  acme-http01-solver:
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchExpressions:
+                - key: kubernetes.io/metadata.name
+                  operator: In
+                  values:
+                    - traefik
+                    - kube-system
+                    - ingress-nginx
+            podSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - traefik
+                    - ingress-nginx
+        ports:
+          - port: 8089
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      acme.cert-manager.io/http01-solver: "true"
+    policyTypes:
+      - Ingress

@@ -1,0 +1,26 @@
+networkpolicies:
+  postgres-from-decidim:
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: decidim-web
+                app.kubernetes.io/name: decidim-web
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: decidim-sidekiq
+                app.kubernetes.io/name: decidim-sidekiq
+        ports:
+          - port: 5432
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      cnpg.io/cluster: postgres-cluster
+    policyTypes:
+      - Ingress

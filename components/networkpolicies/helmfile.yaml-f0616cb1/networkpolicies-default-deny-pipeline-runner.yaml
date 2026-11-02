@@ -1,0 +1,7 @@
+networkpolicies:
+  default-deny-pipeline-runner:
+    namespace: smartcity
+    podSelector: {}
+    policyTypes:
+      - Ingress
+      - Egress

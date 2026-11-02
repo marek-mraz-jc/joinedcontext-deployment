@@ -1,0 +1,7 @@
+networkpolicies:
+  default-deny-context-broker:
+    namespace: smartcity
+    podSelector: {}
+    policyTypes:
+      - Ingress
+      - Egress

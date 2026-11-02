@@ -1,0 +1,18 @@
+config:
+  clusterWide: false
+  data:
+    INHERITED_ANNOTATIONS: config.linkerd.io/skip-inbound-ports,security.joinedcontext.com/api-access-reason
+image:
+  repository: ghcr.io/cloudnative-pg/cloudnative-pg
+  tag: 1.30.1@sha256:923c267ec29636db3bee20f993d0ec4973fa22998e1adad37da79e4d32b5bc07
+podAnnotations:
+  config.linkerd.io/skip-inbound-ports: "9443"
+  security.joinedcontext.com/api-access-reason: 'CloudNativePG operator: reconciles Cluster resources, their Secrets and their pods through the Kubernetes API.'
+replicaCount: 1
+resources:
+  limits:
+    cpu: 200m
+    memory: 400Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

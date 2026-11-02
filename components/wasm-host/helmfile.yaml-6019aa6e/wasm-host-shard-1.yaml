@@ -1,0 +1,96 @@
+command:
+  - /usr/local/bin/jc-wasm-host
+containerPort: 8080
+env:
+  JC_GATEWAY_URL: http://context-gateway.smartcity.svc.cluster.local:8080
+  JC_WASM_APPS_HOST: apps.smartcity.joinedcontext.com
+  JC_WASM_CACHED_COMPONENTS: "600"
+  JC_WASM_DB_PASSWORD_FILE: /etc/jc-wasm/db/password
+  JC_WASM_DB_URL: postgresql://wasm_host_1@apps-db-rw.smartcity.svc.cluster.local:5432/apps?sslmode=require
+  JC_WASM_JOB_TOKEN_URL: http://wasm-host-tokens.smartcity.svc.cluster.local:4180/token
+  JC_WASM_PLACEMENTS: /etc/jc-wasm/placement/placements.json
+  JC_WASM_PORTAL_URL: http://portal.smartcity.svc.cluster.local:8080
+  JC_WASM_S3_BUCKET: apps
+  JC_WASM_S3_ENDPOINT: http://artifact-store.smartcity.svc.cluster.local:9000
+  JC_WASM_S3_KEY_FILE: /etc/jc-wasm/store/access-key
+  JC_WASM_S3_SECRET_FILE: /etc/jc-wasm/store/secret-key
+  JC_WASM_SHARD: "1"
+extraVolumeMounts:
+  - mountPath: /etc/jc-wasm/placement
+    name: placement
+    readOnly: true
+  - mountPath: /etc/jc-wasm/store
+    name: store
+    readOnly: true
+  - mountPath: /etc/jc-wasm/db
+    name: db
+    readOnly: true
+extraVolumes:
+  - configMap:
+      name: jc-wasm-host-1-placements
+    name: placement
+  - name: store
+    secret:
+      secretName: apps-host-1-store
+  - name: db
+    secret:
+      items:
+        - key: password
+          path: password
+      secretName: apps-host-1-db
+fullnameOverride: jc-wasm-host-1
+image:
+  digest: sha256:e11965b94ddb93e034221c15eccfe967a8af46008fc5f2375243326d442f9650
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/joinedcontext-platform
+  tag: main
+meshAuthorization:
+  clients:
+    - namespace: smartcity
+      serviceAccount: portal
+  port: 9090
+metrics:
+  enabled: true
+  name: admin
+  port: 9090
+nameOverride: wasm-host-shard
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+probes:
+  liveness:
+    failureThreshold: 3
+    initialDelaySeconds: 10
+    path: /healthz
+    periodSeconds: 15
+    timeoutSeconds: 3
+  readiness:
+    failureThreshold: 3
+    path: /healthz
+    periodSeconds: 5
+    timeoutSeconds: 3
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: true
+  port: 8080
+serviceAccount:
+  automountServiceAccountToken: false
+  create: true
+serviceMesh:
+  enabled: true

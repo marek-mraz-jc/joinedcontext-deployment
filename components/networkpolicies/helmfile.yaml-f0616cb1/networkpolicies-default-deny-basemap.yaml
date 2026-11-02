@@ -1,0 +1,7 @@
+networkpolicies:
+  default-deny-basemap:
+    namespace: smartcity
+    podSelector: {}
+    policyTypes:
+      - Ingress
+      - Egress

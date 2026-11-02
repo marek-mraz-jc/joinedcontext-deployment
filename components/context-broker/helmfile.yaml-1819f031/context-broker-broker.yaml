@@ -1,0 +1,114 @@
+containerPort: 9090
+env:
+  ANTARES_ADMIN_METRICS: open
+  ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
+  ANTARES_ALLOW_SHARED_LOCAL: "1"
+  ANTARES_API_SURFACES: admin,views,mcp,access,ws,ws-views,ogc,linkml,odata,sta,ical,feed
+  ANTARES_BUS: local
+  ANTARES_DATABASE_URL: postgresql://antares:$(PGPASSWORD)@postgres-cluster-rw.smartcity.svc.cluster.local:5432/antares
+  ANTARES_EGRESS_ALLOW_PRIVATE: "false"
+  ANTARES_EGRESS_PRIVATE_HOSTS: context-broker.smartcity.svc.cluster.local
+  ANTARES_HISTORY_BACKFILL: "on"
+  ANTARES_MAX_CONNECTIONS: "512"
+  ANTARES_MCP_ALLOWED_HOSTS: context-broker.smartcity.svc.cluster.local:8080
+  ANTARES_MCP_ALLOWED_ORIGINS: https://portal.smartcity.joinedcontext.com:443,https://smartcity.joinedcontext.com:443
+  ANTARES_MCP_CONFIRM_URL: https://portal.smartcity.joinedcontext.com/mcp-confirmations/{id}
+  ANTARES_METRICS_PORT: "9464"
+  ANTARES_PG_BATCH_ASYNC_COMMIT: "true"
+  ANTARES_PG_POOL: "13"
+  ANTARES_POLICY: joinedcontext
+  ANTARES_POLICY_SUBJECT_FROM: context-gateway.smartcity.serviceaccount.identity.linkerd.cluster.local,portal.smartcity.serviceaccount.identity.linkerd.cluster.local
+  ANTARES_POLICY_SUBJECT_HEADERS: x-jc-subject,x-jc-groups,x-jc-roles,x-jc-client,x-jc-restricted,x-jc-did,x-jc-read-only,x-jc-member
+  ANTARES_PROVENANCE_FROM: context-gateway.smartcity.serviceaccount.identity.linkerd.cluster.local
+  ANTARES_REQUIRE_RLS: "1"
+  ANTARES_RETENTION_HISTORY_DEFAULT: P28D
+  ANTARES_SCHEMA_MAX_BYTES: "1048576"
+  ANTARES_STORE: postgres
+  ANTARES_TELEMETRY: "1"
+  ANTARES_TEMPORAL_RECORD: ruled
+  ANTARES_WS_MAX_CONNECTIONS: "200"
+  ANTARES_WS_MAX_CONNECTIONS_PER_TENANT: "50"
+  ANTARES_WS_MAX_LIFETIME_SECS: "86400"
+  ANTARES_WS_MAX_SUBSCRIPTIONS: "16"
+  ANTARES_WS_QUEUE: "128"
+envSecret:
+  ANTARES_SECRET_KEY:
+    key: key
+    secret: context-broker-secret-key
+  PGPASSWORD:
+    key: password
+    secret: db-antares
+extraVolumeMounts:
+  - mountPath: /var/run/secrets/antares/admin
+    name: admin-token
+    readOnly: true
+extraVolumes:
+  - name: admin-token
+    secret:
+      items:
+        - key: token
+          path: token
+      secretName: context-broker-admin-token
+fullnameOverride: context-broker
+image:
+  digest: sha256:db1712f10cadd568db5104c756b7470bcea1af2dd7d70005b6fdb2bc4fa29970
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/antares-broker-jc
+  tag: dev-138
+meshAuthorization:
+  clients:
+    - namespace: smartcity
+      serviceAccount: context-gateway
+    - namespace: smartcity
+      serviceAccount: portal
+  includeSelf: true
+  port: 9090
+metrics:
+  enabled: true
+  name: metrics
+  port: 9464
+nameOverride: context-broker-broker
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 65532
+  seccompProfile:
+    type: RuntimeDefault
+probes:
+  liveness:
+    failureThreshold: 3
+    initialDelaySeconds: 10
+    path: /q/health
+    periodSeconds: 15
+    timeoutSeconds: 3
+  readiness:
+    failureThreshold: 3
+    path: /q/ready
+    periodSeconds: 5
+    timeoutSeconds: 3
+  startup:
+    failureThreshold: 240
+    periodSeconds: 15
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+  requests:
+    cpu: 100m
+    memory: 448Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: true
+  name: http
+  port: 8080
+  targetPort: 9090
+  type: ClusterIP
+serviceMesh:
+  enabled: true
+updateStrategy: Recreate

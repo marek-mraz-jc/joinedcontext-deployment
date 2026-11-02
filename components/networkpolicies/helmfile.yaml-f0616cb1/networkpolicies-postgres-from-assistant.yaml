@@ -1,0 +1,18 @@
+networkpolicies:
+  postgres-from-assistant:
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: assistant-worker
+        ports:
+          - port: 5432
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      cnpg.io/cluster: postgres-cluster
+    policyTypes:
+      - Ingress

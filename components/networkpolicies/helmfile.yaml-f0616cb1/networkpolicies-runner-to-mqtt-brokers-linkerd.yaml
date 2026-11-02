@@ -1,0 +1,18 @@
+networkpolicies:
+  runner-to-mqtt-brokers-linkerd:
+    egress:
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mqtt-broker
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: pipeline-runner-runner
+    policyTypes:
+      - Egress

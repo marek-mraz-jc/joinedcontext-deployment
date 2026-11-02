@@ -1,0 +1,20 @@
+networkpolicies:
+  apisix-egress-to-decidim:
+    egress:
+      - ports:
+          - port: 3000
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: decidim-web
+                app.kubernetes.io/name: decidim-web
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/instance: apisix-apisix
+      app.kubernetes.io/name: apisix
+    policyTypes:
+      - Egress

@@ -1,0 +1,18 @@
+networkpolicies:
+  keycloak-linkerd-from-lane-token:
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: lane-token
+        ports:
+          - port: 4143
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/instance: keycloak-app
+    policyTypes:
+      - Ingress

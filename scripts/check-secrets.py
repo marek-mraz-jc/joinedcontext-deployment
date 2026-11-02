@@ -36,8 +36,8 @@ MFA_SEED_KEYS = {"totp": 32}
 # defaults/environment/secrets.yaml.gotmpl, rendered by smartcity alone.
 OWNER_ACCOUNT = {"keycloak-user-initial": {"password": 32}}
 # The Decidim administrator of a production realm (T-6448): global.participationStewardId, declared
-# in defaults/environment/secrets.yaml.gotmpl, always with a TOTP seed.
-PARTICIPATION_STEWARD = {"keycloak-user-participacia-steward": DEMO_USER_KEYS | MFA_SEED_KEYS}
+# in defaults/environment/secrets.yaml.gotmpl, with a TOTP seed where the realm reads one.
+PARTICIPATION_STEWARD = "keycloak-user-participacia-steward"
 # Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
 # under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
 # held to the length components/ckan/secrets.yaml declares for its family.
@@ -96,7 +96,9 @@ def main() -> int:
     rendered = Path(sys.argv[1])
     components = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("components")
     docs = [d for d in yaml.safe_load_all(rendered.read_text()) if isinstance(d, dict)]
-    declared = declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT | PARTICIPATION_STEWARD
+    steward_keys = DEMO_USER_KEYS | (MFA_SEED_KEYS if "USER_TOTP_PARTICIPACIA_STEWARD" in rendered.read_text() else {})
+    declared = (declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT
+                | {PARTICIPATION_STEWARD: steward_keys})
     generated = [
         d for d in docs
         if d.get("kind") == "Secret"

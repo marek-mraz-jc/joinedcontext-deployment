@@ -1,0 +1,19 @@
+networkpolicies:
+  apisix-linkerd-egress-to-viz:
+    egress:
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: renderer
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/instance: apisix-apisix
+      app.kubernetes.io/name: apisix
+    policyTypes:
+      - Egress

@@ -1,0 +1,2642 @@
+apps:
+  owner: joinedcontext-apps
+giteaUrl: http://gitea-http.smartcity.svc.cluster.local:3000
+image:
+  digest: sha256:1c17ecaead42eb3b5391553d8708103a4beb0e86edf5b9ebc1eb269c318845f2
+  pullPolicy: IfNotPresent
+  repository: docker.gitea.com/gitea
+  tag: 1.27.3-rootless
+laneToken:
+  audience: https://idm.smartcity.joinedcontext.com/realms/smartcity
+  enabled: true
+  tokenUrl: http://keycloak-app-keycloakx-http.smartcity.svc.cluster.local:80/realms/smartcity/protocol/openid-connect/token
+layout: 2
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+projectTeams:
+  - banskabystrica
+  - bbsk
+  - helsinki
+  - helsinki-mobility
+  - praha
+  - slovensko
+  - zilina
+repo:
+  branch: main
+  name: configuration
+  owner: joinedcontext
+rewrites:
+  - from: dev\.joinedcontext\.com
+    to: smartcity.joinedcontext.com
+  - from: 'de300000-0000-4000-8000-000000000001( # demo\.steward)?'
+    to: fc3b55df-5fd4-4679-af5e-bb9dca22b0d7
+  - from: '(?m)^[ \t]*- user: de300000-0000-4000-8000-[0-9a-f]{12}[^\n]*\n'
+    to: ""
+  - from: 'de300000-0000-4000-8000-[0-9a-f]{12}( # demo\.[a-z]+)?'
+    to: fc3b55df-5fd4-4679-af5e-bb9dca22b0d7
+sampleApps:
+  apps:
+    air-quality:
+      .gitea__workflows__build.yml: ""
+      Cargo.lock: ""
+      Cargo.toml: ""
+      README.md: ""
+      app.yaml: ""
+      build.rs: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-air-quality.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-quality-1-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-quality-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-quality-2-steward.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-quality-3-steward.yaml: ""
+      grants__users__groups__air-quality-steward.yaml: ""
+      grants__users__groups__air-quality-viewer.yaml: ""
+      src__assets.rs: ""
+      src__lib.rs: ""
+      src__main.rs: ""
+      tests__e2e__auth_flow.spec.ts: ""
+      tests__e2e__stub-endpoint.mjs: ""
+      tests__stations_api_tests.rs: ""
+      ui__e2e__responsive.spec.ts: ""
+      ui__index.html: ""
+      ui__map-worker.ts: ""
+      ui__package.json: ""
+      ui__playwright.config.ts: ""
+      ui__src__App.tsx: ""
+      ui__src__Chart.tsx: ""
+      ui__src__StationMap.tsx: ""
+      ui__src__api.ts: ""
+      ui__src__index.css: ""
+      ui__src__main.tsx: ""
+      ui__src__panel.ts: ""
+      ui__src__quality.ts: ""
+      ui__tests__app.test.tsx: ""
+      ui__tests__attribution.test.tsx: ""
+      ui__tests__charts.test.tsx: ""
+      ui__tests__maplibre.ts: ""
+      ui__tests__panel.test.tsx: ""
+      ui__tests__setup.ts: ""
+      ui__tsconfig.json: ""
+      ui__vite.config.ts: ""
+    air-weather-explorer:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-air-weather-explorer.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-weather-explorer-1-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-weather-explorer-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-weather-explorer-2-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-air-weather-explorer-2.yaml: ""
+      grants__users__groups__air-weather-explorer-steward.yaml: ""
+      grants__users__groups__air-weather-explorer-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_cache_comparisons_exports.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__air.json: ""
+      server__host-test__none.json: ""
+      server__host-test__weather.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__analysis.test.ts: ""
+      src__analysis.ts: ""
+      src__analysis.worker.ts: ""
+      src__app.css: ""
+      src__components__ChartCard.tsx: ""
+      src__components__FaultsCard.tsx: ""
+      src__components__History.tsx: ""
+      src__components__Keep.test.tsx: ""
+      src__components__Keep.tsx: ""
+      src__components__MapView.tsx: ""
+      src__components__components.css: ""
+      src__components__components.test.tsx: ""
+      src__design-tokens.json: ""
+      src__faults.ts: ""
+      src__fixtures__stations.ts: ""
+      src__go.test.ts: ""
+      src__go.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Explore.failure.test.tsx: ""
+      src__pages__Explore.test.tsx: ""
+      src__pages__Explore.tsx: ""
+      src__pages__Places.tsx: ""
+      src__problem.ts: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__stations.test.ts: ""
+      src__stations.ts: ""
+      src__testing__hourly.ts: ""
+      src__testing__maplibre.ts: ""
+      src__testing__server.ts: ""
+      src__testing__sweep.ts: ""
+      src__texts.ts: ""
+      src__theme.ts: ""
+      src__url.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+    alerts-desk:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__app.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-alerts-desk.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-alerts-desk-1.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      package.json: ""
+      playwright.config.ts: ""
+      src__App.tsx: ""
+      src__app.css: ""
+      src__components__EntityTable.test.tsx: ""
+      src__components__EntityTable.tsx: ""
+      src__components__ExportButton.test.tsx: ""
+      src__components__ExportButton.tsx: ""
+      src__components__components.css: ""
+      src__components__filters.test.tsx: ""
+      src__components__filters.tsx: ""
+      src__design-tokens.json: ""
+      src__fixtures.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__jc-types.ts: ""
+      src__main.tsx: ""
+      src__pages__AlertDesk.test.tsx: ""
+      src__pages__AlertDesk.tsx: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+    alerts-heatmap:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-alerts-heatmap.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-alerts-heatmap-1.yaml: ""
+      grants__users__groups__alerts-heatmap-steward.yaml: ""
+      grants__users__groups__alerts-heatmap-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_reports_and_weeks.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__alerts.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__alerts.test.ts: ""
+      src__alerts.ts: ""
+      src__analysis.test.tsx: ""
+      src__analysis.ts: ""
+      src__analysis.worker.ts: ""
+      src__app.css: ""
+      src__charts.test.ts: ""
+      src__charts.ts: ""
+      src__components__Acks.tsx: ""
+      src__components__Changes.tsx: ""
+      src__components__ChartCard.tsx: ""
+      src__components__Filters.tsx: ""
+      src__components__HexMap.test.tsx: ""
+      src__components__HexMap.tsx: ""
+      src__components__Reports.tsx: ""
+      src__components__Weeks.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__fixtures__alerts.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Heatmap.tsx: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__test-analyser.ts: ""
+      src__test-server.ts: ""
+      src__testing__maplibre.ts: ""
+      src__testing__server.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.tsx: ""
+      src__theme.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__dbscan.rs: ""
+      wasm__src__geo.rs: ""
+      wasm__src__lib.rs: ""
+      wasm__src__time.rs: ""
+    bike-rebalancing:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-bike-rebalancing.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-bike-rebalancing-1.yaml: ""
+      grants__users__groups__bike-rebalancing-steward.yaml: ""
+      grants__users__groups__bike-rebalancing-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_plans.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__stations.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__components__ChartCard.tsx: ""
+      src__components__History.test.tsx: ""
+      src__components__History.tsx: ""
+      src__components__LevelsCard.test.tsx: ""
+      src__components__LevelsCard.tsx: ""
+      src__components__MapView.tsx: ""
+      src__components__SavedPlans.test.tsx: ""
+      src__components__SavedPlans.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__fixtures__memory.ts: ""
+      src__fixtures__stations.ts: ""
+      src__go.test.ts: ""
+      src__go.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Rebalance.test.tsx: ""
+      src__pages__Rebalance.tsx: ""
+      src__planner.test.ts: ""
+      src__planner.ts: ""
+      src__planner.worker-path.test.ts: ""
+      src__planner.worker.ts: ""
+      src__plans.test.ts: ""
+      src__plans.ts: ""
+      src__stations.test.ts: ""
+      src__stations.ts: ""
+      src__texts.ts: ""
+      src__theme.ts: ""
+      src__url.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+    bike-weather-demand:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-bike-weather-demand.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-bike-weather-demand-1-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-bike-weather-demand-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-bike-weather-demand-2-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-bike-weather-demand-2.yaml: ""
+      grants__users__groups__bike-weather-demand-steward.yaml: ""
+      grants__users__groups__bike-weather-demand-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_station_models.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__station-history.json: ""
+      server__host-test__station.json: ""
+      server__host-test__weather-history.json: ""
+      server__host-test__weather-stations.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__bikes.test.ts: ""
+      src__bikes.ts: ""
+      src__components__ChartCard.tsx: ""
+      src__components__History.tsx: ""
+      src__components__ModelHistory.test.tsx: ""
+      src__components__ModelHistory.tsx: ""
+      src__components__ModelInputs.tsx: ""
+      src__components__StationMap.test.tsx: ""
+      src__components__StationMap.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__estimate.test.tsx: ""
+      src__estimate.ts: ""
+      src__estimate.worker.ts: ""
+      src__fixtures__bikes.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Station.test.tsx: ""
+      src__pages__Station.tsx: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__testing__server.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.ts: ""
+      src__theme.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+      wasm__src__model.rs: ""
+      wasm__src__series.rs: ""
+    data-quality-inspector:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-data-quality-inspector.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-data-quality-inspector-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-data-quality-inspector-2-steward.yaml: ""
+      grants__users__groups__data-quality-inspector-steward.yaml: ""
+      grants__users__groups__data-quality-inspector-viewer.yaml: ""
+      index.html: ""
+      migrations__0001_quality_runs.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__alerts.json: ""
+      server__host-test__events.json: ""
+      server__host-test__forbidden.json: ""
+      server__host-test__index.json: ""
+      server__host-test__json-schema.json: ""
+      server__src__lib.rs: ""
+      server__wit__deps__jc-app.wit: ""
+      server__wit__server.wit: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__components__ChartCard.tsx: ""
+      src__components__FindingAction.tsx: ""
+      src__components__History.tsx: ""
+      src__components__Trend.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__fixtures__quality.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__inspect.test.tsx: ""
+      src__inspect.ts: ""
+      src__inspect.worker.ts: ""
+      src__main.tsx: ""
+      src__pages__Quality.tsx: ""
+      src__problems.ts: ""
+      src__quality.test.ts: ""
+      src__quality.ts: ""
+      src__resolutions.ts: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__testing__roles.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.ts: ""
+      src__theme.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+      wasm__src__quality.rs: ""
+      wasm__src__validate.rs: ""
+    district-compare:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-district-compare.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-district-compare-1.yaml: ""
+      grants__users__groups__district-compare-steward.yaml: ""
+      grants__users__groups__district-compare-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_district_metrics.sql: ""
+      migrations__0002_roles.sql: ""
+      migrations__0003_share_tokens.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__air.json: ""
+      server__host-test__alerts.json: ""
+      server__host-test__bikes.json: ""
+      server__host-test__districts.json: ""
+      server__host-test__events.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__compare.test.tsx: ""
+      src__compare.ts: ""
+      src__compare.worker.ts: ""
+      src__components__Changes.tsx: ""
+      src__components__ChartCard.tsx: ""
+      src__components__DistrictMap.test.tsx: ""
+      src__components__DistrictMap.tsx: ""
+      src__components__History.tsx: ""
+      src__components__Saved.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__districts.test.ts: ""
+      src__districts.ts: ""
+      src__fixtures__districts.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Compare.tsx: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__testing__server.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.ts: ""
+      src__theme.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__geo.rs: ""
+      wasm__src__lib.rs: ""
+    event-day-planner:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-event-day-planner.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-event-day-planner-1.yaml: ""
+      grants__users__groups__event-day-planner-steward.yaml: ""
+      grants__users__groups__event-day-planner-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_itineraries.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__fair-and-talk.json: ""
+      server__host-test__later.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__components__ChartCard.tsx: ""
+      src__components__FeaturedCard.tsx: ""
+      src__components__History.test.tsx: ""
+      src__components__History.tsx: ""
+      src__components__MapView.tsx: ""
+      src__components__MyDays.test.tsx: ""
+      src__components__MyDays.tsx: ""
+      src__components__ShareDay.test.tsx: ""
+      src__components__ShareDay.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__events.test.ts: ""
+      src__events.ts: ""
+      src__featured.ts: ""
+      src__fixtures__events.ts: ""
+      src__fixtures__memory.ts: ""
+      src__go.test.ts: ""
+      src__go.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__MyDay.test.tsx: ""
+      src__pages__MyDay.tsx: ""
+      src__planner.test.ts: ""
+      src__planner.ts: ""
+      src__planner.worker.ts: ""
+      src__share.test.ts: ""
+      src__share.ts: ""
+      src__texts.ts: ""
+      src__theme.ts: ""
+      src__url.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+    helsinki-alerts:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__alerts.spec.ts: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      functions__expiring.test.ts: ""
+      functions__expiring.ts: ""
+      functions__summary.test.ts: ""
+      functions__summary.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-helsinki-alerts.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-helsinki-alerts-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-helsinki-alerts-2-steward.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-helsinki-alerts-3-steward.yaml: ""
+      grants__users__groups__helsinki-alerts-steward.yaml: ""
+      grants__users__groups__helsinki-alerts-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      package.json: ""
+      playwright.config.ts: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__alerts.ts: ""
+      src__app.css: ""
+      src__components__EntityForm.test.tsx: ""
+      src__components__EntityForm.tsx: ""
+      src__components__EntityMap.test.tsx: ""
+      src__components__EntityMap.tsx: ""
+      src__components__EntityTable.test.tsx: ""
+      src__components__EntityTable.tsx: ""
+      src__components__StatTiles.test.tsx: ""
+      src__components__StatTiles.tsx: ""
+      src__components__components.css: ""
+      src__components__filters.test.tsx: ""
+      src__components__filters.tsx: ""
+      src__design-tokens.json: ""
+      src__fixtures__access.ts: ""
+      src__fixtures__alerts.ts: ""
+      src__fixtures__schema.ts: ""
+      src__jc-types.ts: ""
+      src__main.tsx: ""
+      src__pages__Alerts.tsx: ""
+      src__pages__Overview.tsx: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+    helsinki-bikes:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      e2e__stations.spec.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-helsinki-bikes.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-helsinki-bikes-1.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      package.json: ""
+      playwright.config.ts: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__app.css: ""
+      src__charts.test.ts: ""
+      src__charts.ts: ""
+      src__components__ChartCard.tsx: ""
+      src__components__EntityMap.test.tsx: ""
+      src__components__EntityMap.tsx: ""
+      src__components__EntityTable.test.tsx: ""
+      src__components__EntityTable.tsx: ""
+      src__components__components.css: ""
+      src__components__filters.test.tsx: ""
+      src__components__filters.tsx: ""
+      src__design-tokens.json: ""
+      src__fixtures__stations.ts: ""
+      src__main.tsx: ""
+      src__pages__Overview.test.tsx: ""
+      src__pages__Overview.tsx: ""
+      src__pages__Stations.tsx: ""
+      src__stations.test.ts: ""
+      src__stations.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+    helsinki-events:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-helsinki-events.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-helsinki-events-1.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      package.json: ""
+      playwright.config.ts: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__app.css: ""
+      src__charts.ts: ""
+      src__components__ChartCard.tsx: ""
+      src__components__EntityMap.test.tsx: ""
+      src__components__EntityMap.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__events.test.ts: ""
+      src__events.ts: ""
+      src__fixtures__events.ts: ""
+      src__main.tsx: ""
+      src__pages__Events.test.tsx: ""
+      src__pages__Events.tsx: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+    hsl-transport:
+      .gitea__workflows__build.yml: ""
+      Cargo.lock: ""
+      Cargo.toml: ""
+      README.md: ""
+      app.yaml: ""
+      build.rs: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-hsl-transport.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-hsl-transport-1.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-hsl-transport-2.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-hsl-transport-3.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-hsl-transport-4.yaml: ""
+      src__assets.rs: ""
+      src__board.rs: ""
+      src__lib.rs: ""
+      src__live.rs: ""
+      src__main.rs: ""
+      src__metrics.rs: ""
+      tests__live_tests.rs: ""
+      tests__server_tests.rs: ""
+      ui__e2e__responsive.spec.ts: ""
+      ui__e2e__serve.ts: ""
+      ui__index.html: ""
+      ui__map-worker.ts: ""
+      ui__package.json: ""
+      ui__playwright.config.ts: ""
+      ui__src__App.tsx: ""
+      ui__src__api.ts: ""
+      ui__src__index.css: ""
+      ui__src__main.tsx: ""
+      ui__tests__attribution.test.tsx: ""
+      ui__tests__board.test.tsx: ""
+      ui__tests__map.test.tsx: ""
+      ui__tests__panel.test.tsx: ""
+      ui__tests__setup.ts: ""
+      ui__tsconfig.json: ""
+      ui__vite.config.ts: ""
+    kpi-forecast:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki-kpi__endpoints__app-kpi-forecast.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-kpi-forecast-1-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-kpi-forecast-1.yaml: ""
+      grants__users__groups__kpi-forecast-steward.yaml: ""
+      grants__users__groups__kpi-forecast-viewer.yaml: ""
+      index.html: ""
+      migrations__0001_forecasts.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__history.json: ""
+      server__src__lib.rs: ""
+      server__wit__deps__jc-app.wit: ""
+      server__wit__server.wit: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__analysis.test.tsx: ""
+      src__analysis.ts: ""
+      src__analysis.worker.ts: ""
+      src__app.css: ""
+      src__charts.test.ts: ""
+      src__charts.ts: ""
+      src__components__ChartCard.test.tsx: ""
+      src__components__ChartCard.tsx: ""
+      src__components__Earlier.test.tsx: ""
+      src__components__Earlier.tsx: ""
+      src__components__FollowButton.tsx: ""
+      src__components__History.tsx: ""
+      src__components__Published.tsx: ""
+      src__components__Report.test.tsx: ""
+      src__components__Report.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__earlier.test.ts: ""
+      src__earlier.ts: ""
+      src__fixtures__kpis.ts: ""
+      src__follows.tsx: ""
+      src__go.test.ts: ""
+      src__go.ts: ""
+      src__history.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__kpis.test.ts: ""
+      src__kpis.ts: ""
+      src__main.tsx: ""
+      src__pages__Follows.tsx: ""
+      src__pages__Forecast.tsx: ""
+      src__problem.ts: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__test-analyser.ts: ""
+      src__test-server.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.tsx: ""
+      src__theme.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__forecast.rs: ""
+      wasm__src__lib.rs: ""
+      wasm__src__stats.rs: ""
+    news-topics:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-news-topics.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-news-topics-1.yaml: ""
+      grants__users__groups__news-topics-steward.yaml: ""
+      grants__users__groups__news-topics-viewer.yaml: ""
+      index.html: ""
+      migrations__0001_weekly_topics.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__articles.json: ""
+      server__src__lib.rs: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__app.css: ""
+      src__components__Changes.tsx: ""
+      src__components__ChartCard.test.tsx: ""
+      src__components__ChartCard.tsx: ""
+      src__components__Follows.tsx: ""
+      src__components__KeptWeeks.test.tsx: ""
+      src__components__KeptWeeks.tsx: ""
+      src__components__Names.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__fixtures__news.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__pages__Topics.test.tsx: ""
+      src__pages__Topics.tsx: ""
+      src__roles.test.tsx: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__testing__server.ts: ""
+      src__testing__sweep.ts: ""
+      src__topics.test.ts: ""
+      src__topics.ts: ""
+      src__wasm.test.ts: ""
+      src__worker.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__lib.rs: ""
+    transit-reach:
+      .gitea__workflows__build.yml: ""
+      .gitignore: ""
+      README.md: ""
+      app.yaml: ""
+      e2e__responsive.spec.ts: ""
+      e2e__serve.ts: ""
+      grants__projects__helsinki__spaces__helsinki__endpoints__app-transit-reach.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-transit-reach-1-history.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-transit-reach-2.yaml: ""
+      grants__projects__helsinki__spaces__helsinki__policies__app-transit-reach-3.yaml: ""
+      grants__users__groups__transit-reach-steward.yaml: ""
+      grants__users__groups__transit-reach-viewer.yaml: ""
+      index.html: ""
+      map-worker.ts: ""
+      migrations__0001_networks_and_reach.sql: ""
+      migrations__0002_roles.sql: ""
+      package.json: ""
+      playwright.config.ts: ""
+      server__Cargo.lock: ""
+      server__Cargo.toml: ""
+      server__host-test.json: ""
+      server__host-test__routes.json: ""
+      server__host-test__stops.json: ""
+      server__src__lib.rs: ""
+      src__App.test.tsx: ""
+      src__App.tsx: ""
+      src__access.tsx: ""
+      src__analysis.test.ts: ""
+      src__analysis.ts: ""
+      src__analysis.worker.ts: ""
+      src__app.css: ""
+      src__components__History.test.tsx: ""
+      src__components__History.tsx: ""
+      src__components__KeptReach.test.tsx: ""
+      src__components__KeptReach.tsx: ""
+      src__components__ReachMap.test.tsx: ""
+      src__components__ReachMap.tsx: ""
+      src__components__SaveOrigin.test.tsx: ""
+      src__components__SaveOrigin.tsx: ""
+      src__components__components.css: ""
+      src__design-tokens.json: ""
+      src__fixtures__memory.ts: ""
+      src__fixtures__network.ts: ""
+      src__fixtures__vehicles.ts: ""
+      src__go.test.ts: ""
+      src__go.ts: ""
+      src__history.ts: ""
+      src__i18n.test.ts: ""
+      src__i18n.ts: ""
+      src__main.tsx: ""
+      src__network-paging.test.tsx: ""
+      src__network.test.ts: ""
+      src__network.ts: ""
+      src__origins.ts: ""
+      src__pages__Origins.test.tsx: ""
+      src__pages__Origins.tsx: ""
+      src__pages__Reach.tsx: ""
+      src__problem.ts: ""
+      src__server.test.ts: ""
+      src__server.ts: ""
+      src__test-analyser.ts: ""
+      src__testing__maplibre.ts: ""
+      src__testing__sweep.ts: ""
+      src__theme.test.ts: ""
+      src__theme.ts: ""
+      src__vehicles.test.ts: ""
+      src__vehicles.ts: ""
+      src__wasm.test.ts: ""
+      test-setup.ts: ""
+      tsconfig.json: ""
+      vite.config.ts: ""
+      wasm__Cargo.lock: ""
+      wasm__Cargo.toml: ""
+      wasm__src__dbscan.rs: ""
+      wasm__src__geo.rs: ""
+      wasm__src__lib.rs: ""
+      wasm__src__network.rs: ""
+      wasm__src__reach.rs: ""
+      wasm__src__stops.rs: ""
+  configMaps: gitea-sample-apps
+  project: helsinki
+  publicBase: https://smartcity.joinedcontext.com/git
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+seed:
+  agentprofiles__app-builder.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: AgentProfile
+    metadata:
+      name: app-builder
+      namespace: org
+      title: { en: "Application builder" }
+    spec:
+      role: builder
+      # The runner image of the workspace runs (AG-27); a `static` run never starts one, the
+      # Portal builds it in-process from one model call (AP-56). Pinned by digest all the same:
+      # the profile is refused without one.
+      runtime:
+        image: ghcr.io/all-hands-ai/agent-server
+        digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      # The first run's one big call (SDK-26): Gemini 3.8 Flash through OpenRouter, thinking at
+      # medium on every call of the run (AG-72). The budget covers the run's whole conversation:
+      # the build itself takes about 250k tokens and every edit after it reads the files again,
+      # so 400k ended a run at its first edit ("budget exhausted", T-0896); at Flash prices two
+      # million tokens are about one euro.
+      model:
+        provider: openai-compatible
+        name: google/gemini-3.8-flash
+        maxTokensPerRun: 2000000
+        reasoningEffort: medium
+      limits:
+        stepsPerRun: 120
+        wallClock: PT20M
+        concurrentRunsPerOrganization: 2
+        requestsPerMinute: 60
+        maxResponseBytes: 2097152
+      egress:
+        allowedHosts: [registry.npmjs.org, static.crates.io]
+      tools: [shell, pnpm, git]
+      # What an assistant run may call, intersected with the person who starts it (AG-70): the
+      # catalog search, the share and KPI steps, space completion, opening a change or a removal of
+      # any project resource and a grant of a role for the person to propose (AG-77). Read and propose
+      # only: the run never approves and never removes, the person does, and a grant never exceeds
+      # what that person holds (PF-52). Without this block a run gets read-only operations only.
+      access:
+        # Everything that reads or proposes; a person's own grants narrow each call and a person
+        # approves. Never here: approvals, deletions, service-account keys, project create, delete,
+        # import and export, jc_flow_start, jc_draft_drop, jc_workspace_discard, jc_workspace_propose
+        # (AG-11, AG-82, T-1475).
+        operations:
+          - jc_catalog_search
+          - jc_endpoint_propose
+          - jc_kpi_compute
+          - jc_space_complete
+          - jc_pipeline_test
+          - jc_pipeline_sample_source
+          - jc_pipeline_try_mapping
+          - jc_pipeline_validate
+          - jc_resource_propose
+          - jc_resource_list
+          - jc_resource_get
+          - jc_project_get
+          - jc_project_revisions
+          - jc_endpoint_list_all
+          - jc_federation_graph
+          - jc_activity_list
+          - jc_change_list
+          - jc_change_get
+          - jc_draft_list
+          - jc_draft_get
+          - jc_draft_put
+          - jc_manifest_dry_run
+          - jc_datasource_check
+          - jc_model_infer
+          - jc_model_source_get
+          - jc_pipeline_metrics
+          - jc_syncsource_status
+          - jc_ckan_status
+          - jc_run_list
+          - jc_run_get
+          - jc_workspace_open
+          - jc_workspace_list
+          - jc_workspace_get
+          - jc_workspace_compare
+          - jc_workspace_update_from_main
+          - jc_workspace_preview_start
+          - jc_workspace_preview_get
+          - jc_workspace_preview_stop
+        kinds:
+          - kind: ContextSpace
+            verbs: [read, propose]
+          - kind: Endpoint
+            verbs: [read, propose]
+          - kind: SharedSpaceReference
+            verbs: [read, propose]
+          - kind: DataSource
+            verbs: [read, propose]
+          - kind: Pipeline
+            verbs: [read, propose]
+          - kind: Policy
+            verbs: [read, propose]
+          - kind: Dashboard
+            verbs: [read, propose]
+          - kind: Layer
+            verbs: [read, propose]
+          - kind: App
+            verbs: [read, propose]
+          - kind: SyncSource
+            verbs: [read, propose]
+          - kind: ContextSourceRegistration
+            verbs: [read, propose]
+          - kind: CkanInstance
+            verbs: [read, propose]
+          - kind: ServiceAccount
+            verbs: [read, propose]
+          - kind: DataModel
+            verbs: [read, propose]
+          - kind: RoleBinding
+            verbs: [read, propose]
+      workspace: { cpu: "1", memory: 2Gi, ephemeralStorage: 4Gi }
+  agentprofiles__chat.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: AgentProfile
+    metadata:
+      name: chat
+      namespace: org
+      title: { en: "Assistant conversations" }
+    spec:
+      # The Portal's assistant conversations run on this profile (T-2770, AG-72): no workspace, no
+      # coding tools and no internet, so a steward; the run is the Portal's own model calls.
+      role: steward
+      # Required by the kind and never started: a conversation runs in the Portal (AP-56).
+      runtime:
+        image: ghcr.io/all-hands-ai/agent-server
+        digest: sha256:1111111111111111111111111111111111111111111111111111111111111111
+      # Gemini 3.8 Flash at `low`: measured through OpenRouter on 2026-09-25, `low` answers with no
+      # reasoning tokens (1.8 s) where no setting thinks 135 tokens (2.1 s), and `none` is refused
+      # ("Reasoning is mandatory for this endpoint", HTTP 400). A build keeps app-builder's `medium`.
+      # The budget is a long conversation's, a quarter of a build's.
+      model:
+        provider: openai-compatible
+        name: google/gemini-3.8-flash
+        maxTokensPerRun: 500000
+        reasoningEffort: low
+      # A pool of its own: a build or a test on app-builder never queues a person's chat.
+      limits:
+        stepsPerRun: 200
+        wallClock: PT1H
+        concurrentRunsPerOrganization: 10
+        requestsPerMinute: 60
+        maxResponseBytes: 2097152
+      # No host at all: a conversation reads through the endpoints, never the internet (AG-50).
+      egress: {}
+      tools: []
+      # What an assistant run may call, intersected with the person who starts it (AG-70): the
+      # catalog search, the share and KPI steps, space completion, opening a change or a removal of
+      # any project resource and a grant of a role for the person to propose (AG-77). Read and propose
+      # only: the run never approves and never removes, the person does, and a grant never exceeds
+      # what that person holds (PF-52). Without this block a run gets read-only operations only.
+      access:
+        # Everything that reads or proposes; a person's own grants narrow each call and a person
+        # approves. Never here: approvals, deletions, service-account keys, project create, delete,
+        # import and export, jc_flow_start, jc_draft_drop, jc_workspace_discard, jc_workspace_propose
+        # (AG-11, AG-82, T-1475).
+        operations:
+          - jc_catalog_search
+          - jc_endpoint_propose
+          - jc_kpi_compute
+          - jc_space_complete
+          - jc_pipeline_test
+          - jc_pipeline_sample_source
+          - jc_pipeline_try_mapping
+          - jc_pipeline_validate
+          - jc_resource_propose
+          - jc_resource_list
+          - jc_resource_get
+          - jc_project_get
+          - jc_project_revisions
+          - jc_endpoint_list_all
+          - jc_federation_graph
+          - jc_activity_list
+          - jc_change_list
+          - jc_change_get
+          - jc_draft_list
+          - jc_draft_get
+          - jc_draft_put
+          - jc_manifest_dry_run
+          - jc_datasource_check
+          - jc_model_infer
+          - jc_model_source_get
+          - jc_pipeline_metrics
+          - jc_syncsource_status
+          - jc_ckan_status
+          - jc_run_list
+          - jc_run_get
+          - jc_workspace_open
+          - jc_workspace_list
+          - jc_workspace_get
+          - jc_workspace_compare
+          - jc_workspace_update_from_main
+          - jc_workspace_preview_start
+          - jc_workspace_preview_get
+          - jc_workspace_preview_stop
+        kinds:
+          - kind: ContextSpace
+            verbs: [read, propose]
+          - kind: Endpoint
+            verbs: [read, propose]
+          - kind: SharedSpaceReference
+            verbs: [read, propose]
+          - kind: DataSource
+            verbs: [read, propose]
+          - kind: Pipeline
+            verbs: [read, propose]
+          - kind: Policy
+            verbs: [read, propose]
+          - kind: Dashboard
+            verbs: [read, propose]
+          - kind: Layer
+            verbs: [read, propose]
+          - kind: App
+            verbs: [read, propose]
+          - kind: SyncSource
+            verbs: [read, propose]
+          - kind: ContextSourceRegistration
+            verbs: [read, propose]
+          - kind: CkanInstance
+            verbs: [read, propose]
+          - kind: ServiceAccount
+            verbs: [read, propose]
+          - kind: DataModel
+            verbs: [read, propose]
+          - kind: RoleBinding
+            verbs: [read, propose]
+      workspace: { cpu: "100m", memory: 128Mi, ephemeralStorage: 64Mi }
+  blueprints__app-from-prompt__blueprint.yaml: |
+    # The gallery card of the application builder (AP-56, T-0524): "Generate your own app" in the
+    # Portal starts an agent run of the `app-builder` profile (POST …/agent-runs), and the form shows
+    # only where this Blueprint exists. The template is the App manifest a run files once the app
+    # is built, so a Flows run of this card yields the same manifest by hand.
+    #
+    # The contract every generated app has to meet (ADR-N-019, AP-23, AP-40), stated here where
+    # the builder and its reviewer both read it:
+    #   - the app is served behind the platform edge under /apps/{name}/;
+    #   - the signed-in person arrives as X-Userinfo (base64 JSON); every endpoint call carries
+    #     X-Access-Token; a write without it is answered 401;
+    #   - no login, session, OIDC, PKCE or token-refresh code, and no OIDC library;
+    #   - it listens on JC_BIND_ADDRESS and serves /healthz;
+    #   - apps/air-quality in the Portal repository is the model.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Blueprint
+    metadata:
+      name: app-from-prompt
+      namespace: org
+      title: { en: "An application from a prompt", fi: "Sovellus kehotteesta", sk: "Aplikácia zo zadania", cs: "Aplikace ze zadání", de: "Eine App aus einer Beschreibung" }
+      description:
+        en: "Describe what the app should show; the builder reads the endpoint's schema and writes the app."
+        sk: "Opíšte, čo má aplikácia ukazovať; zostavovač prečíta schému endpointu a aplikáciu napíše."
+        cs: "Popište, co má aplikace ukazovat; sestavovač přečte schéma endpointu a aplikaci napíše."
+        de: "Beschreiben Sie, was die App zeigen soll; der Builder liest das Schema des Endpoints und schreibt die App."
+    spec:
+      version: 1.0.0
+      category: application
+      riskClass: yellow
+      allowedRoles: [portal-approver]
+      parameterSchema:
+        type: object
+        required: [name, kind, prompt, endpoint]
+        additionalProperties: false
+        properties:
+          name: { type: string, title: "App name", x-jc-title: { sk: "Názov aplikácie", cs: "Název aplikace", de: "Name der App" }, pattern: "^[a-z][a-z0-9-]{1,40}$", description: "The path the app is served at: /apps/{name}/.", x-jc-description: { sk: "Adresa, na ktorej sa aplikácia otvorí: /apps/{name}/.", cs: "Adresa, na které se aplikace otevře: /apps/{name}/.", de: "Die Adresse, unter der die App öffnet: /apps/{name}/." } }
+          kind:
+            type: string
+            title: "How it is built and served"
+            x-jc-title: { sk: "Ako sa zostaví a poskytuje", cs: "Jak se sestaví a poskytuje", de: "Wie sie gebaut und bereitgestellt wird" }
+            default: static
+            oneOf:
+              - { const: static, title: "Static (screens only)", x-jc-title: { sk: "Statická (len obrazovky)", cs: "Statická (jen obrazovky)", de: "Statisch (nur Bildschirme)" } }
+              - { const: service, title: "Service (backend only, no screens)", x-jc-title: { sk: "Služba (len backend, bez obrazoviek)", cs: "Služba (jen backend, bez obrazovek)", de: "Dienst (nur Backend, keine Bildschirme)" } }
+              - { const: fullstack, title: "Full stack (Rust backend and React screens)", x-jc-title: { sk: "Celá (backend v Ruste a obrazovky v Reacte)", cs: "Celá (backend v Rustu a obrazovky v Reactu)", de: "Komplett (Rust-Backend und React-Bildschirme)" } }
+          prompt: { type: string, title: "What should the app do", x-jc-title: { sk: "Čo má aplikácia robiť", cs: "Co má aplikace dělat", de: "Was soll die App tun" }, minLength: 10, maxLength: 2000, x-jc-widget: textarea }
+          endpoint:
+            type: string
+            title: "Endpoint it reads"
+            x-jc-title: { sk: "Endpoint, ktorý číta", cs: "Endpoint, který čte", de: "Endpoint, den sie liest" }
+            pattern: "^[a-z][a-z0-9-]{1,60}$"
+            description: "An Endpoint of this project; the app reads only what it publishes."
+            x-jc-description: { sk: "Endpoint tohto projektu; aplikácia číta len to, čo zverejňuje.", cs: "Endpoint tohoto projektu; aplikace čte jen to, co zveřejňuje.", de: "Ein Endpoint dieses Projekts; die App liest nur, was er veröffentlicht." }
+            x-jc-widget: resourcePicker
+            x-jc-options: { plural: endpoints }
+          contextSpace:
+            type: string
+            title: "Context Space behind the endpoint"
+            x-jc-title: { sk: "Kontextový priestor za endpointom", cs: "Kontextový prostor za endpointem", de: "Kontextbereich hinter dem Endpoint" }
+            pattern: "^[a-z][a-z0-9-]{1,60}$"
+            default: helsinki
+            x-jc-widget: resourcePicker
+            x-jc-options: { plural: spaces }
+      templates:
+        - name: app
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: App
+            metadata:
+              name: "{{ name }}"
+              title: { en: "{{ name }}" }
+              annotations:
+                joinedcontext.com/prompt: "{{ prompt }}"
+                joinedcontext.com/endpoint: "{{ endpoint }}"
+            spec:
+              kind: "{{ kind }}"
+              source:
+                path: "apps/{{ name }}"
+              build: { node: "22" }
+              visibility: organization
+              lifecycle: draft
+              dataNeeds:
+                - contextSpaceRef: { kind: ContextSpace, name: "{{ contextSpace }}" }
+                  types: []
+                  attrs: []
+                  operations: [queryEntity, retrieveEntity]
+  blueprints__gbfs-stations__blueprint.yaml: |
+    # A Bento flow for a GBFS 2.x city-bike feed: station_status every minute into
+    # BikeHireDockingStation entities (PL-01, PL-04, CC-23..CC-27). What the helsinki-bikes stream
+    # is, as a card any project can run against its own operator's feed.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Blueprint
+    metadata:
+      name: gbfs-stations
+      namespace: org
+      title:
+        en: City-bike stations from a GBFS feed
+        fi: Kaupunkipyöräasemat GBFS-syötteestä
+        sk: Stanice mestských bicyklov z kanála GBFS
+        cs: Stanice sdílených kol z kanálu GBFS
+        de: Leihrad-Stationen aus einem GBFS-Feed
+      description:
+        en: Reads the stations' free bikes and docks from a GBFS feed and writes them into a Context Space.
+        sk: Číta voľné bicykle a stojany staníc z kanála GBFS a zapisuje ich do kontextového priestoru.
+        cs: Čte volná kola a stojany stanic z kanálu GBFS a zapisuje je do kontextového prostoru.
+        de: Liest freie Räder und Stellplätze der Stationen aus einem GBFS-Feed und schreibt sie in einen Kontextbereich.
+    spec:
+      version: 1.0.0
+      category: ingestion
+      riskClass: yellow
+      allowedRoles: [portal-approver]
+      parameterSchema:
+        type: object
+        required: [name, stationStatusUrl]
+        additionalProperties: false
+        properties:
+          name:
+            type: string
+            title: Flow name
+            x-jc-title: { sk: Názov toku, cs: Název toku, de: Name des Ablaufs }
+            pattern: ^[a-z][a-z0-9-]{1,40}$
+            default: citybikes
+          stationStatusUrl:
+            type: string
+            title: station_status.json URL
+            x-jc-title:
+              sk: URL súboru station_status.json
+              cs: URL souboru station_status.json
+              de: URL der station_status.json
+            format: uri
+            default: https://gbfs.theta.fifteen.eu/gbfs/2.2/helsinki/en/station_status.json
+          period:
+            type: string
+            title: Poll every
+            x-jc-title: { sk: Načítať každých, cs: Načíst každých, de: Abfragen alle }
+            default: 1m
+            oneOf:
+              - const: '1m'
+                title: Minute
+                x-jc-title: { sk: Minútu, cs: Minutu, de: Minute }
+              - const: '5m'
+                title: '5 minutes'
+                x-jc-title: { sk: '5 minút', cs: '5 minut', de: '5 Minuten' }
+              - const: '15m'
+                title: '15 minutes'
+                x-jc-title: { sk: '15 minút', cs: '15 minut', de: '15 Minuten' }
+          targetEndpoint:
+            type: string
+            title: Endpoint the flow writes through
+            x-jc-title:
+              sk: Endpoint, cez ktorý tok zapisuje
+              cs: Endpoint, přes který tok zapisuje
+              de: Endpoint, über den der Ablauf schreibt
+            default: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+      templates:
+        - name: datasource
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: DataSource
+            metadata:
+              name: "{{ name }}-gbfs"
+              title: { en: "GBFS station status ({{ name }})" }
+            spec:
+              type: http
+              http:
+                url: "{{ stationStatusUrl }}"
+                verb: GET
+                headers: { Accept: application/json }
+                timeout: 15s
+        - name: pipeline
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: Pipeline
+            metadata:
+              name: "{{ name }}-gbfs"
+              title: { en: "BikeHireDockingStation from {{ name }}" }
+            spec:
+              class: auto
+              period: "{{ period }}"
+              schedule: "* * * * *"
+              source:
+                dataSourceRef: { kind: DataSource, name: "{{ name }}-gbfs" }
+              targetEndpoint: "{{ targetEndpoint }}"
+              quotas:
+                maxMemoryMb: 128
+                cpuMillicores: 100
+  blueprints__http-json-feed__blueprint.yaml: |
+    # A Bento flow that polls a JSON resource and writes one entity type into a space (PL-01,
+    # PL-04, CC-23..CC-27). The gallery card the steward runs from the Flows view; it renders the
+    # DataSource and the Pipeline of one fetch, the same pair the Linked Events feed is made of.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Blueprint
+    metadata:
+      name: http-json-feed
+      namespace: org
+      title:
+        en: Poll a JSON feed into a Context Space
+        fi: Lue JSON-syöte kontekstitilaan
+        sk: Načítavať kanál JSON do kontextového priestoru
+        cs: Načítat kanál JSON do kontextového prostoru
+        de: Einen JSON-Feed in einen Kontextbereich abfragen
+      description:
+        en: Fetches a JSON resource on a schedule and writes its records as entities of one type; the record-to-entity mapping is added in the Pipeline editor.
+        sk: Podľa plánu načíta zdroj JSON a jeho záznamy zapíše ako entity jedného typu; mapovanie záznamu na entitu doplníte v editore Pipeline.
+        cs: Podle plánu načte zdroj JSON a jeho záznamy zapíše jako entity jednoho typu; mapování záznamu na entitu doplníte v editoru Pipeline.
+        de: Ruft eine JSON-Ressource nach Zeitplan ab und schreibt ihre Datensätze als Entitäten eines Typs; die Abbildung eines Datensatzes auf eine Entität ergänzen Sie im Pipeline-Editor.
+    spec:
+      version: 1.0.0
+      category: ingestion
+      riskClass: yellow
+      allowedRoles: [portal-approver]
+      parameterSchema:
+        type: object
+        required: [name, url, entityType, period]
+        additionalProperties: false
+        properties:
+          name:
+            type: string
+            title: Flow name
+            x-jc-title: { sk: Názov toku, cs: Název toku, de: Name des Ablaufs }
+            pattern: ^[a-z][a-z0-9-]{1,40}$
+            description: Names the DataSource and the Pipeline, one word with hyphens.
+            x-jc-description:
+              sk: Pomenuje zdroj údajov a pipelinu, jedno slovo so spojovníkmi.
+              cs: Pojmenuje zdroj dat a pipeline, jedno slovo se spojovníky.
+              de: Benennt die Datenquelle und die Pipeline, ein Wort mit Bindestrichen.
+          url:
+            type: string
+            title: URL of the JSON resource
+            x-jc-title: { sk: URL zdroja JSON, cs: URL zdroje JSON, de: URL der JSON-Ressource }
+            format: uri
+          entityType:
+            type: string
+            title: Entity type written
+            x-jc-title:
+              sk: Zapisovaný typ entity
+              cs: Zapisovaný typ entity
+              de: Geschriebener Entitätstyp
+            pattern: ^[A-Z][A-Za-z0-9]+$
+            default: Event
+          period:
+            type: string
+            title: Poll every
+            x-jc-title: { sk: Načítať každých, cs: Načíst každých, de: Abfragen alle }
+            default: 30m
+            oneOf:
+              - const: '1m'
+                title: Minute
+                x-jc-title: { sk: Minútu, cs: Minutu, de: Minute }
+              - const: '5m'
+                title: '5 minutes'
+                x-jc-title: { sk: '5 minút', cs: '5 minut', de: '5 Minuten' }
+              - const: '15m'
+                title: '15 minutes'
+                x-jc-title: { sk: '15 minút', cs: '15 minut', de: '15 Minuten' }
+              - const: '30m'
+                title: '30 minutes'
+                x-jc-title: { sk: '30 minút', cs: '30 minut', de: '30 Minuten' }
+              - const: '1h'
+                title: Hour
+                x-jc-title: { sk: Hodinu, cs: Hodinu, de: Stunde }
+              - const: '1d'
+                title: Day
+                x-jc-title: { sk: Deň, cs: Den, de: Tag }
+          schedule:
+            type: string
+            title: Cron schedule
+            x-jc-title: { sk: Plán cron, cs: Plán cron, de: Cron-Zeitplan }
+            default: '*/30 * * * *'
+            pattern: ^[0-9*/,-]+( [0-9*/,-]+){4}$
+            description: The cron line of the period above.
+            x-jc-description:
+              sk: Riadok cron pre interval vyššie.
+              cs: Řádek cron pro interval výše.
+              de: Die Cron-Zeile des Intervalls oben.
+          targetEndpoint:
+            type: string
+            title: Endpoint the flow writes through
+            x-jc-title:
+              sk: Endpoint, cez ktorý tok zapisuje
+              cs: Endpoint, přes který tok zapisuje
+              de: Endpoint, über den der Ablauf schreibt
+            default: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+      templates:
+        - name: datasource
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: DataSource
+            metadata:
+              name: "{{ name }}"
+              title: { en: "{{ name }} ({{ entityType }})" }
+            spec:
+              type: http
+              http:
+                url: "{{ url }}"
+                verb: GET
+                headers: { Accept: application/json }
+                timeout: 30s
+        - name: pipeline
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: Pipeline
+            metadata:
+              name: "{{ name }}"
+              title: { en: "{{ entityType }} from {{ name }}" }
+            spec:
+              class: auto
+              period: "{{ period }}"
+              schedule: "{{ schedule }}"
+              source:
+                dataSourceRef: { kind: DataSource, name: "{{ name }}" }
+              targetEndpoint: "{{ targetEndpoint }}"
+              output: { type: "{{ entityType }}", mode: upsert }
+              quotas:
+                maxMemoryMb: 128
+                cpuMillicores: 100
+  blueprints__mqtt-feed__blueprint.yaml: |
+    # A resident Bento flow on an MQTT topic tree (PL-01, PL-03, CC-23..CC-27): what the HSL
+    # trunk-line feed is, as a card. Push-based, so no schedule: the runner keeps the subscription.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Blueprint
+    metadata:
+      name: mqtt-feed
+      namespace: org
+      title:
+        en: Subscribe to an MQTT feed
+        fi: Tilaa MQTT-syöte
+        sk: Odoberať kanál MQTT
+        cs: Odebírat kanál MQTT
+        de: Einen MQTT-Feed abonnieren
+      description:
+        en: Listens to an MQTT topic and writes each message as an entity of one type.
+        sk: Počúva tému MQTT a každú správu zapíše ako entitu jedného typu.
+        cs: Poslouchá téma MQTT a každou zprávu zapíše jako entitu jednoho typu.
+        de: Hört ein MQTT-Thema ab und schreibt jede Nachricht als Entität eines Typs.
+    spec:
+      version: 1.0.0
+      category: ingestion
+      riskClass: yellow
+      allowedRoles: [portal-approver]
+      parameterSchema:
+        type: object
+        required: [name, brokerUrl, topic, entityType]
+        additionalProperties: false
+        properties:
+          name:
+            type: string
+            title: Flow name
+            x-jc-title: { sk: Názov toku, cs: Název toku, de: Name des Ablaufs }
+            pattern: ^[a-z][a-z0-9-]{1,40}$
+          brokerUrl:
+            type: string
+            title: Broker URL
+            x-jc-title: { sk: URL brokera, cs: URL brokeru, de: Broker-URL }
+            default: wss://mqtt.hsl.fi:443/
+            description: tls://host:8883 or wss://host:443/; the cluster lets 443 out.
+            x-jc-description:
+              sk: tls://host:8883 alebo wss://host:443/; klaster púšťa von port 443.
+              cs: tls://host:8883 nebo wss://host:443/; cluster pouští ven port 443.
+              de: tls://host:8883 oder wss://host:443/; der Cluster lässt Port 443 hinaus.
+          topic:
+            type: string
+            title: Topic filter
+            x-jc-title: { sk: Filter tém, cs: Filtr témat, de: Themenfilter }
+            default: /hfp/v2/journey/ongoing/vp/bus/+/+/2510/#
+          entityType:
+            type: string
+            title: Entity type written
+            x-jc-title:
+              sk: Zapisovaný typ entity
+              cs: Zapisovaný typ entity
+              de: Geschriebener Entitätstyp
+            pattern: ^[A-Z][A-Za-z0-9]+$
+            default: Vehicle
+          targetEndpoint:
+            type: string
+            title: Endpoint the flow writes through
+            x-jc-title:
+              sk: Endpoint, cez ktorý tok zapisuje
+              cs: Endpoint, přes který tok zapisuje
+              de: Endpoint, über den der Ablauf schreibt
+            default: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+      templates:
+        - name: datasource
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: DataSource
+            metadata:
+              name: "{{ name }}"
+              title: { en: "MQTT {{ topic }}" }
+            spec:
+              type: mqtt
+              mqtt:
+                urls:
+                  - "{{ brokerUrl }}"
+                topics:
+                  - "{{ topic }}"
+                qos: 0
+                cleanSession: true
+        - name: pipeline
+          template: |
+            apiVersion: joinedcontext.com/v1alpha1
+            kind: Pipeline
+            metadata:
+              name: "{{ name }}"
+              title: { en: "{{ entityType }} from {{ name }}" }
+            spec:
+              class: auto
+              source:
+                dataSourceRef: { kind: DataSource, name: "{{ name }}" }
+              targetEndpoint: "{{ targetEndpoint }}"
+              quotas:
+                maxMemoryMb: 128
+                cpuMillicores: 250
+  mcp__open-data.yaml: |
+    # The whole portal's public data as one read-only MCP connector (T-5367, ADR-N-043):
+    # `https://{domain}/api/mcp/org/open-data`. It selects every public Endpoint of the installation,
+    # every publisher's, resolved on each call; it reads each Endpoint where it lives and copies no
+    # data. Every call is still that Endpoint's own call under its anonymous Policy, and a public
+    # server lists read tools only, whoever calls (EP-141). The publishers' own connectors are
+    # `{project}/otvorene-data` (barcelona/dades-obertes).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: McpServer
+    metadata:
+      name: open-data
+      namespace: org
+      # What an AI client reads as serverInfo and initialize.instructions (EP-92).
+      title:
+        sk: Otvorené údaje — všetci vydavatelia
+        en: Open data, every publisher
+      description:
+        sk: 'Všetky verejné údaje portálu, len na čítanie: Žilina, Banská Bystrica, Banskobystrický samosprávny kraj, Bratislava, Slovensko, Praha, Helsinki a Barcelona. Začnite nástrojom search, potom query_entities s jedným endpoint. Pri citovaní uveďte zdroj, ktorý Endpoint uvádza.'
+        en: 'Every public dataset of the portal, read-only: Žilina, Banská Bystrica, the Banská Bystrica Region, Bratislava, Slovakia, Prague, Helsinki and Barcelona. Start with search (the question in plain words, place or theme), then query_entities naming the endpoint a hit names, with a small limit. Credit the source each Endpoint names when you quote it.'
+    spec:
+      # Every public Endpoint of every project, resolved on each call (MF-55, T-5367).
+      select:
+        accessLevel: [public]
+      audience: public
+  organizations__barcelona.yaml: |
+    # Ajuntament de Barcelona, an Organization of its own in this installation (ADR-N-058, PF-121,
+    # T-5260), set up as Mesto Žilina is (T-5242). Helsinki (organizations/hel.yaml) stays the
+    # installation's. A project of this Organization publishes under barcelona.cat or a subdomain of
+    # it (PF-122); its Keycloak group subtree is /barcelona and its CKAN organisation `barcelona`.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Organization
+    metadata:
+      name: barcelona
+      namespace: org
+      title: { ca: Ajuntament de Barcelona, es: Ayuntamiento de Barcelona, en: Barcelona City Council }
+    spec:
+      domain: barcelona.cat
+      locales: [ca, es, en]
+      defaultLocale: ca
+      # No national profile: DCAT-AP-ES is not one the platform serves, DCAT-AP 3.0 always is (EP-27).
+      # The publisher a project of this Organization names when it names none of its own
+      # (ADR-N-058 2.3, EP-127): the city council by its DIR3 code in datos.gob.es.
+      catalog:
+        publisher:
+          name:
+            ca: Ajuntament de Barcelona
+            es: Ayuntamiento de Barcelona
+            en: Barcelona City Council
+          uri: http://datos.gob.es/recurso/sector-publico/org/Organismo/L01080193
+        contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
+      projects:
+        # Its people read its projects through barcelona-viewers; a project is opened by org-admin (PF-61, PF-65).
+        visibility: organization
+        creation: org-admin
+        # The demo's quota (T-2873, PF-73): the mechanism stays, nobody reaches it.
+        quota:
+          contextSpaces: 100
+          residentPipelines: 100
+          publicEndpoints: 100
+          apps: 100
+          ingestEventsPerSecond: 500
+          agentRunsPerDay: 2000
+          entitiesPerSpace: 1000000
+          requestsPerMinute: 6000
+  organizations__bratislava.yaml: |
+    # Hlavné mesto SR Bratislava, an Organization of its own in this installation (ADR-N-058, PF-121,
+    # T-5271), set up as Mesto Žilina is (T-5242). Helsinki (organizations/hel.yaml) stays the
+    # installation's. A project of this Organization publishes under bratislava.sk or a subdomain of
+    # it (PF-122); its Keycloak group subtree is /bratislava and its CKAN organisation `bratislava`.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Organization
+    metadata:
+      name: bratislava
+      namespace: org
+      title: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
+    spec:
+      domain: bratislava.sk
+      locales: [sk, en]
+      defaultLocale: sk
+      dcatProfiles: [dcat-ap-sk]
+      # The publisher a project of this Organization names in its catalogue when it names none of
+      # its own (ADR-N-058 2.3, EP-127): the capital by its registry IRI (IČO 00603481).
+      catalog:
+        publisher:
+          name: { sk: Hlavné mesto SR Bratislava, en: City of Bratislava }
+          uri: https://data.gov.sk/id/legal-subject/00603481
+        contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
+      projects:
+        # Its people read its projects through bratislava-viewers; a project is opened by org-admin (PF-61, PF-65).
+        visibility: organization
+        creation: org-admin
+        # The demo's quota (T-2873, PF-73): the mechanism stays, nobody reaches it.
+        quota:
+          contextSpaces: 100
+          residentPipelines: 100
+          publicEndpoints: 100
+          apps: 100
+          ingestEventsPerSecond: 500
+          agentRunsPerDay: 2000
+          entitiesPerSpace: 1000000
+          requestsPerMinute: 6000
+  organizations__hel.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Organization
+    metadata:
+      name: hel
+      namespace: org
+      title: { en: City of Helsinki, fi: Helsingin kaupunki, sk: Mesto Helsinki }
+    spec:
+      domain: hel.fi
+      # The installation's Organization (PF-121, ADR-N-058): it owns the repository, the gateway's
+      # {orgDomain} and the installation-wide kinds; organizations/zilina.yaml is the second one.
+      installation: true
+      # fi: the city's own language, so its models are titled in Finnish (T-4829).
+      locales: [en, fi, sk]
+      defaultLocale: en
+      # The national DCAT-AP renderings its records and catalogues are also served in (API/08 §5):
+      # Banská Bystrica and BBSK publish to data.slovensko.sk, Praha to data.gov.cz (T-4586).
+      dcatProfiles: [dcat-ap-sk, dcat-ap-cz]
+      projects:
+        # Every signed-in person of the organization holds the seeded viewer role (PF-61), and a
+        # project is opened by whoever holds propose on Project (PF-65).
+        visibility: organization
+        creation: org-admin
+        # What a project of this organization starts from (PF-73). Owner, 2026-09-25 (T-2873): no
+        # demo work and no city dataset is refused by a quota, so 100 of each countable kind and
+        # runtime ceilings nobody reaches; the quota stays as the mechanism, and what the one node
+        # holds is the operator's bounds file (PF-97). Every App in `preview` or `published` counts
+        # and the reconciler serves only the first `apps` by name (PF-74, T-2633).
+        quota:
+          contextSpaces: 100
+          residentPipelines: 100
+          publicEndpoints: 100
+          apps: 100
+          ingestEventsPerSecond: 500
+          # Owner, 2026-09-25: the model keys have no spending limit, so the cap must never stop a
+          # live check or a demo; it stays as the mechanism (AG-41) at a ceiling nobody reaches.
+          agentRunsPerDay: 2000
+          entitiesPerSpace: 1000000
+          # The ceiling on a limit a person sets on an endpoint, not a limit itself: the form's
+          # "open" class (6000) is accepted, and the edge's own flood class still holds (OPS-35).
+          requestsPerMinute: 6000
+  organizations__zilina.yaml: |
+    # Mesto Žilina, an Organization of its own in this installation (ADR-N-058, PF-121, T-5242).
+    # Helsinki (organizations/hel.yaml) stays the installation's: the repository, {orgDomain} and
+    # the URNs do not move. A project of this Organization publishes under zilina.sk or a subdomain
+    # of it (PF-122); its Keycloak group subtree is /zilina and its CKAN organisation `zilina`.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Organization
+    metadata:
+      name: zilina
+      namespace: org
+      title: { sk: Mesto Žilina, en: City of Žilina }
+    spec:
+      domain: zilina.sk
+      locales: [sk, en]
+      defaultLocale: sk
+      dcatProfiles: [dcat-ap-sk]
+      # The publisher a project of this Organization names in its catalogue when it names none of
+      # its own (ADR-N-058 2.3, EP-127): the city by its registry IRI.
+      catalog:
+        publisher:
+          name: { sk: Mesto Žilina, en: City of Žilina }
+          uri: https://data.gov.sk/id/legal-subject/00321796
+        contactPoint: { name: joinedcontext platform, email: hello@joinedcontext.com }
+      projects:
+        # Its people read its projects through zilina-viewers; a project is opened by org-admin (PF-61, PF-65).
+        visibility: organization
+        creation: org-admin
+        # The demo's quota (T-2873, PF-73): the mechanism stays, nobody reaches it.
+        quota:
+          contextSpaces: 100
+          residentPipelines: 100
+          publicEndpoints: 100
+          apps: 100
+          ingestEventsPerSecond: 500
+          agentRunsPerDay: 2000
+          entitiesPerSpace: 1000000
+          requestsPerMinute: 6000
+  platform-settings.yaml: |
+    # The settings the whole organization shares (Architecture/06 §1). Not a manifest: a plain
+    # document read by jcctl and by the Portal, reviewed like every other file of this repository.
+    modelTools:
+      # The image the Portal's preview and a CI step both run, pinned by digest (DM-19). Bumping it
+      # is one commit that also carries every artifact the new generator renders differently.
+      image: ghcr.io/marek-mraz-jc/joinedcontext-platform/model-tools@sha256:51c6129072227b9e0aeddceaac40830794e8db87a6b870af180f32f92f728132
+      generatorVersion: linkml-1.11.1
+  portal__forms__endpoint.uischema.yaml: |
+    # How the Portal's Endpoint form is arranged (UI-02, CC-29): what the endpoint publishes first,
+    # who may read it second, the limits after. The Portal reads this file from the configuration
+    # repository, so editing it changes the form in the browser with no rebuild (T-0452).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: UiSchema
+    metadata:
+      name: endpoint
+      namespace: org
+    spec:
+      for: Endpoint
+      order: [contextSpaceRef, name, title, audience, enabledRepresentations]
+      groups:
+        - title: What it publishes
+          description: The context space the endpoint reads, and the name it has in the repository.
+          fields: [contextSpaceRef, name, title]
+        - title: Who can read it
+          fields: [audience, enabledRepresentations]
+      fields:
+        name:
+          placeholder: helsinki-parking
+          help: Lowercase letters, digits and dashes. It is part of the endpoint's manifest path, not of its public address.
+        contextSpaceRef: { help: The endpoint serves the entities of this space and nothing else. }
+        audience:
+          help: 'public: anyone with the address. organization: every project of the organization. project-list: only the projects you pick.'
+  users__assignments__admins.yaml: |
+    # The demo steward (DEMO.md) is also the organization's administrator, so the demonstration
+    # can delete and can change roles; a person with the steward role alone cannot (PF-56).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: admins
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+      role: org-admin
+      scope: { organization: hel }
+  users__assignments__approvers.yaml: |
+    # The demo approver (DEMO.md, components/keycloak/demo-users.yaml) approves across the
+    # organization and proposes nothing, so a change the steward proposes is approved by another
+    # person on camera (CC-34). The Keycloak realm role `portal-approver` only names the person;
+    # what they may do is this binding (PF-50, PF-56).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: approvers
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000003 # demo.approver
+      role: approver
+      scope: { organization: hel }
+  users__assignments__barcelona-admins.yaml: |
+    # Barcelona's organization administrator (ADR-N-058 2.4, PF-123): org-admin on the Ajuntament's
+    # settings and its projects, and nothing in Helsinki's or Žilina's. The person is demo.barcelona
+    # (components/keycloak/demo-users.yaml).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: barcelona-admins
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000006 # demo.barcelona
+      role: org-admin
+      scope: { organization: barcelona }
+  users__assignments__barcelona-viewers.yaml: |
+    # Barcelona's readers (PF-61 inside ADR-N-058 2.4): the members of the Keycloak group /barcelona,
+    # the root of the Organization's subtree, read its projects and nothing of another Organization.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: barcelona-viewers
+      namespace: org
+    spec:
+      subjects:
+        - group: barcelona
+          source: provider
+      role: viewer
+      scope: { organization: barcelona }
+  users__assignments__bratislava-admins.yaml: |
+    # Bratislava's organization administrator (ADR-N-058 2.4, PF-123): org-admin on the capital's
+    # settings and its projects, and nothing in another Organization's. The person is demo.bratislava
+    # (components/keycloak/demo-users.yaml).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: bratislava-admins
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000007 # demo.bratislava
+      role: org-admin
+      scope: { organization: bratislava }
+  users__assignments__bratislava-viewers.yaml: |
+    # Bratislava's readers (PF-61 inside ADR-N-058 2.4): the members of the Keycloak group /bratislava,
+    # the root of the Organization's subtree, read its projects and nothing of another Organization.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: bratislava-viewers
+      namespace: org
+    spec:
+      subjects:
+        - group: bratislava
+          source: provider
+      role: viewer
+      scope: { organization: bratislava }
+  users__assignments__build-lane.yaml: |
+    # The Keycloak service account of the `jc-build-lane` client (components/gitea-runner), whose
+    # token the `propose` job of every application's workflow presents as `JC_LANE_TOKEN`.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: build-lane
+      namespace: org
+    spec:
+      subjects:
+        - user: service-account-jc-build-lane
+      role: build-lane
+      scope: { organization: hel }
+  users__assignments__editors.yaml: |
+    # The demo editor (DEMO.md, components/keycloak/demo-users.yaml) proposes and approves across
+    # the organization and deletes nothing: the fourth demo person T-2231 added, so the plain
+    # self-approval refusal (CC-34) and the refusal of a grant wider than one's own rights (PF-50)
+    # can be played on dev by somebody they apply to. They hold this role and no other, which is
+    # strictly less than the steward, who also holds `org-admin`.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: editors
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000004 # demo.editor
+      role: editor
+      scope: { organization: hel }
+  users__assignments__janitors.yaml: |
+    # The demo janitor (components/keycloak/demo-users.yaml) sweeps what journeys and takes left in
+    # helsinki (T-0667, T-2627): the steward proposes each removal and the janitor approves it, under a
+    # role that reaches journey-named resources alone. Nobody else holds it.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: janitors
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000008 # demo.janitor
+      role: janitor
+      scope: { project: helsinki }
+  users__assignments__stewards.yaml: |
+    # The demo steward (DEMO.md) holds the steward role across the organization (and org-admin,
+    # see admins). Reading is a binding of its own since PF-59: the demo viewer holds `viewer`
+    # through the group everyone lands in (viewers.yaml) and nothing else (PF-50, PF-56).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: stewards
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+      role: steward
+      scope: { organization: hel }
+  users__assignments__viewers.yaml: |
+    # The viewers of Helsinki's projects, named one by one (ADR-N-067 2.1, T-6415). Until then
+    # `platform-readers`, the realm's default group, was viewer here (PF-61), so every account
+    # read every project of `hel`. A person created in the realm is now a member and reaches no
+    # project until someone binds a role; these are the demo people who read through the old
+    # binding, by their fixed Keycloak ids (PF-126). The administrators of zilina, barcelona and
+    # bratislava read Helsinki no more: a binding never names another Organization's people (PF-123).
+    # The forge keeps mapping `platform-readers` onto its readers team (PF-79).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: viewers
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward (and the production owner, T-4678)
+        - user: de300000-0000-4000-8000-000000000002 # demo.viewer
+        - user: de300000-0000-4000-8000-000000000003 # demo.approver
+        - user: de300000-0000-4000-8000-000000000004 # demo.editor
+        - user: de300000-0000-4000-8000-000000000008 # demo.janitor
+        - user: de300000-0000-4000-8000-000000000009 # demo.probe
+      role: viewer
+      scope: { organization: hel }
+  users__assignments__zilina-admins.yaml: |
+    # Žilina's organization administrator (ADR-N-058 2.4, PF-123): org-admin on Mesto Žilina's
+    # settings and its projects, and nothing in Helsinki's. The person is demo.zilina
+    # (components/keycloak/demo-users.yaml); Helsinki's admins.yaml holds no right here.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: zilina-admins
+      namespace: org
+    spec:
+      subjects:
+        - user: de300000-0000-4000-8000-000000000005 # demo.zilina
+      role: org-admin
+      scope: { organization: zilina }
+  users__assignments__zilina-viewers.yaml: |
+    # Žilina's readers (PF-61 inside ADR-N-058 2.4): the members of the Keycloak group /zilina, the
+    # root of the Organization's subtree, read its projects. Helsinki's viewers.yaml names its
+    # people one by one at `hel` (T-6415), so no group reads both Organizations.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: RoleBinding
+    metadata:
+      name: zilina-viewers
+      namespace: org
+    spec:
+      subjects:
+        - group: zilina
+          source: provider
+      role: viewer
+      scope: { organization: zilina }
+  users__groups__banskabystrica-skoly-viewer.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Group
+    metadata:
+      name: banskabystrica-skoly-viewer
+      namespace: org
+      annotations: { joinedcontext.com/app: banskabystrica/banskabystrica-skoly }
+    spec:
+      description: The viewers of banskabystrica-skoly, its default group.
+      members:
+        - user: de300000-0000-4000-8000-000000000002 # demo.viewer
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+  users__groups__bbsk-mosty-viewer.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Group
+    metadata:
+      name: bbsk-mosty-viewer
+      namespace: org
+      annotations: { joinedcontext.com/app: bbsk/bbsk-mosty }
+    spec:
+      description: The viewers of bbsk-mosty, its default group.
+      members:
+        - user: de300000-0000-4000-8000-000000000002 # demo.viewer
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+  users__groups__bbsk-zaznamy-steward.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Group
+    metadata:
+      name: bbsk-zaznamy-steward
+      namespace: org
+      annotations: { joinedcontext.com/app: bbsk/bbsk-zaznamy }
+    spec:
+      description: The stewards of bbsk-zaznamy, its default group.
+      members:
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+  users__groups__praha-odpad-viewer.yaml: |
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Group
+    metadata:
+      name: praha-odpad-viewer
+      namespace: org
+      annotations: { joinedcontext.com/app: praha/praha-odpad }
+    spec:
+      description: The viewers of praha-odpad, its default group.
+      members:
+        - user: de300000-0000-4000-8000-000000000002 # demo.viewer
+        - user: de300000-0000-4000-8000-000000000001 # demo.steward
+  users__roles__app-editor.yaml: |
+    # PF-56: the person who builds applications proposes App manifests; the Endpoint and Policy an
+    # app needs are rendered by the reconciler from its dataNeeds, never by this role (AP-11).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: app-editor
+      namespace: org
+    spec:
+      rules:
+        - kinds: [App]
+          verbs: [propose]
+  users__roles__approver.yaml: |
+    # Roles as code (PF-49, PF-56): the approver reviews what others propose and approves the
+    # yellow lane, and proposes nothing. The demonstration needs one (CC-34): the Portal refuses an
+    # approval of one's own proposal, so the steward proposes and the approver approves on camera.
+    # A binding under users/assignments/ hands it to a person (PF-50).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: approver
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - ContextSpace
+            - DataModel
+            - Mapping
+            - Policy
+            - ScopeDefinition
+            - Endpoint
+            # An endpoint that names a projection carries one, and the Portal proposes the two
+            # as one import: a role that may act on the endpoint and not on its projection cannot
+            # check its own proposal (MP-01, T-1222).
+            - ModelProjection
+            - SharedSpaceReference
+            - ContextSourceRegistration
+            - ServiceAccount
+            - Pipeline
+            - DataSource
+            - App
+            # No CkanInstance: an instance is the administrator's, handed out per instance by its
+            # ckan-admin-{project}-{name} role (PF-107).
+            - Blueprint
+            - DataSpaceParticipant
+            - DataOffer
+            - DataAgreement
+            - SyncSource
+            - Bundle
+            - UiSchema
+            - Subscription
+            - Entity
+            - Dashboard
+            - Layer
+          verbs: [approve]
+  users__roles__build-lane.yaml: |
+    # The build lane (AP-73, ADR-N-028 §5, T-2636): `status.build` of an App on main and nothing
+    # else. The constraint names the field's writer and carries no operator; the Portal lets this
+    # rule authorize that write alone, with the App's spec, labels and annotations as they are.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: build-lane
+      namespace: org
+    spec:
+      rules:
+        - kinds: [App]
+          verbs: [propose]
+          constraints:
+            - field: status.build
+  users__roles__ckan-admin-banskabystrica-banskabystrica.yaml: |
+    # The right to manage one CKAN instance, banskabystrica/banskabystrica (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: banskabystrica }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-banskabystrica-banskabystrica
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [banskabystrica]
+  users__roles__ckan-admin-barcelona-barcelona.yaml: |
+    # The right to manage one CKAN instance, barcelona/barcelona (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: barcelona }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-barcelona-barcelona
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [barcelona]
+  users__roles__ckan-admin-bbsk-bbsk.yaml: |
+    # The right to manage one CKAN instance, bbsk/bbsk (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: bbsk }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-bbsk-bbsk
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [bbsk]
+  users__roles__ckan-admin-bratislava-bratislava.yaml: |
+    # The right to manage one CKAN instance, bratislava/bratislava (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: bratislava }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-bratislava-bratislava
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [bratislava]
+  users__roles__ckan-admin-helsinki-hel-fi.yaml: |
+    # The right to manage one CKAN instance, helsinki/hel-fi (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: helsinki }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-helsinki-hel-fi
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [hel-fi]
+  users__roles__ckan-admin-praha-praha.yaml: |
+    # The right to manage one CKAN instance, praha/praha (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: praha }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-praha-praha
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [praha]
+  users__roles__ckan-admin-slovensko-slovensko.yaml: |
+    # The right to manage one CKAN instance, slovensko/slovensko (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: slovensko }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-slovensko-slovensko
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [slovensko]
+  users__roles__ckan-admin-zilina-zilina.yaml: |
+    # The right to manage one CKAN instance, zilina/zilina (PF-107): the organization administrator's
+    # by default through org-admin, handed to a group or a person by a RoleBinding of the same name at
+    # `scope: { project: zilina }`, which the instance's Access panel proposes. Seeded bound to nobody.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: ckan-admin-zilina-zilina
+      namespace: org
+    spec:
+      rules:
+        - kinds: [CkanInstance]
+          verbs: [propose, approve, delete]
+          constraints:
+            - field: metadata.name
+              in: [zilina]
+  users__roles__editor.yaml: |
+    # PF-56, CC-34, PF-50: the person who writes the configuration and administers nothing. They
+    # propose and approve the demo kinds, and they may not delete any of them — which is what makes
+    # their own change the plain self-approval refusal and not the PF-58 administrator exception the
+    # steward gets (`administers` is `approve` *and* `delete`, joinedcontext-portal
+    # ui/src/api/approval.ts:100-106).
+    #
+    # T-2231 asked for a role with `propose` and no `approve`, and reusing `endpoint-editor` if its
+    # verbs fit. Neither reaches what the task is for, and both were read before this role was
+    # written:
+    #   * `endpoint-editor` stops at `Endpoint` and `ModelProjection`, so its holder cannot open the
+    #     grant form at all and the PF-50 refusal would again read "you may not propose a
+    #     RoleBinding" — the viewer's weaker statement, which `roles-refusals.spec.ts` already plays;
+    #   * a role with no `approve` never reaches the self-approval rule either: `approvalStanding`
+    #     answers `needsRole` before it looks at who wrote the change (approval.ts:88), so such a
+    #     person gets the missing-role refusal the viewer already proves.
+    # The verb that must be absent is `delete`, and it is absent here.
+    #
+    # The holder is still strictly below `demo.steward`, who also holds `org-admin` with `delete`
+    # over every kind.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: editor
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - ContextSpace
+            - DataModel
+            - Mapping
+            - Policy
+            - Endpoint
+            - ModelProjection
+            - Pipeline
+            - DataSource
+          verbs: [propose, approve]
+        # Granting a role is proposing a binding, and it is never this role's to decide: what the
+        # holder may hand out is bounded by the verbs they hold themselves (PF-50), and somebody
+        # else approves the grant.
+        - kinds: [RoleBinding]
+          verbs: [propose]
+  users__roles__endpoint-editor.yaml: |
+    # PF-56: the person who publishes data proposes Endpoints; the lane policy decides who
+    # approves a public one (CC-63).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: endpoint-editor
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - Endpoint
+            # An endpoint that names a projection carries one, and the Portal proposes the two
+            # as one import: a role that may act on the endpoint and not on its projection cannot
+            # check its own proposal (MP-01, T-1222).
+            - ModelProjection
+          verbs: [propose]
+  users__roles__janitor.yaml: |
+    # The residue sweep's role on dev (T-2627, PF-49): it approves and deletes only what a live journey
+    # or a recorded take named as its own, and proposes nothing, so a removal the steward proposes is
+    # approved by somebody else and no demo person gains a delete. The pattern is the sweep's own
+    # (joinedcontext-portal ui/e2e/live/residue.spec.ts): a journey's `t1234-…` or `t1234r-…` (any
+    # four-digit task, T-4993), a take's `…-0915`, the policy-new-user journey's `newuser-policy-…`, and
+    # the fixed names a take's acts create. It matches the whole name, and no
+    # seeded name falls inside it (tests/test_seed_identity_contract.py): `city-bikes`, which a take
+    # once created, is the seeded dashboard now.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: janitor
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - ContextSpace
+            - DataModel
+            - Endpoint
+            - ModelProjection
+            - Policy
+            - Pipeline
+            - DataSource
+            - Dashboard
+            - Layer
+            - ContextSourceRegistration
+            - CkanInstance
+            - App
+            - ServiceAccount
+            - Subscription
+            - SyncSource
+            - KnowledgeSource
+            - AssistantDeployment
+          verbs: [approve, delete]
+          constraints:
+            - field: metadata.name
+              pattern: t[0-9]{4}[a-z]?-[a-z0-9-]+|newuser-policy-[a-z0-9]+|[a-z0-9-]+-[0-9]{4}|bikes-regional-[a-z0-9]+|large-map-city
+  users__roles__model-editor.yaml: |
+    # The role taxonomy every organization starts from (PF-56, T-0602): the modeller proposes
+    # changes to data models and mappings and nothing else; approval stays with the steward.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: model-editor
+      namespace: org
+    spec:
+      rules:
+        - kinds: [DataModel, Mapping]
+          verbs: [propose]
+  users__roles__org-admin.yaml: |
+    # PF-56: the organization administrator proposes, approves and deletes every kind, roles and
+    # bindings included; the one role that approves the red lane (CC-70). A binding under
+    # users/assignments/ hands it to a person; the Portal checks the binding before a Change
+    # exists (PF-50).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: org-admin
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - Organization
+            - Project
+            - ContextSpace
+            - DataModel
+            - Mapping
+            - Policy
+            - ScopeDefinition
+            - Endpoint
+            # An endpoint that names a projection carries one, and the Portal proposes the two
+            # as one import: a role that may act on the endpoint and not on its projection cannot
+            # check its own proposal (MP-01, T-1222).
+            - ModelProjection
+            - SharedSpaceReference
+            - ContextSourceRegistration
+            - ServiceAccount
+            - Pipeline
+            - DataSource
+            - MqttBroker
+            - App
+            - CkanInstance
+            # The knowledge assistant's sources and deployments (MF-51, MF-52, T-3057).
+            - KnowledgeSource
+            - AssistantDeployment
+            - McpServer
+            - Blueprint
+            - DataSpaceParticipant
+            - DataOffer
+            - DataAgreement
+            - SyncSource
+            - Bundle
+            - UiSchema
+            - Role
+            - RoleBinding
+            # Who is in a group is who a binding names, so the administrator who writes bindings
+            # writes groups too; without it Organization → Groups refused its own administrator
+            # (PF-62, T-2625).
+            - Group
+            # Administration lists both as its own sections: without them its administrator met a
+            # missing page on Environments and a refused "New agent profile" (T-4831). Environment
+            # stays a red-lane kind, which this role is the one to approve (CC-73, CC-70).
+            - AgentProfile
+            - Environment
+            - Subscription
+            - Entity
+            - Dashboard
+            - Layer
+          verbs: [propose, approve, delete]
+        # The people of the realm (PF-91): a person is a Keycloak user and never a manifest, so the
+        # Portal's people routes check these verbs, which no other kind takes.
+        - kinds: [Person]
+          verbs: [read, create, update, disable, delete]
+  users__roles__people-admin.yaml: |
+    # PF-91: creates, edits, disables and deletes the people of the organization's realm; what they
+    # may do stays with the bindings. The Portal refuses a people administrator every write on a
+    # person who holds a right they lack (PF-93), so this role opens no stronger account.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: people-admin
+      namespace: org
+    spec:
+      rules:
+        - kinds: [Person]
+          verbs: [read, create, update, disable, delete]
+  users__roles__pipeline-editor.yaml: |
+    # PF-56: the integration developer proposes pipelines and their sources; a public Endpoint
+    # is another role's (PF-52).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: pipeline-editor
+      namespace: org
+    spec:
+      rules:
+        - kinds: [Pipeline, DataSource]
+          verbs: [propose]
+  users__roles__steward.yaml: |
+    # Roles as code (PF-49, PF-56): the steward is the domain lead of the demonstration instance,
+    # proposing and approving every project kind (the yellow lane). Deletion, roles and bindings
+    # belong to org-admin. A binding under users/assignments/ hands it to a person; the Portal
+    # checks the binding before a Change exists (PF-50, T-0526).
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: steward
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - ContextSpace
+            - DataModel
+            - Mapping
+            - Policy
+            - ScopeDefinition
+            - Endpoint
+            # An endpoint that names a projection carries one, and the Portal proposes the two
+            # as one import: a role that may act on the endpoint and not on its projection cannot
+            # check its own proposal (MP-01, T-1222).
+            - ModelProjection
+            - SharedSpaceReference
+            - ContextSourceRegistration
+            - ServiceAccount
+            - Pipeline
+            - DataSource
+            - MqttBroker
+            - App
+            # No CkanInstance: an instance is the administrator's, handed out per instance by its
+            # ckan-admin-{project}-{name} role (PF-107).
+            - Blueprint
+            - DataSpaceParticipant
+            - DataOffer
+            - DataAgreement
+            - SyncSource
+            - Bundle
+            - UiSchema
+            - Subscription
+            - Entity
+            - Dashboard
+            - Layer
+          verbs: [propose, approve]
+  users__roles__viewer.yaml: |
+    # PF-56, PF-61: the role every signed-in person of the organization holds. It reads every
+    # project kind and changes nothing; `read` is a verb of its own since PF-59, and `approve`
+    # implies none of it, so without this role an approver's own Portal answers 404 on every list.
+    # `Role` and `RoleBinding` are not here on purpose: who holds which role is read by the
+    # administrator who grants it (org-admin), not by everyone who signs in.
+    apiVersion: joinedcontext.com/v1alpha1
+    kind: Role
+    metadata:
+      name: viewer
+      namespace: org
+    spec:
+      rules:
+        - kinds:
+            - Organization
+            - Project
+            - ContextSpace
+            - DataModel
+            - Mapping
+            - Policy
+            - ScopeDefinition
+            - Endpoint
+            - ModelProjection
+            - SharedSpaceReference
+            - ContextSourceRegistration
+            - ServiceAccount
+            - Pipeline
+            - DataSource
+            - MqttBroker
+            - App
+            - CkanInstance
+            # The knowledge assistant's sources and deployments (MF-51, MF-52, T-3057).
+            - KnowledgeSource
+            - AssistantDeployment
+            - McpServer
+            - Blueprint
+            - AgentProfile
+            - DataSpaceParticipant
+            - DataOffer
+            - DataAgreement
+            - SyncSource
+            - Bundle
+            - UiSchema
+            - Subscription
+            - Entity
+            - Dashboard
+            - Layer
+          verbs: [read]
+seedProjects:
+  - s1-banskabystrica
+  - s1-banskabystrica--2
+  - s1-banskabystrica--3
+  - s2-barcelona
+  - s2-barcelona--2
+  - s2-barcelona--3
+  - s3-bbsk
+  - s3-bbsk--2
+  - s3-bbsk--3
+  - s4-bbsk--4
+  - s4-bbsk--5
+  - s4-bbsk--6
+  - s4-bbsk--7
+  - s5-bbsk--8
+  - s5-bbsk--9
+  - s5-bbsk--10
+  - s5-bbsk--11
+  - s6-bbsk--12
+  - s6-bbsk--13
+  - s6-bbsk--14
+  - s7-bratislava
+  - s7-bratislava--2
+  - s7-bratislava--3
+  - s7-bratislava--4
+  - s8-bratislava--5
+  - s8-bratislava--6
+  - s8-bratislava--7
+  - s8-bratislava--8
+  - s9-bratislava--9
+  - s9-bratislava--10
+  - s10-helsinki
+  - s10-helsinki--2
+  - s10-helsinki--3
+  - s10-helsinki--4
+  - s11-helsinki--5
+  - s12-helsinki-mobility
+  - s13-praha
+  - s13-praha--2
+  - s13-praha--3
+  - s13-praha--4
+  - s14-praha--5
+  - s14-praha--6
+  - s14-praha--7
+  - s14-praha--8
+  - s15-praha--9
+  - s16-slovensko
+  - s16-slovensko--2
+  - s16-slovensko--3
+  - s16-slovensko--4
+  - s12-slovensko--5
+  - s12-slovensko--6
+  - s12-slovensko--7
+  - s12-slovensko--8
+  - s15-slovensko--9
+  - s15-slovensko--10
+  - s15-slovensko--11
+  - s11-slovensko--12
+  - s11-slovensko--13
+  - s11-slovensko--14
+  - s9-slovensko--15
+  - s9-slovensko--16
+  - s6-slovensko--17
+  - s1-zilina
+serviceMesh:
+  enabled: true
+teams:
+  readers: {}
+tokens:
+  apps:
+    namespaces:
+      - smartcity
+      - smartcity
+    restart:
+      - smartcity/portal
+  gateway:
+    namespaces:
+      - smartcity
+      - smartcity
+      - smartcity
+    restart:
+      - smartcity/context-gateway
+      - smartcity/jc-assistant
+  lane:
+    namespaces:
+      - smartcity
+  portal:
+    namespaces:
+      - smartcity
+      - smartcity
+    restart:
+      - smartcity/portal
+      - smartcity/agent-proxy
+  registry:
+    host: smartcity.joinedcontext.com
+    namespaces:
+      - smartcity
+  runner:
+    namespaces:
+      - smartcity
+    restart:
+      - smartcity/gitea-runner
+      - smartcity/gitea-runner-rust

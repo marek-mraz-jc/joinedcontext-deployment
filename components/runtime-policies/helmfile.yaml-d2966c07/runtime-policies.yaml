@@ -1,0 +1,16 @@
+cnpgOperatorNamespace: smartcity
+driftReader:
+  secretNamespaces:
+    - smartcity
+failureAction: Enforce
+linkerd:
+  enabled: true
+operators:
+  enabled: true
+podSecurity:
+  namespaces:
+    - cert-manager
+    - smartcity
+    - smartcity-*-apps
+    - pv-*
+    - demo-*

@@ -1,0 +1,97 @@
+command:
+  - sh
+  - -c
+  - mkdir -m 700 -p "$TMPDIR" && exec bundle exec sidekiq -C config/sidekiq.yml
+env:
+  ASSISTANT_ORIGIN: https://assistant.smartcity.joinedcontext.com
+  ASSISTANT_PUBLIC_ID: participacia
+  DATABASE_URL: postgres://decidim@postgres-cluster-rw.smartcity.svc.cluster.local:5432/decidim?sslmode=require
+  DECIDIM_ADMIN_EMAIL: participacia.steward@hel.fi
+  DECIDIM_CATALOGUE_URL: https://opendata.smartcity.joinedcontext.com
+  DECIDIM_DEFAULT_LOCALE: sk
+  DECIDIM_HOST: participacia.smartcity.joinedcontext.com
+  DECIDIM_LOCALES: sk,en
+  DECIDIM_ORGANIZATION_NAME: Participácia
+  DECIDIM_PORTAL_URL: https://portal.smartcity.joinedcontext.com
+  DECIDIM_REFERENCE_PREFIX: JC
+  DECIDIM_SITE_CONTENT: "false"
+  DECIDIM_SITE_DEMO_NOTICE: "false"
+  OIDC_CLIENT_ID: decidim
+  OIDC_ISSUER: https://idm.smartcity.joinedcontext.com/realms/smartcity
+  OIDC_REDIRECT_URI: https://participacia.smartcity.joinedcontext.com/users/auth/keycloak/callback
+  RAILS_LOG_LEVEL: warn
+  RAILS_MAX_THREADS: "2"
+  REDIS_URL: redis://decidim-redis.smartcity.svc.cluster.local:6379/1
+  SIDEKIQ_CONCURRENCY: "2"
+  TMPDIR: /tmp/app
+envSecret:
+  DATABASE_PASSWORD:
+    key: password
+    secret: db-decidim
+  OIDC_CLIENT_SECRET:
+    key: client-secret
+    secret: keycloak-client-decidim
+  SECRET_KEY_BASE:
+    key: secret
+    secret: decidim-secret-key-base
+extraVolumeMounts:
+  - mountPath: /code/storage
+    name: storage
+  - mountPath: /code/tmp
+    name: rails-tmp
+  - mountPath: /code/log
+    name: rails-log
+extraVolumes:
+  - name: storage
+    persistentVolumeClaim:
+      claimName: decidim-web-files
+  - emptyDir:
+      sizeLimit: 512Mi
+    name: rails-tmp
+  - emptyDir:
+      sizeLimit: 64Mi
+    name: rails-log
+fullnameOverride: decidim-sidekiq
+image:
+  digest: sha256:a68d5254e917bceea79edffe2806d9e97bcce632d35136f87c62a78c4ebfb01a
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/joinedcontext-decidim
+  tag: 0.32.2
+nameOverride: decidim-sidekiq
+podSecurityContext:
+  fsGroup: 10001
+  runAsGroup: 10001
+  runAsNonRoot: true
+  runAsUser: 10001
+  seccompProfile:
+    type: RuntimeDefault
+preStopSleepSeconds: 0
+probes:
+  enabled: false
+  readinessExec:
+    - grep
+    - -qF
+    - busy]
+    - /proc/1/cmdline
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 768Mi
+  requests:
+    cpu: 50m
+    memory: 448Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: false
+serviceAccount:
+  automountServiceAccountToken: false
+  create: false
+serviceMesh:
+  enabled: true
+terminationGracePeriodSeconds: 35

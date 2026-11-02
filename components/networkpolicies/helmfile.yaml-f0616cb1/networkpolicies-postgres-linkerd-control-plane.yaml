@@ -1,0 +1,39 @@
+networkpolicies:
+  postgres-linkerd-control-plane:
+    egress:
+      - ports:
+          - port: 8080
+            protocol: TCP
+          - port: 8086
+            protocol: TCP
+          - port: 8090
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: linkerd
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/component: store
+    namespace: smartcity
+    podSelector:
+      cnpg.io/cluster: postgres-cluster
+    policyTypes:
+      - Egress

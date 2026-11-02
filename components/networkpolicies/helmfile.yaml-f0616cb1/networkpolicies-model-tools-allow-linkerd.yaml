@@ -1,0 +1,22 @@
+networkpolicies:
+  model-tools-allow-linkerd:
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: portal-portal
+        ports:
+          - port: 4143
+            protocol: TCP
+          - port: 4190
+            protocol: TCP
+          - port: 4191
+            protocol: TCP
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: model-tools-tools
+    policyTypes:
+      - Ingress

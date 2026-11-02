@@ -62,6 +62,9 @@ global:
   # The Keycloak id of the person who administers Decidim on a production-profile realm (T-6448):
   # empty seeds nobody. An id of its own per instance, never a de300000- demo id.
   participationStewardId: ''
+  # true seeds no TOTP for that person: they enrol their own device at first sign-in, as a
+  # production realm's people do (T-6448). false is for a test instance a script signs in to.
+  participationStewardEnrols: false
 
   # Whether Helmfile should create the namespaces automatically
   createNamespaces: true

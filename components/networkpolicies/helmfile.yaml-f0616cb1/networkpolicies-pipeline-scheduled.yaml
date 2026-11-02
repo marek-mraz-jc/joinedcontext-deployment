@@ -1,0 +1,31 @@
+networkpolicies:
+  pipeline-scheduled:
+    egress:
+      - ports:
+          - port: 8080
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: context-gateway-gateway
+      - ports:
+          - port: 53
+            protocol: UDP
+          - port: 53
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/instance: pipeline-runner-scheduled
+    policyTypes:
+      - Ingress
+      - Egress

@@ -1,0 +1,19 @@
+networkpolicies:
+  portal-linkerd-to-agent-workspaces:
+    egress:
+      - ports:
+          - port: 4143
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchExpressions:
+                - key: joinedcontext.com/run-id
+                  operator: Exists
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: portal-portal
+    policyTypes:
+      - Egress

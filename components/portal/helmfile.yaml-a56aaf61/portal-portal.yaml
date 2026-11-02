@@ -1,0 +1,284 @@
+configMap:
+  data:
+    branding.yaml: |
+      city: Helsinki
+      colours:
+        accent: '#ffe977'
+        background: '#ffffff'
+        primary: '#0000bf'
+        secondary: '#0072c6'
+        text: '#1a1a1a'
+      contactEmail: hello@joinedcontext.com
+      documentationBaseUrl: https://smartcity.joinedcontext.com/docs
+      domain: smartcity.joinedcontext.com
+      favicon: logo.svg
+      fonts:
+        body: system-ui, sans-serif
+        heading: system-ui, sans-serif
+      footerLines: []
+      instanceName: joinedcontext
+      languages:
+        default: en
+        offered:
+          - en
+      licenseDefault: CC-BY-4.0
+      logo: logo.svg
+      orgDomain: hel.fi
+      organisation: joinedcontext demo
+      shortName: joinedcontext
+      tagline: ""
+    cost-prices.yaml: |
+      {}
+    logo.svg: |
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="512" height="512"><g transform="translate(0 0)"><defs><clipPath id="cA"><polygon points="-64 -77 100 114 5 196 -159 5"/></clipPath><clipPath id="cB"><polygon points="-64 -77 100 114 196 32 32 -159"/></clipPath><mask id="mA" maskUnits="userSpaceOnUse" x="-50" y="-50" width="150" height="150"><rect x="-50" y="-50" width="150" height="150" fill="white"/><g clip-path="url(#cB)"><polygon points="38.1 31.8 30.3 39.6 19.7 36.7 16.8 26.1 24.6 18.3 35.2 21.2" fill="none" stroke="black" stroke-width="6" stroke-linejoin="round"/></g></mask><mask id="mB" maskUnits="userSpaceOnUse" x="-50" y="-50" width="150" height="150"><rect x="-50" y="-50" width="150" height="150" fill="white"/><g clip-path="url(#cA)"><polygon points="29.0 21.2 21.2 29.0 10.6 26.1 7.7 15.5 15.5 7.7 26.1 10.6" fill="none" stroke="black" stroke-width="6" stroke-linejoin="round"/></g></mask></defs><g mask="url(#mA)"><polygon points="29.0 21.2 21.2 29.0 10.6 26.1 7.7 15.5 15.5 7.7 26.1 10.6" fill="none" stroke="#2f3f9e" stroke-width="4" stroke-linejoin="round"/></g><g mask="url(#mB)"><polygon points="38.1 31.8 30.3 39.6 19.7 36.7 16.8 26.1 24.6 18.3 35.2 21.2" fill="none" stroke="#0e8fa3" stroke-width="4" stroke-linejoin="round"/></g></g></svg>
+    organization-bounds.yaml: |
+      spec.limits.edge.requestsPerMinute.publicEndpoint:
+        max: 600
+  enabled: true
+  mountPath: /etc/jc/branding
+  name: portal-branding
+containerPort: 8080
+env:
+  JC_AGENT_PROXY_BASE: http://agent-proxy.smartcity.svc.cluster.local:8080
+  JC_AGENTS_NAMESPACE: smartcity
+  JC_BASEMAP_ATTRIBUTION: © OpenStreetMap contributors
+  JC_BASEMAP_URL: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+  JC_BRANDING_FILE: /etc/jc/branding/branding.yaml
+  JC_FUNCTIONS_URL: http://jc-functions.smartcity.svc.cluster.local:8080
+  JC_GITEA_APPS_OWNER: joinedcontext-apps
+  JC_GITEA_OWNER: joinedcontext
+  JC_GITEA_PUBLIC_URL: https://smartcity.joinedcontext.com/git
+  JC_GITEA_READER: jc-gateway
+  JC_GITEA_REPO: configuration
+  JC_GITEA_URL: http://gitea-http.smartcity.svc.cluster.local:3000
+  JC_HEALTH_DIR: /etc/jc/health
+  JC_KEYCLOAK_ADMIN_URL: http://keycloak-app-keycloakx-http.smartcity.svc.cluster.local:80
+  JC_OIDC_CLIENT_ASSERTION_FILE: /var/run/secrets/jc/keycloak/token
+  JC_OIDC_CLIENT_ID: portal-api
+  JC_OIDC_ISSUER: https://idm.smartcity.joinedcontext.com/realms/smartcity
+  JC_PORTAL_AGENT_PROXY_CLIENT_ID: helsinki-agent-proxy
+  JC_PORTAL_APISIX_NAMESPACE: smartcity
+  JC_PORTAL_APP_IDENTITY_NAMESPACE: smartcity-app-identities
+  JC_PORTAL_APP_TESTS_IMAGE: ghcr.io/marek-mraz-jc/joinedcontext-app-builder:main@sha256:008c16d231bee2afc31654bc8135e8029abec2e23dccdf0c0ac13a297997db83
+  JC_PORTAL_APP_TESTS_NAMESPACE: smartcity-app-tests
+  JC_PORTAL_APP_TESTS_RUST_IMAGE: ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust:main@sha256:3d3b06ce0e1fde61e7c157735798df0d9907bb5e20a960e25d5549f9265c43c5
+  JC_PORTAL_APPS_BUCKET: apps
+  JC_PORTAL_APPS_CACHE_DIR: /var/cache/jc/apps
+  JC_PORTAL_APPS_DB_URL: postgresql://jc_apps_admin:$(APPS_DB_PASSWORD)@apps-db-rw.smartcity.svc.cluster.local:5432/apps?sslmode=require
+  JC_PORTAL_APPS_NAMESPACE: smartcity
+  JC_PORTAL_APPS_PULL_SECRET_NAME: app-registry
+  JC_PORTAL_APPS_REGISTRY: smartcity.joinedcontext.com
+  JC_PORTAL_APPS_URL: https://smartcity.joinedcontext.com
+  JC_PORTAL_ARTIFACT_STORE_BUCKET: jc-artifacts
+  JC_PORTAL_ARTIFACT_STORE_ENDPOINT: http://artifact-store.smartcity.svc.cluster.local:9000
+  JC_PORTAL_BIND: 0.0.0.0:8080
+  JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: /var/run/secrets/jc/broker-admin/token
+  JC_PORTAL_BROKER_URL: http://context-broker.smartcity.svc.cluster.local:8080
+  JC_PORTAL_BROKER_URL_TEMPLATE: http://context-broker-{broker}.smartcity.svc.cluster.local:8080
+  JC_PORTAL_BUILD_IMAGE_NODE: ghcr.io/marek-mraz-jc/joinedcontext-app-builder@sha256:008c16d231bee2afc31654bc8135e8029abec2e23dccdf0c0ac13a297997db83
+  JC_PORTAL_BUILD_IMAGE_RUST: ghcr.io/marek-mraz-jc/joinedcontext-app-builder-rust@sha256:3d3b06ce0e1fde61e7c157735798df0d9907bb5e20a960e25d5549f9265c43c5
+  JC_PORTAL_BUILD_NAMESPACE: smartcity
+  JC_PORTAL_CKAN_API_URL: http://ckan.smartcity.svc.cluster.local:5000
+  JC_PORTAL_CKAN_URL: https://opendata.smartcity.joinedcontext.com
+  JC_PORTAL_COST_PRICES_FILE: /etc/jc/branding/cost-prices.yaml
+  JC_PORTAL_DATABASE_URL: postgresql://portal:$(PGPASSWORD)@postgres-cluster-rw.smartcity.svc.cluster.local:5432/portal
+  JC_PORTAL_GATEWAY_CLIENT_ID: context-gateway
+  JC_PORTAL_GATEWAY_NAMESPACE: smartcity
+  JC_PORTAL_GATEWAY_PODS_URL: http://context-gateway-pods.smartcity.svc.cluster.local:8080
+  JC_PORTAL_GATEWAY_URL: http://context-gateway.smartcity.svc.cluster.local:8080
+  JC_PORTAL_INVITATION_CLIENT_ID: portal-ui
+  JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_ID: portal-reconciler
+  JC_PORTAL_KEYCLOAK_ADMIN_CLIENT_SERVICE_ACCOUNT: portal-reconciler
+  JC_PORTAL_KNOWLEDGE_URL: http://jc-assistant.smartcity.svc.cluster.local:8080
+  JC_PORTAL_MAIL_FROM: noreply@smartcity.joinedcontext.com
+  JC_PORTAL_MODEL_TOOLS_URL: http://model-tools.smartcity.svc.cluster.local:8080
+  JC_PORTAL_MQTT_NAMESPACE: smartcity
+  JC_PORTAL_NAMESPACE: smartcity
+  JC_PORTAL_ORG_DOMAIN: hel.fi
+  JC_PORTAL_ORGANIZATION_BOUNDS_FILE: /etc/jc/branding/organization-bounds.yaml
+  JC_PORTAL_PIPELINE_IDENTITY: pipeline
+  JC_PORTAL_PIPELINE_NAMESPACE: smartcity-pipeline-identities
+  JC_PORTAL_PIPELINE_RUNNER_CLIENT_ID: helsinki-pipelines
+  JC_PORTAL_PIPELINE_RUNNER_URL: http://pipeline-runner.smartcity.svc.cluster.local:4195
+  JC_PORTAL_PIPELINE_TEST_CAPTURE_URL: http://portal.smartcity.svc.cluster.local:9090
+  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
+  JC_PORTAL_PUBLIC_URL: https://portal.smartcity.joinedcontext.com
+  JC_PORTAL_RELEASE: smartcity
+  JC_PORTAL_SERVICE_ACCOUNT: portal
+  JC_PORTAL_SERVICE_URL: http://portal.smartcity.svc.cluster.local:8080
+  JC_PORTAL_SOPS_AGE_KEY_FILE: /etc/jc/age/keys.txt
+  JC_PORTAL_SYNC_INTERVAL: "120"
+  JC_PORTAL_UI_URL: http://portal-ui:8080
+  JC_PORTAL_WASM_HOST_NAMESPACE: smartcity
+  JC_PORTAL_WASM_SHARDS: "2"
+  JC_SETUP_BACKUPS: "false"
+  JC_SETUP_LOGIN_THEME: joinedcontext
+  JC_SETUP_SMTP: "false"
+  JC_TRUST_EDGE_TOKEN: "true"
+  MALLOC_ARENA_MAX: "2"
+envSecret:
+  APPS_DB_PASSWORD:
+    key: password
+    secret: db-apps-admin
+  CKAN_API_TOKEN:
+    key: token
+    secret: ckan-api-token
+  JC_GITEA_APPS_TOKEN:
+    key: token
+    secret: gitea-token-apps
+  JC_GITEA_TOKEN:
+    key: token
+    secret: gitea-token-portal
+  JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY:
+    key: ACCESS_KEY_ID
+    secret: artifact-store-root
+  JC_PORTAL_ARTIFACT_STORE_SECRET_KEY:
+    key: ACCESS_SECRET_KEY
+    secret: artifact-store-root
+  JC_PORTAL_COOKIE_KEY:
+    key: key
+    secret: portal-cookie-key
+  JC_PORTAL_COOKIE_KEY_PREVIOUS:
+    key: previous
+    optional: true
+    secret: portal-cookie-key
+  JC_PORTAL_ERASURE_KEY:
+    key: key
+    optional: true
+    secret: portal-erasure-key
+  JC_PORTAL_SMTP_URL:
+    key: url
+    optional: true
+    secret: portal-mail-relay
+  PGPASSWORD:
+    key: password
+    secret: db-portal
+extraVolumeMounts:
+  - mountPath: /var/cache/jc/apps
+    name: apps-cache
+  - mountPath: /var/run/secrets/jc/keycloak
+    name: keycloak-token
+    readOnly: true
+  - mountPath: /etc/jc/health
+    name: validation-results
+    readOnly: true
+  - mountPath: /var/run/secrets/jc/broker-admin
+    name: broker-admin-token
+    readOnly: true
+  - mountPath: /etc/jc/age
+    name: age-identity
+    readOnly: true
+extraVolumes:
+  - emptyDir:
+      sizeLimit: 2Gi
+    name: apps-cache
+  - configMap:
+      name: jc-validation-results
+      optional: true
+    name: validation-results
+  - name: keycloak-token
+    projected:
+      sources:
+        - serviceAccountToken:
+            audience: https://idm.smartcity.joinedcontext.com/realms/smartcity
+            expirationSeconds: 600
+            path: token
+  - name: broker-admin-token
+    secret:
+      defaultMode: 288
+      items:
+        - key: token
+          path: token
+      secretName: context-broker-admin-token
+  - name: age-identity
+    secret:
+      defaultMode: 288
+      optional: true
+      secretName: portal-age-identity
+fullnameOverride: portal
+headlessService:
+  name: portal-pods
+image:
+  digest: sha256:488c3e03777d9fa4a66c8eacb88cce49db1a7ac8d2cc430e9fe547f65d880c82
+  pullPolicy: IfNotPresent
+  repository: ghcr.io/marek-mraz-jc/joinedcontext-portal
+  tag: main
+nameOverride: portal-portal
+podAnnotations:
+  config.linkerd.io/skip-outbound-ports: "443"
+  security.joinedcontext.com/api-access-reason: 'App reconciler: applies the four objects an App is made of — Deployment, Service, Secret and NetworkPolicy — in each project''s apps namespace, under the ClusterRole `portal-apps` bound there (AP-13, AP-15, AP-18, AP-116); in its own namespace, under the Role in `rbac.rules` below, only the pipeline runner''s restart patch and the Secrets it hands over (T-5094); and an App''s build Job, its token Secret and its cache claim in the runner''s namespace, under the Role `portal-build-pods` there (AP-130, AP-131, T-2794). It reads and writes nothing else at the API server.'
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+probes:
+  liveness:
+    failureThreshold: 3
+    initialDelaySeconds: 10
+    path: /api/v1/health
+    periodSeconds: 15
+    timeoutSeconds: 3
+  readiness:
+    failureThreshold: 3
+    path: /api/v1/ready
+    periodSeconds: 5
+    timeoutSeconds: 3
+rbac:
+  namespace: smartcity
+  rules:
+    - apiGroups:
+        - apps
+      resourceNames:
+        - pipeline-runner
+      resources:
+        - deployments
+      verbs:
+        - get
+        - patch
+    - apiGroups:
+        - ""
+      resourceNames:
+        - app-registry
+      resources:
+        - secrets
+      verbs:
+        - get
+    - apiGroups:
+        - ""
+      resources:
+        - secrets
+      verbs:
+        - create
+        - patch
+replicaCount: 1
+resources:
+  limits:
+    cpu: "1"
+    memory: 1536Mi
+  requests:
+    cpu: 100m
+    memory: 576Mi
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+service:
+  enabled: true
+  extraPorts:
+    - name: internal
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+  name: http
+  port: 8080
+  targetPort: 8080
+  type: ClusterIP
+serviceAccount:
+  automountServiceAccountToken: true
+  create: true
+serviceMesh:
+  enabled: true

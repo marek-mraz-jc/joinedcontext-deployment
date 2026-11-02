@@ -1,0 +1,4 @@
+portal:
+  namespace: smartcity
+  serviceAccount: portal
+shards: 2

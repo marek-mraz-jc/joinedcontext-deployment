@@ -1,0 +1,7 @@
+networkpolicies:
+  default-deny-postgres:
+    namespace: smartcity
+    podSelector: {}
+    policyTypes:
+      - Ingress
+      - Egress

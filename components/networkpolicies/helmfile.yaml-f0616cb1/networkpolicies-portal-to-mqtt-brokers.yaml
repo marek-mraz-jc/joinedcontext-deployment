@@ -1,0 +1,20 @@
+networkpolicies:
+  portal-to-mqtt-brokers:
+    egress:
+      - ports:
+          - port: 6060
+            protocol: TCP
+          - port: 1883
+            protocol: TCP
+        to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: smartcity
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: mqtt-broker
+    namespace: smartcity
+    podSelector:
+      app.kubernetes.io/name: portal-portal
+    policyTypes:
+      - Egress

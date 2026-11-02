@@ -1,0 +1,302 @@
+alertGroups:
+  - name: apisix-edge
+    rules:
+      - alert: APISIXConfigReloadFailed
+        annotations:
+          summary: 'APISIX standalone failed to reload apisix.yaml (check the #END marker)'
+        expr: apisix_yaml_configuration_load_status == 0
+        for: 1m
+        labels:
+          severity: critical
+      - alert: APISIXHigh5xxRate
+        annotations:
+          summary: APISIX edge 5xx error rate exceeded 1%
+        expr: sum(rate(apisix_http_status{code=~"5.."}[5m])) / sum(rate(apisix_http_status[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+  - name: synthetic-probes
+    rules:
+      - alert: ProbeSurfaceDown
+        annotations:
+          summary: '{{ $labels.surface }} of {{ $labels.endpoint }} on {{ $labels.target }} fails its synthetic probe (GET /results.json on the probe pod names the reason)'
+        expr: jc_probe_up == 0
+        for: 1m
+        labels:
+          severity: critical
+      - alert: ProbeStalled
+        annotations:
+          summary: The synthetic probe of {{ $labels.target }} finished no round for three minutes
+        expr: time() - jc_probe_round_timestamp_seconds > 180
+        for: 1m
+        labels:
+          severity: warning
+  - name: slo-public-surfaces
+    rules:
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[5m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[5m]))
+        record: jc:probe_failure:ratio_rate5m
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[5m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[5m]))
+        record: jc:probe_slow:ratio_rate5m
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[30m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30m]))
+        record: jc:probe_failure:ratio_rate30m
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[30m])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30m]))
+        record: jc:probe_slow:ratio_rate30m
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[1h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[1h]))
+        record: jc:probe_failure:ratio_rate1h
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[1h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[1h]))
+        record: jc:probe_slow:ratio_rate1h
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[6h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[6h]))
+        record: jc:probe_failure:ratio_rate6h
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[6h])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[6h]))
+        record: jc:probe_slow:ratio_rate6h
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[3d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[3d]))
+        record: jc:probe_failure:ratio_rate3d
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[3d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[3d]))
+        record: jc:probe_slow:ratio_rate3d
+      - expr: sum by (target, surface) (rate(jc_probe_failures_total[30d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30d]))
+        record: jc:probe_failure:ratio_rate30d
+      - expr: 1 - sum by (target, surface) (rate(jc_probe_request_duration_seconds_bucket{le="0.5"}[30d])) / sum by (target, surface) (rate(jc_probe_request_duration_seconds_count[30d]))
+        record: jc:probe_slow:ratio_rate30d
+      - expr: 1 - jc:probe_failure:ratio_rate30d
+        record: jc:probe_availability:ratio30d
+      - expr: histogram_quantile(0.95, sum by (target, surface, le) (rate(jc_probe_request_duration_seconds_bucket[30d])))
+        record: jc:probe_latency:p95_30d
+      - alert: SurfaceAvailabilityBudgetBurnFast
+        annotations:
+          summary: '{{ $labels.surface }} on {{ $labels.target }} spends its 30-day availability (99.5 %) budget at 6x or more: at this rate it is gone in under five days (GET /results.json on the probe pod names the failing Endpoints)'
+        expr: |
+          (jc:probe_failure:ratio_rate1h > (14.4 * 0.005) and jc:probe_failure:ratio_rate5m > (14.4 * 0.005))
+          or
+          (jc:probe_failure:ratio_rate6h > (6 * 0.005) and jc:probe_failure:ratio_rate30m > (6 * 0.005))
+        for: 2m
+        labels:
+          severity: critical
+          slo: failure
+      - alert: SurfaceAvailabilityBudgetBurnSlow
+        annotations:
+          summary: '{{ $labels.surface }} on {{ $labels.target }} has spent its availability (99.5 %) budget faster than 30 days allow for three days'
+        expr: jc:probe_failure:ratio_rate3d > 0.005 and jc:probe_failure:ratio_rate6h > 0.005
+        for: 1h
+        labels:
+          severity: warning
+          slo: failure
+      - alert: SurfaceLatencyBudgetBurnFast
+        annotations:
+          summary: '{{ $labels.surface }} on {{ $labels.target }} spends its 30-day latency (p95 < 500 ms) budget at 6x or more: at this rate it is gone in under five days (GET /results.json on the probe pod names the failing Endpoints)'
+        expr: |
+          (jc:probe_slow:ratio_rate1h > (14.4 * 0.05) and jc:probe_slow:ratio_rate5m > (14.4 * 0.05))
+          or
+          (jc:probe_slow:ratio_rate6h > (6 * 0.05) and jc:probe_slow:ratio_rate30m > (6 * 0.05))
+        for: 2m
+        labels:
+          severity: critical
+          slo: slow
+      - alert: SurfaceLatencyBudgetBurnSlow
+        annotations:
+          summary: '{{ $labels.surface }} on {{ $labels.target }} has spent its latency (p95 < 500 ms) budget faster than 30 days allow for three days'
+        expr: jc:probe_slow:ratio_rate3d > 0.05 and jc:probe_slow:ratio_rate6h > 0.05
+        for: 1h
+        labels:
+          severity: warning
+          slo: slow
+  - name: expiry
+    rules:
+      - alert: TLSCertificateExpiresSoon
+        annotations:
+          summary: 'The certificate {{ $labels.host }} serves expires within 14 days or fails verification: check its cert-manager Certificate and the HTTP-01 challenge'
+        expr: jc_probe_tls_cert_expiry_timestamp_seconds - time() < 14 * 86400
+        for: 10m
+        labels:
+          severity: critical
+      - alert: DomainExpiresSoon
+        annotations:
+          summary: 'The registration of {{ $labels.domain }} expires within 30 days: renew it at the registrar'
+        expr: jc_probe_domain_expiry_timestamp_seconds - time() < 30 * 86400
+        for: 10m
+        labels:
+          severity: critical
+  - name: capacity
+    rules:
+      - alert: NodeDiskAlmostFull
+        annotations:
+          summary: '{{ $labels.mountpoint }} on {{ $labels.instance }} is more than 85 % full: Postgres and local-path volumes stop at 100 %'
+        expr: 1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|ramfs"} > 0.85
+        for: 10m
+        labels:
+          severity: critical
+      - alert: VolumeAlmostFull
+        annotations:
+          summary: Volume {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is more than 85 % full
+        expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85
+        for: 10m
+        labels:
+          severity: critical
+      - alert: NodeMemoryHigh
+        annotations:
+          summary: '{{ $labels.instance }} has used more than 90 % of its memory for 10 minutes: the next pod to grow gets OOM-killed'
+        expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes > 0.90
+        for: 10m
+        labels:
+          severity: critical
+  - name: postgres-backup
+    rules:
+      - alert: PostgresBackupStale
+        annotations:
+          summary: 'The newest Postgres backup in {{ $labels.namespace }} is older than 26 hours: check the backup job and its volume'
+        expr: |
+          time() - max by (namespace, cronjob) (kube_cronjob_status_last_successful_time{cronjob=~".*-local-backup"}) > 26 * 3600
+          or
+          time() - max by (namespace, cluster) (cnpg_collector_last_available_backup_timestamp > 0) > 26 * 3600
+        for: 10m
+        labels:
+          severity: critical
+      - alert: PostgresBackupFailed
+        annotations:
+          summary: 'The newest base backup of {{ $labels.cluster }} in {{ $labels.namespace }} failed: read kubectl get backups and the instance log (barman-cloud-backup), then start one with kubectl cnpg backup'
+        expr: |
+          max by (namespace, cluster) (cnpg_collector_last_failed_backup_timestamp)
+            > max by (namespace, cluster) (cnpg_collector_last_available_backup_timestamp)
+        for: 5m
+        labels:
+          severity: critical
+      - alert: PostgresRestoreDrillStale
+        annotations:
+          summary: 'The newest Postgres restore drill is older than 35 days or did not pass: start it with kubectl create job --from=cronjob/postgres-cluster-dr-drill and read configmap/postgres-cluster-dr-drill'
+        expr: |
+          time() - max(jc_probe_restore_drill_timestamp_seconds) > 35 * 86400
+          or
+          max(jc_probe_restore_drill_passed) == 0
+        for: 30m
+        labels:
+          severity: warning
+  - name: context-gateway-websocket
+    rules:
+      - alert: GatewayWebSocketFanoutFull
+        annotations:
+          summary: 'The gateway refused WebSockets: every fan-out hub is in use (raise JC_GATEWAY_WS_HUBS or add a replica)'
+        expr: sum(increase(jc_gateway_ws_refused_total{reason="fan-out-full"}[10m])) > 0
+        labels:
+          severity: warning
+      - alert: GatewayWebSocketClientsOverRate
+        annotations:
+          summary: More than 10 WebSockets closed in 10 minutes for flooding messages
+        expr: sum(increase(jc_gateway_ws_closed_total{reason="rate"}[10m])) > 10
+        labels:
+          severity: warning
+  - name: apisix-websocket
+    rules:
+      - alert: EdgeWebSocketAddressAtItsShare
+        annotations:
+          summary: A client address reached its 50 open WebSockets on {{ $labels.route }}
+        expr: sum by (route) (increase(apisix_http_status{code="429",route=~"(api-)?context-endpoint(-portal)?-ws"}[10m])) > 0
+        labels:
+          severity: warning
+  - name: context-broker
+    rules:
+      - alert: ContextBrokerPoolExhausted
+        annotations:
+          summary: 'The context broker refuses requests: its database pool hands out no connection (antares_pg_pool_timeouts_total rising)'
+        expr: sum(increase(antares_pg_pool_timeouts_total[5m])) > 0
+        for: 2m
+        labels:
+          severity: critical
+  - name: assistant
+    rules:
+      - alert: AssistantSlowAnswers
+        annotations:
+          summary: Assistant answers p95 above 10 s for 15 minutes
+        expr: histogram_quantile(0.95, sum(rate(jc_agent_answer_duration_seconds_bucket[15m])) by (le)) > 10
+        for: 15m
+        labels:
+          severity: warning
+      - alert: AssistantRunsFailing
+        annotations:
+          summary: More than 20% of assistant runs failed or expired in the last hour
+        expr: sum(increase(jc_agent_runs_finished_total{status=~"failed|expired"}[1h])) / sum(increase(jc_agent_runs_finished_total[1h])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+      - alert: ModelKeyInvalid
+        annotations:
+          summary: 'The model key is refused or out of credit: the assistant and the app builder cannot answer'
+        expr: max(jc_model_key_valid) == 0
+        for: 5m
+        labels:
+          severity: critical
+      - alert: ModelKeyCreditLow
+        annotations:
+          summary: Less than 20% of the model key credit is left
+        expr: max(jc_model_key_remaining / jc_model_key_limit) < 0.2
+        for: 15m
+        labels:
+          severity: warning
+      - alert: PipelineOrphansStuck
+        annotations:
+          summary: 'Pipeline {{ $labels.pipeline }} in {{ $labels.project }} keeps {{ $value }} entities its source dropped: open its Source vs space panel'
+        expr: max by (project, pipeline) (jc_pipeline_orphans) > 0
+        for: 72h
+        labels:
+          severity: warning
+      - alert: PipelineRecordsMissing
+        annotations:
+          summary: 'Pipeline {{ $labels.pipeline }} in {{ $labels.project }} could not write {{ $value }} records its source lists: see its rejected records'
+        expr: max by (project, pipeline) (jc_pipeline_missing) > 10
+        for: 24h
+        labels:
+          severity: warning
+      - alert: PipelineDataStale
+        annotations:
+          summary: 'Pipeline {{ $labels.pipeline }} in {{ $labels.project }} has written nothing newer than its freshness target allows: check its runs and its source'
+        expr: max by (project, pipeline) (jc_pipeline_stale) == 1
+        for: 15m
+        labels:
+          severity: warning
+      - alert: PipelineErrorRatio
+        annotations:
+          summary: 'Pipeline {{ $labels.pipeline }} in {{ $labels.project }} lost {{ $value | humanizePercentage }} of the last hour''s records: open its Source health and log'
+        expr: max by (project, pipeline) (jc_pipeline_error_ratio) > 0.05
+        for: 15m
+        labels:
+          severity: warning
+interval: 15s
+podMonitors:
+  - name: postgres-cluster
+    namespace: smartcity
+    port: metrics
+    selector:
+      cnpg.io/cluster: postgres-cluster
+      cnpg.io/podRole: instance
+  - name: apps-db
+    namespace: smartcity
+    port: metrics
+    selector:
+      cnpg.io/cluster: apps-db
+      cnpg.io/podRole: instance
+scrapeTimeout: 10s
+serviceMonitors:
+  - name: context-gateway
+    namespace: smartcity
+    port: http
+    selector:
+      app.kubernetes.io/name: context-gateway-gateway
+  - name: context-broker
+    namespace: smartcity
+    path: /q/metrics
+    port: metrics
+    selector:
+      app.kubernetes.io/name: context-broker-broker
+  - name: probe
+    namespace: smartcity
+    port: metrics
+    selector:
+      app.kubernetes.io/name: probes-probe
+  - name: portal
+    namespace: smartcity
+    port: http
+    selector:
+      app.kubernetes.io/name: portal-portal
+  - name: pipeline-runner
+    namespace: smartcity
+    port: http
+    selector:
+      app.kubernetes.io/name: pipeline-runner-runner

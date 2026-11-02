@@ -212,14 +212,15 @@ def test_the_image_widens_only_the_rubyzip_line_and_ships_no_key():
 @pytest.mark.parametrize("environment", ["stage", "smartcity"])
 def test_the_realm_person_who_administers_decidim_holds_nothing_else(rendered, environment):
     """T-6448: a production realm seeds one person beside the owner: no Portal role, no group,
-    a second factor, a generated password, an id of its own, and that person is Decidim's admin."""
+    the mfa-required role, a generated password, an id of its own, and that person is Decidim's admin."""
     docs = rendered(environment)
     secret = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"].endswith("config-cli-config-realms"))
     realm = json.loads(base64.b64decode(secret["data"][f"{environment}.json"]))
     person = next(u for u in realm["users"] if u["username"].startswith("participacia.steward@"))
     assert person["realmRoles"] == [f"default-roles-{environment}", "mfa-required"]
     assert person["groups"] == []
-    assert {c["type"] for c in person["credentials"]} == {"password", "otp"}
+    # stage's script signs in with a seeded factor; on prod the person enrols their own device.
+    assert {c["type"] for c in person["credentials"]} == ({"password"} if environment == "smartcity" else {"password", "otp"})
     assert all("$(USER_" in (c.get("value") or c["secretData"]) for c in person["credentials"])
     web = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "decidim-web")
     env = {e["name"]: e.get("value") for e in web["spec"]["template"]["spec"]["containers"][0]["env"]}
