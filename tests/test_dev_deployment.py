@@ -74,11 +74,14 @@ def test_the_nightly_deployment_job_runs_the_one_variant_that_fits_a_runner():
     job = k3d_deploy_job()
     runs = [step["run"] for step in job["steps"] if "run" in step]
     variants = [line for line in "\n".join(runs).splitlines() if "test-deployment-variants.sh" in line]
-    assert variants == ["./scripts/test-deployment-variants.sh --after ./scripts/k3d-rotate-each-class.sh 0,0,0"], variants
+    assert variants == [
+        "./scripts/test-deployment-variants.sh --timeout 240 --after ./scripts/k3d-rotate-each-class.sh 0,0,0"
+    ], variants
     assert job["if"] == "github.event_name != 'push'", "nightly and on dispatch, never a push gate"
     # The Done-when asks for a median under 25 minutes; the ceiling has to be near it, or a
-    # job that doubled in length is only discovered by a human noticing.
-    assert job["timeout-minutes"] <= 30, job["timeout-minutes"]
+    # job that doubled in length is only discovered by a human noticing. 35, not 30: green runs
+    # took up to 29 minutes and 2 of 27 were cut at 30 (T-6438).
+    assert job["timeout-minutes"] <= 35, job["timeout-minutes"]
 
 
 def test_the_variant_sweep_runs_every_variant_in_a_job_of_its_own():
@@ -89,8 +92,8 @@ def test_the_variant_sweep_runs_every_variant_in_a_job_of_its_own():
     assert sorted(variants) == [f"{a},{b},{c}" for a in "01" for b in "01" for c in "01"]
     assert job["strategy"]["fail-fast"] is False, "one red variant must not cancel the others"
     runs = [step["run"] for step in job["steps"] if "run" in step]
-    assert "./scripts/test-deployment-variants.sh ${{ matrix.variant }}" in runs
-    assert job["timeout-minutes"] <= 30, job["timeout-minutes"]
+    assert "./scripts/test-deployment-variants.sh --timeout 240 ${{ matrix.variant }}" in runs
+    assert job["timeout-minutes"] <= 35, job["timeout-minutes"]
 
 
 def test_the_nightly_deployment_job_keeps_what_it_needs_to_explain_a_failure():
