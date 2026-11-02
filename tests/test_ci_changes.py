@@ -356,6 +356,7 @@ def test_dev_apply_pins_syncs_only_the_release_the_pin_moved(tree):
     # every workload of dev (CNPG included)
     assert lines == ["RAN render.sh dev RENDER --deployed --selector name=a-x",
                      "RAN verify-pinned-images.py dev --render RENDER --scoped",
+                     "RAN release.py start dev",
                      "RAN wait-rollouts.sh dev 600 a-x", "RAN release.py record dev dev",
                      "RAN smoke-component.sh dev.joinedcontext.com dev a"]
     assert re.search(r"planned, verified, synced and rolled out in \d+ s", done.stdout)
@@ -491,7 +492,7 @@ def test_a_failed_rollout_holds_the_release_and_skips_the_record(tree):
     pin_a(work)
     done = just(work, env)
     assert done.returncode != 0
-    assert "RAN release.py" not in done.stdout and "RAN smoke-component" not in done.stdout
+    assert "RAN release.py record" not in done.stdout and "RAN smoke-component" not in done.stdout
     assert "--from-literal=releases=a-x" in done.stdout
 
 
