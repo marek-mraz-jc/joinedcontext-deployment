@@ -44,3 +44,10 @@ def test_stage_names_nothing_of_another_instance():
 def test_the_dumps_are_encrypted_to_the_stage_key():
     text = (ENVIRONMENT / "global.yaml.gotmpl").read_text()
     assert text.count("ageRecipients: [age1ejlcj0jy4v0e78zpg5vg9ft5cy4zf4ga9apcxvjezc9s44r2pg5szxaund]") == 2
+
+
+def test_the_walker_person_is_stages_alone():
+    """T-6449: only stage names a person an agent signs in as; prod keeps the owner alone."""
+    assert "walkerUserId" in (ENVIRONMENT / "global.yaml.gotmpl").read_text()
+    smartcity = ENVIRONMENT.parent / "smartcity"
+    assert not [p for p in smartcity.glob("*.gotmpl") if "walkerUserId" in p.read_text()]

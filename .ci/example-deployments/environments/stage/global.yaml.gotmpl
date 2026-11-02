@@ -89,6 +89,10 @@ global:
   # id and the seeds grant it (T-5712, PF-126). Never prod's person.
   initialUserId: 806f8b8d-a604-4999-b3d4-a00bf9d68fb3
 
+  # The person agents sign in as on this cluster's Portal (T-6449): created in realm stage by hand,
+  # password and TOTP seed in Secret keycloak-user-walker; the owner's person stays untouched.
+  walkerUserId: 027e6614-1d6c-47d0-b222-a11e62ca4a57
+
   # The person who administers Decidim here (T-6448): a fresh id, seeded with a generated password
   # and TOTP seed in Secret keycloak-user-participacia-steward; no Portal or data rights.
   participationStewardId: d7995ea7-82f0-4321-a7ce-cee7bdb9db4e

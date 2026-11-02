@@ -151,6 +151,12 @@ rewrites:
   # The seeds name the catalogue opendata.dev.joinedcontext.com, so the domain rule below moves it too (T-4679).
   - from: 'dev\.joinedcontext\.com'
     to: {{ .Values.global.domain | quote }}
+  {{- with .Values.global.walkerUserId }}
+  # An environment without demo people still needs a person an agent can sign in as: the owner's
+  # own login is not ours to enrol (T-6449). This id stands beside the steward on every member line.
+  - from: '(?m)^([ \t]*)- user: de300000-0000-4000-8000-000000000001( # demo\.steward)?\n'
+    to: {{ printf "${1}- user: %s\n${0}" . | quote }}
+  {{- end }}
   # The demo people are named by their fixed Keycloak ids (components/keycloak/demo-users.yaml,
   # PF-126): the steward's becomes the owner's id and every other demo member line goes.
   - from: 'de300000-0000-4000-8000-000000000001( # demo\.steward)?'
