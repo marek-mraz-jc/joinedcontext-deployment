@@ -8,8 +8,12 @@ Schema. The edge cases are rows of that cut edited in the one field they name.
 Without a container runtime the Bento cases skip; the seed cases do not.
 """
 
+import json
 import shutil
+import subprocess
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 import yaml
@@ -230,3 +234,96 @@ def test_every_entity_written_leaves_its_urn_in_the_runners_gtfs_cache(pipeline,
     seen = open_data.run_all(probed, member(name), "helsinki", metadata={"archive_filename": name})
     assert len(seen) == len(run(pipeline, name)) > 0
     assert all(s == {"id": s["id"], "cached": "true", "stranger": "false"} for s in seen), seen
+
+
+# gtfs-daily-departures (T-6467): the members as the archive read hands them over, one message each
+# of one batch, with a calendar built for the day the test runs.
+HELSINKI_TIME = ZoneInfo("Europe/Helsinki")
+TODAY = datetime.now(HELSINKI_TIME)
+DAY = TODAY.strftime("%Y%m%d")
+WEEK = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+ROUTES = "route_id,agency_id,route_short_name,route_long_name,route_type\r\n" + "".join(
+    f"{route},HSL,{route},Line {route},{kind}\r\n"
+    for route, kind in (("B1", 700), ("B2", 3), ("T1", 0), ("T2", 900), ("M1", 1), ("R1", 109)))
+
+
+def service(name: str, runs_today: bool = True, start: str = "20200101", end: str = "20991231") -> str:
+    days = ",".join("1" if runs_today and day == WEEK[TODAY.weekday()] else "0" for day in WEEK)
+    return f"{name},{days},{start},{end}\r\n"
+
+
+CALENDAR = "service_id," + ",".join(WEEK) + ",start_date,end_date\r\n" + "".join([
+    service("today"), service("week.dotted"), service("other-day", runs_today=False),
+    service("over", end="20200102"), service("removed"), service("added", runs_today=False),
+])
+EXCEPTIONS = f"service_id,date,exception_type\r\nremoved,{DAY},2\r\nadded,{DAY},1\r\ntoday,19990101,2\r\n"
+TRIPS = "route_id,service_id,trip_id,trip_headsign,direction_id\r\n" + "".join(
+    f'{route},{service_id},{route}-{at},"Kamppi, Elielinaukio",0\r\n'
+    for at, (route, service_id) in enumerate([
+        ("B1", "today"), ("B1", "today"), ("B2", "added"), ("B2", "week.dotted"), ("T1", "today"), ("T2", "today"),
+        ("M1", "other-day"), ("R1", "over"), ("R1", "removed"),
+    ]))
+
+
+def daily(calendar: str = CALENDAR, exceptions: str = EXCEPTIONS, trips: str = TRIPS,
+          leave_out: str = "") -> tuple[list[dict], str]:
+    """The entities the pipeline writes, and what Bento logged."""
+    members = {"calendar.txt": calendar, "calendar_dates.txt": exceptions, "routes.txt": ROUTES, "trips.txt": trips}
+    document = [{"name": name, "text": text} for name, text in members.items() if name != leave_out]
+    pipeline = yaml.safe_load((HELSINKI / "helsinki-pipeline-gtfs-daily-departures-bento.yaml").read_text())["pipeline"]
+    pipeline["processors"][:0] = [
+        {"unarchive": {"format": "json_array"}},
+        {"for_each": [{"mapping": "meta archive_filename = this.name\nroot = this.text"}]},
+    ]
+    config = {"input": {"stdin": {"scanner": {"to_the_end": {}}}}, "pipeline": pipeline,
+              "output": {"stdout": {"codec": "lines"}}, "logger": {"level": "error"}}
+    result = subprocess.run(
+        ["docker", "run", "--rm", "-i", "-e", "JC_ORG_DOMAIN=hel.fi", "-e", "JC_SPACE=helsinki",
+         "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", open_data.BENTO, "-c",
+         'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
+        input=json.dumps(document).encode(), capture_output=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr.decode()
+    return [e for line in result.stdout.decode().splitlines() for e in json.loads(line)], result.stderr.decode()
+
+
+@requires_docker
+def test_each_mode_counts_the_trips_of_todays_services_only():
+    entities, _ = daily()
+    counts = {e["transportMode"]["value"]: e["scheduledDepartures"]["value"] for e in entities}
+    # Calendar, an added exception and a dotted id count; another weekday, past dates and a removal do not.
+    assert counts == {"bus": 4, "tram": 2, "metro": 0, "train": 0, "ferry": 0}
+    midnight = TODAY.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
+    for entity in entities:
+        assert entity["scheduledDepartures"]["unitCode"] == "C62"
+        assert not open_data.schema_errors(HELSINKI / "helsinki.v1.schema.json", entity), entity["id"]
+        assert entity["scheduledDepartures"]["observedAt"] == midnight.strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert {e["id"] for e in entities} == {URN.format("GtfsDailyDepartures", m) for m in counts}
+
+
+@requires_docker
+@pytest.mark.parametrize("edit", [
+    pytest.param({"calendar": CALENDAR.split("\r\n")[0] + "\r\n", "exceptions": EXCEPTIONS.split("\r\n")[0] + "\r\n"},
+                 id="no service today"),
+    pytest.param({"trips": TRIPS.split("\r\n")[0] + "\r\n"}, id="no trips"),
+    pytest.param({"leave_out": "trips.txt"}, id="the archive read refused trips.txt"),
+    pytest.param({"leave_out": "calendar.txt"}, id="the archive read refused calendar.txt"),
+])
+def test_a_day_with_nothing_to_count_writes_nothing_and_says_why(edit):
+    """Zeros from an expired feed would read as a city with no public transport."""
+    entities, log = daily(**edit)
+    assert entities == []
+    assert "gtfs-daily-departures writes nothing" in log
+
+
+def test_the_daily_departures_are_seeded_public_and_kept_as_a_series():
+    source = yaml.safe_load((HELSINKI / "helsinki-datasource-gtfs-daily-departures.yaml").read_text())["spec"]["http"]
+    assert "stop_times.txt" not in source["archive"]["members"]
+    index = yaml.safe_load((HELSINKI / "index.yaml").read_text())
+    for seeded in ("datasource-gtfs-daily-departures", "pipeline-gtfs-daily-departures", "pipeline-gtfs-daily-departures-bento"):
+        assert f"helsinki-{seeded}.yaml" in index
+    pipeline = yaml.safe_load((HELSINKI / "helsinki-pipeline-gtfs-daily-departures.yaml").read_text())["spec"]
+    assert pipeline["output"] == {"type": "GtfsDailyDepartures", "mode": "upsert"}
+    space = yaml.safe_load((HELSINKI / "helsinki-space.yaml").read_text())
+    rules = {rule["entityType"]: rule for rule in space["spec"]["retention"]}
+    assert rules["GtfsDailyDepartures"]["history"] != "off"

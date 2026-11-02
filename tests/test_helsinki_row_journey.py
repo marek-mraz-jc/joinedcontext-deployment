@@ -42,6 +42,27 @@ def test_every_pipeline_alert_carries_traffic_and_a_source_so_the_journey_grant_
     assert writers, "no Helsinki pipeline writes Alert: the grant's premise changed"
 
 
+def test_the_history_journey_grant_reaches_only_the_journeys_own_stations():
+    """T-5326 (ui/e2e/live/attribute-history.spec.ts): the steward creates, corrects and removes
+    one `t5326-` station; a real station keeps its pipeline as its only writer."""
+    policy = HELSINKI / "helsinki-policy-steward-history-journey.yaml"
+    index = yaml.safe_load((HELSINKI / "index.yaml").read_text())
+    assert index[policy.name] == "projects/helsinki/spaces/helsinki/policies/steward-history-journey.yaml"
+    spec = yaml.safe_load(policy.read_text())["spec"]
+    assert spec["assignee"] == {"kind": "user", "id": demo_id("demo.steward")}
+    assert spec["operations"] == ["createEntity", "updateAttrs", "deleteEntity"]
+    assert "validity" not in spec and "q" not in spec, "a condition would hide the Correct values tab"
+    [entities] = [info["entities"] for info in spec["information"]]
+    [selector] = entities
+    assert selector["type"] == "AirQualityObserved"
+    journey = re.compile(selector["idPattern"])
+    assert journey.fullmatch("urn:ngsi-ld:AirQualityObserved:hel.fi:helsinki:t5326-2104")
+    assert not journey.fullmatch("urn:ngsi-ld:AirQualityObserved:hel.fi:helsinki:kallio-2")
+    assert not journey.fullmatch("urn:ngsi-ld:AirQualityObserved:hel.fi:other:t5326-2104")
+    mapping = (HELSINKI / "helsinki-pipeline-air-quality-bento.yaml").read_text()
+    assert "t5326" not in mapping, "a station of the pipeline would fall under the grant"
+
+
 SEED = HELSINKI.parent
 DEV_GITEA = HELSINKI.parents[3] / ".ci/example-deployments/environments/dev/gitea.yaml.gotmpl"
 PREVIEW_STEWARD = "168bb3a1-5b7a-4d2c-a812-8b5f4ebb2586"

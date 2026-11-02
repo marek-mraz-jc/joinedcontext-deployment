@@ -28,6 +28,9 @@
     "GtfsAgency": {
       "@id": "sdm:GtfsAgency"
     },
+    "GtfsDailyDepartures": {
+      "@id": "jc:GtfsDailyDepartures"
+    },
     "GtfsRoute": {
       "@id": "sdm:GtfsRoute"
     },
@@ -449,6 +452,10 @@
     },
     "schema": "http://schema.org/",
     "sdm": "https://smartdatamodels.org/",
+    "scheduledDepartures": {
+      "@id": "jc:scheduledDepartures",
+      "@type": "xsd:integer"
+    },
     "serviceCategory": {
       "@context": {
         "description": "skos:prefLabel",

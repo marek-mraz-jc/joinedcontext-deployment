@@ -68,6 +68,7 @@ EXTENSIONS = Path(__file__).resolve().parents[2] / "scripts/open-data/sdm/extens
 #: Types with no Smart Data Model, and why the Helsinki model keeps its own.
 EXCEPTIONS: dict[str, str] = {
     "Tree": "Smart Data Models has no tree model; GreenspaceRecord records soil and weather readings of a green area (T-5378)",
+    "GtfsDailyDepartures": "Smart Data Models has no count of a day's timetable; a GTFS type describes one stop, line or trip (T-6467)",
     "NatureSite": "Smart Data Models has no protected-area model; GreenspaceRecord records soil and weather readings of a green area (T-5823)",
 }
 
