@@ -248,18 +248,18 @@ portal:
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
-    digest: 'sha256:b7838d0ce32ec2e080dfd010ce8aa57e90356eefaf836ef96fd5dea76fb611fe'
+    digest: 'sha256:5c06a20261520372cf7a1e0af199b018b91d3bf3ced0eb41a73cf541a6246ebe'
     # The Portal commit this digest is the image of, and the docs commit its /docs pages are
     # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
     # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
-    commit: '471b17561bc2013e8db0ef0c84d09c27a26124e3'
+    commit: 'e88453f602664467685e07e14c54695272d29eb5'
     docs: '8e7248b3cfba47668ee7ec44579b3f9547f18a72'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
     # tests/test_portal_pin_reads_the_seed.py holds every seed to it (T-4054).
     # The platform commit the pinned Portal's jc-core is built from: portal f49d6e3's Cargo.toml rev 967e8d3;
     # it carries 9358512 (T-5295's datacube step, which the susr-* pipelines use since T-5382).
-    platform: '30272f8cbc13c8e0b314d70e6c6066ce2348b965'
+    platform: 'c108e579a540ebaee38abf20bb60f3492c71120c'
   # The UI bundle the Portal reads its pages from (T-2485): nginx-unprivileged with ui/dist, uid
   # 101 on 8080. image.yml builds it only for a push that changes ui/ or sdk/, and the binary
   # only for one that changes anything outside ui/ (T-6158), so `commit` and portal.commit may
@@ -268,8 +268,8 @@ portal:
   ui:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
     tag: 'main'
-    digest: 'sha256:64d3795e85c16a2d966f8ee35a5929212c972d9e744e7d5d10c9a81d6c48f930'
-    commit: '471b17561bc2013e8db0ef0c84d09c27a26124e3'
+    digest: 'sha256:b73c31d05a276ea36e7c2b9529c2dc1a1f578eeafd236d6c6516fb65104a89a9'
+    commit: 'e88453f602664467685e07e14c54695272d29eb5'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
