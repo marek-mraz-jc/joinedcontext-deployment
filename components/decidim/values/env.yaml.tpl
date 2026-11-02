@@ -3,6 +3,10 @@
 env:
 {{- $global := .global }}
 {{- $web := .web }}
+# Ruby refuses a world-writable directory without the sticky bit, which every emptyDir is: Dir.tmpdir
+# raises and Rails stops at boot. A 0700 directory inside /tmp, made by migrate and by Sidekiq's start.
+- name: TMPDIR
+  value: /tmp/app
 - name: DATABASE_URL
   value: {{ printf "postgres://decidim@%s:5432/decidim?sslmode=require" .pg | quote }}
 - name: DATABASE_PASSWORD

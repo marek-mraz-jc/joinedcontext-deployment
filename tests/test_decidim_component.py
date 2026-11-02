@@ -52,7 +52,7 @@ def test_the_three_workloads_their_database_and_claim_render(rendered):
 def test_web_migrates_and_bootstraps_before_puma_starts(rendered):
     spec = pod(rendered("addons"), "decidim-web")
     (init,) = [c for c in spec["initContainers"] if c["name"] == "migrate"]
-    assert init["command"][-1].startswith("bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && ")
+    assert init["command"][-1].startswith("mkdir -m 700 -p \"$TMPDIR\" && bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && ")
     assert init["image"] == spec["containers"][0]["image"], "migrations of one release, puma of another"
     assert set(env_of(init)) == set(env_of(spec["containers"][0])), "the bootstrap reads what puma reads"
 
@@ -244,3 +244,15 @@ def test_the_site_runs_after_the_bootstrap_only_where_an_environment_asks(render
         assert command.index("joinedcontext_bootstrap.rb") < command.index("joinedcontext_site.rb")
         # Attachments must land on the claim web serves them from, never in the init's own layer.
         assert {"name": "files", "mountPath": "/code/storage"} in migrate["volumeMounts"]
+
+
+def test_ruby_gets_a_temporary_directory_it_accepts(rendered):
+    """An emptyDir is 0777 without the sticky bit, so Ruby's Dir.tmpdir raises and Rails never boots."""
+    docs = rendered("stage")
+    web = pod(docs, "decidim-web")
+    sidekiq = pod(docs, "decidim-sidekiq")
+    migrate = next(c for c in web["initContainers"] if c["name"] == "migrate")
+    for container in (migrate, web["containers"][0], sidekiq["containers"][0]):
+        assert {"name": "TMPDIR", "value": "/tmp/app"} in container["env"], container["name"]
+    assert migrate["command"][-1].startswith('mkdir -m 700 -p "$TMPDIR" && ')
+    assert sidekiq["containers"][0]["command"][-1].startswith('mkdir -m 700 -p "$TMPDIR" && exec ')

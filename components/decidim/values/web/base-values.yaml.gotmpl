@@ -69,7 +69,7 @@ extraInitContainers:
   - name: migrate
     image: {{ $images.repository }}:{{ $images.tag }}@{{ $images.digest }}
     imagePullPolicy: IfNotPresent
-    command: ["sh", "-c", "bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && if [ \"$DECIDIM_SITE_CONTENT\" = true ]; then bin/rails runner db/joinedcontext_site.rb; fi"]
+    command: ["sh", "-c", "mkdir -m 700 -p \"$TMPDIR\" && bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && if [ \"$DECIDIM_SITE_CONTENT\" = true ]; then bin/rails runner db/joinedcontext_site.rb; fi"]
     env:
       {{- $env | toYaml | nindent 6 }}
     securityContext:

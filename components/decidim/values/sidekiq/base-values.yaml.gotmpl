@@ -24,7 +24,7 @@ image:
   digest: {{ $images.digest }}
   pullPolicy: IfNotPresent
 
-command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+command: ["sh", "-c", "mkdir -m 700 -p \"$TMPDIR\" && exec bundle exec sidekiq -C config/sidekiq.yml"]
 
 service:
   enabled: false
