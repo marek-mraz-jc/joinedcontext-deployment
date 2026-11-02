@@ -377,12 +377,11 @@ def test_project_visibility_is_a_setting_the_seed_spells_right(local):
 
 
 @requires_helmfile
-def test_the_seed_binds_the_viewers_by_name_and_never_every_signed_in_person(local):
-    """PF-56, PF-59, ADR-N-067 2.1: reading is a verb, so a person with no binding reads nothing.
+def test_the_seed_binds_every_signed_in_person_to_the_viewer_role(local):
+    """PF-56, PF-59: reading is a verb, so a person with no binding reads nothing.
 
-    The viewers are people named one by one (T-6415). A group here would have to be
-    `platform-readers`, the realm's default group, which is PF-61: every account read every
-    project of `hel`."""
+    Since ADR-N-067 (T-6415) the viewers are named one by one: the realm's default group binds
+    no project, or every new account would read every project of the Organization again."""
     seed = seed_configmap(local)["data"]
     role = yaml.safe_load(seed["users__roles__viewer.yaml"])
     assert role["kind"] == "Role" and role["metadata"]["name"] == "viewer"
@@ -394,9 +393,7 @@ def test_the_seed_binds_the_viewers_by_name_and_never_every_signed_in_person(loc
     binding = yaml.safe_load(seed["users__assignments__viewers.yaml"])
     assert binding["spec"]["role"] == "viewer"
     assert binding["spec"]["scope"] == {"organization": "hel"}
-    subjects = binding["spec"]["subjects"]
-    assert demo_id("demo.viewer") in [subject.get("user") for subject in subjects]
-    assert all(list(subject) == ["user"] for subject in subjects), subjects
+    assert all("user" in subject for subject in binding["spec"]["subjects"]), "no group is a viewer of every project"
 
 
 @requires_helmfile
