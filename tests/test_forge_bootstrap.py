@@ -13,6 +13,7 @@ the last test reads.
 """
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -649,8 +650,33 @@ def test_a_listed_project_has_its_repository_before_its_teams_are_given_it(scrip
     (created at layout 2 with its `.jc/layout`) before the first grant to it."""
     loop = script[script.index('for slug in ${PROJECT_TEAMS:-}; do'):]
     loop = loop[: loop.index("done")]
-    assert loop.index('ensure_repo "$slug"') < loop.index('project_team "$slug" readers read'), loop
-    assert script.index("ensure_repo() {") < script.index('for slug in ${PROJECT_TEAMS:-}; do')
+    assert loop.index('project_repo "$slug"') < loop.index('project_team "$slug" readers read'), loop
+    assert script.index("project_repo() {") < script.index('for slug in ${PROJECT_TEAMS:-}; do')
+
+
+@requires_helmfile
+def test_a_project_repository_grants_its_machine_users_before_its_rule_names_one(script):
+    """T-6438: the forge drops a whitelisted user without write access from a branch rule, with
+    no error. A rule set before the grant left a new repository with nobody who may push, so
+    the seed answered 403 and each retry repaired one project: every clean install failed
+    while dev, whose repositories already existed, never met it."""
+    step = script[script.index("project_repo() {"):]
+    step = step[: step.index("}")]
+    assert step.index("ensure_repo") < step.index('grant "$PORTAL_USER" write') < step.index("protect"), step
+    assert script.count('protect "$') == 2, "every project goes through project_repo, the organization repository alone"
+    assert script.index('grant "$PORTAL_USER" write "$REPO"') < script.index('protect "$REPO"')
+
+
+@requires_helmfile
+def test_a_failed_job_leaves_a_pod_to_read_and_no_secret_in_its_log(job, script):
+    """T-6438: under OnFailure the Job controller deleted the pod at the backoff limit, so eight
+    variants failed in ci-full with no log of why. The diagnostics print what a failed pod
+    said, so the script prints no credential."""
+    assert job["spec"]["template"]["spec"]["restartPolicy"] == "Never"
+    assert "set -x" not in script
+    printed = [line for line in script.splitlines() if re.search(r"\b(echo|printf)\b", line) and "$" in line]
+    leaks = [line for line in printed if re.search(r"\$\{?\w*(TOKEN|PASSWORD)\b", line)]
+    assert not leaks, leaks
 
 
 @requires_helmfile

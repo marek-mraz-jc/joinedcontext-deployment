@@ -6,7 +6,7 @@
 {{- $host := printf "%s.%s" $web.subDomain $global.domain }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem` (the image runs as 10001)
-# - [x] Health -> Sidekiq serves nothing to probe; a dead process restarts the container
+# - [x] Health -> no port, so readiness reads the process title Sidekiq sets once it runs (below); a dead process restarts the container
 # - [x] Standard labels
 # - [x] ServiceAccount with least privilege -> none
 # - [x] Secrets by reference only, the web's environment (values/env.yaml.tpl)
@@ -29,8 +29,11 @@ command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
 service:
   enabled: false
 
+# Sidekiq titles its process `sidekiq 8.1.7 code [0 of 3 busy]` from its heartbeat on, so the
+# title says the Rails boot finished. No liveness: a restart would only drop the jobs in hand.
 probes:
   enabled: false
+  readinessExec: ["grep", "-qF", "busy]", "/proc/1/cmdline"]
 
 # Sidekiq finishes the job in hand on TERM within its own 25 s timeout.
 terminationGracePeriodSeconds: 35

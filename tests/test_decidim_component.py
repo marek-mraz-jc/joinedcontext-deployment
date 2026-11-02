@@ -178,3 +178,12 @@ def test_the_image_drops_root_and_the_shipped_key():
     final = dockerfile.split("\nFROM ")[-1]
     assert final.startswith("ruby:3.4.12-slim-trixie@sha256:")
     assert "node" not in final.split("\n", 1)[0]
+
+
+@requires_helmfile
+def test_sidekiq_says_when_it_runs_though_it_serves_no_port(rendered):
+    """validate-probes (T-6438): the process title is Sidekiq's own health signal, and it needs
+    no port, no Redis client and no second Ruby in the pod."""
+    container = pod(rendered("addons"), "decidim-sidekiq")["containers"][0]
+    assert container["readinessProbe"]["exec"]["command"] == ["grep", "-qF", "busy]", "/proc/1/cmdline"]
+    assert "livenessProbe" not in container
