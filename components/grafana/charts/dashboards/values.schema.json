@@ -12,6 +12,64 @@
     },
     "global": {
       "type": "object"
+    },
+    "projectsConfigMapName": {
+      "type": "string"
+    },
+    "gatewayUrl": {
+      "type": "string"
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "title",
+          "groups",
+          "endpoints"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^/[a-z0-9/-]+$"
+            }
+          },
+          "endpoints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "slug"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9-]+$"
+                },
+                "slug": {
+                  "type": "string",
+                  "pattern": "^[a-z2-7]{26,}$"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
