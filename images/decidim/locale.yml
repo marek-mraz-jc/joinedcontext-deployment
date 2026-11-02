@@ -1,6 +1,14 @@
 # Decidim 0.32.2's strings that read wrong on the site (T-6453).
 sk:
   decidim:
+    proposals:
+      models:
+        proposal:
+          fields:
+            official_proposal: Oficiálny návrh
+      proposals:
+        orders:
+          label: "Zoradiť návrhy podľa:"
     participatory_spaces:
       highlighted_meetings:
         # Decidim's sk text carries %{count}, which the view never passes.

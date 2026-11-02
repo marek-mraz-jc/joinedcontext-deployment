@@ -35,6 +35,7 @@ step_titles_en:
   Druhé diskusné fórum: Second discussion forum
   Hlasovanie: Voting
   Realizácia projektov: Delivering the projects
+  Ročník ukončený: Round finished
 processes:
 - slug: participatorybudget20262027
   image: process-open.jpg
@@ -145,7 +146,8 @@ processes:
   - { title: "Formálna kontrola návrhov", start: 2024-07-01, end: 2024-07-31 }
   - { title: "Druhé diskusné fórum", start: 2024-11-18, end: 2024-11-19 }
   - { title: "Hlasovanie", start: 2025-01-15, end: 2025-01-29 }
-  - { title: "Realizácia projektov", start: 2025-03-01, end: 2025-12-31, active: true }
+  - { title: "Realizácia projektov", start: 2025-03-01, end: 2025-12-31 }
+  - { title: "Ročník ukončený", start: 2026-01-01, active: true }
   proposals:
   - { title: "RelaxPark Sásová", state: "accepted", body: "Moderný verejný priestor na relax, šport a voľný čas pre všetky vekové kategórie, vznikajúci v spolupráci s Komunitným centrom Sásová." }
   - { title: "Multifunkčný priestor pre skautov a komunitu", state: "accepted", body: "Obnova časti starej budovy na Kalinčiakovej ulici na skautský sklad a spoločenský priestor." }
