@@ -29,3 +29,10 @@ node_modules/
 test-results/
 # scripts/temporal-audit.py writes its report here by default (ci.yml uploads it as an artifact)
 /temporal-audit.json
+
+# Hetzner clusters (T-6444): state, plans and keys live in CLUSTER_STATE_DIR, never here.
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+*_kubeconfig.yaml

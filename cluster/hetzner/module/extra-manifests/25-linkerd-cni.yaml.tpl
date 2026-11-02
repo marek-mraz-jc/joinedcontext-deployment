@@ -1,9 +1,9 @@
 # Linkerd CNI plugin (T-2832, T-4384, T-5327): meshed pods get their iptables
 # rules from this DaemonSet instead of a linkerd-init container with NET_ADMIN,
 # so PSS-restricted namespaces (the Portal's App namespaces) admit them.
-# Live on dev since 2026-09-26 and on prod (smartcity) since 2026-10-19, both
-# kubectl-applied; this file is the kit copy. It needs `cniEnabled: true` on
-# linkerd-control-plane in 30-linkerd.yaml.tpl (see ../README.md).
+# Live on dev since 2026-09-26 and on prod (smartcity) since 2026-10-19. It needs
+# `cniEnabled: true` on linkerd-control-plane in 30-linkerd.yaml.tpl. Keep the chart
+# version equal to linkerd-crds and linkerd-control-plane.
 apiVersion: v1
 kind: Namespace
 metadata:
