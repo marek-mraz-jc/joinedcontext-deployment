@@ -5,7 +5,7 @@ metadata:
   namespace: slovensko
 spec:
   # The assistant inside the platform's own Decidim (T-6449): the launcher on every public page of
-  # participacia.{domain} (images/decidim/head_extra.html.erb) frames /d/participacia/widget. It
+  # participacia.{domain} (images/decidim/assistant.html.erb) frames /d/participacia/widget. It
   # answers from the harvested space slovensko-participacia and from nothing else; that space also
   # holds the towns' instances, so the prompt keeps it to this Decidim by the `source` attribute.
   publicId: participacia
@@ -41,7 +41,7 @@ spec:
   model: { router: google/gemini-3.8-flash, answer: google/gemini-3.8-flash }
   theme:
     title: { sk: Participácia, en: Participation }
-    primaryColor: '#1f5fae'
+    primaryColor: '#d62426'
     greeting:
       sk: Dobrý deň! Opýtajte sa ma na procesy, návrhy, stretnutia a výsledky na tejto platforme.
       en: Hello! Ask me about the processes, proposals, meetings and results on this platform.

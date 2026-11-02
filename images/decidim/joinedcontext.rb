@@ -11,7 +11,7 @@ Rails.application.config.filter_parameters += [:name, :nickname, :personal_url, 
 Rails.application.config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
 
 # The assistant's launcher and its chat frame come from the assistant host and nowhere else
-# (T-6449, layouts/decidim/_head_extra); unset ASSISTANT_ORIGIN leaves the policy stock.
+# (T-6449, layouts/decidim/_assistant); unset ASSISTANT_ORIGIN leaves the policy stock.
 if ENV["ASSISTANT_ORIGIN"].present?
   Decidim.content_security_policies_extra = {
     "script-src" => [ENV.fetch("ASSISTANT_ORIGIN")],

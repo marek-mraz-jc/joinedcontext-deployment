@@ -6,13 +6,13 @@ decidim:
   # the pin.
   web:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-decidim'
-    tag: '0.31.6'
-    digest: 'sha256:4db05308ededa1a2d699bebbdec019aa15aa1f165b529ef1ec2060cfb3137392'
+    tag: '0.32.2'
+    digest: 'sha256:a68d5254e917bceea79edffe2806d9e97bcce632d35136f87c62a78c4ebfb01a'
   # The same image, started as Sidekiq; one pin for both, so they never run two releases.
   sidekiq:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-decidim'
-    tag: '0.31.6'
-    digest: 'sha256:4db05308ededa1a2d699bebbdec019aa15aa1f165b529ef1ec2060cfb3137392'
+    tag: '0.32.2'
+    digest: 'sha256:a68d5254e917bceea79edffe2806d9e97bcce632d35136f87c62a78c4ebfb01a'
   # The Redis the catalogue runs (components/ckan/images.yaml), re-pinned with it.
   redis:
     repository: 'docker.io/library/redis'

@@ -18,7 +18,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 CHART = ROOT / "components/postgres/charts/databases"
 # The operator recipient the default environments name: the dev age key of .sops.yaml (public).
-OPERATOR_RECIPIENT = yaml.safe_load((ROOT / ".sops.yaml").read_text())["creation_rules"][0]["age"]
+OPERATOR_RECIPIENT = yaml.safe_load((ROOT / ".sops.yaml").read_text())["creation_rules"][0]["age"].split(",")[0]
 
 
 def one(docs: list[dict], kind: str, name: str) -> dict:

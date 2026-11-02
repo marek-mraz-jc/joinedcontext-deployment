@@ -68,7 +68,9 @@ def people_ids(docs):
 def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcity):
     owner = "marek.mraz@joinedcontext.com"
     humans = [u for u in realm(smartcity)["users"] if not u["username"].startswith("service-account-")]
-    assert [u["username"] for u in humans] == [owner]
+    # The one person beside the owner holds no right (test_decidim_component, T-6448).
+    assert [u["username"] for u in humans] == ["participacia.steward@hel.fi", owner]
+    humans.pop(0)
     assert humans[0]["credentials"][0]["value"] == "$(USER_PASSWORD_INITIAL)"
     # keycloak-config-cli fails the whole import on a membership of a group the realm lacks.
     groups = {g["path"] for g in realm(smartcity)["groups"]}

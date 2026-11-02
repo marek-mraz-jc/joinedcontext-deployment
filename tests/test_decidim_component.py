@@ -52,7 +52,7 @@ def test_the_three_workloads_their_database_and_claim_render(rendered):
 def test_web_migrates_and_bootstraps_before_puma_starts(rendered):
     spec = pod(rendered("addons"), "decidim-web")
     (init,) = [c for c in spec["initContainers"] if c["name"] == "migrate"]
-    assert init["command"][-1] == "bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb"
+    assert init["command"][-1].startswith("bin/rails db:migrate && bin/rails runner db/joinedcontext_bootstrap.rb && ")
     assert init["image"] == spec["containers"][0]["image"], "migrations of one release, puma of another"
     assert set(env_of(init)) == set(env_of(spec["containers"][0])), "the bootstrap reads what puma reads"
 
@@ -186,9 +186,10 @@ def test_the_layout_loads_the_launcher_from_the_assistant_host_alone():
     # The Dockerfile puts the partial where Decidim looks for it, and only the assistant host joins
     # the script and frame policy; both stay off without ASSISTANT_ORIGIN.
     image = PROJECT_ROOT / "images/decidim"
-    assert "COPY head_extra.html.erb app/views/layouts/decidim/_head_extra.html.erb" in (image / "Dockerfile").read_text()
-    partial = (image / "head_extra.html.erb").read_text()
-    assert 'data: { lang: I18n.locale }' in partial and 'if ENV["ASSISTANT_ORIGIN"].present?' in partial
+    assert "COPY assistant.html.erb app/views/layouts/decidim/_assistant.html.erb" in (image / "Dockerfile").read_text()
+    assert 'render partial: "layouts/decidim/assistant"' in (image / "head-extra.html.erb").read_text()
+    partial = (image / "assistant.html.erb").read_text()
+    assert 'data: { lang: I18n.locale, color: current_organization.colors["primary"] }' in partial and 'if ENV["ASSISTANT_ORIGIN"].present?' in partial
     ruby = (image / "joinedcontext.rb").read_text()
     assert re.search(r'if ENV\["ASSISTANT_ORIGIN"\]\.present\?\n  Decidim\.content_security_policies_extra = \{\n'
                      r'    "script-src" => \[ENV\.fetch\("ASSISTANT_ORIGIN"\)\],\n    "frame-src" => \[ENV\.fetch\("ASSISTANT_ORIGIN"\)\]\n  \}', ruby)
@@ -264,3 +265,24 @@ def test_sidekiq_says_when_it_runs_though_it_serves_no_port(rendered):
     container = pod(rendered("addons"), "decidim-sidekiq")["containers"][0]
     assert container["readinessProbe"]["exec"]["command"] == ["grep", "-qF", "busy]", "/proc/1/cmdline"]
     assert "livenessProbe" not in container
+
+
+@requires_helmfile
+def test_the_site_runs_after_the_bootstrap_only_where_an_environment_asks(rendered):
+    """T-6453: the themed site is for stage until the owner has looked; prod keeps a plain Decidim."""
+    for env, wanted in (("addons", "false"), ("stage", None), ("smartcity", "false")):
+        spec = pod(rendered(env), "decidim-web")
+        migrate = next(c for c in spec["initContainers"] if c["name"] == "migrate")
+        values = {e["name"]: e.get("value") for e in migrate["env"]}
+        if wanted:
+            assert values["DECIDIM_SITE_CONTENT"] == wanted, env
+            assert values["DECIDIM_SITE_DEMO_NOTICE"] == wanted, env
+        else:
+            # Stage may turn the site on, and then always with the demo notice.
+            assert values["DECIDIM_SITE_DEMO_NOTICE"] == "true"
+        assert values["DECIDIM_PORTAL_URL"].startswith("https://portal.")
+        assert values["DECIDIM_CATALOGUE_URL"].startswith("https://opendata.")
+        command = migrate["command"][-1]
+        assert command.index("joinedcontext_bootstrap.rb") < command.index("joinedcontext_site.rb")
+        # Attachments must land on the claim web serves them from, never in the init's own layer.
+        assert {"name": "files", "mountPath": "/code/storage"} in migrate["volumeMounts"]

@@ -28,6 +28,14 @@ env:
   value: {{ $web.organization.referencePrefix | quote }}
 - name: DECIDIM_ADMIN_EMAIL
   value: {{ $web.adminEmail | quote }}
+- name: DECIDIM_SITE_CONTENT
+  value: {{ $web.site.content | quote }}
+- name: DECIDIM_SITE_DEMO_NOTICE
+  value: {{ $web.site.demoNotice | quote }}
+- name: DECIDIM_PORTAL_URL
+  value: {{ printf "https://portal.%s" $global.domain | quote }}
+- name: DECIDIM_CATALOGUE_URL
+  value: {{ printf "https://opendata.%s" $global.domain | quote }}
 - name: OIDC_ISSUER
   value: {{ printf "https://idm.%s/realms/%s" $global.domain $global.instanceSlug | quote }}
 - name: OIDC_CLIENT_ID

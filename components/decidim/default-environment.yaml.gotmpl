@@ -21,6 +21,12 @@ decidim:
     # The AssistantDeployment whose launcher every public page carries (components/decidim/seed,
     # T-6449). Empty: no launcher.
     assistantPublicId: participacia
+    # The city's site of images/decidim/site.rb after the bootstrap: name, colours, logo, home page
+    # and the seeded processes. Off until an owner looks at it. `demoNotice` marks the site as a
+    # demo copy in the banner and the footer (T-6453).
+    site:
+      content: false
+      demoNotice: false
     # Outgoing mail (confirmations, notifications). Empty `address`: Decidim sends none.
     # The password comes from a Secret the operator creates (`passwordSecret`, key `password`).
     smtp:
