@@ -1,13 +1,10 @@
 name: image-decidim
 # The participation platform image: stock Decidim plus the realm sign-in (T-6316, ADR-N-065).
-# Run by hand only while the HIGH finding Decidim 0.32.2 pins stands (rubyzip, ADR-N-065 section 4):
-# on push and schedule every run would end red at the gate below. Put these two lines back
-# under `on:` once a Decidim release lifts the pin or the owner accepts it in writing:
-#   push: { branches: [main], paths: ["images/decidim/**", ".github/workflows/image-decidim.yml"] }
-#   schedule: [{ cron: "30 4 1 * *" }]
 # The repository is public, so its minutes are not metered (T-3289).
 on:
   workflow_dispatch:
+  push: { branches: [main], paths: ["images/decidim/**", ".github/workflows/image-decidim.yml"] }
+  schedule: [{ cron: "30 4 1 * *" }]
 permissions: { contents: read }
 concurrency: { group: "image-decidim", cancel-in-progress: true }
 jobs:

@@ -12,9 +12,8 @@ helmfile apply -i --selector component=decidim
 ## What it deploys
 
 Three releases of `charts/workload`, one image (`images/decidim`, published by
-`.github/workflows/image-decidim.yml`, run by hand only: it scans the image before it pushes,
-and the six HIGH findings of ADR-N-065 section 4 stop it until Decidim lifts its gem pins or the
-owner accepts them; its push and schedule triggers sit in a comment beside `on:`):
+`.github/workflows/image-decidim.yml`, which scans the image before it pushes, on every change
+under `images/decidim` and monthly):
 
 - **decidim-web**: puma on 3000 behind the edge. Its init container `migrate` runs
   `bin/rails db:migrate` and `db/joinedcontext_bootstrap.rb`, which creates the one
@@ -35,9 +34,8 @@ edge refuses `/system`, `/users/password`, `/users/invitation` and `/users/sign_
 
 ## Before installing
 
-1. Pin the digest the image workflow prints in `images.yaml` (`web` and `sidekiq`). The pin in
-   the repository is the T-6316 local build, which no registry serves.
-2. Set `decidim.web.adminEmail`, and `decidim.web.smtp` for mail.
-3. Add `decidim` to the environment's `components` and regenerate `gitops/<env>.yaml`.
+1. Set `decidim.web.adminEmail`, and `decidim.web.smtp` for mail. On a production-profile realm
+   `global.participationStewardId` seeds the person who holds that address (T-6448).
+2. Add `decidim` to the environment's `components` and regenerate `gitops/<env>.yaml`.
 
 Sizing and the measured run: docs Deployment/18 section 5.

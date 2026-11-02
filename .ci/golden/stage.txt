@@ -31,6 +31,9 @@ apps/v1/Deployment stage/ckan
 apps/v1/Deployment stage/ckan-redis
 apps/v1/Deployment stage/context-broker
 apps/v1/Deployment stage/context-gateway
+apps/v1/Deployment stage/decidim-redis
+apps/v1/Deployment stage/decidim-sidekiq
+apps/v1/Deployment stage/decidim-web
 apps/v1/Deployment stage/gitea
 apps/v1/Deployment stage/gitea-runner
 apps/v1/Deployment stage/gitea-runner-rust
@@ -148,12 +151,14 @@ networking.k8s.io/v1/NetworkPolicy stage/apisix-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-basemap
 networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-ckan
+networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-decidim
 networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-status-page
 networking.k8s.io/v1/NetworkPolicy stage/apisix-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-basemap
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-ckan
+networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-decidim
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-status-page
 networking.k8s.io/v1/NetworkPolicy stage/apisix-linkerd-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy stage/apisix-project-apps
@@ -199,6 +204,14 @@ networking.k8s.io/v1/NetworkPolicy stage/context-gateway-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy stage/context-gateway-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/database-dr-drill
 networking.k8s.io/v1/NetworkPolicy stage/database-role-setup
+networking.k8s.io/v1/NetworkPolicy stage/decidim-redis
+networking.k8s.io/v1/NetworkPolicy stage/decidim-redis-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy stage/decidim-redis-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy stage/decidim-sidekiq
+networking.k8s.io/v1/NetworkPolicy stage/decidim-sidekiq-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy stage/decidim-web
+networking.k8s.io/v1/NetworkPolicy stage/decidim-web-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy stage/decidim-web-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-agent-runner
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-apisix
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-apps-db
@@ -208,6 +221,7 @@ networking.k8s.io/v1/NetworkPolicy stage/default-deny-basemap
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-ckan
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-context-broker
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-context-gateway
+networking.k8s.io/v1/NetworkPolicy stage/default-deny-decidim
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-functions
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-gitea
 networking.k8s.io/v1/NetworkPolicy stage/default-deny-gitea-runner
@@ -323,12 +337,14 @@ networking.k8s.io/v1/NetworkPolicy stage/postgres-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy stage/postgres-from-assistant
 networking.k8s.io/v1/NetworkPolicy stage/postgres-from-ckan
 networking.k8s.io/v1/NetworkPolicy stage/postgres-from-context-broker
+networking.k8s.io/v1/NetworkPolicy stage/postgres-from-decidim
 networking.k8s.io/v1/NetworkPolicy stage/postgres-from-gitea
 networking.k8s.io/v1/NetworkPolicy stage/postgres-from-portal
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-assistant
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-ckan
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-context-broker
+networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-decidim
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy stage/postgres-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy stage/postgres-operator-egress
@@ -390,6 +406,7 @@ postgresql.cnpg.io/v1/Database stage/antares
 postgresql.cnpg.io/v1/Database stage/assistant
 postgresql.cnpg.io/v1/Database stage/ckan
 postgresql.cnpg.io/v1/Database stage/ckan-datastore
+postgresql.cnpg.io/v1/Database stage/decidim
 postgresql.cnpg.io/v1/Database stage/gitea
 postgresql.cnpg.io/v1/Database stage/keycloak
 postgresql.cnpg.io/v1/Database stage/portal
@@ -517,6 +534,7 @@ v1/Namespace -/stage-pipeline-identities
 v1/PersistentVolumeClaim stage/apps-db-local-backup
 v1/PersistentVolumeClaim stage/basemap-tiles
 v1/PersistentVolumeClaim stage/ckan-storage
+v1/PersistentVolumeClaim stage/decidim-web-files
 v1/PersistentVolumeClaim stage/gitea-shared-storage
 v1/PersistentVolumeClaim stage/pipeline-runner-files
 v1/PersistentVolumeClaim stage/postgres-cluster-local-backup
@@ -539,9 +557,11 @@ v1/Secret stage/db-apps-admin
 v1/Secret stage/db-assistant
 v1/Secret stage/db-ckan
 v1/Secret stage/db-ckan-datastore-read
+v1/Secret stage/db-decidim
 v1/Secret stage/db-gitea
 v1/Secret stage/db-keycloak
 v1/Secret stage/db-portal
+v1/Secret stage/decidim-secret-key-base
 v1/Secret stage/etcd-apisix
 v1/Secret stage/gitea
 v1/Secret stage/gitea-admin-credentials
@@ -554,6 +574,7 @@ v1/Secret stage/keycloak-client-barcelona-pipelines
 v1/Secret stage/keycloak-client-bbsk-pipelines
 v1/Secret stage/keycloak-client-bratislava-pipelines
 v1/Secret stage/keycloak-client-ckan
+v1/Secret stage/keycloak-client-decidim
 v1/Secret stage/keycloak-client-edge
 v1/Secret stage/keycloak-client-gitea
 v1/Secret stage/keycloak-client-helsinki-pipeline-proposer
@@ -563,6 +584,7 @@ v1/Secret stage/keycloak-client-slovensko-pipelines
 v1/Secret stage/keycloak-client-zilina-pipelines
 v1/Secret stage/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret stage/keycloak-user-initial
+v1/Secret stage/keycloak-user-participacia-steward
 v1/Secret stage/portal-cookie-key
 v1/Secret stage/postgres-backup-artifact-store
 v1/Secret stage/postgres-cluster-local-backup-key
@@ -580,6 +602,8 @@ v1/Service stage/cnpg-webhook-service
 v1/Service stage/context-broker
 v1/Service stage/context-gateway
 v1/Service stage/context-gateway-pods
+v1/Service stage/decidim-redis
+v1/Service stage/decidim-web
 v1/Service stage/gitea-http
 v1/Service stage/gitea-ssh
 v1/Service stage/jc-assistant

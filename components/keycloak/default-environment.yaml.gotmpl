@@ -40,6 +40,17 @@ keycloak:
     demoUsers:
       {{- if eq .Values.global.profile "development" }}
       {{- readFile "../../components/keycloak/demo-users.yaml" | fromYaml | toYaml | nindent 6 }}
+      {{- else if .Values.global.participationStewardId }}
+      # The one person a production realm seeds besides the owner (T-6448): the login that
+      # administers Decidim (decidim.web.adminEmail) and nothing else. No group, no platform
+      # readers, no Portal role; a generated password and TOTP seed, read from its Secret.
+      participacia.steward:
+        id: {{ .Values.global.participationStewardId | quote }}
+        firstName: Participácia
+        lastName: Steward
+        realmRoles: [mfa-required]
+        platformReaders: false
+        groups: []
       {{- else }}
       {}
       {{- end }}

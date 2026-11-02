@@ -7,6 +7,8 @@ web and Sidekiq reaches the workloads. The component renders in the addons envir
 T-6317 lists it on dev and smartcity.
 """
 
+import base64
+import json
 import re
 import shutil
 from pathlib import Path
@@ -178,6 +180,40 @@ def test_the_image_drops_root_and_the_shipped_key():
     final = dockerfile.split("\nFROM ")[-1]
     assert final.startswith("ruby:3.4.12-slim-trixie@sha256:")
     assert "node" not in final.split("\n", 1)[0]
+
+
+def test_the_image_widens_only_the_rubyzip_line_and_ships_no_key():
+    """T-6448: the one declared range the image moves is decidim-core's rubyzip, past
+    CVE-2026-85396, and a Decidim release that rewrites the line stops the build."""
+    dockerfile = (PROJECT_ROOT / "images/decidim/Dockerfile").read_text()
+    assert dockerfile.count("sed -i") == 1
+    assert "&& grep -q '%q<rubyzip>.freeze, \\[\"~> 3.4\".freeze\\]'" in dockerfile
+    for gem in ("decidim-core", "doc2text", "graphql", "rubyzip"):
+        assert f" {gem} " in dockerfile.split("bundle lock --update", 1)[1].split("bundle config", 1)[0]
+    assert "rm -rf /usr/local/bundle/gems/*/spec /usr/local/bundle/gems/hexapdf-*/data/hexapdf/cert" in dockerfile
+    workflow = (PROJECT_ROOT / ".github/workflows/image-decidim.yml").read_text()
+    assert 'exit-code: "1"' in workflow and 'severity: "HIGH,CRITICAL"' in workflow
+
+
+@requires_helmfile
+@pytest.mark.parametrize("environment", ["stage", "smartcity"])
+def test_the_realm_person_who_administers_decidim_holds_nothing_else(rendered, environment):
+    """T-6448: a production realm seeds one person beside the owner: no Portal role, no group,
+    a second factor, a generated password, an id of its own, and that person is Decidim's admin."""
+    docs = rendered(environment)
+    secret = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"].endswith("config-cli-config-realms"))
+    realm = json.loads(base64.b64decode(secret["data"][f"{environment}.json"]))
+    person = next(u for u in realm["users"] if u["username"].startswith("participacia.steward@"))
+    assert person["realmRoles"] == [f"default-roles-{environment}", "mfa-required"]
+    assert person["groups"] == []
+    assert {c["type"] for c in person["credentials"]} == {"password", "otp"}
+    assert all("$(USER_" in (c.get("value") or c["secretData"]) for c in person["credentials"])
+    web = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "decidim-web")
+    env = {e["name"]: e.get("value") for e in web["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["DECIDIM_ADMIN_EMAIL"] == person["email"]
+    assert not any(
+        "de300000-" in str(u.get("id")) for d in docs if d.get("kind") == "ConfigMap" for u in [d.get("data") or {}]
+    )
 
 
 @requires_helmfile
