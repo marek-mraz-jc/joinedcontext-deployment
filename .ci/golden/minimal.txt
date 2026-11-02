@@ -157,6 +157,7 @@ v1/Secret minimal/keycloak-admin-user
 v1/Secret minimal/keycloak-client-apisix-gateway
 v1/Secret minimal/keycloak-client-edge
 v1/Secret minimal/keycloak-config-keycloak-config-cli-config-realms
+v1/Secret minimal/keycloak-user-demo-analyst
 v1/Secret minimal/keycloak-user-demo-approver
 v1/Secret minimal/keycloak-user-demo-author
 v1/Secret minimal/keycloak-user-demo-barcelona
@@ -166,6 +167,7 @@ v1/Secret minimal/keycloak-user-demo-editor
 v1/Secret minimal/keycloak-user-demo-janitor
 v1/Secret minimal/keycloak-user-demo-member
 v1/Secret minimal/keycloak-user-demo-neighbour
+v1/Secret minimal/keycloak-user-demo-orgmember
 v1/Secret minimal/keycloak-user-demo-outsider
 v1/Secret minimal/keycloak-user-demo-probe
 v1/Secret minimal/keycloak-user-demo-steward

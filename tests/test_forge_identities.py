@@ -371,8 +371,10 @@ def test_dev_keeps_its_applications_apart_and_restarts_only_its_runners(rendered
         for group, orgs in json.loads(raw.replace('\\"', '"')).items():
             # A project's own two teams (PF-87, T-2647) reach that project's repository in the
             # configuration's organization alone; every other group reads both organizations.
-            if group.endswith(("-readers", "-writers")) and group != "platform-readers":
-                assert orgs == {"joinedcontext": [group]}, (group, orgs)
+            # The claim holds full paths (ADR-N-067 2.2, T-6408): the key is `/{group}`.
+            assert group.startswith("/") and "/" not in group[1:], group
+            if group.endswith(("-readers", "-writers")) and group != "/platform-readers":
+                assert orgs == {"joinedcontext": [group[1:]]}, (group, orgs)
                 continue
             assert orgs["joinedcontext"] and orgs.get("joinedcontext-apps") == orgs["joinedcontext"], (group, orgs)
     targets = env["RUNNER_RESTART"].split()

@@ -30,6 +30,12 @@ keycloak:
     # The root of each Organization's group subtree but the installation's (ADR-N-058 2.5): the
     # seed's organizations/{name}.yaml. Its readers' binding names the root (zilina-viewers).
     organizations: [zilina, barcelona, bratislava]
+    # The groups inside an Organization, by its subtree root (ADR-N-067 2.2, 2.7): every member
+    # of the Organization is in `members`, a data-access group beside it narrows a dataset. Each
+    # carries the attributes the `jc_org` and `jc_groups` claims read. Created empty on every
+    # realm; on dev demo.orgmember and demo.analyst hold them (demo-users.yaml).
+    organizationGroups:
+      helsinki: [members, traffic-analysts]
     # Realm users of the development profile (components/keycloak/demo-users.yaml).
     demoUsers:
       {{- if eq .Values.global.profile "development" }}

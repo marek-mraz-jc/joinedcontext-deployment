@@ -600,6 +600,7 @@ v1/Secret dev/keycloak-client-praha-pipelines
 v1/Secret dev/keycloak-client-slovensko-pipelines
 v1/Secret dev/keycloak-client-zilina-pipelines
 v1/Secret dev/keycloak-config-keycloak-config-cli-config-realms
+v1/Secret dev/keycloak-user-demo-analyst
 v1/Secret dev/keycloak-user-demo-approver
 v1/Secret dev/keycloak-user-demo-author
 v1/Secret dev/keycloak-user-demo-barcelona
@@ -609,6 +610,7 @@ v1/Secret dev/keycloak-user-demo-editor
 v1/Secret dev/keycloak-user-demo-janitor
 v1/Secret dev/keycloak-user-demo-member
 v1/Secret dev/keycloak-user-demo-neighbour
+v1/Secret dev/keycloak-user-demo-orgmember
 v1/Secret dev/keycloak-user-demo-outsider
 v1/Secret dev/keycloak-user-demo-probe
 v1/Secret dev/keycloak-user-demo-steward

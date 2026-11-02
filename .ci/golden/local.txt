@@ -334,6 +334,7 @@ v1/Secret local/keycloak-client-praha-pipelines
 v1/Secret local/keycloak-client-slovensko-pipelines
 v1/Secret local/keycloak-client-zilina-pipelines
 v1/Secret local/keycloak-config-keycloak-config-cli-config-realms
+v1/Secret local/keycloak-user-demo-analyst
 v1/Secret local/keycloak-user-demo-approver
 v1/Secret local/keycloak-user-demo-author
 v1/Secret local/keycloak-user-demo-barcelona
@@ -343,6 +344,7 @@ v1/Secret local/keycloak-user-demo-editor
 v1/Secret local/keycloak-user-demo-janitor
 v1/Secret local/keycloak-user-demo-member
 v1/Secret local/keycloak-user-demo-neighbour
+v1/Secret local/keycloak-user-demo-orgmember
 v1/Secret local/keycloak-user-demo-outsider
 v1/Secret local/keycloak-user-demo-probe
 v1/Secret local/keycloak-user-demo-steward

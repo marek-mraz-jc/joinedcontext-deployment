@@ -313,7 +313,7 @@ def test_a_signed_in_person_lands_in_a_forge_team_that_reads(local, job, script)
         if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-init"
     )["stringData"]["configure_gitea.sh"]
     assert '--group-claim-name "groups"' in init
-    assert '--group-team-map "{\\"platform-readers\\":{\\"joinedcontext\\":[\\"readers\\"]}}"' in init
+    assert '--group-team-map "{\\"/platform-readers\\":{\\"joinedcontext\\":[\\"readers\\"]}}"' in init
 
     teams = next(e for e in job["spec"]["template"]["spec"]["containers"][0]["env"]
                  if e["name"] == "TEAMS")
@@ -346,7 +346,7 @@ def test_a_signed_in_person_lands_in_a_forge_team_that_reads(local, job, script)
     mapper = next(m for m in gitea["protocolMappers"]
                   if m["protocolMapper"] == "oidc-group-membership-mapper")
     assert mapper["config"]["claim.name"] == "groups"
-    assert mapper["config"]["full.path"] == "false", "the team map names the group, not its path"
+    assert mapper["config"]["full.path"] == "true", "the team map names /{group} (ADR-N-067 2.2)"
     assert mapper["config"]["id.token.claim"] == "true"
 
 
@@ -611,7 +611,7 @@ def test_one_named_keycloak_group_administers_the_forge_and_no_team_writes(local
         if d.get("kind") == "Secret" and d["metadata"]["name"] == "gitea-init"
     )["stringData"]["configure_gitea.sh"]
     # Once on `add-oauth`, once on `update-oauth`: both name the same one group.
-    assert init.count("--admin-group") == init.count('--admin-group "forge-admins"') == 2
+    assert init.count("--admin-group") == init.count('--admin-group "/forge-admins"') == 2
     assert '\\"permission\\":\\"write\\"' not in script and '\\"permission\\":\\"admin\\"' not in script
 
 
@@ -644,9 +644,9 @@ def test_a_listed_projects_groups_land_in_its_own_teams_and_leaving_one_leaves_t
     init = _forge_init(docs)
     owner = "joinedcontext"
     expected = (
-        '{\\"doprava-readers\\":{\\"%s\\":[\\"doprava-readers\\"]},'
-        '\\"doprava-writers\\":{\\"%s\\":[\\"doprava-writers\\"]},'
-        '\\"platform-readers\\":{\\"%s\\":[\\"readers\\"]}}' % (owner, owner, owner)
+        '{\\"/doprava-readers\\":{\\"%s\\":[\\"doprava-readers\\"]},'
+        '\\"/doprava-writers\\":{\\"%s\\":[\\"doprava-writers\\"]},'
+        '\\"/platform-readers\\":{\\"%s\\":[\\"readers\\"]}}' % (owner, owner, owner)
     )
     assert f'--group-team-map "{expected}"' in init, init
     variant_job = next(
