@@ -496,6 +496,30 @@ api-context-endpoint-mcp:
     idleTimeout: 60
     requests: 1000
 
+# T-6507: nginx drops If-None-Match on the way to the upstream in a location with proxy_cache, so
+# on api-context-endpoint a schema artifact's reader never got the gateway's 304 (EP-51) and
+# downloaded it again. A schema answer is `private, no-cache`, never stored at the edge, so
+# `{endpoint}/schema/*` loses nothing on the plain chain: APISIX serves an unbuffered route from
+# @disable_proxy_buffering, which carries no proxy_cache. The rest of api-context-endpoint, limits
+# and timeouts included.
+api-context-endpoint-schema:
+  name: api-context-endpoint-schema
+  description: Schema artifacts of the data host's surface, revalidated by the gateway and never cached
+  upstream: context-gateway.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "context-gateway") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  uri: '/api/endpoint/*'
+  vars: [["uri", "~~", "^/api/endpoint/[^/]+/schema/"]]
+  subDomain: api
+  priority: 21
+  pluginConfig: context-endpoint
+  timeout:
+    connect: 6
+    send: 60
+    read: 60
+  keepalivePool:
+    size: 320
+    idleTimeout: 60
+    requests: 1000
+
 api-mcp-hub:
   name: api-mcp-hub
   description: The MCP hub on the data host
