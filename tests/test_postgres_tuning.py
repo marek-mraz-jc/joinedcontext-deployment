@@ -63,7 +63,8 @@ def test_dev_postgres_carries_the_broker_sizing(rendered):
 
 def test_prod_waits_for_the_dev_measurement(rendered):
     parameters = cluster(rendered("smartcity"))["spec"]["postgresql"].get("parameters", {})
-    assert parameters == PROFILE_PARAMETERS
+    # Only Decidim's connections differ from the profile (T-6448, environments/smartcity/postgres).
+    assert parameters == PROFILE_PARAMETERS | {"max_connections": "61"}
     assert env_of(stat_statements_job(rendered("smartcity")))["PRELOADED"] == "false"
 
 

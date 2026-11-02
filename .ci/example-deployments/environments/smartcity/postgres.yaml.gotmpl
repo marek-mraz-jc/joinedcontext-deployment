@@ -1,0 +1,14 @@
+---
+# Decidim's 5 connections (T-6448): the pools' ceiling goes from 43 to 48, x 1.2 + 3 reserved = 61
+# (tests/test_postgres_connection_budget.py), and the worst case to 1767MiB, under 80 % of 2560Mi
+# (tests/test_postgres_memory_budget.py). Dev stays at 55 and 2Gi: its node has no room.
+postgres:
+  cluster:
+    rawValues:
+      cluster:
+        resources:
+          limits:
+            memory: 2560Mi
+        postgresql:
+          parameters:
+            max_connections: "61"

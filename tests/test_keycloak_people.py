@@ -29,6 +29,9 @@ COMPONENT = yaml.safe_load((ROOT / "components/keycloak/component.yaml").read_te
 REALM = "pf126"
 # The owner's real Keycloak id on smartcity (global.initialUserId): the people Job refuses an id
 # another person already holds, so production never takes the defaults' placeholder.
+SMARTCITY_STEWARD = re.search(
+    r"participationStewardId: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
+)[1]
 SMARTCITY_OWNER = re.search(
     r"initialUserId: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
 )[1]
@@ -102,7 +105,12 @@ def test_a_production_instance_names_its_owner_by_id_and_never_deletes_them(rend
     docs = rendered("smartcity")
     lines, _ = people_job(docs)
     assert UUID.match(SMARTCITY_OWNER) and not SMARTCITY_OWNER.startswith(("0a000000-", "de300000-"))
-    assert lines == [[SMARTCITY_OWNER, "marek.mraz@joinedcontext.com", "false"]]
+    # The owner, never deleted, and the Decidim administrator (T-6448), both under their own ids.
+    assert lines == [
+        [SMARTCITY_STEWARD, "participacia.steward@hel.fi", "true"],
+        [SMARTCITY_OWNER, "marek.mraz@joinedcontext.com", "false"],
+    ]
+    assert not SMARTCITY_STEWARD.startswith(("0a000000-", "de300000-"))
     seeds = "\n".join(
         str(v) for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"].startswith("gitea-seed")
         for v in (d.get("data") or {}).values()

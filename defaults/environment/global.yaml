@@ -59,6 +59,9 @@ global:
   # production instance carrying dev's seeds (smartcity, T-4678) sets "development": dev's measured
   # sizes and seeds, under the production profile's guards, accounts and test-object exclusions.
   valuesProfile: ''
+  # The Keycloak id of the person who administers Decidim on a production-profile realm (T-6448):
+  # empty seeds nobody. An id of its own per instance, never a de300000- demo id.
+  participationStewardId: ''
 
   # Whether Helmfile should create the namespaces automatically
   createNamespaces: true

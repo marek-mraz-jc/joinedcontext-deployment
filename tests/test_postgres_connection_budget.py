@@ -32,7 +32,7 @@ import re
 import pytest
 from test_postgres_memory_budget import PER_PROCESS_MIB
 
-ENVIRONMENTS = ["local", "dev", "smartcity", "staging", "production", "minimal", "broker-only"]
+ENVIRONMENTS = ["local", "dev", "smartcity", "stage", "staging", "production", "minimal", "broker-only"]
 HEADROOM = 1.2
 ALERT_SHARE = 0.8  # CNPGClusterHighConnectionsWarning, charts/cluster prometheus_rules (cnpg/cluster 0.7.0)
 SUPERUSER_RESERVED_DEFAULT = 3
@@ -123,6 +123,15 @@ def gitea(docs: list[dict]) -> int:
     return sum(replicas(w) for w in named(docs, "gitea")) * ceiling
 
 
+def decidim(docs: list[dict]) -> int:
+    # Rails' pool is RAILS_MAX_THREADS per process (config/database.yml of the generated app).
+    return sum(
+        replicas(w) * int(env_of(w)["RAILS_MAX_THREADS"])
+        for name in ("decidim-web", "decidim-sidekiq")
+        for w in named(docs, name)
+    )
+
+
 def wasm_host(shard: str):
     # A shard's pool, and one App owner login while the Portal migrates an App of the shard.
     def count(docs: list[dict]) -> int:
@@ -152,6 +161,7 @@ CLIENTS = {
     "assistant": compiled("assistant"),
     "ckan": ckan,
     "jc_apps_admin": compiled("jc_apps_admin"),
+    "decidim": decidim,
     # The branch previews' group never logs in; each member pv_{slug} has CONNECTION LIMIT 5, the
     # preview Portal's pool, and scripts/preview.sh starts at most PREVIEW_MAX = 2 of them (T-5548).
     "pv_previews": lambda docs: 2 * COMPILED["portal"][1],
