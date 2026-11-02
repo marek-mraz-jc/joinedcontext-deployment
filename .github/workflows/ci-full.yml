@@ -68,7 +68,7 @@ jobs:
       matrix:
         variant: ["0,0,0", "0,0,1", "0,1,0", "0,1,1", "1,0,0", "1,0,1", "1,1,0", "1,1,1"]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # The three-node k3d cluster keeps one containerd image store per node on the runner's
@@ -98,7 +98,9 @@ jobs:
           curl --fail --retry 3 --retry-all-errors -sSLo "${RUNNER_TEMP}/linkerd" "https://github.com/linkerd/linkerd2/releases/download/${LINKERD2_VERSION}/linkerd2-cli-${LINKERD2_VERSION}-linux-amd64"
           echo "${LINKERD2_CHECKSUM}  ${RUNNER_TEMP}/linkerd" | sha256sum --check --status
           sudo install -m 0755 "${RUNNER_TEMP}/linkerd" /usr/local/bin/linkerd
-      - run: ./scripts/test-deployment-variants.sh ${{ matrix.variant }}
+      # --timeout: the deploy takes 20 to 29 of the job's 35 minutes, and at the default 900 s the
+      # job was cancelled before the smoke named the pod it waited for (T-6438).
+      - run: ./scripts/test-deployment-variants.sh --timeout 240 ${{ matrix.variant }}
   deployment-profiles:
     # The two small component profiles (T-4856), each installed into its own k3d cluster: single
     # namespace, all-in-one, no mesh. minimal is smoked at the edge like the variants above;
@@ -145,7 +147,7 @@ jobs:
     # cluster with `just dev-apply` and `just dev-smoke` long before this runs.
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       # The same disk reclaim as deployment-variants: one containerd image store plus the
@@ -171,7 +173,7 @@ jobs:
         run: echo "127.0.0.1 joinedcontext.test idm.joinedcontext.test portal.joinedcontext.test" | sudo tee -a /etc/hosts
       # After the smoke, one rotation of each credential class and the smoke again (T-2843,
       # OPS-45): the old value refused, the new one accepted, every reader green again.
-      - run: ./scripts/test-deployment-variants.sh --after ./scripts/k3d-rotate-each-class.sh 0,0,0
+      - run: ./scripts/test-deployment-variants.sh --timeout 240 --after ./scripts/k3d-rotate-each-class.sh 0,0,0
       # The harness keeps the cluster up when a variant fails, which is what makes this
       # possible: what did not become Ready, why, and what it said before it gave up.
       - name: collect what the cluster looked like when it failed
