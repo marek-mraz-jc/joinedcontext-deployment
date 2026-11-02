@@ -60,6 +60,7 @@ batch/v1/CronJob stage/apps-db-local-backup
 batch/v1/CronJob stage/basemap-tiles
 batch/v1/CronJob stage/ckan-harvest-banskabystrica
 batch/v1/CronJob stage/ckan-harvest-bbsk
+batch/v1/CronJob stage/decidim-sync
 batch/v1/CronJob stage/gitea-lane-token
 batch/v1/CronJob stage/keycloak-admin-permissions-sync
 batch/v1/CronJob stage/postgres-cluster-dr-drill
@@ -209,6 +210,8 @@ networking.k8s.io/v1/NetworkPolicy stage/decidim-redis-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy stage/decidim-redis-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/decidim-sidekiq
 networking.k8s.io/v1/NetworkPolicy stage/decidim-sidekiq-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy stage/decidim-sync
+networking.k8s.io/v1/NetworkPolicy stage/decidim-sync-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy stage/decidim-web
 networking.k8s.io/v1/NetworkPolicy stage/decidim-web-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy stage/decidim-web-linkerd-control-plane
@@ -580,6 +583,7 @@ v1/Secret stage/keycloak-client-gitea
 v1/Secret stage/keycloak-client-helsinki-pipeline-proposer
 v1/Secret stage/keycloak-client-helsinki-pipelines
 v1/Secret stage/keycloak-client-praha-pipelines
+v1/Secret stage/keycloak-client-slovensko-decidim-publish
 v1/Secret stage/keycloak-client-slovensko-pipelines
 v1/Secret stage/keycloak-client-zilina-pipelines
 v1/Secret stage/keycloak-config-keycloak-config-cli-config-realms
