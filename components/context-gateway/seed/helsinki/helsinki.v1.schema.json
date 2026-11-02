@@ -242,7 +242,7 @@
           "x-ngsi-ld-kind": "Property"
         },
         "pm10": {
-          "description": "Particulate matter up to 10 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 10 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -254,7 +254,7 @@
           }
         },
         "pm25": {
-          "description": "Particulate matter up to 2.5 µm, the hour's mean at the station.",
+          "description": "Particulate matter up to 2.5 \u00b5m, the hour's mean at the station.",
           "minimum": 0,
           "type": [
             "number",
@@ -329,11 +329,8 @@
           "x-ngsi-ld-kind": "Property"
         },
         "cause": {
-          "description": "Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE.",
-          "type": [
-            "string",
-            "null"
-          ],
+          "$ref": "#/definitions/AlertCause",
+          "description": "Why an HSL service alert is in force, one of GTFS-RT's Cause values.",
           "x-ngsi-ld-kind": "Property"
         },
         "dateIssued": {
@@ -357,11 +354,8 @@
           "x-ngsi-ld-kind": "LanguageProperty"
         },
         "effect": {
-          "description": "What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE.",
-          "type": [
-            "string",
-            "null"
-          ],
+          "$ref": "#/definitions/AlertEffect",
+          "description": "What an HSL service alert does to the service, one of GTFS-RT's Effect values.",
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
@@ -450,11 +444,8 @@
           }
         },
         "severity": {
+          "$ref": "#/definitions/AlertSeverity",
           "description": "How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE).",
-          "type": [
-            "string",
-            "null"
-          ],
           "x-ngsi-ld-kind": "Property"
         },
         "source": {
@@ -3078,7 +3069,7 @@
         "swimmingHall": "An indoor swimming hall.",
         "other": "Any other unit of the service register: a private one, or a public one with no point inside the city or of no kind above.",
         "ticketMachine": "An HSL single or multi ticket machine (Kerta- or Monilippuautomaatti).",
-        "ticketParkingMeter": "A parking meter that also sells HSL tickets (Pysäköintiautomaatti).",
+        "ticketParkingMeter": "A parking meter that also sells HSL tickets (Pys\u00e4k\u00f6intiautomaatti).",
         "ticketSalesPoint": "An HSL ticket sales point in a shop or kiosk (Myyntipiste).",
         "ticketServicePoint": "An HSL customer service point (Palvelupiste).",
         "kindergarten": "A day-care centre, a family day-care area, a pre-primary group or a playpark (leikkipuisto).",
@@ -4563,6 +4554,85 @@
       ],
       "title": "NoiseZone",
       "type": "object"
+    },
+    "AlertEffect": {
+      "description": "What a public transport alert does to the service, GTFS-RT's Effect values as HSL publishes them.",
+      "enum": [
+        "NO_SERVICE",
+        "REDUCED_SERVICE",
+        "SIGNIFICANT_DELAYS",
+        "DETOUR",
+        "ADDITIONAL_SERVICE",
+        "MODIFIED_SERVICE",
+        "OTHER_EFFECT",
+        "UNKNOWN_EFFECT",
+        "STOP_MOVED",
+        "NO_EFFECT",
+        "ACCESSIBILITY_ISSUE"
+      ],
+      "title": "AlertEffect",
+      "type": "string",
+      "x-enum-descriptions": {
+        "ACCESSIBILITY_ISSUE": "A step-free route or a lift is out of use.",
+        "ADDITIONAL_SERVICE": "Extra departures run.",
+        "DETOUR": "The service runs on another route.",
+        "MODIFIED_SERVICE": "The timetable or the stops differ from the usual.",
+        "NO_EFFECT": "The alert informs and the service does not change.",
+        "NO_SERVICE": "The service does not run.",
+        "OTHER_EFFECT": "An effect GTFS-RT has no value for.",
+        "REDUCED_SERVICE": "The service runs with fewer departures.",
+        "SIGNIFICANT_DELAYS": "The service runs with long delays.",
+        "STOP_MOVED": "A stop has moved.",
+        "UNKNOWN_EFFECT": "The publisher does not know the effect."
+      }
+    },
+    "AlertCause": {
+      "description": "Why a public transport alert is in force, GTFS-RT's Cause values as HSL publishes them.",
+      "enum": [
+        "UNKNOWN_CAUSE",
+        "OTHER_CAUSE",
+        "TECHNICAL_PROBLEM",
+        "STRIKE",
+        "DEMONSTRATION",
+        "ACCIDENT",
+        "HOLIDAY",
+        "WEATHER",
+        "MAINTENANCE",
+        "CONSTRUCTION",
+        "POLICE_ACTIVITY",
+        "MEDICAL_EMERGENCY"
+      ],
+      "title": "AlertCause",
+      "type": "string",
+      "x-enum-descriptions": {
+        "ACCIDENT": "An accident happened on the way.",
+        "CONSTRUCTION": "Construction work on the way.",
+        "DEMONSTRATION": "A demonstration blocks the way.",
+        "HOLIDAY": "A public holiday changes the service.",
+        "MAINTENANCE": "Planned maintenance of the track or the vehicles.",
+        "MEDICAL_EMERGENCY": "A medical emergency on the way.",
+        "OTHER_CAUSE": "A cause GTFS-RT has no value for.",
+        "POLICE_ACTIVITY": "A police operation on the way.",
+        "STRIKE": "Staff are on strike.",
+        "TECHNICAL_PROBLEM": "A vehicle or the infrastructure failed.",
+        "UNKNOWN_CAUSE": "The publisher does not know the cause.",
+        "WEATHER": "The weather affects the service."
+      }
+    },
+    "AlertSeverity": {
+      "description": "How much a public transport alert matters, the Smart Data Models values HSL's three GTFS-RT levels map to.",
+      "enum": [
+        "informational",
+        "medium",
+        "high"
+      ],
+      "title": "AlertSeverity",
+      "type": "string",
+      "x-enum-descriptions": {
+        "high": "A severe disruption (GTFS-RT SEVERE).",
+        "informational": "For information (GTFS-RT INFO).",
+        "medium": "A warning (GTFS-RT WARNING)."
+      }
     }
   },
   "metamodel_version": "1.11.0",

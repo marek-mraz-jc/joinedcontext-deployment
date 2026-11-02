@@ -148,9 +148,9 @@ Specialises `Entity`.
 | `category` | Property | `string` |  |  | `sdm:category` | The alert's domain; traffic for everything Fintraffic and HSL publish. |
 | `subCategory` | Property | `string` |  |  | `sdm:subCategory` | The Smart Data Models code of the alert, roadWorks for a Fintraffic road work. Left out where no code fits: a Fintraffic traffic announcement and an HSL service alert. |
 | `alertSource` | Property | `string` |  |  | `sdm:alertSource` | Who raised the alert, Fintraffic or HSL. |
-| `effect` | Property | `string` |  |  | `jc:effect` | What an HSL service alert does to the service, as GTFS-RT names it, such as DETOUR or REDUCED_SERVICE. |
-| `cause` | Property | `string` |  |  | `jc:cause` | Why an HSL service alert is in force, as GTFS-RT names it, such as CONSTRUCTION or MAINTENANCE. |
-| `severity` | Property | `string` |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
+| `effect` | Property | [`AlertEffect`](#alerteffect) |  |  | `jc:effect` | What an HSL service alert does to the service, one of GTFS-RT's Effect values. |
+| `cause` | Property | [`AlertCause`](#alertcause) |  |  | `jc:cause` | Why an HSL service alert is in force, one of GTFS-RT's Cause values. |
+| `severity` | Property | [`AlertSeverity`](#alertseverity) |  |  | `sdm:severity` | How much the alert matters, informational, medium or high (GTFS-RT INFO, WARNING, SEVERE). |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the source publishes it, field by field (Smart Data Models' common PostalAddress); a field the source leaves out is absent, never guessed from a line of text. |
 | `dateIssued` | Property | `datetime` |  |  | `sdm:dateIssued` | When the situation was published. |
 | `validFrom` | Property | `datetime` |  |  | `sdm:validFrom` | When the situation starts; for a preschool admission area, the first day of its school year. |
@@ -973,3 +973,50 @@ The layers of the nature information system a NatureSite comes from.
 | `batArea` | An area bats use, by value class (lepakkoalue). |
 | `valuablePlantSite` | A valuable vegetation or flora site (arvokas kasvillisuus- ja kasvistokohde). |
 | `geologicalSite` | A geologically or geomorphologically valuable site (geologisesti arvokas kohde). |
+
+### AlertEffect
+
+What a public transport alert does to the service, GTFS-RT's Effect values as HSL publishes them.
+
+| Value | Meaning |
+|---|---|
+| `NO_SERVICE` | The service does not run. |
+| `REDUCED_SERVICE` | The service runs with fewer departures. |
+| `SIGNIFICANT_DELAYS` | The service runs with long delays. |
+| `DETOUR` | The service runs on another route. |
+| `ADDITIONAL_SERVICE` | Extra departures run. |
+| `MODIFIED_SERVICE` | The timetable or the stops differ from the usual. |
+| `OTHER_EFFECT` | An effect GTFS-RT has no value for. |
+| `UNKNOWN_EFFECT` | The publisher does not know the effect. |
+| `STOP_MOVED` | A stop has moved. |
+| `NO_EFFECT` | The alert informs and the service does not change. |
+| `ACCESSIBILITY_ISSUE` | A step-free route or a lift is out of use. |
+
+### AlertCause
+
+Why a public transport alert is in force, GTFS-RT's Cause values as HSL publishes them.
+
+| Value | Meaning |
+|---|---|
+| `UNKNOWN_CAUSE` | The publisher does not know the cause. |
+| `OTHER_CAUSE` | A cause GTFS-RT has no value for. |
+| `TECHNICAL_PROBLEM` | A vehicle or the infrastructure failed. |
+| `STRIKE` | Staff are on strike. |
+| `DEMONSTRATION` | A demonstration blocks the way. |
+| `ACCIDENT` | An accident happened on the way. |
+| `HOLIDAY` | A public holiday changes the service. |
+| `WEATHER` | The weather affects the service. |
+| `MAINTENANCE` | Planned maintenance of the track or the vehicles. |
+| `CONSTRUCTION` | Construction work on the way. |
+| `POLICE_ACTIVITY` | A police operation on the way. |
+| `MEDICAL_EMERGENCY` | A medical emergency on the way. |
+
+### AlertSeverity
+
+How much a public transport alert matters, the Smart Data Models values HSL's three GTFS-RT levels map to.
+
+| Value | Meaning |
+|---|---|
+| `informational` | For information (GTFS-RT INFO). |
+| `medium` | A warning (GTFS-RT WARNING). |
+| `high` | A severe disruption (GTFS-RT SEVERE). |

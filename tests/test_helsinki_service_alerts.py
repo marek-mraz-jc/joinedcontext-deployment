@@ -8,6 +8,7 @@ lists. Without a container runtime the Bento cases skip; the seed cases do not.
 """
 
 import json
+import re
 from datetime import UTC, datetime
 
 import pytest
@@ -186,3 +187,20 @@ def test_the_seed_reads_the_feed_every_minute_into_alert_through_the_city_endpoi
     model = yaml.safe_load((HELSINKI / "helsinki.linkml.yaml").read_text())
     assert {"cause", "severity", "refRoute", "refStop", "unknownReference"} <= set(model["classes"]["Alert"]["slots"])
     assert model["slots"]["refRoute"]["inverse"] == "routeAlerts" and model["slots"]["refStop"]["inverse"] == "stopAlerts"
+
+
+@requires_docker
+def test_a_value_gtfs_rt_adds_later_leaves_the_attribute_out_and_keeps_the_alert():
+    late = alert(1, {"routeId": "1001"})
+    late["alert"] |= {"effect": 99, "cause": 99}
+    written = run(encode(feed(late)), held())["hsl-1"]
+    assert "effect" not in written and "cause" not in written and written["severity"]["value"] == "medium"
+
+
+def test_the_pipeline_writes_exactly_the_model_enums():
+    schema = json.loads((HELSINKI / "helsinki.v1.schema.json").read_text())["definitions"]
+    mapping = (HELSINKI / "helsinki-pipeline-service-alerts-bento.yaml").read_text()
+    for let, enum in (("effects", "AlertEffect"), ("causes", "AlertCause")):
+        listed = json.loads(re.search(rf"let {let} = (\[.*\])", mapping).group(1))
+        assert listed == schema[enum]["enum"]
+    assert set(json.loads(re.search(r"let severity = (\{.*\})", mapping).group(1)).values()) == set(schema["AlertSeverity"]["enum"])

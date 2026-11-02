@@ -151,13 +151,22 @@ class Stand(http.server.BaseHTTPRequestHandler):
             if Stand.version is None and ("category" in query or "endorsementsCount\n" in query or " endorsementsCount " in query):
                 return self.answer(200, json.dumps({"errors": [{"message": "Field 'category' doesn't exist"}]}))
             nodes = records(Stand.version or "0.27.9")[var["id"]]
+            errors = []
             if Stand.version is None:
                 nodes = [n and {**{k: v for k, v in n.items() if k != "category"}, "taxonomies": [n["category"]] if n.get("category") else []} for n in nodes]
+                if var["id"] == "583":
+                    # A meeting without a link fails onlineMeetingUrl (non-null), and so its whole node;
+                    # the attendance is an upper-case enum. Stage, 2026-11-02.
+                    nodes = [None if "onlineMeetingUrl" in query else n and {**n, "typeOfMeeting": n.get("typeOfMeeting", "").upper()} for n in nodes]
+                if var["id"] == "587":
+                    # A point without a latitude fails Coordinates and leaves the proposal: rows and errors together.
+                    nodes = [{**n, "coordinates": None} if n.get("id") == "1" else n for n in nodes]
+                    errors = [{"message": "Cannot return null for non-nullable field Coordinates.latitude"}]
             start = int(var.get("after") or 0)
             chunk = nodes[start:start + Stand.page]
             more = start + Stand.page < len(nodes)
             items = {"pageInfo": {"hasNextPage": more, "endCursor": str(start + Stand.page) if more else None}, "nodes": chunk}
-            return self.answer(200, json.dumps({"data": {"c": {"items": items}}}))
+            return self.answer(200, json.dumps({"data": {"c": {"items": items}}, **({"errors": errors} if errors else {})}))
         return self.answer(400, json.dumps({"errors": [{"message": "unknown query"}]}))
 
     def log_message(self, *_):
@@ -295,6 +304,9 @@ def test_0_32_reads_with_its_own_fields_within_its_alias_limit():
     assert {"Proposal", "BudgetProject", "Result", "Meeting", "Debate", "Survey"} <= by_type
     proposal = next(e for e in entities if e["type"] == "Proposal" and e["id"].endswith("-1"))
     assert proposal["category"]["value"] == "Zeleň" and proposal["endorsementsCount"]["value"] == 3
+    assert "location" not in proposal
+    meeting = next(e for e in entities if e["type"] == "Meeting")
+    assert meeting["meetingType"]["value"] == "in_person"
     assert not [b for _, _, b in seen if b"Blogs" in b]
 
 
