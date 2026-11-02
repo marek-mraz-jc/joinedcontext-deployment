@@ -176,6 +176,7 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
     # SDK-26, AG-72: the first run calls Gemini 3.8 Flash at medium reasoning.
     assert profile["spec"]["model"]["name"] == "google/gemini-3.8-flash"
     assert profile["spec"]["model"]["reasoningEffort"] == "medium"
+    assert profile["spec"]["model"]["routing"]["order"][0] == "google-ai-studio/flex"
     # AG-70, AG-77: the assistant's share, KPI, space completion and change steps are granted,
     # never approval or removal.
     access = profile["spec"]["access"]

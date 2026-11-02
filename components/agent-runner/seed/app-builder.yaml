@@ -22,6 +22,12 @@ spec:
     name: google/gemini-3.8-flash
     maxTokensPerRun: 2000000
     reasoningEffort: medium
+    # AI Studio's flex route first: of six calls on 2026-11-02 each route, the default went to
+    # Vertex at twice the price (median 52 s, one 504 after 15 s), this one 43 s at USD 0.013
+    # (T-6457). The other routes stay as fallbacks.
+    routing:
+      order: [google-ai-studio/flex, google-ai-studio]
+      allowFallbacks: true
   limits:
     stepsPerRun: 120
     wallClock: PT20M
