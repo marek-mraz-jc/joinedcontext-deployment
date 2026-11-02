@@ -5,6 +5,10 @@ sk:
       highlighted_meetings:
         # Decidim's sk text carries %{count}, which the view never passes.
         see_all: Zobraziť všetky stretnutia
+    participatory_space:
+      labels:
+        # Missing in Decidim's sk file: the page shows a broken aria-label.
+        reference: Odkaz
     pages:
       home:
         footer_sub_hero:
