@@ -308,6 +308,10 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "api-context-endpoint's MCP (T-6185): the same chain unbuffered for SSE, never in the edge cache",
     },
+    "api-context-endpoint-schema": {
+        "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
+        "why": "api-context-endpoint's schema artifacts (T-6507): the same chain, off proxy_cache so a read with its ETag reaches the gateway's 304",
+    },
     "api-context-endpoint-history": {
         "reach": UPSTREAM, "cacheable": UPSTREAM_DECIDES, "framing": "DENY",
         "why": "api-context-endpoint's temporal history (T-6185): the bulk route's 10 at once, anonymous answers kept at the edge",

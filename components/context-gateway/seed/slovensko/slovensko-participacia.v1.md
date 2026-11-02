@@ -3,10 +3,10 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What a town publishes on its participation platform (Decidim): the participatory processes and assemblies, the proposals residents filed, the projects of a participatory budget, the results the town reports, the meetings, the debates and the surveys (T-5065). Each record is copied from the platform's public GraphQL API, or from its public pages where the API hides it, and carries the link back to its page. No personal data: author names, profiles, comments and their authors are never read, and e-mail addresses and phone numbers are cut from every text. An id is `urn:ngsi-ld:{Type}:slovensko-participacia:{instance}-{Decidim id}`, so a record keeps its entity from run to run; one no run has seen for three days leaves the space (expiresAt).
+What a town publishes on its participation platform (Decidim): the participatory processes and assemblies, the proposals residents filed, the projects of a participatory budget, the results the town reports, the meetings, the debates and the surveys. Each record is copied from the platform's public GraphQL API, or from its public pages where the API hides it, and carries the link back to its page. No personal data: author names, profiles, comments and their authors are never read, and e-mail addresses and phone numbers are cut from every text. An id is `urn:ngsi-ld:{Type}:slovensko-participacia:{instance}-{Decidim id}`, so a record keeps its entity from run to run; one no run has seen for three days leaves the space (expiresAt).
 
 - Namespace: `https://joinedcontext.com/models/slovensko/slovensko-participacia`
-- Rendered by: `linkml-1.11.1`
+- Rendered by: `linkml-1.12.0`
 - License: https://joinedcontext.com/licenses/cc-by-4.0
 
 ## Classes
@@ -67,6 +67,7 @@ Specialises `Entity`.
 | `description` | Property | `string` |  |  | `schema:description` | The text as plain text without markup, at most 2000 characters, e-mail addresses and phone numbers cut out. |
 | `proposalState` | Property | `string` |  |  | `jc:proposalState` | The town's answer as Decidim's state token: `not_answered`, `evaluating`, `accepted`, `rejected`, `withdrawn`, or a token the instance defined itself. Empty when only the page was readable; `stateLabel` then holds what the page shows. |
 | `stateLabel` | Property | `string` |  |  | `jc:stateLabel` | The state as the page shows it, `Postupuje do hlasovania`. |
+| `proposalAnswer` | Property | `string` |  |  | `jc:proposalAnswer` | The town's published answer to the proposal. Only the platform's own Decidim sends it, because the public API hides it. |
 | `voteCount` | Property | `integer` |  |  | `jc:voteCount` | How many votes the proposal or project has, where the platform shows them. |
 | `endorsementsCount` | Property | `integer` |  |  | `jc:endorsementsCount` | How many residents support the proposal. |
 | `official` | Property | `boolean` |  |  | `jc:official` | Whether the town itself filed the proposal. |
@@ -164,6 +165,8 @@ Specialises `Entity`.
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | Where it is, as the platform writes it; the town is the instance's. |
 | `onlineUrl` | Property | `uri` |  |  | `jc:onlineUrl` | Where an online meeting is held. |
 | `closed` | Property | `boolean` |  |  | `jc:closed` | Whether the meeting is over and its minutes are published. |
+| `closingReport` | Property | `string` |  |  | `jc:closingReport` | The minutes of a closed meeting, once they are public. Only the platform's own Decidim sends them. |
+| `attendeesCount` | Property | `integer` |  |  | `jc:attendeesCount` | How many people attended a closed meeting, once that is public. Only the platform's own Decidim sends it. |
 | `category` | Property | `string` |  |  | `jc:category` | The category the platform files the record under, `Životné prostredie`. |
 | `refParticipatoryProcess` | Relationship | `uriorcurie` | yes |  | `jc:refParticipatoryProcess` | The ParticipatoryProcess of this space the record belongs to, its URN. |
 | `reference` | Property | `string` |  |  | `jc:reference` | Decidim's reference code of the record, `BB-PROP-2026-05-21616`. |

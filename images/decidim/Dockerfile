@@ -1,5 +1,5 @@
 # The participation platform image (T-6316, T-6321, ADR-N-065): stock Decidim plus the one gem a
-# Keycloak sign-in needs, run as a user of its own.
+# Keycloak sign-in needs and the Publish to context space module, run as a user of its own.
 #
 # Decidim publishes no image past 0.31.6, and 0.31.6 pins gems with HIGH findings (puma ~> 6.5,
 # ransack ~> 4.2.0, shakapacker ~> 8.3.0 ...). So this builds what the Decidim project's own image
@@ -47,11 +47,14 @@ WORKDIR /code
 # images/decidim/check-zip.rb proves the three zip users on the built image (T-6448).
 # faker: production eager-loads Decidim's seed classes (decidim-core lib/decidim/seeds.rb), which
 # require it, and only decidim-dev, a development gem, depends on it; same range as decidim-dev.
+# decidim-joinedcontext: Publish to context space (T-6458), pinned by commit; the repository is
+# public, so no token enters a layer. Its engine adds its migration path, so db:migrate runs it.
 RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3.4".freeze]/' \
          /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && grep -q '%q<rubyzip>.freeze, \["~> 3.4".freeze\]' /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle add faker --version '~> 3.2' --skip-install \
+    && bundle add decidim-joinedcontext --git https://github.com/marek-mraz-jc/decidim-module-joinedcontext --ref d94108bb9e8278964f01d8c2e133c70d550fe561 --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
          concurrent-ruby crass css_parser decidim-core doc2text erb faraday graphql jwt net-imap \
@@ -65,6 +68,15 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
     && rm -f config/master.key config/credentials.yml.enc \
     && rm -rf /usr/local/bundle/cache /usr/local/bundle/plugins/yard_plugin.rb \
     && rm -rf /usr/local/bundle/gems/*/spec /usr/local/bundle/gems/hexapdf-*/data/hexapdf/cert
+
+# The generator stamps each copied migration with the build's clock, so a rebuild of the same Decidim
+# looked to db:migrate like every migration again and the web init failed on "decidim_users already
+# exists" (T-6449, stage 2026-11-02). Numbered by their order instead, one number per build.
+# ponytail: a Decidim release that adds a migration mid-list moves the numbers; bump with a
+# schema_migrations step, or renumber from the source gems' own timestamps.
+RUN i=0; for f in db/migrate/*.rb; do \
+      mv "$f" "db/migrate/$(printf '%014d' $((20000101000000 + i)))_${f#db/migrate/*_}"; i=$((i + 1)); \
+    done
 
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
 COPY assistant.html.erb app/views/layouts/decidim/_assistant.html.erb
