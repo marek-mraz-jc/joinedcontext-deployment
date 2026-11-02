@@ -75,3 +75,8 @@ def test_every_site_file_reaches_its_place_in_the_image():
 def test_each_phase_title_has_its_english_title():
     titles = {step["title"] for process in PROCESSES for step in process["steps"]}
     assert titles == set(CONTENT["step_titles_en"])
+
+
+def test_a_rebuild_keeps_every_migration_number():
+    """T-6449: a build-clock number made db:migrate rerun every migration on the next image."""
+    assert "printf '%014d' $((20000101000000 + i))" in (ROOT / "Dockerfile").read_text(encoding="utf-8")

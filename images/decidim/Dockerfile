@@ -69,6 +69,15 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
     && rm -rf /usr/local/bundle/cache /usr/local/bundle/plugins/yard_plugin.rb \
     && rm -rf /usr/local/bundle/gems/*/spec /usr/local/bundle/gems/hexapdf-*/data/hexapdf/cert
 
+# The generator stamps each copied migration with the build's clock, so a rebuild of the same Decidim
+# looked to db:migrate like every migration again and the web init failed on "decidim_users already
+# exists" (T-6449, stage 2026-11-02). Numbered by their order instead, one number per build.
+# ponytail: a Decidim release that adds a migration mid-list moves the numbers; bump with a
+# schema_migrations step, or renumber from the source gems' own timestamps.
+RUN i=0; for f in db/migrate/*.rb; do \
+      mv "$f" "db/migrate/$(printf '%014d' $((20000101000000 + i)))_${f#db/migrate/*_}"; i=$((i + 1)); \
+    done
+
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
 COPY assistant.html.erb app/views/layouts/decidim/_assistant.html.erb
 COPY bootstrap.rb db/joinedcontext_bootstrap.rb
