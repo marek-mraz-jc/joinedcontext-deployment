@@ -190,6 +190,13 @@ elif args[0] == "get" and args[1] == "configmap":
         sys.stdout.write("  password: %s\\n" % spec["leakedCredential"])
 elif args[0] == "get" and args[1] == "deployment" and args[2] == "apisix":
     sys.exit(0 if spec.get("edge", True) else 1)
+elif args[0] == "logs" and args[1].startswith("smoke-meshforge"):
+    if spec.get("meshForgerRan", True):
+        sys.stdout.write("PROBE-RAN\\n")
+        code = spec.get("meshForgerCode", 401)
+        if code is not None and open(os.environ["STUB_SPEC"] + ".meshforge").read() == "fits":
+            sys.stdout.write("HTTP-%s\\n" % code)
+        sys.stdout.write("PROBE-DONE\\n")
 elif args[0] == "logs" and "pipeline-runner-runner" in line:
     # T-4055: the runner's refusals, each `[age in seconds, line]`; `--since=Ns` shows those
     # at most N seconds old.
@@ -361,13 +368,6 @@ elif args[0] == "run" and args[1].startswith("smoke-meshforge"):
             and pod["metadata"]["labels"]["app.kubernetes.io/name"] == "portal-portal")
     with open(os.environ["STUB_SPEC"] + ".meshforge", "w") as f:
         f.write("fits" if fits else "")
-elif args[0] == "logs" and args[1].startswith("smoke-meshforge"):
-    if spec.get("meshForgerRan", True):
-        sys.stdout.write("PROBE-RAN\\n")
-        code = spec.get("meshForgerCode", 401)
-        if code is not None and open(os.environ["STUB_SPEC"] + ".meshforge").read() == "fits":
-            sys.stdout.write("HTTP-%s\\n" % code)
-        sys.stdout.write("PROBE-DONE\\n")
 elif args[0] == "run" and args[1].startswith("smoke-edgepeer"):
     # T-0939: like the egress probe, it reports by what it prints. `edgePeerRan: False` is a
     # probe that never ran, which must not read as "the policy refused it".
