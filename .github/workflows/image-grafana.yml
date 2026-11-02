@@ -55,13 +55,8 @@ jobs:
             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
             --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/image-grafana.yml@${{ github.ref }}" \
             "ghcr.io/${{ github.repository_owner }}/joinedcontext-grafana@${{ steps.push.outputs.digest }}" > /dev/null
-      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: "ghcr.io/${{ github.repository_owner }}/joinedcontext-grafana@${{ steps.push.outputs.digest }}"
-          severity: "HIGH,CRITICAL"
-          exit-code: "1"
-          ignore-unfixed: true
-      # The digest to pin in components/grafana/images.yaml; nothing deploys until it is pinned.
+      # The digest to pin in components/grafana/images.yaml; nothing deploys until it is pinned. Before
+      # the gate, so that a new finding still leaves a digest to read it on.
       - run: |
           echo "pin this in components/grafana/images.yaml:" >> "$GITHUB_STEP_SUMMARY"
           echo '```yaml' >> "$GITHUB_STEP_SUMMARY"
@@ -69,3 +64,20 @@ jobs:
           echo "    tag: '12.4.14'" >> "$GITHUB_STEP_SUMMARY"
           echo "    digest: '${{ steps.push.outputs.digest }}'" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
+      # The same reviewed, expiring excuses pinned-images.yml applies to the upstream Grafana: its
+      # binary is this image's, and the plugin adds no Go code. An expired row turns this red.
+      - run: |
+          python3 - <<'PY' > .trivyignore
+          import datetime, yaml
+          today = datetime.date.today()
+          for row in yaml.safe_load(open(".ci/pinned-images-ignore.yaml")):
+              if row["image"] == "docker.io/grafana/grafana" and row["expires"] >= today:
+                  print(row["cve"])
+          PY
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: "ghcr.io/${{ github.repository_owner }}/joinedcontext-grafana@${{ steps.push.outputs.digest }}"
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+          ignore-unfixed: true
+          trivyignores: .trivyignore
