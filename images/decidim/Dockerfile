@@ -37,16 +37,24 @@ RUN gem install decidim --version 0.32.2 --no-document \
 WORKDIR /code
 
 # The generator copies Decidim's own lockfile, so the lock update moves, inside the ranges Decidim
-# 0.32.2 declares, every gem trivy finds a fixed release of. rubyzip stays on 2.3: decidim-core
-# asks ~> 2.0 and doc2text ~> 2.3.0 (T-6321 lists what is left).
+# 0.32.2 declares, every gem trivy finds a fixed release of.
+# rubyzip is the one gem it moves past a declared range: CVE-2026-85396 (path traversal in
+# Zip::Entry#extract, HIGH) is fixed only in 3.4.0, doc2text 0.4.11 asks ~> 3.2, and decidim-core
+# still declares ~> 2.0 although it calls nothing but Zip::OutputStream.write_buffer, which keeps
+# its signature in 3.x. So the sed widens that one line of the installed gemspec, which Bundler
+# prefers to the index, and the grep stops the build when a Decidim release changes the line.
+# images/decidim/check-zip.rb proves the three zip users on the built image (T-6448).
 # faker: production eager-loads Decidim's seed classes (decidim-core lib/decidim/seeds.rb), which
 # require it, and only decidim-dev, a development gem, depends on it; same range as decidim-dev.
-RUN bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
+RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3.4".freeze]/' \
+         /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
+    && grep -q '%q<rubyzip>.freeze, \["~> 3.4".freeze\]' /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
+    && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle add faker --version '~> 3.2' --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
-         concurrent-ruby crass css_parser erb faraday jwt net-imap nokogiri oauth oauth2 puma \
-         rack ransack websocket-driver \
+         concurrent-ruby crass css_parser decidim-core doc2text erb faraday graphql jwt net-imap \
+         nokogiri oauth oauth2 puma rack ransack rubyzip websocket-driver \
     && bundle config set --local without development:test \
     && bundle install \
     && RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile \
@@ -54,10 +62,12 @@ RUN bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle config set --local frozen true \
     && rm -rf node_modules tmp/cache log/* \
     && rm -f config/master.key config/credentials.yml.enc \
-    && rm -rf /usr/local/bundle/cache /usr/local/bundle/plugins/yard_plugin.rb
+    && rm -rf /usr/local/bundle/cache /usr/local/bundle/plugins/yard_plugin.rb \
+    && rm -rf /usr/local/bundle/gems/*/spec /usr/local/bundle/gems/hexapdf-*/data/hexapdf/cert
 
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
 COPY bootstrap.rb db/joinedcontext_bootstrap.rb
+COPY check-zip.rb db/joinedcontext_check_zip.rb
 
 FROM ruby:3.4.12-slim-trixie@sha256:caf086d19bf11fabd2af8bf33cb84007acc9655f31ea2cd129e754d05f374c27
 

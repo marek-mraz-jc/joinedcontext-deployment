@@ -31,6 +31,9 @@ apps/v1/Deployment smartcity/ckan
 apps/v1/Deployment smartcity/ckan-redis
 apps/v1/Deployment smartcity/context-broker
 apps/v1/Deployment smartcity/context-gateway
+apps/v1/Deployment smartcity/decidim-redis
+apps/v1/Deployment smartcity/decidim-sidekiq
+apps/v1/Deployment smartcity/decidim-web
 apps/v1/Deployment smartcity/gitea
 apps/v1/Deployment smartcity/gitea-runner
 apps/v1/Deployment smartcity/gitea-runner-rust
@@ -148,12 +151,14 @@ networking.k8s.io/v1/NetworkPolicy smartcity/apisix-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-basemap
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-ckan
+networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-decidim
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-status-page
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-basemap
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-ckan
+networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-decidim
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-status-page
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-linkerd-egress-to-viz
 networking.k8s.io/v1/NetworkPolicy smartcity/apisix-project-apps
@@ -199,6 +204,14 @@ networking.k8s.io/v1/NetworkPolicy smartcity/context-gateway-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/context-gateway-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/database-dr-drill
 networking.k8s.io/v1/NetworkPolicy smartcity/database-role-setup
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-redis
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-redis-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-redis-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sidekiq
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sidekiq-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-agent-runner
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-apisix
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-apps-db
@@ -208,6 +221,7 @@ networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-basemap
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-ckan
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-context-broker
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-context-gateway
+networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-decidim
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-functions
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-gitea
 networking.k8s.io/v1/NetworkPolicy smartcity/default-deny-gitea-runner
@@ -323,12 +337,14 @@ networking.k8s.io/v1/NetworkPolicy smartcity/postgres-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-ckan
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-context-broker
+networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-decidim
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-gitea
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-from-portal
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-assistant
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-ckan
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-context-broker
+networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-decidim
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-gitea
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy smartcity/postgres-operator-egress
@@ -390,6 +406,7 @@ postgresql.cnpg.io/v1/Database smartcity/antares
 postgresql.cnpg.io/v1/Database smartcity/assistant
 postgresql.cnpg.io/v1/Database smartcity/ckan
 postgresql.cnpg.io/v1/Database smartcity/ckan-datastore
+postgresql.cnpg.io/v1/Database smartcity/decidim
 postgresql.cnpg.io/v1/Database smartcity/gitea
 postgresql.cnpg.io/v1/Database smartcity/keycloak
 postgresql.cnpg.io/v1/Database smartcity/portal
@@ -517,6 +534,7 @@ v1/Namespace -/smartcity-pipeline-identities
 v1/PersistentVolumeClaim smartcity/apps-db-local-backup
 v1/PersistentVolumeClaim smartcity/basemap-tiles
 v1/PersistentVolumeClaim smartcity/ckan-storage
+v1/PersistentVolumeClaim smartcity/decidim-web-files
 v1/PersistentVolumeClaim smartcity/gitea-shared-storage
 v1/PersistentVolumeClaim smartcity/pipeline-runner-files
 v1/PersistentVolumeClaim smartcity/postgres-cluster-local-backup
@@ -539,9 +557,11 @@ v1/Secret smartcity/db-apps-admin
 v1/Secret smartcity/db-assistant
 v1/Secret smartcity/db-ckan
 v1/Secret smartcity/db-ckan-datastore-read
+v1/Secret smartcity/db-decidim
 v1/Secret smartcity/db-gitea
 v1/Secret smartcity/db-keycloak
 v1/Secret smartcity/db-portal
+v1/Secret smartcity/decidim-secret-key-base
 v1/Secret smartcity/etcd-apisix
 v1/Secret smartcity/gitea
 v1/Secret smartcity/gitea-admin-credentials
@@ -554,6 +574,7 @@ v1/Secret smartcity/keycloak-client-barcelona-pipelines
 v1/Secret smartcity/keycloak-client-bbsk-pipelines
 v1/Secret smartcity/keycloak-client-bratislava-pipelines
 v1/Secret smartcity/keycloak-client-ckan
+v1/Secret smartcity/keycloak-client-decidim
 v1/Secret smartcity/keycloak-client-edge
 v1/Secret smartcity/keycloak-client-gitea
 v1/Secret smartcity/keycloak-client-helsinki-pipeline-proposer
@@ -563,6 +584,7 @@ v1/Secret smartcity/keycloak-client-slovensko-pipelines
 v1/Secret smartcity/keycloak-client-zilina-pipelines
 v1/Secret smartcity/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret smartcity/keycloak-user-initial
+v1/Secret smartcity/keycloak-user-participacia-steward
 v1/Secret smartcity/portal-cookie-key
 v1/Secret smartcity/postgres-backup-artifact-store
 v1/Secret smartcity/postgres-cluster-local-backup-key
@@ -580,6 +602,8 @@ v1/Service smartcity/cnpg-webhook-service
 v1/Service smartcity/context-broker
 v1/Service smartcity/context-gateway
 v1/Service smartcity/context-gateway-pods
+v1/Service smartcity/decidim-redis
+v1/Service smartcity/decidim-web
 v1/Service smartcity/gitea-http
 v1/Service smartcity/gitea-ssh
 v1/Service smartcity/jc-assistant

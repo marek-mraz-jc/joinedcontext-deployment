@@ -69,6 +69,9 @@ components:
   - basemap
   # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
   - viz
+  # The participation platform on participacia.{domain} (ADR-N-065, T-6448): before the probes, so
+  # the first probe round finds it. Sizing in docs Deployment/18 section 5.
+  - decidim
   # Synthetic probes of every public surface through the public hosts, every minute (T-5103).
   - probes
   # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
@@ -86,6 +89,10 @@ global:
   # The owner's existing Keycloak user in realm smartcity (prod-deployer, keycloak DB user_entity,
   # 2026-10-25): the keycloak people Job keeps it and the seeds grant it (T-5712, PF-126).
   initialUserId: fc3b55df-5fd4-4679-af5e-bb9dca22b0d7
+
+  # The person who administers Decidim here (T-6448): a fresh id, seeded with a generated password
+  # and TOTP seed in Secret keycloak-user-participacia-steward; no Portal or data rights.
+  participationStewardId: ed06f6ff-232c-4669-bbd9-37ee792131c0
 
   # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
   # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
