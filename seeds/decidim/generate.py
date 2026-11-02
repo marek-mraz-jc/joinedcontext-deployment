@@ -47,6 +47,12 @@ PASSES = (
     ("-hlasovanie", True, "{m} 0,1,3-23 * * *", "1h", " (hlasovanie)", " (voting)"),
 )
 OWN_PASSES = (("", False, "{m} * * * *", "1h", "", ""),)
+# The API answers a state token and no title: the words of the own site (images/decidim/site.rb), so
+# stateLabel says what the page says.
+OWN_STATE_LABELS = {
+    "not_answered": "Bez odpovede", "evaluating": "V hodnotení", "to_vote": "Postupuje do hlasovania",
+    "accepted": "Prijatý", "rejected": "Nepostupuje do hlasovania", "withdrawn": "Stiahnutý",
+}
 
 
 def rows() -> list[dict]:
@@ -75,6 +81,8 @@ def documents(i: int, row: dict) -> dict[str, str]:
             "instance": row["name"], "base": row["base_url"], "locale": row["locale"], "scope": row["scope"],
             "locality": row["locality"], "provider": row["provider"], "light": light,
         }
+        if row["name"] == OWN:
+            cfg["stateLabels"] = OWN_STATE_LABELS
         head = HEADER.format(name=row["name"])
         files[f"{NS}-datasource-{name}.yaml"] = head + f"""apiVersion: joinedcontext.com/v1alpha1
 kind: DataSource

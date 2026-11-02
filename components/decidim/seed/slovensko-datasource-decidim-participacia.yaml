@@ -12,6 +12,6 @@ spec:
   type: generate
   input:
     # The instance this run reads; the mapping (pipeline.yaml) builds every URL from base alone.
-    mapping: "root = {\"instance\": \"participacia\", \"base\": \"https://participacia.dev.joinedcontext.com\", \"locale\": \"sk\", \"scope\": \"/SK/participacia\", \"locality\": \"Slovensko\", \"provider\": \"Platforma joinedcontext\", \"light\": false}"
+    mapping: "root = {\"instance\": \"participacia\", \"base\": \"https://participacia.dev.joinedcontext.com\", \"locale\": \"sk\", \"scope\": \"/SK/participacia\", \"locality\": \"Slovensko\", \"provider\": \"Platforma joinedcontext\", \"light\": false, \"stateLabels\": {\"not_answered\": \"Bez odpovede\", \"evaluating\": \"V hodnotení\", \"to_vote\": \"Postupuje do hlasovania\", \"accepted\": \"Prijatý\", \"rejected\": \"Nepostupuje do hlasovania\", \"withdrawn\": \"Stiahnutý\"}}"
     count: 1
     interval: ""

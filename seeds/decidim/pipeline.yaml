@@ -403,7 +403,7 @@ pipeline:
                                     "name": $title.apply("prop"),
                                     "description": $r.body.apply("tr").apply("prop"),
                                     "proposalState": $state.apply("prop"),
-                                    "stateLabel": $r.stateLabel.apply("text").apply("prop"),
+                                    "stateLabel": (if $html { $r.stateLabel.apply("text") } else { $cfg.stateLabels.or({}).get($state) }).apply("prop"),
                                     "voteCount": $r.voteCount.apply("prop"),
                                     "endorsementsCount": $r.endorsementsCount.apply("prop"),
                                     "official": $r.official.apply("prop"),
