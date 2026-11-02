@@ -60,6 +60,7 @@ batch/v1/CronJob smartcity/apps-db-local-backup
 batch/v1/CronJob smartcity/basemap-tiles
 batch/v1/CronJob smartcity/ckan-harvest-banskabystrica
 batch/v1/CronJob smartcity/ckan-harvest-bbsk
+batch/v1/CronJob smartcity/decidim-sync
 batch/v1/CronJob smartcity/gitea-lane-token
 batch/v1/CronJob smartcity/keycloak-admin-permissions-sync
 batch/v1/CronJob smartcity/postgres-cluster-dr-drill
@@ -209,6 +210,8 @@ networking.k8s.io/v1/NetworkPolicy smartcity/decidim-redis-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-redis-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sidekiq
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sidekiq-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sync
+networking.k8s.io/v1/NetworkPolicy smartcity/decidim-sync-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy smartcity/decidim-web-linkerd-control-plane
@@ -580,6 +583,7 @@ v1/Secret smartcity/keycloak-client-gitea
 v1/Secret smartcity/keycloak-client-helsinki-pipeline-proposer
 v1/Secret smartcity/keycloak-client-helsinki-pipelines
 v1/Secret smartcity/keycloak-client-praha-pipelines
+v1/Secret smartcity/keycloak-client-slovensko-decidim-publish
 v1/Secret smartcity/keycloak-client-slovensko-pipelines
 v1/Secret smartcity/keycloak-client-zilina-pipelines
 v1/Secret smartcity/keycloak-config-keycloak-config-cli-config-realms

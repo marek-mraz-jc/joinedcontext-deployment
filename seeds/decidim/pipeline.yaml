@@ -319,7 +319,7 @@ pipeline:
                             - mapping: |
                                 map text {
                                   root = if this == null { null } else {
-                                    this.string().strip_html().unescape_html().re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+421|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").re_replace_all("[\\s,;:]+$", "").trim().(t -> if t == "" { null } else { t.slice(0, [t.length(), 2000].min()) })
+                                    this.string().strip_html().unescape_html().re_replace_all("[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}", "").re_replace_all("(\\+[0-9]{1,3}[ /]?|\\b0)[0-9][0-9 /]{7,}[0-9]", "").re_replace_all("\\s+", " ").re_replace_all("[\\s,;:]+$", "").trim().(t -> if t == "" { null } else { t.slice(0, [t.length(), 2000].min()) })
                                   }
                                 }
                                 map tr {

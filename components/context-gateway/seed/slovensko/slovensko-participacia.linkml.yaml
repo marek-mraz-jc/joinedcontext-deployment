@@ -362,6 +362,21 @@ slots:
           en: State shown
           de: Angezeigter Status
       ngsi_ld_kind: Property
+  proposalAnswer:
+    slot_uri: jc:proposalAnswer
+    description: >-
+      The town's published answer to the proposal. Only the platform's own Decidim sends it, because
+      the public API hides it.
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Odpoveď mesta
+          cs: Odpověď města
+          en: Town's answer
+          de: Antwort der Stadt
+      ngsi_ld_kind: Property
   voteCount:
     slot_uri: jc:voteCount
     description: How many votes the proposal or project has, where the platform shows them.
@@ -541,6 +556,35 @@ slots:
           de: Abgeschlossen
       ngsi_ld_kind: Property
 
+  closingReport:
+    slot_uri: jc:closingReport
+    description: >-
+      The minutes of a closed meeting, once they are public. Only the platform's own Decidim sends them.
+    range: string
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Zápisnica
+          cs: Zápis
+          en: Closing report
+          de: Protokoll
+      ngsi_ld_kind: Property
+  attendeesCount:
+    slot_uri: jc:attendeesCount
+    description: >-
+      How many people attended a closed meeting, once that is public. Only the platform's own Decidim
+      sends it.
+    range: integer
+    annotations:
+      label:
+        tag: label
+        value:
+          sk: Počet účastníkov
+          cs: Počet účastníků
+          en: Attendees
+          de: Teilnehmende
+      ngsi_ld_kind: Property
 enums:
   ParticipatorySpaceType:
     permissible_values:
@@ -673,6 +717,7 @@ classes:
       - description
       - proposalState
       - stateLabel
+      - proposalAnswer
       - voteCount
       - endorsementsCount
       - official
@@ -773,6 +818,8 @@ classes:
       - address
       - onlineUrl
       - closed
+      - closingReport
+      - attendeesCount
       - category
       - refParticipatoryProcess
       - reference

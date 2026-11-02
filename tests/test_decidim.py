@@ -35,7 +35,7 @@ SCHEMA = json.loads((SEED / f"{SPACE}.v1.schema.json").read_text())
 TYPES = {"ParticipatoryProcess", "Proposal", "BudgetProject", "Result", "Meeting", "Debate", "Survey"}
 # NGSI-LD members the broker keeps beside the model's attributes.
 SYSTEM = {"scope", "expiresAt"}
-PERSONAL = ("author", "authors", "nickname", "profiles", "comments", "Ján Vzorový", "navrhovatel@example.sk", "0900 123 456", "00421900123456")
+PERSONAL = ("author", "authors", "nickname", "profiles", "comments", "Ján Vzorový", "navrhovatel@example.sk", "0900 123 456", "00421900123456", "905 123 456", "420 601 123 456")
 
 
 def tr(text):
@@ -64,7 +64,7 @@ COMPONENTS = {
 
 def proposal(n, **kw):
     base = {"id": str(n), "reference": f"BB-PROP-2026-05-{n}", "title": tr(f"Návrh {n}"),
-            "body": tr("<p>Lavičky pri ihrisku. Píšte na navrhovatel@example.sk alebo volajte 0900 123 456.</p>"),
+            "body": tr("<p>Lavičky pri ihrisku. Píšte na navrhovatel@example.sk alebo volajte 0900 123 456, +421 905 123 456, +420 601 123 456.</p>"),
             "state": "accepted", "address": "Tatranská 10", "coordinates": {"latitude": 48.7363, "longitude": 19.1462},
             "voteCount": 12, "endorsementsCount": 3, "official": False, "publishedAt": "2025-05-01T10:00:00+02:00",
             "updatedAt": "2025-06-01T10:00:00+02:00", "category": {"name": tr("Zeleň")},

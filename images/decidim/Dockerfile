@@ -1,5 +1,5 @@
 # The participation platform image (T-6316, T-6321, ADR-N-065): stock Decidim plus the one gem a
-# Keycloak sign-in needs, run as a user of its own.
+# Keycloak sign-in needs and the Publish to context space module, run as a user of its own.
 #
 # Decidim publishes no image past 0.31.6, and 0.31.6 pins gems with HIGH findings (puma ~> 6.5,
 # ransack ~> 4.2.0, shakapacker ~> 8.3.0 ...). So this builds what the Decidim project's own image
@@ -47,11 +47,14 @@ WORKDIR /code
 # images/decidim/check-zip.rb proves the three zip users on the built image (T-6448).
 # faker: production eager-loads Decidim's seed classes (decidim-core lib/decidim/seeds.rb), which
 # require it, and only decidim-dev, a development gem, depends on it; same range as decidim-dev.
+# decidim-joinedcontext: Publish to context space (T-6458), pinned by commit; the repository is
+# public, so no token enters a layer. Its engine adds its migration path, so db:migrate runs it.
 RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3.4".freeze]/' \
          /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && grep -q '%q<rubyzip>.freeze, \["~> 3.4".freeze\]' /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle add faker --version '~> 3.2' --skip-install \
+    && bundle add decidim-joinedcontext --git https://github.com/marek-mraz-jc/decidim-module-joinedcontext --ref 3cfd7ed7a88083d49f07099d3793feb0e3a5100d --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
          concurrent-ruby crass css_parser decidim-core doc2text erb faraday graphql jwt net-imap \

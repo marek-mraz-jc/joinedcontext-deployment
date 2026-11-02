@@ -11,7 +11,7 @@ helmfile apply -i --selector component=decidim
 
 ## What it deploys
 
-Three releases of `charts/workload`, one image (`images/decidim`, published by
+Three releases of `charts/workload` and the CronJob of `charts/sync`, one image (`images/decidim`, published by
 `.github/workflows/image-decidim.yml`, which scans the image before it pushes, on every change
 under `images/decidim` and monthly):
 
@@ -21,8 +21,24 @@ under `images/decidim` and monthly):
   `decidim.web.adminEmail` the admin flag. Attachments go on the 5 GiB claim `decidim-web-files`.
 - **decidim-sidekiq**: the background jobs (mail, notifications, exports), same image and claim.
 - **decidim-redis**: Sidekiq's queue and Action Cable, persistence off.
+- **decidim-sync**: a CronJob that queues the nightly full pass of Publish to context space and exits.
 
 PostgreSQL comes from CloudNativePG through `databases.yaml`: database and role `decidim`.
+
+
+## Publish to context space (T-6458)
+
+The image carries the gem [decidim-joinedcontext](https://github.com/marek-mraz-jc/decidim-module-joinedcontext),
+pinned by commit in `images/decidim/Dockerfile`. An admin opens a process, **Publish to context space**,
+and picks the one row of `decidim.web.publish`. Sidekiq then writes through the Endpoint
+`slovensko-participacia-zapis` into the space `slovensko-participacia`, as the ServiceAccount
+`decidim-publish` (`seed/`), with the client `slovensko-decidim-publish` of `keycloak-clients.yaml`.
+The web holds the list of Endpoints and no credential. A nightly `decidim-sync` renews every lease.
+
+The harvester reads the same Decidim into the same ids: its row `participacia` in
+`seeds/decidim/instances.csv` and `decidim.web.publish` share instance, scope, locality and provider
+(`tests/test_decidim_component.py`), and both write with `options=update`, so neither removes what the
+other wrote. `proposalAnswer`, `closingReport` and `attendeesCount` arrive by the push alone.
 
 
 ## The city's site (T-6453)

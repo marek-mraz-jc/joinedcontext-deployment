@@ -27,6 +27,19 @@ decidim:
     site:
       content: false
       demoNotice: false
+    # The context space Publish to context space writes to (the gem decidim-joinedcontext, T-6458):
+    # an admin picks this row. `endpointSlug` is the Endpoint slovensko-participacia-zapis, and space,
+    # instance, scope, locality and provider equal the harvester's row participacia of
+    # seeds/decidim/instances.csv, so pull and push write one id and one text.
+    publish:
+      name: participacia
+      title: Participácia občanov na Slovensku
+      endpointSlug: o6av726lj6atb4mn5o5ptnujabssdilo
+      space: slovensko-participacia
+      instance: participacia
+      scope: /SK/participacia
+      locality: Slovensko
+      provider: Platforma joinedcontext
     # Outgoing mail (confirmations, notifications). Empty `address`: Decidim sends none.
     # The password comes from a Secret the operator creates (`passwordSecret`, key `password`).
     smtp:
@@ -36,6 +49,9 @@ decidim:
       from: ""
       passwordSecret: ""
   sidekiq:
+    enabled: true
+    namespace: {{ $ns }}
+  sync:
     enabled: true
     namespace: {{ $ns }}
   redis:

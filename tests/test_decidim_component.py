@@ -8,6 +8,7 @@ T-6317 lists it on dev and smartcity.
 """
 
 import base64
+import csv
 import json
 import re
 import shutil
@@ -140,7 +141,7 @@ def test_the_route_and_certificate_carry_the_participation_host(rendered):
 
 
 @requires_helmfile
-def test_only_web_and_sidekiq_reach_redis_and_the_database_and_only_the_edge_reaches_web(rendered):
+def test_only_web_sidekiq_and_sync_reach_redis_and_the_database_and_only_the_edge_reaches_web(rendered):
     docs = rendered("addons")
     policies = {d["metadata"]["name"]: d for d in docs if d and d.get("kind") == "NetworkPolicy"}
 
@@ -152,13 +153,13 @@ def test_only_web_and_sidekiq_reach_redis_and_the_database_and_only_the_edge_rea
         )
 
     assert sources("decidim-web") == ["apisix"]
-    assert sources("decidim-redis") == ["decidim-sidekiq", "decidim-web"]
-    assert sources("postgres-from-decidim") == ["decidim-sidekiq", "decidim-web"]
+    assert sources("decidim-redis") == ["decidim-sidekiq", "decidim-sync", "decidim-web"]
+    assert sources("postgres-from-decidim") == ["decidim-sidekiq", "decidim-sync", "decidim-web"]
     assert policies["decidim-sidekiq"]["spec"].get("ingress", []) == [], "Sidekiq serves nothing"
     # Meshed: each plain rule has its 4143 half (T-5314).
     assert sources("decidim-web-allow-linkerd") == ["apisix"]
-    assert sources("decidim-redis-allow-linkerd") == ["decidim-sidekiq", "decidim-web"]
-    assert sources("postgres-linkerd-from-decidim") == ["decidim-sidekiq", "decidim-web"]
+    assert sources("decidim-redis-allow-linkerd") == ["decidim-sidekiq", "decidim-sync", "decidim-web"]
+    assert sources("postgres-linkerd-from-decidim") == ["decidim-sidekiq", "decidim-sync", "decidim-web"]
     for name in ("decidim-web", "decidim-sidekiq"):
         egress_ports = {
             port["port"] for rule in policies[name]["spec"]["egress"] for port in rule.get("ports", [])
@@ -166,8 +167,6 @@ def test_only_web_and_sidekiq_reach_redis_and_the_database_and_only_the_edge_rea
         assert {5432, 6379, 587}.issubset(egress_ports), name
     web_443 = [r for r in policies["decidim-web"]["spec"]["egress"] if {"port": 443, "protocol": "TCP"} in r["ports"]]
     assert web_443, "the web cannot reach the realm"
-    sidekiq_ports = {p["port"] for r in policies["decidim-sidekiq"]["spec"]["egress"] for p in r["ports"]}
-    assert 443 not in sidekiq_ports, "Sidekiq has no business with the realm"
 
 
 def test_the_image_drops_root_and_the_shipped_key():
@@ -308,3 +307,83 @@ def test_ruby_gets_a_temporary_directory_it_accepts(rendered):
         assert {"name": "TMPDIR", "value": "/tmp/app"} in container["env"], container["name"]
     assert migrate["command"][-1].startswith('mkdir -m 700 -p "$TMPDIR" && ')
     assert sidekiq["containers"][0]["command"][-1].startswith('mkdir -m 700 -p "$TMPDIR" && exec ')
+
+
+def seed(name):
+    return yaml.safe_load((COMPONENT / "seed" / name).read_text())
+
+
+def publish_row(docs):
+    return json.loads(env_of(pod(docs, "decidim-sidekiq")["containers"][0])["JOINEDCONTEXT_ENDPOINTS"]["value"])[0]
+
+
+@requires_helmfile
+def test_push_and_harvester_share_one_row_and_the_write_endpoint(rendered):
+    row = publish_row(rendered("addons"))
+    with (PROJECT_ROOT / "seeds/decidim/instances.csv").open(encoding="utf-8") as f:
+        harvested = next(r for r in csv.DictReader(f) if r["name"] == "participacia")
+    assert (row["instance"], row["scope"], row["locality"], row["provider"]) == (harvested["name"], harvested["scope"], harvested["locality"], harvested["provider"])
+    endpoint = yaml.safe_load((PROJECT_ROOT / "components/context-gateway/seed/slovensko/slovensko-endpoint-participacia-zapis.yaml").read_text())
+    assert row["url"] == f"https://api.addons.example.org/api/endpoint/{endpoint['spec']['slug']}"
+    assert row["space"] == endpoint["spec"]["contextSpaceRef"]
+
+
+@requires_helmfile
+def test_only_sidekiq_holds_the_publishing_credential(rendered):
+    docs = rendered("addons")
+    side = env_of(pod(docs, "decidim-sidekiq")["containers"][0])
+    assert side["JOINEDCONTEXT_CLIENT_SECRET"]["valueFrom"]["secretKeyRef"] == {"name": "keycloak-client-slovensko-decidim-publish", "key": "client-secret"}
+    assert side["JOINEDCONTEXT_CLIENT_ID"]["value"] == "slovensko-decidim-publish"
+    assert side["JOINEDCONTEXT_GATEWAY_HOST"]["value"] == "api.addons.example.org"
+    web = env_of(pod(docs, "decidim-web")["containers"][0])
+    assert "JOINEDCONTEXT_ENDPOINTS" in web, "the admin page lists the row"
+    assert not {"JOINEDCONTEXT_CLIENT_SECRET", "JOINEDCONTEXT_CLIENT_ID", "JOINEDCONTEXT_TOKEN_URL"} & set(web)
+
+
+def test_the_publishing_account_writes_its_five_classes_in_its_one_space():
+    account, policy = seed("slovensko-serviceaccount-publish.yaml"), seed("slovensko-policy-publish.yaml")
+    types = ["ParticipatoryProcess", "Proposal", "BudgetProject", "Result", "Meeting"]
+    assert [r["scope"] for r in account["spec"]["roles"]] == [{"contextSpace": "slovensko-participacia"}]
+    assert account["spec"]["roles"][0]["types"] == types
+    assert policy["spec"]["assignee"] == {"kind": "serviceAccount", "id": account["metadata"]["name"]}
+    assert policy["spec"]["contextSpaceRef"]["name"] == "slovensko-participacia"
+    assert sorted(policy["spec"]["operations"]) == ["createBatch", "deleteBatch", "queryBatch", "upsertBatch"]
+    assert [e["type"] for e in policy["spec"]["information"][0]["entities"]] == types
+    assert "policyRef" not in yaml.safe_load((PROJECT_ROOT / "components/context-gateway/seed/slovensko/slovensko-endpoint-participacia-zapis.yaml").read_text())["spec"]
+
+
+def test_the_publishing_client_opens_the_write_endpoint_and_no_browser_flow():
+    client = yaml.safe_load((COMPONENT / "keycloak-clients.yaml").read_text())["slovensko-decidim-publish"]
+    raw = client["rawValues"]
+    assert client["componentNamespaces"] == ["decidim"]
+    assert raw["serviceAccountsEnabled"] and not (raw["standardFlowEnabled"] or raw["directAccessGrantsEnabled"] or raw["implicitFlowEnabled"])
+    audiences = [m["config"]["included.custom.audience"] for m in raw["protocolMappers"]]
+    assert audiences == [yaml.safe_load((PROJECT_ROOT / "components/context-gateway/seed/slovensko/slovensko-endpoint-participacia-zapis.yaml").read_text())["spec"]["slug"]]
+
+
+@requires_helmfile
+def test_the_nightly_pass_queues_from_the_sidekiq_image_and_never_writes(rendered):
+    docs = rendered("addons")
+    cron = by_name(docs, "CronJob", "decidim-sync")
+    job = cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    (container,) = job["containers"]
+    assert "decidim_joinedcontext:sync_all" in container["command"][-1]
+    assert container["image"] == pod(docs, "decidim-sidekiq")["containers"][0]["image"]
+    env = {e["name"]: e for e in container["env"]}
+    assert env["RAILS_MAX_THREADS"]["value"] == "1"
+    assert "JOINEDCONTEXT_CLIENT_SECRET" not in env
+    assert job["automountServiceAccountToken"] is False
+    assert container["securityContext"]["readOnlyRootFilesystem"] is True
+
+
+@requires_helmfile
+def test_sidekiq_reaches_the_public_edge_and_the_sync_only_its_data(rendered):
+    docs = rendered("addons")
+    policies = [d for d in docs if d and d.get("kind") == "NetworkPolicy"]
+
+    def ports(name):
+        (policy,) = [p for p in policies if p["metadata"]["name"] == name]
+        return {port["port"] for rule in policy["spec"]["egress"] for port in rule.get("ports", [])}
+
+    assert 443 in ports("decidim-sidekiq")
+    assert ports("decidim-sync") == {53, 5432, 6379}
