@@ -1,6 +1,10 @@
-# dev.joinedcontext.com, the workbench. Values from hetzner-kit (kube-hetzner 3.1.0 there): k3s stays
-# on the live minor until its upgrade task; secrets encryption is fixed at creation.
+# dev.joinedcontext.com, the workbench: the primaleto cluster since T-3040 (node
+# k3s-control-plane-nbg1-ivh, hcloud CSI), which this repository did not create. Its token and state
+# are not on the board: T-6446 checks these values with a plan before anyone adopts it.
+# k3s stays on the live minor until its upgrade task; secrets encryption is fixed at creation.
 cluster_name              = "k3s"
+node_pool_name            = "control-plane-nbg1"
+enable_hetzner_csi        = true
 ssh_key_name              = "ssh-dev"
 server_type               = "cpx42"
 location                  = "nbg1"

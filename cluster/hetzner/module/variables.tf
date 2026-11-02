@@ -24,6 +24,18 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "node_pool_name" {
+  description = "Name of the control-plane pool, part of the server name; a change replaces the node"
+  type        = string
+  default     = "control-plane"
+}
+
+variable "enable_hetzner_csi" {
+  description = "Install the Hetzner CSI driver, which can create paid volumes"
+  type        = bool
+  default     = false
+}
+
 variable "server_type" {
   description = "Hetzner server type for the single node (x86 required by CIVITAS)"
   type        = string

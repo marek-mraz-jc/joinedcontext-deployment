@@ -60,7 +60,7 @@ Expect these changes on the first plan of a kit state:
 
 - the kustomization resources re-run, because `extra-manifests/` moved the Linkerd CNI chart into
   its own file and merged the dev and prod Traefik values;
-- on `dev`, every change between kube-hetzner 3.1.0 and 3.2.1, and the k3s config write of
+- on `dev`, whatever differs from the cluster taken over in T-3040, and the k3s config write of
   `k3s_server_config`.
 
 ## Production

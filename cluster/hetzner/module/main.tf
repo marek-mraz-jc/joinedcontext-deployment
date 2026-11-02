@@ -27,7 +27,7 @@ module "kube-hetzner" {
 
   control_plane_nodepools = [
     {
-      name        = "control-plane",
+      name        = var.node_pool_name,
       server_type = var.server_type,
       location    = var.location,
       os          = "leapmicro", # v3 default for new pools — explicit on purpose
@@ -81,12 +81,10 @@ module "kube-hetzner" {
 
   enable_cert_manager = true
 
-  # PVCs live on the node disk for free: k3s local-path is the ONLY storage —
-  # the Hetzner CSI is not installed, so nothing can ever create a paid
-  # hcloud volume. Flip enable_hetzner_csi to true if you later want opt-in
-  # durable volumes (then also demote its default class via hetzner_csi_merge_values).
+  # PVCs live on the node disk for free. Without the Hetzner CSI nothing can create a paid hcloud
+  # volume; dev runs it because the cluster it took over did (T-3040).
   enable_local_storage = true
-  enable_hetzner_csi   = false
+  enable_hetzner_csi   = var.enable_hetzner_csi
 
   # SSH + kube API reachable only from the admin CIDRs (validated non-open).
   firewall_kube_api_source = local.admin_cidrs
