@@ -95,6 +95,7 @@
  "test_decidim.py": 11.7,
  "test_decidim_component.py": 12.5,
  "test_decidim_site.py": 0.0,
+ "test_decidim_statistics.py": 2.7,
  "test_demo_bbsk.py": 2.7,
  "test_demo_bbsk_landing.py": 4.9,
  "test_demo_feeds.py": 2.7,
