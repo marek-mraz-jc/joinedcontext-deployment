@@ -51,11 +51,16 @@ platform hides or deletes leaves within three days.
 GLOBSEC's 2025 report on participatory democracy in Slovakia names Banská Bystrica as the Slovak town
 on Decidim. A further instance goes in as a row once its host answers `{ decidim { version } }`.
 
+## A new process takes two runs
+
+The gateway looks up a relationship's target in the store, not in the batch it holds (`HeldWrite::check`), and answers a 207 that leaves the run green. The first run over a new process writes the process alone; the next run writes its proposals, projects, results and meetings. A Result under a new parent Result takes one run more. New records in a known process take one run.
+
 ## Not in the data, and why
 
 - Authors, profiles, comments and endorsement lists: personal data, never asked for.
 - A Result's linked proposals: Decidim's API has no field for them (0.27 to 0.29).
 - Proposal coordinates and body on 0.29.5: the API hides the proposal, and the list page shows neither.
 - Survey questions and answers: only the survey's title and link.
+- A meeting's online link on 0.32: `onlineMeetingUrl` is non-null there and nulls a meeting without one, so it stays unread; the Meeting's `url` leads to the link.
 - Meetings as calendar Events of the events store (T-5047): not done here; the Meeting entities carry
   `startDate`, `endDate`, `address` and `location`, ready for a later mapping.
