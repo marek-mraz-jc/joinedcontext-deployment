@@ -9,6 +9,8 @@
 #      are kept and every page the fallback would read is checked against them (RFC 9309, prefixes).
 #   2. { decidim { version } }: 0.28 and later know `withdrawn` on proposals and meetings, 0.27 does not;
 #      0.32 has taxonomies for categories and likesCount for endorsementsCount (T-6449, read from its gems).
+#      0.32 declares onlineMeetingUrl non-null and fails the whole node of a meeting without one, so a run
+#      never asks for it there (T-6449, read on stage); an online meeting keeps its page url.
 #   3. participatoryProcesses and assemblies, with their phases.
 #   4. per space its components of the six types read, by type (an unfiltered list of a big process
 #      timed out at the server's 30 s on tvormespolu, 2026-10-21); a space that fails keeps its records
@@ -200,7 +202,7 @@ pipeline:
                                             let connection = { "Proposals": "proposals", "Budgets": "budgets", "Accountability": "results", "Meetings": "meetings", "Debates": "debates", "Surveys": "surveys" }
                                             let t = this.component.__typename
                                             root = this.assign({
-                                              "query": "query($id: ID!, $l: String!, $after: String) { c: component(id: $id) { ... on %s { items: %s(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { %s } } } } }".format($t, $connection.get($t), if this.cfg.v32 { $nodes.get($t).replace_all("category { name", "taxonomies { name").replace_all("endorsementsCount", "endorsementsCount: likesCount") } else { $nodes.get($t) }),
+                                              "query": "query($id: ID!, $l: String!, $after: String) { c: component(id: $id) { ... on %s { items: %s(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { %s } } } } }".format($t, $connection.get($t), if this.cfg.v32 { $nodes.get($t).replace_all("category { name", "taxonomies { name").replace_all("endorsementsCount", "endorsementsCount: likesCount").replace_all(" onlineMeetingUrl", "") } else { $nodes.get($t) }),
                                               "items": [], "after": null, "more": true, "pages": 0
                                             })
                                         - while:
@@ -440,7 +442,7 @@ pipeline:
                                     "description": $r.description.apply("tr").apply("prop"),
                                     "startDate": $r.startTime.apply("dated").apply("prop"),
                                     "endDate": $r.endTime.apply("dated").apply("prop"),
-                                    "meetingType": $r.typeOfMeeting.or(null).(m -> if ["in_person", "online", "hybrid"].contains(m) { m } else { null }).apply("prop"),
+                                    "meetingType": $r.typeOfMeeting.or("").lowercase().(m -> if ["in_person", "online", "hybrid"].contains(m) { m } else { null }).apply("prop"),
                                     "address": $address,
                                     "location": $r.coordinates.apply("point").catch(null),
                                     "onlineUrl": $r.onlineMeetingUrl.or(null).(u -> if u != null && u.has_prefix("https://") { u } else { null }).apply("prop"),
