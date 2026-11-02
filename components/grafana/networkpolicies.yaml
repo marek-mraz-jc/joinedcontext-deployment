@@ -1,8 +1,8 @@
 ---
-# A dashboard viewer reads one Prometheus and talks to one identity provider, and that is the
-# whole of its network life. Ingress: APISIX, which is the only way in. Egress: Prometheus,
-# Keycloak and DNS. It has no database, reads no other component's API, and reaches nothing
-# outside the cluster (OPS-38).
+# A dashboard viewer reads one Prometheus, talks to one identity provider, and reads project
+# Endpoints through the gateway, and that is the whole of its network life. Ingress: APISIX, which
+# is the only way in. Egress: Prometheus, Keycloak, the gateway and DNS. It has no database, reads
+# no other component's API, and reaches nothing outside the cluster (OPS-38).
 grafana:
   podSelector:
     app.kubernetes.io/name: grafana
@@ -52,6 +52,40 @@ grafana:
             matchLabels:
               app.kubernetes.io/instance: keycloak-app
           componentNamespace: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+
+# The project dashboards' reads (T-6504): the datasource proxy, with the person's own token. Plain
+# rule: this is the only component a project datasource may address.
+grafana-egress-to-gateway:
+  podSelector:
+    app.kubernetes.io/name: grafana
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+
+# The gateway lists its callers by name too.
+context-gateway-from-grafana:
+  componentNamespace: context-gateway
+  podSelector:
+    app.kubernetes.io/name: context-gateway-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: grafana
+          componentNamespace: grafana
       ports:
         - protocol: TCP
           port: 8080

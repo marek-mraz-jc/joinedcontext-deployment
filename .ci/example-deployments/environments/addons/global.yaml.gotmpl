@@ -62,3 +62,12 @@ grafana:
     # The Prometheus that scrapes this installation: the prometheus component's (T-5154), named
     # here as an operator would name one this repository does not deploy.
     prometheusUrl: 'http://prometheus-operated.addons.svc.cluster.local:9090'
+    # One project, so this render holds the organization, the hook and the mapping (T-6504).
+    projects:
+      - name: helsinki
+        title: Helsinki
+        groups: [/helsinki]
+        endpoints:
+          - { name: helsinki-cycle-counts, slug: kvhnixtbe5dex2wt2kx3i37dzw6yzsxt }
+          - { name: helsinki-air-quality, slug: jtjnhkaau64zmzz5csmcwem52icvufy2 }
+          - { name: helsinki-bikes-ops, slug: ydp6nddchg4sewmylsiclg4377mlldrj }
