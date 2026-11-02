@@ -280,6 +280,10 @@ helsinki-pipeline-gtfs-routes.yaml: projects/helsinki/pipelines/gtfs-routes/pipe
 helsinki-pipeline-gtfs-shapes.yaml: projects/helsinki/pipelines/gtfs-shapes/pipeline.yaml
 helsinki-pipeline-gtfs-routes-bento.yaml: projects/helsinki/pipelines/gtfs-routes/bento.yaml
 helsinki-pipeline-gtfs-shapes-bento.yaml: projects/helsinki/pipelines/gtfs-shapes/bento.yaml
+# Today's scheduled departures per mode, from the feed's calendars and trips (T-6467).
+helsinki-datasource-gtfs-daily-departures.yaml: projects/helsinki/datasources/hsl-gtfs-daily-departures.yaml
+helsinki-pipeline-gtfs-daily-departures.yaml: projects/helsinki/pipelines/gtfs-daily-departures/pipeline.yaml
+helsinki-pipeline-gtfs-daily-departures-bento.yaml: projects/helsinki/pipelines/gtfs-daily-departures/bento.yaml
 # HSL's GTFS-RT trip updates (T-3891): the next departures of a curated set of stops.
 helsinki-datasource-trip-updates.yaml: projects/helsinki/datasources/hsl-trip-updates.yaml
 helsinki-pipeline-departures.yaml: projects/helsinki/pipelines/hsl-departures/pipeline.yaml

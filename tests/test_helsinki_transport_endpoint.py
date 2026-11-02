@@ -8,7 +8,7 @@ import yaml
 HELSINKI = Path(__file__).resolve().parent.parent / "components/context-gateway/seed/helsinki"
 
 TRANSPORT = {"Vehicle", "GtfsStop", "PublicTransportRoute", "GtfsStation", "GtfsAgency", "GtfsRoute", "GtfsShape",
-             "Alert", "OffStreetParking"}
+             "GtfsDailyDepartures", "Alert", "OffStreetParking"}
 
 
 def load(name: str) -> dict:

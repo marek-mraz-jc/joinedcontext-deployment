@@ -83,15 +83,17 @@ neither.
 
 ### GTFS static (T-3890)
 
-Three DataSources read `hsl.zip` by its members (PL-72): the runner fetches the zip's directory
-and then each named member by its byte range, so `stop_times.txt` (1.0 GB inflated), `trips.txt`
-and `translations.txt` are never fetched. Measured 2026-10-12 with Bento 1.22.0 locally over the
+Four DataSources read `hsl.zip` by its members (PL-72): the runner fetches the zip's directory
+and then each named member by its byte range, so `stop_times.txt` (1.0 GB inflated) and
+`translations.txt` are never fetched, and `trips.txt` only for today's count, which stores no trip
+(T-6467). Measured 2026-10-12 with Bento 1.22.0 locally over the
 member alone, peak resident memory over Bento's own baseline (about 140 MB), and entities written:
 
 | Pipeline | Source | Members | Entities | Peak over baseline | Time | Schedule |
 |---|---|---|---|---|---|---|
 | `transit-stops` | `hsl-gtfs-stops` | `stops.txt` (8 385 rows) | 8 263 GtfsStop, 122 GtfsStation | 120 to 135 MB | 2 s | daily 04:20 |
 | `gtfs-routes` | `hsl-gtfs-routes` | `agency.txt` (1), `routes.txt` (459) | 1 GtfsAgency, 459 GtfsRoute | under 5 MB | 1 s | daily 04:30 |
+| `gtfs-daily-departures` | `hsl-gtfs-daily-departures` | `calendar.txt`, `calendar_dates.txt`, `routes.txt`, `trips.txt` (380 543 rows, counted, never stored) | 5 GtfsDailyDepartures | 128-192 MiB peak, quota 256 (2026-11-02) | 6 s | daily 04:35 |
 | `gtfs-shapes` | `hsl-gtfs-shapes` | `shapes.txt` (456 964 points, 1 192 shapes) | 1 192 GtfsShape, about 200 points each | 180 to 225 MB | 4 s | paused |
 
 The row counts are `wc -l` minus the header of each member; the entity counts are the mappings'
