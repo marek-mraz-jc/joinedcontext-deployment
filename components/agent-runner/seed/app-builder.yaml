@@ -68,6 +68,7 @@ spec:
       - jc_model_infer
       - jc_model_source_get
       - jc_pipeline_metrics
+      - jc_pipeline_run
       - jc_syncsource_status
       - jc_ckan_status
       - jc_run_list
