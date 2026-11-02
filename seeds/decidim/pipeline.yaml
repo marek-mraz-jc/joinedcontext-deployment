@@ -5,7 +5,8 @@
 # Order of a run, every request one second after the last (sleep before each, one message at a time):
 #   1. robots.txt: a 5xx fails the run; /api disallowed for * or joinedcontext fails it; the other rules
 #      are kept and every page the fallback would read is checked against them (RFC 9309, prefixes).
-#   2. { decidim { version } }: 0.28 and later know `withdrawn` on proposals and meetings, 0.27 does not.
+#   2. { decidim { version } }: 0.28 and later know `withdrawn` on proposals and meetings, 0.27 does not;
+#      0.32 has taxonomies for categories and likesCount for endorsementsCount (T-6449, read from its gems).
 #   3. participatoryProcesses and assemblies, with their phases.
 #   4. per space its components of the six types read, by type (an unfiltered list of a big process
 #      timed out at the server's 30 s on tvormespolu, 2026-10-21); a space that fails keeps its records
@@ -86,7 +87,9 @@ pipeline:
                       timeout: 40s
                       retries: 1
                 result_map: |
-                  root.version = this.data.decidim.version.not_null().string()
+                  # Decidim 0.30 and later hide their version unless the operator discloses it (T-6449):
+                  # null from a live API is a current release; no `decidim` object stops the run.
+                  root.version = if this.data.decidim.type() == "object" { this.data.decidim.version.or("0.32").string() } else { throw("%s/api answered no decidim object".format(meta("base"))) }
 
             # Only a run whose version was read goes on.
             - switch:
@@ -94,7 +97,7 @@ pipeline:
                   processors:
                     - mapping: |
                         let v = this.version.split(".").map_each(p -> p.number().catch(0))
-                        root = this.assign({ "v28": $v.index(0) > 0 || $v.index(1).or(0) >= 28 })
+                        root = this.assign({ "v28": $v.index(0) > 0 || $v.index(1).or(0) >= 28, "v32": $v.index(0) > 0 || $v.index(1).or(0) >= 32 })
 
                     - branch:
                         request_map: |
@@ -142,7 +145,9 @@ pipeline:
                                     request_map: |
                                       meta base = this.cfg.base
                                       let types = if this.cfg.light.or(false) { ["Budgets"] } else { ["Proposals", "Budgets", "Accountability", "Meetings", "Debates", "Surveys"] }
-                                      let wanted = $types.map_each(t -> "%s: components(filter: { type: \"%s\" }) { id __typename name { translation(locale: $l) } }".format(t, t)).join(" ")
+                                      # 0.32 refuses more than 5 aliases, and an instance of that age lists its components in one read.
+                                      meta types = $types.join(",")
+                                      let wanted = if this.cfg.v32 { "components { id __typename name { translation(locale: $l) } }" } else { $types.map_each(t -> "%s: components(filter: { type: \"%s\" }) { id __typename name { translation(locale: $l) } }".format(t, t)).join(" ") }
                                       root = {
                                         "query": "query($id: ID!, $l: String!) { s: %s(id: $id) { %s } }".format(this.space.field, $wanted),
                                         "variables": { "id": this.space.id, "l": this.cfg.locale }
@@ -158,7 +163,8 @@ pipeline:
                                           timeout: 40s
                                           retries: 1
                                     result_map: |
-                                      root.components = this.data.s.values().flatten().filter(c -> c != null && c.id != null)
+                                      let types = meta("types").split(",")
+                                      root.components = this.data.s.values().flatten().filter(c -> c != null && c.id != null && $types.contains(c.__typename))
                                 - catch:
                                     - log:
                                         level: WARN
@@ -192,7 +198,7 @@ pipeline:
                                             let connection = { "Proposals": "proposals", "Budgets": "budgets", "Accountability": "results", "Meetings": "meetings", "Debates": "debates", "Surveys": "surveys" }
                                             let t = this.component.__typename
                                             root = this.assign({
-                                              "query": "query($id: ID!, $l: String!, $after: String) { c: component(id: $id) { ... on %s { items: %s(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { %s } } } } }".format($t, $connection.get($t), $nodes.get($t)),
+                                              "query": "query($id: ID!, $l: String!, $after: String) { c: component(id: $id) { ... on %s { items: %s(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { %s } } } } }".format($t, $connection.get($t), if this.cfg.v32 { $nodes.get($t).replace_all("category { name", "taxonomies { name").replace_all("endorsementsCount", "endorsementsCount: likesCount") } else { $nodes.get($t) }),
                                               "items": [], "after": null, "more": true, "pages": 0
                                             })
                                         - while:
@@ -366,7 +372,7 @@ pipeline:
                                   "dataProvider": { "type": "Property", "value": $cfg.provider },
                                   "sourceId": $r.id.string().catch(null).apply("prop"),
                                   "reference": $r.reference.apply("prop"),
-                                  "category": $r.category.name.apply("tr").apply("prop"),
+                                  "category": $r.taxonomies.0.name.or($r.category.name).apply("tr").apply("prop"),
                                   "dateModified": $r.updatedAt.apply("instant").apply("prop"),
                                   # Renewed by every run; a record the platform stops listing leaves after three days.
                                   "expiresAt": (timestamp_unix() + 259200).ts_format("2006-01-02T15:04:05Z", "UTC")

@@ -132,14 +132,27 @@ class Stand(http.server.BaseHTTPRequestHandler):
         q = json.loads(body)
         query, var = q["query"], q.get("variables") or {}
         if "decidim { version }" in query:
+            if Stand.version == "no-object":
+                return self.answer(200, json.dumps({"data": {"decidim": None}}))
             return self.answer(200, json.dumps({"data": {"decidim": {"version": Stand.version}}}))
         if "participatoryProcesses" in query:
             return self.answer(200, json.dumps({"data": {"participatoryProcesses": PROCESSES, "assemblies": []}}))
+        if Stand.version is None and "components(filter" in query:
+            # 0.32 counts the aliases of a query and refuses more than five (API_SCHEMA_MAX_ALIASES).
+            return self.answer(200, json.dumps({"errors": [{"extensions": {"code": "TOO_MANY_ALIASES_ERROR"}}]}))
+        if "{ components {" in query:
+            found = [c for per in COMPONENTS.get(var["id"], {}).values() for c in per]
+            blog = {"id": "9", "__typename": "Blogs", "name": tr("Blog")}
+            return self.answer(200, json.dumps({"data": {"s": {"components": [*found, blog] if found else []}}}))
         if "components(filter" in query:
             found = COMPONENTS.get(var["id"], {})
             return self.answer(200, json.dumps({"data": {"s": {t: found.get(t, []) for t in ("Proposals", "Budgets", "Accountability", "Meetings", "Debates", "Surveys") if f"{t}: components" in query}}}))
         if "component(id" in query:
-            nodes = records(Stand.version)[var["id"]]
+            if Stand.version is None and ("category" in query or "endorsementsCount\n" in query or " endorsementsCount " in query):
+                return self.answer(200, json.dumps({"errors": [{"message": "Field 'category' doesn't exist"}]}))
+            nodes = records(Stand.version or "0.27.9")[var["id"]]
+            if Stand.version is None:
+                nodes = [n and {**{k: v for k, v in n.items() if k != "category"}, "taxonomies": [n["category"]] if n.get("category") else []} for n in nodes]
             start = int(var.get("after") or 0)
             chunk = nodes[start:start + Stand.page]
             more = start + Stand.page < len(nodes)
@@ -271,6 +284,26 @@ def test_0_27_reads_everything_from_the_api_across_pages_without_the_0_28_fields
 
 
 @requires_docker
+@requires_docker
+def test_0_32_reads_with_its_own_fields_within_its_alias_limit():
+    # T-6449: the real 0.32.2 (the image of images/decidim) hides its version, keeps categories as
+    # taxonomies, says likesCount for endorsementsCount and refuses a sixth alias.
+    entities, done, seen = run(version=None)
+    assert "RUN FAILED" not in done.stderr
+    assert "were not read" not in done.stderr, done.stderr
+    by_type = {e["type"] for e in entities}
+    assert {"Proposal", "BudgetProject", "Result", "Meeting", "Debate", "Survey"} <= by_type
+    proposal = next(e for e in entities if e["type"] == "Proposal" and e["id"].endswith("-1"))
+    assert proposal["category"]["value"] == "Zeleň" and proposal["endorsementsCount"]["value"] == 3
+    assert not [b for _, _, b in seen if b"Blogs" in b]
+
+
+@requires_docker
+def test_a_run_stops_when_the_api_answers_no_decidim_object():
+    entities, done, _ = run(version="no-object")
+    assert entities == [] and "answered no decidim object" in done.stderr
+
+
 def test_the_process_carries_its_phases_and_status(v29):
     found = by_type(v29[0])
     procs = {e["sourceId"]["value"]: e for e in found["ParticipatoryProcess"]}
@@ -342,7 +375,8 @@ def test_every_site_request_waits_a_second_first():
 def test_generate_check_is_clean_and_one_row_is_one_instance():
     done = subprocess.run([sys.executable, str(HERE / "generate.py"), "--check"], capture_output=True, text=True)
     assert done.returncode == 0, done.stdout
-    rows = (HERE / "instances.csv").read_text().strip().splitlines()[1:]
+    # The platform's own row has a seed folder of its own (test_the_platforms_own_decidim_...).
+    rows = [r for r in (HERE / "instances.csv").read_text().strip().splitlines()[1:] if not r.startswith("participacia,")]
     names = sorted(p.name for p in SEED.glob("slovensko-*-decidim-*.yaml"))
     # Per instance: two DataSources, two Pipelines, two mappings and the full pass's Policy (T-5717).
     assert len(names) == 7 * len(rows)
@@ -377,6 +411,8 @@ def test_the_full_and_the_voting_pass_of_an_instance_never_start_in_the_same_min
     """F-R2BNT3-011: both passes crawl one instance at its one-second pace, and the full pass also
     writes BudgetProject; at 02:07 the two used to run at once."""
     for row in (HERE / "instances.csv").read_text().strip().splitlines()[1:]:
+        if row.startswith("participacia,"):
+            continue  # one pass, the platform's own (test_the_platforms_own_decidim_...)
         inst = row.split(",")[0]
         full, light = (seed(f"slovensko-pipeline-decidim-{inst}{s}.yaml")["spec"]["schedule"] for s in ("", "-hlasovanie"))
         assert not fires(full) & fires(light), (inst, full, light)
@@ -421,12 +457,38 @@ def test_the_dataset_is_filed_under_the_town_while_it_is_the_only_instance():
     spec = importlib.util.spec_from_file_location("decidim_generate", HERE / "generate.py")
     generate = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(generate)
-    one = generate.rows()
+    one = [row for row in generate.rows() if row["name"] != generate.OWN]
     assert len(one) == 1 and generate.organization(one) == ["      organization: banskabystrica"]
     two = one + [dict(one[0], name="trnava", locality="Trnava", organization="trnava")]
     assert generate.organization(two) == []
     assert "na Slovensku" in generate.title(two)[0] and "Trnava" not in generate.title(two)[0]
     assert generate.organization([dict(one[0], organization="")]) == []
+
+
+def test_the_platforms_own_decidim_is_seeded_apart_with_one_hourly_full_pass():
+    # T-6449: its host is the environment's, so it never joins the towns' folder, every environment
+    # loads; its one pass is a full one, so a new proposal reaches the space within the hour.
+    own = ROOT / "components/decidim/seed"
+    assert not list(SEED.glob("slovensko-*-decidim-participacia*"))
+    index = yaml.safe_load((own / "index.yaml").read_text())
+    assert sorted(p.name for p in own.glob("*.yaml") if p.name != "index.yaml") == sorted(index)
+    pipeline = yaml.safe_load((own / "slovensko-pipeline-decidim-participacia.yaml").read_text())
+    assert pipeline["spec"]["period"] == "1h" and pipeline["spec"]["output"]["type"] == "ParticipatoryProcess"
+    assert not list(own.glob("*hlasovanie*"))
+    bento = (own / "slovensko-pipeline-decidim-participacia-bento.yaml").read_text()
+    assert bento.endswith(MAPPING.read_text().replace("__BASE__", "https://participacia.dev.joinedcontext.com"))
+    policy = yaml.safe_load((own / "slovensko-policy-decidim-participacia-account.yaml").read_text())
+    assert policy["spec"]["assignee"] == {"kind": "serviceAccount", "id": "pl-decidim-participacia"}
+
+
+def test_the_assistant_reads_the_space_alone_from_the_decidim_host_alone():
+    spec = yaml.safe_load((ROOT / "components/decidim/seed/slovensko-assistant-participacia.yaml").read_text())["spec"]
+    assert spec["channel"] == "public" and spec["publicId"] == "participacia"
+    assert spec["allowedOrigins"] == ["https://participacia.dev.joinedcontext.com"]
+    assert [c["endpoint"] for c in spec["connectors"]] == ["slovensko-participacia"]
+    assert "sources" not in spec and "mcpServer" not in spec and "scope" not in spec
+    # The owner's model limit: no share override, so one visitor stays at VISITOR_COST_SHARE of the day.
+    assert "visitorSharePercent" not in spec["budget"] and spec["budget"]["costPerDayUsd"] <= 0.5
 
 
 def test_every_http_step_writes_its_host_out():

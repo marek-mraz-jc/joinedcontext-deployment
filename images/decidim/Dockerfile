@@ -6,7 +6,8 @@
 # build does (github.com/decidim/docker, Dockerfile-generator + Dockerfile): the `decidim` generator
 # on the Ruby of the release's .ruby-version line writes the application, Node compiles its packs.
 # Then it adds `omniauth_openid_connect`, the initializer that registers the realm as the one
-# sign-in provider (joinedcontext.rb) and the bootstrap that creates the one organization
+# sign-in provider (joinedcontext.rb), the assistant's launcher in the layout (assistant.html.erb)
+# and the bootstrap that creates the one organization
 # (bootstrap.rb), drops the generator's `config/master.key` (SECRET_KEY_BASE comes from a Secret,
 # so Rails never reads the credentials file) and copies the result onto the slim Ruby image, which
 # carries no compiler, no Node and no root process. No Ruby of ours beyond configuration.
@@ -66,6 +67,7 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
     && rm -rf /usr/local/bundle/gems/*/spec /usr/local/bundle/gems/hexapdf-*/data/hexapdf/cert
 
 COPY joinedcontext.rb config/initializers/joinedcontext.rb
+COPY assistant.html.erb app/views/layouts/decidim/_assistant.html.erb
 COPY bootstrap.rb db/joinedcontext_bootstrap.rb
 COPY check-zip.rb db/joinedcontext_check_zip.rb
 COPY site.rb db/joinedcontext_site.rb

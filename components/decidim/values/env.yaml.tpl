@@ -48,6 +48,12 @@ env:
   valueFrom: { secretKeyRef: { name: keycloak-client-decidim, key: client-secret } }
 - name: OIDC_REDIRECT_URI
   value: {{ printf "https://%s/users/auth/keycloak/callback" .host | quote }}
+{{- if $web.assistantPublicId }}
+- name: ASSISTANT_ORIGIN
+  value: {{ printf "https://assistant.%s" $global.domain | quote }}
+- name: ASSISTANT_PUBLIC_ID
+  value: {{ $web.assistantPublicId | quote }}
+{{- end }}
 {{- if $web.smtp.address }}
 - name: SMTP_ADDRESS
   value: {{ $web.smtp.address | quote }}
