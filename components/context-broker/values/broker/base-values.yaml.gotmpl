@@ -144,6 +144,10 @@ env:
   # History is opt-in (T-5056, DM-132): a type records only when its space, type rule or Entity gives
   # it a history duration, observed by default; spaces without retention keep none.
   ANTARES_TEMPORAL_RECORD: "ruled"
+  # A write of an instance older than the current one goes to history only (T-5326, ADR-N-054 2.1,
+  # DM-106): the Portal's "add an old value" and a correction of a past measurement rest on it. Off,
+  # such a write would replace the current value. The ETSI suites assume off and run on their own broker.
+  ANTARES_HISTORY_BACKFILL: "on"
   # Batch upserts commit asynchronously (T-5050, option A of T-5046): a Postgres crash can lose the
   # last few hundred ms of batch writes, which the next run of a pipeline writes again; single writes stay durable.
   ANTARES_PG_BATCH_ASYNC_COMMIT: "true"

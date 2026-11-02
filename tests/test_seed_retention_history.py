@@ -47,3 +47,9 @@ def test_the_measured_types_keep_their_history():
         ("helsinki", "KeyPerformanceIndicator"),
     ]:
         assert (space, entity_type) in kept, f"{space} {entity_type} lost its history"
+
+
+def test_a_late_write_goes_to_history_and_never_replaces_the_current_value():
+    """T-5326, DM-106: the Portal's backfill and correction of a past measurement are plain writes."""
+    values = (SEED.parents[2] / "components/context-broker/values/broker/base-values.yaml.gotmpl").read_text()
+    assert 'ANTARES_HISTORY_BACKFILL: "on"' in values
