@@ -1157,3 +1157,12 @@ def test_the_certificate_door_admits_only_a_valid_certificate_of_the_project_ca(
     finally:
         subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
         decider.shutdown()
+
+
+def test_a_stamped_broker_certificate_names_the_environments_issuer(local):
+    # The Portal stamps this template; a hard-coded letsencrypt-prod left every broker on a
+    # self-signed cluster waiting for a Secret no issuer could fill (T-6438).
+    template = one(local, "ConfigMap", "broker-template")["data"]
+    certificates = [f for f in template.values() if "kind: Certificate" in f]
+    assert certificates
+    assert all('name: "selfsigned-ca"' in f for f in certificates)
