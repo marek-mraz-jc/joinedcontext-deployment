@@ -177,6 +177,16 @@ env:
   # (ADR-N-054 2.3, T-5361). Unset, every write was recorded as channel api with no actor.
   ANTARES_PROVENANCE_FROM: "context-gateway.{{ $gateway.namespace }}.serviceaccount.identity.linkerd.cluster.local"
   {{- end }}
+  {{- if and $mesh $callers }}
+  # The mesh identities whose subject headers above the broker believes (Antares T-6432), the
+  # same list as the Server below. From any other caller, the broker's own included, they are
+  # dropped and the request names nobody. Never blank: a set key naming no one is fatal at boot.
+  {{- $subjectFrom := list }}
+  {{- range $callers }}
+  {{- $subjectFrom = append $subjectFrom (printf "%s.%s.serviceaccount.identity.linkerd.cluster.local" .serviceAccount .namespace) }}
+  {{- end }}
+  ANTARES_POLICY_SUBJECT_FROM: {{ join "," $subjectFrom | quote }}
+  {{- end }}
   ANTARES_ADMIN_TOKEN_FILE: /var/run/secrets/antares/admin/token
   # A scraper cannot send the admin secret; the metrics carry no tenant data. Only the metrics
   # port is open to Prometheus (networkpolicies.yaml), and that port serves no API path (T-5095).
