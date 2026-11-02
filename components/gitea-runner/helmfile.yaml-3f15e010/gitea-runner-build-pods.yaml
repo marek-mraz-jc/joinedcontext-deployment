@@ -1,5 +1,0 @@
-forge: http://gitea-http.smartcity.svc.cluster.local:3000
-portal:
-  namespace: smartcity
-  serviceAccount: portal
-portalUrl: http://portal.smartcity.svc.cluster.local:8080

@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-agent-runner:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

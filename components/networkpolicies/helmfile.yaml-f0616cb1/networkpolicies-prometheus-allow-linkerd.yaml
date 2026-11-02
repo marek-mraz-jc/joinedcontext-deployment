@@ -1,8 +1,0 @@
-networkpolicies:
-  prometheus-allow-linkerd:
-    ingress: []
-    namespace: smartcity
-    podSelector:
-      app.kubernetes.io/name: prometheus
-    policyTypes:
-      - Ingress

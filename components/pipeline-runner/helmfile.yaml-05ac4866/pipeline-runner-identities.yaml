@@ -1,7 +1,0 @@
-namespace: smartcity-pipeline-identities
-portal:
-  namespace: smartcity
-  serviceAccount: portal
-tokenService:
-  namespace: smartcity
-  serviceAccount: pipeline-tokens

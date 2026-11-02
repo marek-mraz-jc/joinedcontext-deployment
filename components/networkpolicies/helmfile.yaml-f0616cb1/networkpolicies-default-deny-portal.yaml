@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-portal:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

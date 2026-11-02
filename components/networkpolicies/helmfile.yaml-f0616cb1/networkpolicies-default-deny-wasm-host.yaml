@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-wasm-host:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

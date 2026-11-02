@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-ckan:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

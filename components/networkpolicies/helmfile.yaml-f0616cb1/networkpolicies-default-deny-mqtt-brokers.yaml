@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-mqtt-brokers:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

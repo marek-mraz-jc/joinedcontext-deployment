@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-gitea-runner:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

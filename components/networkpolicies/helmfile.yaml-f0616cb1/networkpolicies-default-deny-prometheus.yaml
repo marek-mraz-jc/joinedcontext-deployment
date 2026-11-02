@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-prometheus:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

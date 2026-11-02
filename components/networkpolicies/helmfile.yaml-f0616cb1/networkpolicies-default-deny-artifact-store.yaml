@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-artifact-store:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

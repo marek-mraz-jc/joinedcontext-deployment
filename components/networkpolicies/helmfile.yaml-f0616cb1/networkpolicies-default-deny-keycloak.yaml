@@ -1,7 +1,0 @@
-networkpolicies:
-  default-deny-keycloak:
-    namespace: smartcity
-    podSelector: {}
-    policyTypes:
-      - Ingress
-      - Egress

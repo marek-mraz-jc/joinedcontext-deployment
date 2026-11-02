@@ -1,8 +1,0 @@
-appTests:
-  enabled: true
-edge:
-  ingressClass: traefik
-release: smartcity
-serviceAccount:
-  name: portal
-  namespace: smartcity
