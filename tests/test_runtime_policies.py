@@ -727,3 +727,24 @@ def test_runtime_namespaces_get_the_pod_rules_and_the_drift_reader_only_release_
     assert portal in secret_roles
     assert not {"kube-system", "default"} & secret_roles
     assert not any(ns.endswith("-apps") or "*" in ns for ns in secret_roles), secret_roles
+
+
+def test_the_agent_reader_holds_view_and_node_reads_only():
+    """T-6546: workers read dev and stage as agent-reader. It may read what `view` reads plus
+    nodes and their metrics, and nothing else: no Secret, no write verb, no subresource such as
+    pods/exec or nodes/proxy, and no stored token. Off unless the environment turns it on."""
+    off = subprocess.run(["helm", "template", "runtime-policies", str(CHART)],
+                         check=True, capture_output=True, text=True).stdout
+    assert "agent-reader" not in off
+    docs = [d for d in yaml.safe_load_all(subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "agentReader.enabled=true"],
+        check=True, capture_output=True, text=True).stdout) if d]
+    mine = [d for d in docs if "agent-reader" in d["metadata"]["name"]]
+    assert sorted(d["kind"] for d in mine) == ["ClusterRole", "ClusterRoleBinding", "ClusterRoleBinding", "ServiceAccount"]
+    assert not any(d["kind"] == "Secret" for d in mine)
+    bindings = {d["roleRef"]["name"] for d in mine if d["kind"] == "ClusterRoleBinding"}
+    assert bindings == {"view", "jc-agent-reader-nodes"}
+    role = next(d for d in mine if d["kind"] == "ClusterRole")
+    for rule in role["rules"]:
+        assert set(rule["verbs"]) <= {"get", "list"}, rule
+        assert not any("/" in r or r == "*" or r == "secrets" for r in rule["resources"]), rule

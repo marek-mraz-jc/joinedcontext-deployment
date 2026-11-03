@@ -413,6 +413,7 @@ postgresql.cnpg.io/v1/Database stage/decidim
 postgresql.cnpg.io/v1/Database stage/gitea
 postgresql.cnpg.io/v1/Database stage/keycloak
 postgresql.cnpg.io/v1/Database stage/portal
+rbac.authorization.k8s.io/v1/ClusterRole -/jc-agent-reader-nodes
 rbac.authorization.k8s.io/v1/ClusterRole -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-edit
@@ -422,6 +423,8 @@ rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-prometheus
 rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-stack-kube-state-metrics
 rbac.authorization.k8s.io/v1/ClusterRole -/stage-portal-apps
 rbac.authorization.k8s.io/v1/ClusterRole -/stage-portal-namespaces
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-agent-reader-nodes
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-agent-reader-view
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/prometheus-operator
@@ -634,6 +637,7 @@ v1/Service stage/viz-renderer
 v1/Service stage/wasm-host-tokens
 v1/ServiceAccount kube-system/node-exporter
 v1/ServiceAccount stage/agent-proxy
+v1/ServiceAccount stage/agent-reader
 v1/ServiceAccount stage/apisix
 v1/ServiceAccount stage/artifact-store
 v1/ServiceAccount stage/ckan-api-token

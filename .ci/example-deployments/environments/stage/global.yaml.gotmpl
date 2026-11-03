@@ -80,6 +80,10 @@ components:
   # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
 
 global:
+  # Workers read this cluster through the read-only agent-reader account (T-6546); never production.
+  runtimePolicies:
+    agentReader: true
+
   domain: stage.joinedcontext.com
 
   instanceSlug: stage

@@ -85,6 +85,15 @@
         }
       }
     },
+    "agentReader": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
     "driftReader": {
       "type": "object",
       "additionalProperties": false,

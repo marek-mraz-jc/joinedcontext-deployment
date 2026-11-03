@@ -59,6 +59,9 @@ imageSignatures:
     subjectRegExp: "^https://github.com/marek-mraz-jc/[^/]+/\\.github/workflows/(promote\\.yml@refs/heads/main|image-jc\\.yml@refs/heads/dev)$"
 
 # The read-only identity of the nightly drift check (T-4956): get and list, no token Secret.
+# The read-only identity workers read the cluster with (T-6546): on in dev and stage only.
+agentReader:
+  enabled: false
 driftReader:
   enabled: true
   # The namespaces whose Secrets the drift reader may get and list: the release namespaces,
