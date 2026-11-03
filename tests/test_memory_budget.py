@@ -49,10 +49,12 @@ ALLOCATABLE_MIB = {"dev": NODE_ALLOCATABLE_MIB, "smartcity": 22172700 / 1024}
 # dashboards on dev; it books 138Mi of requests.
 # smartcity's limit moved on 2026-11-02 for Decidim (T-6448, owner's order): web 1274Mi, Sidekiq
 # 1018Mi and Redis 410Mi with their proxies, Postgres 2Gi -> 2560Mi for their connections; it books
-# 1182Mi of requests.
+# 1182Mi of requests. It moved again on 2026-11-03 for dev's components (T-6536, owner's order:
+# stage and prod run what dev runs): observability-collector, Grafana, ai and sandbox-reaper with
+# their proxies, 47558Mi rendered.
 CEILINGS = {
     "dev": (NODE_REQUEST_BUDGET_MIB, 45824),
-    "smartcity": (NODE_REQUEST_BUDGET_MIB, 46080),
+    "smartcity": (NODE_REQUEST_BUDGET_MIB, 47616),
     "production": (37120, 67584),
 }
 
