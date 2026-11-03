@@ -195,3 +195,17 @@ def test_a_boarding_count_keeps_its_window_and_each_platform(written):
     platforms = [e["currentValue"]["value"] for e in written["stop-boardings"] if "elielinaukio" in e["id"]]
     assert sorted(platforms) == [1014, 1153]
     assert isinstance(station["updatedAt"]["value"], str) and station["updatedAt"]["value"].endswith("Z")
+
+
+@requires_docker
+def test_a_city_bike_station_message_maps_to_one_docking_station():
+    """hsl-citybikes-gbfs-info splits station_information's data.stations (records, PL-114), so
+    the citybikes mapping gets one GBFS station per message (T-6576), not the whole answer."""
+    source = yaml.safe_load((HELSINKI / "helsinki-datasource-bikes-info.yaml").read_text())
+    assert source["spec"]["http"]["records"] == "data.stations"
+    station = {"station_id": "001", "name": "Kaivopuisto", "lat": 60.155411, "lon": 24.950391,
+               "capacity": 30}
+    [entity] = open_data.run(mapping("bikes-info"), json.dumps(station).encode(), "helsinki")
+    assert entity["id"] == "urn:ngsi-ld:BikeHireDockingStation:hel.fi:helsinki:001"
+    assert entity["name"]["languageMap"] == {"fi": "Kaivopuisto"}
+    assert entity["location"]["value"]["coordinates"] == [24.950391, 60.155411]

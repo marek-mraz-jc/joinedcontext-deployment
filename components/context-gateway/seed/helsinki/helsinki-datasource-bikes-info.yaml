@@ -13,3 +13,5 @@ spec:
     verb: GET
     headers: { Accept: application/json }
     timeout: 15s
+    # One message per station (PL-114): the runner and the Portal sample split data.stations.
+    records: data.stations
