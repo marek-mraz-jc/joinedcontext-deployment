@@ -96,6 +96,10 @@ grafana:
     enabled: true
 
 global:
+  # Workers read this cluster through the read-only agent-reader account (T-6546); never production.
+  runtimePolicies:
+    agentReader: true
+
   domain: stage.joinedcontext.com
 
   instanceSlug: stage
