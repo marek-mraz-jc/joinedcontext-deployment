@@ -467,6 +467,23 @@ def test_the_gateway_is_reached_through_all_four_halves():
         assert port in {p["port"] for p in policy["ingress"][0]["ports"]}
 
 
+def test_the_portal_reaches_the_admin_api_through_all_four_halves():
+    """T-6509: the same four halves as the gateway's, with the Portal as the caller."""
+    plain = yaml.safe_load((COMPONENT / "networkpolicies.yaml").read_text())
+    meshed = yaml.safe_load((COMPONENT / "networkpolicies-linkerd.yaml").read_text())
+    portal = {"app.kubernetes.io/name": "portal-portal"}
+    grafana = {"app.kubernetes.io/name": "grafana"}
+
+    for policy, port in ((plain["portal-egress-to-grafana"], 3000), (meshed["portal-linkerd-egress-to-grafana"], 4143)):
+        assert policy["podSelector"] == portal and policy["componentNamespace"] == "portal"
+        assert policy["egress"][0]["to"][0]["podSelector"]["matchLabels"] == grafana
+        assert {p["port"] for p in policy["egress"][0]["ports"]} == {port}
+    for policy, port in ((plain["grafana-from-portal"], 3000), (meshed["grafana-linkerd-from-portal"], 4143)):
+        assert policy["podSelector"] == grafana
+        assert policy["ingress"][0]["from"][0]["podSelector"]["matchLabels"] == portal
+        assert port in {p["port"] for p in policy["ingress"][0]["ports"]}
+
+
 class FakeGrafana(BaseHTTPRequestHandler):
     """Answers as the admin API does: an existing name is 409 and every write lands in an org."""
 
