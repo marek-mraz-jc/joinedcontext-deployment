@@ -7,7 +7,7 @@ metadata:
 spec:
   contextSpaceRef: { kind: ContextSpace, name: banskabystrica-kpi }
   assigner: did:web:banskabystrica.sk
-  assignee: { kind: group, id: bbsk }
+  assignee: { kind: group, id: bbsk-readers }
   # Read only, and only the indicator type. The region cannot write a city number, which is the
   # separation this demonstration exists to show (EP-15).
   operations:

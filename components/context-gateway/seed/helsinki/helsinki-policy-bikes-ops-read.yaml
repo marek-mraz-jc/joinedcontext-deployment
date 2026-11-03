@@ -2,8 +2,9 @@
 # helsinki-bikes-ops has the `organization` audience, where a signed-in person holds no
 # synthetic `public` role (GW22), so public-bikes does not reach them there; without this grant
 # the endpoint answered every member with nothing (T-3957, dev-smoke "ogc internal"). The
-# project group is what a member's token carries (components/keycloak/demo-users.yaml); the
-# endpoint's projection still hides contactPoint. Reading only: the status write stays
+# derived `helsinki-readers` holds everyone a binding names on the project and is what a token's
+# jc_groups carries (ADR-N-067 2.3, T-6470): the plain `helsinki` group matches only tokens
+# without jc_groups. The endpoint's projection still hides contactPoint. Reading only: the status write stays
 # bikes-ops-steward's, one Policy per attribute whitelist (GW17).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Policy
@@ -14,7 +15,7 @@ metadata:
 spec:
   contextSpaceRef: { kind: ContextSpace, name: helsinki }
   assigner: did:web:{orgDomain}
-  assignee: { kind: group, id: helsinki }
+  assignee: { kind: group, id: helsinki-readers }
   operations:
     - retrieveOps
     - createSubscription

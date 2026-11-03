@@ -415,10 +415,10 @@ def assignees(spec: dict):
 
 def test_no_holder_of_a_root_group_grant_carries_jc_groups():
     """With `jc_groups` in the token the PDP matches a `group` grant only as `/{org}/{group}`
-    (T-6409), so a grant naming a root group (a project group: bikes-ops-read `helsinki`,
-    kpi-shared-read `bbsk`) stops reaching a person the moment they join an Organization
-    subgroup. Rewrite those grants before such a person joins one; this keeps every read they
-    hold today."""
+    (T-6409), so a grant naming a root group stops reaching a person the moment they join an
+    Organization subgroup. Since T-6514 every bound person does, so bikes-ops-read and
+    kpi-shared-read name the derived `{project}-readers`; a plain project group left in a grant
+    answers its members 403 on dev."""
     apps = SEED.parent.parent / "gitea/apps"
     policies = [doc for _path, doc in manifests("Policy")] + [
         doc for path in sorted(apps.rglob("*.yaml")) for doc in documents(path) if doc.get("kind") == "Policy"
@@ -427,7 +427,8 @@ def test_no_holder_of_a_root_group_grant_carries_jc_groups():
         a["id"] for doc in policies for a in assignees(doc["spec"])
         if a.get("kind") == "group" and "/" not in a.get("id", "")
     }
-    assert {"helsinki", "bbsk"} <= root, sorted(root)
+    assert {"helsinki-readers", "bbsk-readers"} <= root, sorted(root)
+    assert not {"helsinki", "bbsk"} & root, sorted(root)
     for name, user in PEOPLE.items():
         if any("/" in group for group in user["groups"]):
             held = root & set(user["groups"])
