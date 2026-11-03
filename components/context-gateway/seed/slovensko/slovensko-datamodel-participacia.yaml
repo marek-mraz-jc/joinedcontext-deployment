@@ -7,9 +7,17 @@ metadata:
 spec:
   contextSpaceRef: slovensko-participacia
   linkml: ./slovensko-participacia.linkml.yaml
-  version: 1.1.0
+  version: 1.2.0
   lifecycle: published
-  classes: [ParticipatoryProcess, Proposal, BudgetProject, Result, Meeting, Debate, Survey]
+  classes:
+    - ParticipatoryProcess
+    - Proposal
+    - BudgetProject
+    - Result
+    - Meeting
+    - Debate
+    - Survey
+    - ProposalStatistic
   artifacts:
     jsonSchema: ./slovensko-participacia.v1.schema.json
     context: ./slovensko-participacia.v1.context.jsonld
