@@ -155,3 +155,10 @@ barcelona-pipeline-weather-forecast.yaml: projects/barcelona/pipelines/weather-f
 barcelona-pipeline-weather-forecast-bento.yaml: projects/barcelona/pipelines/weather-forecast/bento.yaml
 barcelona-endpoint-weather-forecast.yaml: projects/barcelona/spaces/barcelona/endpoints/weather-forecast.yaml
 barcelona-policy-public-weather-forecast.yaml: projects/barcelona/spaces/barcelona/policies/public-weather-forecast.yaml
+# Architectural heritage (T-6570): the 1,484 buildings Wikidata lists with an IPAC code inside the
+# city, weekly, as PointOfInterest with the category heritage and the prefix heritage-.
+barcelona-datasource-heritage.yaml: projects/barcelona/datasources/bcn-heritage.yaml
+barcelona-pipeline-heritage.yaml: projects/barcelona/pipelines/heritage/pipeline.yaml
+barcelona-pipeline-heritage-bento.yaml: projects/barcelona/pipelines/heritage/bento.yaml
+barcelona-endpoint-heritage.yaml: projects/barcelona/spaces/barcelona/endpoints/heritage.yaml
+barcelona-policy-public-heritage.yaml: projects/barcelona/spaces/barcelona/policies/public-heritage.yaml
