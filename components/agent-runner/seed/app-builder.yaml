@@ -78,6 +78,8 @@ spec:
       - jc_pipeline_inspect
       - jc_pipeline_run
       - jc_syncsource_status
+      - jc_syncsource_pause
+      - jc_member_list
       - jc_ckan_status
       - jc_run_list
       - jc_run_get
