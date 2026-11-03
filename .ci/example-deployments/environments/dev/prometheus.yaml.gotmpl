@@ -1,0 +1,13 @@
+---
+prometheus:
+  stack:
+    # Owner order 2026-11-03 05:0xZ: dev's node sat at 98-100 % memory and the owner could not
+    # sign in, so Prometheus and Alertmanager run no pod on dev (their volumes stay). Restore:
+    # delete this file and apply the prometheus release.
+    rawValues:
+      prometheus:
+        prometheusSpec:
+          replicas: 0
+      alertmanager:
+        alertmanagerSpec:
+          replicas: 0
