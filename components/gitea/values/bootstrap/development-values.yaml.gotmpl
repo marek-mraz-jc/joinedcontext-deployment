@@ -120,6 +120,8 @@ seed:
 {{- /* The platform's own Decidim, its harvester and its assistant (T-6449). */}}
 {{- if has "decidim" .Values.components }}{{ $sources = append $sources "decidim/seed" }}{{ end }}
 {{- if eq .Values.global.profile "development" }}{{ $sources = append $sources "context-gateway/seed/sharing" }}{{ end }}
+{{- /* Seed folders one environment adds under components/ (extraSeeds; T-6545: stage registers prod). */}}
+{{- range $dir := index .Values "extraSeeds" | default list }}{{ $sources = append $sources $dir }}{{ end }}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
 {{- range $path, $_ := $assistants }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ end }}
 {{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources "extra" $assistants) | fromJson }}
