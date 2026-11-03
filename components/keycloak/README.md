@@ -82,14 +82,17 @@ Keycloak.
 ## The presenter (T-6542)
 
 `presenter@hel.fi` is the one login the owner presents with on dev, stage and smartcity: the same
-id (`global.presenterUserId`), realm roles and groups on all three (`presenter.yaml`), bound by the
-forge seeds beside the demo steward and each other Organization's administrator, and never deleted
-by the `people` Job. Its password and TOTP seed are the owner's, in `presenter.enc.yaml` (sops,
-the age recipients of `.sops.yaml`); the owner reads them with `sops -d presenter.enc.yaml`. A
-render generates Secret `keycloak-user-presenter` like a demo person's, so no apply needs a key;
-once per instance the deployer loads the owner's values over it:
+id (`global.presenterUserId`), groups and no realm role on all three (`presenter.yaml`), bound by
+the forge seeds beside the demo steward and each other Organization's administrator, and never
+deleted by the `people` Job. No TOTP (owner 2026-11-03 04:52Z). Its password is the owner's own dev
+admin password (04:48Z), copied as Keycloak stores it: `capture` reads the hashed credential on dev
+into `presenter.enc.yaml` (sops, the age recipients of `.sops.yaml`), `load` writes it into each
+realm by partial import. The realm import gives the person no credential, so keycloak-config-cli
+leaves the copied one alone, and until `load` ran nobody can sign in as the presenter.
 
 ```bash
+KUBECONFIG=.secrets/kubeconfig-dev.yaml \
+    scripts/presenter-secret.sh capture --realm <dev slug> --from <owner's dev username>
 SOPS_AGE_KEY_FILE=.secrets/age-<instance>.key KUBECONFIG=.secrets/kubeconfig-<instance>.yaml \
-    scripts/presenter-secret.sh --instance <instance> --realm <global.instanceSlug>
+    scripts/presenter-secret.sh load --instance <instance> --realm <global.instanceSlug>
 ```

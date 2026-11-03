@@ -195,14 +195,17 @@ def test_development_profile_seeds_the_demo_users(rendered):
         # uses email as username, and the import aborts before it sets any password (T-0366).
         assert user["username"] == user["email"]
         assert user["requiredActions"] == [], "a required action would block the demo login"
+        if user["username"] == "presenter@hel.fi":
+            # The owner's dev password, copied hashed by scripts/presenter-secret.sh (T-6542).
+            assert "credentials" not in user
+            continue
         credential, *otp = user["credentials"]
         # Security line of T-0248: the password is a per-cluster Secret substituted at import
         # time, never a literal in the rendered realm.
         assert credential["value"].startswith("$(USER_PASSWORD_") and credential["temporary"] is False
         # Dev's approvers sign in with the password alone (T-5776, owner 2026-10-26): no seeded
         # one-time code; smartcity and production keep T-5120 (test_keycloak_login_hardening.py).
-        # The presenter keeps TOTP everywhere (mfa-required, T-6542).
-        assert (otp == []) != (user["username"] == "presenter@hel.fi"), user["username"]
+        assert otp == []
 
 
 def test_demo_passwords_are_generated_per_cluster(rendered):
@@ -221,13 +224,11 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-orgmember",
         "keycloak-user-demo-analyst",
         *("keycloak-user-" + name.split("@")[0].replace(".", "-") for name in SHARING_PEOPLE),
-        "keycloak-user-presenter",
     }
-    for name, secret in secrets.items():
+    for secret in secrets.values():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
-        # No TOTP seed on dev (T-5776): its approvers sign in without a one-time code. The
-        # presenter's is the owner's (T-6542), written over this one by scripts/presenter-secret.sh.
-        assert sorted(secret["data"]) == (["password", "totp"] if name == "keycloak-user-presenter" else ["password"])
+        # No TOTP seed on dev (T-5776): its approvers sign in without a one-time code.
+        assert sorted(secret["data"]) == ["password"]
 
 
 def test_production_seeds_no_human_users(rendered):

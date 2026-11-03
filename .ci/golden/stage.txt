@@ -589,7 +589,6 @@ v1/Secret stage/keycloak-client-zilina-pipelines
 v1/Secret stage/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret stage/keycloak-user-initial
 v1/Secret stage/keycloak-user-participacia-steward
-v1/Secret stage/keycloak-user-presenter
 v1/Secret stage/portal-cookie-key
 v1/Secret stage/postgres-backup-artifact-store
 v1/Secret stage/postgres-cluster-local-backup-key

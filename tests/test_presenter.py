@@ -2,12 +2,15 @@
 
 The owner presents as `presenter@hel.fi` on all three. Each realm seeds the person under one id
 with the same realm roles and groups, the forge seeds bind them beside the demo steward and each
-other Organization's administrator, and the password and TOTP seed are only in the sops file.
+other Organization's administrator, with no realm role and no second factor (owner 04:52Z), and
+the password is the owner's dev credential, copied hashed into the sops file (owner 04:48Z).
 """
 
 import base64
 import json
+import os
 import re
+import subprocess
 import uuid
 from pathlib import Path
 
@@ -38,20 +41,41 @@ def test_the_three_instances_name_one_presenter_and_no_other_does():
     assert not others, others
 
 
-def test_the_presenter_holds_the_administrators_rights_and_no_wider_role():
-    """Security: what the steward and the other Organizations' administrators hold, plus TOTP."""
-    admin_roles = set().union(*(PEOPLE[name]["realmRoles"] for name in ADMINS))
-    assert set(PRESENTER["realmRoles"]) == admin_roles | {"mfa-required"}
-    assert "platform-admin" not in PRESENTER["realmRoles"]
+def test_the_presenter_reads_what_the_administrators_read_with_no_realm_role():
+    """Security: the groups of the steward and the other Organizations' administrators, and no realm
+    role: `portal-approver` carries `mfa-required` on stage and prod, and the owner wants no TOTP
+    (04:52Z). What the person may do is the seeds' bindings beside those administrators."""
+    assert PRESENTER["realmRoles"] == []
     assert set(PRESENTER["groups"]) == set().union(*(PEOPLE[name]["groups"] for name in ADMINS))
+    assert PRESENTER["credential"] == "copied"
     assert "id" not in PRESENTER, "the id is per instance values, the same on all three"
 
 
-def test_the_password_and_totp_seed_are_only_in_the_sops_file():
-    encrypted = yaml.safe_load((KEYCLOAK / "presenter.enc.yaml").read_text())
+def test_the_copied_credential_is_only_in_the_sops_file():
+    """The owner's dev password as Keycloak stores it (04:48Z), and only once `capture` ran."""
+    path = KEYCLOAK / "presenter.enc.yaml"
+    if not path.exists():
+        pytest.skip("scripts/presenter-secret.sh capture has not run on dev yet")
+    encrypted = yaml.safe_load(path.read_text())
     values = {key: value for key, value in encrypted.items() if key != "sops"}
-    assert set(values) == {"username", "password", "totp", "totpUri"}
+    assert set(values) == {"from", "secretData", "credentialData"}
     assert all(str(value).startswith("ENC[AES256_GCM,") for value in values.values()), "a plain value in Git"
+
+
+@pytest.mark.parametrize("args,refusal", [
+    ([], "usage"),
+    (["load"], "--realm is required"),
+    (["capture", "--realm", "dev"], "--from is required"),
+    (["capture", "--realm", "dev", "--from", "a b"], "takes a Keycloak username"),
+    (["load", "--realm", "Dev;x"], "lowercase letters"),
+    (["load", "--realm", "stage"], "--instance is required"),
+])
+def test_the_script_refuses_before_it_reaches_a_cluster(args, refusal):
+    result = subprocess.run(
+        [str(ROOT / "scripts/presenter-secret.sh"), *args], cwd=ROOT, capture_output=True, text=True,
+        env={"PATH": os.environ["PATH"]},
+    )
+    assert result.returncode == 2 and refusal in result.stderr, result.stderr
 
 
 def config_users(docs: list[dict]) -> dict[str, dict]:
@@ -74,16 +98,17 @@ def seed_texts(docs: list[dict]) -> list[str]:
 
 
 @pytest.mark.parametrize("env", INSTANCES)
-def test_each_realm_seeds_the_same_person_with_a_second_factor(rendered, env):
+def test_each_realm_seeds_the_same_person_with_no_second_factor_and_no_password_of_its_own(rendered, env):
     docs = rendered(env)
     user = config_users(docs).get("presenter@hel.fi")
     assert user, f"{env}: the realm import seeds no presenter"
-    extra = set(user["realmRoles"]) - set(PRESENTER["realmRoles"])
-    assert len(extra) == 1 and extra.pop().startswith("default-roles-"), user["realmRoles"]
+    [default] = user["realmRoles"]
+    assert default.startswith("default-roles-")
     assert set(user["groups"]) == {"/platform-readers"} | {f"/{g}" for g in PRESENTER["groups"]}
-    assert {c["type"] for c in user["credentials"]} == {"password", "otp"}
-    secrets = [d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"] == "keycloak-user-presenter"]
-    assert secrets and all({"password", "totp"} <= set(d["data"]) for d in secrets), env
+    # keycloak-config-cli leaves the copied credential alone only when it is given none.
+    assert "credentials" not in user and user["requiredActions"] == []
+    assert not [d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"] == "keycloak-user-presenter"]
+    assert "USER_PASSWORD_PRESENTER" not in json.dumps(docs)
 
 
 @pytest.mark.parametrize("env", INSTANCES)

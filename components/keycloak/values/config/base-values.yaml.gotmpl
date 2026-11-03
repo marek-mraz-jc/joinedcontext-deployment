@@ -71,6 +71,8 @@ extraEnv:
         key: password
   {{- end }}
   {{- range $name, $user := $this.demoUsers | default dict }}
+  {{- /* The presenter's password is copied from dev as stored (T-6542): no Secret, no variable. */}}
+  {{- if ne (index $user "credential" | default "") "copied" }}
   - name: USER_PASSWORD_{{ $name | upper | replace "." "_" }}
     valueFrom:
       secretKeyRef:
@@ -85,6 +87,7 @@ extraEnv:
       secretKeyRef:
         name: keycloak-user-{{ $name | replace "." "-" }}
         key: totp
+  {{- end }}
   {{- end }}
   {{- end }}
   {{- range $clientId, $client := .Values.keycloakClients }}
@@ -636,6 +639,9 @@ config:
           firstName: {{ $user.firstName | quote }}
           lastName: {{ $user.lastName | quote }}
           requiredActions: []
+          {{- if eq (index $user "credential" | default "") "copied" }}
+          {{- /* No `credentials`: keycloak-config-cli then leaves the copied one alone (T-6542). */}}
+          {{- else }}
           credentials:
             - type: password
               value: "$(USER_PASSWORD_{{ $name | upper | replace "." "_" }})"
@@ -653,6 +659,7 @@ config:
               secretData: '{"value":"$(USER_TOTP_{{ $name | upper | replace "." "_" }})"}'
               credentialData: '{"subType":"totp","digits":6,"counter":0,"period":30,"algorithm":"HmacSHA256"}'
             {{- end }}
+          {{- end }}
           {{- /* The people Job creates each person by a partial import, which grants no default
                  roles, and the import keeps only the roles listed here (it leaves the realm's
                  default composite alone). So the composite is listed: without it a person holds
