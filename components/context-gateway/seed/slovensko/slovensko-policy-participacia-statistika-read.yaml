@@ -19,6 +19,10 @@ spec:
     - retrieveAttrTypes
     - retrieveAttrTypeDetails
     - retrieveAttrTypeInfo
+    - createSubscription
+    - retrieveSubscription
+    - updateSubscription
+    - deleteSubscription
   information:
     - entities:
         - type: ProposalStatistic

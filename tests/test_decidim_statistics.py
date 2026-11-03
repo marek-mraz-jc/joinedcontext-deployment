@@ -116,7 +116,8 @@ def test_the_dataset_is_public_read_only_and_published_as_links():
     assert endpoint["publish"]["ckan"] == {"instanceRef": {"kind": "CkanInstance", "name": "slovensko"}, "license": "cc-by"}
     assert {e["type"] for i in policy["information"] for e in i["entities"]} == {"ProposalStatistic"}
     assert policy["assignee"] == {"kind": "role", "id": "public"}
-    assert not [op for op in policy["operations"] if op.startswith(("create", "update", "delete", "append", "merge", "replace", "batch"))]
+    # A subscriber needs the four subscription operations; nothing here writes an Entity.
+    assert not [op for op in policy["operations"] if "Subscription" not in op and op.startswith(("create", "update", "delete", "append", "merge", "replace", "batch"))]
 
 
 def test_the_harvest_dataset_keeps_its_own_types():
