@@ -176,8 +176,7 @@ def main(source, tier="dev"):
         if refused.returncode != 0:
             # Whatever it wrote before it stopped goes back: a pin is all three images or none.
             subprocess.run(["git", "checkout", "--", "components"], cwd=ROOT, check=False)
-            print(f"{source} {commit[:7]}: pin-portal.sh refused (exit {refused.returncode}); nothing pinned",
-                  file=sys.stderr)
+            print(f"{source} {commit[:7]}: pin-portal.sh refused (exit {refused.returncode}); nothing pinned")
             return
         # pin-portal.sh may take the binary or the bundle of an earlier commit than the one checked
         # above (T-6050, T-6158): whatever it wrote passes the same signature and tier checks.
