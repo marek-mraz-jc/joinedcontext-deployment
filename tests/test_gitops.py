@@ -434,7 +434,8 @@ def test_a_red_image_build_or_a_refusing_pin_portal_pins_nothing_and_says_so(mon
                         lambda argv, **kw: ran.append(argv) or subprocess.CompletedProcess(argv, 255 if argv[0].endswith("pin-portal.sh") else 0))
     module.main("portal")
     captured = capsys.readouterr()
-    assert "pin-portal.sh refused (exit 255); nothing pinned" in captured.err and captured.out == ""
+    # On stdout since fdfb3504: pin-images.yml reads the run's output to fail a refused pin.
+    assert "pin-portal.sh refused (exit 255); nothing pinned" in captured.out
     assert ran[-1] == ["git", "checkout", "--", "components"]
     # The script itself names a missing image in words instead of dying in set -e.
     bin_dir = tmp_path / "bin"
