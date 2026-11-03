@@ -1973,7 +1973,17 @@ def test_the_internal_ogc_rows_reader_is_granted_the_stations_on_helsinki_bikes_
     assert endpoint["spec"]["audience"] == "organization"
     assert "policyRef" not in endpoint["spec"]
     space = endpoint["spec"]["contextSpaceRef"]
-    groups = set(yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())["demo.viewer"]["groups"])
+    users = yaml.safe_load((PROJECT_ROOT / "components/keycloak/demo-users.yaml").read_text())
+    groups = set(users["demo.viewer"]["groups"])
+    # A person a helsinki RoleBinding names also carries the derived `helsinki-readers` in
+    # jc_groups, the group a grant names since T-6470 (the plain group no longer matches then).
+    viewer = users["demo.viewer"]["id"]
+    if any(
+        subject.get("user") == viewer
+        for path in seed_dir.glob("helsinki-rolebinding-*.yaml")
+        for subject in yaml.safe_load(path.read_text())["spec"].get("subjects") or []
+    ):
+        groups.add("helsinki-readers")
     assert 'demo_user="${JC_SMOKE_DEMO_USER:-demo.viewer}"' in SMOKE.read_text()
 
     def grants(policy):

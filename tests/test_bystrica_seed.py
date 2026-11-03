@@ -126,7 +126,7 @@ def test_the_citys_indicators_reach_the_region_by_a_named_share_and_nothing_wide
 
     # Read and nothing else: the region cannot write a city number.
     grant = one(CITY, "Policy", "kpi-shared-read")
-    assert grant["spec"]["assignee"] == {"kind": "group", "id": "bbsk"}
+    assert grant["spec"]["assignee"] == {"kind": "group", "id": "bbsk-readers"}  # the derived group a bound person carries (T-6470)
     assert grant["spec"]["operations"] == READ_AND_SUBSCRIBE
     assert grant["spec"]["information"][0]["entities"] == [{"type": "KeyPerformanceIndicator"}]
 
