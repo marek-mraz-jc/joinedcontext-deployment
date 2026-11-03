@@ -248,11 +248,11 @@ portal:
     # portal dfd0b23: jc-core of platform 2883bd0 reads a space's `quality` and `retention`
     # (T-3899), so the Helsinki seed that carries them comes back in the same apply (T-4054).
     # portal f311196: a failed forge build no longer flags the App's catalog card (owner, 2026-10-13).
-    digest: 'sha256:1be7ac50f5ad4c1b88eeb462bb73498433125ae56be50deaee8b4bce5acbef5a'
+    digest: 'sha256:73975489959e9c9f8a3ac748c1cfc3b058cc4a13dc25e4c5400a4e73b7c91c55'
     # The Portal commit this digest is the image of, and the docs commit its /docs pages are
     # (public-docs/COMMIT at that commit): scripts/pin-portal.sh writes both with the digest, and
     # scripts/check-docs-pin.sh holds those docs to the code this release runs (T-4483).
-    commit: '3ff17d2215fa670e5455e4f125294d782507bdd9'
+    commit: '872510b3e22d8d8edc38f0d7aa52d9fa395a4bdf'
     docs: '0c1e926eb6d04c728811b816e6aca95b10d74bfa'
     # The platform commit the image's jc-core is built from (the portal's Cargo.toml `rev`): a
     # seed field this jc-core does not know makes the Portal drop the whole manifest, so
@@ -268,8 +268,8 @@ portal:
   ui:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-portal-ui'
     tag: 'main'
-    digest: 'sha256:ceca7ee2792fd86603eb7c17ffdb861da6b0015d3113eb4152fed622a783af08'
-    commit: '3ff17d2215fa670e5455e4f125294d782507bdd9'
+    digest: 'sha256:26ba6109ff274edf40557c6b67d28abc70eac0e460de7949d51c2451c2eeb98e'
+    commit: '872510b3e22d8d8edc38f0d7aa52d9fa395a4bdf'
   # Mailpit, the mail catcher of an installation without a relay (T-3583). Re-pin with the
   # registry query in components/sandbox-reaper/images.yaml, repository axllent/mailpit.
   mail-catcher:
