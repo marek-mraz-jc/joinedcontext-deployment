@@ -32,6 +32,13 @@ whose Policy reads them by that prefix. The pipeline `local-trees` reads the 208
 (arbres-interes-local) from the DataStore of the register the same way, with the category
 `environment, local-interest-tree` and the prefix `local-tree-` (Endpoint `local-trees`).
 
+T-6570 adds the pipeline `heritage`: the city's architectural heritage, 1,484 buildings with a code
+of the Generalitat's inventory (IPAC) as Wikidata lists them (CC0, one SPARQL query, weekly), as
+`PointOfInterest` with the category `heritage` and each designation's code (`bcin`, `bcil`, `bpcc`,
+`urban-protection`, `world-heritage`...), the prefix `heritage-` and the Wikidata item id (Endpoint
+`heritage`). The Ajuntament's own catalogue (patrimoni-arquitectonic-protegit) is a zipped
+Shapefile in ETRS89 UTM 31N with no address, which a pipeline cannot read.
+
 The pipeline `weather-forecast` reads Meteocat's forecast for the comarca of Barcelonès from Open
 Data BCN's XML file (prediccio-meteorologica-del-barcelones) every half hour, one `WeatherForecast`
 per day ahead (`barcelones-day-1`, `-day-2`) with its issue time, validity, extremes and sky,

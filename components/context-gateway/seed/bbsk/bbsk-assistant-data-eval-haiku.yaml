@@ -349,6 +349,17 @@ spec:
         - get_entity
         - query_temporal
       timeoutSeconds: 20
+    - endpoint: barcelona/heritage
+      tools:
+        - list_types
+        - get_type
+        - list_attributes
+        - describe_schema
+        - query_entities
+        - summarize
+        - get_entity
+        - query_temporal
+      timeoutSeconds: 20
     - endpoint: barcelona/barcelona-parking
       tools:
         - list_types
