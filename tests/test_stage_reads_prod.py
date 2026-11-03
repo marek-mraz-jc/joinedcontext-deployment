@@ -58,8 +58,9 @@ def test_every_stage_registration_reads_a_public_prod_endpoint_and_nothing_else(
         # where stage's own Pipeline writes the same type.
         assert endpoint["metadata"]["namespace"] == meta["namespace"], path
         assert space_name(endpoint["spec"]["contextSpaceRef"]) == spec["contextSpaceRef"], path
-        # No credential and no account: prod answers stage as any anonymous reader.
-        assert spec["federation"] == {"identity": "caller"}, path
+        # No credential and no account: prod answers stage as any anonymous reader. `caller` would
+        # make the gateway answer 501 on every Endpoint of the space (stage 2026-11-03T05:58Z).
+        assert spec["federation"] == {"identity": "anonymous"}, path
         assert "endpointRef" not in spec, path
         assert all(set(e) == {"type"} for info in spec["information"] for e in info["entities"]), path
 
@@ -74,9 +75,7 @@ def test_one_registration_per_space_and_type():
                 seen[key] = path
 
 
-def test_no_environment_lists_the_folder_while_the_gateway_refuses_it():
-    """Paused (T-6545 reopened): the gateway answers 501 on every Endpoint of a space holding an
-    `identity: caller` registration to an address outside the platform."""
+def test_only_stage_lists_the_folder():
     environments = PROJECT_ROOT / ".ci/example-deployments/environments"
     listing = {
         env.name
@@ -84,12 +83,14 @@ def test_no_environment_lists_the_folder_while_the_gateway_refuses_it():
         for values in env.glob("*.yaml.gotmpl")
         if any(line.strip() == "- context-gateway/seed/stage-reads-prod" for line in values.read_text().splitlines())
     }
-    assert listing == set(), listing
+    assert listing == {"stage"}, listing
 
 
-def test_no_seed_carries_the_registrations_while_paused(rendered):
+def test_the_stage_seed_carries_the_registrations_and_prod_and_dev_do_not(rendered):
     paths = {path.replace("/", "__") for path in registrations()}
-    for env in ("stage", "smartcity", "dev"):
+    stage = set(seed_configmap(rendered("stage"))["data"])
+    assert paths <= stage, sorted(paths - stage)[:5]
+    for env in ("smartcity", "dev"):
         assert not paths & set(seed_configmap(rendered(env))["data"]), env
 
 
