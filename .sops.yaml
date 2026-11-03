@@ -5,5 +5,6 @@
 # fails on a file that names anyone else, and on an encrypted file outside these rules.
 creation_rules:
   - path_regex: \.enc\.ya?ml$
-    # dev, then stage's own key (owner 2026-11-02, T-6443: the Praha Golemio sources on stage).
-    age: age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55,age1ejlcj0jy4v0e78zpg5vg9ft5cy4zf4ga9apcxvjezc9s44r2pg5szxaund
+    # dev, then stage's own key (owner 2026-11-02, T-6443), then prod's (supervisor 2026-11-03 under
+    # the owner's key authority, T-4678): the Praha Golemio sources on stage and prod.
+    age: age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55,age1ejlcj0jy4v0e78zpg5vg9ft5cy4zf4ga9apcxvjezc9s44r2pg5szxaund,age139z3x6sj0jjzag384jms2esknz32nghhptg0c8d5uvff0g256prs8utasx
