@@ -53,8 +53,15 @@ keycloak:
         platformReaders: false
         groups: []
         enrols: {{ .Values.global.participationStewardEnrols }}
-      {{- else }}
+      {{- else if not .Values.global.presenterUserId }}
       {}
+      {{- end }}
+      {{- with .Values.global.presenterUserId }}
+      # The person the owner presents as, the same on dev, stage and prod (T-6542).
+      {{- $presenter := readFile "../../components/keycloak/presenter.yaml" | fromYaml }}
+      {{- $_ := set $presenter "id" . }}
+      presenter:
+        {{- $presenter | toYaml | nindent 8 }}
       {{- end }}
     # The owner's account of a production realm that carries dev's seeds (T-4678): the demo
     # steward's rights under the owner's address, so the seeds' bindings have a holder.

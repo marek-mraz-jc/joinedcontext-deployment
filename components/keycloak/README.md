@@ -78,3 +78,21 @@ and created again under theirs (the import then sets their password and second f
 their Secrets again); an owner under another id is never deleted: the Job fails and names the id
 to set in `global.initialUserId`. `tests/test_keycloak_people.py` runs the script in the pinned
 Keycloak.
+
+## The presenter (T-6542)
+
+`presenter@hel.fi` is the one login the owner presents with on dev, stage and smartcity: the same
+id (`global.presenterUserId`), groups and no realm role on all three (`presenter.yaml`), bound by
+the forge seeds beside the demo steward and each other Organization's administrator, and never
+deleted by the `people` Job. No TOTP (owner 2026-11-03 04:52Z). Its password is the owner's own dev
+admin password (04:48Z), copied as Keycloak stores it: `capture` reads the hashed credential on dev
+into `presenter.enc.yaml` (sops, the age recipients of `.sops.yaml`), `load` writes it into each
+realm by partial import. The realm import gives the person no credential, so keycloak-config-cli
+leaves the copied one alone, and until `load` ran nobody can sign in as the presenter.
+
+```bash
+KUBECONFIG=.secrets/kubeconfig-dev.yaml \
+    scripts/presenter-secret.sh capture --realm <dev slug> --from <owner's dev username>
+SOPS_AGE_KEY_FILE=.secrets/age-<instance>.key KUBECONFIG=.secrets/kubeconfig-<instance>.yaml \
+    scripts/presenter-secret.sh load --instance <instance> --realm <global.instanceSlug>
+```

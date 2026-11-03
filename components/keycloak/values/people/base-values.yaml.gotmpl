@@ -17,7 +17,8 @@ users:
   {{- range $name, $user := $config.demoUsers | default dict }}
   - id: {{ required (printf "components/keycloak/demo-users.yaml: %s has no id" $name) $user.id | quote }}
     username: "{{ $name }}@{{ $global.orgDomain }}"
-    recreate: true
+    {{- /* The presenter is no demo person: the Job never deletes it (T-6542). */}}
+    recreate: {{ ne $name "presenter" }}
   {{- end }}
   {{- with $config.initialUser }}
   - id: {{ required "global.initialUserId" .id | quote }}

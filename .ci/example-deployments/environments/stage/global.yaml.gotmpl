@@ -117,6 +117,10 @@ global:
   # and TOTP seed in Secret keycloak-user-participacia-steward; no Portal or data rights.
   participationStewardId: d7995ea7-82f0-4321-a7ce-cee7bdb9db4e
 
+  # The person the owner presents as (T-6542, components/keycloak/presenter.yaml): this id on dev,
+  # stage and prod alike, its password and TOTP seed from components/keycloak/presenter.enc.yaml.
+  presenterUserId: 0ef92607-af78-4cbd-b9b8-ec19cd908889
+
   # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
   # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
   # email domain. Moved to Helsinki with the demo data (T-0343) while the broker held no
