@@ -85,6 +85,15 @@ components:
   # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
   # last: it renders its monitors into the namespaces of the components before it.
   - monitoring
+  # The operational dashboards and each project's own (T-6504, T-6513), read from the Prometheus
+  # above and through the gateway; dev's project list is grafana.yaml.gotmpl.
+  - grafana
+
+grafana:
+  dashboards:
+    enabled: true
+  grafana:
+    enabled: true
 
 global:
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}

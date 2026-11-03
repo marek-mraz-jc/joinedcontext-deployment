@@ -1,17 +1,16 @@
 ---
-# Grafana itself, and nothing beside it: the dashboards are provisioned from ConfigMaps this
-# component renders, so no sidecar fetches anything at start-up. Re-pin the digest with:
-#   S="service=registry.docker.io&scope=repository:grafana/grafana:pull"
-#   T=$(curl -s "https://auth.docker.io/token?$S" | jq -r .token)
-#   curl -sI -H "Authorization: Bearer $T" \
-#     -H 'Accept: application/vnd.oci.image.index.v1+json' \
-#     https://registry-1.docker.io/v2/grafana/grafana/manifests/<tag> | grep -i docker-content-digest
+# Grafana itself plus the NGSI-LD datasource, nothing beside it: the dashboards are provisioned
+# from ConfigMaps this component renders, so no sidecar fetches anything at start-up. Built by
+# image-grafana.yml from images/grafana; re-pin from its run's summary, on main only (a branch
+# build is refused by verify-pinned-images).
 grafana:
   grafana:
-    repository: 'docker.io/grafana/grafana'
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-grafana'
     # 12.4.12 clears the 7 fixable CRITICALs of 12.3.1, which the 12.3 line still carries one of
     # (T-3297). Checked against 12.3.1 read-only with this component's grafana.ini, datasource and
     # dashboard provider: no error, the same five dashboards provisioned. 12.4.14 (2026-10-27)
-    # clears CVE-2026-111497 (brotli-libs, HIGH, CISA KEV) and three Go rows (T-5887).
+    # clears CVE-2026-111497 (brotli-libs, HIGH, CISA KEV) and three Go rows (T-5887). Built on
+    # that upstream digest with the plugin added (T-6504, T-6513): image-grafana.yml run
+    # 41545246175 at 5730314b9.
     tag: '12.4.14'
-    digest: 'sha256:ae509d9ae8c1021ca32ec370a9ca975d40165eda9fccd1e1102d317ff8787cd7'
+    digest: 'sha256:bfe9e0171f2e5cbbe027be9ab737f4f0bedca8c5ac915b2d60c13d2c07ace07a'

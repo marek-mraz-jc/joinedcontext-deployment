@@ -12,7 +12,7 @@ RUN tar -xzf /tmp/plugin.tar.gz --strip-components=3 Grafana-NGSI-LD-data-source
     && npm ci --ignore-scripts --no-audit --no-fund \
     && npm run build
 
-# The digest moves with components/grafana/images.yaml's upstream line: same tag, same trivy rows.
+# A new upstream digest means a new build and a new pin in components/grafana/images.yaml (same tag).
 FROM docker.io/grafana/grafana:12.4.14@sha256:ae509d9ae8c1021ca32ec370a9ca975d40165eda9fccd1e1102d317ff8787cd7
 # Outside /var/lib/grafana: the chart mounts an emptyDir over that path (no persistence).
 COPY --from=plugin /build/dist /usr/share/grafana/jc-plugins/ngsild-grafana-datasource
