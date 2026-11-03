@@ -57,6 +57,8 @@ class Upstream(http.server.BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=60, must-revalidate")
         if self.path.startswith("/api/3/action/session"):
             self.send_header("Set-Cookie", f"ckan=session-{n}; Path=/; HttpOnly")
+        if self.headers.get("Origin"):
+            self.send_header("Access-Control-Allow-Origin", self.headers["Origin"])
         self.end_headers()
         self.wfile.write(json.dumps({"n": n, "cookie": self.headers.get("Cookie")}).encode())
 
@@ -135,3 +137,13 @@ def test_an_answer_ckan_marks_private_or_one_that_sets_a_cookie_is_never_kept(ed
         two, headers = get(edge + path)
         assert one["n"] != two["n"], path
         assert headers.get("Apisix-Cache-Status") != "HIT", path
+
+
+def test_an_answer_kept_for_one_origin_is_never_served_to_another(edge):
+    # CKAN names the asking Origin in Access-Control-Allow-Origin, so each Origin keeps its own copy.
+    _, bare = get(edge + "/api/3/action/status_show")
+    assert "Access-Control-Allow-Origin" not in bare
+    _, viz = get(edge + "/api/3/action/status_show", Origin="https://viz.example")
+    assert viz["Access-Control-Allow-Origin"] == "https://viz.example"
+    _, other = get(edge + "/api/3/action/status_show", Origin="https://other.example")
+    assert other["Access-Control-Allow-Origin"] == "https://other.example"

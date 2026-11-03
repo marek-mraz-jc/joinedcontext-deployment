@@ -206,3 +206,10 @@ def test_two_leader_runs_without_the_write_end_the_wait_red(monkeypatch):
     assert not ok
     assert "two Portal leader sync runs finished without writing dev/apisix-standalone-config back" in said
     assert cluster.secret["metadata"]["annotations"][edge.MARKER] == edge.MARKED
+
+
+def test_the_portal_log_skips_the_probe_pods_smoke_starts_with_kubectl_run(monkeypatch):
+    calls = []
+    monkeypatch.setattr(edge, "kubectl", lambda *args: calls.append(args) or "stage")
+    edge.portal_log("--since=1m")
+    assert all("app.kubernetes.io/name=portal-portal,!run" in call for call in calls)
