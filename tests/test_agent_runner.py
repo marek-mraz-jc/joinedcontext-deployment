@@ -188,6 +188,8 @@ def test_the_forge_seed_commits_the_builder_profile(dev):
     assert {"jc_pipeline_sample_source", "jc_pipeline_try_mapping", "jc_pipeline_validate"} <= named
     # T-6489: why a pipeline wrote nothing is read from its runs (portal paths.rs).
     assert {"jc_pipeline_logs", "jc_pipeline_inspect"} <= named
+    # T-6533: a SyncSource pauses through its switch, and a member's bindings are found by name.
+    assert {"jc_syncsource_pause", "jc_member_list"} <= named
     assert len(access["operations"]) == len(named), "an operation is listed once"
     # Never an agent's: approving, deleting, keys, whole projects, bringing a copy back (AG-11, AG-82).
     never = {"jc_change_approve", "jc_change_reject", "jc_resource_delete", "jc_project_delete",
