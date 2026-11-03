@@ -255,6 +255,7 @@
  "test_praha_tsk_roads.py": 9.5,
  "test_praha_vehicles.py": 6.5,
  "test_prepare.py": 148.8,
+ "test_presenter.py": 172.8,
  "test_preview.py": 94.5,
  "test_probes.py": 0.1,
  "test_prod_apply_trap.py": 0.8,
