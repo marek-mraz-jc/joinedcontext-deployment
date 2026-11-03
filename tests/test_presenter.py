@@ -72,7 +72,7 @@ def test_the_copied_credential_is_only_in_the_sops_file():
 ])
 def test_the_script_refuses_before_it_reaches_a_cluster(args, refusal):
     result = subprocess.run(
-        [str(ROOT / "scripts/presenter-secret.sh"), *args], cwd=ROOT, capture_output=True, text=True,
+        [str(ROOT / "scripts/presenter-secret.sh"), *args], cwd=ROOT, capture_output=True, text=True, check=False,
         env={"PATH": os.environ["PATH"]},
     )
     assert result.returncode == 2 and refusal in result.stderr, result.stderr
