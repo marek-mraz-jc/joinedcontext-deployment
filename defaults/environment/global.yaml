@@ -67,6 +67,9 @@ global:
   participationStewardEnrols: false
   # The person agents sign in as where no demo people exist (T-6449); empty means none.
   walkerUserId: ""
+  # The Keycloak id of the person the owner presents as (T-6542, components/keycloak/presenter.yaml):
+  # one id on dev, stage and prod; empty seeds nobody.
+  presenterUserId: ""
 
   # Whether Helmfile should create the namespaces automatically
   createNamespaces: true

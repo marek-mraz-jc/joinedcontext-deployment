@@ -589,6 +589,7 @@ v1/Secret smartcity/keycloak-client-zilina-pipelines
 v1/Secret smartcity/keycloak-config-keycloak-config-cli-config-realms
 v1/Secret smartcity/keycloak-user-initial
 v1/Secret smartcity/keycloak-user-participacia-steward
+v1/Secret smartcity/keycloak-user-presenter
 v1/Secret smartcity/portal-cookie-key
 v1/Secret smartcity/postgres-backup-artifact-store
 v1/Secret smartcity/postgres-cluster-local-backup-key

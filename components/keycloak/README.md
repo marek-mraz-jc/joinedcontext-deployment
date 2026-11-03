@@ -78,3 +78,18 @@ and created again under theirs (the import then sets their password and second f
 their Secrets again); an owner under another id is never deleted: the Job fails and names the id
 to set in `global.initialUserId`. `tests/test_keycloak_people.py` runs the script in the pinned
 Keycloak.
+
+## The presenter (T-6542)
+
+`presenter@hel.fi` is the one login the owner presents with on dev, stage and smartcity: the same
+id (`global.presenterUserId`), realm roles and groups on all three (`presenter.yaml`), bound by the
+forge seeds beside the demo steward and each other Organization's administrator, and never deleted
+by the `people` Job. Its password and TOTP seed are the owner's, in `presenter.enc.yaml` (sops,
+the age recipients of `.sops.yaml`); the owner reads them with `sops -d presenter.enc.yaml`. A
+render generates Secret `keycloak-user-presenter` like a demo person's, so no apply needs a key;
+once per instance the deployer loads the owner's values over it:
+
+```bash
+SOPS_AGE_KEY_FILE=.secrets/age-<instance>.key KUBECONFIG=.secrets/kubeconfig-<instance>.yaml \
+    scripts/presenter-secret.sh --instance <instance> --realm <global.instanceSlug>
+```

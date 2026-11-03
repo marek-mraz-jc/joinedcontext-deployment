@@ -161,6 +161,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.orgmember@hel.fi",
         "demo.analyst@hel.fi",
         *SHARING_PEOPLE,
+        # The person the owner presents as on dev, stage and prod (T-6542, tests/test_presenter.py).
+        "presenter@hel.fi",
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.zilina@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -199,7 +201,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
         assert credential["value"].startswith("$(USER_PASSWORD_") and credential["temporary"] is False
         # Dev's approvers sign in with the password alone (T-5776, owner 2026-10-26): no seeded
         # one-time code; smartcity and production keep T-5120 (test_keycloak_login_hardening.py).
-        assert otp == []
+        # The presenter keeps TOTP everywhere (mfa-required, T-6542).
+        assert (otp == []) != (user["username"] == "presenter@hel.fi"), user["username"]
 
 
 def test_demo_passwords_are_generated_per_cluster(rendered):
@@ -218,11 +221,13 @@ def test_demo_passwords_are_generated_per_cluster(rendered):
         "keycloak-user-demo-orgmember",
         "keycloak-user-demo-analyst",
         *("keycloak-user-" + name.split("@")[0].replace(".", "-") for name in SHARING_PEOPLE),
+        "keycloak-user-presenter",
     }
-    for secret in secrets.values():
+    for name, secret in secrets.items():
         assert secret["metadata"]["annotations"]["helm.sh/resource-policy"] == "keep"
-        # No TOTP seed on dev (T-5776): its approvers sign in without a one-time code.
-        assert sorted(secret["data"]) == ["password"]
+        # No TOTP seed on dev (T-5776): its approvers sign in without a one-time code. The
+        # presenter's is the owner's (T-6542), written over this one by scripts/presenter-secret.sh.
+        assert sorted(secret["data"]) == (["password", "totp"] if name == "keycloak-user-presenter" else ["password"])
 
 
 def test_production_seeds_no_human_users(rendered):

@@ -170,9 +170,10 @@ def test_every_seeded_totp_credential_has_a_fixed_id(env_docs, realm):
 
 
 def test_the_initial_owner_gets_no_seed_and_enrols_at_first_login(realm):
-    # A real person's second factor is enrolled on their own device, never seeded.
+    # A real person's second factor is enrolled on their own device, never seeded. The presenter's
+    # seed is the owner's own, one for three realms, held only in sops (T-6542).
     for user in realm["users"]:
-        if not user["username"].startswith(("demo.", "service-account-")):
+        if not user["username"].startswith(("demo.", "service-account-", "presenter@")):
             assert not [c for c in user.get("credentials", []) if c["type"] == "otp"], user["username"]
 
 

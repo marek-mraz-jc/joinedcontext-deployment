@@ -649,6 +649,7 @@ v1/Secret dev/keycloak-user-demo-probe
 v1/Secret dev/keycloak-user-demo-steward
 v1/Secret dev/keycloak-user-demo-viewer
 v1/Secret dev/keycloak-user-demo-zilina
+v1/Secret dev/keycloak-user-presenter
 v1/Secret dev/portal-cookie-key
 v1/Secret dev/postgres-backup-artifact-store
 v1/Secret dev/postgres-cluster-local-backup-key

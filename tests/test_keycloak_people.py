@@ -94,7 +94,9 @@ def people_job(docs):
 
 def test_dev_gives_every_demo_person_their_id(rendered):
     lines, job = people_job(rendered("dev"))
-    assert sorted(lines) == sorted([u["id"], f"{name}@hel.fi", "true"] for name, u in DEMO.items())
+    # The presenter (T-6542) beside them, never deleted.
+    expected = [[u["id"], f"{name}@hel.fi", "true"] for name, u in DEMO.items()] + [[PRESENTER, "presenter@hel.fi", "false"]]
+    assert sorted(lines) == sorted(expected)
     assert job["metadata"]["annotations"]["helm.sh/hook"] == "post-install,post-upgrade"
     pod = job["spec"]["template"]["spec"]
     assert pod["automountServiceAccountToken"] is False
@@ -108,6 +110,7 @@ def test_a_production_instance_names_its_owner_by_id_and_never_deletes_them(rend
     # The owner, never deleted, and the Decidim administrator (T-6448), both under their own ids.
     assert lines == [
         [SMARTCITY_STEWARD, "participacia.steward@hel.fi", "true"],
+        [PRESENTER, "presenter@hel.fi", "false"],
         [SMARTCITY_OWNER, "marek.mraz@joinedcontext.com", "false"],
     ]
     assert not SMARTCITY_STEWARD.startswith(("0a000000-", "de300000-"))
@@ -174,6 +177,10 @@ def held(base, username):
     return [u["id"] for u in body]
 
 
+# The person the owner presents as on dev, stage and smartcity (T-6542, tests/test_presenter.py).
+PRESENTER = re.search(
+    r"presenterUserId: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
+).group(1)
 STEWARD = ("de300000-0000-4000-8000-000000000001", "demo.steward@hel.fi", "true")
 OWNER = ("0a000000-0000-4000-8000-000000000001", "owner@example.org", "false")
 

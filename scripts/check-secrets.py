@@ -38,6 +38,9 @@ OWNER_ACCOUNT = {"keycloak-user-initial": {"password": 32}}
 # The Decidim administrator of a production realm (T-6448): global.participationStewardId, declared
 # in defaults/environment/secrets.yaml.gotmpl, with a TOTP seed where the realm reads one.
 PARTICIPATION_STEWARD = "keycloak-user-participacia-steward"
+# The person the owner presents as (T-6542, components/keycloak/presenter.yaml): `mfa-required`
+# always, so a TOTP seed beside the password; scripts/presenter-secret.sh writes the owner's over both.
+PRESENTER = {"keycloak-user-presenter": DEMO_USER_KEYS | MFA_SEED_KEYS}
 # Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
 # under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
 # held to the length components/ckan/secrets.yaml declares for its family.
@@ -98,7 +101,7 @@ def main() -> int:
     docs = [d for d in yaml.safe_load_all(rendered.read_text()) if isinstance(d, dict)]
     steward_keys = DEMO_USER_KEYS | (MFA_SEED_KEYS if "USER_TOTP_PARTICIPACIA_STEWARD" in rendered.read_text() else {})
     declared = (declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT
-                | {PARTICIPATION_STEWARD: steward_keys})
+                | {PARTICIPATION_STEWARD: steward_keys} | PRESENTER)
     generated = [
         d for d in docs
         if d.get("kind") == "Secret"
