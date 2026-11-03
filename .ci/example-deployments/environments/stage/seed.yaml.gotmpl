@@ -1,0 +1,6 @@
+---
+# Seed folders under components/ that stage adds to the forge seed (T-6545, owner 2026-11-03: "create
+# the context source registration from prod to stage"): one ContextSourceRegistration per public prod
+# Endpoint whose types stage holds no rows of, read only. Dev and prod list none.
+extraSeeds:
+  - context-gateway/seed/stage-reads-prod
