@@ -74,6 +74,8 @@ spec:
       - jc_model_infer
       - jc_model_source_get
       - jc_pipeline_metrics
+      - jc_pipeline_logs
+      - jc_pipeline_inspect
       - jc_pipeline_run
       - jc_syncsource_status
       - jc_ckan_status
@@ -117,5 +119,7 @@ spec:
       - kind: DataModel
         verbs: [read, propose]
       - kind: RoleBinding
+        verbs: [read, propose]
+      - kind: Role
         verbs: [read, propose]
   workspace: { cpu: "1", memory: 2Gi, ephemeralStorage: 4Gi }
