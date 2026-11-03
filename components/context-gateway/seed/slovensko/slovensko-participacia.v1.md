@@ -3,7 +3,7 @@
 <!-- Generated from the LinkML source by Model Tools. Do not edit: `jcctl model
      generate` overwrites this file and CI fails on any difference (DM-01, DM-02). -->
 
-What a town publishes on its participation platform (Decidim): the participatory processes and assemblies, the proposals residents filed, the projects of a participatory budget, the results the town reports, the meetings, the debates and the surveys. Each record is copied from the platform's public GraphQL API, or from its public pages where the API hides it, and carries the link back to its page. No personal data: author names, profiles, comments and their authors are never read, and e-mail addresses and phone numbers are cut from every text. An id is `urn:ngsi-ld:{Type}:slovensko-participacia:{instance}-{Decidim id}`, so a record keeps its entity from run to run; one no run has seen for three days leaves the space (expiresAt).
+What a town publishes on its participation platform (Decidim): the participatory processes and assemblies, the proposals residents filed, the projects of a participatory budget, the results the town reports, the meetings, the debates and the surveys. Each record is copied from the platform's public GraphQL API, or from its public pages where the API hides it, and carries the link back to its page. No personal data: author names, profiles, comments and their authors are never read, and e-mail addresses and phone numbers are cut from every text. An id is `urn:ngsi-ld:{Type}:slovensko-participacia:{instance}-{Decidim id}`, so a record keeps its entity from run to run; one no run has seen for three days leaves the space (expiresAt). ProposalStatistic is the one derived class: the counts the space computes from its own Proposal records.
 
 - Namespace: `https://joinedcontext.com/models/slovensko/slovensko-participacia`
 - Rendered by: `linkml-1.12.0`
@@ -225,6 +225,30 @@ Specialises `Entity`.
 | `sourceId` | Property | `string` |  |  | `jc:sourceId` | The record's id on the platform (Decidim's own numeric id). |
 | `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | The town or body that runs the participation platform. |
 | `dateCreated` | Property | `datetime` |  |  | `sdm:dateCreated` | When the platform created or published the record. |
+| `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the platform last changed the record. |
+| `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
+| `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
+| `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
+| `observedAt` | Property | `datetime` |  |  | `ngsi-ld:observedAt` | When the observation the entity reports was made. |
+
+### ProposalStatistic
+
+How many proposals of one process are in one state, counted from the Proposal records of this space. It holds figures only, so no text a resident wrote reaches it.
+
+IRI: `jc:ProposalStatistic`
+
+Specialises `Entity`.
+
+| Attribute | NGSI-LD kind | Range | Required | Unit | IRI | Description |
+|---|---|---|---|---|---|---|
+| `name` | Property | `string` | yes |  | `schema:name` | The title as the platform shows it, in the instance's language. |
+| `processName` | Property | `string` | yes |  | `jc:processName` | The title of the process the figure counts, as the platform shows it. |
+| `proposalState` | Property | `string` |  |  | `jc:proposalState` | The town's answer as Decidim's state token: `not_answered`, `evaluating`, `accepted`, `rejected`, `withdrawn`, or a token the instance defined itself. Empty when only the page was readable; `stateLabel` then holds what the page shows. |
+| `stateLabel` | Property | `string` |  |  | `jc:stateLabel` | The state as the page shows it, `Postupuje do hlasovania`. |
+| `proposalCount` | Property | `integer` | yes |  | `jc:proposalCount` | How many proposals of the process are in this state. |
+| `refParticipatoryProcess` | Relationship | `uriorcurie` | yes |  | `jc:refParticipatoryProcess` | The ParticipatoryProcess of this space the record belongs to, its URN. |
+| `source` | Property | `uri` |  |  | `sdm:source` | The participation platform the record was read from, its base URL. |
+| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | The town or body that runs the participation platform. |
 | `dateModified` | Property | `datetime` |  |  | `sdm:dateModified` | When the platform last changed the record. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |

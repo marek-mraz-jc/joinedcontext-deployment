@@ -33,6 +33,8 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures/decidim"
 SPACE = "slovensko-participacia"
 SCHEMA = json.loads((SEED / f"{SPACE}.v1.schema.json").read_text())
 TYPES = {"ParticipatoryProcess", "Proposal", "BudgetProject", "Result", "Meeting", "Debate", "Survey"}
+# Computed from TYPES inside the space (T-6505), harvested by nothing.
+DERIVED = {"ProposalStatistic"}
 # NGSI-LD members the broker keeps beside the model's attributes.
 SYSTEM = {"scope", "expiresAt"}
 PERSONAL = ("author", "authors", "nickname", "profiles", "comments", "Ján Vzorový", "navrhovatel@example.sk", "0900 123 456", "00421900123456", "905 123 456", "420 601 123 456")
@@ -454,9 +456,9 @@ def seed(name):
 def test_the_space_reads_publicly_and_only_pipelines_write():
     space = seed("slovensko-space-participacia.yaml")
     assert space["spec"]["dataModelRef"]["name"] == SPACE
-    assert {r["entityType"] for r in space["spec"]["retention"]} == TYPES
+    assert {r["entityType"] for r in space["spec"]["retention"]} == TYPES | DERIVED
     model = seed("slovensko-datamodel-participacia.yaml")
-    assert set(model["spec"]["classes"]) == TYPES
+    assert set(model["spec"]["classes"]) == TYPES | DERIVED
     public = seed("slovensko-endpoint-participacia.yaml")["spec"]
     assert public["audience"] == "public" and public["policyRef"].endswith(f":{SPACE}:participacia-read")
     assert public["catalog"]["personalData"] == "does-not-contain"

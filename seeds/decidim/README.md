@@ -55,6 +55,15 @@ on Decidim. A further instance goes in as a row once its host answers `{ decidim
 
 The gateway looks up a relationship's target in the store, not in the batch it holds (`HeldWrite::check`), and answers a 207 that leaves the run green. The first run over a new process writes the process alone; the next run writes its proposals, projects, results and meetings. A Result under a new parent Result takes one run more. New records in a known process take one run.
 
+## The derived dataset
+
+`slovensko-pipeline-participacia-statistika.yaml` (T-6505) reads Proposal and ParticipatoryProcess through
+the public Endpoint each hour, after the harvest, and writes one ProposalStatistic per process and state
+into the same space. The Endpoint `slovensko-participacia-statistika` serves that one type under its own
+Policy and publishes it to CKAN as links; the rows stay in the space. A state with no proposal left leaves
+within three hours (`expiresAt`), so the counts equal the Proposal records once the proposals' own three-day
+lease has passed. The state words are `OWN_STATE_LABELS` (a test keeps them equal).
+
 ## Not in the data, and why
 
 - Authors, profiles, comments and endorsement lists: personal data, never asked for.
