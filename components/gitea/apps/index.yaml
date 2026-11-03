@@ -440,6 +440,8 @@ apps:
     - server/host-test/districts.json
     - server/host-test/events.json
     - server/src/lib.rs
+    - server/wit/deps/jc-app.wit
+    - server/wit/server.wit
     - src/App.test.tsx
     - src/App.tsx
     - src/access.tsx

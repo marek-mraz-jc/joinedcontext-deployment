@@ -40,6 +40,14 @@ jobs:
           skipped=""
           for source in platform portal antares; do
             message=$(python3 scripts/pin-images.py "$source")
+            # A refused pin writes nothing, so the diff below would end the run green (portal 11-02
+            # 22:38..00:15Z: every commit refused, the run green, no ci-red filed).
+            case "$message" in
+              *"refused (exit"*)
+                echo "::error::$message"
+                skipped="$skipped $source"
+                continue ;;
+            esac
             git diff --quiet -- components && continue
             just _dev-assemble
             helmfile -f deployment/helmfile.yaml -e dev repos >/dev/null

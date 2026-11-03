@@ -53,13 +53,41 @@ grafana-linkerd-control-plane:
     # outbound proxy connects to 4143 when it is and to 9090 when it is not, so both are
     # allowed and neither widens the peer.
     - to:
-        - namespaceSelector: {}
-          podSelector:
+        - podSelector:
             matchLabels:
               app.kubernetes.io/name: prometheus
+          namespaceFrom: grafana.grafana.prometheusNamespace
       ports:
         - protocol: TCP
           port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: context-gateway-gateway
+          componentNamespace: context-gateway
+      ports:
+        - protocol: TCP
+          port: 4143
+
+context-gateway-linkerd-from-grafana:
+  componentNamespace: context-gateway
+  podSelector:
+    app.kubernetes.io/name: context-gateway-gateway
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: grafana
+          componentNamespace: grafana
+      ports:
+        - port: 4143
+          protocol: TCP
+        - port: 4190
+          protocol: TCP
+        - port: 4191
+          protocol: TCP
 
 keycloak-linkerd-from-grafana:
   componentNamespace: keycloak

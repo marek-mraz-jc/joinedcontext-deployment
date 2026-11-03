@@ -110,6 +110,7 @@ networking.k8s.io/v1/NetworkPolicy addons/default-deny-secrets
 networking.k8s.io/v1/NetworkPolicy addons/dr-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/grafana
 networking.k8s.io/v1/NetworkPolicy addons/grafana-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy addons/grafana-egress-to-gateway
 networking.k8s.io/v1/NetworkPolicy addons/grafana-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/keycloak
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-admin-permissions
@@ -191,6 +192,7 @@ rbac.authorization.k8s.io/v1/RoleBinding argocd/argocd-redis-secret-init
 rbac.authorization.k8s.io/v1/RoleBinding argocd/argocd-repo-server
 rbac.authorization.k8s.io/v1/RoleBinding argocd/argocd-server
 v1/ConfigMap -/grafana-dashboards
+v1/ConfigMap -/grafana-projects
 v1/ConfigMap addons/apisix
 v1/ConfigMap addons/apisix-standalone-base
 v1/ConfigMap addons/cnpg-controller-manager-config
