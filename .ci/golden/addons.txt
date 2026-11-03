@@ -111,7 +111,9 @@ networking.k8s.io/v1/NetworkPolicy addons/dr-drill-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/grafana
 networking.k8s.io/v1/NetworkPolicy addons/grafana-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/grafana-egress-to-gateway
+networking.k8s.io/v1/NetworkPolicy addons/grafana-from-portal
 networking.k8s.io/v1/NetworkPolicy addons/grafana-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy addons/grafana-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy addons/keycloak
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-admin-permissions
 networking.k8s.io/v1/NetworkPolicy addons/keycloak-admin-permissions-linkerd

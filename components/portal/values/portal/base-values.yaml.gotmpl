@@ -133,6 +133,16 @@ envSecret:
     secret: portal-erasure-key
     key: key
     optional: true
+{{- if and (has "grafana" .Values.components) .Values.grafana.grafana.enabled }}
+  # What a person's visualization is saved with (T-6509): Grafana has one local administrator, and
+  # its service accounts are per organization, while the Portal writes into each project's.
+  JC_PORTAL_GRAFANA_USER:
+    secret: grafana-admin
+    key: username
+  JC_PORTAL_GRAFANA_PASSWORD:
+    secret: grafana-admin
+    key: password
+{{- end }}
 {{- if has "gitea" .Values.components }}
   # Minted by the forge's bootstrap Job, not generated: a token the forge accepts is one the
   # forge issued (T-0399).
@@ -349,6 +359,12 @@ env:
   # The knowledge assistant's administration paths (API/01 §34, T-3057), asked with the Portal's
   # own token (audience jc-assistant); without it the knowledge routes answer 503.
   JC_PORTAL_KNOWLEDGE_URL: "http://jc-assistant.{{ .Values.assistant.worker.namespace }}.svc.cluster.local:8080"
+{{- end }}
+{{- if and (has "grafana" .Values.components) .Values.grafana.grafana.enabled }}
+  # The project's Grafana (T-6509): the admin API inside the cluster, and the address a person
+  # opens a saved visualization at. Unset, the Grafana page says Grafana is not set up here.
+  JC_PORTAL_GRAFANA_URL: "http://grafana.{{ .Values.grafana.grafana.namespace }}.svc.cluster.local:3000/grafana"
+  JC_PORTAL_GRAFANA_PUBLIC_URL: "https://{{ .Values.global.domain }}/grafana"
 {{- end }}
 {{- if has "context-gateway" .Values.components }}
   # The space surface a declared Subscription is written through (T-0931, CC-72): the reconciler
