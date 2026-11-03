@@ -36,3 +36,4 @@ components:
 - {name: sandbox-reaper, component: sandbox-reaper, namespace: dev, wave: 29}
 - {name: probes, component: probes, namespace: dev, wave: 30}
 - {name: monitoring, component: monitoring, namespace: dev, wave: 31}
+- {name: grafana, component: grafana, namespace: dev, wave: 32}

@@ -316,7 +316,7 @@ DEV_PROJECTS = yaml.safe_load(
 DASHBOARD_DIR = COMPONENT / "charts/dashboards/projects"
 PROVISION = COMPONENT / "charts/dashboards/provision.sh"
 PLUGIN_ID = "ngsild-grafana-datasource"
-# The upstream digest under images/grafana; images.yaml pins the same until the built image takes over.
+# The upstream digest under images/grafana; images.yaml pins what image-grafana.yml built on it.
 BASE_DIGEST = "sha256:ae509d9ae8c1021ca32ec370a9ca975d40165eda9fccd1e1102d317ff8787cd7"
 
 
@@ -354,6 +354,9 @@ def test_the_one_unsigned_plugin_is_the_pinned_one(addons):
     # Only ever the base of what is pinned, or the plugin moves Grafana behind the trivy reading.
     pinned = yaml.safe_load((COMPONENT / "images.yaml").read_text())["grafana"]["grafana"]
     assert bases[1].endswith(":" + pinned["tag"] + "@" + BASE_DIGEST), pinned
+    # The built image, or stock Grafana starts without the plugin and every project panel fails.
+    assert pinned["repository"] == "ghcr.io/marek-mraz-jc/joinedcontext-grafana"
+    assert pinned["digest"] != BASE_DIGEST
 
 
 def test_the_image_gate_reads_the_expiring_excuses_and_prints_the_digest_first():

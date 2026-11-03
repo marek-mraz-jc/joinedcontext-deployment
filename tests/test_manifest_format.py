@@ -93,6 +93,32 @@ def test_every_hand_written_seed_is_in_the_canonical_layout():
     )
 
 
+def in_cron_range(field: str, low: int, high: int) -> bool:
+    return all(
+        low <= int(number) <= high
+        for part in field.split(",")
+        for number in part.split("/")[0].split("-")
+        if number != "*"
+    )
+
+
+def test_every_pipeline_schedule_is_a_cron_the_portal_accepts():
+    """The Portal refuses a schedule out of range and the Pipeline never runs (`77 3 * * 3`)."""
+    ranges = [(0, 59), (0, 23), (1, 31), (1, 12), (0, 7)]
+    bad = []
+    for path in SEED.rglob("*-pipeline-*.yaml"):
+        for doc in yaml.safe_load_all(path.read_text()):
+            schedule = (doc or {}).get("spec", {}).get("schedule")
+            if (doc or {}).get("kind") != "Pipeline" or schedule is None:
+                continue
+            fields = schedule.split()
+            if len(fields) != 5 or not all(
+                in_cron_range(field, *limit) for field, limit in zip(fields, ranges)
+            ):
+                bad.append(f"{path.name}: {schedule}")
+    assert not bad, bad
+
+
 def test_each_generated_glob_names_a_file_and_its_generator_exists():
     files = [p.relative_to(SEED).as_posix() for p in SEED.rglob("*.yaml")]
     for generator, globs in GENERATED.items():
