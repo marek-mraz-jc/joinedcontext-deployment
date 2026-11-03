@@ -450,6 +450,7 @@ postgresql.cnpg.io/v1/ScheduledBackup dev/apps-db-daily-backup
 postgresql.cnpg.io/v1/ScheduledBackup dev/postgres-cluster-daily-backup
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-apps
 rbac.authorization.k8s.io/v1/ClusterRole -/dev-portal-namespaces
+rbac.authorization.k8s.io/v1/ClusterRole -/jc-agent-reader-nodes
 rbac.authorization.k8s.io/v1/ClusterRole -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRole -/postgres-operator-cloudnative-pg-edit
@@ -459,6 +460,8 @@ rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-prometheus
 rbac.authorization.k8s.io/v1/ClusterRole -/prometheus-stack-kube-state-metrics
 rbac.authorization.k8s.io/v1/ClusterRole -/sandbox-reaper-reaper
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/dev-portal-namespaces
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-agent-reader-nodes
+rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-agent-reader-view
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/jc-drift-reader
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/ClusterRoleBinding -/prometheus-operator
@@ -696,6 +699,7 @@ v1/Service dev/viz-renderer
 v1/Service dev/wasm-host-tokens
 v1/Service kube-system/node-exporter
 v1/ServiceAccount dev/agent-proxy
+v1/ServiceAccount dev/agent-reader
 v1/ServiceAccount dev/apisix
 v1/ServiceAccount dev/artifact-store
 v1/ServiceAccount dev/ckan-api-token
