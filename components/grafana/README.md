@@ -37,6 +37,36 @@ is the worked example and the render this component is tested against.
 | Context Broker — Antares | `antares_http_requests_total`, `antares_http_request_duration_seconds`, `antares_notifications_*`, `antares_pg_*` | The broker serves these at `/q/metrics` |
 | SLOs — public surfaces | `jc:probe_availability:ratio30d`, `jc:probe_latency:p95_30d`, `jc:probe_failure:ratio_rate*`, `jc:probe_slow:ratio_rate30d`, `jc_probe_*_expiry_timestamp_seconds` | The 30-day objectives per target and surface (T-5104), recorded by the monitoring component from the synthetic probe |
 
+## Project dashboards
+
+A project sees its own dashboards with its own rights (T-6504). `grafana.grafana.projects` in an
+environment (dev: `.ci/example-deployments/environments/dev/grafana.yaml.gotmpl`) lists them; empty
+leaves this component as it was, operational dashboards only.
+
+- **One organization per project.** Grafana's folders cannot be closed here (team sync is
+  Enterprise), so an organization is the wall: `org_mapping` opens it to the project's realm groups
+  at each login, and a dashboard, folder or datasource of another project answers 404. A person
+  who holds none of the groups and not `platform-admin` is refused at sign-in; the operational
+  dashboards in organization 1 are `platform-admin`'s alone once a project is listed.
+- **The person's own token reads the Endpoint.** Each Endpoint is one datasource with
+  `oauthPassThru`: the proxy forwards the signed-in person's token to the gateway, and the
+  Endpoint's Policy decides by the person. No token, key or service account sits in a datasource
+  or a dashboard. The token has to name each slug, so a slug also goes into `keycloak-clients.yaml`
+  as an audience; `tests/test_grafana.py` fails when the two lists part.
+- **The hook provisions, not the files.** Grafana refuses a provisioning file for an organization
+  that does not exist, and the database starts empty with the pod, so `provision.sh` runs as the
+  container's postStart hook against the local admin API. It repeats safely. `org_mapping` names
+  organizations by number because Grafana reads it before the hook has run: the numbers follow
+  the project names in sorted order, and the hook stops the container when one differs.
+- **The plugin is in the image** (`images/grafana`, built by `image-grafana.yml`): the NGSI-LD
+  datasource from one commit of github.com/joinedcontext/Grafana-NGSI-LD-data-source (Apache-2.0),
+  archive checked by hash, dependencies by its lockfile with install scripts off. It is unsigned,
+  so `allow_loading_unsigned_plugins` names this one id. A commit move repeats the read of the
+  source: the plugin runs in every viewer's browser.
+
+To add a project: its entry in the environment, `charts/dashboards/projects/<name>.json` whose
+datasource uids are the Endpoint names, and each slug's audience in `keycloak-clients.yaml`.
+
 ## Checklist
 
 - [x] Runs as non-root (472:472) with `readOnlyRootFilesystem`; `/tmp` and the log directory
@@ -44,6 +74,7 @@ is the worked example and the render this component is tested against.
 - [x] Health probes — the chart's `/api/health`
 - [x] Standard labels — the chart's
 - [x] ServiceAccount with least privilege — no RBAC, no API access, no mounted token
+- [x] Egress only to Prometheus, Keycloak, DNS and the gateway (`networkpolicies.yaml`)
 - [x] Published through APISIX with TLS at the edge (`apisix-routes.yaml`), never an Ingress
       of its own
 - [x] Image pinned by digest (`images.yaml`)

@@ -44,12 +44,14 @@ KIT_REQUESTS_MIB = 990
 ALLOCATABLE_MIB = {"dev": NODE_ALLOCATABLE_MIB, "smartcity": 22172700 / 1024}
 # (requests, limits) ceilings in MiB, the sums of 2026-10-28 rounded up to 256Mi. dev's limit moved
 # on 2026-11-02 for observability-collector (T-6431): 512Mi plus its proxy's 250Mi, the price of
-# gateway MCP calls in a project's Activity; it books 128Mi plus its proxy's 10Mi of requests.
+# gateway MCP calls in a project's Activity; it books 128Mi plus its proxy's 10Mi of requests. It
+# moved again on 2026-11-02 for Grafana (T-6513): 256Mi plus its proxy's 250Mi, the project
+# dashboards on dev; it books 138Mi of requests.
 # smartcity's limit moved on 2026-11-02 for Decidim (T-6448, owner's order): web 1274Mi, Sidekiq
 # 1018Mi and Redis 410Mi with their proxies, Postgres 2Gi -> 2560Mi for their connections; it books
 # 1182Mi of requests.
 CEILINGS = {
-    "dev": (NODE_REQUEST_BUDGET_MIB, 45312),
+    "dev": (NODE_REQUEST_BUDGET_MIB, 45824),
     "smartcity": (NODE_REQUEST_BUDGET_MIB, 46080),
     "production": (37120, 67584),
 }

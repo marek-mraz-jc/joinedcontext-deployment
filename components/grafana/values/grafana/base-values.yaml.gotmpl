@@ -92,6 +92,16 @@ grafana.ini:
     domain: {{ $global.domain | quote }}
     root_url: "https://{{ $global.domain }}/grafana"
     serve_from_sub_path: true
+{{- if $this.projects }}
+  # The NGSI-LD datasource is in the image (images/grafana), outside the chart's emptyDir, and it
+  # is the one unsigned plugin this Grafana loads.
+  paths:
+    plugins: /usr/share/grafana/jc-plugins
+  plugins:
+    allow_loading_unsigned_plugins: ngsild-grafana-datasource
+    # Grafana's own downloads at start: the egress policy drops them, and nothing here wants them.
+    preinstall_disabled: true
+{{- end }}
   analytics:
     reporting_enabled: false
     check_for_updates: false
@@ -122,8 +132,37 @@ grafana.ini:
     # The realm decides what an operator may see here, the same way it does everywhere else:
     # a viewer reads, `platform-admin` administers, and nobody is an editor, because a
     # dashboard edited in the UI is a dashboard that disappears with the pod (CC-02).
+{{- if $this.projects }}
+    # One organization per project, so a dashboard is out of reach for anyone outside it: a
+    # folder cannot be closed here, because team sync is Enterprise. A person's groups pick the
+    # organizations at each login, platform-admin alone reaches the operational dashboards of
+    # organization 1, and a person with neither is refused at the door.
+    org_attribute_path: "[groups, realm_access.roles][]"
+    # By number: Grafana reads this list when it starts, before the hook has made any
+    # organization, and drops a name it cannot find. provision.sh makes them in this order on the
+    # empty database and refuses to go on when a number differs.
+    {{- $names := list }}
+    {{- range $project := $this.projects }}{{ $names = append $names $project.name }}{{ end }}
+    {{- $ids := dict }}
+    {{- range $index, $name := sortAlpha $names }}{{ $_ := set $ids $name (add $index 2) }}{{ end }}
+    {{- $mapping := list "platform-admin:1:Admin" }}
+    {{- $members := list }}
+    {{- range $project := $this.projects }}
+    {{- range $group := $project.groups }}
+    {{- $mapping = append $mapping (printf "%s:%d:Viewer" $group (index $ids $project.name)) }}
+    {{- $members = append $members (printf "@ == '%s'" $group) }}
+    {{- end }}
+    {{- end }}
+    org_mapping: {{ join " " $mapping | quote }}
+    # No role for anyone else, which is what the strict line below refuses.
+    role_attribute_path: {{ printf "contains(realm_access.roles[*], 'platform-admin') && 'Admin' || groups[?%s] | [0] && 'Viewer'" (join " || " $members) | quote }}
+    role_attribute_strict: true
+    # A datasource forwards the person's access token, which outlives no panel refresh by itself.
+    use_refresh_token: true
+{{- else }}
     role_attribute_path: "contains(realm_access.roles[*], 'platform-admin') && 'Admin' || 'Viewer'"
     role_attribute_strict: false
+{{- end }}
     use_pkce: true
     tls_skip_verify_insecure: false
 
@@ -180,3 +219,18 @@ dashboardProviders:
 # fetch when every dashboard is already a file in this repository.
 dashboardsConfigMaps:
   platform: {{ index .Values "grafana" "dashboards" "configMapName" }}
+{{- if $this.projects }}
+
+# What provision.sh reads, and the hook that runs it inside this container: the image holds curl
+# and the chart hands it the local administrator, so no second image and no Job (T-6504). It also
+# has to hold on a pod that starts from an empty database, which only the pod itself sees.
+extraConfigmapMounts:
+  - name: projects
+    mountPath: /etc/grafana/projects
+    configMap: {{ index .Values "grafana" "dashboards" "projectsConfigMapName" }}
+    readOnly: true
+lifecycleHooks:
+  postStart:
+    exec:
+      command: [/bin/bash, /etc/grafana/projects/provision.sh]
+{{- end }}
