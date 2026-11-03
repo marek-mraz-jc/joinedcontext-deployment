@@ -290,14 +290,14 @@ def test_the_catalogue_frames_the_general_assistant_on_every_page():
 
 
 # The CKAN organization each body publishes under, and the project its Endpoints live in.
-PUBLISHED = {"bbsk": "bbsk", "banskabystrica": "banskabystrica", "zilina": "zilina", "praha": "praha", "hel-fi": "helsinki", "slovensko": "slovensko"}
+PUBLISHED = {"bbsk": "bbsk", "banskabystrica": "banskabystrica", "zilina": "zilina", "praha": "praha", "hel-fi": "helsinki", "slovensko": "slovensko", "barcelona": "barcelona"}
 
 
 def test_the_general_assistant_reads_every_publishers_public_endpoints():
     spec = general()["spec"]
     assert spec["channel"] == "public" and spec.get("enabled", True) is True
     # And the national open data (T-4340).
-    assert spec["scope"]["projects"] == ["banskabystrica", "zilina", "praha", "helsinki", "slovensko"]
+    assert spec["scope"]["projects"] == ["banskabystrica", "zilina", "praha", "helsinki", "slovensko", "barcelona"]
     reached = set()
     for connector in spec["connectors"]:
         project, _, name = connector["endpoint"].rpartition("/")
@@ -325,6 +325,22 @@ def test_the_general_assistant_reads_every_national_public_endpoint():
     for name in national:
         title = endpoints[name.split("/")[1]]["metadata"]["title"]
         assert title.get("en") and len(title["en"]) <= 80, name
+
+
+def test_the_general_assistant_reads_barcelonas_surface_parking():
+    # T-6566 (owner 2026-11-03): asked where to park near Barcelona's centre, the catalogue's
+    # assistant answered that the published data holds no parking for Barcelona and sent the
+    # person to Žilina and Helsinki, while barcelona-parking (OnStreetParking, totalSpotNumber) is
+    # public. Every public Endpoint of the city is a connector, and the prompt names the city.
+    spec = general()["spec"]
+    connected = {c["endpoint"] for c in spec["connectors"]}
+    endpoints = manifests("Endpoint", "barcelona")
+    city = {f"barcelona/{name}" for name, e in endpoints.items() if name != "barcelona"
+            and e["spec"]["audience"] == "public" and "mcp" in e["spec"]["enabledRepresentations"]}
+    assert "barcelona/barcelona-parking" in city
+    assert city <= connected, sorted(city - connected)
+    assert "barcelona" in spec["scope"]["projects"]
+    assert "Barcelona = barcelona" in spec["systemPrompt"]
 
 
 # jc-core reach::MAX_RESOLVED (AG-122): jc-assistant serves the first this many Endpoints by slug
@@ -374,8 +390,11 @@ def test_the_general_assistant_knows_the_whole_catalogue_and_each_publishers_own
     instance = manifests("CkanInstance", "bbsk")[portal["ckanInstanceRef"]]["spec"]
     assert instance["url"] == "https://opendata.dev.joinedcontext.com"
     assert portal["schedule"] == "50 3 * * *"  # after charts/ckan's harvest at 03:23
-    assert {f"{p}/catalogue" for p in spec["scope"]["projects"]} | {"portal", "catalogue"} | \
-        {"web"} | {f"{p}/web" for p in spec["scope"]["projects"] if p != "slovensko"} == set(spec["sources"])
+    # Barcelona keeps no source of its own (T-6566): its datasets come through `portal`, its
+    # numbers through its connectors.
+    indexed = [p for p in spec["scope"]["projects"] if p != "barcelona"]
+    assert {f"{p}/catalogue" for p in indexed} | {"portal", "catalogue"} | \
+        {"web"} | {f"{p}/web" for p in indexed if p != "slovensko"} == set(spec["sources"])
 
 
 def test_the_general_assistant_names_no_city_and_carries_the_portal_guide():
