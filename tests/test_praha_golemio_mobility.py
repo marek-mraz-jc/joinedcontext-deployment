@@ -74,7 +74,7 @@ def bento(mapping: str, document: dict, base: str = HOST) -> tuple[list[dict], l
     }
     done = subprocess.run(
         ["docker", "run", "--rm", "-i", "--network", "host", "-e", "JC_ORG_DOMAIN=praha.eu", "-e", f"JC_SPACE={SPACE}",
-         "-e", f"DS_GOLEMIO_MR_PARKIT_TOKEN={TOKEN}", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO,
+         "-e", f"PRAHA_GOLEMIO_TOKEN={TOKEN}", "-e", f"CONFIG={json.dumps(config)}", "--entrypoint", "sh", BENTO,
          "-c", 'printf "%s" "$CONFIG" > /tmp/c.json && exec /bento -c /tmp/c.json'],
         input=json.dumps(document).encode(), capture_output=True, timeout=180, check=False,
     )

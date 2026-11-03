@@ -14,6 +14,12 @@ spec:
   schedule: '40 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-mr-parkit }
+  # The tariff read in the mapping sends the same Golemio key; a step may name only its own
+  # pipeline's secretRefs (PL-16), so the key comes in under its own name (T-6537).
+  secretRefs:
+    - name: golemio
+      key: token
+      envVar: PRAHA_GOLEMIO_TOKEN
   targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
   output: { type: OffStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

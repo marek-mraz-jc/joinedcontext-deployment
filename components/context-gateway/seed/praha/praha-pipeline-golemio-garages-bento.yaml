@@ -3,8 +3,8 @@
 # address, reservation page and tariff. Golemio publishes no occupancy for these garages (their
 # measurements carry nulls, T-5268), so none is written.
 #
-# Tariffs: the pipeline reads /v3/parking-tariffs?primarySource=mr_parkit itself, with the key the
-# DataSource's headerRef puts into the runner as DS_GOLEMIO_MR_PARKIT_TOKEN. A garage names its
+# Tariffs: the pipeline reads /v3/parking-tariffs?primarySource=mr_parkit itself, with the key its
+# own secretRef puts into the runner as PRAHA_GOLEMIO_TOKEN. A garage names its
 # tariff by id; a tariff's charges give the price of an hour (charge_interval 3600, written as
 # priceRatePerMinute) and of a day (86400, pricePerDay), in Czech crowns: the register names no
 # currency, and Mr.Parkit sells in CZK.
@@ -32,7 +32,7 @@ pipeline:
                   verb: GET
                   headers:
                     Accept: application/json
-                    X-Access-Token: ${DS_GOLEMIO_MR_PARKIT_TOKEN}
+                    X-Access-Token: ${PRAHA_GOLEMIO_TOKEN}
                   timeout: 30s
                   retries: 1
               # 164 tariffs are 630 KB; 8 MiB is room for ten times as many.
