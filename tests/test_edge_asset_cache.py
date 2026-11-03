@@ -97,3 +97,15 @@ routes:
         status, headers, _ = answer(base + "/webassets/broken.css")
         assert status == 502
         assert IMMUTABLE not in headers.get("Cache-Control", ""), headers
+
+
+def test_the_portal_bundle_counts_in_a_bucket_of_its_own():
+    """T-6539: a cold dataset page fetches ~45 chunks; in the page's web-class bucket a few
+    visitors behind one address got 429 on a chunk and a broken page. The route keeps the chain
+    of portal-public and replaces only its limit-count."""
+    entry = load("components/portal/apisix-routes.yaml")["portal-public-assets"]
+    assert entry["pluginConfig"] == "portal-public"
+    assert "rateClass" not in entry, "the Organization's page rate must not replace this bucket"
+    assert set(entry["plugins"]) == {"limit-count"}, entry["plugins"]
+    limit = entry["plugins"]["limit-count"]
+    assert (limit["count"], limit["time_window"], limit["key"], limit["rejected_code"]) == (3000, 60, "remote_addr", 429)

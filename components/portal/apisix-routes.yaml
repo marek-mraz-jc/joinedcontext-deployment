@@ -172,6 +172,19 @@ portal-public-assets:
   subDomain: portal
   priority: 5
   pluginConfig: portal-public
+  # A cold dataset page fetches about 45 chunks; in the page's own bucket (the web class, 300 a
+  # minute on stage) five visitors behind one address (a school, a carrier's CGNAT) got 429 on a
+  # chunk and a "Too many requests" page instead of the dataset (T-6539). The files are
+  # content-hashed and hold no data, so they count in a bucket of their own, as CKAN's (T-4717).
+  plugins:
+    limit-count:
+      count: 3000
+      time_window: 60
+      key_type: var
+      key: remote_addr
+      rejected_code: 429
+      policy: local
+      show_limit_quota_header: true
 
 portal-api:
   name: portal-api
