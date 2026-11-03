@@ -11,6 +11,6 @@ grafana:
     # dashboard provider: no error, the same five dashboards provisioned. 12.4.14 (2026-10-27)
     # clears CVE-2026-111497 (brotli-libs, HIGH, CISA KEV) and three Go rows (T-5887). Built on
     # that upstream digest with the plugin added (T-6504, T-6513): image-grafana.yml run
-    # 41545246175 at 5730314b9.
+    # 41548616058 at d89d7c77f.
     tag: '12.4.14'
-    digest: 'sha256:bfe9e0171f2e5cbbe027be9ab737f4f0bedca8c5ac915b2d60c13d2c07ace07a'
+    digest: 'sha256:a7bf66f9b8061c6053e5ffc58b7232b3f799ce28bc7b4013f0cfa47ac9bad53d'
