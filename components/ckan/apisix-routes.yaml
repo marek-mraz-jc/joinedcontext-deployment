@@ -94,7 +94,9 @@ ckan-old-host:
 # nginx stores nothing CKAN marks private or answers with a Set-Cookie, and a request with any
 # cookie, an Authorization or an X-CKAN-API-Key header (CKAN reads a token from both) neither
 # reads nor fills the cache: a person's session and a token's private datasets never reach it
-# (tests/test_edge_ckan_cache.py runs the pinned image).
+# (tests/test_edge_ckan_cache.py runs the pinned image). CKAN answers Access-Control-Allow-Origin
+# only to an Origin on its allow list, so the key holds the Origin: an Origin-less read kept first
+# was served to the viz renderer without the header (stage smoke 2026-11-03).
 ckan-action-cache:
   name: ckan-action-cache
   description: CKAN's anonymous action API reads, cached 60 s
@@ -112,7 +114,7 @@ ckan-action-cache:
     proxy-cache:
       cache_strategy: disk
       cache_zone: disk_cache_one
-      cache_key: ["$host", "$request_uri"]
+      cache_key: ["$host", "$request_uri", "$http_origin"]
       cache_bypass: ["$http_cookie", "$http_authorization", "$http_x_ckan_api_key"]
       no_cache: ["$http_cookie", "$http_authorization", "$http_x_ckan_api_key"]
       cache_method: ["GET", "HEAD"]

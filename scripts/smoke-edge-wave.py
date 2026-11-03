@@ -34,7 +34,9 @@ from datetime import UTC, datetime
 SECRET = "apisix-standalone-config"
 MARKER = "joinedcontext.com/composed-by"
 MARKED = "portal"
-PORTAL_LABEL = "app.kubernetes.io/name=portal-portal"
+# `!run` skips the probe pods smoke.sh starts with `kubectl run` wearing the Portal label (the meshed
+# forged-caller probe): one still initializing failed `kubectl logs -l` (stage smoke 2026-11-03).
+PORTAL_LABEL = "app.kubernetes.io/name=portal-portal,!run"
 REFUSED = "edge file not written"
 SYNCED = "sync run finished"
 # JC_PORTAL_SYNC_INTERVAL: the pause between two sync runs.
