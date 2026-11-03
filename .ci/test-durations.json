@@ -315,6 +315,7 @@
  "test_stage.py": 0.4,
  "test_standards_gate.py": 1.2,
  "test_status_page.py": 0.2,
+ "test_sweep_endpoints.py": 1.0,
  "test_temporal_audit.py": 89.5,
  "test_test_shard.py": 3.2,
  "test_upgrade.py": 4.9,
