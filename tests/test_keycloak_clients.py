@@ -161,6 +161,8 @@ def test_development_profile_seeds_the_demo_users(rendered):
         "demo.orgmember@hel.fi",
         "demo.analyst@hel.fi",
         *SHARING_PEOPLE,
+        # The person the owner presents as on dev, stage and prod (T-6542, tests/test_presenter.py).
+        "presenter@hel.fi",
     }
     assert users["demo.steward@hel.fi"]["realmRoles"] == ["portal-approver"]
     assert users["demo.zilina@hel.fi"]["realmRoles"] == ["portal-approver"]
@@ -193,6 +195,10 @@ def test_development_profile_seeds_the_demo_users(rendered):
         # uses email as username, and the import aborts before it sets any password (T-0366).
         assert user["username"] == user["email"]
         assert user["requiredActions"] == [], "a required action would block the demo login"
+        if user["username"] == "presenter@hel.fi":
+            # The owner's dev password, copied hashed by scripts/presenter-secret.sh (T-6542).
+            assert "credentials" not in user
+            continue
         credential, *otp = user["credentials"]
         # Security line of T-0248: the password is a per-cluster Secret substituted at import
         # time, never a literal in the rendered realm.

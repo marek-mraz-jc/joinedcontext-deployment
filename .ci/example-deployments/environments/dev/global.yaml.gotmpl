@@ -111,6 +111,10 @@ global:
   metrics:
     enabled: true
 
+  # The person the owner presents as (T-6542, components/keycloak/presenter.yaml): this id on dev,
+  # stage and prod alike, its password and TOTP seed from components/keycloak/presenter.enc.yaml.
+  presenterUserId: 0ef92607-af78-4cbd-b9b8-ec19cd908889
+
   # The URN segment of every entity on this cluster (urn:ngsi-ld:{Type}:hel.fi:{space}:{id});
   # the gateway checks it on every write (PF-42), the realm's demo users carry it as their
   # email domain. Moved to Helsinki with the demo data (T-0343) while the broker held no
