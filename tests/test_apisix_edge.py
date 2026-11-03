@@ -265,6 +265,10 @@ def test_space_reads_and_writes_count_apart(rendered):
             # T-5900: the data host keeps the edge cache of anonymous reads (tests/test_edge_api_cache.py).
             # Buffered, or proxy-cache stores nothing (T-6185).
             assert "labels" not in route and set(route["plugins"]) == {"proxy-buffering", "proxy-cache"}, route["id"]
+        elif route["id"] == "portal-public-assets":
+            # T-6539: the Portal's bundle counts in a bucket of its own, as CKAN's assets
+            # (tests/test_edge_asset_cache.py).
+            assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
         elif route["id"] == "api-oauth":
             # T-4630, ADR-N-052 §4: minting an anonymous token counts per client address.
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"}, route["id"]
