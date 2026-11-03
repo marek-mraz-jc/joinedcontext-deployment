@@ -25,6 +25,9 @@
     "Proposal": {
       "@id": "jc:Proposal"
     },
+    "ProposalStatistic": {
+      "@id": "jc:ProposalStatistic"
+    },
     "Result": {
       "@id": "jc:Result"
     },
@@ -124,6 +127,9 @@
       "@id": "jc:onlineUrl",
       "@type": "xsd:anyURI"
     },
+    "processName": {
+      "@id": "jc:processName"
+    },
     "processType": {
       "@context": {
         "description": "skos:prefLabel",
@@ -138,6 +144,10 @@
     },
     "proposalAnswer": {
       "@id": "jc:proposalAnswer"
+    },
+    "proposalCount": {
+      "@id": "jc:proposalCount",
+      "@type": "xsd:integer"
     },
     "proposalState": {
       "@id": "jc:proposalState"

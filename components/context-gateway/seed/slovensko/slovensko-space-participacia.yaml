@@ -42,3 +42,6 @@ spec:
       history: 'off'
     - entityType: Survey
       history: 'off'
+    # Recomputed each hour from Proposal; the figures of an earlier hour are not kept.
+    - entityType: ProposalStatistic
+      history: 'off'
