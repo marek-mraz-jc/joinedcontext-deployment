@@ -64,6 +64,12 @@ leaves this component as it was, operational dashboards only.
   so `allow_loading_unsigned_plugins` names this one id. A commit move repeats the read of the
   source: the plugin runs in every viewer's browser.
 
+- **A person saves a visualization from the Portal** (T-6509). The Portal holds `grafana-admin`
+  (the Secret is mirrored into its namespace), writes one dashboard into the project's folder and
+  keeps the definition in its own database, because Grafana's database dies with the pod. A sweep
+  puts a lost dashboard back within five minutes. A public Endpoint gets an anonymous datasource
+  from the Portal; a closed one needs its entry and audience here first.
+
 To add a project: its entry in the environment, `charts/dashboards/projects/<name>.json` whose
 datasource uids are the Endpoint names, and each slug's audience in `keycloak-clients.yaml`.
 
