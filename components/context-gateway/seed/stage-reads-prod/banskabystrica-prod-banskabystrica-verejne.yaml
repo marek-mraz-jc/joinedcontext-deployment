@@ -14,4 +14,4 @@ spec:
         - type: PointOfInterest
   mode: auxiliary
   operations: [retrieveOps]
-  federation: { identity: caller }
+  federation: { identity: anonymous }

@@ -14,4 +14,4 @@ spec:
         - type: Survey
   mode: auxiliary
   operations: [retrieveOps]
-  federation: { identity: caller }
+  federation: { identity: anonymous }

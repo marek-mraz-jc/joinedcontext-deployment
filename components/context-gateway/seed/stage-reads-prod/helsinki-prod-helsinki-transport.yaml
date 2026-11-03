@@ -13,4 +13,4 @@ spec:
         - type: GtfsRoute
   mode: auxiliary
   operations: [retrieveOps]
-  federation: { identity: caller }
+  federation: { identity: anonymous }

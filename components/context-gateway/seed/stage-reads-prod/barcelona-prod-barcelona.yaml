@@ -13,4 +13,4 @@ spec:
         - type: Event
   mode: auxiliary
   operations: [retrieveOps]
-  federation: { identity: caller }
+  federation: { identity: anonymous }
