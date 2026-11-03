@@ -117,6 +117,7 @@
  "test_emergency_revoke.py": 5.7,
  "test_endpoint_surfaces.py": 13.1,
  "test_entity_lifetime.py": 7.1,
+ "test_env_seed_parity.py": 4.5,
  "test_environments_config.py": 529.3,
  "test_events_classify.py": 0.1,
  "test_failed_jobs.py": 0.1,

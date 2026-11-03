@@ -55,6 +55,9 @@ components:
   # `ckan-api-token`, which the portal's reconciler publishes with (T-2469).
   - ckan
   - portal
+  # The OpenTelemetry Collector of the Activity stream (Deployment/05 section 5), as on dev (T-6536):
+  # after the Portal it posts to; the gateway's MCP tool calls reach a steward's Activity through it.
+  - observability
   # The shared host of server WASM Apps, one Deployment per shard (ADR-N-044, T-3361): AFTER the
   # Portal, whose reconciler writes each shard's placement ConfigMap and store-key Secret, which a
   # shard mounts and waits for (AP-157, AP-158); synced before it, a fresh cluster's shards waited
@@ -68,6 +71,10 @@ components:
   - basemap
   # The chart renderer of ADR-N-053 (T-4641): viz.{domain}, framed by the catalogue's datasets.
   - viz
+  # The standalone assistant (T-4694): ai.{domain}/{publicId}, as on dev (T-6536).
+  - ai
+  # Deletes sandbox and branch-preview namespaces past their TTL (OPS-44, PF-19), as on dev (T-6536).
+  - sandbox-reaper
   # The participation platform on participacia.{domain} (ADR-N-065, T-6448): before the probes, so
   # the first probe round finds it. Sizing in docs Deployment/18 section 5.
   - decidim
@@ -76,8 +83,17 @@ components:
   # The scrape configuration and alert rules the Prometheus above evaluates (OPS-16, T-5104),
   # last: it renders its monitors into the namespaces of the components before it.
   - monitoring
+  # The operational dashboards and each project's own (T-6504, T-6513), as on dev (T-6536); the
+  # project list is grafana.yaml.gotmpl.
+  - grafana
   # Argo CD (ADR-N-056, T-4678) goes here, `- gitops`, once its images carry no CRITICAL CVE
   # (T-4706: argocd v3.5.4 and the helmfile v1.8.1 plugin image); everything else it needs is set.
+
+grafana:
+  dashboards:
+    enabled: true
+  grafana:
+    enabled: true
 
 global:
   # Workers read this cluster through the read-only agent-reader account (T-6546); never production.
