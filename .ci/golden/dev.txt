@@ -285,7 +285,9 @@ networking.k8s.io/v1/NetworkPolicy dev/gitea-runner-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/grafana
 networking.k8s.io/v1/NetworkPolicy dev/grafana-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy dev/grafana-egress-to-gateway
+networking.k8s.io/v1/NetworkPolicy dev/grafana-from-portal
 networking.k8s.io/v1/NetworkPolicy dev/grafana-linkerd-control-plane
+networking.k8s.io/v1/NetworkPolicy dev/grafana-linkerd-from-portal
 networking.k8s.io/v1/NetworkPolicy dev/hsl-bridge
 networking.k8s.io/v1/NetworkPolicy dev/hsl-bridge-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/keycloak
@@ -339,6 +341,7 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-agent-workspaces
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-assistant
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-functions
 networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-gitea
+networking.k8s.io/v1/NetworkPolicy dev/portal-egress-to-grafana
 networking.k8s.io/v1/NetworkPolicy dev/portal-from-gitea
 networking.k8s.io/v1/NetworkPolicy dev/portal-from-observability
 networking.k8s.io/v1/NetworkPolicy dev/portal-ingress-from-gitea-runner
@@ -347,6 +350,7 @@ networking.k8s.io/v1/NetworkPolicy dev/portal-internal-from-context-gateway
 networking.k8s.io/v1/NetworkPolicy dev/portal-internal-from-pipeline-runner
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-egress-to-gitea
+networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-egress-to-grafana
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-agent-proxy
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-context-gateway
 networking.k8s.io/v1/NetworkPolicy dev/portal-linkerd-from-gitea
