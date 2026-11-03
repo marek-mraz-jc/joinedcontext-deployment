@@ -74,22 +74,22 @@ def test_one_registration_per_space_and_type():
                 seen[key] = path
 
 
-def test_only_stage_lists_the_folder():
+def test_no_environment_lists_the_folder_while_the_gateway_refuses_it():
+    """Paused (T-6545 reopened): the gateway answers 501 on every Endpoint of a space holding an
+    `identity: caller` registration to an address outside the platform."""
     environments = PROJECT_ROOT / ".ci/example-deployments/environments"
     listing = {
         env.name
         for env in environments.iterdir()
         for values in env.glob("*.yaml.gotmpl")
-        if "seed/stage-reads-prod" in values.read_text()
+        if any(line.strip() == "- context-gateway/seed/stage-reads-prod" for line in values.read_text().splitlines())
     }
-    assert listing == {"stage"}, listing
+    assert listing == set(), listing
 
 
-def test_the_stage_seed_carries_the_registrations_and_prod_and_dev_do_not(rendered):
+def test_no_seed_carries_the_registrations_while_paused(rendered):
     paths = {path.replace("/", "__") for path in registrations()}
-    stage = set(seed_configmap(rendered("stage"))["data"])
-    assert paths <= stage, sorted(paths - stage)[:5]
-    for env in ("smartcity", "dev"):
+    for env in ("stage", "smartcity", "dev"):
         assert not paths & set(seed_configmap(rendered(env))["data"]), env
 
 

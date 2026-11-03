@@ -1,6 +1,11 @@
 ---
 # Seed folders under components/ that stage adds to the forge seed (T-6545, owner 2026-11-03: "create
-# the context source registration from prod to stage"): one ContextSourceRegistration per public prod
-# Endpoint whose types stage holds no rows of, read only. Dev and prod list none.
-extraSeeds:
-  - context-gateway/seed/stage-reads-prod
+# the context source registration from prod to stage"). Paused 2026-11-03T06:1xZ (prod-deployer,
+# T-6545 reopened): context-gateway answers 501 federation-identity-unavailable on every Endpoint of
+# a space holding an `identity: caller` registration whose address is outside the platform
+# (crates/context-gateway/src/app.rs federation_token), so the folder took down every Endpoint of
+# the nine registered spaces on stage (stage-smoke 05:58Z: helsinki-* NGSI-LD and MCP 501). It comes
+# back with a gateway mode that forwards anonymously to an outside address.
+# extraSeeds:
+#   - context-gateway/seed/stage-reads-prod
+extraSeeds: []
