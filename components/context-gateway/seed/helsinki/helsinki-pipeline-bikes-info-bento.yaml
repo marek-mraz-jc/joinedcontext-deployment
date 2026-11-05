@@ -19,5 +19,3 @@ pipeline:
           },
           "source": { "type": "Property", "value": "https://www.hsl.fi/en/citybikes" }
         }
-
-    - archive: { format: json_array }

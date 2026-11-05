@@ -205,7 +205,7 @@ def test_a_city_bike_station_message_maps_to_one_docking_station():
     assert source["spec"]["http"]["records"] == "data.stations"
     station = {"station_id": "001", "name": "Kaivopuisto", "lat": 60.155411, "lon": 24.950391,
                "capacity": 30}
-    [entity] = open_data.run(mapping("bikes-info"), json.dumps(station).encode(), "helsinki")
+    [entity] = open_data.run_all(mapping("bikes-info"), json.dumps(station).encode(), "helsinki")
     assert entity["id"] == "urn:ngsi-ld:BikeHireDockingStation:hel.fi:helsinki:001"
     assert entity["name"]["languageMap"] == {"fi": "Kaivopuisto"}
     assert entity["location"]["value"]["coordinates"] == [24.950391, 60.155411]
