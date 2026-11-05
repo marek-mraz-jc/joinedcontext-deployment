@@ -316,6 +316,9 @@ elif args[0] == "run" and args[1].startswith("smoke-app") and args[1].endswith("
     # The probe carrying APISIX's labels: the App policy's own positive control. Like the
     # cluster, it passes only with every label the edge's egress policy selects (T-2667).
     edge = all('"%s": "%s"' % pair in line for pair in EDGE_SELECTOR)
+    # The pod spec as the cluster would get it, for the Service check (T-6594).
+    overrides = next(a for a in args if a.startswith("--overrides="))[len("--overrides="):]
+    open(os.environ["STUB_SPEC"] + ".app-edge-pod", "w").write(overrides)
     sys.exit(0 if spec.get("appEdgeReaches", True) and edge else 1)
 elif args[0] == "run" and args[1].startswith("smoke-app"):
     # Reports by what it prints, like the edge-peer probe.
@@ -1703,6 +1706,18 @@ def test_an_app_pod_apisix_cannot_reach_fails_the_run(tmp_path):
     result = run(tmp_path, dict(HEALTHY, appEdgeReaches=False), "https://example.test", "https://idm.example.test")
     assert result.returncode == 1
     assert "FAIL  a pod with APISIX's label cannot reach the App pod at 10.42.0.20:8080" in result.stdout
+
+
+def test_the_probe_with_apisix_labels_never_serves_apisix_traffic(tmp_path):
+    """T-6594: APISIX's labels are Service apisix-gateway's selector, and a Ready pod carrying them is
+    one of its endpoints: Traefik sent visitors to the busybox probe (502 on / at 08:06Z). Only a pod
+    that never turns Ready stays out of the Service while the NetworkPolicies still select it."""
+    result = run(tmp_path, HEALTHY, "https://example.test", "https://idm.example.test")
+    assert "ok    a pod with APISIX's label reaches an App pod on 8080 (first of 1)" in result.stdout
+    pods = list(tmp_path.glob("*.app-edge-pod"))
+    assert len(pods) == 1, pods
+    container = json.loads(pods[0].read_text())["spec"]["containers"][0]
+    assert container.get("readinessProbe", {}).get("exec", {}).get("command") == ["false"], container
 
 
 def test_an_app_peer_probe_that_never_ran_fails_the_run(tmp_path):
