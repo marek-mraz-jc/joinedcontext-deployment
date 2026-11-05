@@ -220,5 +220,11 @@ context-broker:
     # Antares dev a376b65 (dev-91, over daeea7d: T-5894 merged @context cache bounded at 64 MiB of heap instead of
     # 2 million terms; same FEATURES). No migration, no new key. Rollback: dev-90.
     # Signed by ship.yml on dev at a376b65 (run 40646951161).
-    tag: 'dev-91'
-    digest: 'sha256:67f5833d6b61dee7d343bb2dd4ca47c4831689609ec7caa1c364f4adc8e6de55'
+    # Hotfix v0.1.23 (owner order 2026-11-05 06:1xZ, T-6000, T-4678): only this pin moves on the release branch,
+    # to the image dev runs since 2026-10-30: Antares dev dc1da08 (dev-140), which holds the T-6000 pool-leak fix
+    # 0741592. Migrations over dev-91: 0029 (trigger function), 0030 (ADD COLUMN bare, constant default), 0031
+    # (DROP POLICY tenant_update, unused); all rollback compatible. No key prod sets is gone; new keys keep defaults.
+    # Signed by ship.yml on dev at dc1da08 (run 41549943302). Dump first: postgres-cluster-1
+    # /var/lib/postgresql/data/t6000/antares-20261105.dump. Rollback: dev-91 (sha256:67f5833d...) and that dump.
+    tag: 'dev-140'
+    digest: 'sha256:c827dadc775c32c9ebd9c3fdd3ec73bdee2b3c22384c2fa4aca4bd4e5014a85e'
