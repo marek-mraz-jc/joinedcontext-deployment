@@ -279,8 +279,10 @@ context-broker:
     # (pinned by pin-images, T-6330). Rollback: dev-138. Signed by ship.yml on dev at 4386508 (run 41535007202).
     # Antares dev dc1da08 (dev-140, over 4386508: T-6508). No migration, no new runtime key
     # (pinned by pin-images, T-6330). Rollback: dev-139. Signed by ship.yml on dev at dc1da08 (run 41549943302).
-    tag: 'dev-140'
-    digest: 'sha256:c827dadc775c32c9ebd9c3fdd3ec73bdee2b3c22384c2fa4aca4bd4e5014a85e'
+    # Antares dev 4cab024 (dev-141, over dc1da08: T-6591, T-6592). No migration, no new runtime key
+    # (pinned by pin-images, T-6330). Rollback: dev-140. Signed by ship.yml on dev at 4cab024 (run 42000103963).
+    tag: 'dev-141'
+    digest: 'sha256:c8a62641514ca00ea4a6fa7a6c49704eb1d951a939f31c73443bb1143e2993e6'
     # The Antares dev commit this digest is the ship.yml image of: scripts/pin-images.py antares judges the
     # range from here and moves it with the digest (T-6330).
-    commit: 'dc1da084c626d6c2c2aa9e77f89f92ae900d67a0'
+    commit: '4cab024eb8f09bf2119d352e7e8a90f0bcc138a8'
