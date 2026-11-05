@@ -89,9 +89,9 @@ def plan(monkeypatch, tmp_path, files, head, again=None, base=BASE, full_at=RECE
     # a pin moves the one release that renders the image
     (["components/portal/images.yaml"], change(**{"portal-portal": [deployment("portal", "p@sha256:2")]}),
      ["portal-portal"]),
-    # a seed edit moves only the seed release
+    # a seed edit moves the seed release and the bootstrap whose Job commits it to the forge (T-6593)
     (["seeds/bbsk/pipelines/air.yaml"], change(**{"gitea-seed": [config("seed", {"bbsk.yaml": "a: 2"})]}),
-     ["gitea-seed"]),
+     ["gitea-bootstrap", "gitea-seed"]),
     # a values change in one component moves that component's release
     (["components/keycloak/values/keycloak/base-values.yaml.gotmpl"],
      change(**{"keycloak-keycloak": [deployment("keycloak", "k@sha256:1"), config("realm", {"x": "2"})]}),
@@ -183,7 +183,7 @@ def test_a_mixed_batch_names_exactly_the_releases_it_changes(monkeypatch, tmp_pa
                      "gitea-seed": [config("seed", {"bbsk.yaml": "a: 2"})],
                      "keycloak-keycloak": [deployment("keycloak", "k@sha256:1"), config("realm", {"x": "2"})]})
     assert plan(monkeypatch, tmp_path, files, head, listed=LISTED) == [
-        "gitea-seed", "keycloak-keycloak", "portal-portal"]
+        "gitea-bootstrap", "gitea-seed", "keycloak-keycloak", "portal-portal"]
 
 
 @pytest.mark.parametrize("structure", ["components/portal/helmfile.yaml.gotmpl", "components/portal/component.yaml"])
@@ -251,3 +251,17 @@ def test_dev_apply_reads_and_stamps_the_last_full_sync():
     body = text[text.index("\ndev-apply full="):text.index("\n_smoke ")]
     assert "{.data.fullSyncAt}" in body and 'apply-pins.py plan dev "$base" "$full_at"' in body
     assert '--full)' in body[body.index("release.py record dev dev"):]
+
+
+@pytest.mark.parametrize("release", ["gitea-seed", "gitea-seed-11", "gitea-sample-apps", "gitea-sample-apps-7"])
+def test_a_moved_seed_release_also_runs_the_forge_bootstrap(monkeypatch, tmp_path, release):
+    # T-6593: the KPI model moved in gitea-seed-N's ConfigMap and the forge kept the old one,
+    # because only gitea-bootstrap's post-upgrade Job commits the seed and it was not synced
+    monkeypatch.setitem(BEFORE, release, [config("seed", {"helsinki-kpi.yaml": "derivedFrom: string"})])
+    head = change(**{release: [config("seed", {"helsinki-kpi.yaml": "derivedFrom: list"})]})
+    assert plan(monkeypatch, tmp_path, ["components/context-gateway/seed/helsinki/x.yaml"], head) == [
+        "gitea-bootstrap", release]
+
+def test_a_release_outside_the_seed_runs_no_bootstrap(monkeypatch, tmp_path):
+    head = change(**{"keycloak-keycloak": [deployment("keycloak", "k@sha256:2"), config("realm", {"x": "1"})]})
+    assert plan(monkeypatch, tmp_path, ["components/keycloak/images.yaml"], head) == ["keycloak-keycloak"]
