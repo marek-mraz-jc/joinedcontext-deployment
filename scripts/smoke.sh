@@ -988,7 +988,8 @@ probe_overrides() {
     "containers": [{
       "name": "$1",
       "image": "$image",
-      "command": $2,
+      "command": $2,${3:+
+      $3,}
       "securityContext": {"allowPrivilegeEscalation": false, "readOnlyRootFilesystem": true, "capabilities": {"drop": ["ALL"]}},
       "resources": {"requests": {"cpu": "10m", "memory": "16Mi"}, "limits": {"cpu": "100m", "memory": "64Mi"}}
     }]
@@ -1137,7 +1138,13 @@ if [ "$app_count" -eq 0 ]; then
 else
 	app_ip=${app_ips%% *}
 	app_probe="smoke-app-$$"
-	app_edge=$(probe_overrides "$app_probe-edge" "[\"sh\", \"-c\", \"i=0; while [ \$i -lt 10 ]; do nc -w 3 -z $app_ip 8080 && exit 0; i=\$((i+1)); sleep 3; done; exit 1\"]" |
+	# T-6594: APISIX's two labels are also the selector of Service apisix-gateway, so a Ready
+	# probe became one of its endpoints and Traefik sent visitors to busybox, which answered
+	# nothing on 9080: the walk's load of / met a 502 at 08:06Z, one second after the probe
+	# started. A readiness probe that never passes keeps it out of every Service; the
+	# NetworkPolicies select by labels and admit it as before.
+	app_edge=$(probe_overrides "$app_probe-edge" "[\"sh\", \"-c\", \"i=0; while [ \$i -lt 10 ]; do nc -w 3 -z $app_ip 8080 && exit 0; i=\$((i+1)); sleep 3; done; exit 1\"]" \
+		'"readinessProbe": {"exec": {"command": ["false"]}, "periodSeconds": 300}' |
 		sed 's/"metadata": {/"metadata": {\n    "labels": {"app.kubernetes.io\/name": "apisix", "app.kubernetes.io\/instance": "apisix-apisix"},/')
 	if kubectl run "$app_probe-edge" -n "$slug" --rm --attach --restart=Never --quiet --timeout=90s \
 		--image="$image" --overrides="$app_edge" >/dev/null 2>&1; then
