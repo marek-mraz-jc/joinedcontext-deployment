@@ -394,8 +394,14 @@ slots:
     annotations: { ngsi_ld_kind: Property, hidden: true }
   derivedFrom:
     slot_uri: jc:derivedFrom
-    description: "The Endpoint the sources were read through, as its URN. The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see."
+    description: "The Endpoint the sources were read through, as its URN, or the list of them when the sources are read through several (PL-104). The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see."
     required: true
+    range: Any
+    inlined: true
+    any_of:
+      - range: uri
+      - range: uri
+        multivalued: true
     annotations:
       label:
         tag: label

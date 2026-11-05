@@ -118,3 +118,21 @@ def test_an_indicator_is_a_number_or_not_measured_over_a_start_end_window(model)
     window = example["calculationPeriod"]
     for wrong in ("2026-09-18T05:31:05Z/2026-09-18T05:46:05Z", {"start": window["start"]}):
         assert list(validator.iter_errors({**example, "calculationPeriod": wrong})), wrong
+
+
+@pytest.mark.parametrize("model", KPI_MODELS + ["helsinki/helsinki-hub"])
+def test_an_indicator_names_one_source_endpoint_or_the_list_of_them(model):
+    """PL-104, T-6593: `derivedFrom` is the URN of the Endpoint the sources were read through, or
+    the list of them when a KPI step reads through several, as jc-core's kpi step writes it. The
+    Portal refused every KPI editor proposal (`records_failed`) while the schema took one string."""
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = json.loads((SEED / f"{model}.v1.schema.json").read_text())
+    slot = {**schema["definitions"]["KeyPerformanceIndicator"]["properties"]["derivedFrom"]}
+    validator = jsonschema.Draft7Validator(slot)
+    one = "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-transport"
+    for good in (one, [one], [one, "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-air-quality"]):
+        assert list(validator.iter_errors(good)) == [], good
+    # Each wrong value fails on its type, the constraint the gateway refuses a write for (DM-86).
+    for wrong in (17, [], [17], {"object": one}):
+        errors = list(validator.iter_errors(wrong))
+        assert errors and {e.validator for e in errors} <= {"type", "minItems"}, wrong

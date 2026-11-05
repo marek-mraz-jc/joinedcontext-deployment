@@ -131,8 +131,15 @@
           "x-ngsi-ld-kind": "Property"
         },
         "derivedFrom": {
-          "description": "The Endpoint the sources were read through, as its URN. The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see.",
-          "type": "string",
+          "description": "The Endpoint the sources were read through, as its URN, or the list of them when the sources are read through several (PL-104). The endpoint and not the space: what an indicator could see is what that endpoint's policy let it see.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": [
+            "string",
+            "array"
+          ],
           "x-ngsi-ld-kind": "Property"
         },
         "id": {
