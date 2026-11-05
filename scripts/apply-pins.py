@@ -86,6 +86,11 @@ STRUCTURE = re.compile(r"(^|/)helmfile[^/]*\.(ya?ml|gotmpl)$|^components/[^/]+/c
 # A structure file inside one component changes only that component's releases.
 COMPONENT = re.compile(r"^components/([^/]+)/")
 FULL_SYNC_HOURS = 6
+# The forge seed and the sample Apps are ConfigMaps of their own releases, committed to the forge
+# only by gitea-bootstrap's post-upgrade Job, whose render does not move with them: a scoped sync
+# of the ConfigMaps alone left dev's forge on the old seed until the next full sync (T-6593).
+SEED_RELEASE = re.compile(r"^gitea-(seed|sample-apps)(-[0-9]+)?$")
+SEED_WRITER = "gitea-bootstrap"
 
 
 def objects(release_dir: Path) -> dict[str, tuple[str, str]]:
@@ -254,6 +259,8 @@ def plan(environment: str, base: str, full_at: str | None, now: datetime) -> lis
         if bare:
             raise Refused(f"{base[:12]}..HEAD changes the hooks of {', '.join(bare)}, which installs no release of its own")
         names = sorted(set(names) | set(component_releases(environment, components)))
+    if any(SEED_RELEASE.match(n) for n in names):
+        names = sorted(set(names) | {SEED_WRITER})
     return names
 
 
