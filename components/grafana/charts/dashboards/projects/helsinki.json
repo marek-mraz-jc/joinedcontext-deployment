@@ -427,6 +427,11 @@
                         "text": "Closed",
                         "color": "red",
                         "index": 1
+                      },
+                      "withIncidence": {
+                        "text": "Incident",
+                        "color": "orange",
+                        "index": 2
                       }
                     }
                   }
