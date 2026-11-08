@@ -605,6 +605,115 @@ def test_the_pinned_image_clears_forged_identity_headers_before_the_upstream(com
         assert seen.get(header.lower()) == value, f"{header} was cleared too: {seen}"
 
 
+# --- F-12 (T-6662): an Authorization that is no bearer is no credential at the edge -----------
+
+GATEWAY_CHAINS = ["context-space", "context-space-portal", "context-endpoint", "context-endpoint-portal"]
+
+
+def test_the_gateway_chains_clear_an_authorization_that_is_no_bearer(component_plugins, component_routes):
+    """F-12: the gateway reads `Basic` as anonymous, so the edge must too. Each gateway chain
+    clears a non-bearer Authorization before limit-count and the cache read it, and every route
+    for callers without a bearer matches any Authorization that is no bearer."""
+    for chain in GATEWAY_CHAINS:
+        lua = sanitiser(component_plugins[chain][1]["plugins"])
+        assert 'ngx.req.clear_header("Authorization")' in lua, chain
+        assert "^[Bb]earer\\s+\\S" in lua, chain
+    no_bearer = ["http_authorization", "!", "~*", "^bearer\\s+\\S"]
+    anonymous = [
+        route_id for route_id, (_, route) in component_routes.items()
+        if any(var[0] == "http_authorization" for var in route.get("vars", []))
+    ]
+    assert {"context-mcp-named", "api-mcp-named"} <= set(anonymous)
+    for route_id in anonymous:
+        vars_ = component_routes[route_id][1]["vars"]
+        assert no_bearer in vars_, f"{route_id} matches {vars_}"
+
+
+@pytest.mark.xdist_group("docker-apisix-sanitiser")
+@pytest.mark.skipif(not __import__("shutil").which("docker"), reason="docker not installed")
+def test_a_basic_header_meets_the_anonymous_limit_on_the_pinned_image(component_plugins, component_routes, tmp_path):
+    """F-12 played on `apache/apisix` as pinned: 61 MCP calls from one address, each with a fresh
+    `Authorization: Basic`, take the anonymous route and its 60 per minute, and the upstream sees
+    no Authorization; a bearer still takes the hub route and arrives as sent."""
+    import json
+    import subprocess
+    import time
+    import urllib.error
+    import urllib.request
+
+    from test_apisix_429_contract import pinned_image
+    from test_edge_csp_baseline import free_port
+
+    pre = component_plugins["context-endpoint"][1]["plugins"]["serverless-pre-function"]
+    named = component_routes["context-mcp-named"][1]
+    echo = 'return function() ngx.say(require("cjson").encode(ngx.req.get_headers(0))); ngx.exit(200) end'
+    # One dict per route: yaml.safe_dump writes a shared one as an alias, which APISIX drops.
+    def upstream() -> dict:
+        return {"type": "roundrobin", "nodes": {"127.0.0.1:9080": 1}}
+
+    routes = [
+        {"id": "echo", "uri": "/echo", "plugins": {
+            "serverless-pre-function": {"phase": "rewrite", "functions": [echo]}}},
+        {"id": "named", "uri": named["uri"], "priority": named["priority"], "vars": named["vars"],
+         "plugins": {"serverless-pre-function": pre, "limit-count": named["plugins"]["limit-count"],
+                     "proxy-rewrite": {"uri": "/echo"}},
+         "upstream": upstream()},
+        {"id": "hub", "uri": "/api/mcp*", "priority": 20,
+         "plugins": {"serverless-pre-function": pre, "proxy-rewrite": {"uri": "/echo"}},
+         "upstream": upstream()},
+    ]
+    (tmp_path / "config.yaml").write_text(
+        "deployment:\n  role: data_plane\n  role_data_plane:\n    config_provider: yaml\n"
+    )
+    (tmp_path / "apisix.yaml").write_text(yaml.safe_dump({"routes": routes}) + "#END\n")
+    port = free_port()
+    name = f"apisix-basic-{port}"
+    subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+    started = subprocess.run(
+        ["docker", "run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:9080",
+         "-v", f"{tmp_path / 'config.yaml'}:/usr/local/apisix/conf/config.yaml:ro",
+         "-v", f"{tmp_path / 'apisix.yaml'}:/usr/local/apisix/conf/apisix.yaml:ro",
+         pinned_image()],
+        capture_output=True, text=True, check=False,
+    )
+    if started.returncode != 0:
+        pytest.skip(f"the pinned image does not run here: {started.stderr.strip()}")
+
+    def call(authorization: str) -> tuple[int, dict]:
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{port}/api/mcp/p/s", method="POST", data=b"{}",
+            headers={"Authorization": authorization, "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=5) as response:
+                return response.status, json.loads(response.read())
+        except urllib.error.HTTPError as refused:
+            return refused.code, {}
+
+    try:
+        deadline = time.time() + 60
+        while True:
+            try:
+                status, seen = call("Bearer a.b.c")
+                break
+            except OSError:
+                if time.time() > deadline:
+                    pytest.fail("APISIX did not start")
+                time.sleep(1)
+        assert status == 200 and seen.get("authorization") == "Bearer a.b.c", (status, seen)
+        statuses = []
+        for n in range(61):
+            status, seen = call(f"Basic {n:04d}")
+            statuses.append(status)
+            if status == 200:
+                assert "authorization" not in seen, seen
+        assert statuses[:60] == [200] * 60, statuses
+        assert statuses[60] == 429, statuses
+        assert call("Bearer a.b.c")[0] == 200, "a bearer keeps its own route and limit"
+    finally:
+        subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
+
+
 def test_the_sanitiser_clears_the_underscore_spelling_of_every_header(component_plugins, apisix_config):
     """`X_Userinfo` is a header of its own on the wire, and `underscores_in_headers on` lets it
     travel. A WSGI or CGI upstream then folds it onto the same name as `X-Userinfo`, so

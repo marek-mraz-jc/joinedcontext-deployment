@@ -243,6 +243,24 @@ def test_production_seeds_no_human_users(rendered):
 # `view-clients`; the writes come from the realm's fine-grained admin permissions, granted on
 # the clients it manages and denied on every other one.
 @pytest.mark.parametrize("env", ["local", "production", "dev"])
+def test_no_audience_mapper_puts_a_resource_into_an_id_token(rendered, env):
+    """F-14 (T-6662): an ID token never names a resource. The gateway refuses a token whose `typ`
+    is not `Bearer` (jc-core check_signature); this keeps the realm from minting one that would
+    need that refusal: every audience mapper writes the access token alone."""
+    realm = realm_of(rendered, env)
+    holders = list(realm.get("clients", [])) + list(realm.get("clientScopes", []))
+    mappers = [
+        (holder.get("clientId") or holder.get("name"), mapper)
+        for holder in holders
+        for mapper in holder.get("protocolMappers", [])
+        if mapper.get("protocolMapper") == "oidc-audience-mapper"
+    ]
+    assert mappers, "the realm has no audience mapper; the walk found nothing to check"
+    for holder, mapper in mappers:
+        assert mapper.get("config", {}).get("id.token.claim") == "false", (holder, mapper["name"])
+
+
+@pytest.mark.parametrize("env", ["local", "production", "dev"])
 def test_the_portal_service_account_may_manage_clients(rendered, env):
     realm = realm_of(rendered, env)
     accounts = {u["serviceAccountClientId"]: u

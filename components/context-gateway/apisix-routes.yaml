@@ -186,7 +186,7 @@ context-mcp-named:
   uri: '/api/mcp/*'
   host: '{{ .Values.global.domain }}'
   priority: 21
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: context-endpoint
   plugins:
     limit-count:
@@ -220,7 +220,7 @@ context-mcp-named-portal:
   uri: '/api/mcp/*'
   subDomain: portal
   priority: 21
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: context-endpoint-portal
   plugins:
     limit-count:
@@ -540,7 +540,7 @@ api-mcp-named:
   uri: '/api/mcp/*'
   subDomain: api
   priority: 21
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: context-endpoint
   plugins:
     limit-count:
@@ -619,7 +619,7 @@ api-moved-endpoint:
   uri: '/api/endpoint/*'
   host: '{{ .Values.global.domain }}'
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: api-moved
 api-moved-portal-endpoint:
   name: api-moved-portal-endpoint
@@ -628,7 +628,7 @@ api-moved-portal-endpoint:
   uri: '/api/endpoint/*'
   subDomain: portal
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"], ["cookie___Host-jc_edge", "!", "~~", "."]]
   pluginConfig: api-moved
 api-moved-mcp:
   name: api-moved-mcp
@@ -637,7 +637,7 @@ api-moved-mcp:
   uri: '/api/mcp*'
   host: '{{ .Values.global.domain }}'
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: api-moved
 api-moved-portal-mcp:
   name: api-moved-portal-mcp
@@ -646,7 +646,7 @@ api-moved-portal-mcp:
   uri: '/api/mcp*'
   subDomain: portal
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"], ["cookie___Host-jc_edge", "!", "~~", "."]]
   pluginConfig: api-moved
 # The radix tree matches the longest prefix before priority: `/api/mcp/*` (context-mcp-named)
 # outranked `/api/mcp*` above, so the hub's metadata and the named servers stayed on the old host.
@@ -657,7 +657,7 @@ api-moved-mcp-named:
   uri: '/api/mcp/*'
   host: '{{ .Values.global.domain }}'
   priority: 31
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: api-moved
 api-moved-portal-mcp-named:
   name: api-moved-portal-mcp-named
@@ -666,7 +666,7 @@ api-moved-portal-mcp-named:
   uri: '/api/mcp/*'
   subDomain: portal
   priority: 31
-  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"], ["cookie___Host-jc_edge", "!", "~~", "."]]
   pluginConfig: api-moved
 api-moved-cs:
   name: api-moved-cs
@@ -675,7 +675,7 @@ api-moved-cs:
   uri: '/cs/*'
   host: '{{ .Values.global.domain }}'
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: api-moved
 api-moved-portal-cs:
   name: api-moved-portal-cs
@@ -684,7 +684,7 @@ api-moved-portal-cs:
   uri: '/cs/*'
   subDomain: portal
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."], ["cookie___Host-jc_edge", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"], ["cookie___Host-jc_edge", "!", "~~", "."]]
   pluginConfig: api-moved
 api-moved-catalog:
   name: api-moved-catalog
@@ -693,7 +693,7 @@ api-moved-catalog:
   uri: '/catalog*'
   host: '{{ .Values.global.domain }}'
   priority: 30
-  vars: [["http_authorization", "!", "~~", "."]]
+  vars: [["http_authorization", "!", "~*", "^bearer\\s+\\S"]]
   pluginConfig: api-moved
 
 # Class 4 (T-4717): the bulk exports, `{endpoint}/file.*` and the temporal history, hold their

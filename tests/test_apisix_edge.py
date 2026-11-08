@@ -239,7 +239,7 @@ def test_space_reads_and_writes_count_apart(rendered):
             assert "labels" not in route and set(route["plugins"]) == {"limit-count"} | cors, route["id"]
             limit = route["plugins"]["limit-count"]
             assert (limit["count"], limit["key"]) == (ANONYMOUS_ROUTE_LIMITS[route["id"]], "remote_addr")
-            assert route["vars"] == [["http_authorization", "!", "~~", "."]], route["id"]
+            assert route["vars"] == [["http_authorization", "!", "~*", "^bearer\\s+\\S"]], route["id"]
         elif route["id"] == "ckan-webassets":
             # T-4201: it keeps the config's CSP baseline and adds the year-long cache of a
             # content-hashed file; T-4717: and counts its assets in a bucket of their own

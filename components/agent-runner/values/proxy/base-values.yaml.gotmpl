@@ -92,6 +92,9 @@ env:
   # works from no other pod. Off only where there is no mesh to name the caller.
   JC_REQUIRE_MESH_IDENTITY: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") | quote }}
   JC_PROXY_PORTAL_IDENTITY: "portal.{{ .Values.portal.portal.namespace }}"
+  # A run's data credential is honoured from the jc-functions workload alone, named with its
+  # namespace: an account of that name in any other namespace is another workload (F-17).
+  JC_PROXY_FUNCTIONS_IDENTITY: "jc-functions.{{ .Values.functions.runtime.namespace }}"
 
 # The token endpoint on the cluster's public host and the model provider are both the
 # proxy's own TLS to hosts outside the mesh, the hop the Portal's values describe: 443 leaves

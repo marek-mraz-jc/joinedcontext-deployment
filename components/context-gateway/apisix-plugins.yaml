@@ -28,6 +28,11 @@ context-space:
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
+            end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
@@ -102,6 +107,11 @@ catalog-feed:
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
             end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
@@ -181,6 +191,11 @@ context-space-portal:
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
             end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
@@ -297,6 +312,11 @@ context-endpoint:
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
             end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
+            end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
               for _, prefix in ipairs({ "x-jc-", "jc-provenance-", "l5d-" }) do
@@ -392,6 +412,11 @@ context-endpoint-portal:
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
             end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
@@ -515,6 +540,11 @@ api-moved:
             for _, header in ipairs(forged) do
               ngx.req.clear_header(header)
               ngx.req.clear_header((header:gsub("%-", "_")))
+            end
+            local presented = ngx.req.get_headers()["Authorization"]
+            if type(presented) == "table"
+              or (presented and not ngx.re.find(presented, [[^[Bb]earer\s+\S]], "jo")) then
+              ngx.req.clear_header("Authorization")
             end
             for name in pairs(ngx.req.get_headers(0)) do
               local key = name:lower():gsub("_", "-")
