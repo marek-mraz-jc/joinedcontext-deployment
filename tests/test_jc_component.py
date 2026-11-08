@@ -3,6 +3,8 @@
 jc sits behind APISIX, so without `trusted_proxies` every request comes from the edge's pod and
 kaisatsu's per-address sign-in lock and daiya's public rate limit become one bucket for everybody.
 The list comes from the environment (the edge's pod network) and never widens to everything.
+APISIX pods take any address of that network, so the trust holds because jc's NetworkPolicies
+let no pod but APISIX reach its public listener (8080) or the Linkerd inbound proxy (4143).
 """
 
 import ipaddress
@@ -12,7 +14,6 @@ import tomllib
 from pathlib import Path
 
 import pytest
-
 from conftest import TREE_IGNORE
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -40,7 +41,7 @@ def client_of(proxies: list[str], peer: str, forwarded: str | None) -> str:
     client_addr_trusts_forwarded_for_only_from_trusted_proxies): an untrusted peer is the client;
     behind a trusted peer, the right-most hop that is not a proxy."""
     nets = [ipaddress.ip_network(n) for n in proxies]
-    trusted = lambda ip: any(ipaddress.ip_address(ip) in n for n in nets)  # noqa: E731
+    trusted = lambda ip: any(ipaddress.ip_address(ip) in n for n in nets)
     if not trusted(peer):
         return peer
     hops = [h.strip() for h in (forwarded or "").split(",") if h.strip()]
@@ -80,7 +81,7 @@ def render_addons_with(tmp_path, proxies_yaml: str) -> subprocess.CompletedProce
     values.write_text(head + proxies_yaml)
     return subprocess.run(
         [str(tree / "scripts/render.sh"), "addons", str(tmp_path / "out.yaml")],
-        cwd=str(tree), capture_output=True, text=True,
+        cwd=str(tree), capture_output=True, text=True, check=False,
     )
 
 
@@ -98,3 +99,71 @@ def test_jc_refuses_to_render_without_a_narrow_edge_network(tmp_path, proxies_ya
     result = render_addons_with(tmp_path, proxies_yaml)
     assert result.returncode != 0, "rendered with trusted_proxies missing or wide open"
     assert refusal in result.stderr + result.stdout
+
+
+def selects(selector: dict | None, labels: dict) -> bool:
+    selector = selector or {}
+    if selector.get("matchExpressions"):
+        return False  # none in this repository; a new one gets its own reading here
+    return all(labels.get(k) == v for k, v in (selector.get("matchLabels") or {}).items())
+
+
+def pod_of(docs, name: str) -> tuple[str, dict]:
+    (dep,) = [d for d in docs if d.get("kind") in ("Deployment", "StatefulSet") and d["metadata"]["name"] == name]
+    return dep["metadata"]["namespace"], dep["spec"]["template"]["metadata"]["labels"]
+
+
+def workloads(docs, namespace: str):
+    """(name, pod labels) of every workload rendered into `namespace`."""
+    for d in docs:
+        if d.get("kind") not in ("Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"):
+            continue
+        if d["metadata"].get("namespace") != namespace:
+            continue
+        spec = d["spec"].get("jobTemplate", {}).get("spec", d["spec"])
+        yield d["metadata"]["name"], (spec.get("template", {}).get("metadata") or {}).get("labels") or {}
+
+
+# jc's public listener and the Linkerd inbound proxy meshed traffic to it arrives on.
+PUBLIC_PORTS = {8080, 4143}
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
+def test_only_the_edge_reaches_jc_public_listener(rendered, env):
+    """`trusted_proxies` names the whole pod network (APISIX pods take any address in it), so the
+    trust holds only if no pod but APISIX can open a connection to jc's public listener at all."""
+    docs = rendered(env)
+    jc_ns, jc_labels = pod_of(docs, "jc")
+    edge_ns, edge_labels = pod_of(docs, "apisix")
+    namespaces = {d["metadata"]["name"]: d["metadata"].get("labels") or {} for d in docs if d.get("kind") == "Namespace"}
+    namespaces.setdefault(edge_ns, {}).setdefault("kubernetes.io/metadata.name", edge_ns)
+    policies = [
+        d for d in docs
+        if d.get("kind") == "NetworkPolicy"
+        and d["metadata"].get("namespace") == jc_ns
+        and selects(d["spec"].get("podSelector"), jc_labels)
+    ]
+    ingress = [p for p in policies if "Ingress" in (p["spec"].get("policyTypes") or ["Ingress"])]
+    assert ingress, f"{env}: no NetworkPolicy isolates jc's ingress, every pod reaches it"
+    opened = 0
+    for policy in ingress:
+        for rule in policy["spec"].get("ingress") or []:
+            ports = {p.get("port") for p in rule.get("ports") or []}
+            if rule.get("ports") and not ports & PUBLIC_PORTS:
+                continue
+            name = policy["metadata"]["name"]
+            peers = rule.get("from")
+            assert peers, f"{env}: {name} opens {ports or 'every port'} to every source"
+            for peer in peers:
+                assert "ipBlock" not in peer, f"{env}: {name} opens jc to an address block"
+                assert "podSelector" in peer, f"{env}: {name} opens jc to whole namespaces"
+                ns_sel = peer.get("namespaceSelector")
+                peer_ns = [n for n, labels in namespaces.items() if selects(ns_sel, labels)] if ns_sel is not None else [jc_ns]
+                assert peer_ns == [edge_ns], f"{env}: {name} admits namespaces {peer_ns}"
+                assert peer["podSelector"].get("matchLabels"), f"{env}: {name} admits every pod of {edge_ns}"
+                assert selects(peer["podSelector"], edge_labels), f"{env}: {name} admits pods that are not APISIX"
+                others = [w for w, labels in workloads(docs, edge_ns) if w != "apisix" and selects(peer["podSelector"], labels)]
+                assert not others, f"{env}: {name} also admits {others}, which carry APISIX's labels"
+                opened += 1
+    assert opened, f"{env}: not even APISIX reaches jc"
