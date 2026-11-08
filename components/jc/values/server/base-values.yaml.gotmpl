@@ -1,0 +1,198 @@
+{{- $global := .Values.global }}
+{{- $jc := .Values.jc.server }}
+{{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`; writable: /tmp, the state dir
+#       (an emptyDir the init container fills from Secret jc-setup) and the data volume
+# - [x] Health probes -> readiness /api/v1/health (the Portal, built last), liveness /streams/ping
+# - [x] Graceful shutdown -> jc drains on SIGTERM
+# - [x] Standard labels
+# - [x] ServiceAccount with least privilege -> no API token
+# - [x] Named ports -> 8080 public (every mount), 9091 admin (/metrics behind its token, /healthz)
+# - [x] Ingress with TLS -> APISIX routes jc.{domain} (apisix-routes.yaml)
+
+fullnameOverride: jc
+nameOverride: jc-server
+
+{{- $images := index .Values.images "jc" "server" | default dict }}
+{{- if not $images.digest }}
+{{- fail "jc.server: components/jc/images.yaml pins no digest yet; pin the one the monorepo's image.yml signed before deploying jc" }}
+{{- end }}
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+args: ["--config", "/etc/jc/jc.toml"]
+
+containerPort: 8080
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+
+# The admin listener: /metrics behind the admin token (every module's series), open /healthz.
+metrics:
+  enabled: true
+  port: 9091
+  name: admin
+
+probes:
+  readiness:
+    # The Portal answers once jc has built it after serving (503 until then), so a ready pod
+    # serves every mount.
+    path: /api/v1/health
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  # The first start applies the Portal's realm and creates the forge repository before the
+  # Portal answers: up to 5 minutes before liveness counts.
+  startup:
+    periodSeconds: 10
+    failureThreshold: 30
+  liveness:
+    # ekiben's /ping: open, answered by the process itself, no module dependency.
+    path: /streams/ping
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# One process: Antares keeps process-wide statics and jc's modules their in-memory stores
+# (bins/jc/STATUS.md), so a second replica is a second, divergent installation.
+replicaCount: 1
+
+configMap:
+  enabled: true
+  mountPath: /etc/jc
+  data:
+    jc.toml: |
+      role = "all"
+      listen = "0.0.0.0:8080"
+      admin_listen = "0.0.0.0:9091"
+      admin_token_file = "/run/jc/admin/token"
+      mode = "slug"
+      base_host = "{{ $jc.subDomain }}.{{ $global.domain }}"
+      scheme = "https"
+      log_format = "json"
+      state_dir = "/var/lib/jc/state"
+
+      # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
+      [mounts.portal]
+      path_prefix = ""
+
+      [kaisatsu]
+      database_url_file = "/etc/jc/kaisatsu-database-url"
+      db_password_file = "/run/jc/db/kaisatsu-app/password"
+      db_max_connections = {{ $jc.kaisatsuPool }}
+
+      [ekiben]
+      file_root = "/var/lib/jc-data/streams"
+
+      [shako]
+      repo_root = "/var/lib/jc-data/git"
+    # kaisatsu's request role on its database; the password comes from its own file.
+    kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
+
+# The Portal's and Antares' own settings, which jc passes through unchanged.
+envSecret:
+  PORTAL_DB_PASSWORD:
+    secret: db-jc-portal
+    key: password
+  BROKER_DB_PASSWORD:
+    secret: db-jc-antares
+    key: password
+env:
+  JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
+  ANTARES_STORE: "postgres"
+  ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
+  ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
+  _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+
+# The generated secrets of jc's first-start setup (bins/jc/src/setup.rs) live in Secret jc-setup,
+# so a new pod reads the same values: the init container copies them into the state dir as
+# 0600 files of the pod's user (jc refuses a state dir it cannot make 0700, which a Secret
+# volume is not), then kaisatsu's migrations run as kaisatsu_migrate.
+extraInitContainers:
+  - name: seed-state
+    image: {{ printf "%s@%s" .Values.images.jc.seed.repository .Values.images.jc.seed.digest | quote }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        install -d -m 0700 /var/lib/jc/state
+        for f in /run/jc/setup/*; do install -m 0600 "$f" "/var/lib/jc/state/$(basename "$f")"; done
+    securityContext:
+      {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { cpu: 100m, memory: 32Mi }
+    volumeMounts:
+      - { name: state, mountPath: /var/lib/jc }
+      - { name: setup, mountPath: /run/jc/setup, readOnly: true }
+  - name: kaisatsu-migrate
+    image: {{ printf "%s@%s" $images.repository $images.digest | quote }}
+    command:
+      - /usr/local/bin/kaisatsu
+      - migrate
+      - --database-url
+      - "postgres://kaisatsu_migrate@{{ $pg }}:5432/jc_kaisatsu"
+      - --db-password-file
+      - /run/jc/db/kaisatsu-migrate/password
+    securityContext:
+      {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    resources:
+      requests: { cpu: 20m, memory: 32Mi }
+      limits: { cpu: 500m, memory: 128Mi }
+    volumeMounts:
+      - { name: db-kaisatsu-migrate, mountPath: /run/jc/db/kaisatsu-migrate, readOnly: true }
+
+extraVolumes:
+  - name: state
+    emptyDir:
+      medium: Memory
+      sizeLimit: 1Mi
+  - name: setup
+    secret:
+      secretName: jc-setup
+      defaultMode: 0440
+  - name: admin-token
+    secret:
+      secretName: jc-admin-token
+      defaultMode: 0440
+  - name: db-kaisatsu-app
+    secret:
+      secretName: db-jc-kaisatsu-app
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  - name: db-kaisatsu-migrate
+    secret:
+      secretName: db-jc-kaisatsu
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+
+extraVolumeMounts:
+  - { name: state, mountPath: /var/lib/jc }
+  - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
+  - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
+
+# shako's repositories and ekiben's file root (jc.toml above).
+persistence:
+  enabled: true
+  size: {{ $jc.dataSize }}
+  mountPath: /var/lib/jc-data
+  storageClass: {{ $global.storage.storageClass.rwo | default "" | quote }}
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

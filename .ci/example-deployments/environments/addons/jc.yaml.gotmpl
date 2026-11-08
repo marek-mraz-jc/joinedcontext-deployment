@@ -1,0 +1,10 @@
+---
+# jc renders here with an example pin, because components/jc/images.yaml holds none until the
+# monorepo's image.yml publishes the first signed digest. This render is never applied; an
+# environment that deploys jc pins the real digest in components/jc/images.yaml instead.
+images:
+  jc:
+    server:
+      repository: 'ghcr.io/marek-mraz-jc/jc'
+      tag: 'main'
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'

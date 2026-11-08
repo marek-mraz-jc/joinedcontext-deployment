@@ -1,0 +1,16 @@
+---
+# Checklist:
+# - [x] Resources (requests and limits), from `jc --role all` measured locally (README.md)
+# - [x] 1 Replica: the data claim (ekiben files, shako repositories) is ReadWriteOnce and
+#   dataroom, daiya and ekiben keep state in memory; a second replica needs those stores in
+#   Postgres first. A rollout surges a second pod on the same node.
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: '2'
+    memory: 1536Mi

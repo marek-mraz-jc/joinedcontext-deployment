@@ -1,0 +1,17 @@
+---
+# jc serves every module on one host, jc.{domain}, in slug mode: the Portal at the root,
+# kaisatsu (identity) under /id, dataroom (catalogue) under /opendata, daiya (dashboards)
+# under /dashboards. jc authenticates every caller itself (kaisatsu sessions and bearers), so the
+# edge proxies anonymous requests and refuses the mounts that stay inside the pod
+# (apisix-plugins.yaml). `subDomain` puts jc.{domain} on the edge Ingress and its certificate.
+jc:
+  name: jc
+  description: joinedcontext in one binary (Portal, identity, catalogue, dashboards)
+  upstream: jc.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  subDomain: jc
+  uri: '/*'
+  # The assistant streams its answer and an import uploads a file: longer than a page read.
+  timeout:
+    connect: 6
+    send: 120
+    read: 120

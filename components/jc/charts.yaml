@@ -1,0 +1,4 @@
+---
+jc:
+  server:
+    chart: ../../charts/workload

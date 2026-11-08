@@ -32,14 +32,16 @@ import re
 import pytest
 from test_postgres_memory_budget import PER_PROCESS_MIB
 
-ENVIRONMENTS = ["local", "dev", "smartcity", "stage", "staging", "production", "minimal", "broker-only"]
+ENVIRONMENTS = ["local", "dev", "smartcity", "stage", "staging", "production", "minimal", "broker-only", "addons"]
 HEADROOM = 1.2
 ALERT_SHARE = 0.8  # CNPGClusterHighConnectionsWarning, charts/cluster prometheus_rules (cnpg/cluster 0.7.0)
 SUPERUSER_RESERVED_DEFAULT = 3
 # Ceilings compiled into the programs (sqlx PgPoolOptions::max_connections):
 # joinedcontext-portal src/db.rs and joinedcontext-platform crates/assistant/src/bin/jc-assistant.rs.
 # joinedcontext-portal src/state.rs: the Portal's apps admin pool in apps-db, 4.
-COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 10), "jc_apps_admin": ("portal", 4)}
+# jc (monorepo crates/portal/src/db.rs): the same Portal pool inside the one binary, 5; jc renders
+# no apps-db, so the Portal opens no apps admin pool there.
+COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 10), "jc_apps_admin": ("portal", 4), "jc_portal": ("jc", 5)}
 # Drivers' own defaults, used when the render sets nothing.
 ANTARES_DEFAULT = 20  # antares-broker main.rs parse_pg_pool
 KEYCLOAK_DEFAULT = 100  # Quarkus/Agroal KC_DB_POOL_MAX_SIZE
@@ -80,12 +82,26 @@ def replicas(workload: dict) -> int:
     return int(workload["spec"].get("replicas", 1))
 
 
-def antares(docs: list[dict]) -> int:
+def antares(docs: list[dict], jc: bool = False) -> int:
+    # jc runs the broker in its own process and logs in as jc_antares, counted apart.
     return sum(
         replicas(w) * int(env_of(w).get("ANTARES_PG_POOL", ANTARES_DEFAULT))
         for w in workloads(docs)
-        if "ANTARES_DATABASE_URL" in env_of(w)
+        if "ANTARES_DATABASE_URL" in env_of(w) and (w["metadata"]["name"] == "jc") == jc
     )
+
+
+def jc_kaisatsu(docs: list[dict]) -> int:
+    # kaisatsu in jc: its pool as kaisatsu_app (jc.toml [kaisatsu] db_max_connections, read by
+    # the pool builder in kaisatsu store-pg, clamped to 50), counted under the database's owner
+    # kaisatsu_migrate, plus the one login of the `kaisatsu migrate` init container.
+    found = named(docs, "jc")
+    assert found, "role kaisatsu_migrate has a database but no jc workload in the render"
+    toml = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
+    assert len(toml) == 1, "the jc ConfigMap with jc.toml is not in the render"
+    match = re.search(r"^db_max_connections = (\d+)$", toml[0], re.MULTILINE)
+    assert match, "jc.toml sets no [kaisatsu] db_max_connections"
+    return sum(replicas(w) for w in found) * (min(int(match[1]), 50) + 1)
 
 
 def keycloak(docs: list[dict]) -> int:
@@ -162,6 +178,9 @@ CLIENTS = {
     "ckan": ckan,
     "jc_apps_admin": compiled("jc_apps_admin"),
     "decidim": decidim,
+    "jc_portal": compiled("jc_portal"),
+    "jc_antares": lambda docs: antares(docs, jc=True),
+    "kaisatsu_migrate": jc_kaisatsu,
     # The branch previews' group never logs in; each member pv_{slug} has CONNECTION LIMIT 5, the
     # preview Portal's pool, and scripts/preview.sh starts at most PREVIEW_MAX = 2 of them (T-5548).
     "pv_previews": lambda docs: 2 * COMPILED["portal"][1],
