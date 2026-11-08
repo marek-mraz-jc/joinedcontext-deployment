@@ -3424,7 +3424,7 @@ def test_no_theme_template_writes_a_script_style_or_handler_the_policy_refuses()
 
 
 def test_the_core_templates_with_inline_script_or_handlers_are_overridden():
-    """CKAN 2.11.6's inline scripts (dataviewer, text view, table view) and onclick attributes
+    """CKAN 2.11.7's inline scripts (dataviewer, text view, table view) and onclick attributes
     (resource upload field, Refit) each have a theme copy that the test above holds."""
     for name in ("dataviewer__base", "text_view", "datatables__datatables_view", "package__snippets__resource_upload_field", "image_view"):
         assert (THEME / ("templates__%s.html" % name)).exists(), name
@@ -3432,6 +3432,18 @@ def test_the_core_templates_with_inline_script_or_handlers_are_overridden():
     assert view.count("{%- block page -%}") == 1 and 'id="refit-button"' in view and '<div id="dtv-resource-info" hidden>' in view
     for name in ("templates__base.html", "templates__datatables__datatables_view.html"):
         assert "/jc-forms.js" in (THEME / name).read_text(), name
+
+
+def test_the_table_view_copy_keeps_ckan_2_11_7_s_guard():
+    """CKAN 2.11.7's table view (T-6643) draws the table only when the DataStore names the
+    resource's fields and says the view is unavailable otherwise; the theme's page block replaces
+    CKAN's whole, so the copy carries the guard itself (the helper exists in 2.11.6 too)."""
+    view = (THEME / "templates__datatables__datatables_view.html").read_text()
+    page = view.split("{%- block page -%}", 1)[1]
+    assert page.lstrip().startswith("{% if h.resource_view_get_fields(resource) %}")
+    assert page.index("{% else %}") > page.index('<div id="dtv-resource-info" hidden>')
+    assert "This resource view is not available at the moment." in page
+    assert page.rstrip().endswith("{% endif %}\n{%- endblock -%}")
 
 
 def test_the_theme_stylesheet_holds_what_style_attributes_and_htmx_wrote_inline():

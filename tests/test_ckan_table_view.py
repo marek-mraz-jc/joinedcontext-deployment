@@ -51,5 +51,5 @@ def test_an_upgrade_that_moved_the_line_fails_the_build(tmp_path):
 
 
 def test_the_base_image_is_the_one_the_line_was_read_from():
-    """The upstream line above is CKAN 2.11.6's; a new base image is a new reading of it."""
-    assert "FROM ckan/ckan-base:2.11.6@sha256:" in DOCKERFILE.read_text()
+    """The upstream line above is CKAN 2.11.7's (unchanged since 2.11.6); a new base image is a new reading of it."""
+    assert "FROM ckan/ckan-base:2.11.7@sha256:" in DOCKERFILE.read_text()

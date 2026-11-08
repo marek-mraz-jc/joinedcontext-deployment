@@ -170,7 +170,7 @@ The stock `ckan/ckan-base` carries no OIDC authenticator, so `images/ckan/Docker
 and nothing else. `.github/workflows/image-ckan.yml` builds it, signs it with cosign and scans
 it, the way every image this platform deploys is published (OPS-27); the digest it prints is what
 `images.yaml` pins as `ckan.catalogue`. The image is also where the catalogue's patch level lives:
-it is built from `ckan/ckan-base:2.11.6`, takes the day's Debian security updates, upgrades the
+it is built from `ckan/ckan-base:2.11.7`, takes the day's Debian security updates, upgrades the
 Python packages that have a published fix, and carries neither the kernel headers the base image
 keeps for building wheels nor pip itself — 3380 scanner findings on the stock image, none on
 this one, and nothing hidden behind an ignore rule.
@@ -275,7 +275,7 @@ sends the same policy with `frame-ancestors *`. The edge's frame-ancestors-only 
 covers the answers CKAN sends without a policy (static files, JSON).
 
 A template that writes an inline `<script>` or `<style>` gives it `nonce="{{ h.jc_csp_nonce() }}"`;
-an inline handler or a `style` attribute is refused, so the theme overrides the CKAN 2.11.6
+an inline handler or a `style` attribute is refused, so the theme overrides the CKAN 2.11.7
 templates that carry one (`dataviewer/base.html`, `text_view.html`, `datatables_view.html`,
 `resource_upload_field.html`, `image_view.html`) and `jc-forms.js` does what their `onclick`
 did. A CKAN upgrade re-checks those copies against the new templates. Gravatar is off

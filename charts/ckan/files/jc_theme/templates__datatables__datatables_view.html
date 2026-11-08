@@ -9,9 +9,11 @@
   <script src="{{ h.url_for_static('/jc-forms.js') }}" defer></script>
 {% endblock %}
 
-{# CKAN 2.11.6's page block, its inline script with this request's nonce, the Refit button's onclick in
-   jc-forms.js and the hidden info as an attribute: the CSP refuses inline handlers and style attributes (T-5147). #}
+{# CKAN 2.11.7's page block, its inline script with this request's nonce, the Refit button's onclick in
+   jc-forms.js and the hidden info as an attribute: the CSP refuses inline handlers and style attributes (T-5147).
+   2.11.7 skips the table when the DataStore cannot name the resource's fields (T-6643). #}
 {%- block page -%}
+{% if h.resource_view_get_fields(resource) %} {# Skip the whole table if the datastore has errors #}
 {#- pass the datadictionary to javascript, so we can init columns there -#}
 {%- set datadictionary = h.datastore_dictionary(resource.id, resource_view.get('show_fields')) -%}
 {%- set nbspval = "&nbsp;"|safe -%}
@@ -97,4 +99,10 @@
    ( {{ h.localised_filesize(res.size)}} )
   {%- endif -%}
 </div>
+{% else %}
+  <p class="text-danger">
+    <i class="fa fa-info-circle"></i>
+    {{ _('This resource view is not available at the moment.') }}
+  </p>
+{% endif %}
 {%- endblock -%}
