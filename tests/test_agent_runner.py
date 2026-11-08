@@ -97,6 +97,19 @@ def test_the_portal_is_told_where_the_proxy_is_and_opens_its_internal_listener_t
 
 
 @requires_helmfile
+def test_a_data_credential_is_honoured_from_the_functions_workload_with_its_namespace(dev):
+    """F-17 (T-6662): the proxy compares the whole `<account>.<namespace>` of a caller's Linkerd
+    identity, so the functions workload is named with the namespace it runs in."""
+    env = env_of(container(dev, "agent-proxy"))
+    functions = next(
+        d for d in dev
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc-functions"
+    )
+    account = functions["spec"]["template"]["spec"].get("serviceAccountName") or "default"
+    assert env["JC_PROXY_FUNCTIONS_IDENTITY"] == f"{account}.{functions['metadata']['namespace']}"
+
+
+@requires_helmfile
 def test_a_runs_ticket_is_honoured_from_the_portal_and_the_runs_own_meshed_workspace_alone(dev):
     """F-PLT1-008, T-5809: the proxy requires the caller's Linkerd identity and names the Portal's
     ServiceAccount with its namespace; the workspaces it serves reach it, and the Portal reaches

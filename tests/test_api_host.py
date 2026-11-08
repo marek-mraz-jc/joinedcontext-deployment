@@ -32,7 +32,7 @@ ON_THE_DATA_HOST = {
 MOVED = {"endpoint": "/api/endpoint/*", "mcp": "/api/mcp*", "cs": "/cs/*", "catalog": "/catalog*"}
 # Every prefix the Portal host moves; `/catalog*` would also match its own `/catalogue` page.
 PORTAL_MOVED = {"endpoint", "mcp", "cs"}
-NO_BEARER = ["http_authorization", "!", "~~", "."]
+NO_BEARER = ["http_authorization", "!", "~*", "^bearer\\s+\\S"]
 NO_EDGE_SESSION = ["cookie___Host-jc_edge", "!", "~~", "."]
 
 
