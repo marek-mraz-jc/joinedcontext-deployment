@@ -144,6 +144,14 @@ def test_each_page_carries_the_headers_that_keep_a_spec_harmless(dev):
 def test_the_renderer_draws_through_the_interpreter_and_loads_nothing():
     render = (FILES / "site/render.js").read_text()
     assert "ast: true" in render and "expr: vega.expressionInterpreter" in render
+    # GHSA-m9rg-mr6g-75gm and GHSA-7f2v-3qq3-vvjf (HIGH): Vega before 6.2.0 runs a window function
+    # an expression reaches. The interpreter is scripts/viz-vega-interpreter.sh over the release.
+    (vega,) = [p.name for p in VENDOR.glob("vega-[0-9]*.min.js")]
+    assert tuple(int(n) for n in vega.split("-")[1].removesuffix(".min.js").split(".")) >= (6, 2, 0), vega
+    (interpreter,) = VENDOR.glob("vega-interpreter-*.js")
+    text = interpreter.read_text()
+    assert text.startswith("(function (vega) {") and "vega.expressionInterpreter = expression;" in text
+    assert "import " not in text.split("\n", 3)[2] and text.rstrip().endswith("})(self.vega);")
     assert "editor: false" in render and "source: false" in render
     assert "loader: loader" in render and "self.jcRefuse(message.spec" in render
     assert "event.source !== window.parent || event.origin !== host" in render
