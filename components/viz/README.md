@@ -60,8 +60,11 @@ Two documents, two origins of trust:
   `tests/wordpress/run.sh` pastes both codes into a real WordPress 6.8 page in Docker and runs
   `wordpress.spec.mjs` there.
 
-The Vega, MapLibre 6.14.0 and pmtiles 4.5.0 builds are the npm releases byte for byte
-(`images/viz/vendor/SHA256SUMS`), served from this host: no CDN. They are baked into the image
+The Vega 6.4.0, Vega-Lite 6.5.0, vega-embed 7.3.0, MapLibre 6.14.0 and pmtiles 4.5.0 builds are
+the npm releases byte for byte (`images/viz/vendor/SHA256SUMS`), served from this host: no CDN.
+vega-interpreter 2.3.2 ships only an ES module importing `vega-util`;
+`scripts/viz-vega-interpreter.sh` writes the same code as a classic script over the `vega`
+global. Vega-Lite 6 draws the Vega-Lite 5 specs the Endpoints publish. They are baked into the image
 `ghcr.io/<owner>/joinedcontext-viz` (`images/viz/Dockerfile`, which checks the sums at build time;
 built and signed by `.github/workflows/image-viz.yml`), because as chart files they took the Helm
 release past the 1 MiB its Secret holds (T-4657). The image is pinned by digest in `images.yaml`.

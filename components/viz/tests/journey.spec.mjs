@@ -53,6 +53,7 @@ const SOIL = [{ id: Object.keys(STATIONS)[1], type: "WeatherObserved", soilTempe
 const NAMES = Object.entries(STATIONS).map(([id, name]) => ({ id, name }));
 
 const VL = "https://vega.github.io/schema/vega-lite/v5.json";
+const VEGA = "https://vega.github.io/schema/vega/v5.json";
 const temporal = { source: "temporal", type: "WeatherObserved", attrs: ["temperature"], last: "PT24H", aggrMethod: "avg", aggrPeriod: "PT1H" };
 const odata = { source: "odata", entitySet: "WeatherObserved", $select: "name,temperature,dateObserved", $orderby: "temperature desc" };
 const SPECS = {
@@ -230,7 +231,17 @@ const SHOWN = {
   bar: { type: "jc-viz-show", lang: "sk", rows: [{ name: "Donovaly", temperature: 11.5 }, { name: "Zelená", temperature: 13.4 }],
     spec: { $schema: VL, data: { name: "source" }, mark: { type: "bar", tooltip: true },
       encoding: { y: { field: "name", type: "nominal", title: null }, x: { field: "temperature", type: "quantitative", title: "°C" } } } },
-  foreignLink: { type: "jc-viz-show", lang: "sk", spec: { ...MAP_SPEC, link: "https://evil.example/" } }
+  foreignLink: { type: "jc-viz-show", lang: "sk", spec: { ...MAP_SPEC, link: "https://evil.example/" } },
+  // GHSA-m9rg-mr6g-75gm (vega-functions < 6.1.1): modify(), behind setdata, calls any function an
+  // expression reaches, here the frame's own console.error on each row. The spec passes refuse.js.
+  setdata: { type: "jc-viz-show", lang: "sk", rows: [{ name: "jc-advisory-setdata" }], spec: { $schema: VEGA, data: [{ name: "source" }],
+    signals: [{ name: "x", value: 0, on: [{ events: { type: "timer", throttle: 300 },
+      update: "modify('source', false, false, false, event.dataflow._el.ownerDocument.defaultView.console.error, {'tttt': null})" }] }] } },
+  // GHSA-7f2v-3qq3-vvjf (vega-expression < 6.1.0): an object literal whose toString is a window
+  // function runs it when the expression turns the object into text.
+  toString: { type: "jc-viz-show", lang: "sk", rows: [], spec: { $schema: VEGA, data: [{ name: "source" }],
+    signals: [{ name: "x", value: 0, on: [{ events: { type: "timer", throttle: 300 },
+      update: "({toString: event.dataflow._el.ownerDocument.defaultView.console.error, name: 'jc-advisory-tostring'}) + 1" }] }] } }
 };
 
 const renderer = (page) => page.frameLocator("#viz").frameLocator("#frame");
@@ -370,6 +381,26 @@ test("show: a Vega spec with its rows draws in the sandboxed renderer", async ({
   await expect(renderer(page).locator("svg.marks")).toContainText("Donovaly");
   expect(foreign(requests)).toEqual([]);
 });
+
+// The two HIGH advisories of 2026-01 against Vega: an expression that reaches a window function
+// calls it, the CSP-safe interpreter included. Each call would log the marker. Vega 5.33.1 ran
+// the setdata one (GHSA-m9rg-mr6g-75gm); its parser already refused the toString key.
+for (const key of ["setdata", "toString"]) {
+  test(`show: a ${key} expression calls no window function in the renderer`, async ({ page, context }) => {
+    const ran = [];
+    page.on("console", async (m) => {
+      const args = await Promise.all(m.args().map((a) => a.jsonValue().catch(() => null)));
+      if (JSON.stringify(args).includes("jc-advisory") || m.text().includes("jc-advisory")) ran.push(m.text());
+    });
+    await serve(context);
+    await page.goto(`https://assistant.${DOMAIN}/${key}`);
+    // setdata draws (its rows do nothing); Vega's parser refuses a toString key before a draw.
+    if (key === "setdata") await expect(renderer(page).locator("svg.marks")).toBeAttached({ timeout: 15000 });
+    else await expect(host(page).locator("#status")).toContainText("Illegal property: toString", { timeout: 15000 });
+    await page.waitForTimeout(1500); // five timer ticks
+    expect(ran).toEqual([]);
+  });
+}
 
 test("show: a page on another site gets nothing drawn, and a map linking out is refused", async ({ page, context }) => {
   await serve(context);
