@@ -1,5 +1,5 @@
 name: image-ckan
-# The catalogue image: stock CKAN plus `ckanext-oauth2` (T-0403). Built when its files change
+# The catalogue image: stock CKAN plus `ckanext-oidc-pkce` (T-0403). Built when its files change
 # and once a month for the base image's fixes; the repository is public, so its minutes are not
 # metered (T-3289).
 on:
@@ -26,7 +26,7 @@ jobs:
           file: images/ckan/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan:2.11.6
+            ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan:2.11.7
             ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -66,6 +66,6 @@ jobs:
           echo "pin this in components/ckan/images.yaml:" >> "$GITHUB_STEP_SUMMARY"
           echo '```yaml' >> "$GITHUB_STEP_SUMMARY"
           echo "    repository: 'ghcr.io/${{ github.repository_owner }}/joinedcontext-ckan'" >> "$GITHUB_STEP_SUMMARY"
-          echo "    tag: '2.11.6'" >> "$GITHUB_STEP_SUMMARY"
+          echo "    tag: '2.11.7'" >> "$GITHUB_STEP_SUMMARY"
           echo "    digest: '${{ steps.push.outputs.digest }}'" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"

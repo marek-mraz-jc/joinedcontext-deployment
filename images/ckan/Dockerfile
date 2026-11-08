@@ -9,7 +9,7 @@
 #
 # Nothing else is added: the theme is still mounted from a ConfigMap (OPS-46), so a rebrand stays
 # a values edit and never a rebuild.
-FROM ckan/ckan-base:2.11.6@sha256:fc040c5b1e6e04de76187b478b3037c8c6c4e97ef4b7f1c03cbc6b0008e04ce7 AS ckan
+FROM ckan/ckan-base:2.11.7@sha256:822c79ad696a8f7539c8762f1a0455d6957ae69a451f49bfa2eec2a0ec6d0f1d AS ckan
 
 USER root
 
@@ -28,7 +28,6 @@ RUN pip install --no-cache-dir --upgrade \
         'urllib3>=2.7.0' \
         'PyJWT>=2.13.0' \
         'Mako>=1.3.12' \
-        'sqlparse>=0.6.0' \
         'wheel>=0.46.2' \
         'jaraco.context>=6.1.0' \
         'setuptools>=78.1.1' \
@@ -54,7 +53,7 @@ RUN f=/srv/app/src/ckan/ckanext/datatablesview/assets/datatablesview.js \
 RUN pip freeze --exclude-editable > /tmp/requirements.txt
 
 # ckan/ckan-base sits on Debian 12, whose sqlite, zlib and kernel headers carry CRITICAL
-# findings with no fix on that release, and 2.11.6 is the newest base there is (T-4128). The
+# findings with no fix on that release, and 2.11.7 is the newest base there is (T-4128). The
 # image therefore keeps only CKAN from it: the Python packages above are rebuilt on Debian 13,
 # the C extensions (psycopg2, uWSGI) against its libraries, and the runtime stage carries no
 # compiler, no headers and no git.
@@ -127,7 +126,7 @@ ENV TZ=UTC \
     CKAN__PLUGINS="image_view text_view datatables_view datastore envvars" \
     UWSGI_HARAKIRI=50 \
     LC_ALL=en_US.UTF-8 \
-    CKAN_REF=ckan-2.11.6
+    CKAN_REF=ckan-2.11.7
 
 WORKDIR /srv/app
 USER ckan
