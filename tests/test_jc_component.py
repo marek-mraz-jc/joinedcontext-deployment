@@ -102,15 +102,62 @@ def test_jc_refuses_to_render_without_a_narrow_edge_network(tmp_path, proxies_ya
 
 
 def selects(selector: dict | None, labels: dict) -> bool:
+    """A Kubernetes label selector, matchExpressions included; an operator it cannot read fails
+    the test instead of reading as "selects nothing"."""
     selector = selector or {}
-    if selector.get("matchExpressions"):
-        return False  # none in this repository; a new one gets its own reading here
-    return all(labels.get(k) == v for k, v in (selector.get("matchLabels") or {}).items())
+    if not all(labels.get(k) == v for k, v in (selector.get("matchLabels") or {}).items()):
+        return False
+    for expr in selector.get("matchExpressions") or []:
+        key, op, values = expr["key"], expr["operator"], expr.get("values") or []
+        if op == "In":
+            ok = labels.get(key) in values
+        elif op == "NotIn":
+            ok = labels.get(key) not in values
+        elif op == "Exists":
+            ok = key in labels
+        elif op == "DoesNotExist":
+            ok = key not in labels
+        else:
+            raise AssertionError(f"unread selector operator {op!r} in {selector}")
+        if not ok:
+            return False
+    return True
+
+
+def opens_public_port(rule: dict, named: dict[str, int]) -> bool:
+    """Whether an ingress rule covers jc's public listener or the Linkerd inbound proxy. No ports
+    means every port; a named port resolves through jc's container ports, and a name jc's pod
+    does not declare (the injected proxy's, a typo) counts as public."""
+    entries = rule.get("ports")
+    if not entries:
+        return True
+    for entry in entries:
+        port = entry.get("port")
+        if port is None:
+            return True
+        if isinstance(port, str):
+            port = named.get(port)
+            if port is None:
+                return True
+        end = entry.get("endPort", port)
+        if any(port <= p <= end for p in PUBLIC_PORTS):
+            return True
+    return False
+
+
+def workload(docs, name: str) -> dict:
+    (dep,) = [d for d in docs if d.get("kind") in ("Deployment", "StatefulSet") and d["metadata"]["name"] == name]
+    return dep
 
 
 def pod_of(docs, name: str) -> tuple[str, dict]:
-    (dep,) = [d for d in docs if d.get("kind") in ("Deployment", "StatefulSet") and d["metadata"]["name"] == name]
+    dep = workload(docs, name)
     return dep["metadata"]["namespace"], dep["spec"]["template"]["metadata"]["labels"]
+
+
+def named_ports(docs, name: str) -> dict[str, int]:
+    containers = workload(docs, name)["spec"]["template"]["spec"]["containers"]
+    return {p["name"]: p["containerPort"] for c in containers for p in c.get("ports") or [] if p.get("name")}
 
 
 def workloads(docs, namespace: str):
@@ -124,6 +171,25 @@ def workloads(docs, namespace: str):
         yield d["metadata"]["name"], (spec.get("template", {}).get("metadata") or {}).get("labels") or {}
 
 
+def test_the_selector_and_port_readers_fail_closed():
+    """The policy test is only as strict as these two readers."""
+    labels = {"app.kubernetes.io/name": "jc-server", "tier": "edge"}
+    assert selects({"matchExpressions": [{"key": "tier", "operator": "In", "values": ["edge"]}]}, labels)
+    assert not selects({"matchExpressions": [{"key": "tier", "operator": "NotIn", "values": ["edge"]}]}, labels)
+    assert selects({"matchExpressions": [{"key": "tier", "operator": "Exists"}]}, labels)
+    assert not selects({"matchExpressions": [{"key": "tier", "operator": "DoesNotExist"}]}, labels)
+    with pytest.raises(AssertionError, match="unread selector"):
+        selects({"matchExpressions": [{"key": "tier", "operator": "Gt", "values": ["1"]}]}, labels)
+    named = {"http": 8080, "admin": 9091}
+    assert opens_public_port({"ports": [{"port": "http"}]}, named)
+    assert not opens_public_port({"ports": [{"port": "admin"}]}, named)
+    assert opens_public_port({"ports": [{"port": "linkerd-proxy"}]}, named)
+    assert opens_public_port({"ports": [{"protocol": "TCP"}]}, named)
+    assert opens_public_port({"ports": [{"port": 8000, "endPort": 8100}]}, named)
+    assert opens_public_port({}, named)
+    assert not opens_public_port({"ports": [{"port": 4191}]}, named)
+
+
 # jc's public listener and the Linkerd inbound proxy meshed traffic to it arrives on.
 PUBLIC_PORTS = {8080, 4143}
 
@@ -133,8 +199,12 @@ PUBLIC_PORTS = {8080, 4143}
 def test_only_the_edge_reaches_jc_public_listener(rendered, env):
     """`trusted_proxies` names the whole pod network (APISIX pods take any address in it), so the
     trust holds only if no pod but APISIX can open a connection to jc's public listener at all."""
-    docs = rendered(env)
+    check_only_the_edge_reaches_jc(rendered(env), env)
+
+
+def check_only_the_edge_reaches_jc(docs, env):
     jc_ns, jc_labels = pod_of(docs, "jc")
+    named = named_ports(docs, "jc")
     edge_ns, edge_labels = pod_of(docs, "apisix")
     namespaces = {d["metadata"]["name"]: d["metadata"].get("labels") or {} for d in docs if d.get("kind") == "Namespace"}
     namespaces.setdefault(edge_ns, {}).setdefault("kubernetes.io/metadata.name", edge_ns)
@@ -149,9 +219,9 @@ def test_only_the_edge_reaches_jc_public_listener(rendered, env):
     opened = 0
     for policy in ingress:
         for rule in policy["spec"].get("ingress") or []:
-            ports = {p.get("port") for p in rule.get("ports") or []}
-            if rule.get("ports") and not ports & PUBLIC_PORTS:
+            if not opens_public_port(rule, named):
                 continue
+            ports = [p.get("port") for p in rule.get("ports") or []]
             name = policy["metadata"]["name"]
             peers = rule.get("from")
             assert peers, f"{env}: {name} opens {ports or 'every port'} to every source"
@@ -167,3 +237,36 @@ def test_only_the_edge_reaches_jc_public_listener(rendered, env):
                 assert not others, f"{env}: {name} also admits {others}, which carry APISIX's labels"
                 opened += 1
     assert opened, f"{env}: not even APISIX reaches jc"
+
+
+def planted(namespace: str, pod_selector: dict, ports: list | None) -> dict:
+    rule = {"from": [{"podSelector": {}}]}
+    if ports is not None:
+        rule["ports"] = ports
+    return {
+        "kind": "NetworkPolicy",
+        "metadata": {"name": "planted", "namespace": namespace},
+        "spec": {"podSelector": pod_selector, "policyTypes": ["Ingress"], "ingress": [rule]},
+    }
+
+
+@requires_helmfile
+@pytest.mark.parametrize(
+    "pod_selector, ports",
+    [
+        ({"matchExpressions": [{"key": "app.kubernetes.io/name", "operator": "In", "values": ["jc-server"]}]},
+         [{"protocol": "TCP", "port": 8080}]),
+        ({"matchLabels": {"app.kubernetes.io/name": "jc-server"}}, [{"protocol": "TCP", "port": "http"}]),
+        ({"matchLabels": {"app.kubernetes.io/name": "jc-server"}}, [{"protocol": "TCP", "port": "linkerd-proxy"}]),
+        ({"matchLabels": {"app.kubernetes.io/name": "jc-server"}}, [{"protocol": "TCP", "port": 4100, "endPort": 4200}]),
+        ({}, None),
+    ],
+    ids=["by-expression", "named-http", "named-unknown", "port-range", "every-pod-every-port"],
+)
+def test_a_policy_opening_jc_to_every_pod_is_caught(rendered, pod_selector, ports):
+    """Each way a NetworkPolicy can select jc or name its port reaches the check: none reads as
+    "does not apply" (both used to, for matchExpressions and named ports)."""
+    docs = rendered(jc_environments()[0])
+    jc_ns, _ = pod_of(docs, "jc")
+    with pytest.raises(AssertionError, match="admits every pod"):
+        check_only_the_edge_reaches_jc([*docs, planted(jc_ns, pod_selector, ports)], "planted")
