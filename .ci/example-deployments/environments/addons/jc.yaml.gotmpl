@@ -8,3 +8,9 @@ images:
       repository: 'ghcr.io/marek-mraz-jc/jc'
       tag: 'main'
       digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+# The edge's pod network (k3s and kube-hetzner hand pods 10.42.0.0/16, as apisix's
+# trustedProxyCidr says): jc reads the caller's address from X-Forwarded-For only from there.
+jc:
+  server:
+    trustedProxies:
+      - "10.42.0.0/16"

@@ -1,6 +1,17 @@
 {{- $global := .Values.global }}
 {{- $jc := .Values.jc.server }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
+       Without it every caller is the edge's address and per-address limits are one bucket. */}}
+{{- $proxies := $jc.trustedProxies | default list }}
+{{- if not $proxies }}
+{{- fail "jc.server.trustedProxies: name the pod network the edge (APISIX) runs in, e.g. [\"10.42.0.0/16\"] on k3s, in the environment's jc values" }}
+{{- end }}
+{{- range $proxies }}
+{{- if or (hasSuffix "/0" .) (not (contains "/" .)) }}
+{{- fail (printf "jc.server.trustedProxies: %q is refused: give the edge's pod network as a CIDR narrower than /0" .) }}
+{{- end }}
+{{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem`; writable: /tmp, the state dir
 #       (an emptyDir the init container fills from Secret jc-setup) and the data volume
@@ -83,6 +94,8 @@ configMap:
       scheme = "https"
       log_format = "json"
       state_dir = "/var/lib/jc/state"
+      # Only a peer inside these networks may name the caller in X-Forwarded-For.
+      trusted_proxies = {{ $proxies | toJson }}
 
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]

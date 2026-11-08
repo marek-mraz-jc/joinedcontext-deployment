@@ -87,3 +87,7 @@ first stage apply.
    environment's list.
 4. dataroom, daiya, shako and ekiben keep their state in memory or on the claim: a restart
    loses the catalogue, the dashboards and ekiben's in-memory topics.
+5. Name the edge's pod network in `jc.server.trustedProxies` (k3s: `["10.42.0.0/16"]`, as
+   apisix's `trustedProxyCidr`). jc reads the caller's address from `X-Forwarded-For` only from a
+   peer inside it, so kaisatsu's sign-in lock and daiya's public rate limit count per caller. The
+   render refuses an empty list and any `/0` (`tests/test_jc_component.py`).
