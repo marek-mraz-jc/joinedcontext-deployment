@@ -9,10 +9,11 @@ COPY vendor/ /srv/vendor/
 COPY explorer/ /srv/explorer/
 
 # Every file is the release byte for byte (vendor/SHA256SUMS), or the image does not build.
-# pcre2 from the base's repository: 10.48-r0 in the pinned base is CVE-2026-103111 (HIGH), fixed
-# in 10.49-r0 (trivy on image-viz, 2026-10-18).
+# Every package upgraded from the base's repository: the pinned base trailed its fixes twice
+# (pcre2 CVE-2026-103111, 2026-10-18; musl CVE-2026-107891 and zlib CVE-2026-85091, HIGH, fixed in
+# musl 1.2.6-r3 and zlib 1.3.2-r1, trivy on image-viz 42523813160, 2026-11-08).
 USER root
-RUN apk upgrade --no-cache pcre2 \
+RUN apk upgrade --no-cache \
     && cd /srv/vendor && grep -v '^#' SHA256SUMS | sha256sum -c - \
     && cd /srv/explorer && grep -v '^#' SHA256SUMS | sha256sum -c - && chmod -R a+rX,go-w /srv/vendor /srv/explorer
 USER 101
