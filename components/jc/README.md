@@ -52,6 +52,13 @@ bucket and the security headers. It refuses `/streams`, `/broker` and `/git` wit
 takes one shared token, the in-binary broker runs no views or Policy engine, and shako is the
 Portal's forge. The Portal reaches all three inside the pod.
 
+A second route `jc-identity` sends `/id/*` (kaisatsu) to the headless Service `jc-pods`, which
+lists a pod before it is Ready. At start jc serves kaisatsu, then builds the Portal, which reads
+the realm's discovery at its public issuer `https://jc.{domain}/id/realms/jc`. Through the
+Service `jc` that read would wait for the readiness only the built Portal gives, and jc stops on
+the failed read: a crash loop on every start. The pod's egress to the cluster ingress on 443
+carries that read.
+
 ## 3. Network
 
 `networkpolicies.yaml`: ingress from APISIX on 8080 only; egress to DNS, `postgres-cluster` on
@@ -61,9 +68,13 @@ URL) and public addresses on 443. Each peer has its other half (`postgres-from-j
 
 ## 4. Resources
 
-Measured with `docker stats` on the image running `jc --role all` against Postgres
-(monorepo `.github/scripts/image-smoke.sh`, then the module probes in a loop), 2026-11-08:
-see `production-values.yaml.gotmpl` and `development-values.yaml.gotmpl`.
+Measured 2026-11-08 with `docker stats` on the image (`jc --role all`, the smoke test's config,
+memory stores, jemalloc settings of the pod): 94 MiB once every module answered (2 s after
+start), 99 MiB after 2100 requests over seven module routes, 22 MiB resident 20 s later. Not
+measured: the Postgres stores of the Portal, kaisatsu and Antares, and real data volumes. The
+requests (256 Mi production, 192 Mi development) cover the measured peak with Postgres pools;
+the limits (1 Gi, 768 Mi) leave room for Antares' 200 MiB memory budget. Measure again on the
+first stage apply.
 
 ## 5. Before an environment lists `jc`
 

@@ -34,6 +34,10 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+# Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
+# of the same pod still waits on the realm (apisix-routes.yaml).
+headlessService:
+  name: jc-pods
 
 # The admin listener: /metrics behind the admin token (every module's series), open /healthz.
 metrics:
