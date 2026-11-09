@@ -303,6 +303,9 @@ def test_the_gateway_reads_the_forge_checkout_git_sync_keeps(dev, gateway_pod, g
         env = {e["name"]: e for e in container["env"]}
         assert env["GITSYNC_REPO"]["value"].startswith("http://gitea-http.") and env["GITSYNC_REPO"]["value"].endswith("/configuration.git")
         assert env["GITSYNC_ROOT"]["value"] == "/repo" and env["GITSYNC_LINK"]["value"] == "current"
+        # git-sync (65533) on an emptyDir the pod's fsGroup owns: git >= 2.35 refuses it as dubious
+        # ownership unless /repo, and only /repo, is a safe directory (git-sync v4.8.0, 2026-11-09)
+        assert env["GITSYNC_GIT_CONFIG"]["value"] == "safe.directory:/repo"
         assert env["GITSYNC_PASSWORD"]["valueFrom"]["secretKeyRef"] == {"name": "gitea-token-gateway", "key": "token"}
         assert container["securityContext"]["readOnlyRootFilesystem"] is True
         assert container["securityContext"]["runAsNonRoot"] is True
