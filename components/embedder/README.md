@@ -63,9 +63,15 @@ cluster has no way in yet: it needs an edge route first.
 
 ## 4. Resources
 
-See the monorepo report (`evidence/jc-embedder/REPORT.md`) for the measured run. One replica: the
-model runs one text at a time (the int8 export's vectors depend on the batch otherwise), and one
-queue puts every deployment's question before any passage.
+Measured 2026-11-09 on the release binary (monorepo `crates/embedder/tests/load.rs`), host load
+about 31 on 16 cores: the model is ready 1.2 s after start; 436 MiB resident idle, 513 MiB peak
+while two deployments sent 96 passages of 1.1 KB each at once; 12.2 texts/s with 2 ONNX
+threads (12.8 with 1, 10.4 with 4: the loaded host gave more threads nothing); a question asked
+during that indexing took 66 ms on average, 87 ms at most. Requests 512 Mi (the peak), limits
+768 Mi and 2 CPUs (the thread count). Measure again on the first stage apply, on a quiet node.
+
+One replica: the model runs one text at a time (the int8 export's vectors depend on the batch
+otherwise), and one queue puts every deployment's question before any passage.
 
 ## 5. Before an environment lists `embedder`
 
