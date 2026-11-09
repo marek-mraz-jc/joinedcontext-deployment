@@ -1,0 +1,8 @@
+---
+component: jc
+# The one binary (monorepo bins/jc): kaisatsu, dataroom, daiya, ekiben, Antares, shako and the
+# Portal in one process behind one mount router, the successor of the separate keycloak, ckan,
+# grafana, pipeline-runner, context-broker, gitea and portal components. Opt-in: an environment
+# turns it on by listing `jc` in its components (README.md); dev and smartcity do not.
+parts:
+  - name: server

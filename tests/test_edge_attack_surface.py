@@ -256,6 +256,14 @@ ROUTE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "participation is public reading; Decidim signs people in through the realm itself, and the edge refuses its system console, local password reset, invitations and sign-up (ADR-N-065 §3, T-6316)",
     },
+    "jc": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "jc in one binary on jc.{domain}: its Portal, identity (kaisatsu), catalogue and dashboards authenticate every caller themselves and serve their own bundles; the edge refuses the internal mounts /streams, /broker and /git with 404",
+    },
+    "jc-identity": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "kaisatsu, jc's identity provider, under /id: discovery, sign-in and token endpoints are public by OIDC and authenticate themselves; the route reaches a starting pod so the Portal of that pod can read the realm",
+    },
     "ckan-webassets": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "CKAN's fingerprinted stylesheets and scripts, the same files for everyone, kept a year by the browser (T-4201)",

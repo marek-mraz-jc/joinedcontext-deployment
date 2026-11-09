@@ -1,0 +1,48 @@
+---
+# jc's three Postgres stores on the shared postgres-cluster. The other modules (dataroom, daiya,
+# shako, ekiben) run on their in-memory stores inside jc today (bins/jc/STATUS.md); each gets its
+# database here once jc wires its Postgres store.
+jc_portal:
+  name: 'jc_portal'
+  embedded: true
+  user: 'jc_portal'
+  secret:
+    name: 'db-jc-portal'
+    key: 'password'
+    generate: true
+  hostServiceName: 'postgres-cluster-rw'
+  port: 5432
+jc_antares:
+  name: 'jc_antares'
+  embedded: true
+  user: 'jc_antares'
+  secret:
+    name: 'db-jc-antares'
+    key: 'password'
+    generate: true
+  hostServiceName: 'postgres-cluster-rw'
+  port: 5432
+  # Antares' first migration needs both, neither of which PostgreSQL trusts (components/context-broker).
+  extensions:
+    - name: 'postgis'
+      ensure: present
+    - name: 'btree_gin'
+      ensure: present
+# kaisatsu's migrations grant to the role named kaisatsu_app (crates/kaisatsu/store-pg/migrations),
+# so the names are fixed. kaisatsu_app gets CONNECT here; its table rights come from the migrations.
+jc_kaisatsu:
+  name: 'jc_kaisatsu'
+  embedded: true
+  user: 'kaisatsu_migrate'
+  secret:
+    name: 'db-jc-kaisatsu'
+    key: 'password'
+    generate: true
+  hostServiceName: 'postgres-cluster-rw'
+  port: 5432
+  additionalRoles:
+    - name: 'kaisatsu_app'
+      type: 'readonly'
+      credentialsSecret:
+        name: 'db-jc-kaisatsu-app'
+        passwordKey: 'password'
