@@ -1,6 +1,7 @@
 ---
 # jc-prod: one jc instance on the dev cluster (owner 2026-11-09 19:2xZ, tasks/GOAL-jc-dev.md
-# 'Dev cluster rebuild'). Namespace jc-prod, host jc.jcprod.dev.joinedcontext.com, its own
+# 'Dev cluster rebuild'). Namespace jc-prod, under prod's own host names in host mode (owner 19:5xZ,
+# GOAL-prod-decommission 'Cutover tomorrow morning': the owner moves DNS to this node), its own
 # CloudNativePG cluster (kaisatsu's role names are fixed, so two instances cannot share one
 # Postgres) reconciled by the dev environment's operator, which watches every namespace, and its own
 # APISIX edge behind the kit's Traefik.
@@ -13,9 +14,10 @@ components:
   - jc
 
 global:
-  # Its own domain under dev's wildcard A record: jc answers on jc.jcprod.dev.joinedcontext.com (slug
-  # mode), the bare jcprod.dev.joinedcontext.com only on the edge's ACME path. dev's own apex stays dev's.
-  domain: jcprod.dev.joinedcontext.com
+  # Prod's names. Until the owner moves DNS they reach this node only by Host header or a hosts
+  # override; the edge certificate is prod's own, copied into Secret apisix-edge-tls by the
+  # prod-deployer, and cert-manager renews it after the move.
+  domain: smartcity.joinedcontext.com
   orgDomain: hel.fi
   instanceSlug: jc-prod
   profile: development
@@ -55,8 +57,26 @@ images:
 
 jc:
   server:
+    mode: host
+    # Prod's edge certificate names (kubectl get ingress -n smartcity apisix, 2026-11-09): the same
+    # set, so the copied certificate stays Ready. status. and tiles. have no jc module yet: jc
+    # answers 404 there (T-6676).
+    hosts: ["", api, assistant, data, idm, opendata, portal, status, tiles, viz]
+    # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
+    edgeAddress: 116.203.134.249
     trustedProxies:
       - "10.42.0.0/16"
+    # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
+    # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
+    # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.
+    rawValues:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 384Mi
+        limits:
+          cpu: '2'
+          memory: 1280Mi
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
 # to, so the edge's Keycloak dependency does not hold here.

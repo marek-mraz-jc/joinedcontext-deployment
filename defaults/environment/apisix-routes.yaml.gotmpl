@@ -20,3 +20,27 @@ routes:
 {{- end }}
 {{- end }}
 {{- end }}
+{{- /* jc in host mode (components/jc, jc.server.mode: host): every other old host name to jc, which
+       picks the module by the Host header; the routes `jc` (portal.) and `jc-identity` (idm.) come
+       from components/jc/apisix-routes.yaml. "" is the apex. */}}
+{{- if and (has "jc" .Values.components) (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}
+{{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+{{- range $host := .Values.jc.server.hosts | default list }}
+{{- if not (has $host (list "portal" "idm")) }}
+  jc-host-{{ $host | default "apex" }}:
+    name: jc-host-{{ $host | default "apex" }}
+    description: jc on {{ if $host }}{{ $host }}.{{ end }}{domain}
+    upstream: jc.{{ $ns }}.svc.cluster.local:8080
+    {{- if $host }}
+    subDomain: {{ $host }}
+    {{- end }}
+    uri: '/*'
+    priority: 1
+    pluginConfig: jc
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+{{- end }}
+{{- end }}
+{{- end }}

@@ -18,7 +18,10 @@
     },
     "updateStrategy": {
       "type": "string",
-      "enum": ["RollingUpdate", "Recreate"]
+      "enum": [
+        "RollingUpdate",
+        "Recreate"
+      ]
     },
     "image": {
       "type": "object",
@@ -64,6 +67,29 @@
     },
     "terminationGracePeriodSeconds": {
       "type": "number"
+    },
+    "hostAliases": {
+      "type": "array",
+      "description": "Extra /etc/hosts entries of the pod.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ip",
+          "hostnames"
+        ],
+        "properties": {
+          "ip": {
+            "type": "string"
+          },
+          "hostnames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
     },
     "preStopSleepSeconds": {
       "type": "number"
