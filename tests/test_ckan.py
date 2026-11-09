@@ -667,7 +667,7 @@ def test_the_realm_egress_is_the_login_s_and_closes_with_it(rendered, rendered_v
     assert "ipBlock" not in ingress["to"][0]
     container = ckan_container(on)
     assert "oidc_pkce" in env_of(container)["CKAN__PLUGINS"]
-    assert container["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-ckan:2.11.6@sha256:")
+    assert container["image"].startswith("ghcr.io/marek-mraz-jc/joinedcontext-ckan:2.11.7@sha256:")
 
     # With the login off, nothing of it is rendered either: no policy, no plugin.
     off = rendered_variant("dev", lambda tree: set_global(tree, "ckan.sso", False))
