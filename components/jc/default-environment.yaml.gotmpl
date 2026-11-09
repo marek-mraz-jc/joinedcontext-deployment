@@ -1,0 +1,15 @@
+---
+jc:
+  server:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    # The public host every mount answers on (slug mode: /id, /opendata, /dashboards and the
+    # Portal at the root): jc.{domain}, so nothing collides with the separate components' hosts
+    # while both run on one cluster.
+    subDomain: jc
+    # Pool ceilings on the shared postgres-cluster (tests/test_postgres_connection_budget.py):
+    # kaisatsu's request role, Antares' store. The Portal's pool is compiled in (5).
+    kaisatsuPool: 4
+    antaresPool: 8
+    # shako's repositories and ekiben's file root.
+    dataSize: 5Gi

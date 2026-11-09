@@ -177,6 +177,8 @@ def _identity():
     "joinedcontext-deployment/.github/workflows/image-gitops.yml@refs/heads/main",
     "joinedcontext-deployment/.github/workflows/image-patched.yml@refs/heads/main",
     "Antares-NGSI-LD-Context-Broker/.github/workflows/full.yml@refs/tags/v0.4.1",
+    # the monorepo's one binary (components/jc)
+    "joinedcontext/.github/workflows/image.yml@refs/heads/main",
 ])
 def test_the_signers_of_pinned_images_are_accepted(workflow):
     assert re.search(_identity(), f"https://github.com/{OWNER}/{workflow}")
@@ -190,9 +192,21 @@ def test_the_signers_of_pinned_images_are_accepted(workflow):
     "Antares-NGSI-LD-Context-Broker/.github/workflows/ship.yml@refs/heads/feature",
     "joinedcontext-docs/.github/workflows/image.yml@refs/heads/main",
     "joinedcontext-portal/.github/workflows/image.yml@refs/heads/main.evil",
+    "joinedcontext/.github/workflows/image.yml@refs/heads/jc-ship",
+    "joinedcontext/.github/workflows/image-scan.yml@refs/heads/main",
 ])
 def test_a_preview_or_branch_signature_is_refused(workflow):
     assert not re.search(_identity(), f"https://github.com/{OWNER}/{workflow}")
+
+
+def test_the_one_binary_is_scanned_by_the_monorepo():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("verify_pinned_images", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    digest = "sha256:" + "1" * 64
+    assert module.scanner(f"ghcr.io/{OWNER}/jc@{digest}", "ghcr.io") == "joinedcontext"
+    assert module.scanner(f"ghcr.io/{OWNER}/jcx@{digest}", "ghcr.io") is None
 
 
 def test_scanned_asks_the_platform_image_scan_for_both_attestations(tmp_path):
