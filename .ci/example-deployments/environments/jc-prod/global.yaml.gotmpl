@@ -59,8 +59,12 @@ jc:
   server:
     mode: host
     # Prod's edge certificate names (kubectl get ingress -n smartcity apisix, 2026-11-09): the same
-    # set, so the copied certificate stays Ready. status. and tiles. have no jc module yet: jc
-    # answers 404 there (T-6676).
+    # set, so the copied certificate stays Ready. status. and tiles. are no jc modules (prod serves
+    # them from status-page and basemap-tiles): `hostUpstreams` sends them to the ones dev kept
+    # (supervisor 20:2xZ), opened to this edge by the policies below.
+    hostUpstreams:
+      status: status-page.dev.svc.cluster.local:8080
+      tiles: basemap-tiles.dev.svc.cluster.local:8080
     hosts: ["", api, assistant, data, idm, opendata, portal, status, tiles, viz]
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
@@ -82,3 +86,74 @@ jc:
 # to, so the edge's Keycloak dependency does not hold here.
 componentDependencies:
   apisix: [secrets]
+
+# This edge to dev's status page and tile server (hostUpstreams above), both halves, the Linkerd
+# proxy port beside the app port.
+networkpolicies:
+  apisix-egress-to-dev-status-tiles:
+    _component: apisix
+    podSelector:
+      app.kubernetes.io/name: apisix
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: probes-status
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/instance: basemap-tiles
+                app.kubernetes.io/component: server
+        ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 4143
+  dev-status-page-from-jc-prod-edge:
+    _component: apisix
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/instance: probes-status
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: apisix
+        ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 4143
+  dev-basemap-from-jc-prod-edge:
+    _component: apisix
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/instance: basemap-tiles
+      app.kubernetes.io/component: server
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: apisix
+        ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 4143

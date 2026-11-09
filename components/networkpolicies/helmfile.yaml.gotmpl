@@ -109,6 +109,8 @@ releases:
             {{- /* Skip: consumed above for target-namespace resolution */ -}}
           {{- else if eq $key "deployLayer" }}
             {{- /* Skip: consumed above for layer gating */ -}}
+          {{- else if eq $key "namespace" }}
+            {{- /* Skip: consumed above as the explicit target namespace */ -}}
           {{- else if or (eq $key "ingress") (eq $key "egress") }}
             {{- $transformedRules := list }}
             {{- range $rule := $value }}

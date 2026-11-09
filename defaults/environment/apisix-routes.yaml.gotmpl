@@ -30,7 +30,7 @@ routes:
   jc-host-{{ $host | default "apex" }}:
     name: jc-host-{{ $host | default "apex" }}
     description: jc on {{ if $host }}{{ $host }}.{{ end }}{domain}
-    upstream: jc.{{ $ns }}.svc.cluster.local:8080
+    upstream: {{ index ($.Values.jc.server.hostUpstreams | default dict) $host | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     {{- if $host }}
     subDomain: {{ $host }}
     {{- end }}
