@@ -29,6 +29,8 @@ envFrom: []           # raw list, passed through
 goMemLimitPercent: 0  # >0: GOMEMLIMIT = this % of resources.limits.memory (Go workloads)
 
 enableServiceLinks: false
+# Extra /etc/hosts entries of the pod (jc-prod before the DNS move).
+hostAliases: []
 terminationGracePeriodSeconds: 30
 # How long a terminating pod keeps serving before its process is told to stop (OPS-27, T-3008).
 # The kubelet stops a pod at once, while APISIX and the mesh still send to it until they see its

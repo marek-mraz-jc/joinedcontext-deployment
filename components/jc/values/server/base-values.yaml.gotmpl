@@ -80,6 +80,18 @@ probes:
 # (bins/jc/STATUS.md), so a second replica is a second, divergent installation.
 replicaCount: 1
 
+# Before DNS points the public names at this cluster (jc-prod on dev ahead of the cutover), jc's own
+# reads of its public URLs (the Portal fetching kaisatsu's discovery at idm.{domain}) would reach the
+# old installation: `edgeAddress` pins every routed host to this cluster's ingress address.
+{{- with (dig "edgeAddress" "" $jc) }}
+hostAliases:
+  - ip: {{ . | quote }}
+    hostnames:
+    {{- range $jc.hosts }}
+      - {{ if . }}{{ . }}.{{ end }}{{ $global.domain }}
+    {{- end }}
+{{- end }}
+
 configMap:
   enabled: true
   mountPath: /etc/jc
@@ -89,17 +101,70 @@ configMap:
       listen = "0.0.0.0:8080"
       admin_listen = "0.0.0.0:9091"
       admin_token_file = "/run/jc/admin/token"
+      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      mode = "host"
+      base_host = "{{ $global.domain }}"
+      {{- else }}
       mode = "slug"
       base_host = "{{ $jc.subDomain }}.{{ $global.domain }}"
+      {{- end }}
       scheme = "https"
       log_format = "json"
       state_dir = "/var/lib/jc/state"
       # Only a peer inside these networks may name the caller in X-Forwarded-For.
       trusted_proxies = {{ $proxies | toJson }}
 
+      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      # Every old host name (bins/jc CUTOVER.md section 4, tests/fixtures/dev-mounts.toml).
+      [mounts.kaisatsu]
+      host = "idm.{{ $global.domain }}"
+      path_prefix = ""
+
+      [mounts.portal]
+      host = "portal.{{ $global.domain }}"
+      path_prefix = ""
+
+      [mounts.dataroom]
+      host = "opendata.{{ $global.domain }}"
+      path_prefix = ""
+
+      [mounts.daiya]
+      host = "{{ $global.domain }}"
+      path_prefix = "/grafana"
+
+      [mounts.shako]
+      host = "{{ $global.domain }}"
+      path_prefix = "/git"
+
+      [mounts.assistant]
+      host = "assistant.{{ $global.domain }}"
+      path_prefix = ""
+
+      [mounts.viz]
+      host = "viz.{{ $global.domain }}"
+      path_prefix = ""
+
+      # The gateway's own host first: its issuer and absolute URLs.
+      [[mounts.gateway]]
+      host = "api.{{ $global.domain }}"
+      path_prefix = ""
+      {{- range list "/cs" "/api/endpoint" "/api/mcp" "/catalog" "/catalog.jsonld" "/catalog.ttl" }}
+
+      [[mounts.gateway]]
+      host = "{{ $global.domain }}"
+      path_prefix = "{{ . }}"
+      {{- end }}
+      {{- range list "/cs" "/api/endpoint" "/api/mcp" }}
+
+      [[mounts.gateway]]
+      host = "portal.{{ $global.domain }}"
+      path_prefix = "{{ . }}"
+      {{- end }}
+      {{- else }}
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]
       path_prefix = ""
+      {{- end }}
 
       [kaisatsu]
       database_url_file = "/etc/jc/kaisatsu-database-url"

@@ -57,8 +57,66 @@ jc:
   server:
     trustedProxies:
       - "10.42.0.0/16"
+    # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
+    # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
+    # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.
+    rawValues:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 384Mi
+        limits:
+          cpu: '2'
+          memory: 1280Mi
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
 # to, so the edge's Keycloak dependency does not hold here.
 componentDependencies:
   apisix: [secrets]
+
+networkpolicies:
+  # The CloudNativePG operator runs in namespace dev (clusterWide): it reads each instance's status
+  # on 8000 and connects on 5432. Both halves, with the Linkerd proxy port.
+  postgres-from-dev-operator:
+    _component: postgres
+    podSelector:
+      cnpg.io/cluster: postgres-cluster
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: cloudnative-pg
+        ports:
+          - protocol: TCP
+            port: 8000
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 4143
+  dev-operator-egress-to-jc-dev:
+    _component: postgres
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/name: cloudnative-pg
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-dev
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+        ports:
+          - protocol: TCP
+            port: 8000
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 4143

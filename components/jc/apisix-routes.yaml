@@ -8,7 +8,9 @@ jc:
   name: jc
   description: joinedcontext in one binary (Portal, identity, catalogue, dashboards)
   upstream: jc.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
-  subDomain: jc
+  # Host mode (jc.server.mode: host): the Portal's host; the other hosts are routed by
+  # defaults/environment/apisix-routes.yaml.gotmpl.
+  subDomain: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}portal{{ else }}jc{{ end }}'
   uri: '/*'
   priority: 1
   # The assistant streams its answer and an import uploads a file: longer than a page read.
@@ -24,8 +26,8 @@ jc-identity:
   name: jc-identity
   description: jc identity (kaisatsu), reachable while the pod starts
   upstream: jc-pods.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
-  subDomain: jc
-  uri: '/id/*'
+  subDomain: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}idm{{ else }}jc{{ end }}'
+  uri: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}/*{{ else }}/id/*{{ end }}'
   priority: 5
   pluginConfig: jc
   timeout:

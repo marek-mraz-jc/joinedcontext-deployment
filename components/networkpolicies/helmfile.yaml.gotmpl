@@ -78,8 +78,10 @@ releases:
           {{- end }}
         {{- end }}
       {{- else }}
+        {{- /* A policy entry (it carries `_component`) is no component part, even when it names
+               its own `namespace`: the networkpolicies component's own values hold both. */ -}}
         {{- range $partKey, $partData := $targetComponentData }}
-          {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") }}
+          {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") (not (hasKey $partData "_component")) }}
             {{- $targetNamespace = index $partData "namespace" }}
             {{- break }}
           {{- end }}
@@ -109,6 +111,8 @@ releases:
             {{- /* Skip: consumed above for target-namespace resolution */ -}}
           {{- else if eq $key "deployLayer" }}
             {{- /* Skip: consumed above for layer gating */ -}}
+          {{- else if eq $key "namespace" }}
+            {{- /* Skip: consumed above as the explicit target namespace */ -}}
           {{- else if or (eq $key "ingress") (eq $key "egress") }}
             {{- $transformedRules := list }}
             {{- range $rule := $value }}

@@ -7,6 +7,13 @@ jc:
     # Portal at the root): jc.{domain}, so nothing collides with the separate components' hosts
     # while both run on one cluster.
     subDomain: jc
+    # host: every old host name keeps answering (bins/jc CUTOVER.md section 4): the Portal on
+    # portal.{domain}, kaisatsu on idm., the gateway on api. and its paths on the apex and portal.,
+    # dataroom on opendata., daiya at {domain}/grafana, shako at {domain}/git. `subDomain` is then
+    # unused and `hosts` lists every host the edge routes to jc ("" is the apex) and its
+    # certificate names; a host no mount claims answers jc's 404.
+    mode: slug
+    hosts: ["", idm, portal, api, opendata, data, assistant, viz]
     # Pool ceilings on the shared postgres-cluster (tests/test_postgres_connection_budget.py):
     # kaisatsu's request role, Antares' store. The Portal's pool is compiled in (5).
     kaisatsuPool: 4
