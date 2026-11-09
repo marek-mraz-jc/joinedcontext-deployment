@@ -2,101 +2,80 @@
 # Fixable findings no release has a fix for yet, each with its reason, its task and an expiry of
 # at most 30 days (scripts/scan-pinned-images.py `judge`). An expired or incomplete entry
 # excuses nothing and turns the scan red. Re-scan and remove an entry once the image is rebuilt.
-# registry.k8s.io/git-sync/git-sync: v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing.
-- cve: CVE-2026-13221
-  image: registry.k8s.io/git-sync/git-sync
-  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
-  task: T-3297
-  expires: 2026-11-07
-- cve: CVE-2026-42496
-  image: registry.k8s.io/git-sync/git-sync
-  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
-  task: T-3297
-  expires: 2026-11-07
-- cve: CVE-2026-56123
-  image: registry.k8s.io/git-sync/git-sync
-  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
-  task: T-3297
-  expires: 2026-11-07
-- cve: CVE-2026-8376
-  image: registry.k8s.io/git-sync/git-sync
-  reason: "v4.7.1 is the newest git-sync; its Debian base still ships the affected perl and socat. git-sync runs inside the cluster, reads the configuration repository and serves nothing."
-  task: T-3297
-  expires: 2026-11-07
-# ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr (docker.io/ckan/ckan-solr rebuilt, T-6114): 2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace.
+# ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr (docker.io/ckan/ckan-solr rebuilt, T-6114), re-scanned 2026-11-09 (T-6696): no CKAN Solr tag carries the fixed jars yet.
 - cve: CVE-2024-47561
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2025-12383
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2025-54988
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2025-66516
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-40682
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-42027
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-75595
   image: ghcr.io/marek-mraz-jc/joinedcontext-ckan-solr
-  reason: "2.11-solr9, 2.11-solr9.9 and 2.12-solr9.9 all ship the same Solr libraries; no CKAN Solr image carries the fixed jars yet. Solr is reachable only from CKAN inside its namespace."
-  task: T-3297
-  expires: 2026-11-07
-# ghcr.io/warpstreamlabs/bento: 1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output.
+  reason: "docker.io/ckan/ckan-solr 2.11-solr9 (last rebuilt 2026-05-13) is the newest 2.11 tag and 2.12-solr9 ships the same Solr jars (trivy 0.75.0, 2026-11-09); our image only upgrades the OS packages. Solr is reachable only from CKAN inside its namespace."
+  task: T-6696
+  expires: 2026-12-09
+# ghcr.io/warpstreamlabs/bento, re-scanned 2026-11-09 (T-6696): 1.22.0 is still the newest release and bundles amqp091-go 1.9.0.
 - cve: CVE-2026-77405
   image: ghcr.io/warpstreamlabs/bento
-  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "1.22.0 (2026-10-09) is still the newest Bento release and bundles amqp091-go 1.9.0 (trivy 0.75.0, 2026-11-09); no pipeline of this platform uses an AMQP input or output."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-77408
   image: ghcr.io/warpstreamlabs/bento
-  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "1.22.0 (2026-10-09) is still the newest Bento release and bundles amqp091-go 1.9.0 (trivy 0.75.0, 2026-11-09); no pipeline of this platform uses an AMQP input or output."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-77411
   image: ghcr.io/warpstreamlabs/bento
-  reason: "1.21.2, the newest Bento, still bundles amqp091-go 1.9.0; no pipeline of this platform uses an AMQP input or output."
-  task: T-3297
-  expires: 2026-11-07
-# docker.gitea.com/gitea: 1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here.
+  reason: "1.22.0 (2026-10-09) is still the newest Bento release and bundles amqp091-go 1.9.0 (trivy 0.75.0, 2026-11-09); no pipeline of this platform uses an AMQP input or output."
+  task: T-6696
+  expires: 2026-12-09
+# docker.gitea.com/gitea, re-scanned 2026-11-09 (T-6696): 1.27.3 is the newest 1.27 patch; 28.3.0 scans clean and is a major upgrade of its own.
 - cve: CVE-2026-60002
   image: docker.gitea.com/gitea
-  reason: "1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "1.27.3 is the newest 1.27 patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8 (trivy 0.75.0, 2026-11-09); 28.3.0 (2026-11-01) scans clean but is a new major line with forward-only database migrations, so the forge moves to it as its own change. The forge exposes no SSH and runs no bundled runner here."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-73802
   image: docker.gitea.com/gitea
-  reason: "1.27.3 is the newest Gitea patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8; the forge exposes no SSH and runs no bundled runner here."
-  task: T-3297
-  expires: 2026-11-07
-# alpine/kubectl: alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic.
+  reason: "1.27.3 is the newest 1.27 patch and still ships openssh-keygen 10.3_p1-r0 and runner 1.0.8 (trivy 0.75.0, 2026-11-09); 28.3.0 (2026-11-01) scans clean but is a new major line with forward-only database migrations, so the forge moves to it as its own change. The forge exposes no SSH and runs no bundled runner here."
+  task: T-6696
+  expires: 2026-12-09
+# alpine/kubectl, re-scanned 2026-11-09 (T-6696): no 1.33 or 1.34 build carries the fixed OpenSSL and Go; 1.35 is outside the client skew of the k3s v1.33 cluster.
 - cve: CVE-2025-68121
   image: alpine/kubectl
-  reason: "alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "1.33.4 is the newest 1.33 build and 1.34.2, the newest 1.34, still ships OpenSSL 3.5.4 and Go 1.24.9 (trivy 0.75.0, 2026-11-09); 1.35 is outside the supported client skew of the k3s v1.33.13 cluster. The reaper and the restore drill run inside the cluster with no inbound traffic."
+  task: T-6696
+  expires: 2026-12-09
 - cve: CVE-2026-31789
   image: alpine/kubectl
-  reason: "alpine/kubectl has no 1.33 or 1.34 build with the fixed OpenSSL and Go (1.35 has, outside the supported skew of the k3s v1.33 cluster); the reaper runs inside the cluster with no inbound traffic."
-  task: T-3297
-  expires: 2026-11-07
+  reason: "1.33.4 is the newest 1.33 build and 1.34.2, the newest 1.34, still ships OpenSSL 3.5.4 and Go 1.24.9 (trivy 0.75.0, 2026-11-09); 1.35 is outside the supported client skew of the k3s v1.33.13 cluster. The reaper and the restore drill run inside the cluster with no inbound traffic."
+  task: T-6696
+  expires: 2026-12-09
 # apache/apisix: 3.19.0-ubuntu, the newest APISIX image, still ships openssl 3.0.13-0ubuntu3.15 (trivy 0.70.0, 2026-10-11); the fix is 3.0.13-0ubuntu3.16. The pin stays on 3.17.0 until an APISIX image carries it.
 - cve: CVE-2026-84782
   image: apache/apisix
@@ -1141,24 +1120,6 @@
   reason: "1.22.0 is the newest Bento release (ghcr.io tags, 2026-10-11) and still carries these Go module and standard library findings: 5 fixable HIGH findings where 1.21.1 had 18 (trivy 0.70.0)."
   task: T-3870
   expires: 2026-11-10
-# ghcr.io/cloudnative-pg/postgis: certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it.
-- cve: GHSA-6q48-6c7w-9gw2
-  image: ghcr.io/cloudnative-pg/postgis
-  reason: "certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it."
-  task: T-5053
-  expires: 2026-11-04
-# ghcr.io/marek-mraz-jc/joinedcontext-ckan: certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it.
-- cve: GHSA-6q48-6c7w-9gw2
-  image: ghcr.io/marek-mraz-jc/joinedcontext-ckan
-  reason: "certifi 2026.10.19 carries the fix and is two days old, inside the seven-day dependency cooldown (eligible 2026-10-26); the image is re-pinned once it carries it."
-  task: T-5053
-  expires: 2026-11-04
-# docker.io/library/python: the 3.13.16-slim-trixie probe image ships pip, whose vendored certifi predates 2026.10.19, the only fixed release; it was uploaded 2026-10-20 and every slim image carrying it is inside the seven-day dependency cooldown (eligible 2026-10-27). The probe runs files/probe.py with the standard library only and never runs pip; re-pinned once a slim image carries it.
-- cve: GHSA-6q48-6c7w-9gw2
-  image: docker.io/library/python
-  reason: "pip's vendored certifi predates 2026.10.19, the only fixed release, uploaded 2026-10-20 and inside the seven-day dependency cooldown (eligible 2026-10-27); the probe never runs pip; re-pinned once a slim image carries it."
-  task: T-5053
-  expires: 2026-11-04
 # CVE-2026-111497 (brotli, HIGH, CISA KEV since 2026-10-27): the newest images of these two still ship the affected library (trivy 0.75.0, 2026-10-27).
 - cve: CVE-2026-111497
   image: registry.k8s.io/git-sync/git-sync

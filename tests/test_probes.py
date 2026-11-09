@@ -331,7 +331,7 @@ def test_rendered_probe_is_anonymous_pinned_and_probes_both_environments(dev):
     deployment = next(d for d in dev if d.get("kind") == "Deployment" and d["metadata"]["name"] == "probe")
     pod = deployment["spec"]["template"]["spec"]
     container = pod["containers"][0]
-    assert container["image"].startswith("docker.io/library/python:3.13.16-slim-trixie@sha256:")
+    assert container["image"].startswith("docker.io/library/python:3.13.17-slim-trixie@sha256:")
     env = {e["name"]: e.get("value") for e in container.get("env", [])}
     targets = probe.load_targets(env["PROBE_TARGETS"])
     assert [t["name"] for t in targets] == ["dev", "smartcity"]

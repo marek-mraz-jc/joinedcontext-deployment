@@ -389,7 +389,7 @@ def one(docs, kind, name):
 def test_rendered_status_page_is_anonymous_pinned_and_reads_the_probe(dev):
     pod = one(dev, "Deployment", "status-page")["spec"]["template"]["spec"]
     container = pod["containers"][0]
-    assert container["image"].startswith("docker.io/library/python:3.13.16-slim-trixie@sha256:")
+    assert container["image"].startswith("docker.io/library/python:3.13.17-slim-trixie@sha256:")
     env = {e["name"]: e.get("value") for e in container["env"]}
     assert env["STATUS_TARGET"] == "dev" and env["STATUS_DOMAIN"] == "dev.joinedcontext.com"
     assert re.fullmatch(r"http://probe\.[a-z0-9-]+\.svc\.cluster\.local:9100/results\.json", env["STATUS_PROBE_URL"])
