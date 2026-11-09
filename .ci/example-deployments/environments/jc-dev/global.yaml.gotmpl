@@ -1,0 +1,64 @@
+---
+# jc-dev: one jc instance on the dev cluster (owner 2026-11-09 19:2xZ, tasks/GOAL-jc-dev.md
+# 'Dev cluster rebuild'). Namespace jc-dev, host jc.jcdev.dev.joinedcontext.com, its own
+# CloudNativePG cluster (kaisatsu's role names are fixed, so two instances cannot share one
+# Postgres) reconciled by the dev environment's operator, which watches every namespace, and its own
+# APISIX edge behind the kit's Traefik.
+components:
+  - prepare
+  - secrets
+  - networkpolicies
+  - postgres
+  - apisix
+  - jc
+
+global:
+  # Its own domain under dev's wildcard A record: jc answers on jc.jcdev.dev.joinedcontext.com (slug
+  # mode), the bare jcdev.dev.joinedcontext.com only on the edge's ACME path. dev's own apex stays dev's.
+  domain: jcdev.dev.joinedcontext.com
+  orgDomain: hel.fi
+  instanceSlug: jc-dev
+  profile: development
+  securityTxt:
+    contact: mailto:contact@marek-mraz.com
+    expires: "2027-09-24T00:00:00Z"
+  serviceMesh:
+    allowUnauthenticatedIngress: true
+  ingress:
+    enabled: true
+    clusterIssuer: 'letsencrypt-prod'
+    ingressClass: 'traefik'
+  kubeApiCidrs: [10.255.0.101/32]
+
+# The operator is the dev environment's (namespace dev, clusterWide since this change).
+postgres:
+  operator:
+    enabled: false
+  # One instance of three on a 16 GB node: jc's three stores ask for a third of dev's request and keep
+  # its 2Gi ceiling (measure with kubectl top after the import and set the request from it).
+  cluster:
+    rawValues:
+      cluster:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 640Mi
+          limits:
+            memory: 2Gi
+
+images:
+  jc:
+    server:
+      repository: 'ghcr.io/marek-mraz-jc/jc'
+      tag: 'main'
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000'
+
+jc:
+  server:
+    trustedProxies:
+      - "10.42.0.0/16"
+
+# jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
+# to, so the edge's Keycloak dependency does not hold here.
+componentDependencies:
+  apisix: [secrets]
