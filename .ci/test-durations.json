@@ -28,6 +28,7 @@
  "test_barcelona_environment.py": 14.7,
  "test_barcelona_equipaments.py": 4.1,
  "test_barcelona_events.py": 8.8,
+ "test_barcelona_heritage.py": 4.6,
  "test_barcelona_local_trees.py": 3.4,
  "test_barcelona_mobility.py": 64.4,
  "test_barcelona_seed.py": 15.1,
