@@ -1,0 +1,11 @@
+---
+# ghcr.io/marek-mraz-jc/jc-embedder, built, smoke-tested, signed and scanned by the monorepo's
+# .github/workflows/image-embedder.yml on main. No digest is pinned yet: no run on main has
+# published one. Pin the first with
+#   embedder:
+#     server:
+#       repository: 'ghcr.io/marek-mraz-jc/jc-embedder'
+#       tag: 'main'
+#       digest: 'sha256:<the digest image-embedder.yml printed>'
+# before an environment that deploys this component is applied (the render refuses an empty pin).
+embedder: {}
