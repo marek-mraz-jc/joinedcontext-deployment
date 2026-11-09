@@ -2,7 +2,7 @@
 jc:
   name: jc
   description: jc headers, rate limiting and the mounts that stay inside the pod
-  plugins:
+  plugins: &jc-plugins
     request-id:
       include_in_response: true
     # Every route clears the headers the platform trusts internally, not only the
@@ -81,5 +81,33 @@ jc:
             if ngx.header["Content-Security-Policy"] == nil then
               ngx.header["Content-Security-Policy"] =
                 "frame-ancestors 'self'; object-src 'none'; base-uri 'self'"
+            end
+          end
+
+# The App hosts `{name}.apps.{domain}` (jc host mode): the same chain, but no X-Frame-Options.
+# The Portal opens an App in a frame of its own origin (AP-122), which SAMEORIGIN refuses; each
+# App's own Content Security Policy says who may frame it (`frame-ancestors`), as the Portal's
+# edge file left it on dev (reconciler/edge_file.rs framed_by_portal).
+jc-apps:
+  name: jc-apps
+  description: jc on the App hosts, framed by the Portal alone
+  plugins:
+    <<: *jc-plugins
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+    # An answer without a policy of its own (a problem body, a gateway read) is framed by nobody:
+    # the App's pages carry their own `frame-ancestors` naming the Portal.
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
             end
           end

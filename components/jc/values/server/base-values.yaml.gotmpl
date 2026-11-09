@@ -120,9 +120,14 @@ configMap:
       host = "idm.{{ $global.domain }}"
       path_prefix = ""
 
-      [mounts.portal]
+      [[mounts.portal]]
       host = "portal.{{ $global.domain }}"
       path_prefix = ""
+
+      # Every App host: the Portal serves App {name} alone on {name}.apps.{domain} (edge-session-design
+      # S4a); jc sets JC_PORTAL_APPS_URL and JC_PORTAL_SERVE_APP_HOSTS from this entry.
+      [[mounts.portal]]
+      host = "*.apps.{{ $global.domain }}"
 
       [mounts.dataroom]
       host = "opendata.{{ $global.domain }}"
@@ -192,6 +197,9 @@ env:
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  # The builds the Portal fetches from shako's package registry (the own-repository Apps, prod's
+  # builds imported by jc-migrate), checked against status.build before they are unpacked.
+  JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc/apps-cache
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
 

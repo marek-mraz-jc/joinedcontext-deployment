@@ -80,6 +80,8 @@ edge:
   websocketHosts: {{ if $websocketHosts }}{{ $websocketHosts | toJson }}{{ else }}[]{{ end }}
   # The zone every App host sits in, when its wildcard certificate is on (ADR-N-037 §6).
   appsWildcard: {{ if dig "ingress" "appsWildcard" "enabled" false $global }}{{ printf "*.apps.%s" $global.domain | quote }}{{ else }}''{{ end }}
+  # App hosts one by one (global.ingress.appHosts): a Certificate `app-{name}` each.
+  appHosts: {{ dig "ingress" "appHosts" list $global | toJson }}
 
 # Authorize the ingress edge to reach the APISIX data plane when the
 # namespace enforces mandatory mTLS via the Linkerd default-inbound-policy.
