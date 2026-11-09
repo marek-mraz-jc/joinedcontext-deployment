@@ -73,3 +73,50 @@ jc:
 # to, so the edge's Keycloak dependency does not hold here.
 componentDependencies:
   apisix: [secrets]
+
+networkpolicies:
+  # The CloudNativePG operator runs in namespace dev (clusterWide): it reads each instance's status
+  # on 8000 and connects on 5432. Both halves, with the Linkerd proxy port.
+  postgres-from-dev-operator:
+    _component: postgres
+    podSelector:
+      cnpg.io/cluster: postgres-cluster
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: cloudnative-pg
+        ports:
+          - protocol: TCP
+            port: 8000
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 4143
+  dev-operator-egress-to-jc-dev:
+    _component: postgres
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/name: cloudnative-pg
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-dev
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+        ports:
+          - protocol: TCP
+            port: 8000
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 4143

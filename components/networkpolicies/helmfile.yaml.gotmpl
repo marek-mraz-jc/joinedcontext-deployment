@@ -78,8 +78,10 @@ releases:
           {{- end }}
         {{- end }}
       {{- else }}
+        {{- /* A policy entry (it carries `_component`) is no component part, even when it names
+               its own `namespace`: the networkpolicies component's own values hold both. */ -}}
         {{- range $partKey, $partData := $targetComponentData }}
-          {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") }}
+          {{- if and (kindIs "map" $partData) (hasKey $partData "namespace") (not (hasKey $partData "_component")) }}
             {{- $targetNamespace = index $partData "namespace" }}
             {{- break }}
           {{- end }}
