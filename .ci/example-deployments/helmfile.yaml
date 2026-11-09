@@ -30,6 +30,11 @@ environments:
     values: []
   broker-only:
     values: []
+  # The two jc instances on the dev cluster (owner 2026-11-09, GOAL-jc-dev 'Dev cluster rebuild').
+  jc-dev:
+    values: []
+  jc-prod:
+    values: []
 ---
 helmfiles:
   - path: '../helmfile-root.yaml.gotmpl'
@@ -47,3 +52,5 @@ helmfiles:
           - addons
           - minimal
           - broker-only
+          - jc-dev
+          - jc-prod
