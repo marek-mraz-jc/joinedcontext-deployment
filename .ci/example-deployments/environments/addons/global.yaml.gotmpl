@@ -34,6 +34,9 @@ components:
   # joinedcontext in one binary (monorepo bins/jc): rendered here with an example image pin
   # (jc.yaml.gotmpl) until the first signed digest exists; no live environment lists it yet.
   - jc
+  # The embedding model as a service the deployments share (monorepo crates/embedder): rendered
+  # here with an example image pin and jc as its one caller (embedder.yaml.gotmpl).
+  - embedder
 
 global:
   domain: addons.example.org

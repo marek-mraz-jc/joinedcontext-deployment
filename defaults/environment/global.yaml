@@ -383,6 +383,8 @@ componentDependencies:
   context-gateway: [context-broker, keycloak]
   mqtt-brokers: [context-gateway, pipeline-runner]
   observability: [portal, keycloak]
+  # Its one caller (networkpolicies.yaml, meshAuthorization) is jc's pod.
+  embedder: [jc, networkpolicies]
 
 # List of components to deploy (order matters for dependencies)
 # To "disable" a component, remove it from the list.
