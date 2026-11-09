@@ -484,7 +484,6 @@ rbac.authorization.k8s.io/v1/Role dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/Role dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/Role dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role dev/postgres-cluster-dr-drill
-rbac.authorization.k8s.io/v1/Role dev/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/Role dev/probe
 rbac.authorization.k8s.io/v1/RoleBinding dev-app-identities/portal-app-job-accounts
 rbac.authorization.k8s.io/v1/RoleBinding dev-app-identities/wasm-host-tokens
@@ -502,7 +501,6 @@ rbac.authorization.k8s.io/v1/RoleBinding dev/portal-personal-data-keys
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-reconciler-token
 rbac.authorization.k8s.io/v1/RoleBinding dev/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-cluster-dr-drill
-rbac.authorization.k8s.io/v1/RoleBinding dev/postgres-operator-cloudnative-pg
 rbac.authorization.k8s.io/v1/RoleBinding dev/probe
 traefik.io/v1alpha1/IngressRoute dev/endpoint-ws
 traefik.io/v1alpha1/Middleware dev/endpoint-ws-upgrade
