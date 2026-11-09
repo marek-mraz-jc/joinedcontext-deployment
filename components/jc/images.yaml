@@ -1,14 +1,12 @@
 ---
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
-# .github/workflows/image.yml on main and scanned by its image-scan.yml. No digest is pinned yet:
-# no run on main has published one. Pin the first with
-#   jc:
-#     server:
-#       repository: 'ghcr.io/marek-mraz-jc/jc'
-#       tag: 'main'
-#       digest: 'sha256:<the digest image.yml printed>'
-# before an environment that deploys this component is applied (the render refuses an empty pin).
+# .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
+  # main 7b963836, ci run 42702031687 (scan green, cosign tlog 3771284691).
+  server:
+    repository: 'ghcr.io/marek-mraz-jc/jc'
+    tag: '7b9638367c5f360f006a8f89433266ccca1a95d1'
+    digest: 'sha256:e7f8942699ae654872d3458dcffddb58182b739c717d197fb38087d10eab6c95'
   # The init container that copies Secret jc-setup into the state dir: busybox's sh and install,
   # the same pin as components/keycloak/images.yaml dbchecker.
   seed:
