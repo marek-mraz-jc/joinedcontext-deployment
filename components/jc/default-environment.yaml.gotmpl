@@ -53,3 +53,11 @@ jc:
   functions:
     enabled: false
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+  # A Prometheus of another instance on the same cluster, read through prom-label-proxy with every
+  # query pinned to namespace=<this namespace>: jc's daiya gets datasource `prometheus` (org 1) on
+  # the proxy and may reach that one address ([daiya] prometheus_reach). Off: no proxy, no datasource.
+  metricsProxy:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    # http://<prometheus service>.<namespace>.svc.cluster.local:9090
+    upstream: ''

@@ -9,3 +9,7 @@ parts:
   # jc-functions (components/functions) beside jc: the server functions of generated Apps, on
   # this instance's own realm and gateway. Off unless the environment turns it on.
   - name: functions
+  # prom-label-proxy, off by default: on a cluster whose Prometheus belongs to another instance
+  # (jc-prod beside dev), the only path from this jc's daiya to it, every query pinned to this
+  # namespace's series ([daiya] prometheus_reach names it).
+  - name: metricsProxy

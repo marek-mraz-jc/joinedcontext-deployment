@@ -8,6 +8,9 @@
 {{- fail "jc with wasm-host needs apps-db (the Apps' rows) and artifact-store (their components) in the same environment" }}
 {{- end }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- /* The metricsProxy part's address: daiya's datasource `prometheus` and the one address it may reach. */}}
+{{- $proxy := .Values.jc.metricsProxy }}
+{{- $proxyUrl := printf "http://jc-metrics-proxy.%s.svc.cluster.local:8080" $proxy.namespace }}
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
 {{- $proxies := $jc.trustedProxies | default list }}
@@ -279,10 +282,32 @@ configMap:
       # reads od-datasets.json beside jc.toml.
 {{ readFile "../../files/harvest-sources.toml" | indent 6 }}
       {{- end }}
+      {{- if $proxy.enabled }}
+
+      # Organization 1's datasource `prometheus` on the metricsProxy part, the one address it may
+      # reach over http (every query pinned to this namespace's series there).
+      [daiya]
+      provisioning_dir = "/etc/jc-daiya"
+      prometheus_reach = "{{ $proxyUrl }}"
+      {{- end }}
     {{- if (dig "catalogueHarvest" false $jc) }}
     # The datasets prod converted (files/od-datasets.json, the monorepo's bins/jc/docs copy).
     od-datasets.json: |
 {{ readFile "../../files/od-datasets.json" | indent 6 }}
+    {{- end }}
+    {{- if $proxy.enabled }}
+    daiya-prometheus.yaml: |
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          uid: prometheus
+          type: prometheus
+          access: proxy
+          orgId: 1
+          url: {{ $proxyUrl }}
+          editable: false
+          jsonData:
+            timeInterval: 15s
     {{- end }}
     # kaisatsu's request role on its database; the password comes from its own file.
     kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
@@ -501,9 +526,19 @@ extraVolumes:
       secretName: {{ $realm.secretsSecret }}
       defaultMode: 0440
   {{- end }}
+  {{- if $proxy.enabled }}
+  # daiya's provisioning root: the datasource file of this pod's ConfigMap under datasources/.
+  - name: daiya-provisioning
+    configMap:
+      name: jc
+      items: [{ key: daiya-prometheus.yaml, path: datasources/prometheus.yaml }]
+  {{- end }}
 
 extraVolumeMounts:
   - { name: state, mountPath: /var/lib/jc }
+  {{- if $proxy.enabled }}
+  - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
+  {{- end }}
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
   - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }

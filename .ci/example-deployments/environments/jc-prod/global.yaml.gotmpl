@@ -17,6 +17,9 @@ components:
   - apps-db
   - jc
   - wasm-host
+  # Scrape configuration only (ServiceMonitor/PodMonitor in this namespace), read by dev's
+  # Prometheus; no rule set of its own, which dev's Prometheus would evaluate a second time.
+  - monitoring
 
 global:
   # Prod's names. Until the owner moves DNS they reach this node only by Host header or a hosts
@@ -113,6 +116,9 @@ artifact-store:
           memory: 512Mi
 
 jc:
+  metricsProxy:
+    enabled: true
+    upstream: http://prometheus-operated.dev.svc.cluster.local:9090
   server:
     mode: host
     # Prod's edge certificate names (kubectl get ingress -n smartcity apisix, 2026-11-09): the same
@@ -264,6 +270,11 @@ jc:
     # Supervisor 2026-11-10 06:5xZ from evidence/jc-memory-1g/REPORT.md (prod data): peak RSS 2.13 GiB
     # after start, 2.28 GiB under gate load, allocator-resident 2.60 GiB, idle 1.63 GiB.
     rawValues:
+      # dev's Prometheus is meshed: through jc's Linkerd inbound port (4143) it would reach every
+      # port of the pod, the public 8080 included. The admin listener skips the proxy instead, so
+      # the policy below opens 9091 alone (the token still guards /metrics).
+      podAnnotations:
+        config.linkerd.io/skip-inbound-ports: "9091"
       resources:
         requests:
           cpu: 100m
@@ -275,6 +286,29 @@ jc:
   # realm smartcity and jc-prod's gateway; dev's jc-functions trusts dev's realm and gateway only.
   functions:
     enabled: true
+
+# Metrics (jc-prod-metrics, Decided (supervisor, owner may override)): no second Prometheus on the
+# 16 GB node. Dev's Prometheus (namespace dev) scrapes this namespace's jc, APISIX and Postgres
+# exporters; jc's daiya reads it only through the metricsProxy part, which pins every query to
+# namespace="jc-prod" (dev's and jc-dev's series stay out of reach). While dev's Prometheus runs no
+# pod (environments/dev/prometheus.yaml.gotmpl, owner order 2026-11-03) the panels stay empty.
+monitoring:
+  monitoring:
+    # On without global.metrics.enabled, which would also render the CloudNativePG chart's rules.
+    enabled: true
+    # Admits dev's Prometheus to the Postgres exporter (namespaceFrom in components/postgres).
+    prometheusNamespace: dev
+    rawValues:
+      alertGroups: []
+apisix:
+  apisix:
+    rawValues:
+      apisix:
+        prometheus:
+          enabled: true
+      metrics:
+        serviceMonitor:
+          enabled: true
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
 # to, so the edge's Keycloak dependency does not hold here.
@@ -428,5 +462,170 @@ networkpolicies:
             port: 8000
           - protocol: TCP
             port: 5432
+          - protocol: TCP
+            port: 4143
+  # Metrics: jc's daiya -> the proxy -> dev's Prometheus, and dev's Prometheus -> the exporters of
+  # jc (admin 9091, behind its token), APISIX (9091) and Postgres (9187, by prometheusNamespace
+  # above). Both halves of each hop, the Linkerd proxy port beside the app port; nothing else
+  # reaches the proxy or the metrics ports.
+  jc-egress-to-metrics-proxy:
+    _component: jc
+    podSelector:
+      app.kubernetes.io/name: jc-server
+      app.kubernetes.io/instance: jc-server
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - podSelector:
+              matchLabels:
+                app.kubernetes.io/name: jc-metrics-proxy
+        ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 4143
+  jc-metrics-proxy:
+    _component: jc
+    podSelector:
+      app.kubernetes.io/name: jc-metrics-proxy
+    policyTypes:
+      - Ingress
+      - Egress
+    ingress:
+      - from:
+          - podSelector:
+              matchLabels:
+                app.kubernetes.io/name: jc-server
+                app.kubernetes.io/instance: jc-server
+        ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 4143
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                k8s-app: kube-dns
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+        ports:
+          - protocol: TCP
+            port: 9090
+          - protocol: TCP
+            port: 4143
+  dev-prometheus-from-jc-prod-proxy:
+    _component: jc
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/name: prometheus
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: jc-metrics-proxy
+        ports:
+          - protocol: TCP
+            port: 9090
+          - protocol: TCP
+            port: 4143
+  dev-prometheus-egress-to-jc-prod:
+    _component: jc
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/name: prometheus
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: jc-server
+                app.kubernetes.io/instance: jc-server
+        ports:
+          - protocol: TCP
+            port: 9091
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: apisix
+        ports:
+          - protocol: TCP
+            port: 9091
+          - protocol: TCP
+            port: 4143
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: postgres-cluster
+        ports:
+          - protocol: TCP
+            port: 9187
+          - protocol: TCP
+            port: 4143
+  # 9091 alone: it skips jc's mesh proxy (podAnnotations above), and 4143 would reach 8080 too.
+  jc-admin-from-dev-prometheus:
+    _component: jc
+    podSelector:
+      app.kubernetes.io/name: jc-server
+      app.kubernetes.io/instance: jc-server
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+        ports:
+          - protocol: TCP
+            port: 9091
+  apisix-metrics-from-dev-prometheus:
+    _component: apisix
+    podSelector:
+      app.kubernetes.io/name: apisix
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+        ports:
+          - protocol: TCP
+            port: 9091
           - protocol: TCP
             port: 4143
