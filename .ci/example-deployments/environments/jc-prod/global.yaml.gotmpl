@@ -163,8 +163,8 @@ jc:
     # prod's catalog dataset moved to zilina-catalog (bins/jc RENAMES.md, rehearsal.py aliases).
     # prod's harvests of hub-bbsk and nkod-banskabystrica (jc-catalogue-17).
     catalogueHarvest: true
-    # The owner's 24 h temporal rule (2026-11-09 20:1xZ), KeyPerformanceIndicator whole.
-    retainHours: 24
+    # No retainHours: jc-prod replaces prod and keeps history as each space's retention rule says, as
+    # old prod did (supervisor 2026-11-10 14:28Z). The 24 h cut is the dev move's rule only.
     dataroomAliases:
       catalog: zilina-catalog
     # prod's publish-gate hidden list, copied from the monorepo's bins/jc/docs/catalogue-hidden.toml at
