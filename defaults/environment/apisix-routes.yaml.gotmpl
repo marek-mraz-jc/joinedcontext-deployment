@@ -106,6 +106,37 @@ routes:
 {{- end }}
 {{- end }}
 {{- end }}
+{{- with $.Values.jc.server.trustedProxies }}
+  # jc's own back channel (the Portal's code exchange, pipelines' client credentials) reaches
+  # idm.{domain} from the pod network through the edge, all from one pod address. On jc-identity
+  # it shared one remote_addr bucket, so a pipeline's token refetch storm starved every sign-in
+  # (T-6676, 15:38Z: 8 of 8 code exchanges 429). Stopgap until the back channel stays inside the
+  # pod: token requests from the pod network jc trusts as its proxies get a bucket per client
+  # (client_id form field, or the basic-auth user), never an unlimited route; every other source
+  # keeps jc-identity's 600/60 s per address.
+  jc-identity-pod-token:
+    name: jc-identity-pod-token
+    description: token requests from the pod network, counted per client instead of per address
+    upstream: jc-pods.{{ $ns }}.svc.cluster.local:8080
+    subDomain: idm
+    uri: /realms/*/protocol/openid-connect/token
+    vars: [["remote_addr", "ipmatch", {{ . | toJson }}]]
+    priority: 6
+    pluginConfig: jc
+    plugins:
+      limit-count:
+        count: 600
+        time_window: 60
+        key_type: var_combination
+        key: '$post_arg_client_id $remote_user'
+        rejected_code: 429
+        policy: local
+        show_limit_quota_header: true
+    timeout:
+      connect: 6
+      send: 60
+      read: 60
+{{- end }}
 {{- if not $jcWindow }}
   # Every App host to jc, whose Portal serves App `{name}` alone on `{name}.apps.{domain}`
   # (bins/jc edge-session-design S4a); `host`, not `subDomain`, so the edge certificate's names

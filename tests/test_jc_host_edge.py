@@ -183,3 +183,22 @@ def test_the_api_host_answers_the_platforms_own_origins_like_old_prod(edge):
     # The Portal's own routes stay without `cors` (test_foreign_origin's rule for jc hosts).
     for route_id in ("jc", "jc-host-apex", "jc-host-api"):
         assert "cors" not in (routes[route_id].get("plugins") or {}), route_id
+
+
+def test_the_pods_token_requests_count_per_client_and_the_public_route_keeps_its_bucket(edge):
+    """jc's back channel reaches idm from the pod network; a pipeline's token storm used the one
+    pod-address bucket and starved every sign-in (T-6676 15:38Z). Pod-network token requests get a
+    bucket per client, still limited; every other source keeps jc-identity's per-address bucket."""
+    routes = {r["id"]: r for r in edge["routes"]}
+    pod, public = routes["jc-identity-pod-token"], routes["jc-identity"]
+    assert (pod["host"], pod["uri"]) == (f"idm.{DOMAIN}", "/realms/*/protocol/openid-connect/token")
+    assert pod["vars"] == [["remote_addr", "ipmatch", ["10.42.0.0/16"]]]
+    assert pod["priority"] > public["priority"]
+    limit = pod["plugins"]["limit-count"]
+    assert (limit["count"], limit["time_window"], limit["key_type"], limit["key"]) == (
+        600, 60, "var_combination", "$post_arg_client_id $remote_user")
+    assert pod["plugin_config_id"] == public["plugin_config_id"]  # headers cleared, uri-blocker
+    # The public route is untouched: no vars, no route-level limit over the jc config's.
+    assert not public.get("vars") and "limit-count" not in (public.get("plugins") or {})
+    jc_config = next(c for c in edge["plugin_configs"] if c["id"] == public["plugin_config_id"])
+    assert jc_config["plugins"]["limit-count"]["key"] == "remote_addr"
