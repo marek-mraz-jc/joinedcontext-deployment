@@ -440,6 +440,13 @@ env:
   # Concurrent OGC file exports: jc 446484ae raised the default from 2 to 6 (each streams page by
   # page, up to 512 MiB / 120 s). The one node runs at 85-90 % memory: keep the old cap until measured.
   ANTARES_EXPORT_FILES: "2"
+  # The basemap under the map Apps and generated maps (AP-67), as old prod's Portal set it: the
+  # Portal fetches, caches (in /tmp) and serves the tiles, so a sandboxed App never talks to the
+  # tile host; jc's egress to public 443 covers it. Unset, every map App says "No base map is
+  # configured" (jc-prod 2026-11-10). The cache is capped at 64 MiB of the node's disk.
+  JC_BASEMAP_URL: "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+  JC_BASEMAP_ATTRIBUTION: "© OpenStreetMap contributors"
+  JC_BASEMAP_CACHE_MAX_BYTES: "67108864"
   {{- with $global.orgDomain }}
   # The organization's domain in every minted id (urn:ngsi-ld:{Type}:{orgDomain}:...): unset, jc
   # derives it from the Portal's host, and jc-prod's pipelines minted portal.smartcity... copies
