@@ -163,7 +163,7 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # Antares' in-process bus: one jc process per database, so no rollout overlaps two.
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
-    assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/var/lib/jc/state/shako-token"
+    assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 

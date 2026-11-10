@@ -344,12 +344,13 @@ env:
   JCBIN_LISTEN: {{ ternary "127.0.0.1:8080" "0.0.0.0:8080" $window | quote }}
   JCBIN_STATE_DIR: "/var/lib/jc/state"
   # jc holds these in-process tokens per boot in memory unless given a file: the ones Secret
-  # jc-setup keeps (seed-state copies them into the state dir), so the cluster import, the smoke
-  # suites and the Apps' catalogue publishing read the value jc checks (up.sh does the same).
-  JCBIN_SHAKO_TOKEN_FILE: "/var/lib/jc/state/shako-token"
-  JCBIN_EKIBEN_TOKEN_FILE: "/var/lib/jc/state/ekiben-token"
-  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/var/lib/jc/state/dashboards-password"
-  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/var/lib/jc/state/catalogue-token"
+  # jc-setup keeps, read from its volume (jc deletes an in-memory token's file from the state dir
+  # at start, setup.rs remove_stale), so the cluster import, the smoke suites and the Apps'
+  # catalogue publishing read the value jc checks (up.sh does the same).
+  JCBIN_SHAKO_TOKEN_FILE: "/run/jc/setup/shako-token"
+  JCBIN_EKIBEN_TOKEN_FILE: "/run/jc/setup/ekiben-token"
+  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
+  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
   # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
   # rolls by Recreate (updateStrategy below) and declares itself the only one.
   ANTARES_BUS: "local"
@@ -551,6 +552,7 @@ extraVolumeMounts:
   - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
   {{- end }}
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
+  - { name: setup, mountPath: /run/jc/setup, readOnly: true }
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
   - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
   {{- if (dig "ageKeySecret" "" $jc) }}
