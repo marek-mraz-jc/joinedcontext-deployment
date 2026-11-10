@@ -182,6 +182,10 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
     (vol,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "realm-secrets"]
     assert vol["emptyDir"]["sizeLimit"] == "8Mi"
+    # The gateway's checkouts (~70 MB) overflowed the 1Mi token tmpfs: they get node disk.
+    (work,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "gateway-work"]
+    assert work["emptyDir"] == {"sizeLimit": "512Mi"}
+    assert {"name": "gateway-work", "mountPath": "/var/lib/jc/state/gateway"} in jc_container(docs)["volumeMounts"]
     env = {e["name"]: e.get("value") for e in jc["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert (env["JCBIN_LISTEN"], env["JCBIN_STATE_DIR"]) == ("0.0.0.0:8080", "/var/lib/jc/state")
     # Antares' in-process bus: one jc process per database, so no rollout overlaps two.
