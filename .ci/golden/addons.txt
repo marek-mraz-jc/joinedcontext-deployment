@@ -16,6 +16,7 @@ apiextensions.k8s.io/v1/CustomResourceDefinition -/scheduledbackups.postgresql.c
 apiextensions.k8s.io/v1/CustomResourceDefinition -/subscriptions.postgresql.cnpg.io
 apps/v1/DaemonSet kube-system/node-exporter
 apps/v1/Deployment addons/apisix
+apps/v1/Deployment addons/app-hsl-transport
 apps/v1/Deployment addons/decidim-redis
 apps/v1/Deployment addons/decidim-sidekiq
 apps/v1/Deployment addons/decidim-web
@@ -105,6 +106,7 @@ networking.k8s.io/v1/NetworkPolicy addons/decidim-web
 networking.k8s.io/v1/NetworkPolicy addons/decidim-web-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/decidim-web-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/default-deny-apisix
+networking.k8s.io/v1/NetworkPolicy addons/default-deny-app-pods
 networking.k8s.io/v1/NetworkPolicy addons/default-deny-decidim
 networking.k8s.io/v1/NetworkPolicy addons/default-deny-embedder
 networking.k8s.io/v1/NetworkPolicy addons/default-deny-grafana
@@ -124,8 +126,15 @@ networking.k8s.io/v1/NetworkPolicy addons/grafana-egress-to-gateway
 networking.k8s.io/v1/NetworkPolicy addons/grafana-from-portal
 networking.k8s.io/v1/NetworkPolicy addons/grafana-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy addons/grafana-linkerd-from-portal
+networking.k8s.io/v1/NetworkPolicy addons/hsl-transport-allow-linkerd
+networking.k8s.io/v1/NetworkPolicy addons/hsl-transport-linkerd-cp
+networking.k8s.io/v1/NetworkPolicy addons/hsl-transport-pod
+networking.k8s.io/v1/NetworkPolicy addons/jc-egress-to-app-pods
 networking.k8s.io/v1/NetworkPolicy addons/jc-egress-to-embedder
+networking.k8s.io/v1/NetworkPolicy addons/jc-from-app-pods
+networking.k8s.io/v1/NetworkPolicy addons/jc-linkerd-egress-to-app-pods
 networking.k8s.io/v1/NetworkPolicy addons/jc-linkerd-egress-to-embedder
+networking.k8s.io/v1/NetworkPolicy addons/jc-linkerd-from-app-pods
 networking.k8s.io/v1/NetworkPolicy addons/jc-server
 networking.k8s.io/v1/NetworkPolicy addons/jc-server-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy addons/jc-server-linkerd-control-plane
@@ -171,10 +180,13 @@ networking.k8s.io/v1/NetworkPolicy argocd/argocd-repo-server
 networking.k8s.io/v1/NetworkPolicy argocd/argocd-server
 networking.k8s.io/v1/NetworkPolicy argocd/default-deny-gitops
 networking.k8s.io/v1/NetworkPolicy kube-system/node-exporter
+policy.linkerd.io/v1alpha1/AuthorizationPolicy addons/app-hsl-transport-api
 policy.linkerd.io/v1alpha1/AuthorizationPolicy addons/embedder-api
+policy.linkerd.io/v1alpha1/MeshTLSAuthentication addons/app-hsl-transport-api-clients
 policy.linkerd.io/v1alpha1/MeshTLSAuthentication addons/embedder-api-clients
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-acme-http01-solver
 policy.linkerd.io/v1beta3/Server -/apisix-configuration-apisix-gateway
+policy.linkerd.io/v1beta3/Server addons/app-hsl-transport-api
 policy.linkerd.io/v1beta3/Server addons/embedder-api
 policy/v1/PodDisruptionBudget addons/apisix
 policy/v1/PodDisruptionBudget addons/keycloak-app-keycloakx
@@ -266,6 +278,7 @@ v1/Secret addons/prometheus-prometheus-token
 v1/Secret argocd/argocd-secret
 v1/Service addons/apisix-gateway
 v1/Service addons/apisix-prometheus-metrics
+v1/Service addons/app-hsl-transport
 v1/Service addons/cnpg-webhook-service
 v1/Service addons/decidim-redis
 v1/Service addons/decidim-web
@@ -288,6 +301,7 @@ v1/Service argocd/argocd-server
 v1/Service argocd/argocd-server-metrics
 v1/Service kube-system/node-exporter
 v1/ServiceAccount addons/apisix
+v1/ServiceAccount addons/app-hsl-transport
 v1/ServiceAccount addons/embedder
 v1/ServiceAccount addons/grafana
 v1/ServiceAccount addons/jc
