@@ -18,7 +18,7 @@ One release of `charts/workload` per App, today `app-pods-hsl-transport`:
 - **Deployment `app-hsl-transport`**: one replica, image pinned by digest in `images.yaml`, uid
   65532 (the image's user), read-only root filesystem, every capability dropped. Its environment
   is what prod's reconciler set: `JC_BIND_ADDRESS`, `JC_BASE_PATH=/`, `JC_APP_CONFIG`, and
-  `JC_ENDPOINT_URL` on jc's Service, `http://jc.{jc namespace}.svc.cluster.local:8080/api/endpoint/{slug}/`.
+  `JC_ENDPOINT_URL` on jc's apps listener, `http://jc.{jc namespace}.svc.cluster.local:8083/api/endpoint/{slug}/`.
 - **Service `app-hsl-transport`** on 8080.
 
 ## 2. How a request reaches it
@@ -27,8 +27,11 @@ One release of `charts/workload` per App, today `app-pods-hsl-transport`:
 2. jc's Portal finds a `ui-rust` App named in `JC_PORTAL_APP_PODS` and proxies the request to
    the Service. It drops cookies both ways and sets the App's Content-Security-Policy. The
    jc values set the variable from this component's parts.
-3. The App reads its Endpoint through jc's gateway, mounted on jc's Service host at
-   `/api/endpoint` for this caller alone.
+3. The App reads its Endpoint through jc's gateway on jc's apps listener (Service port 8083,
+   `JCBIN_APPS_LISTEN`): the gateway's `GET`/`HEAD` `/api/endpoint/...` with the same policy as
+   the public read path, and no other route or method. jc's public listener (8080) stays the
+   edge's alone. The listener needs a jc image that has it: list `app-pods` only once jc's pin
+   carries `JCBIN_APPS_LISTEN`. An older jc ignores the variable and opens nothing on 8083.
 
 An App host whose App is not listed here keeps the Portal's designed 503 page.
 
@@ -48,6 +51,10 @@ after the first day on prod.
 ## 4. Network
 
 `networkpolicies.yaml`: the App pod takes 8080 from jc's pod alone, and calls jc's pod on
-8080 alone, plus DNS. jc's halves are `jc-egress-to-app-pods` and `jc-from-app-pods`.
+8083 alone, plus DNS. jc's halves are `jc-egress-to-app-pods` and `jc-from-app-pods`.
 `networkpolicies-linkerd.yaml` adds the proxy port 4143 to each rule and the control plane.
-Meshed, the pod's Linkerd `Server` admits jc's identity alone (`meshAuthorization`).
+Meshed, the pod's Linkerd `Server` admits jc's identity alone (`meshAuthorization`), and jc's
+Server `jc-apps` on 8083 admits the App pods' ServiceAccounts alone (the jc values'
+`meshAuthorization.extraPorts`); jc's Server on 8080 admits APISIX alone, so the pods' way to
+jc's inbound proxy (4143) opens nothing but 8083. Linkerd gives the pod its identity from a
+projected token, so `automountServiceAccountToken: false` stays.
