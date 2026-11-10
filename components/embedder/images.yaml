@@ -1,11 +1,10 @@
 ---
 # ghcr.io/marek-mraz-jc/jc-embedder, built, smoke-tested, signed and scanned by the monorepo's
-# .github/workflows/image-embedder.yml on main. No digest is pinned yet: no run on main has
-# published one. Pin the first with
-#   embedder:
-#     server:
-#       repository: 'ghcr.io/marek-mraz-jc/jc-embedder'
-#       tag: 'main'
-#       digest: 'sha256:<the digest image-embedder.yml printed>'
-# before an environment that deploys this component is applied (the render refuses an empty pin).
-embedder: {}
+# .github/workflows/image-embedder.yml (run 42806830659, commit b43e3130, 2026-11-10; no change
+# under crates/embedder or crates/shared/jc-door since). cosign verify with identity
+# image-embedder.yml and issuer token.actions.githubusercontent.com passes.
+embedder:
+  server:
+    repository: 'ghcr.io/marek-mraz-jc/jc-embedder'
+    tag: 'main'
+    digest: 'sha256:cc835dd409cf885aa281c44d8f6cf8db8a572488e287548d9ebaf28ef2129f22'

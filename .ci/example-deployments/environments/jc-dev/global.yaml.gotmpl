@@ -73,6 +73,11 @@ jc:
   server:
     trustedProxies:
       - "10.42.0.0/16"
+    # jc-prod's embedder, shared (components/embedder in jc-prod, callerNamespaces): the assistant
+    # signs in with this realm's jc-assistant token; no model loads in this jc.
+    embedder:
+      url: http://embedder.jc-prod.svc.cluster.local:8089
+      namespace: jc-prod
     # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
     # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
     # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.

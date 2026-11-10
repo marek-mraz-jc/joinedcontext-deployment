@@ -88,9 +88,11 @@ securityContext:
 serviceMesh:
   enabled: {{ and (.Values.global.serviceMesh.enable | default false) (eq (.Values.global.serviceMesh.type | default "") "linkerd") }}
 
-# Meshed, only jc's identity reaches 8089 (the kubelet's probes still do).
+# Meshed, only jc's identity of each caller namespace reaches 8089 (the kubelet's probes still do).
 meshAuthorization:
   port: 8089
   clients:
+    {{- range ($e.callerNamespaces | default (list .Values.jc.server.namespace)) }}
     - serviceAccount: jc
-      namespace: {{ .Values.jc.server.namespace }}
+      namespace: {{ . }}
+    {{- end }}

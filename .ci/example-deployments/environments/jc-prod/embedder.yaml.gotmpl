@@ -1,0 +1,31 @@
+---
+# One embedder for the deployments of this cluster (owner 2026-11-10 16:3xZ): jc-prod's and
+# jc-dev's assistants each sign in with their own kaisatsu's client-credentials token (client
+# jc-assistant, audience `embedder`, which jc provisions in its realm itself), each with its own
+# quota; the network admits the jc pods of both namespaces only (embedder.server.callerNamespaces
+# in global.yaml.gotmpl). Stateless: no text or vector is
+# kept or logged (monorepo crates/embedder).
+embedder:
+  server:
+    deployments:
+      # Host mode: kaisatsu at idm.{domain}, realm smartcity (jc.server.realmImport).
+      - name: jc-prod
+        issuer: https://idm.smartcity.joinedcontext.com/realms/smartcity
+        jwksUrl: https://idm.smartcity.joinedcontext.com/realms/smartcity/protocol/openid-connect/certs
+        clients: [jc-assistant]
+        maxTextsPerMinute: 1200
+      # Slug mode: kaisatsu at {domain}/id, jc's default realm `jc`.
+      - name: jc-dev
+        issuer: https://jcdev.dev.joinedcontext.com/id/realms/jc
+        jwksUrl: https://jcdev.dev.joinedcontext.com/id/realms/jc/protocol/openid-connect/certs
+        clients: [jc-assistant]
+        maxTextsPerMinute: 600
+    rawValues:
+      # Measured on the release binary (README section 4): 436 MiB idle, 513 MiB peak.
+      resources:
+        requests:
+          cpu: 50m
+          memory: 512Mi
+        limits:
+          cpu: '2'
+          memory: 768Mi
