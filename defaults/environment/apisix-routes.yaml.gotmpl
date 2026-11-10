@@ -36,6 +36,10 @@ routes:
     upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     {{- if $host }}
     subDomain: {{ $host }}
+    {{- else }}
+    # The apex by name: a route with no host answers every Host, so a pod reaching the edge could
+    # name a host jc serves inside the pod only (broker., streams., localhost:8080) (T-6705).
+    host: {{ $.Values.global.domain | quote }}
     {{- end }}
     {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
     tlsSecret: {{ . }}
