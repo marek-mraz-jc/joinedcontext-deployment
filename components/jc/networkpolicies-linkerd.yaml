@@ -64,6 +64,18 @@ jc-server-linkerd-control-plane:
             matchLabels:
               cnpg.io/cluster: postgres-cluster
           componentNamespace: postgres
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
       ports:
         - protocol: TCP
           port: 4143

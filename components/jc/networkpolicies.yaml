@@ -22,6 +22,35 @@ jc-server:
         - protocol: TCP
           port: 8080
   egress:
+    # The server WASM Apps (ADR-N-044), each peer dropped where its component is not deployed: an
+    # App host's /api/* to the App's shard (8080) and each shard's /jobs (9090, AP-154), the Apps'
+    # database (AP-149) and the store the shards' keys and components live in (AP-151, AP-158).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9090
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 9000
     - to:
         - namespaceSelector:
             matchLabels:

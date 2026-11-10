@@ -119,9 +119,17 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
     ingresses = [d["metadata"]["name"] for d in docs if d.get("kind") == "Ingress" and "jc" in str(d["spec"].get("rules", [])) and "jc-prod" == d["metadata"].get("namespace") and d["metadata"]["name"].startswith("jc")]
     assert not ingresses, f"the window renders jc Ingress(es) {ingresses}"
     assert not jc_upstreams(docs), f"the window routes the edge to jc: {jc_upstreams(docs)}"
+    # No App runtime path in the window: no API token, no kube-api egress, no apps-db or store login.
+    (deployment,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    assert deployment["spec"]["template"]["spec"]["automountServiceAccountToken"] is False
+    assert not [d for d in docs if d.get("kind") == "NetworkPolicy" and d["metadata"]["name"] == "jc-server-kube-api"]
+    names = {e["name"] for e in container.get("env", [])}
+    assert not names & {"APPS_DB_PASSWORD", "JC_PORTAL_APPS_DB_URL", "JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY", "JC_PORTAL_ARTIFACT_STORE_SECRET_KEY"}
     # Red check of the reader: the default render routes the edge to jc.
     default = rendered_variant("jc-prod", lambda tree: None)
     assert jc_upstreams(default), "the upstream reader finds no jc route in the default render"
+    (default_jc,) = [d for d in default if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    assert default_jc["spec"]["template"]["spec"]["automountServiceAccountToken"] is True, "jc-prod's default render holds no App runtime token"
 
 
 @requires_helmfile

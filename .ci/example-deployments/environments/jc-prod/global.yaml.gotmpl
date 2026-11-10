@@ -11,7 +11,12 @@ components:
   - networkpolicies
   - postgres
   - apisix
+  # The server WASM Apps (jc-app-hosts slice 2): their store and database before jc, whose Portal
+  # writes what each shard mounts, and the shards after it (tests/test_wasm_host.py).
+  - artifact-store
+  - apps-db
   - jc
+  - wasm-host
 
 global:
   # Prod's names. Until the owner moves DNS they reach this node only by Host header or a hosts
@@ -89,6 +94,23 @@ postgres:
           limits:
             memory: 2Gi
 
+
+# The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
+# and apps-db 30 MB (final export, 2026-11-09), so 2Gi each. The store archives no WAL here (dev's
+# 832Mi request is its WAL objects, T-5926): its idle working set, 96-105Mi on dev before the
+# archive (T-4473), with room for a publish of the ten components.
+artifact-store:
+  store:
+    storage:
+      size: 2Gi
+    rawValues:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
 
 jc:
   server:
@@ -337,6 +359,27 @@ networkpolicies:
             port: 4143
   # The CloudNativePG operator runs in namespace dev (clusterWide): it reads each instance's status
   # on 8000 and connects on 5432. Both halves, with the Linkerd proxy port.
+  apps-db-from-dev-operator:
+    _component: apps-db
+    podSelector:
+      cnpg.io/cluster: apps-db
+    policyTypes:
+      - Ingress
+    ingress:
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: cloudnative-pg
+        ports:
+          - protocol: TCP
+            port: 8000
+          - protocol: TCP
+            port: 5432
+          - protocol: TCP
+            port: 4143
   postgres-from-dev-operator:
     _component: postgres
     podSelector:
@@ -373,6 +416,13 @@ networkpolicies:
             podSelector:
               matchLabels:
                 cnpg.io/cluster: postgres-cluster
+          # apps-db, the wasm Apps' own cluster (components/apps-db), managed by the same operator.
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-prod
+            podSelector:
+              matchLabels:
+                cnpg.io/cluster: apps-db
         ports:
           - protocol: TCP
             port: 8000
