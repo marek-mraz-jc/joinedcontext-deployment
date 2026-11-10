@@ -23,6 +23,8 @@
 {{- $assistant := dig "assistant" dict $jc }}
 {{- /* The window opens no path to the App runtime: no API token, no store or apps-db login. */}}
 {{- $wasmOn := and $wasm (not $window) }}
+{{- /* Nor to the MQTT brokers: no internal listener, no API token. */}}
+{{- $mqtt := and (has "mqtt-brokers" .Values.components) (not $window) }}
 {{- if not $proxies }}
 {{- fail "jc.server.trustedProxies: name the pod network the edge (APISIX) runs in, e.g. [\"10.42.0.0/16\"] on k3s, in the environment's jc values" }}
 {{- end }}
@@ -37,9 +39,9 @@
 # - [x] Health probes -> readiness /api/v1/health (the Portal, built last), liveness /streams/ping
 # - [x] Graceful shutdown -> jc drains on SIGTERM
 # - [x] Standard labels
-# - [x] ServiceAccount with least privilege -> no API token, but with wasm-host: then the token
-#       reaches only the Role of components/wasm-host portal-access (each shard's placement and
-#       store key, by name)
+# - [x] ServiceAccount with least privilege -> no API token, but with wasm-host or mqtt-brokers:
+#       then the token reaches only the Role of components/wasm-host portal-access (each shard's
+#       placement and store key, by name) and the brokers chart's Role in the brokers' namespace
 # - [x] Named ports -> 8080 public (every mount), 9091 admin (/metrics behind its token, /healthz)
 # - [x] Ingress with TLS -> APISIX routes jc.{domain} (apisix-routes.yaml)
 
@@ -60,9 +62,11 @@ args: ["--config", "/etc/jc/jc.toml"]
 
 containerPort: 8080
 
-{{- if $wasmOn }}
-# The Portal's reconciler writes each WASM shard's placement ConfigMap and store-key Secret in the
-# host's namespace (AP-157, AP-158) with this pod's token; that Role grants nothing else.
+{{- if or $wasmOn $mqtt }}
+# The Portal's API client (KubeClient::in_cluster). With wasm-host its reconciler writes each WASM
+# shard's placement ConfigMap and store-key Secret in the host's namespace (AP-157, AP-158); with
+# mqtt-brokers it stamps the brokers under the brokers chart's Role portal-mqtt-brokers, in the
+# brokers' namespace alone. Those Roles grant nothing else.
 serviceAccount:
   automountServiceAccountToken: true
 {{- end }}
@@ -74,6 +78,16 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+{{- if $mqtt }}
+  # The MQTT brokers' CONNECT and publish checks (ADR-N-048) on 8082, the port the brokers chart's
+  # Linkerd Server names: no APISIX route names it, and the NetworkPolicy and that Server admit
+  # the broker pods alone.
+  extraPorts:
+    - name: mqtt-auth
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+{{- end }}
 # Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
 # of the same pod still waits on the realm (apisix-routes.yaml).
 {{- if not $window }}
@@ -451,6 +465,29 @@ env:
   {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+{{- if $mqtt }}
+  {{- $brokers := index .Values "mqtt-brokers" "brokers" "namespace" }}
+  # The MQTT edge brokers (ADR-N-048). The gateway's CONNECT check on its internal listener; the
+  # tokenless CONNECTs it admits from jc's own pods (ekiben's DataSource reads, the Portal's
+  # capture) and from the broker pods, which is where a meshed client of 1883 appears; the
+  # Portal's identity, the one caller of the refusals route.
+  JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
+  JC_GATEWAY_MQTT_RUNNER_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_BROKER_HOST: "mqtt-broker-pods.{{ $brokers }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_IDENTITY: "jc.{{ $jc.namespace }}"
+  # Where the Portal stamps one release per MqttBroker from the chart's broker-template.
+  JC_PORTAL_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # A DataSource on a platform broker reads tcp://<release>.${JC_MQTT_NAMESPACE}.svc:1883, so
+  # ekiben's JC_MQTT_NAMESPACE is the brokers' namespace (it also keeps an outside broker's
+  # client id apart per installation).
+  EKIBEN_VAR_JC_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # ekiben refuses a private address unless the name is listed: each broker's 1883 alone, never
+  # its HTTP API (6060), which only the Portal reads; `project=` admits only that project's
+  # streams. ponytail: one entry per MqttBroker the environment names (jc.server.mqttBrokers);
+  # a broker added in the Portal needs a line there.
+  JC_EKIBEN_PRIVATE_HOSTS: {{ $hosts := list }}{{ range $jc.mqttBrokers | default list }}{{ $hosts = append $hosts (printf "%s=%s.%s.svc.cluster.local:1883" .project .release $brokers) }}{{ end }}{{ join "," $hosts | quote }}
+{{- end }}
 
 # The generated secrets of jc's first-start setup (bins/jc/src/setup.rs) live in Secret jc-setup,
 # so a new pod reads the same values: the init container copies them into the state dir as
@@ -686,6 +723,18 @@ podSecurityContext:
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+{{- if $mqtt }}
+# The brokers reach the Linkerd inbound proxy (4143) for 8082, and the proxy would hand them 8080
+# too (the namespace admits every meshed identity). On 8080 it admits APISIX's alone, which is
+# what the NetworkPolicy lets reach it, so the X-Forwarded-For trust stays the edge's
+# (tests/test_jc_component.py). No HTTPRoute: the kubelet's probes stay authorized.
+meshAuthorization:
+  port: 8080
+  clients:
+    - serviceAccount: apisix
+      namespace: {{ .Values.apisix.apisix.namespace }}
+{{- end }}
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}
