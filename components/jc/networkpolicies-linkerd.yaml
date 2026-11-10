@@ -14,6 +14,10 @@ jc-server-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: apisix
           componentNamespace: apisix
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
       ports:
         - protocol: TCP
           port: 4143

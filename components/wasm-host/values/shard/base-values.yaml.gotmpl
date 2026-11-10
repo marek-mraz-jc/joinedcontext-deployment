@@ -6,17 +6,16 @@
 {{- $digest := required (printf "wasm-host.%s needs its image digest in components/wasm-host/images.yaml" $part) $images.digest }}
 {{- $appsDb := index .Values "apps-db" "cluster" "namespace" }}
 {{- $store := index .Values "artifact-store" "store" "namespace" }}
-{{- /* The gateway and the Portal the shard calls, and the identity that reads /jobs. Where jc
-       carries both, the shard calls neither yet: jc trusts X-Forwarded-* from the whole pod
-       network, so only APISIX may reach its listener (tests/test_jc_component.py), and the host
-       passes a component's own forwarding headers on (platform crates/wasm-host host.rs). Unset,
-       a component's gateway call is refused at once and identity answers nobody. */}}
+{{- /* The gateway and the Portal the shard calls: jc's one Service where jc carries both (its
+       host-mode jc.toml routes that Service's name to them), else the separate components. */}}
 {{- $jc := has "jc" .Values.components }}
 {{- $portal := dig "portal" "portal" dict .Values }}
 {{- $gatewayUrl := "" }}
 {{- $portalUrl := "" }}
 {{- $portalAccount := dict }}
 {{- if $jc }}
+{{- $gatewayUrl = printf "http://jc.%s.svc.cluster.local:8080" .Values.jc.server.namespace }}
+{{- $portalUrl = $gatewayUrl }}
 {{- $portalAccount = dict "serviceAccount" "jc" "namespace" .Values.jc.server.namespace }}
 {{- else }}
 {{- $gatewayUrl = printf "http://context-gateway.%s.svc.cluster.local:8080" (index .Values "context-gateway" "gateway" "namespace") }}
@@ -57,9 +56,7 @@ serviceAccount:
 env:
   JC_WASM_SHARD: {{ $shard | quote }}
   JC_WASM_PLACEMENTS: /etc/jc-wasm/placement/placements.json
-  {{- if $gatewayUrl }}
   JC_GATEWAY_URL: {{ $gatewayUrl | quote }}
-  {{- end }}
   JC_WASM_S3_ENDPOINT: "http://artifact-store.{{ $store }}.svc.cluster.local:9000"
   JC_WASM_S3_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
   JC_WASM_S3_KEY_FILE: /etc/jc-wasm/store/access-key

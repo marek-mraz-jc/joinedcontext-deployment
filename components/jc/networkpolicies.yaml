@@ -21,6 +21,16 @@ jc-server:
       ports:
         - protocol: TCP
           port: 8080
+    # A WASM shard calls the gateway (an App's own Endpoint) and the Portal (a request's caller,
+    # services) on jc's Service (components/wasm-host shard values); dropped without wasm-host.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
     # The server WASM Apps (ADR-N-044), each peer dropped where its component is not deployed: an
     # App host's /api/* to the App's shard (8080) and each shard's /jobs (9090, AP-154), the Apps'

@@ -1,16 +1,14 @@
 """The server WASM Apps on jc-prod and jc-dev (jc-app-hosts slice 2, ADR-N-044, AP-143..AP-158).
 
 jc's Portal places each wasm App on a shard of wasm-host, writes the shard's placement ConfigMap and
-store-key Secret (reconciler/wasm_shards.rs) and hands an App host's /api/* to the shard. What is
-coupled across files: the shards and their pins, jc's settings and token, the one Role jc's token
-reaches, both halves of every NetworkPolicy (service port and the Linkerd proxy's 4143), and
-apps-db under dev's CloudNativePG operator.
-
-The shard does not call jc back yet: jc trusts X-Forwarded-* from the whole pod network, so only
-APISIX may reach its listener (test_jc_component.py), and jc-wasm-host passes a component's own
-forwarding headers on (platform crates/wasm-host host.rs). Until the host strips them, a shard has
-no gateway and no Portal URL and no rule lets it reach jc.
+store-key Secret (reconciler/wasm_shards.rs) and hands an App host's /api/* to the shard; the shard
+calls jc back as the gateway and the Portal. What is coupled across files: the shards and their
+pins, jc's settings and token, the one Role jc's token reaches, both halves of every NetworkPolicy
+(service port and the Linkerd proxy's 4143), the jc.toml entry for the Service host the shards
+call, and apps-db under dev's CloudNativePG operator.
 """
+
+import re
 
 import pytest
 
@@ -78,11 +76,13 @@ def test_each_shard_runs_the_pinned_host_non_root_and_bounded(env, shard):
 
 
 @pytest.mark.parametrize("shard", SHARDS)
-def test_each_shard_reads_its_database_and_bucket_and_calls_no_jc_listener(env, shard):
+def test_each_shard_calls_jc_by_its_service_as_the_gateway_and_the_portal(env, shard):
     name, docs = env
     container = one(docs, "Deployment", f"jc-wasm-host-{shard}")["spec"]["template"]["spec"]["containers"][0]
     settings = env_of(container)
-    assert "JC_GATEWAY_URL" not in settings and "JC_WASM_PORTAL_URL" not in settings
+    service = f"http://jc.{name}.svc.cluster.local:8080"
+    assert settings["JC_GATEWAY_URL"] == service
+    assert settings["JC_WASM_PORTAL_URL"] == service
     assert settings["JC_WASM_DB_URL"] == f"postgresql://wasm_host_{shard}@apps-db-rw.{name}.svc.cluster.local:5432/apps?sslmode=require"
     assert settings["JC_WASM_S3_ENDPOINT"] == f"http://artifact-store.{name}.svc.cluster.local:9000"
     assert settings["JC_WASM_S3_BUCKET"] == "apps"
@@ -139,14 +139,15 @@ def test_only_jcs_identity_reaches_a_shards_job_records_through_the_mesh(env, sh
 
 
 @pytest.mark.parametrize("port", (8080, 4143))
-def test_jc_reaches_the_shards_both_halves_and_never_the_other_way(env, port):
+def test_jc_and_the_shards_reach_each_other_both_halves(env, port):
     """knowledge/deployment.md: a meshed peer needs caller egress and callee ingress on the service
-    port and on 4143: jc to a shard (an App host's /api/*). Nothing lets a shard reach jc."""
+    port and on 4143, both ways: jc to a shard (an App host's /api/*), a shard to jc (gateway,
+    Portal)."""
     name, docs = env
     assert reach(docs, JC, "egress", SHARD, port, name)
     assert reach(docs, SHARD, "ingress", JC, port, name)
-    assert not reach(docs, SHARD, "egress", JC, port, name)
-    assert not reach(docs, JC, "ingress", SHARD, port, name)
+    assert reach(docs, SHARD, "egress", JC, port, name)
+    assert reach(docs, JC, "ingress", SHARD, port, name)
 
 
 def test_jc_reads_the_shards_job_records_on_their_admin_port(env):
@@ -181,6 +182,17 @@ def test_apps_db_is_run_by_devs_operator_both_halves(env):
     assert reach(docs, APPS_DB, "ingress", operator, 5432, "dev")
     assert reach(docs, operator, "egress", APPS_DB, 8000, name)
     assert reach(docs, operator, "egress", APPS_DB, 5432, name)
+
+
+def test_the_jc_prod_toml_routes_the_service_host_the_shards_call(rendered):
+    docs = rendered("jc-prod")
+    toml = one(docs, "ConfigMap", "jc")["data"]["jc.toml"]
+    host = "jc.jc-prod.svc.cluster.local"
+    portal = re.findall(r'\[\[mounts\.portal\]\]\s*\nhost = "([^"]+)"\s*\npath_prefix = "([^"]*)"', toml)
+    gateway = re.findall(r'\[\[mounts\.gateway\]\]\s*\nhost = "([^"]+)"\s*\npath_prefix = "([^"]*)"', toml)
+    assert (host, "") in portal
+    # The gateway on that host answers an App's own Endpoint and nothing else of the gateway.
+    assert [g for g in gateway if g[0] == host] == [(host, "/api/endpoint")]
 
 
 def test_no_edge_route_reaches_a_shard_past_jcs_visibility_check(rendered):

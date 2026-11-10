@@ -181,7 +181,18 @@ configMap:
       host = "portal.{{ $global.domain }}"
       path_prefix = "{{ . }}"
       {{- end }}
+      {{- if $wasm }}
 
+      # The WASM host's shards call jc by its Service name (JC_GATEWAY_URL, JC_WASM_PORTAL_URL):
+      # an App's own Endpoint and the Portal's caller and services. The edge never sends this host.
+      [[mounts.portal]]
+      host = "jc.{{ $jc.namespace }}.svc.cluster.local"
+      path_prefix = ""
+
+      [[mounts.gateway]]
+      host = "jc.{{ $jc.namespace }}.svc.cluster.local"
+      path_prefix = "/api/endpoint"
+      {{- end }}
       {{- else }}
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]
