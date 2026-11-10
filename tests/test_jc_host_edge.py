@@ -160,3 +160,26 @@ def test_the_pinned_edge_reaches_no_inside_module_on_a_forged_host_or_path(edge,
         seen = json.loads(body)
         assert seen["host"] in {DOMAIN, f"api.{DOMAIN}", f"portal.{DOMAIN}"}, (host, path, seen)
         assert not BLOCKED.match(seen["uri"]), (host, path, seen)
+
+
+def test_the_api_host_answers_the_platforms_own_origins_like_old_prod(edge):
+    """The catalogue's viz iframe and Apps read api.{domain} across origins; old prod's
+    context-endpoint and named-MCP `cors` rules carry over, never `*` or a look-alike domain."""
+    routes = {r["id"]: r for r in jc_routes(edge)}
+    rule = re.compile(routes["jc-host-api-endpoint"]["plugins"]["cors"]["allow_origins_by_regex"][0])
+    for route_id, uri, methods in (("jc-host-api-endpoint", "/api/endpoint/*", "GET,HEAD,OPTIONS"),
+                                   ("jc-host-api-mcp", "/api/mcp*", "POST,OPTIONS")):
+        route = routes[route_id]
+        cors = route["plugins"]["cors"]
+        assert (route["host"], route["uri"], cors["allow_methods"]) == (f"api.{DOMAIN}", uri, methods)
+        assert cors["allow_credential"] is False and "allow_origins" not in cors
+        assert route["priority"] > routes["jc-host-api"]["priority"]
+        assert route["plugin_config_id"] == routes["jc-host-api"]["plugin_config_id"]  # headers cleared, uri-blocker
+    for origin in (f"https://viz.{DOMAIN}", f"https://app-praha-mapa.apps.{DOMAIN}", f"https://portal.{DOMAIN}"):
+        assert rule.match(origin), origin
+    for origin in ("https://evil.smartcity-joinedcontext.com", f"http://viz.{DOMAIN}", f"https://{DOMAIN}.evil.org",
+                   f"https://a@viz.{DOMAIN}", "https://example.org", "null"):
+        assert not rule.match(origin), origin
+    # The Portal's own routes stay without `cors` (test_foreign_origin's rule for jc hosts).
+    for route_id in ("jc", "jc-host-apex", "jc-host-api"):
+        assert "cors" not in (routes[route_id].get("plugins") or {}), route_id
