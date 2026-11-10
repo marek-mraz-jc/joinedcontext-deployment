@@ -202,3 +202,19 @@ def test_the_pods_token_requests_count_per_client_and_the_public_route_keeps_its
     assert not public.get("vars") and "limit-count" not in (public.get("plugins") or {})
     jc_config = next(c for c in edge["plugin_configs"] if c["id"] == public["plugin_config_id"])
     assert jc_config["plugins"]["limit-count"]["key"] == "remote_addr"
+
+
+def test_the_pods_endpoint_writes_count_per_bearer_like_old_prod(edge):
+    """jc's pipelines write api.{domain} from the pod network, all from one pod address; old prod
+    counted the endpoint surface per bearer and address at 1200/60 s. Only the pod network gets
+    that route; public callers keep the per-address bucket and the cors route."""
+    routes = {r["id"]: r for r in edge["routes"]}
+    pod, public = routes["jc-host-api-endpoint-pod"], routes["jc-host-api-endpoint"]
+    assert (pod["host"], pod["uri"]) == (f"api.{DOMAIN}", "/api/endpoint/*")
+    assert pod["vars"] == [["remote_addr", "ipmatch", ["10.42.0.0/16"]]]
+    assert pod["priority"] > public["priority"] > routes["jc-host-api"]["priority"]
+    limit = pod["plugins"]["limit-count"]
+    assert (limit["count"], limit["time_window"], limit["key_type"], limit["key"]) == (
+        1200, 60, "var_combination", "$http_authorization $remote_addr")
+    assert pod["plugin_config_id"] == public["plugin_config_id"]  # headers cleared, uri-blocker
+    assert not public.get("vars") and "limit-count" not in public["plugins"]
