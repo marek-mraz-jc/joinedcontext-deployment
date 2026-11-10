@@ -108,7 +108,10 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
         values.write_text(text.replace("    mode: host\n", "    mode: host\n    importWindow: true\n", 1))
 
     docs = rendered_variant("jc-prod", window_on)
-    assert jc_toml(docs)["listen"] == "127.0.0.1:8080", "the window listens beyond the pod's loopback"
+    toml = jc_toml(docs)
+    assert toml["listen"] == "127.0.0.1:8080", "the window listens beyond the pod's loopback"
+    # The kit's slug paths on http://localhost:8080, the Portal's discovery on the same loopback.
+    assert (toml["mode"], toml["base_host"], toml["scheme"]) == ("slug", "localhost:8080", "http")
     container = jc_container(docs)
     assert {e["name"]: e.get("value") for e in container.get("env", [])}.get("ANTARES_POLICY") == "allow-all"
     jc_services = [d["metadata"]["name"] for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] in ("jc", "jc-pods")]

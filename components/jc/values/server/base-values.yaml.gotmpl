@@ -7,6 +7,8 @@
 {{- /* jc-prod's cutover (default-environment.yaml.gotmpl realmImport, importWindow). */}}
 {{- $realm := dig "realmImport" dict $jc }}
 {{- $window := dig "importWindow" false $jc }}
+{{- /* The window serves slug mounts on loopback whatever the environment's mode. */}}
+{{- $mode := ternary "slug" (dig "mode" "slug" $jc) $window }}
 {{- $modules := list "shako" "daiya" "dataroom" "ekiben" }}
 {{- $assistant := dig "assistant" dict $jc }}
 {{- if not $proxies }}
@@ -116,20 +118,29 @@ configMap:
       {{- end }}
       admin_listen = "0.0.0.0:9091"
       admin_token_file = "/run/jc/admin/token"
-      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      {{- if $window }}
+      # Import window: the rehearsal kit's shape (CLUSTER-IMPORT.md 6): slug mounts on
+      # http://localhost:8080, which the kit reaches through `kubectl port-forward 8080:8080` and
+      # the Portal reaches on the pod's own loopback for kaisatsu's discovery (the window routes
+      # nothing through the edge).
+      mode = "slug"
+      base_host = "localhost:8080"
+      scheme = "http"
+      {{- else if eq $mode "host" }}
       mode = "host"
       base_host = "{{ $global.domain }}"
+      scheme = "https"
       {{- else }}
       mode = "slug"
       base_host = "{{ $jc.subDomain }}.{{ $global.domain }}"
-      {{- end }}
       scheme = "https"
+      {{- end }}
       log_format = "json"
       state_dir = "/var/lib/jc/state"
       # Only a peer inside these networks may name the caller in X-Forwarded-For.
       trusted_proxies = {{ $proxies | toJson }}
 
-      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      {{- if eq $mode "host" }}
       # Every old host name (bins/jc CUTOVER.md section 4, tests/fixtures/dev-mounts.toml).
       [mounts.kaisatsu]
       host = "idm.{{ $global.domain }}"
