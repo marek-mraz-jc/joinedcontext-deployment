@@ -87,6 +87,13 @@ serviceMonitors:
     bearerTokenSecret:
       name: jc-admin-token
       key: token
+    # The gateway's latency summary has one series per Endpoint, route and quantile: 37,394 of one
+    # jc's 56,574 series in the prod rehearsal (jc-prod-metrics), and no dashboard reads it (they
+    # ask for _bucket). Its _count and _sum stay.
+    metricRelabelings:
+      - sourceLabels: [__name__, quantile]
+        regex: jc_gateway_request_duration_seconds;.+
+        action: drop
   {{- end }}
   {{- if has "gitops" $components }}
   # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
