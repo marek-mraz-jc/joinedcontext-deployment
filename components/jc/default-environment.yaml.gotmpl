@@ -18,5 +18,38 @@ jc:
     # kaisatsu's request role, Antares' store. The Portal's pool is compiled in (5).
     kaisatsuPool: 4
     antaresPool: 8
+    # shako's, daiya's, dataroom's and ekiben's request roles, each (plus one migration login at start).
+    modulePool: 3
+    # The assistant's pool on jc_assistant (it migrates as the same role).
+    assistantPool: 3
+    # The knowledge assistant (bins/jc/src/modules/assistant.rs): on with a model key, which jc's own
+    # proxy calls the provider with; off (404 on its mount) without. The key comes from a Secret
+    # (secretRef, never in Git): assistant: {modelKeySecret: jc-model-key}. Each Deployment's
+    # costPerDayUsd (its project's manifest) caps what it spends.
+    assistant: {}
+    # Secret (key `key`) with the age identity the projects' SOPS files name; unset: no secretRef
+    # of a project resolves.
+    ageKeySecret: ""
+    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica; files/harvest-sources.toml and
+    # files/od-datasets.json from the monorepo's bins/jc/docs at the pinned jc). Egress: public 443.
+    catalogueHarvest: false
+    # Hours of temporal history kept (KPI whole, audit rows kept), deleted by CronJob jc-retain;
+    # 0 keeps everything.
+    retainHours: 0
+    # jc-prod's cutover (CLUSTER-IMPORT.md): the realm of the export, applied at start from the
+    # Secrets the deployer makes from the bundle's realm render (never in Git):
+    #   realmImport: {realm: smartcity, secret: jc-realm, secretsSecret: jc-realm-secrets}
+    # `jc-realm` holds realm.json.gz, state-secrets.txt and pipeline-clients.txt; `jc-realm-secrets`
+    # one key per line of realm-vars.txt. Unset: jc applies only its own realm.
+    realmImport: {}
+    # The import window (CLUSTER-IMPORT.md section 6): jc on loopback only, Antares allow-all, no
+    # probes, no Service endpoints. Only during the import through `kubectl port-forward`; off again
+    # before DNS moves (RUNBOOK-cutover step 1).
+    importWindow: false
     # shako's repositories and ekiben's file root.
     dataSize: 5Gi
+  # The App functions runtime beside jc (values/functions): its realm is realmImport's, its
+  # gateway and identity jc's public hosts (host mode), reached over the edge (edgeAddress).
+  functions:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
