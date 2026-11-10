@@ -641,6 +641,13 @@ ingress:
       paths:
         - '/'
   {{- end }}
+  {{- /* App hosts one by one, each on its own certificate (global.ingress.appHosts). */}}
+  {{- $appHosts := dig "ingress" "appHosts" list $global }}
+  {{- range $appHosts }}
+    - host: {{ . }}.apps.{{ $global.domain }}
+      paths:
+        - '/'
+  {{- end }}
   tls:
     # Its own Secret, not the `apisix-tls` cert-manager's ingress-shim used to fill: two
     # Certificates cannot share one Secret, and an upgrade that renamed the owner instead of
@@ -655,6 +662,11 @@ ingress:
     - secretName: apisix-apps-wildcard-tls
       hosts:
         - '*.apps.{{ $global.domain }}'
+    {{- end }}
+    {{- range $appHosts }}
+    - secretName: app-{{ . }}-tls
+      hosts:
+        - {{ . }}.apps.{{ $global.domain }}
     {{- end }}
 
 # Ingress Controller
