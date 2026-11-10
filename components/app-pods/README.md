@@ -39,8 +39,11 @@ An App host whose App is not listed here keeps the Portal's designed 503 page.
 | `app-pods.hsl-transport.endpointSlug` | the slug of the public Endpoint the App reads; the render refuses an empty one |
 | `app-pods.hsl-transport.project` | the App's project, for its Portal link and basemap route (`helsinki`) |
 
-Resources: on the prod rehearsal the pod peaked at the figure in the deployment's values file
-(development and production alike).
+Resources (development and production alike): requests 20m CPU / 32Mi, limits 500m / 128Mi.
+On the prod rehearsal (2026-11-10) the pod held 3.4 MiB idle and 4.6 MiB under 120 parallel page
+and API reads, with 8304 stops and 25 alerts loaded and an empty fleet (the rehearsal has no live
+Vehicles). A live HSL fleet of a few thousand buses adds a few MiB; recheck `kubectl top pod`
+after the first day on prod.
 
 ## 4. Network
 
