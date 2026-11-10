@@ -195,7 +195,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # pipeline clients, which overflowed a 2Mi realm-secrets volume (seed-realm, 2026-11-10).
     (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
     (vol,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "realm-secrets"]
-    assert vol["emptyDir"]["sizeLimit"] == "8Mi"
+    # 904 realm secrets plus a copy per pipeline client (841 lines) at a 4 KiB page each: ~7 MiB.
+    assert vol["emptyDir"]["sizeLimit"] == "16Mi"
     # The gateway's checkouts (70 MB in prod's rehearsal) live in the state tmpfs; 1Mi gave ENOSPC.
     (state,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "state"]
     assert state["emptyDir"] == {"medium": "Memory", "sizeLimit": "192Mi"}
@@ -220,6 +221,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["JC_BASEMAP_URL"], env["JC_BASEMAP_ATTRIBUTION"]) == (
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "© OpenStreetMap contributors")
     assert env["JC_BASEMAP_CACHE_MAX_BYTES"] == "67108864"
+    # Without it the gateway refused the pipelines' writes: "token is not bound to this resource".
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "pipeline-secret"
     # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
     assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
     assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")

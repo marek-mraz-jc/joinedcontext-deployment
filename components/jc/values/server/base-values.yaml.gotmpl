@@ -466,6 +466,13 @@ env:
   JC_BASEMAP_URL: "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
   JC_BASEMAP_ATTRIBUTION: "© OpenStreetMap contributors"
   JC_BASEMAP_CACHE_MAX_BYTES: "67108864"
+  {{- with (dig "pipelineIdentity" "" $realm) }}
+  # How streams sign in (jc-pipeline-audience, d4b2de4d): `pipeline-secret` makes each stream its
+  # Pipeline's own client <project>-pl-<pipeline>, whose audience names the Endpoints it writes (as
+  # prod's); `project` (unset) keeps <project>-pipelines, which the gateway refuses on most of them
+  # ("token is not bound to this resource"). The pl- secrets come from the realm import above.
+  JC_PORTAL_PIPELINE_IDENTITY: {{ . | quote }}
+  {{- end }}
   {{- with $global.orgDomain }}
   # The organization's domain in every minted id (urn:ngsi-ld:{Type}:{orgDomain}:...): unset, jc
   # derives it from the Portal's host, and jc-prod's pipelines minted portal.smartcity... copies
@@ -704,7 +711,7 @@ extraVolumes:
   - name: realm-secrets
     emptyDir:
       medium: Memory
-      sizeLimit: 8Mi  # 900+ secret files at 4 KiB tmpfs pages each
+      sizeLimit: 16Mi  # 900+ secret files plus ~840 pipeline client copies, a 4 KiB tmpfs page each
   - name: realm-src
     secret:
       secretName: {{ $realm.secret }}
