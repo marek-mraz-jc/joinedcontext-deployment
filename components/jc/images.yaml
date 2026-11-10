@@ -2,12 +2,12 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 8b31df00, ci run 42759015743 (cosign tlog 3778592039). Never pin an image older than
+  # main b43e3130, ci run 42803650149 (cosign tlog 3784624132): T-6705 loopback listener + JWKS reach. Never pin an image older than
   # 520e299e: without its reconciler guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '8b31df009712b6c7ec42438f567499ec42b8d646'
-    digest: 'sha256:646fcb6b90d1519027602f7b82141da4c0ed487d1b8f4147087ead3299dc6384'
+    tag: 'b43e313034cf10d1c41badf715c954eeb9f4b8e2'
+    digest: 'sha256:813ecff2f92f85fc30dac04e4b968a86a7eeb31854616b6e383eab790e45fdd9'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
