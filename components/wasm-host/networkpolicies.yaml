@@ -25,9 +25,23 @@ wasm-host-shard:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+          componentNamespace: jc
       ports:
         - protocol: TCP
           port: 9090
+    # jc's Portal, which serves every App host and hands a wasm App's /api/* to its shard
+    # (app_host.rs, AP-143) where jc runs instead of the edge route.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+          componentNamespace: jc
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
     - to:
         - podSelector:

@@ -51,7 +51,7 @@ databases:
 | Field                           | Required | Default    | Description                                    |
 | ------------------------------- | -------- | ---------- | ---------------------------------------------- |
 | `name`                          | Yes      | -          | The PostgreSQL role name                       |
-| `type`                          | No       | `readonly` | Permission type: `readonly` or `readwrite`     |
+| `type`                          | No       | `readonly` | Permission type: `readonly`, `readwrite` or `login` |
 | `credentialsSecret.name`        | Yes      | -          | Kubernetes secret containing the role password |
 | `credentialsSecret.passwordKey` | No       | `password` | Key name in the secret for the password        |
 
@@ -64,6 +64,11 @@ databases:
 - `CONNECT` on the database
 - `USAGE` on the public schema
 - Default privileges for future objects
+
+#### `login`
+
+- `CONNECT` on the database, nothing else: the program's own migrations grant the role its tables
+  (jc's shako, daiya, dataroom and ekiben request roles), so no upgrade revokes them
 
 #### `readwrite`
 
