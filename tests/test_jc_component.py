@@ -145,6 +145,22 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
 
 
+@requires_helmfile
+def test_jc_prod_opts_no_pod_out_of_the_mesh_without_a_reason(rendered):
+    # Kyverno's justify-linkerd-inject-opt-out refused jc-retain at admission on jc-prod
+    # (2026-11-10 07:3xZ): a pod template with linkerd.io/inject disabled needs a reason.
+    templates = []
+    for d in rendered("jc-prod"):
+        spec = d.get("spec") or {}
+        if d.get("kind") == "CronJob":
+            spec = spec["jobTemplate"]["spec"]
+        if d.get("kind") in ("Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"):
+            templates.append((d["metadata"]["name"], spec["template"]["metadata"].get("annotations") or {}))
+    opted = [(n, a) for n, a in templates if a.get("linkerd.io/inject") == "disabled"]
+    assert any(n == "jc-retain" for n, _ in opted), "the reader finds no opted-out pod (jc-retain)"
+    assert not [n for n, a in opted if not str(a.get("mesh.joinedcontext.com/opt-out-reason", "")).strip()]
+
+
 def render_addons_with(tmp_path, proxies_yaml: str) -> subprocess.CompletedProcess:
     if not (PROJECT_ROOT / "deployment/environments/addons").is_dir():
         pytest.skip("run `just _dev-assemble` first")
