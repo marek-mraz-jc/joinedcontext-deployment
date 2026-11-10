@@ -319,6 +319,25 @@ configMap:
       {{ $slug | quote }} = {{ $why | quote }}
       {{- end }}
       {{- end }}
+      {{- range $name, $p := (dig "dataroomPublishers" dict $jc) }}
+
+      # prod's publisher badges and words (CKAN chart `organizations`; bins/jc/docs/dataroom-publishers.toml).
+      [dataroom.publishers.{{ $name | quote }}]
+      initials = {{ $p.initials | quote }}
+      colour = {{ $p.colour | quote }}
+      {{- range $lang, $words := (dig "description" dict $p) }}
+      description.{{ $lang | quote }} = {{ $words | quote }}
+      {{- end }}
+      {{- end }}
+      {{- with (dig "branding" "logoSvg" "" $global) }}
+
+      # The installation's logo (global.branding logo, favicon, logoSvg): the footer mark, the favicon
+      # and /logo.svg; jc refuses an SVG with script, event handlers or external references.
+      [dataroom.branding]
+      logo = {{ dig "branding" "logo" "logo.svg" $global | quote }}
+      favicon = {{ dig "branding" "favicon" "logo.svg" $global | quote }}
+      logo_svg = {{ . | toJson }}
+      {{- end }}
       {{- range $modules }}
 
       [{{ . }}.database]
