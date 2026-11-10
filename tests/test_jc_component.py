@@ -10,6 +10,7 @@ let no pod but APISIX reach its public listener (8080) or the Linkerd inbound pr
 import ipaddress
 import shutil
 import subprocess
+import sys
 import tomllib
 from pathlib import Path
 
@@ -193,19 +194,54 @@ def test_the_selector_and_port_readers_fail_closed():
 # jc's public listener and the Linkerd inbound proxy meshed traffic to it arrives on.
 PUBLIC_PORTS = {8080, 4143}
 
+# Peers besides APISIX that may reach jc's public listener because they send no forwarding header
+# of their own: (workload name prefix, its pod's app.kubernetes.io/name). A WASM shard calls jc as
+# its Apps' gateway and Portal (components/wasm-host shard values). It is tenant code, so it is
+# admitted only while the pinned jc-wasm-host forwards nothing but `accept` and `content-type`
+# from a component (platform crates/wasm-host/src/host.rs `sent_headers`, jc-wasm-headers
+# 2026-11-10; before it the host passed a component's X-Forwarded-*, x-jc-* and l5d-* on, and jc
+# trusts X-Forwarded-* from the whole pod network). HEADER_CLEAN_WASM_HOST lists the platform
+# image digests built from that fix or later: whoever re-pins components/wasm-host/images.yaml
+# adds the new digest here in the same commit, after checking the image's commit carries the fix.
+HEADER_CLEAN_PEERS = (("jc-wasm-host-", "wasm-host-shard"),)
+HEADER_CLEAN_WASM_HOST: set[str] = set()
+
 
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
 def test_only_the_edge_reaches_jc_public_listener(rendered, env):
     """`trusted_proxies` names the whole pod network (APISIX pods take any address in it), so the
-    trust holds only if no pod but APISIX can open a connection to jc's public listener at all."""
+    trust holds only if no pod but APISIX can open a connection to jc's public listener at all,
+    besides the header-clean peers (HEADER_CLEAN_PEERS), which send no forwarding header."""
     check_only_the_edge_reaches_jc(rendered(env), env)
+
+
+def header_clean_peers(docs, env) -> list[tuple[str, str, dict]]:
+    """(name, namespace, pod labels) of each rendered workload HEADER_CLEAN_PEERS admits; each must
+    run a header-clean jc-wasm-host image, or the test fails here, not by admitting it."""
+    found = []
+    for d in docs:
+        if d.get("kind") != "Deployment":
+            continue
+        name = d["metadata"]["name"]
+        labels = d["spec"]["template"]["metadata"].get("labels") or {}
+        for prefix, app in HEADER_CLEAN_PEERS:
+            if name.startswith(prefix) and labels.get("app.kubernetes.io/name") == app:
+                images = {c["image"].rsplit("@", 1)[-1] for c in d["spec"]["template"]["spec"]["containers"]}
+                stale = images - HEADER_CLEAN_WASM_HOST
+                assert not stale, (
+                    f"{env}: {name} reaches jc but runs {sorted(stale)}, not a header-clean jc-wasm-host "
+                    "(HEADER_CLEAN_WASM_HOST): re-pin components/wasm-host/images.yaml to a build of the fix"
+                )
+                found.append((name, d["metadata"]["namespace"], labels))
+    return found
 
 
 def check_only_the_edge_reaches_jc(docs, env):
     jc_ns, jc_labels = pod_of(docs, "jc")
     named = named_ports(docs, "jc")
     edge_ns, edge_labels = pod_of(docs, "apisix")
+    clean = None
     namespaces = {d["metadata"]["name"]: d["metadata"].get("labels") or {} for d in docs if d.get("kind") == "Namespace"}
     namespaces.setdefault(edge_ns, {}).setdefault("kubernetes.io/metadata.name", edge_ns)
     policies = [
@@ -230,6 +266,14 @@ def check_only_the_edge_reaches_jc(docs, env):
                 assert "podSelector" in peer, f"{env}: {name} opens jc to whole namespaces"
                 ns_sel = peer.get("namespaceSelector")
                 peer_ns = [n for n, labels in namespaces.items() if selects(ns_sel, labels)] if ns_sel is not None else [jc_ns]
+                if peer["podSelector"].get("matchLabels") and not selects(peer["podSelector"], edge_labels):
+                    clean = header_clean_peers(docs, env) if clean is None else clean
+                    admitted = [w for w, ns, labels in clean if [ns] == peer_ns and selects(peer["podSelector"], labels)]
+                    assert admitted, f"{env}: {name} admits pods that are neither APISIX nor a header-clean peer"
+                    for ns in peer_ns:
+                        others = [w for w, labels in workloads(docs, ns) if w not in admitted and selects(peer["podSelector"], labels)]
+                        assert not others, f"{env}: {name} also admits {others} beside {admitted}"
+                    continue
                 assert peer_ns == [edge_ns], f"{env}: {name} admits namespaces {peer_ns}"
                 assert peer["podSelector"].get("matchLabels"), f"{env}: {name} admits every pod of {edge_ns}"
                 assert selects(peer["podSelector"], edge_labels), f"{env}: {name} admits pods that are not APISIX"
@@ -237,6 +281,23 @@ def check_only_the_edge_reaches_jc(docs, env):
                 assert not others, f"{env}: {name} also admits {others}, which carry APISIX's labels"
                 opened += 1
     assert opened, f"{env}: not even APISIX reaches jc"
+
+
+@requires_helmfile
+def test_a_shard_reaches_jc_only_on_a_header_clean_host(rendered, monkeypatch):
+    """The shard rule stands on the pin: the same render fails once the pinned jc-wasm-host is not
+    a header-clean build, and passes for a digest named header-clean."""
+    env = "jc-prod"
+    docs = rendered(env)
+    shards = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"].startswith("jc-wasm-host-")
+              and d["spec"]["template"]["metadata"]["labels"].get("app.kubernetes.io/name") == "wasm-host-shard"]
+    assert shards, f"{env}: no WASM shard rendered"
+    pinned = {c["image"].rsplit("@", 1)[-1] for d in shards for c in d["spec"]["template"]["spec"]["containers"]}
+    monkeypatch.setattr(sys.modules[__name__], "HEADER_CLEAN_WASM_HOST", set())
+    with pytest.raises(AssertionError, match="not a header-clean jc-wasm-host"):
+        check_only_the_edge_reaches_jc(docs, env)
+    monkeypatch.setattr(sys.modules[__name__], "HEADER_CLEAN_WASM_HOST", pinned)
+    check_only_the_edge_reaches_jc(docs, env)
 
 
 def planted(namespace: str, pod_selector: dict, ports: list | None) -> dict:
