@@ -1,10 +1,10 @@
 ---
 # ghcr.io/marek-mraz-jc/jc-embedder, built, smoke-tested, signed and scanned by the monorepo's
-# .github/workflows/image-embedder.yml (run 42806830659, commit b43e3130, 2026-11-10; no change
-# under crates/embedder or crates/shared/jc-door since). cosign verify with identity
-# image-embedder.yml and issuer token.actions.githubusercontent.com passes.
+# .github/workflows/image-embedder.yml on main (run 42854826681, main e6a88467, 2026-11-10;
+# cosign verify: identity image-embedder.yml@refs/heads/main, issuer
+# token.actions.githubusercontent.com).
 embedder:
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc-embedder'
     tag: 'main'
-    digest: 'sha256:cc835dd409cf885aa281c44d8f6cf8db8a572488e287548d9ebaf28ef2129f22'
+    digest: 'sha256:2ca408865ba773b34d82d3e98cdea518483a4b887395520900061c5be5ff13f7'
