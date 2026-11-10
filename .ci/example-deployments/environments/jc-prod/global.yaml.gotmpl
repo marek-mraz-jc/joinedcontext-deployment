@@ -287,13 +287,16 @@ jc:
       # the policy below opens 9091 alone (the token still guards /metrics).
       podAnnotations:
         config.linkerd.io/skip-inbound-ports: "9091"
+      # Guaranteed QoS so prod wins on the shared node (supervisor 2026-11-10 15:59Z): requests =
+      # limits, 3.75 GiB as jc-memory-cut2 sized it. jc OOMKilled at 3 Gi three times on
+      # 2026-11-10 (15:29, 15:57, 16:05Z) once the old dev namespace still held ~2 GiB; it is off.
       resources:
         requests:
-          cpu: 100m
-          memory: 2Gi
+          cpu: '2'
+          memory: 3840Mi
         limits:
           cpu: '2'
-          memory: 3Gi
+          memory: 3840Mi
   # The server functions of generated Apps (supervisor 06:3xZ): their own runtime in jc-prod, on
   # realm smartcity and jc-prod's gateway; dev's jc-functions trusts dev's realm and gateway only.
   functions:
