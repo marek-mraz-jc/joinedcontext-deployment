@@ -1,7 +1,7 @@
 ---
 # jc (one pod, every module): the edge reaches its public listener on 8080, nothing reaches the
 # admin listener (9091) or the Portal's internal listener (9090) from outside the pod. It reaches
-# its three databases on postgres-cluster, the cluster's ingress (the Portal reads the OIDC
+# its databases on postgres-cluster, the cluster's ingress (the Portal reads the OIDC
 # discovery of kaisatsu at its public issuer URL, jc.{domain}/id) and public addresses on 443
 # (catalogue harvests, pipeline sources, the model provider), plus DNS. The modules call each
 # other on jc's own listener inside the pod, which no policy sees.
@@ -97,6 +97,66 @@ jc-server:
       ports:
         - protocol: TCP
           port: 443
+    # The App functions runtime beside jc (jc.functions), when the environment turns it on.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-functions
+      ports:
+        - protocol: TCP
+          port: 8080
+# jc-functions (jc.functions): called by jc's Portal alone; reaches jc's identity and gateway only
+# through the cluster's ingress (their public hosts), plus DNS. A function's code is the model's:
+# no internet, no database, no other pod.
+jc-functions:
+  podSelector:
+    app.kubernetes.io/name: jc-functions
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+              app.kubernetes.io/instance: jc-server
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - traefik
+                  - kube-system
+                  - ingress-nginx
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - traefik
+                  - ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
 postgres-from-jc:
   componentNamespace: postgres
   podSelector:
@@ -110,6 +170,43 @@ postgres-from-jc:
               app.kubernetes.io/name: jc-server
               app.kubernetes.io/instance: jc-server
           componentNamespace: jc
+      ports:
+        - protocol: TCP
+          port: 5432
+    # jc-retain (retainHours): the hourly history cut on jc_antares.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-retain
+          componentNamespace: jc
+      ports:
+        - protocol: TCP
+          port: 5432
+jc-retain:
+  podSelector:
+    app.kubernetes.io/name: jc-retain
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
       ports:
         - protocol: TCP
           port: 5432

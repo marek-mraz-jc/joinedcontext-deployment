@@ -341,6 +341,10 @@
     "extraContainers": {
       "type": "array"
     },
+    "cronJobs": {
+      "type": "array",
+      "description": "raw CronJob specs (name, schedule, pod spec) in the workload's namespace, with its labels"
+    },
     "extraVolumeMounts": {
       "type": "array"
     },

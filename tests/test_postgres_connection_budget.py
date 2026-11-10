@@ -28,6 +28,7 @@ max_connections, not the pools' sum, because Postgres lets that many backends in
 
 import math
 import re
+import tomllib
 
 import pytest
 from test_postgres_memory_budget import PER_PROCESS_MIB
@@ -36,7 +37,7 @@ ENVIRONMENTS = ["local", "dev", "smartcity", "stage", "staging", "production", "
 # addons renders the opt-in components (jc, decidim) whose pools no live environment counts yet;
 # its postgres-cluster renders without the PodMonitor the scrape test asks, so only the pool test
 # reads it.
-POOL_ENVIRONMENTS = [*ENVIRONMENTS, "addons"]
+POOL_ENVIRONMENTS = [*ENVIRONMENTS, "addons", "jc-dev", "jc-prod"]
 HEADROOM = 1.2
 ALERT_SHARE = 0.8  # CNPGClusterHighConnectionsWarning, charts/cluster prometheus_rules (cnpg/cluster 0.7.0)
 SUPERUSER_RESERVED_DEFAULT = 3
@@ -106,6 +107,32 @@ def jc_kaisatsu(docs: list[dict]) -> int:
     match = re.search(r"^db_max_connections = (\d+)$", toml[0], re.MULTILINE)
     assert match, "jc.toml sets no [kaisatsu] db_max_connections"
     return sum(replicas(w) for w in found) * (min(int(match[1]), 50) + 1)
+
+
+def jc_module(module: str):
+    # shako, daiya, dataroom and ekiben in jc: each pool as <module>_app (jc.toml [<module>.database]
+    # max_connections, bins/jc/src/pg.rs), counted under the database's owner <module>_migrate,
+    # plus that owner's one migration login at start.
+    def count(docs: list[dict]) -> int:
+        found = named(docs, "jc")
+        assert found, f"role {module}_migrate has a database but no jc workload in the render"
+        toml = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
+        assert len(toml) == 1, "the jc ConfigMap with jc.toml is not in the render"
+        section = tomllib.loads(toml[0]).get(module, {}).get("database", {})
+        assert "max_connections" in section, f"jc.toml sets no [{module}.database] max_connections"
+        return sum(replicas(w) for w in found) * (section["max_connections"] + 1)
+
+    return count
+
+
+def jc_assistant(docs: list[dict]) -> int:
+    # The assistant in jc migrates and serves as jc_assistant: [assistant.database] max_connections.
+    found = named(docs, "jc")
+    assert found, "role jc_assistant has a database but no jc workload in the render"
+    (toml,) = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
+    section = tomllib.loads(toml).get("assistant", {}).get("database", {})
+    assert "max_connections" in section, "jc.toml sets no [assistant.database] max_connections"
+    return sum(replicas(w) for w in found) * section["max_connections"]
 
 
 def keycloak(docs: list[dict]) -> int:
@@ -185,6 +212,8 @@ CLIENTS = {
     "jc_portal": compiled("jc_portal"),
     "jc_antares": lambda docs: antares(docs, jc=True),
     "kaisatsu_migrate": jc_kaisatsu,
+    **{f"{m}_migrate": jc_module(m) for m in ("shako", "daiya", "dataroom", "ekiben")},
+    "jc_assistant": jc_assistant,
     # The branch previews' group never logs in; each member pv_{slug} has CONNECTION LIMIT 5, the
     # preview Portal's pool, and scripts/preview.sh starts at most PREVIEW_MAX = 2 of them (T-5548).
     "pv_previews": lambda docs: 2 * COMPILED["portal"][1],

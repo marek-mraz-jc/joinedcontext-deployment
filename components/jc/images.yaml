@@ -8,6 +8,12 @@ jc:
     repository: 'ghcr.io/marek-mraz-jc/jc'
     tag: '8b31df009712b6c7ec42438f567499ec42b8d646'
     digest: 'sha256:646fcb6b90d1519027602f7b82141da4c0ed487d1b8f4147087ead3299dc6384'
+  # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
+  # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
+  functions:
+    repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
+    tag: 'main'
+    digest: 'sha256:471d88ddd1b54f934d9ceb9b3fd7fae1650e0e4cb42b438961bc91d5a093018d'
   # The init container that copies Secret jc-setup into the state dir: busybox's sh and install,
   # the same pin as components/keycloak/images.yaml dbchecker.
   seed:
