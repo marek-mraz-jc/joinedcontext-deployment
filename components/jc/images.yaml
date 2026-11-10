@@ -2,14 +2,14 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main b29baaf1, ci run 42865102175 (cosign tlog 3790485959): 0e570e8e (jc-dataroom-brand de560b57, the
-  # [dataroom.publishers]/[dataroom.branding] keys) + jc-login-exchange (realm token requests on the back
-  # channel, ekiben token backoff). Never pin an image older than
+  # main db36f6c7, ci run 42870855134 (cosign tlog 3790927275): b29baaf1 (jc-dataroom-brand de560b57, the
+  # [dataroom.publishers]/[dataroom.branding] keys; jc-login-exchange) + jc-delete-mem's byte bound on the
+  # change-to-matcher queue. Never pin an image older than
   # 520e299e: without its reconciler guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'b29baaf157ff52e64ccda3b53b928068b6421bf5'
-    digest: 'sha256:520db0dfb0b193851c3f3a12e7c67e2f4a7a8a6706a30a74b400ca6d6291cb4e'
+    tag: 'db36f6c793e1bf17fb03c14cb1362471071c04b3'
+    digest: 'sha256:185a9b0a4cf6a20140acc1f17bd9445365fa4cbe07a2f43f347b74b3a1c416bc'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
