@@ -200,6 +200,10 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # Unset, jc took the Portal's host as the org domain and pipelines minted second copies.
     assert {k: env[k] for k in ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN")} == dict.fromkeys(
         ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN"), "hel.fi")
+    # Old prod's Portal served the map Apps' tiles; unset, every map App said "No base map".
+    assert (env["JC_BASEMAP_URL"], env["JC_BASEMAP_ATTRIBUTION"]) == (
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "© OpenStreetMap contributors")
+    assert env["JC_BASEMAP_CACHE_MAX_BYTES"] == "67108864"
     # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
     assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
     assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
