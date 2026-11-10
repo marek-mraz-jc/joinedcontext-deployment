@@ -152,6 +152,9 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert vol["emptyDir"]["sizeLimit"] == "8Mi"
     env = {e["name"]: e.get("value") for e in jc["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert (env["JCBIN_LISTEN"], env["JCBIN_STATE_DIR"]) == ("0.0.0.0:8080", "/var/lib/jc/state")
+    # Antares' in-process bus: one jc process per database, so no rollout overlaps two.
+    assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
+    assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 
 @requires_helmfile
