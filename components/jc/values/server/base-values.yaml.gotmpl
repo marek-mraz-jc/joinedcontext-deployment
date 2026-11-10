@@ -274,6 +274,11 @@ envSecret:
     secret: db-jc-antares
     key: password
 env:
+  # The image sets JCBIN_LISTEN=0.0.0.0:8080 and JCBIN_STATE_DIR=/var/lib/jc (bins/jc/Dockerfile),
+  # and jc's environment beats jc.toml: name both as jc.toml does, or the window listens on every
+  # address and jc tries to chmod the volume root it does not own.
+  JCBIN_LISTEN: {{ ternary "127.0.0.1:8080" "0.0.0.0:8080" $window | quote }}
+  JCBIN_STATE_DIR: "/var/lib/jc/state"
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
