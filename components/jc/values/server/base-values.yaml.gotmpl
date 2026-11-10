@@ -594,16 +594,14 @@ extraInitContainers:
   {{- end }}
 
 extraVolumes:
+  # Tokens and the gateway's project checkouts ({state}/gateway: org cache, archives, assembly;
+  # 70 MB in prod's rehearsal). 1Mi gave ENOSPC and no Endpoint served (jc-prod, 2026-11-10); a
+  # disk volume on {state}/gateway cannot work, because jc chmods that directory 0700 and a
+  # volume's root is not its own. tmpfs counts against jc's memory limit.
   - name: state
     emptyDir:
       medium: Memory
-      sizeLimit: 1Mi
-  # The gateway's project checkouts ({state}/gateway: org cache, archives, assembly; ~70 MB on
-  # prod's export): node disk, not the 1Mi tmpfs that holds the tokens. ENOSPC there left every
-  # Endpoint unserved (jc-prod, 2026-11-10). They hold the organization's config repos only.
-  - name: gateway-work
-    emptyDir:
-      sizeLimit: 512Mi
+      sizeLimit: 192Mi
   - name: setup
     secret:
       secretName: jc-setup
@@ -681,7 +679,6 @@ extraVolumes:
 
 extraVolumeMounts:
   - { name: state, mountPath: /var/lib/jc }
-  - { name: gateway-work, mountPath: /var/lib/jc/state/gateway }
   {{- if $proxy.enabled }}
   - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
   {{- end }}
