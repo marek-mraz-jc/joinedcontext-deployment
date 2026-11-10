@@ -192,6 +192,9 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
+    # Unset, jc took the Portal's host as the org domain and pipelines minted second copies.
+    assert {k: env[k] for k in ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN")} == dict.fromkeys(
+        ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN"), "hel.fi")
     # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
     assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
     assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
