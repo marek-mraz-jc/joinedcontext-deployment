@@ -35,6 +35,13 @@ global:
   orgDomain: hel.fi
   instanceSlug: jc-prod
   profile: development
+  # The installation's logo as old prod's smartcity branding named it: jc's catalogue footer mark,
+  # favicon and /logo.svg ([dataroom.branding], components/jc/values/server).
+  branding:
+    logo: logo.svg
+    favicon: logo.svg
+    logoSvg: |
+{{ readFile "branding/logo.svg" | indent 6 }}
   securityTxt:
     contact: mailto:contact@marek-mraz.com
     expires: "2027-09-24T00:00:00Z"
@@ -163,6 +170,52 @@ jc:
     # prod's catalog dataset moved to zilina-catalog (bins/jc RENAMES.md, rehearsal.py aliases).
     # prod's harvests of hub-bbsk and nkod-banskabystrica (jc-catalogue-17).
     catalogueHarvest: true
+    # prod's publisher badges and words (owner 2026-10-12, release 23a43801 components/ckan/values/catalogue/
+    # development-values.yaml.gotmpl `organizations`), copied from the monorepo's
+    # bins/jc/docs/dataroom-publishers.toml: CKAN's own picture or description still wins.
+    dataroomPublishers:
+      hel-fi:
+        initials: HEL
+        colour: '#0000bf'
+        description:
+          en: 'Open data of the Helsinki region, live from HSL public transport, Fintraffic parking and the city''s own services, through joinedcontext endpoints.'
+          sk: 'Otvorené údaje regiónu Helsinki, naživo z verejnej dopravy HSL, parkovísk Fintraffic a mestských služieb, cez endpointy joinedcontext.'
+      praha:
+        initials: PHA
+        colour: '#b4232a'
+        description:
+          en: 'Open data of the City of Prague, published through joinedcontext endpoints.'
+          sk: 'Otvorené údaje hlavného mesta Prahy, publikované cez endpointy joinedcontext.'
+      zilina:
+        initials: ZA
+        colour: '#1f6f43'
+        description:
+          en: 'Open data of the City of Žilina and the University of Žilina, published through joinedcontext endpoints.'
+          sk: 'Otvorené údaje mesta Žilina a Žilinskej univerzity, publikované cez endpointy joinedcontext.'
+      barcelona:
+        initials: BCN
+        colour: '#c8102e'
+        description:
+          en: 'Open data of Barcelona City Council (Open Data BCN, CC BY 4.0), published through joinedcontext endpoints.'
+          sk: 'Otvorené údaje mesta Barcelona (Open Data BCN, CC BY 4.0), publikované cez endpointy joinedcontext.'
+      bratislava:
+        initials: BA
+        colour: '#e30613'
+        description:
+          en: 'Open data of the City of Bratislava (data.bratislava.sk, CC BY 4.0), published through joinedcontext endpoints.'
+          sk: 'Otvorené údaje hlavného mesta SR Bratislavy (data.bratislava.sk, CC BY 4.0), publikované cez endpointy joinedcontext.'
+      banskabystrica:
+        initials: BB
+        colour: '#00579c'
+      bbsk:
+        initials: BBSK
+        colour: '#7a1f5c'
+      slovensko:
+        initials: SK
+        colour: '#0b4ea2'
+        description:
+          en: 'Open data about the whole of Slovakia, collected by the joinedcontext platform.'
+          sk: 'Otvorené údaje za celé Slovensko, ktoré zbiera platforma joinedcontext.'
     # No retainHours: jc-prod replaces prod and keeps history as each space's retention rule says, as
     # old prod did (supervisor 2026-11-10 14:28Z). The 24 h cut is the dev move's rule only.
     dataroomAliases:
