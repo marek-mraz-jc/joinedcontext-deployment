@@ -429,6 +429,9 @@ env:
   JCBIN_EKIBEN_TOKEN_FILE: "/run/jc/setup/ekiben-token"
   JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
   JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
+  # Concurrent OGC file exports: jc 446484ae raised the default from 2 to 6 (each streams page by
+  # page, up to 512 MiB / 120 s). The one node runs at 85-90 % memory: keep the old cap until measured.
+  ANTARES_EXPORT_FILES: "2"
   {{- with $global.orgDomain }}
   # The organization's domain in every minted id (urn:ngsi-ld:{Type}:{orgDomain}:...): unset, jc
   # derives it from the Portal's host, and jc-prod's pipelines minted portal.smartcity... copies

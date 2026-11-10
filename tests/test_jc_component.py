@@ -192,6 +192,7 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
+    assert env["ANTARES_EXPORT_FILES"] == "2", "the export cap rose to 6 in jc 446484ae; the node has no room yet"
     # Unset, jc took the Portal's host as the org domain and pipelines minted second copies.
     assert {k: env[k] for k in ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN")} == dict.fromkeys(
         ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN"), "hel.fi")
