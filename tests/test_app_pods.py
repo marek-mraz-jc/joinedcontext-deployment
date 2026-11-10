@@ -32,12 +32,18 @@ def of_kind(docs, kind, name=None):
 
 
 def with_app_pods(tree):
-    """jc-prod with app-pods listed after jc and an example pin."""
+    """jc-prod (which lists app-pods after jc) with an example pin."""
+    path = tree / "deployment/environments/jc-prod/global.yaml.gotmpl"
+    assert "\n  - jc\n" in path.read_text() and "\n  - app-pods\n" in path.read_text()
+    (path.parent / "app-pods.yaml.gotmpl").write_text(PIN)
+
+
+def without_app_pods(tree):
+    """jc-prod with app-pods taken out of its components."""
     path = tree / "deployment/environments/jc-prod/global.yaml.gotmpl"
     text = path.read_text()
-    assert "\n  - jc\n" in text
-    path.write_text(text.replace("\n  - jc\n", "\n  - jc\n  - app-pods\n", 1))
-    (path.parent / "app-pods.yaml.gotmpl").write_text(PIN)
+    assert "\n  - app-pods\n" in text
+    path.write_text(text.replace("\n  - app-pods\n", "\n", 1))
 
 
 RENDERED: list[list[dict]] = []
@@ -124,8 +130,8 @@ def test_jc_proxies_the_app_host_and_serves_the_reads_on_its_apps_listener(prod)
     assert OLD_SERVICE_HOST not in jc_toml_text(prod)
 
 
-def test_without_app_pods_jc_neither_proxies_nor_opens_the_apps_listener(rendered):
-    docs = rendered("jc-prod")
+def test_without_app_pods_jc_neither_proxies_nor_opens_the_apps_listener(rendered_variant):
+    docs = rendered_variant("jc-prod", without_app_pods)
     assert not of_kind(docs, "Deployment", "app-hsl-transport")
     env = jc_env(docs)
     assert "JC_PORTAL_APP_PODS" not in env and "JCBIN_APPS_LISTEN" not in env

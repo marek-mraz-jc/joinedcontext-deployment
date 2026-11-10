@@ -16,6 +16,8 @@ components:
   - artifact-store
   - apps-db
   - jc
+  # hsl-transport as a pod behind jc's Portal (jc >= a4ae0d82 serves its apps listener).
+  - app-pods
   - wasm-host
   # Prod's three MQTT edge brokers (ADR-N-048), stamped by jc's Portal from the chart's template
   # into a namespace of their own (jc-prod-mqtt, not jc-prod: the gateway's Linkerd rule admits
@@ -322,7 +324,7 @@ apisix:
 
 # Prod's hsl-transport pod (components/app-pods), proxied by jc's Portal on its App host. Its
 # Endpoint is prod's `app-hsl-transport` of space helsinki (the App's JC_APP_CONFIG on prod). The
-# component joins `components:` with the first digest image-apps.yml signs (components/app-pods/images.yaml).
+# component is listed in `components:` since jc a4ae0d82 (the apps listener on 8083).
 app-pods:
   hsl-transport:
     endpointSlug: sv4ibpmhwowb6gnzqy6vp2b3iy
