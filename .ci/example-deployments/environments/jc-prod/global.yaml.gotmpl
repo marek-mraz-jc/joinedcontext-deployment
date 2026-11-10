@@ -74,6 +74,11 @@ jc:
     # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
     # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.
     rawValues:
+      # dev's Prometheus is meshed: through jc's Linkerd inbound port (4143) it would reach every
+      # port of the pod, the public 8080 included. The admin listener skips the proxy instead, so
+      # the policy below opens 9091 alone (the token still guards /metrics).
+      podAnnotations:
+        config.linkerd.io/skip-inbound-ports: "9091"
       resources:
         requests:
           cpu: 100m
@@ -325,6 +330,10 @@ networkpolicies:
               matchLabels:
                 app.kubernetes.io/name: jc-server
                 app.kubernetes.io/instance: jc-server
+        ports:
+          - protocol: TCP
+            port: 9091
+      - to:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: jc-prod
@@ -348,6 +357,7 @@ networkpolicies:
             port: 9187
           - protocol: TCP
             port: 4143
+  # 9091 alone: it skips jc's mesh proxy (podAnnotations above), and 4143 would reach 8080 too.
   jc-admin-from-dev-prometheus:
     _component: jc
     podSelector:
@@ -366,8 +376,6 @@ networkpolicies:
         ports:
           - protocol: TCP
             port: 9091
-          - protocol: TCP
-            port: 4143
   apisix-metrics-from-dev-prometheus:
     _component: apisix
     podSelector:
