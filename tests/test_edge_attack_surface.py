@@ -413,6 +413,10 @@ TEMPLATE_CLASSES = {
         "reach": EDGE_LOGIN, "cacheable": True, "framing": "SAMEORIGIN",
         "why": "every App's own host, whose pages ask for a login before they show anything (AP-133)",
     },
+    "jc-apps": {
+        "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the plugin config of the jc-apps route that defaults/environment/apisix-routes.yaml.gotmpl adds in jc host mode: every App host {name}.apps.{domain} to jc in host mode: jc's Portal serves App {name} alone there, signs its visitor in with the App's own client and hands the App's own endpoint slugs to the gateway (bins/jc edge-session-design S4a); each App page names the Portal in its own frame-ancestors (AP-122), so the edge sets no X-Frame-Options",
+    },
 }
 
 # The workloads that answer inside the cluster only. None of them may appear as the upstream

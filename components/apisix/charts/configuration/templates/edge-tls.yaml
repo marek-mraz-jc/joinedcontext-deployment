@@ -114,6 +114,25 @@ spec:
   dnsNames:
     - {{ . | quote }}
 {{- end }}
+{{- range $edge.appHosts | default list }}
+---
+# One App host on a certificate of its own (jc, no Portal stamping App hosts): the name and
+# Secret the Portal gave it before, so a copied certificate stays valid and cert-manager renews it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: app-{{ . }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  secretName: app-{{ . }}-tls
+  issuerRef:
+    name: {{ $edge.clusterIssuer | quote }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ printf "%s.apps.%s" . $.Values.domain | quote }}
+{{- end }}
 {{- if eq $edge.ingressClass "traefik" }}
 ---
 apiVersion: traefik.io/v1alpha1

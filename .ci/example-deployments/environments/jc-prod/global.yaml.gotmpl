@@ -30,6 +30,47 @@ global:
     enabled: true
     clusterIssuer: 'letsencrypt-prod'
     ingressClass: 'traefik'
+    # Prod's App hosts (kubectl get ingress,certificate -n smartcity app-*, 2026-11-09: 38, one
+    # host and Secret app-{name}-tls each). The prod-deployer copies each Secret before DNS moves.
+    appHosts:
+      - air-quality
+      - air-weather-explorer
+      - alerts-desk
+      - alerts-heatmap
+      - banskabystrica-data
+      - banskabystrica-mapa
+      - banskabystrica-ovzdusie
+      - banskabystrica-skoly
+      - banskabystrica-zaznamy
+      - bbsk-data
+      - bbsk-mapa
+      - bbsk-mosty
+      - bbsk-podujatia
+      - bbsk-ukazovatele
+      - bbsk-zaznamy
+      - bike-rebalancing
+      - bike-stations
+      - bike-weather-demand
+      - data-quality-inspector
+      - district-compare
+      - event-day-planner
+      - helsinki-alerts
+      - helsinki-bikes
+      - helsinki-data
+      - helsinki-events
+      - helsinki-kartta
+      - hsl-transport
+      - kpi-forecast
+      - news-topics
+      - praha-data
+      - praha-mapa
+      - praha-mesto
+      - praha-odpad
+      - transit-reach
+      - zilina-mapa
+      - zilina-ukazovatele
+      - zilina-vyskum
+      - zilina-zaznamy
   kubeApiCidrs: [10.255.0.101/32]
 
 # The operator is the dev environment's (namespace dev, clusterWide since this change).
@@ -198,14 +239,16 @@ jc:
     # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
     # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
     # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.
+    # Supervisor 2026-11-10 06:5xZ from evidence/jc-memory-1g/REPORT.md (prod data): peak RSS 2.13 GiB
+    # after start, 2.28 GiB under gate load, allocator-resident 2.60 GiB, idle 1.63 GiB.
     rawValues:
       resources:
         requests:
           cpu: 100m
-          memory: 384Mi
+          memory: 2Gi
         limits:
           cpu: '2'
-          memory: 1280Mi
+          memory: 3Gi
   # The server functions of generated Apps (supervisor 06:3xZ): their own runtime in jc-prod, on
   # realm smartcity and jc-prod's gateway; dev's jc-functions trusts dev's realm and gateway only.
   functions:

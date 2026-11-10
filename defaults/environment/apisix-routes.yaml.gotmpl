@@ -49,4 +49,38 @@ routes:
       read: 120
 {{- end }}
 {{- end }}
+{{- if not $jcWindow }}
+  # Every App host to jc, whose Portal serves App `{name}` alone on `{name}.apps.{domain}`
+  # (bins/jc edge-session-design S4a); `host`, not `subDomain`, so the edge certificate's names
+  # stay prod's (each App host has its own, global.ingress.appHosts).
+  jc-apps:
+    name: jc-apps
+    description: jc's Portal on every App host
+    upstream: jc.{{ $ns }}.svc.cluster.local:8080
+    host: '*.apps.{{ .Values.global.domain }}'
+    uri: '/*'
+    priority: 2
+    pluginConfig: jc-apps
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+  # An App's old address on the apex moves to its host, as the Portal's edge file had it: no
+  # upstream, no login, the query kept.
+  jc-apps-moved:
+    name: jc-apps-moved
+    description: an App's old path on the apex, moved to its own host
+    upstream: jc.{{ $ns }}.svc.cluster.local:8080
+    host: {{ .Values.global.domain | quote }}
+    uri: '/apps/*'
+    priority: 2
+    pluginConfig: jc
+    plugins:
+      redirect:
+        regex_uri:
+          - '^/apps/([a-z0-9]([-a-z0-9]*[a-z0-9])?)(?:/(.*))?$'
+          - 'https://$1.apps.{{ .Values.global.domain }}/$3'
+        ret_code: 308
+        append_query_string: true
+{{- end }}
 {{- end }}
