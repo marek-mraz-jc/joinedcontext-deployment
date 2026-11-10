@@ -359,7 +359,6 @@ configMap:
     od-datasets.json: |
 {{ readFile "../../files/od-datasets.json" | indent 6 }}
     {{- end }}
-    {{- if $proxy.enabled }}
     # The runner's shared resources (`-r`: project caches, source rate limits) and the GTFS-RT schema a
     # stream's `import_paths: [/proto]` reads, as the pipeline-runner component and up.sh give them.
     # Without them hsl-service-alerts and hsl-departures were refused: lstat .../streams/proto (jc-prod).
@@ -367,6 +366,7 @@ configMap:
 {{ readFile "../../../pipeline-runner/streams/resources.yaml" | indent 6 }}
     gtfs-realtime.proto: |
 {{ readFile "../../../pipeline-runner/streams/gtfs-realtime.proto" | indent 6 }}
+    {{- if $proxy.enabled }}
     daiya-prometheus.yaml: |
       apiVersion: 1
       datasources:
