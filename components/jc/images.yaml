@@ -20,3 +20,10 @@ jc:
     repository: 'docker.io/busybox'
     tag: '1.38'
     digest: 'sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616'
+  # prom-label-proxy (metricsProxy part): one static Go binary, runs as nobody. v0.16.2 of
+  # 2026-11-04; trivy 2026-11-10: one HIGH, golang.org/x/net/html CVE-2026-78661 (HTML parsing,
+  # which the proxy never does; not in CISA KEV, so scan-pinned-images.py does not block it).
+  metricsProxy:
+    repository: 'quay.io/prometheuscommunity/prom-label-proxy'
+    tag: 'v0.16.2'
+    digest: 'sha256:9812cce38fa78c39250c9c59c78bbe75895ef9126952a098cd44adef2e21dbc5'

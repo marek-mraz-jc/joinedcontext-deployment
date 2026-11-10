@@ -75,6 +75,26 @@ serviceMonitors:
     # Bento serves its Prometheus text on the same port as its API (PL-24).
     port: http
   {{- end }}
+  {{- if has "jc" $components }}
+  # jc's admin listener: every module's series (gateway, Antares, Portal, assistant) in one
+  # /metrics, behind the admin token (components/jc secrets.yaml jc-admin-token).
+  - name: jc
+    namespace: {{ index $root "jc" "server" "namespace" }}
+    selector:
+      app.kubernetes.io/name: jc-server
+      app.kubernetes.io/instance: jc-server
+    port: admin
+    bearerTokenSecret:
+      name: jc-admin-token
+      key: token
+    # The gateway's latency summary has one series per Endpoint, route and quantile: 37,394 of one
+    # jc's 56,574 series in the prod rehearsal (jc-prod-metrics), and no dashboard reads it (they
+    # ask for _bucket). Its _count and _sum stay.
+    metricRelabelings:
+      - sourceLabels: [__name__, quantile]
+        regex: jc_gateway_request_duration_seconds;.+
+        action: drop
+  {{- end }}
   {{- if has "gitops" $components }}
   # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
   - name: argocd-application-controller

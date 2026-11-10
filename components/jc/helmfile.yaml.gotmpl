@@ -28,7 +28,7 @@ repositories:
 releases:
   {{- range $parts }}
   {{- $part := . }}
-  {{- $releaseName := printf "%s-%s" $component $part.name }}
+  {{- $releaseName := printf "%s-%s" ($component | kebabcase) ($part.name | kebabcase) }}
   {{- $repoUrl := index $root.charts $component $part.name "repository" | default "" }}
   - name: {{ $releaseName }}
     labels:

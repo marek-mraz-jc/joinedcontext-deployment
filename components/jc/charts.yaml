@@ -4,3 +4,5 @@ jc:
     chart: ../../charts/workload
   functions:
     chart: ../../charts/workload
+  metricsProxy:
+    chart: ../../charts/workload
