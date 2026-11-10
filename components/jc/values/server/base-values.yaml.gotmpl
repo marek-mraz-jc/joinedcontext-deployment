@@ -8,6 +8,20 @@
 {{- fail "jc with wasm-host needs apps-db (the Apps' rows) and artifact-store (their components) in the same environment" }}
 {{- end }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- /* The App pods of components/app-pods, when the environment lists it: the Portal proxies
+       each App's host to its Service, and the pod reads its Endpoint on jc's apps listener (8083,
+       the gateway's Endpoint reads alone), never on the public listener the edge holds. The
+       import window opens neither. */}}
+{{- $pods := list }}
+{{- $podClients := list }}
+{{- if and (has "app-pods" .Values.components) (not (dig "importWindow" false $jc)) }}
+{{- range $name, $pod := index .Values "app-pods" }}
+{{- if and (kindIs "map" $pod) $pod.enabled }}
+{{- $pods = append $pods (printf "%s=http://app-%s.%s.svc.cluster.local:8080" $name $name $pod.namespace) }}
+{{- $podClients = append $podClients (dict "serviceAccount" (printf "app-%s" $name) "namespace" $pod.namespace) }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- /* The metricsProxy part's address: daiya's datasource `prometheus` and the one address it may reach. */}}
 {{- $proxy := .Values.jc.metricsProxy }}
 {{- $proxyUrl := printf "http://jc-metrics-proxy.%s.svc.cluster.local:8080" $proxy.namespace }}
@@ -78,14 +92,24 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+{{- if or $mqtt $pods }}
+  extraPorts:
+{{- end }}
 {{- if $mqtt }}
   # The MQTT brokers' CONNECT and publish checks (ADR-N-048) on 8082, the port the brokers chart's
   # Linkerd Server names: no APISIX route names it, and the NetworkPolicy and that Server admit
   # the broker pods alone.
-  extraPorts:
     - name: mqtt-auth
       port: 8082
       targetPort: 8082
+      protocol: TCP
+{{- end }}
+{{- if $pods }}
+  # The App pods' Endpoint reads (JCBIN_APPS_LISTEN): no APISIX route names it, and the
+  # NetworkPolicy and the Linkerd Server jc-apps admit the App pods alone.
+    - name: apps
+      port: 8083
+      targetPort: 8083
       protocol: TCP
 {{- end }}
 # Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
@@ -463,6 +487,13 @@ env:
   JC_PORTAL_APPS_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
   JC_PORTAL_WASM_HOST_NAMESPACE: {{ index .Values "wasm-host" "shard-0" "namespace" | quote }}
   {{- end }}
+  {{- with $pods }}
+  # The ui-rust Apps whose pod runs beside jc (components/app-pods): the Portal proxies their hosts,
+  # and the pods read their Endpoints on the apps listener, the gateway's GET/HEAD
+  # /api/endpoint/... alone (an env key, so a jc without it starts and listens on nothing more).
+  JC_PORTAL_APP_PODS: {{ join "," . | quote }}
+  JCBIN_APPS_LISTEN: "0.0.0.0:8083"
+  {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
 {{- if $mqtt }}
@@ -724,16 +755,25 @@ podSecurityContext:
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
 
-{{- if $mqtt }}
-# The brokers reach the Linkerd inbound proxy (4143) for 8082, and the proxy would hand them 8080
-# too (the namespace admits every meshed identity). On 8080 it admits APISIX's alone, which is
-# what the NetworkPolicy lets reach it, so the X-Forwarded-For trust stays the edge's
-# (tests/test_jc_component.py). No HTTPRoute: the kubelet's probes stay authorized.
+{{- if or $mqtt $pods }}
+# The brokers and the App pods reach the Linkerd inbound proxy (4143) for 8082 and 8083, and the
+# proxy would hand them 8080 too (the namespace admits every meshed identity). On 8080 it admits
+# APISIX's alone, which is what the NetworkPolicy lets reach it, so the X-Forwarded-For trust
+# stays the edge's (tests/test_jc_component.py). No HTTPRoute: the kubelet's probes stay authorized.
 meshAuthorization:
   port: 8080
   clients:
     - serviceAccount: apisix
       namespace: {{ .Values.apisix.apisix.namespace }}
+  {{- with $podClients }}
+  # 8083, the apps listener, admits the App pods' identities alone: a port with no Server would
+  # fall back to the namespace default, which admits every meshed identity.
+  extraPorts:
+    - name: apps
+      port: 8083
+      clients:
+        {{- toYaml . | nindent 8 }}
+  {{- end }}
 {{- end }}
 
 serviceMesh:

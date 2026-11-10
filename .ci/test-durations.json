@@ -9,6 +9,7 @@
  "test_apisix_429_contract.py": 95.0,
  "test_apisix_edge.py": 188.2,
  "test_apisix_routes.py": 39.4,
+ "test_app_pods.py": 12.8,
  "test_app_registry.py": 84.8,
  "test_app_shapes.py": 52.9,
  "test_apply_scoped.py": 0.2,
