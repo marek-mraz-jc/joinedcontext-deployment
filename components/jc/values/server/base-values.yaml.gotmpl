@@ -121,10 +121,13 @@ probes:
     periodSeconds: 10
     failureThreshold: 30
   liveness:
-    # ekiben's /ping: open, answered by the process itself, no module dependency.
-    path: /streams/ping
+    # ekiben's /ping: open, answered by the process itself, no module dependency. Host mode routes
+    # by name: ekiben's own host (jc's default streams.{domain}, which the edge routes nowhere).
     {{- if eq $mode "host" }}
-    host: "localhost:8080"
+    path: /ping
+    host: "streams.{{ $global.domain }}"
+    {{- else }}
+    path: /streams/ping
     {{- end }}
     periodSeconds: 15
     timeoutSeconds: 3
@@ -208,26 +211,12 @@ configMap:
       host = "{{ $global.domain }}"
       path_prefix = "/grafana"
 
+      # The edge's uri-blocker keeps /git closed; jc's siblings (the Portal, the gateway) call
+      # shako, ekiben (streams.{domain}) and the broker (broker.{domain}) under their host on jc's
+      # own listener (T-6705), and the edge routes no host but the ones it names.
       [[mounts.shako]]
       host = "{{ $global.domain }}"
       path_prefix = "/git"
-
-      # The Portal's own forge address (JC_SHAKO_URL below): in host mode jc points the Portal at
-      # shako's public base, which the edge refuses (/git stays inside the pod) and which needs
-      # jc Ready before the Portal is built. A request naming this host through the edge meets the
-      # same /git block on the host-less apex route.
-      [[mounts.shako]]
-      host = "localhost:8080"
-      path_prefix = "/git"
-
-      # ekiben and the broker stay inside the pod too: on loopback only, never on a public name.
-      [[mounts.ekiben]]
-      host = "localhost:8080"
-      path_prefix = "/streams"
-
-      [[mounts.antares]]
-      host = "localhost:8080"
-      path_prefix = "/broker"
 
       [mounts.assistant]
       host = "assistant.{{ $global.domain }}"
@@ -358,20 +347,6 @@ envSecret:
   CKAN_API_TOKEN:
     secret: jc-setup
     key: catalogue-token
-{{- if eq $mode "host" }}
-  JC_SHAKO_TOKEN:
-    secret: jc-setup
-    key: shako-token
-  JC_SHAKO_APPS_TOKEN:
-    secret: jc-setup
-    key: shako-token
-  JC_SHAKO_WEBHOOK_SECRET:
-    secret: jc-setup
-    key: forge-webhook-secret
-  JC_PORTAL_PIPELINE_RUNNER_TOKEN:
-    secret: jc-setup
-    key: ekiben-token
-{{- end }}
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
@@ -406,23 +381,13 @@ env:
   JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
   JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
   {{- if eq $mode "host" }}
-  # The Portal's forge on jc's loopback ([[mounts.shako]] localhost:8080 above). Naming the URL
-  # turns off jc's fill of the whole group, so the group is named here (siblings.rs JC_SHAKO_URL).
-  JC_SHAKO_URL: "http://localhost:8080/git"
-  JC_SHAKO_PUBLIC_URL: "https://{{ $global.domain }}/git"
-  JC_SHAKO_APPS_OWNER: "jc-apps"
-  JC_PORTAL_PIPELINE_RUNNER_URL: "http://localhost:8080/streams"
-  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
-  JC_PORTAL_BROKER_URL: "http://localhost:8080/broker"
+  # The broker's admin token as jc-setup keeps it; jc fills the broker's URL (T-6705).
   JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: "/run/jc/setup/antares-admin-token"
   {{- end }}
   {{- if $realm }}
   # The imported deployment's configuration repository, as the rehearsal kit points jc at it.
   JC_SHAKO_OWNER: "joinedcontext"
   JC_SHAKO_REPO: "configuration"
-  {{- else if eq $mode "host" }}
-  JC_SHAKO_OWNER: "jc"
-  JC_SHAKO_REPO: "config"
   {{- end }}
   # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
   # rolls by Recreate (updateStrategy below) and declares itself the only one.

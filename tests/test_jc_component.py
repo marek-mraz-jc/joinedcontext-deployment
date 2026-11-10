@@ -188,16 +188,19 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
-    # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
-    assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
-    assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
+    # The edge blocks /git: jc hands the Portal and the gateway shako, ekiben and the broker under
+    # their host on its own listener (T-6705), so no loopback mount and no sibling URL is named.
     mounts = jc_toml(docs)["mounts"]
-    assert [m["host"] for m in mounts["ekiben"] + mounts["antares"]] == ["localhost:8080", "localhost:8080"]
-    assert (env["JC_PORTAL_PIPELINE_RUNNER_URL"], env["JC_PORTAL_BROKER_URL"]) == ("http://localhost:8080/streams", "http://localhost:8080/broker")
+    assert [m["host"] for m in mounts["shako"]] == ["smartcity.joinedcontext.com"]
+    assert "ekiben" not in mounts and "antares" not in mounts
+    for key in ("JC_SHAKO_URL", "JC_SHAKO_TOKEN", "JC_PORTAL_PIPELINE_RUNNER_URL", "JC_PORTAL_PIPELINE_RUNNER_TOKEN", "JC_PORTAL_BROKER_URL"):
+        assert key not in env, key
+    assert (env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("joinedcontext", "configuration")
     # Host mode routes by name: the kubelet's probes name the hosts jc answers them on.
     probes = jc["spec"]["template"]["spec"]["containers"][0]
     assert probes["readinessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "portal.smartcity.joinedcontext.com"}]
-    assert probes["livenessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "localhost:8080"}]
+    assert probes["livenessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "streams.smartcity.joinedcontext.com"}]
+    assert probes["livenessProbe"]["httpGet"]["path"] == "/ping"
     # Each harvest reads its Endpoints on this instance's gateway and links under its catalogue.
     for h in jc_toml(docs)["dataroom"]["harvest"]:
         assert "api.smartcity.joinedcontext.com" in h["allowed_hosts"]
