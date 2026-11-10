@@ -1,5 +1,12 @@
 {{- $global := .Values.global }}
 {{- $jc := .Values.jc.server }}
+{{- /* The server WASM Apps (ADR-N-044): with wasm-host in the environment the Portal inside jc
+       places Apps on its shards, writes each shard's placement and store key there and proxies an
+       App host's /api/* to the shard. */}}
+{{- $wasm := has "wasm-host" .Values.components }}
+{{- if and $wasm (not (and (has "apps-db" .Values.components) (has "artifact-store" .Values.components))) }}
+{{- fail "jc with wasm-host needs apps-db (the Apps' rows) and artifact-store (their components) in the same environment" }}
+{{- end }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
 {{- /* The App pods of components/app-pods, when the environment lists it: the Portal proxies
        each App's host to its Service, and the pod reads its Endpoint on jc's own Service. */}}
@@ -11,9 +18,23 @@
 {{- end }}
 {{- end }}
 {{- end }}
+{{- /* The metricsProxy part's address: daiya's datasource `prometheus` and the one address it may reach. */}}
+{{- $proxy := .Values.jc.metricsProxy }}
+{{- $proxyUrl := printf "http://jc-metrics-proxy.%s.svc.cluster.local:8080" $proxy.namespace }}
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
 {{- $proxies := $jc.trustedProxies | default list }}
+{{- /* jc-prod's cutover (default-environment.yaml.gotmpl realmImport, importWindow). */}}
+{{- $realm := dig "realmImport" dict $jc }}
+{{- $window := dig "importWindow" false $jc }}
+{{- /* The window serves slug mounts on loopback whatever the environment's mode. */}}
+{{- $mode := ternary "slug" (dig "mode" "slug" $jc) $window }}
+{{- $modules := list "shako" "daiya" "dataroom" "ekiben" }}
+{{- $assistant := dig "assistant" dict $jc }}
+{{- /* The window opens no path to the App runtime: no API token, no store or apps-db login. */}}
+{{- $wasmOn := and $wasm (not $window) }}
+{{- /* Nor to the MQTT brokers: no internal listener, no API token. */}}
+{{- $mqtt := and (has "mqtt-brokers" .Values.components) (not $window) }}
 {{- if not $proxies }}
 {{- fail "jc.server.trustedProxies: name the pod network the edge (APISIX) runs in, e.g. [\"10.42.0.0/16\"] on k3s, in the environment's jc values" }}
 {{- end }}
@@ -28,7 +49,9 @@
 # - [x] Health probes -> readiness /api/v1/health (the Portal, built last), liveness /streams/ping
 # - [x] Graceful shutdown -> jc drains on SIGTERM
 # - [x] Standard labels
-# - [x] ServiceAccount with least privilege -> no API token
+# - [x] ServiceAccount with least privilege -> no API token, but with wasm-host or mqtt-brokers:
+#       then the token reaches only the Role of components/wasm-host portal-access (each shard's
+#       placement and store key, by name) and the brokers chart's Role in the brokers' namespace
 # - [x] Named ports -> 8080 public (every mount), 9091 admin (/metrics behind its token, /healthz)
 # - [x] Ingress with TLS -> APISIX routes jc.{domain} (apisix-routes.yaml)
 
@@ -49,16 +72,38 @@ args: ["--config", "/etc/jc/jc.toml"]
 
 containerPort: 8080
 
+{{- if or $wasmOn $mqtt }}
+# The Portal's API client (KubeClient::in_cluster). With wasm-host its reconciler writes each WASM
+# shard's placement ConfigMap and store-key Secret in the host's namespace (AP-157, AP-158); with
+# mqtt-brokers it stamps the brokers under the brokers chart's Role portal-mqtt-brokers, in the
+# brokers' namespace alone. Those Roles grant nothing else.
+serviceAccount:
+  automountServiceAccountToken: true
+{{- end }}
+
 service:
-  enabled: true
+  # The import window renders no Service, so neither the edge nor a pod finds jc's endpoints.
+  enabled: {{ not $window }}
   type: ClusterIP
   port: 8080
   targetPort: 8080
   name: http
+{{- if $mqtt }}
+  # The MQTT brokers' CONNECT and publish checks (ADR-N-048) on 8082, the port the brokers chart's
+  # Linkerd Server names: no APISIX route names it, and the NetworkPolicy and that Server admit
+  # the broker pods alone.
+  extraPorts:
+    - name: mqtt-auth
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+{{- end }}
 # Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
 # of the same pod still waits on the realm (apisix-routes.yaml).
+{{- if not $window }}
 headlessService:
   name: jc-pods
+{{- end }}
 
 # The admin listener: /metrics behind the admin token (every module's series), open /healthz.
 metrics:
@@ -67,6 +112,8 @@ metrics:
   name: admin
 
 probes:
+  # The window's loopback listener answers no kubelet probe.
+  enabled: {{ not $window }}
   readiness:
     # The Portal answers once jc has built it after serving (503 until then), so a ready pod
     # serves every mount.
@@ -89,6 +136,9 @@ probes:
 # One process: Antares keeps process-wide statics and jc's modules their in-memory stores
 # (bins/jc/STATUS.md), so a second replica is a second, divergent installation.
 replicaCount: 1
+# Stays at one (ANTARES_BUS=local, env below): Recreate stops the old process before the new one
+# starts, so two matchers never share jc_antares (policy-exceptions.yaml).
+updateStrategy: Recreate
 
 # Before DNS points the public names at this cluster (jc-prod on dev ahead of the cutover), jc's own
 # reads of its public URLs (the Portal fetching kaisatsu's discovery at idm.{domain}) would reach the
@@ -108,23 +158,37 @@ configMap:
   data:
     jc.toml: |
       role = "all"
+      {{- if $window }}
+      # Import window: only `kubectl port-forward` (the pod's loopback) reaches jc.
+      listen = "127.0.0.1:8080"
+      {{- else }}
       listen = "0.0.0.0:8080"
+      {{- end }}
       admin_listen = "0.0.0.0:9091"
       admin_token_file = "/run/jc/admin/token"
-      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      {{- if $window }}
+      # Import window: the rehearsal kit's shape (CLUSTER-IMPORT.md 6): slug mounts on
+      # http://localhost:8080, which the kit reaches through `kubectl port-forward 8080:8080` and
+      # the Portal reaches on the pod's own loopback for kaisatsu's discovery (the window routes
+      # nothing through the edge).
+      mode = "slug"
+      base_host = "localhost:8080"
+      scheme = "http"
+      {{- else if eq $mode "host" }}
       mode = "host"
       base_host = "{{ $global.domain }}"
+      scheme = "https"
       {{- else }}
       mode = "slug"
       base_host = "{{ $jc.subDomain }}.{{ $global.domain }}"
-      {{- end }}
       scheme = "https"
+      {{- end }}
       log_format = "json"
       state_dir = "/var/lib/jc/state"
       # Only a peer inside these networks may name the caller in X-Forwarded-For.
       trusted_proxies = {{ $proxies | toJson }}
 
-      {{- if eq (dig "mode" "slug" $jc) "host" }}
+      {{- if eq $mode "host" }}
       # Every old host name (bins/jc CUTOVER.md section 4, tests/fixtures/dev-mounts.toml).
       [mounts.kaisatsu]
       host = "idm.{{ $global.domain }}"
@@ -183,6 +247,7 @@ configMap:
       host = "jc.{{ $jc.namespace }}.svc.cluster.local"
       path_prefix = "/api/endpoint"
       {{- end }}
+
       {{- else }}
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]
@@ -193,37 +258,198 @@ configMap:
       database_url_file = "/etc/jc/kaisatsu-database-url"
       db_password_file = "/run/jc/db/kaisatsu-app/password"
       db_max_connections = {{ $jc.kaisatsuPool }}
+      {{- if $realm }}
+      # The export's realm (seed-realm below), its $(file:...) secrets only under import_secrets_dir.
+      import_dir = "/var/lib/jc-realms"
+      import_secrets_dir = "/run/jc/realm-secrets"
+      {{- end }}
 
       [ekiben]
       file_root = "/var/lib/jc-data/streams"
 
       [shako]
       repo_root = "/var/lib/jc-data/git"
+
+      # A [dataroom] section must name its organization and catalogue: jc's defaults.
+      [dataroom]
+      org_id = "00000000-0000-7000-8000-000000000001"
+      catalogue_id = "00000000-0000-7000-8000-000000000010"
+      {{- with (dig "dataroomAliases" dict $jc) }}
+
+      [dataroom.aliases]
+      {{- range $from, $to := . }}
+      {{ $from | quote }} = {{ $to | quote }}
+      {{- end }}
+      {{- end }}
+      {{- with (dig "catalogueHidden" dict $jc) }}
+
+      # prod's publish-gate hidden list (bins/jc/docs/catalogue-hidden.toml).
+      [dataroom.hidden]
+      {{- range $slug, $why := . }}
+      {{ $slug | quote }} = {{ $why | quote }}
+      {{- end }}
+      {{- end }}
+      {{- range $modules }}
+
+      [{{ . }}.database]
+      url = "postgres://{{ . }}_app@{{ $pg }}:5432/jc_{{ . }}"
+      password_file = "/run/jc/db/{{ . }}-app/password"
+      max_connections = {{ dig "modulePool" 3 $jc }}
+      migrate_url = "postgres://{{ . }}_migrate@{{ $pg }}:5432/jc_{{ . }}"
+      migrate_password_file = "/run/jc/db/{{ . }}-migrate/password"
+      {{- end }}
+
+      [assistant.database]
+      url = "postgres://jc_assistant@{{ $pg }}:5432/jc_assistant"
+      password_file = "/run/jc/db/assistant/password"
+      max_connections = {{ dig "assistantPool" 3 $jc }}
+      {{- with (dig "realm" "" $realm) }}
+
+      [identity]
+      realm = {{ . | quote }}
+      {{- end }}
+      {{- if (dig "catalogueHarvest" false $jc) }}
+
+      # prod's two catalogue harvests, copied from the monorepo (files/harvest-sources.toml); each
+      # reads od-datasets.json beside jc.toml.
+{{ readFile "../../files/harvest-sources.toml" | indent 6 }}
+      {{- end }}
+      {{- if $proxy.enabled }}
+
+      # Organization 1's datasource `prometheus` on the metricsProxy part, the one address it may
+      # reach over http (every query pinned to this namespace's series there).
+      [daiya]
+      provisioning_dir = "/etc/jc-daiya"
+      prometheus_reach = "{{ $proxyUrl }}"
+      {{- end }}
+    {{- if (dig "catalogueHarvest" false $jc) }}
+    # The datasets prod converted (files/od-datasets.json, the monorepo's bins/jc/docs copy).
+    od-datasets.json: |
+{{ readFile "../../files/od-datasets.json" | indent 6 }}
+    {{- end }}
+    {{- if $proxy.enabled }}
+    daiya-prometheus.yaml: |
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          uid: prometheus
+          type: prometheus
+          access: proxy
+          orgId: 1
+          url: {{ $proxyUrl }}
+          editable: false
+          jsonData:
+            timeInterval: 15s
+    {{- end }}
     # kaisatsu's request role on its database; the password comes from its own file.
     kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
 
 # The Portal's and Antares' own settings, which jc passes through unchanged.
 envSecret:
+  # The CkanInstances' apiTokenRef (envVar CKAN_API_TOKEN): jc's own dataroom publisher token.
+  CKAN_API_TOKEN:
+    secret: jc-setup
+    key: catalogue-token
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
   BROKER_DB_PASSWORD:
     secret: db-jc-antares
     key: password
+{{- if $wasmOn }}
+  # The wasm Apps' database login (AP-149): the Portal makes every App's schema and roles.
+  APPS_DB_PASSWORD:
+    secret: db-apps-admin
+    key: password
+  # The artifact store's root credential (PF-32): the reconciler derives each shard's key from it.
+  JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY:
+    secret: artifact-store-root
+    key: ACCESS_KEY_ID
+  JC_PORTAL_ARTIFACT_STORE_SECRET_KEY:
+    secret: artifact-store-root
+    key: ACCESS_SECRET_KEY
+{{- end }}
 env:
+  # The image sets JCBIN_LISTEN=0.0.0.0:8080 and JCBIN_STATE_DIR=/var/lib/jc (bins/jc/Dockerfile),
+  # and jc's environment beats jc.toml: name both as jc.toml does, or the window listens on every
+  # address and jc tries to chmod the volume root it does not own.
+  JCBIN_LISTEN: {{ ternary "127.0.0.1:8080" "0.0.0.0:8080" $window | quote }}
+  JCBIN_STATE_DIR: "/var/lib/jc/state"
+  # jc holds these in-process tokens per boot in memory unless given a file: the ones Secret
+  # jc-setup keeps (seed-state copies them into the state dir), so the cluster import, the smoke
+  # suites and the Apps' catalogue publishing read the value jc checks (up.sh does the same).
+  JCBIN_SHAKO_TOKEN_FILE: "/var/lib/jc/state/shako-token"
+  JCBIN_EKIBEN_TOKEN_FILE: "/var/lib/jc/state/ekiben-token"
+  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/var/lib/jc/state/dashboards-password"
+  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/var/lib/jc/state/catalogue-token"
+  # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
+  # rolls by Recreate (updateStrategy below) and declares itself the only one.
+  ANTARES_BUS: "local"
+  ANTARES_ALLOW_SHARED_LOCAL: "1"
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  {{- if dig "jc" "functions" "enabled" false .Values }}
+  # The App functions runtime beside jc (values/functions); the Portal calls it with its token.
+  JC_FUNCTIONS_URL: "http://jc-functions.{{ .Values.jc.functions.namespace }}.svc.cluster.local:8080"
+  {{- end }}
+  {{- if (dig "ageKeySecret" "" $jc) }}
+  # The age identity that decrypts each project's SOPS secrets, so a secretRef resolves in jc.
+  JCBIN_PORTAL_AGE_KEY_FILE: "/run/jc/age/key"
+  {{- end }}
+  {{- if $assistant }}
+  # The model key's file (a file only: jc refuses the key in the environment).
+  JCBIN_MODEL_KEY_FILE: "/run/jc/model/key"
+  {{- end }}
+  {{- if $window }}
+  # Import window only: the import's writes carry no subject. Never outside it (tests/test_jc_component.py).
+  ANTARES_POLICY: "allow-all"
+  {{- end }}
   # The builds the Portal fetches from shako's package registry (the own-repository Apps, prod's
-  # builds imported by jc-migrate), checked against status.build before they are unpacked.
-  JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc/apps-cache
+  # builds imported by jc-migrate), checked against status.build before they are unpacked. On the
+  # data volume: /var/lib/jc is the 1 MiB memory state dir.
+  JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc-data/apps-cache
+  {{- if $wasmOn }}
+  # Server WASM Apps (ADR-N-044): their database, the shards the Portal places them on, the
+  # bucket of their components and files, and the namespace where it writes each shard's
+  # placement and store key (AP-149, AP-157, AP-158), as components/portal sets them.
+  JC_PORTAL_ARTIFACT_STORE_ENDPOINT: "http://artifact-store.{{ index .Values "artifact-store" "store" "namespace" }}.svc.cluster.local:9000"
+  JC_PORTAL_ARTIFACT_STORE_BUCKET: {{ index .Values "artifact-store" "store" "bucket" | default "jc-artifacts" | quote }}
+  JC_PORTAL_APPS_DB_URL: "postgresql://jc_apps_admin:$(APPS_DB_PASSWORD)@apps-db-rw.{{ index .Values "apps-db" "cluster" "namespace" }}.svc.cluster.local:5432/apps?sslmode=require"
+  JC_PORTAL_WASM_SHARDS: {{ index .Values "apps-db" "cluster" "shards" | default 2 | quote }}
+  JC_PORTAL_APPS_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
+  JC_PORTAL_WASM_HOST_NAMESPACE: {{ index .Values "wasm-host" "shard-0" "namespace" | quote }}
+  {{- end }}
   {{- with $pods }}
   # The ui-rust Apps whose pod runs beside jc (components/app-pods): the Portal proxies their hosts.
   JC_PORTAL_APP_PODS: {{ join "," . | quote }}
   {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+{{- if $mqtt }}
+  {{- $brokers := index .Values "mqtt-brokers" "brokers" "namespace" }}
+  # The MQTT edge brokers (ADR-N-048). The gateway's CONNECT check on its internal listener; the
+  # tokenless CONNECTs it admits from jc's own pods (ekiben's DataSource reads, the Portal's
+  # capture) and from the broker pods, which is where a meshed client of 1883 appears; the
+  # Portal's identity, the one caller of the refusals route.
+  JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
+  JC_GATEWAY_MQTT_RUNNER_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_BROKER_HOST: "mqtt-broker-pods.{{ $brokers }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_IDENTITY: "jc.{{ $jc.namespace }}"
+  # Where the Portal stamps one release per MqttBroker from the chart's broker-template.
+  JC_PORTAL_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # A DataSource on a platform broker reads tcp://<release>.${JC_MQTT_NAMESPACE}.svc:1883, so
+  # ekiben's JC_MQTT_NAMESPACE is the brokers' namespace (it also keeps an outside broker's
+  # client id apart per installation).
+  EKIBEN_VAR_JC_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # ekiben refuses a private address unless the name is listed: each broker's 1883 alone, never
+  # its HTTP API (6060), which only the Portal reads; `project=` admits only that project's
+  # streams. ponytail: one entry per MqttBroker the environment names (jc.server.mqttBrokers);
+  # a broker added in the Portal needs a line there.
+  JC_EKIBEN_PRIVATE_HOSTS: {{ $hosts := list }}{{ range $jc.mqttBrokers | default list }}{{ $hosts = append $hosts (printf "%s=%s.%s.svc.cluster.local:1883" .project .release $brokers) }}{{ end }}{{ join "," $hosts | quote }}
+{{- end }}
 
 # The generated secrets of jc's first-start setup (bins/jc/src/setup.rs) live in Secret jc-setup,
 # so a new pod reads the same values: the init container copies them into the state dir as
@@ -263,6 +489,40 @@ extraInitContainers:
       limits: { cpu: 500m, memory: 128Mi }
     volumeMounts:
       - { name: db-kaisatsu-migrate, mountPath: /run/jc/db/kaisatsu-migrate, readOnly: true }
+  {{- if $realm }}
+  # The export's realm: realm.json.gz unpacked to the import dir, each realm secret a 0600 file
+  # under import_secrets_dir (a Secret volume holds links, which ekiben refuses), the
+  # <project>-pipelines copies, and jc's own client secrets into the state dir (CLUSTER-IMPORT.md 4).
+  - name: seed-realm
+    image: {{ printf "%s@%s" .Values.images.jc.seed.repository .Values.images.jc.seed.digest | quote }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        for f in /run/jc/realm-secrets-src/*; do install -m 0600 "$f" "/run/jc/realm-secrets/$(basename "$f")"; done
+        while read -r client name; do
+          [ -n "$client" ] || continue
+          install -m 0600 "/run/jc/realm-secrets/$name" "/run/jc/realm-secrets/$client"
+        done < /run/jc/realm-src/pipeline-clients.txt
+        while read -r file name; do
+          [ -n "$file" ] || continue
+          install -m 0600 "/run/jc/realm-secrets/$name" "/var/lib/jc/state/$file"
+        done < /run/jc/realm-src/state-secrets.txt
+        gunzip -c /run/jc/realm-src/realm.json.gz > "/var/lib/jc-realms/{{ $realm.realm }}.json"
+        chmod 0600 "/var/lib/jc-realms/{{ $realm.realm }}.json"
+    securityContext:
+      {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { cpu: 200m, memory: 64Mi }
+    volumeMounts:
+      - { name: state, mountPath: /var/lib/jc }
+      - { name: realms, mountPath: /var/lib/jc-realms }
+      - { name: realm-secrets, mountPath: /run/jc/realm-secrets }
+      - { name: realm-src, mountPath: /run/jc/realm-src, readOnly: true }
+      - { name: realm-secrets-src, mountPath: /run/jc/realm-secrets-src, readOnly: true }
+  {{- end }}
 
 extraVolumes:
   - name: state
@@ -287,11 +547,85 @@ extraVolumes:
       secretName: db-jc-kaisatsu
       defaultMode: 0440
       items: [{ key: password, path: password }]
+  - name: db-assistant
+    secret:
+      secretName: db-jc-assistant
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- with (dig "ageKeySecret" "" $jc) }}
+  - name: age-key
+    secret:
+      secretName: {{ . }}
+      defaultMode: 0400
+      items: [{ key: key, path: key }]
+  {{- end }}
+  {{- with (dig "modelKeySecret" "" $assistant) }}
+  - name: model-key
+    secret:
+      secretName: {{ . }}
+      defaultMode: 0440
+      items: [{ key: key, path: key }]
+  {{- end }}
+  {{- range $modules }}
+  - name: db-{{ . }}-app
+    secret:
+      secretName: db-jc-{{ . }}-app
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  - name: db-{{ . }}-migrate
+    secret:
+      secretName: db-jc-{{ . }}
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- end }}
+  {{- if $realm }}
+  - name: realms
+    emptyDir:
+      medium: Memory
+      sizeLimit: 16Mi
+  - name: realm-secrets
+    emptyDir:
+      medium: Memory
+      sizeLimit: 8Mi  # 900+ secret files at 4 KiB tmpfs pages each
+  - name: realm-src
+    secret:
+      secretName: {{ $realm.secret }}
+      defaultMode: 0440
+  - name: realm-secrets-src
+    secret:
+      secretName: {{ $realm.secretsSecret }}
+      defaultMode: 0440
+  {{- end }}
+  {{- if $proxy.enabled }}
+  # daiya's provisioning root: the datasource file of this pod's ConfigMap under datasources/.
+  - name: daiya-provisioning
+    configMap:
+      name: jc
+      items: [{ key: daiya-prometheus.yaml, path: datasources/prometheus.yaml }]
+  {{- end }}
 
 extraVolumeMounts:
   - { name: state, mountPath: /var/lib/jc }
+  {{- if $proxy.enabled }}
+  - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
+  {{- end }}
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
+  - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
+  {{- if (dig "ageKeySecret" "" $jc) }}
+  - { name: age-key, mountPath: /run/jc/age, readOnly: true }
+  {{- end }}
+  {{- if (dig "modelKeySecret" "" $assistant) }}
+  - { name: model-key, mountPath: /run/jc/model, readOnly: true }
+  {{- end }}
+  {{- range $modules }}
+  - { name: db-{{ . }}-app, mountPath: /run/jc/db/{{ . }}-app, readOnly: true }
+  - { name: db-{{ . }}-migrate, mountPath: /run/jc/db/{{ . }}-migrate, readOnly: true }
+  {{- end }}
+  {{- if $realm }}
+  - { name: realms, mountPath: /var/lib/jc-realms, readOnly: true }
+  - { name: realm-secrets, mountPath: /run/jc/realm-secrets, readOnly: true }
+  {{- end }}
 
 # shako's repositories and ekiben's file root (jc.toml above).
 persistence:
@@ -300,11 +634,68 @@ persistence:
   mountPath: /var/lib/jc-data
   storageClass: {{ $global.storage.storageClass.rwo | default "" | quote }}
 
+{{- with (dig "retainHours" 0 $jc) }}
+# The cutover's temporal rule (owner 2026-11-09, CLUSTER-IMPORT.md 6.6): every hour, delete history
+# older than {{ . }} h, audit rows kept, KeyPerformanceIndicator whole. The statement of the
+# monorepo's deploy/rehearsal/rehearsal.py retain_sql, with now() for the cutoff.
+cronJobs:
+  - name: jc-retain
+    schedule: "17 * * * *"
+    podLabels:
+      app.kubernetes.io/name: jc-retain
+    podSpec:
+      securityContext:
+        {{- $.Values.securityDefaults.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+        - name: retain
+          image: {{ printf "%s@%s" $.Values.images.postgres.roleJob.repository $.Values.images.postgres.roleJob.digest | quote }}
+          securityContext:
+            {{- $.Values.securityDefaults.securityContext | toYaml | nindent 12 }}
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 500m, memory: 128Mi }
+          env:
+            - { name: HOME, value: /tmp }
+            - { name: PGHOST, value: {{ $pg | quote }} }
+            - { name: PGDATABASE, value: jc_antares }
+            - { name: PGUSER, value: jc_antares }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: db-jc-antares, key: password } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          command:
+            - psql
+            - -AX
+            - -v
+            - ON_ERROR_STOP=1
+            - -c
+            - |
+              BEGIN;
+              SELECT set_config('antares.service', 'on', true);
+              DELETE FROM public.attr_instances h WHERE h.observed_at < now() - interval '{{ . }} hours' AND NOT coalesce(h.provenance @> '{"audit": true}', false) AND NOT EXISTS (SELECT 1 FROM public.temporal_entities te WHERE te.tenant_id = h.tenant_id AND te.id = h.entity_id AND EXISTS (SELECT 1 FROM unnest(te.types) t WHERE t ~ '(^|[/#:])(KeyPerformanceIndicator)$'));
+              DELETE FROM public.attr_rows h WHERE h.observed_at < now() - interval '{{ . }} hours' AND NOT coalesce(h.provenance @> '{"audit": true}', false) AND NOT EXISTS (SELECT 1 FROM public.iri_ids i JOIN public.temporal_entities te ON te.tenant_id = i.tenant_id AND te.id = i.iri WHERE i.tenant_id = h.tenant_id AND i.id = h.entity_no AND EXISTS (SELECT 1 FROM unnest(te.types) t WHERE t ~ '(^|[/#:])(KeyPerformanceIndicator)$'));
+              COMMIT;
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 16Mi } }
+{{- end }}
+
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+{{- if $mqtt }}
+# The brokers reach the Linkerd inbound proxy (4143) for 8082, and the proxy would hand them 8080
+# too (the namespace admits every meshed identity). On 8080 it admits APISIX's alone, which is
+# what the NetworkPolicy lets reach it, so the X-Forwarded-For trust stays the edge's
+# (tests/test_jc_component.py). No HTTPRoute: the kubelet's probes stay authorized.
+meshAuthorization:
+  port: 8080
+  clients:
+    - serviceAccount: apisix
+      namespace: {{ .Values.apisix.apisix.namespace }}
+{{- end }}
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

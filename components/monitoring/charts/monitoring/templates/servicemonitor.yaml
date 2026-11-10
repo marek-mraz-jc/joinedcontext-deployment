@@ -25,4 +25,16 @@ spec:
       scheme: http
       interval: {{ $.Values.interval }}
       scrapeTimeout: {{ $.Values.scrapeTimeout }}
+      {{- with .metricRelabelings }}
+      metricRelabelings:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .bearerTokenSecret }}
+      # A target behind a token: the Secret beside the monitor, read by the operator, never in values.
+      authorization:
+        type: Bearer
+        credentials:
+          name: {{ .name }}
+          key: {{ .key }}
+      {{- end }}
 {{- end }}

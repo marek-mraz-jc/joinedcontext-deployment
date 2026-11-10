@@ -64,6 +64,25 @@ jc-server-linkerd-control-plane:
             matchLabels:
               cnpg.io/cluster: postgres-cluster
           componentNamespace: postgres
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: wasm-host-shard
+          componentNamespace: wasm-host
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: apps-db
+          componentNamespace: apps-db
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: store
+          componentNamespace: artifact-store
+      ports:
+        - protocol: TCP
+          port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-functions
       ports:
         - protocol: TCP
           port: 4143
@@ -84,3 +103,38 @@ apisix-linkerd-egress-to-jc:
       ports:
         - protocol: TCP
           port: 4143
+jc-functions-allow-linkerd:
+  podSelector:
+    app.kubernetes.io/name: jc-functions
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+              app.kubernetes.io/instance: jc-server
+      ports:
+        - protocol: TCP
+          port: 4143
+        - protocol: TCP
+          port: 4190
+        - protocol: TCP
+          port: 4191
+jc-functions-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: jc-functions
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090

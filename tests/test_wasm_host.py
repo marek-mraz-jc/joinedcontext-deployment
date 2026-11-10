@@ -179,9 +179,12 @@ def test_every_environment_syncs_the_shards_after_the_portal_that_writes_what_th
         listed = [line.strip()[2:] for line in file.read_text().splitlines() if line.startswith("  - ")]
         if "wasm-host" not in listed:
             continue
-        assert "portal" in listed, f"{file.parent.name}: wasm-host without the Portal that feeds it"
-        assert listed.index("portal") < listed.index("wasm-host"), f"{file.parent.name}: wasm-host before the Portal"
-        assert listed.index("apps-db") < listed.index("portal"), f"{file.parent.name}: the Portal before its database"
+        # The Portal is its own component or runs inside jc (jc-prod, jc-dev).
+        feeders = [c for c in ("portal", "jc") if c in listed]
+        assert feeders, f"{file.parent.name}: wasm-host without the Portal that feeds it"
+        for portal in feeders:
+            assert listed.index(portal) < listed.index("wasm-host"), f"{file.parent.name}: wasm-host before the Portal"
+            assert listed.index("apps-db") < listed.index(portal), f"{file.parent.name}: the Portal before its database"
         checked.append(file.parent.name)
     assert "dev" in checked
 

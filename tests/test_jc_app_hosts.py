@@ -118,4 +118,5 @@ def test_jc_mounts_the_portal_on_every_app_host_and_caches_fetched_builds(docs):
     assert entries == [f"portal.{DOMAIN}", f"*.apps.{DOMAIN}"], entries
     deployments = [d for d in of_kind(docs, "Deployment") if d["metadata"]["name"] == "jc"]
     env = {e["name"]: e.get("value") for c in deployments[0]["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
-    assert env["JC_PORTAL_APPS_CACHE_DIR"] == "/var/lib/jc/apps-cache"
+    # On the data volume: /var/lib/jc is the state dir, a 1 MiB memory emptyDir no build fits in.
+    assert env["JC_PORTAL_APPS_CACHE_DIR"] == "/var/lib/jc-data/apps-cache"

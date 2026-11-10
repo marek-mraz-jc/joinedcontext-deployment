@@ -129,6 +129,11 @@ spec:
               :'role_name', :'role_password') \gexec
           EOSQL
 
+          if [ "${ROLE_TYPE}" = "login" ]; then
+          # login: the program's own migrations grant this role its tables (jc's shako, daiya,
+          # dataroom and ekiben request roles); the revoke below would strip them at every upgrade.
+          psql -v ON_ERROR_STOP=1 -c "GRANT CONNECT ON DATABASE \"${PGDATABASE}\" TO \"${ROLE_NAME}\""
+          else
           echo "Configuring permissions for ${ROLE_NAME}..."
 
           # Revoke all privileges first to ensure clean state
@@ -167,6 +172,8 @@ spec:
               ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT SELECT ON TABLES TO "${ROLE_NAME}";
               ALTER DEFAULT PRIVILEGES FOR ROLE "${DB_OWNER}" IN SCHEMA public GRANT SELECT ON SEQUENCES TO "${ROLE_NAME}";
           EOSQL
+          fi
+
           fi
 
           echo "Role ${ROLE_NAME} configured successfully with ${ROLE_TYPE} permissions on database ${PGDATABASE}"
