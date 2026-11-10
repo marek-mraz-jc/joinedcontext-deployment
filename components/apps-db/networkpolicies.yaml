@@ -72,6 +72,11 @@ apps-db:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        # jc, which carries the Portal where an environment runs it (components/jc).
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+          componentNamespace: jc
         # Each shard of the WASM host as its own login role (ADR-N-044 §2.5, T-3361).
         - podSelector:
             matchLabels:

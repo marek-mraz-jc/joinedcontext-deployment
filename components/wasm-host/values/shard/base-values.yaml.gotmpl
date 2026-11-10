@@ -6,8 +6,24 @@
 {{- $digest := required (printf "wasm-host.%s needs its image digest in components/wasm-host/images.yaml" $part) $images.digest }}
 {{- $appsDb := index .Values "apps-db" "cluster" "namespace" }}
 {{- $store := index .Values "artifact-store" "store" "namespace" }}
-{{- $gateway := index .Values "context-gateway" "gateway" "namespace" }}
+{{- /* The gateway and the Portal the shard calls: jc's one Service where jc carries both (its
+       host-mode jc.toml routes that Service's name to them), else the separate components. */}}
+{{- $jc := has "jc" .Values.components }}
 {{- $portal := dig "portal" "portal" dict .Values }}
+{{- $gatewayUrl := "" }}
+{{- $portalUrl := "" }}
+{{- $portalAccount := dict }}
+{{- if $jc }}
+{{- $gatewayUrl = printf "http://jc.%s.svc.cluster.local:8080" .Values.jc.server.namespace }}
+{{- $portalUrl = $gatewayUrl }}
+{{- $portalAccount = dict "serviceAccount" "jc" "namespace" .Values.jc.server.namespace }}
+{{- else }}
+{{- $gatewayUrl = printf "http://context-gateway.%s.svc.cluster.local:8080" (index .Values "context-gateway" "gateway" "namespace") }}
+{{- if dig "enabled" false $portal }}
+{{- $portalUrl = printf "http://portal.%s.svc.cluster.local:8080" (dig "namespace" "" $portal) }}
+{{- $portalAccount = dict "serviceAccount" "portal" "namespace" $portal.namespace }}
+{{- end }}
+{{- end }}
 # Checklist:
 # - [x] Containers run as non-root with `readOnlyRootFilesystem` -> /tmp is the one writable path
 # - [x] Health probes -> /healthz
@@ -40,7 +56,7 @@ serviceAccount:
 env:
   JC_WASM_SHARD: {{ $shard | quote }}
   JC_WASM_PLACEMENTS: /etc/jc-wasm/placement/placements.json
-  JC_GATEWAY_URL: "http://context-gateway.{{ $gateway }}.svc.cluster.local:8080"
+  JC_GATEWAY_URL: {{ $gatewayUrl | quote }}
   JC_WASM_S3_ENDPOINT: "http://artifact-store.{{ $store }}.svc.cluster.local:9000"
   JC_WASM_S3_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
   JC_WASM_S3_KEY_FILE: /etc/jc-wasm/store/access-key
@@ -57,11 +73,11 @@ env:
   # would pass the 1 GiB limit near 800 and be OOM-killed; 600 keeps about 270 MiB for compiles in
   # flight and running instances. Raise it with the memory limit.
   JC_WASM_CACHED_COMPONENTS: "600"
-  {{- if dig "enabled" false $portal }}
+  {{- if $portalUrl }}
   # The Portal the host asks for a request's caller and an App's email and ai, as that person and
   # on the App's own host (T-3622, API/06 §5). Unset, identity answers nobody and both services
   # say so.
-  JC_WASM_PORTAL_URL: "http://portal.{{ dig "namespace" "" $portal }}.svc.cluster.local:8080"
+  JC_WASM_PORTAL_URL: {{ $portalUrl | quote }}
   {{- end }}
   {{- if index .Values "wasm-host" "tokens" "enabled" }}
   # The job token service (AP-159): a job runs as the App's job principal. Unset, every run fails
@@ -142,10 +158,10 @@ serviceMesh:
 
 # The job records answer the Portal's reconciler alone (T-3857): the port the NetworkPolicy opens
 # for the proxy (4143) admits APISIX too; this is what keeps it off 9090.
-{{- if dig "enabled" false $portal }}
+{{- if $portalAccount }}
 meshAuthorization:
   port: 9090
   clients:
-    - serviceAccount: portal
-      namespace: {{ $portal.namespace }}
+    - serviceAccount: {{ $portalAccount.serviceAccount }}
+      namespace: {{ $portalAccount.namespace }}
 {{- end }}

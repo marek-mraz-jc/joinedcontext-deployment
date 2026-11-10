@@ -115,7 +115,8 @@ def test_jc_mounts_the_portal_on_every_app_host_and_caches_fetched_builds(docs):
     assert maps, "no jc.toml in the jc-prod render"
     toml = maps[0]["data"]["jc.toml"]
     entries = re.findall(r'\[\[mounts\.portal\]\]\s*\nhost = "([^"]+)"', toml)
-    assert entries == [f"portal.{DOMAIN}", f"*.apps.{DOMAIN}"], entries
+    # The third is jc's own Service, which the WASM shards call (tests/test_jc_wasm_host.py).
+    assert entries == [f"portal.{DOMAIN}", f"*.apps.{DOMAIN}", "jc.jc-prod.svc.cluster.local"], entries
     deployments = [d for d in of_kind(docs, "Deployment") if d["metadata"]["name"] == "jc"]
     env = {e["name"]: e.get("value") for c in deployments[0]["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     assert env["JC_PORTAL_APPS_CACHE_DIR"] == "/var/lib/jc/apps-cache"

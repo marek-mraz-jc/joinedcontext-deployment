@@ -1,5 +1,12 @@
 {{- $global := .Values.global }}
 {{- $jc := .Values.jc.server }}
+{{- /* The server WASM Apps (ADR-N-044): with wasm-host in the environment the Portal inside jc
+       places Apps on its shards, writes each shard's placement and store key there and proxies an
+       App host's /api/* to the shard. */}}
+{{- $wasm := has "wasm-host" .Values.components }}
+{{- if and $wasm (not (and (has "apps-db" .Values.components) (has "artifact-store" .Values.components))) }}
+{{- fail "jc with wasm-host needs apps-db (the Apps' rows) and artifact-store (their components) in the same environment" }}
+{{- end }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
@@ -18,7 +25,9 @@
 # - [x] Health probes -> readiness /api/v1/health (the Portal, built last), liveness /streams/ping
 # - [x] Graceful shutdown -> jc drains on SIGTERM
 # - [x] Standard labels
-# - [x] ServiceAccount with least privilege -> no API token
+# - [x] ServiceAccount with least privilege -> no API token, but with wasm-host: then the token
+#       reaches only the Role of components/wasm-host portal-access (each shard's placement and
+#       store key, by name)
 # - [x] Named ports -> 8080 public (every mount), 9091 admin (/metrics behind its token, /healthz)
 # - [x] Ingress with TLS -> APISIX routes jc.{domain} (apisix-routes.yaml)
 
@@ -38,6 +47,13 @@ image:
 args: ["--config", "/etc/jc/jc.toml"]
 
 containerPort: 8080
+
+{{- if $wasm }}
+# The Portal's reconciler writes each WASM shard's placement ConfigMap and store-key Secret in the
+# host's namespace (AP-157, AP-158) with this pod's token; that Role grants nothing else.
+serviceAccount:
+  automountServiceAccountToken: true
+{{- end }}
 
 service:
   enabled: true
@@ -165,6 +181,18 @@ configMap:
       host = "portal.{{ $global.domain }}"
       path_prefix = "{{ . }}"
       {{- end }}
+      {{- if $wasm }}
+
+      # The WASM host's shards call jc by its Service name (JC_GATEWAY_URL, JC_WASM_PORTAL_URL):
+      # an App's own Endpoint and the Portal's caller and services. The edge never sends this host.
+      [[mounts.portal]]
+      host = "jc.{{ $jc.namespace }}.svc.cluster.local"
+      path_prefix = ""
+
+      [[mounts.gateway]]
+      host = "jc.{{ $jc.namespace }}.svc.cluster.local"
+      path_prefix = "/api/endpoint"
+      {{- end }}
       {{- else }}
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]
@@ -192,6 +220,19 @@ envSecret:
   BROKER_DB_PASSWORD:
     secret: db-jc-antares
     key: password
+{{- if $wasm }}
+  # The wasm Apps' database login (AP-149): the Portal makes every App's schema and roles.
+  APPS_DB_PASSWORD:
+    secret: db-apps-admin
+    key: password
+  # The artifact store's root credential (PF-32): the reconciler derives each shard's key from it.
+  JC_PORTAL_ARTIFACT_STORE_ACCESS_KEY:
+    secret: artifact-store-root
+    key: ACCESS_KEY_ID
+  JC_PORTAL_ARTIFACT_STORE_SECRET_KEY:
+    secret: artifact-store-root
+    key: ACCESS_SECRET_KEY
+{{- end }}
 env:
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
   ANTARES_STORE: "postgres"
@@ -200,6 +241,17 @@ env:
   # The builds the Portal fetches from shako's package registry (the own-repository Apps, prod's
   # builds imported by jc-migrate), checked against status.build before they are unpacked.
   JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc/apps-cache
+  {{- if $wasm }}
+  # Server WASM Apps (ADR-N-044): their database, the shards the Portal places them on, the
+  # bucket of their components and files, and the namespace where it writes each shard's
+  # placement and store key (AP-149, AP-157, AP-158), as components/portal sets them.
+  JC_PORTAL_ARTIFACT_STORE_ENDPOINT: "http://artifact-store.{{ index .Values "artifact-store" "store" "namespace" }}.svc.cluster.local:9000"
+  JC_PORTAL_ARTIFACT_STORE_BUCKET: {{ index .Values "artifact-store" "store" "bucket" | default "jc-artifacts" | quote }}
+  JC_PORTAL_APPS_DB_URL: "postgresql://jc_apps_admin:$(APPS_DB_PASSWORD)@apps-db-rw.{{ index .Values "apps-db" "cluster" "namespace" }}.svc.cluster.local:5432/apps?sslmode=require"
+  JC_PORTAL_WASM_SHARDS: {{ index .Values "apps-db" "cluster" "shards" | default 2 | quote }}
+  JC_PORTAL_APPS_BUCKET: {{ index .Values "wasm-host" "bucket" | default "apps" | quote }}
+  JC_PORTAL_WASM_HOST_NAMESPACE: {{ index .Values "wasm-host" "shard-0" "namespace" | quote }}
+  {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
 

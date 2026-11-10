@@ -15,6 +15,10 @@ wasm-host-shard-allow-linkerd:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+          componentNamespace: jc
       ports:
         - port: 4143
           protocol: TCP
@@ -79,6 +83,14 @@ wasm-host-shard-linkerd-control-plane:
             matchLabels:
               app.kubernetes.io/name: portal-portal
           componentNamespace: portal
+      ports:
+        - protocol: TCP
+          port: 4143
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-server
+          componentNamespace: jc
       ports:
         - protocol: TCP
           port: 4143
