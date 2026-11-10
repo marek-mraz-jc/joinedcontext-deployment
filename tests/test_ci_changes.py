@@ -303,6 +303,8 @@ def tree(tmp_path):
         src, dst = ROOT / rel, work / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, dst)
+    # These cases play the pin logic, not the old dev environment's retirement (test_dev_recipes).
+    (work / ".ci/example-deployments/environments/dev/RETIRED").unlink(missing_ok=True)
     for name in ("verify-pinned-images.py", "wait-rollouts.sh", "release.py", "smoke-component.sh", "render.sh"):
         # a component named in $STUB_DIR/red-smoke fails its smoke
         (work / "scripts" / name).write_text(f'#!/bin/sh\necho "RAN {name} $*"\n'
