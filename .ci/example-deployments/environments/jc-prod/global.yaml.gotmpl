@@ -167,6 +167,10 @@ jc:
       realm: smartcity
       secret: jc-realm
       secretsSecret: jc-realm-secrets
+      # Streams sign in as their Pipeline's own client by its secret (jc-pipeline-audience): the realm
+      # render of jc d4b2de4d turns the 833 <project>-pl-<pipeline> clients to client-secret and lists
+      # them in pipeline-clients.txt. Unset, the gateway refused 534 pipeline writes in 30 min.
+      pipelineIdentity: pipeline-secret
     # prod's catalog dataset moved to zilina-catalog (bins/jc RENAMES.md, rehearsal.py aliases).
     # prod's harvests of hub-bbsk and nkod-banskabystrica (jc-catalogue-17).
     catalogueHarvest: true
