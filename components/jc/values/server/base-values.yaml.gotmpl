@@ -436,7 +436,7 @@ extraVolumes:
   - name: realm-secrets
     emptyDir:
       medium: Memory
-      sizeLimit: 2Mi
+      sizeLimit: 8Mi  # 900+ secret files at 4 KiB tmpfs pages each
   - name: realm-src
     secret:
       secretName: {{ $realm.secret }}

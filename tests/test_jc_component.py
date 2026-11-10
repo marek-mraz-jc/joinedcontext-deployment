@@ -143,6 +143,11 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     sql = retain["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["command"][-1]
     assert sql.count("interval '24 hours'") == 2 and sql.count("KeyPerformanceIndicator") == 2
     assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
+    # tmpfs keeps each file in a 4 KiB page: prod's realm names 903 client secrets plus the
+    # pipeline clients, which overflowed a 2Mi realm-secrets volume (seed-realm, 2026-11-10).
+    (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    (vol,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "realm-secrets"]
+    assert vol["emptyDir"]["sizeLimit"] == "8Mi"
 
 
 @requires_helmfile
