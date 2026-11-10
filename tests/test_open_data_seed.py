@@ -807,14 +807,16 @@ def test_a_layer_over_one_page_is_read_page_by_page_until_its_count_with_its_fil
 
 
 @requires_docker
-def test_a_layer_past_its_cap_or_short_of_its_pages_fails_the_run_with_the_count():
+def test_a_layer_of_any_size_is_read_whole_and_one_short_of_its_pages_fails_the_run():
+    # The runner holds one page at a time (jc-ekiben-paging), so no row count caps a run: a layer
+    # of ten times the rows it held when mapped is read to its last row, page by page.
     e = next(x for x in SEEDED if x["name"] == "bbsk-dodavatelia-825cd0")
-    cap = generate.esri_cap(e["source"])
+    rows = max(10 * e["source"]["rows"], 12 * generate.PAGE) + 7
+    big = supplier_pages(rows)
+    entities = written(offline("bbsk", "dodavatelia", json.dumps(big[0]).encode(), as_pages(big), count=rows))
+    assert len({x["id"] for x in entities}) == rows
     pages = supplier_pages(2 * generate.PAGE + 500)
     first = json.dumps(pages[0]).encode()
-    over = offline("bbsk", "dodavatelia", first, as_pages(pages), count=cap + 1)
-    assert f"the layer holds {cap + 1} rows, more than the {cap} one run reads".encode() in over.stdout + over.stderr
-    assert over.stdout.strip() == b"", "nothing of a layer over its cap is written"
     # A server answering fewer rows a page than asked would skip the rest of each page.
     short = offline("bbsk", "dodavatelia", first, {**as_pages(pages), 1000: json.dumps(pages[2]).encode()}, count=2500)
     assert b"the page at 1000 answered 500 rows where 1000 were due" in short.stdout + short.stderr
@@ -824,15 +826,20 @@ def test_a_layer_past_its_cap_or_short_of_its_pages_fails_the_run_with_the_count
     assert b"the layer did not say how many rows it holds" in uncounted.stdout + uncounted.stderr
 
 
-def test_every_esri_layer_counts_its_rows_with_its_filter_and_caps_a_run():
+def test_every_esri_layer_counts_its_rows_with_its_filter_and_reads_them_a_page_at_a_time():
     layers = [x for x in SEEDED if x["source"]["kind"] == "esri-featureserver"]
     assert layers
     for e in layers:
         slug, project = SLUGS[e["name"]], e["org"]
         bento = (SEED / project / f"{project}-od-pipeline-{slug}-bento.yaml").read_text()
         assert "range(1, 5)" not in bento and "returnCountOnly=true" in bento, e["name"]
-        assert f"$rows > {generate.esri_cap(e['source'])}" in bento, e["name"]
-        assert generate.esri_cap(e["source"]) >= 2 * e["source"]["rows"]
+        # No row cap (jc-ekiben-paging): each listed page is its own batch, fetched, mapped and
+        # written before the next, so the runner holds a page whatever the layer's size.
+        assert "one run reads" not in bento, e["name"]
+        steps = yaml.safe_load(bento)["pipeline"]["processors"]
+        at = next(i for i, p in enumerate(steps) if "switch" in p and "offset" in json.dumps(p))
+        assert steps[at - 2] == {"unarchive": {"format": "json_array"}}, e["name"]
+        assert steps[at - 1] == {"split": {"size": 1}}, e["name"]
 
 
 

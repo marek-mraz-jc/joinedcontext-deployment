@@ -8,6 +8,9 @@ pipeline:
         root = [{ "page": this }.merge({"key": "dtm-6", "name": "parkovisko, odstavná plocha - db"})].concat($rest)
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.url.or(null) != null
           processors:
