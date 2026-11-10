@@ -231,6 +231,10 @@ env:
   # ekiben's JC_MQTT_NAMESPACE is the brokers' namespace (it also keeps an outside broker's
   # client id apart per installation).
   EKIBEN_VAR_JC_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # ekiben refuses a private address unless the name is listed: each broker's 1883 alone, never
+  # its HTTP API (6060), which only the Portal reads. ponytail: one entry per MqttBroker the
+  # environment names (jc.server.mqttBrokers); a broker added in the Portal needs a line there.
+  JC_EKIBEN_PRIVATE_HOSTS: {{ $hosts := list }}{{ range $jc.mqttBrokers | default list }}{{ $hosts = append $hosts (printf "%s.%s.svc.cluster.local:1883" . $brokers) }}{{ end }}{{ join "," $hosts | quote }}
 {{- end }}
 
 # The generated secrets of jc's first-start setup (bins/jc/src/setup.rs) live in Secret jc-setup,
