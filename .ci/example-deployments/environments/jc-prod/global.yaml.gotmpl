@@ -17,6 +17,10 @@ components:
   - apps-db
   - jc
   - wasm-host
+  # Prod's three MQTT edge brokers (ADR-N-048), stamped by jc's Portal from the chart's template
+  # into a namespace of their own (jc-prod-mqtt, not jc-prod: the gateway's Linkerd rule admits
+  # every identity of that namespace to jc's internal port).
+  - mqtt-brokers
 
 global:
   # Prod's names. Until the owner moves DNS they reach this node only by Host header or a hosts
@@ -258,6 +262,12 @@ jc:
       "bbsk-zmluvy-cafee6": "ngsi-ld: no entity on dev"
       "bbsk-zoznam-poskytovatelov-socialnych-sluzieb-v-bbk-9ab090": "ngsi-ld: no entity on dev"
       "bbsk-zoznam-ucinnych-vseobecne-zavaznych-nariadeni-vzn-80db50": "ngsi-ld: no entity on dev"
+    # Prod's three MqttBroker releases (frozen bundle prod-final-20261109T1958Z, mqtt-<project>-<name>):
+    # ekiben's DataSources read their 1883.
+    mqttBrokers:
+      - mqtt-banskabystrica-ovzdusie
+      - mqtt-helsinki-sensors
+      - mqtt-helsinki-vehicles
     # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
     # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
     # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.
@@ -277,9 +287,17 @@ jc:
     enabled: true
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
-# to, so the edge's Keycloak dependency does not hold here.
+# to, so the edge's Keycloak dependency does not hold here. jc's gateway answers the brokers'
+# CONNECT check, its ekiben reads them and its Portal stamps them.
 componentDependencies:
   apisix: [secrets]
+  mqtt-brokers: [jc, networkpolicies]
+
+mqtt-brokers:
+  brokers:
+    # The three TLS Secrets mqtt-<project>-<name>-tls are copied here from jc-prod before DNS
+    # moves (evidence/jc-prod/RUNBOOK-apply.md), so each broker's certificate serves at once.
+    namespace: jc-prod-mqtt
 
 # This edge to dev's status page and tile server (hostUpstreams above), both halves, the Linkerd
 # proxy port beside the app port.
