@@ -159,6 +159,22 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
 
 
 @requires_helmfile
+@pytest.mark.parametrize("env", ["jc-prod", "jc-dev"])
+def test_jc_catalogue_carries_prods_publisher_badges_and_logo(rendered, env):
+    # Owner 2026-11-10 15:28Z "logos are missing": old prod drew each publisher's badge and words
+    # from the CKAN chart's `organizations` and the footer mark and favicon from global.branding.
+    dataroom = jc_toml(rendered(env))["dataroom"]
+    pubs = dataroom["publishers"]
+    assert len(pubs) == 8 and pubs["praha"]["initials"] == "PHA" and pubs["praha"]["colour"] == "#b4232a"
+    assert pubs["hel-fi"]["description"]["sk"].startswith("Otvorené údaje regiónu Helsinki")
+    assert sum(bool(p.get("description")) for p in pubs.values()) == 6, "none for banskabystrica and bbsk, as on prod"
+    logo = (ENVIRONMENTS / env / "branding/logo.svg").read_text()
+    branding = dataroom["branding"]
+    assert (branding["logo"], branding["favicon"]) == ("logo.svg", "logo.svg")
+    assert branding["logo_svg"].strip() == logo.strip()
+
+
+@requires_helmfile
 def test_jc_prod_carries_the_cutover_parts(rendered):
     # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. keeps its own certificate, off
     # the copied edge certificate's SAN list; App functions run on jc-prod's realm and gateway; the
@@ -179,7 +195,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # pipeline clients, which overflowed a 2Mi realm-secrets volume (seed-realm, 2026-11-10).
     (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
     (vol,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "realm-secrets"]
-    assert vol["emptyDir"]["sizeLimit"] == "8Mi"
+    # 904 realm secrets plus a copy per pipeline client (841 lines) at a 4 KiB page each: ~7 MiB.
+    assert vol["emptyDir"]["sizeLimit"] == "16Mi"
     # The gateway's checkouts (70 MB in prod's rehearsal) live in the state tmpfs; 1Mi gave ENOSPC.
     (state,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "state"]
     assert state["emptyDir"] == {"medium": "Memory", "sizeLimit": "192Mi"}
@@ -204,6 +221,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["JC_BASEMAP_URL"], env["JC_BASEMAP_ATTRIBUTION"]) == (
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "© OpenStreetMap contributors")
     assert env["JC_BASEMAP_CACHE_MAX_BYTES"] == "67108864"
+    # Without it the gateway refused the pipelines' writes: "token is not bound to this resource".
+    assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "pipeline-secret"
     # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
     assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
     assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")

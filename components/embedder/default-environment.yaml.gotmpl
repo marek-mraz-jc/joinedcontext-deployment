@@ -18,3 +18,9 @@ embedder:
     #     clients: [jc-assistant]
     #     maxTextsPerMinute: 1200
     deployments: []
+    # The namespaces whose jc pods may reach 8089 (NetworkPolicy and Linkerd meshAuthorization):
+    # empty is jc's own namespace in this environment. Set it in the environment's
+    # global.yaml.gotmpl: the NetworkPolicy render reads no other values file. One embedder shared by several
+    # deployments of this cluster lists each, e.g. [jc-prod, jc-dev]; each still signs in with
+    # its own kaisatsu token (deployments above).
+    callerNamespaces: []
