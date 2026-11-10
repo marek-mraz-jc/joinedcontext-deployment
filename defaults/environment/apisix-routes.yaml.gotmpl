@@ -51,6 +51,59 @@ routes:
       connect: 6
       send: 120
       read: 120
+{{- if eq $host "api" }}
+  # Browser apps read the endpoint surface across origins (the catalogue's viz iframe, Apps on
+  # *.apps): old prod's context-endpoint `cors`, the same origins, methods and headers. Never `*`:
+  # only `https://<sub>.{domain}`, the dots escaped by ${DOMAIN_RE} (T-1679), no credentials.
+  jc-host-api-endpoint:
+    name: jc-host-api-endpoint
+    description: jc's endpoint surface on api.{domain}, readable by the platform's own origins
+    upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
+    subDomain: api
+    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    tlsSecret: {{ . }}
+    {{- end }}
+    uri: '/api/endpoint/*'
+    priority: 2
+    pluginConfig: jc
+    plugins:
+      cors:
+        allow_origins_by_regex:
+          - '^https://[^@/]+\.${DOMAIN_RE}$'
+        allow_methods: 'GET,HEAD,OPTIONS'
+        allow_headers: 'Authorization,Content-Type'
+        allow_credential: false
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+  # An MCP call is a JSON POST, which the GET-only rule refuses at the preflight: old prod's
+  # named-MCP `cors` (the Portal's public /connect page lists a server's tools, T-4949).
+  jc-host-api-mcp:
+    name: jc-host-api-mcp
+    description: jc's MCP servers on api.{domain}, callable from the platform's own origins
+    upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
+    subDomain: api
+    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    tlsSecret: {{ . }}
+    {{- end }}
+    uri: '/api/mcp*'
+    priority: 2
+    pluginConfig: jc
+    plugins:
+      cors:
+        allow_origins_by_regex:
+          - '^https://[^@/]+\.${DOMAIN_RE}$'
+        allow_methods: 'POST,OPTIONS'
+        allow_headers: 'Content-Type,Accept,Mcp-Protocol-Version,Mcp-Session-Id'
+        expose_headers: 'Mcp-Session-Id,Retry-After'
+        allow_credential: false
+        max_age: 600
+    timeout:
+      connect: 6
+      send: 120
+      read: 300
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if not $jcWindow }}
