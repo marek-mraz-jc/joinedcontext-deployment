@@ -6,3 +6,7 @@ component: jc
 # turns it on by listing `jc` in its components (README.md); dev and smartcity do not.
 parts:
   - name: server
+  # prom-label-proxy, off by default: on a cluster whose Prometheus belongs to another instance
+  # (jc-prod beside dev), the only path from this jc's daiya to it, every query pinned to this
+  # namespace's series ([daiya] prometheus_reach names it).
+  - name: metricsProxy

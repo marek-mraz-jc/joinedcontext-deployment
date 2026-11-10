@@ -2,3 +2,5 @@
 jc:
   server:
     chart: ../../charts/workload
+  metricsProxy:
+    chart: ../../charts/workload
