@@ -469,6 +469,19 @@ _dev-guard:
 		*) echo "refusing: current kube context points at '${server:-<none>}', not the dev cluster ($ip). Set KUBECONFIG=.secrets/kubeconfig-dev.yaml" >&2; exit 1 ;;
 	esac
 
+# The old dev environment is off while environments/dev/RETIRED exists (owner 2026-11-10): an
+# apply of it would bring back what was scaled to 0. jc-dev and jc-prod applies do not read it.
+[group('dev cluster')]
+_dev-retired:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	marker=.ci/example-deployments/environments/dev/RETIRED
+	if [ -f "$marker" ]; then
+		echo "refusing: the old dev environment is retired ($marker):" >&2
+		cat "$marker" >&2
+		exit 1
+	fi
+
 # Assemble deployment/ from the committed defaults and the dev environment
 [group('dev cluster')]
 _dev-assemble:
@@ -489,6 +502,7 @@ dev-apply full='false' spend_guard='on':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
+	just _dev-retired
 	just _dev-assemble
 	started=$(date -u +%s)
 	selectors=()
@@ -665,6 +679,7 @@ dev-apply-pins base='' dry='false' spend_guard='on':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	just _dev-guard
+	just _dev-retired
 	just _dev-assemble
 	started=$(date -u +%s)
 	committed=$(git log -1 --format=%ct HEAD)

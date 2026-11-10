@@ -1,0 +1,6 @@
+The old dev environment (namespace dev on the dev cluster) is off since 2026-11-10 (owner order,
+T-6676): every Deployment and StatefulSet scaled to 0, its CronJobs suspended, both CNPG clusters
+hibernated, PVCs and the namespace kept. basemap-tiles, status-page and the CNPG operator keep
+running because jc-prod uses them. `just dev-apply` and `just dev-apply-pins` refuse while this
+file exists. Restore: the replica counts and commands in evidence/olddev-off/ (the shared
+workspace), then delete this file.
