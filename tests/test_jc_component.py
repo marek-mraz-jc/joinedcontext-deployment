@@ -121,6 +121,27 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
     assert jc_upstreams(default), "the upstream reader finds no jc route in the default render"
 
 
+@requires_helmfile
+def test_jc_prod_carries_the_cutover_parts(rendered):
+    # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. keeps its own certificate, off
+    # the copied edge certificate's SAN list; App functions run on jc-prod's realm and gateway; the
+    # 24 h temporal rule runs hourly and keeps KPI history and audit rows.
+    docs = rendered("jc-prod")
+    (cert,) = [d for d in docs if d.get("kind") == "Certificate" and d["metadata"]["name"] == "apisix-edge"]
+    assert "bbsk.smartcity.joinedcontext.com" not in cert["spec"]["dnsNames"], "bbsk. on the edge SANs: cert-manager would re-order the copied certificate"
+    tls = [t for d in docs if d.get("kind") == "Ingress" for t in d["spec"].get("tls", [])]
+    assert {"hosts": ["bbsk.smartcity.joinedcontext.com"], "secretName": "demo-bbsk-tls"} in tls
+    (functions,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc-functions"]
+    env = {e["name"]: e.get("value") for e in functions["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["JC_OIDC_ISSUER"] == "https://idm.smartcity.joinedcontext.com/realms/smartcity"
+    assert env["JC_GATEWAY_URL"] == "https://api.smartcity.joinedcontext.com"
+    assert {e["name"]: e.get("value") for e in jc_container(docs)["env"]}["JC_FUNCTIONS_URL"].startswith("http://jc-functions.jc-prod.")
+    (retain,) = [d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "jc-retain"]
+    sql = retain["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["command"][-1]
+    assert sql.count("interval '24 hours'") == 2 and sql.count("KeyPerformanceIndicator") == 2
+    assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
+
+
 def render_addons_with(tmp_path, proxies_yaml: str) -> subprocess.CompletedProcess:
     if not (PROJECT_ROOT / "deployment/environments/addons").is_dir():
         pytest.skip("run `just _dev-assemble` first")

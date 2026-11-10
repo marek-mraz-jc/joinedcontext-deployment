@@ -1,0 +1,31 @@
+{{- range .Values.cronJobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "workload.labels" $ | nindent 4 }}
+spec:
+  schedule: {{ .schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: {{ .activeDeadlineSeconds | default 1800 }}
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            {{- toYaml .podLabels | nindent 12 }}
+          annotations:
+            # A Job pod with a mesh proxy never completes.
+            linkerd.io/inject: disabled
+        spec:
+          restartPolicy: OnFailure
+          automountServiceAccountToken: false
+          {{- toYaml .podSpec | nindent 10 }}
+{{- end }}

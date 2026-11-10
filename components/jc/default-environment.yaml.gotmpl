@@ -30,6 +30,12 @@ jc:
     # Secret (key `key`) with the age identity the projects' SOPS files name; unset: no secretRef
     # of a project resolves.
     ageKeySecret: ""
+    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica; files/harvest-sources.toml and
+    # files/od-datasets.json from the monorepo's bins/jc/docs at the pinned jc). Egress: public 443.
+    catalogueHarvest: false
+    # Hours of temporal history kept (KPI whole, audit rows kept), deleted by CronJob jc-retain;
+    # 0 keeps everything.
+    retainHours: 0
     # jc-prod's cutover (CLUSTER-IMPORT.md): the realm of the export, applied at start from the
     # Secrets the deployer makes from the bundle's realm render (never in Git):
     #   realmImport: {realm: smartcity, secret: jc-realm, secretsSecret: jc-realm-secrets}
@@ -42,3 +48,8 @@ jc:
     importWindow: false
     # shako's repositories and ekiben's file root.
     dataSize: 5Gi
+  # The App functions runtime beside jc (values/functions): its realm is realmImport's, its
+  # gateway and identity jc's public hosts (host mode), reached over the edge (edgeAddress).
+  functions:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}

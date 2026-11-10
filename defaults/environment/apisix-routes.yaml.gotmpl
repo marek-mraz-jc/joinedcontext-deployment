@@ -37,6 +37,9 @@ routes:
     {{- if $host }}
     subDomain: {{ $host }}
     {{- end }}
+    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    tlsSecret: {{ . }}
+    {{- end }}
     uri: '/*'
     priority: 1
     pluginConfig: jc

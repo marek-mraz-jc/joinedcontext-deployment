@@ -235,6 +235,17 @@ configMap:
       [identity]
       realm = {{ . | quote }}
       {{- end }}
+      {{- if (dig "catalogueHarvest" false $jc) }}
+
+      # prod's two catalogue harvests, copied from the monorepo (files/harvest-sources.toml); each
+      # reads od-datasets.json beside jc.toml.
+{{ readFile "../../files/harvest-sources.toml" | indent 6 }}
+      {{- end }}
+    {{- if (dig "catalogueHarvest" false $jc) }}
+    # The datasets prod converted (files/od-datasets.json, the monorepo's bins/jc/docs copy).
+    od-datasets.json: |
+{{ readFile "../../files/od-datasets.json" | indent 6 }}
+    {{- end }}
     # kaisatsu's request role on its database; the password comes from its own file.
     kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
 
@@ -251,6 +262,10 @@ env:
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  {{- if dig "jc" "functions" "enabled" false .Values }}
+  # The App functions runtime beside jc (values/functions); the Portal calls it with its token.
+  JC_FUNCTIONS_URL: "http://jc-functions.{{ .Values.jc.functions.namespace }}.svc.cluster.local:8080"
+  {{- end }}
   {{- if (dig "ageKeySecret" "" $jc) }}
   # The age identity that decrypts each project's SOPS secrets, so a secretRef resolves in jc.
   JCBIN_PORTAL_AGE_KEY_FILE: "/run/jc/age/key"
@@ -438,6 +453,51 @@ persistence:
   size: {{ $jc.dataSize }}
   mountPath: /var/lib/jc-data
   storageClass: {{ $global.storage.storageClass.rwo | default "" | quote }}
+
+{{- with (dig "retainHours" 0 $jc) }}
+# The cutover's temporal rule (owner 2026-11-09, CLUSTER-IMPORT.md 6.6): every hour, delete history
+# older than {{ . }} h, audit rows kept, KeyPerformanceIndicator whole. The statement of the
+# monorepo's deploy/rehearsal/rehearsal.py retain_sql, with now() for the cutoff.
+cronJobs:
+  - name: jc-retain
+    schedule: "17 * * * *"
+    podLabels:
+      app.kubernetes.io/name: jc-retain
+    podSpec:
+      securityContext:
+        {{- $.Values.securityDefaults.podSecurityContext | toYaml | nindent 8 }}
+      containers:
+        - name: retain
+          image: {{ printf "%s@%s" $.Values.images.postgres.roleJob.repository $.Values.images.postgres.roleJob.digest | quote }}
+          securityContext:
+            {{- $.Values.securityDefaults.securityContext | toYaml | nindent 12 }}
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 500m, memory: 128Mi }
+          env:
+            - { name: HOME, value: /tmp }
+            - { name: PGHOST, value: {{ $pg | quote }} }
+            - { name: PGDATABASE, value: jc_antares }
+            - { name: PGUSER, value: jc_antares }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: db-jc-antares, key: password } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+          command:
+            - psql
+            - -AX
+            - -v
+            - ON_ERROR_STOP=1
+            - -c
+            - |
+              BEGIN;
+              SELECT set_config('antares.service', 'on', true);
+              DELETE FROM public.attr_instances h WHERE h.observed_at < now() - interval '{{ . }} hours' AND NOT coalesce(h.provenance @> '{"audit": true}', false) AND NOT EXISTS (SELECT 1 FROM public.temporal_entities te WHERE te.tenant_id = h.tenant_id AND te.id = h.entity_id AND EXISTS (SELECT 1 FROM unnest(te.types) t WHERE t ~ '(^|[/#:])(KeyPerformanceIndicator)$'));
+              DELETE FROM public.attr_rows h WHERE h.observed_at < now() - interval '{{ . }} hours' AND NOT coalesce(h.provenance @> '{"audit": true}', false) AND NOT EXISTS (SELECT 1 FROM public.iri_ids i JOIN public.temporal_entities te ON te.tenant_id = i.tenant_id AND te.id = i.iri WHERE i.tenant_id = h.tenant_id AND i.id = h.entity_no AND EXISTS (SELECT 1 FROM unnest(te.types) t WHERE t ~ '(^|[/#:])(KeyPerformanceIndicator)$'));
+              COMMIT;
+      volumes:
+        - { name: tmp, emptyDir: { sizeLimit: 16Mi } }
+{{- end }}
 
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}

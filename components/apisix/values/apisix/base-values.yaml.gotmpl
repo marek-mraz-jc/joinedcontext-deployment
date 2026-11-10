@@ -615,8 +615,11 @@ ingress:
   {{- /* One rule per hostname: several routes share a subdomain (the Portal's three), and
          the same list feeds the certificate's SAN list in the configuration chart. */}}
   {{- $subDomains := list }}
+  {{- $ownTls := dict }}
   {{- range $component, $config := .Values.routes }}
-    {{- if hasKey $config "subDomain" }}
+    {{- if and (hasKey $config "subDomain") (hasKey $config "tlsSecret") }}
+    {{- $_ := set $ownTls $config.subDomain $config.tlsSecret }}
+    {{- else if hasKey $config "subDomain" }}
     {{- $subDomains = append $subDomains $config.subDomain }}
     {{- end }}
   {{- end }}
@@ -630,6 +633,12 @@ ingress:
         - '/'
   {{- range $subDomains }}
     - host: {{ . }}.{{ $global.domain }}
+      paths:
+        - '/'
+  {{- end }}
+  {{- range $sub, $_ := $ownTls }}
+    # A host on a certificate of its own (route `tlsSecret`), off the shared SAN list.
+    - host: {{ $sub }}.{{ $global.domain }}
       paths:
         - '/'
   {{- end }}
@@ -651,6 +660,11 @@ ingress:
       {{- range $subDomains }}
         - {{ . }}.{{ $global.domain }}
       {{- end }}
+    {{- range $sub, $secret := $ownTls }}
+    - secretName: {{ $secret }}
+      hosts:
+        - {{ $sub }}.{{ $global.domain }}
+    {{- end }}
     {{- if $appsWildcard }}
     - secretName: apisix-apps-wildcard-tls
       hosts:

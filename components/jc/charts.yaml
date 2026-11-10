@@ -2,3 +2,5 @@
 jc:
   server:
     chart: ../../charts/workload
+  functions:
+    chart: ../../charts/workload

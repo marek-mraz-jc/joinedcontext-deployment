@@ -38,7 +38,8 @@ composer:
 # routes share one subdomain (the Portal's three), so the list is de-duplicated.
 {{- $subDomains := list }}
 {{- range $component, $config := .Values.routes }}
-{{- if hasKey $config "subDomain" }}
+{{- /* A route with `tlsSecret` brings its own certificate (the apisix Ingress names it). */}}
+{{- if and (hasKey $config "subDomain") (not (hasKey $config "tlsSecret")) }}
 {{- $subDomains = append $subDomains $config.subDomain }}
 {{- end }}
 {{- end }}
