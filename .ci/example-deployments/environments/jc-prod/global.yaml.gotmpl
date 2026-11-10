@@ -109,12 +109,12 @@ jc:
     edgeAddress: 116.203.134.249
     trustedProxies:
       - "10.42.0.0/16"
-    # Prod's three MqttBroker releases (frozen bundle prod-final-20261109T1958Z, mqtt-<project>-<name>):
-    # ekiben's DataSources read their 1883.
+    # Prod's three MqttBroker releases (frozen bundle prod-final-20261109T1958Z, mqtt-<project>-<name>),
+    # each with its project: ekiben's DataSources of that project alone read its 1883.
     mqttBrokers:
-      - mqtt-banskabystrica-ovzdusie
-      - mqtt-helsinki-sensors
-      - mqtt-helsinki-vehicles
+      - {project: banskabystrica, release: mqtt-banskabystrica-ovzdusie}
+      - {project: helsinki, release: mqtt-helsinki-sensors}
+      - {project: helsinki, release: mqtt-helsinki-vehicles}
     # Both instances beside dev's kept components on 13.5 GiB (8.1 GiB used after the removal,
     # owner 20:0xZ): per instance jc 384Mi/1280Mi, Postgres 640Mi/2Gi, APISIX 176Mi/512Mi, so
     # requests 1.2 GiB and limits 3.75 GiB each. Measure with kubectl top after the import.

@@ -56,6 +56,29 @@ def test_jc_renders_in_some_environment():
     assert jc_environments(), "no example environment lists jc: the render tests below check nothing"
 
 
+def env_values(docs, name: str) -> list[str]:
+    """Every value the rendered objects give the variable `name` (container env or ConfigMap data)."""
+    out = []
+    for d in docs:
+        out += [v for k, v in (d.get("data") or {}).items() if k == name]
+        spec = ((d.get("spec") or {}).get("template") or {}).get("spec") or {}
+        for c in spec.get("containers") or []:
+            out += [e.get("value") for e in c.get("env") or [] if e.get("name") == name]
+    return out
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
+def test_each_private_broker_host_names_its_own_project(rendered, env):
+    """jc's ekiben admits a broker's 1883 only to streams of the project an entry names
+    (`project=name:port`); an entry without one opens nothing (jc-mqtt-runner-scope)."""
+    for value in env_values(rendered(env), "JC_EKIBEN_PRIVATE_HOSTS"):
+        for entry in filter(None, value.split(",")):
+            project, _, host = entry.partition("=")
+            assert project and host.endswith(":1883"), f"{env}: {entry}"
+            assert host.startswith(f"mqtt-{project}-"), f"{env}: {entry} is another project's broker"
+
+
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
 def test_jc_trusts_forwarded_for_only_from_the_edge(rendered, env):
