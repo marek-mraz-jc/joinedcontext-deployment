@@ -193,6 +193,12 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
     assert env["ANTARES_EXPORT_FILES"] == "2", "the export cap rose to 6 in jc 446484ae; the node has no room yet"
+    # The runner's files: without them every GTFS-RT stream was refused (lstat .../streams/proto).
+    assert env["JCBIN_EKIBEN_RESOURCES_FILE"] == "/etc/jc/ekiben-resources.yaml"
+    (cm,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "jc"]
+    assert "helsinki__gtfs" in cm["data"]["ekiben-resources.yaml"] and "message FeedMessage" in cm["data"]["gtfs-realtime.proto"]
+    assert {"name": "config", "mountPath": "/var/lib/jc-data/streams/proto/gtfs-realtime.proto", "subPath": "gtfs-realtime.proto",
+            "readOnly": True} in jc_container(docs)["volumeMounts"]
     # Unset, jc took the Portal's host as the org domain and pipelines minted second copies.
     assert {k: env[k] for k in ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN")} == dict.fromkeys(
         ("JC_PORTAL_ORG_DOMAIN", "JC_GATEWAY_ORG_DOMAIN", "JC_ASSISTANT_ORG_DOMAIN"), "hel.fi")

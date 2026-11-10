@@ -360,6 +360,13 @@ configMap:
 {{ readFile "../../files/od-datasets.json" | indent 6 }}
     {{- end }}
     {{- if $proxy.enabled }}
+    # The runner's shared resources (`-r`: project caches, source rate limits) and the GTFS-RT schema a
+    # stream's `import_paths: [/proto]` reads, as the pipeline-runner component and up.sh give them.
+    # Without them hsl-service-alerts and hsl-departures were refused: lstat .../streams/proto (jc-prod).
+    ekiben-resources.yaml: |
+{{ readFile "../../../pipeline-runner/streams/resources.yaml" | indent 6 }}
+    gtfs-realtime.proto: |
+{{ readFile "../../../pipeline-runner/streams/gtfs-realtime.proto" | indent 6 }}
     daiya-prometheus.yaml: |
       apiVersion: 1
       datasources:
@@ -429,6 +436,7 @@ env:
   JCBIN_EKIBEN_TOKEN_FILE: "/run/jc/setup/ekiben-token"
   JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
   JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
+  JCBIN_EKIBEN_RESOURCES_FILE: "/etc/jc/ekiben-resources.yaml"
   # Concurrent OGC file exports: jc 446484ae raised the default from 2 to 6 (each streams page by
   # page, up to 512 MiB / 120 s). The one node runs at 85-90 % memory: keep the old cap until measured.
   ANTARES_EXPORT_FILES: "2"
@@ -690,6 +698,8 @@ extraVolumes:
 
 extraVolumeMounts:
   - { name: state, mountPath: /var/lib/jc }
+  # A file, not a symlink (subPath): ekiben confines /proto to its file root and lstats the path.
+  - { name: config, mountPath: /var/lib/jc-data/streams/proto/gtfs-realtime.proto, subPath: gtfs-realtime.proto, readOnly: true }
   {{- if $proxy.enabled }}
   - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
   {{- end }}
