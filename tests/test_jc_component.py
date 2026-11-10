@@ -173,10 +173,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert env["JC_OIDC_ISSUER"] == "https://idm.smartcity.joinedcontext.com/realms/smartcity"
     assert env["JC_GATEWAY_URL"] == "https://api.smartcity.joinedcontext.com"
     assert {e["name"]: e.get("value") for e in jc_container(docs)["env"]}["JC_FUNCTIONS_URL"].startswith("http://jc-functions.jc-prod.")
-    (retain,) = [d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "jc-retain"]
-    sql = retain["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["command"][-1]
-    assert sql.count("interval '24 hours'") == 2 and sql.count("KeyPerformanceIndicator") == 2
-    assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
+    # jc-prod keeps prod's history: no hourly 24 h sweep (it would delete prod history for good).
+    assert not [d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "jc-retain"]
     # tmpfs keeps each file in a 4 KiB page: prod's realm names 903 client secrets plus the
     # pipeline clients, which overflowed a 2Mi realm-secrets volume (seed-realm, 2026-11-10).
     (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
@@ -219,12 +217,29 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 
+def with_retain(tree):
+    """jc-prod with the dev move's 24 h retain sweep turned on (retainHours: 24)."""
+    path = tree / "deployment/environments/jc-prod/global.yaml.gotmpl"
+    text = path.read_text()
+    assert "\n    catalogueHarvest: true\n" in text
+    path.write_text(text.replace("\n    catalogueHarvest: true\n", "\n    catalogueHarvest: true\n    retainHours: 24\n", 1))
+
+
 @requires_helmfile
-def test_jc_prod_opts_no_pod_out_of_the_mesh_without_a_reason(rendered):
+def test_the_retain_sweep_keeps_audit_rows_and_kpis(rendered_variant):
+    docs = rendered_variant("jc-prod", with_retain)
+    (retain,) = [d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "jc-retain"]
+    sql = retain["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["command"][-1]
+    assert sql.count("interval '24 hours'") == 2 and sql.count("KeyPerformanceIndicator") == 2
+    assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
+
+
+@requires_helmfile
+def test_jc_prod_opts_no_pod_out_of_the_mesh_without_a_reason(rendered_variant):
     # Kyverno's justify-linkerd-inject-opt-out refused jc-retain at admission on jc-prod
     # (2026-11-10 07:3xZ): a pod template with linkerd.io/inject disabled needs a reason.
     templates = []
-    for d in rendered("jc-prod"):
+    for d in rendered_variant("jc-prod", with_retain):
         spec = d.get("spec") or {}
         if d.get("kind") == "CronJob":
             spec = spec["jobTemplate"]["spec"]
