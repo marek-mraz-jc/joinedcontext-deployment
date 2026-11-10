@@ -209,6 +209,9 @@
             },
             "failureThreshold": {
               "type": "number"
+            },
+            "host": {
+              "type": "string"
             }
           }
         },
@@ -236,6 +239,9 @@
             },
             "initialDelaySeconds": {
               "type": "number"
+            },
+            "host": {
+              "type": "string"
             }
           }
         },

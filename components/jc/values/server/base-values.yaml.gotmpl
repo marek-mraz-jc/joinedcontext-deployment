@@ -94,6 +94,10 @@ probes:
     # The Portal answers once jc has built it after serving (503 until then), so a ready pod
     # serves every mount.
     path: /api/v1/health
+    {{- if eq $mode "host" }}
+    # Host mode routes by name: the kubelet's request names the Portal's host.
+    host: "portal.{{ $global.domain }}"
+    {{- end }}
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
@@ -105,6 +109,9 @@ probes:
   liveness:
     # ekiben's /ping: open, answered by the process itself, no module dependency.
     path: /streams/ping
+    {{- if eq $mode "host" }}
+    host: "localhost:8080"
+    {{- end }}
     periodSeconds: 15
     timeoutSeconds: 3
     failureThreshold: 3
@@ -198,6 +205,15 @@ configMap:
       [[mounts.shako]]
       host = "localhost:8080"
       path_prefix = "/git"
+
+      # ekiben and the broker stay inside the pod too: on loopback only, never on a public name.
+      [[mounts.ekiben]]
+      host = "localhost:8080"
+      path_prefix = "/streams"
+
+      [[mounts.antares]]
+      host = "localhost:8080"
+      path_prefix = "/broker"
 
       [mounts.assistant]
       host = "assistant.{{ $global.domain }}"
@@ -338,6 +354,9 @@ envSecret:
   JC_SHAKO_WEBHOOK_SECRET:
     secret: jc-setup
     key: forge-webhook-secret
+  JC_PORTAL_PIPELINE_RUNNER_TOKEN:
+    secret: jc-setup
+    key: ekiben-token
 {{- end }}
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
@@ -378,6 +397,10 @@ env:
   JC_SHAKO_URL: "http://localhost:8080/git"
   JC_SHAKO_PUBLIC_URL: "https://{{ $global.domain }}/git"
   JC_SHAKO_APPS_OWNER: "jc-apps"
+  JC_PORTAL_PIPELINE_RUNNER_URL: "http://localhost:8080/streams"
+  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
+  JC_PORTAL_BROKER_URL: "http://localhost:8080/broker"
+  JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: "/run/jc/setup/antares-admin-token"
   {{- end }}
   {{- if $realm }}
   # The imported deployment's configuration repository, as the rehearsal kit points jc at it.
