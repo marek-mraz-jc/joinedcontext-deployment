@@ -348,6 +348,15 @@ configMap:
       migrate_password_file = "/run/jc/db/{{ . }}-migrate/password"
       {{- end }}
 
+      {{- with (dig "embedder" "url" "" $jc) }}
+
+      # The shared embedder (components/embedder) instead of the model in this process: jc then
+      # loads neither e5-small nor ONNX Runtime, and its assistant signs in there with the
+      # jc-assistant client's token of this realm (scope and audience `embedder`).
+      [assistant]
+      embedder_url = {{ . | quote }}
+      {{- end }}
+
       [assistant.database]
       url = "postgres://jc_assistant@{{ $pg }}:5432/jc_assistant"
       password_file = "/run/jc/db/assistant/password"

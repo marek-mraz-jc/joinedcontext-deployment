@@ -16,6 +16,9 @@ components:
   - artifact-store
   - apps-db
   - jc
+  # The embedding model as one service for jc-prod and jc-dev (components/embedder): jc loads
+  # neither e5-small nor ONNX Runtime, ~0.45 GiB less in jc (jc-2gib, evidence/jc-2gib).
+  - embedder
   # hsl-transport as a pod behind jc's Portal (jc >= a4ae0d82 serves its apps listener).
   - app-pods
   - wasm-host
@@ -128,6 +131,12 @@ artifact-store:
           cpu: 500m
           memory: 512Mi
 
+# The shared embedder's callers (components/embedder): the jc pods of both instances. In this
+# file, not embedder.yaml.gotmpl: the NetworkPolicy render reads only global values.
+embedder:
+  server:
+    callerNamespaces: [jc-prod, jc-dev]
+
 jc:
   metricsProxy:
     enabled: true
@@ -158,6 +167,10 @@ jc:
     # OpenRouter key's own limit (80 USD, owner) stops every call when reached.
     assistant:
       modelKeySecret: jc-model-key
+    # The shared embedder in this namespace (components/embedder, embedder.yaml.gotmpl).
+    embedder:
+      url: http://embedder.jc-prod.svc.cluster.local:8089
+      namespace: jc-prod
     # The release's SOPS files name dev's age recipient (CLUSTER-IMPORT.md 2.4): Secret jc-age, copied
     # by the deployer from the secrets mount, never in Git.
     ageKeySecret: jc-age
