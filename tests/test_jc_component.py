@@ -435,7 +435,8 @@ def test_beside_the_mqtt_brokers_the_proxy_holds_the_public_listener_for_the_edg
     docs = rendered("jc-prod")
     jc_ns, _ = pod_of(docs, "jc")
     check_only_the_edge_reaches_jc(docs, "jc-prod")
-    (server,) = [d for d in docs if d.get("kind") == "Server" and d["metadata"].get("namespace") == jc_ns and d["spec"]["port"] == 8080]
+    (server,) = [d for d in docs if d.get("kind") == "Server" and d["metadata"].get("namespace") == jc_ns and d["spec"]["port"] == 8080
+                 and d["spec"]["podSelector"].get("matchLabels", {}).get("app.kubernetes.io/name") == "jc-server"]
     name = server["metadata"]["name"]
 
     without = [d for d in docs if d is not server]

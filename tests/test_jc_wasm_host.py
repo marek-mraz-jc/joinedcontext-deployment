@@ -123,12 +123,16 @@ def test_jcs_token_reaches_each_shards_placement_and_store_key_by_name_alone(env
     binding = one(docs, "RoleBinding", "portal-wasm-shards")
     assert binding["subjects"] == [{"kind": "ServiceAccount", "name": "jc", "namespace": name}]
     assert binding["roleRef"]["name"] == "portal-wasm-shards"
-    # Nothing else in the render binds jc's ServiceAccount.
+    # Nothing else in the render binds jc's ServiceAccount in jc's namespace or cluster-wide; beside
+    # mqtt-brokers the brokers chart's portal-mqtt-brokers binds it in the brokers' own namespace
+    # (tests/test_mqtt_brokers.py reads that Role).
     bound = [
-        b["metadata"]["name"] for b in docs if b.get("kind") in ("RoleBinding", "ClusterRoleBinding")
+        (b["kind"], b["metadata"].get("namespace"), b["metadata"]["name"])
+        for b in docs if b.get("kind") in ("RoleBinding", "ClusterRoleBinding")
         if any(s.get("name") == "jc" and s.get("kind") == "ServiceAccount" for s in b.get("subjects") or [])
     ]
-    assert bound == ["portal-wasm-shards"]
+    bound = [b for b in bound if not (b[0] == "RoleBinding" and b[2] == "portal-mqtt-brokers" and b[1] != name)]
+    assert [b[2] for b in bound] == ["portal-wasm-shards"]
 
 
 @pytest.mark.parametrize("shard", SHARDS)
