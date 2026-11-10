@@ -85,15 +85,6 @@ wasm-host-shard:
       ports:
         - protocol: TCP
           port: 8080
-    # jc, which carries both the gateway and the Portal where an environment runs it.
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: jc-server
-          componentNamespace: jc
-      ports:
-        - protocol: TCP
-          port: 8080
     - to:
         - namespaceSelector:
             matchLabels:
