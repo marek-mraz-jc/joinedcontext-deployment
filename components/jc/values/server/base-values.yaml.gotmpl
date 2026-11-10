@@ -281,7 +281,9 @@ configMap:
 
       # prod's two catalogue harvests, copied from the monorepo (files/harvest-sources.toml); each
       # reads od-datasets.json beside jc.toml.
-{{ readFile "../../files/harvest-sources.toml" | indent 6 }}
+      # A source reads its datasets' Endpoint doors on this instance's own gateway (api.{domain} in
+      # host mode, refused unless listed) and links the datasets under this instance's catalogue.
+{{ readFile "../../files/harvest-sources.toml" | replace "https://opendata.dev.joinedcontext.com/" (printf "https://opendata.%s/" $global.domain) | replace "allowed_hosts = [" (printf "allowed_hosts = [%q, " (printf "api.%s" $global.domain)) | indent 6 }}
       {{- end }}
       {{- if $proxy.enabled }}
 

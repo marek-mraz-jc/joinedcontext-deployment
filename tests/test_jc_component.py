@@ -166,6 +166,10 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
     # The edge blocks /git: a shako mount on a host made the Portal's forge calls leave the pod.
     assert "host" not in jc_toml(docs)["mounts"]["shako"]
+    # Each harvest reads its Endpoints on this instance's gateway and links under its catalogue.
+    for h in jc_toml(docs)["dataroom"]["harvest"]:
+        assert "api.smartcity.joinedcontext.com" in h["allowed_hosts"]
+        assert h.get("datasets_base", "https://opendata.smartcity.joinedcontext.com/") == "https://opendata.smartcity.joinedcontext.com/"
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 
