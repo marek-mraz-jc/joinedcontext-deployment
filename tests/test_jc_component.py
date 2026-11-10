@@ -114,6 +114,8 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
     assert (toml["mode"], toml["base_host"], toml["scheme"]) == ("slug", "localhost:8080", "http")
     container = jc_container(docs)
     assert {e["name"]: e.get("value") for e in container.get("env", [])}.get("ANTARES_POLICY") == "allow-all"
+    # The image's own JCBIN_LISTEN (0.0.0.0:8080) beats jc.toml unless the pod names it.
+    assert {e["name"]: e.get("value") for e in container.get("env", [])}.get("JCBIN_LISTEN") == "127.0.0.1:8080"
     jc_services = [d["metadata"]["name"] for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] in ("jc", "jc-pods")]
     assert not jc_services, f"the window renders Service(s) {jc_services}: their endpoints would reach jc"
     ingresses = [d["metadata"]["name"] for d in docs if d.get("kind") == "Ingress" and "jc" in str(d["spec"].get("rules", [])) and "jc-prod" == d["metadata"].get("namespace") and d["metadata"]["name"].startswith("jc")]
@@ -151,6 +153,32 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     sql = retain["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["command"][-1]
     assert sql.count("interval '24 hours'") == 2 and sql.count("KeyPerformanceIndicator") == 2
     assert sql.count('\'{"audit": true}\'') == 2, "retain deletes audit rows"
+    # tmpfs keeps each file in a 4 KiB page: prod's realm names 903 client secrets plus the
+    # pipeline clients, which overflowed a 2Mi realm-secrets volume (seed-realm, 2026-11-10).
+    (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    (vol,) = [v for v in jc["spec"]["template"]["spec"]["volumes"] if v["name"] == "realm-secrets"]
+    assert vol["emptyDir"]["sizeLimit"] == "8Mi"
+    env = {e["name"]: e.get("value") for e in jc["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert (env["JCBIN_LISTEN"], env["JCBIN_STATE_DIR"]) == ("0.0.0.0:8080", "/var/lib/jc/state")
+    # Antares' in-process bus: one jc process per database, so no rollout overlaps two.
+    assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
+    assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
+
+
+@requires_helmfile
+def test_jc_prod_opts_no_pod_out_of_the_mesh_without_a_reason(rendered):
+    # Kyverno's justify-linkerd-inject-opt-out refused jc-retain at admission on jc-prod
+    # (2026-11-10 07:3xZ): a pod template with linkerd.io/inject disabled needs a reason.
+    templates = []
+    for d in rendered("jc-prod"):
+        spec = d.get("spec") or {}
+        if d.get("kind") == "CronJob":
+            spec = spec["jobTemplate"]["spec"]
+        if d.get("kind") in ("Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"):
+            templates.append((d["metadata"]["name"], spec["template"]["metadata"].get("annotations") or {}))
+    opted = [(n, a) for n, a in templates if a.get("linkerd.io/inject") == "disabled"]
+    assert any(n == "jc-retain" for n, _ in opted), "the reader finds no opted-out pod (jc-retain)"
+    assert not [n for n, a in opted if not str(a.get("mesh.joinedcontext.com/opt-out-reason", "")).strip()]
 
 
 def render_addons_with(tmp_path, proxies_yaml: str) -> subprocess.CompletedProcess:

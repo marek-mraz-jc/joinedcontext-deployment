@@ -109,6 +109,9 @@ probes:
 # One process: Antares keeps process-wide statics and jc's modules their in-memory stores
 # (bins/jc/STATUS.md), so a second replica is a second, divergent installation.
 replicaCount: 1
+# Stays at one (ANTARES_BUS=local, env below): Recreate stops the old process before the new one
+# starts, so two matchers never share jc_antares (policy-exceptions.yaml).
+updateStrategy: Recreate
 
 # Before DNS points the public names at this cluster (jc-prod on dev ahead of the cutover), jc's own
 # reads of its public URLs (the Portal fetching kaisatsu's discovery at idm.{domain}) would reach the
@@ -306,6 +309,15 @@ envSecret:
     key: ACCESS_SECRET_KEY
 {{- end }}
 env:
+  # The image sets JCBIN_LISTEN=0.0.0.0:8080 and JCBIN_STATE_DIR=/var/lib/jc (bins/jc/Dockerfile),
+  # and jc's environment beats jc.toml: name both as jc.toml does, or the window listens on every
+  # address and jc tries to chmod the volume root it does not own.
+  JCBIN_LISTEN: {{ ternary "127.0.0.1:8080" "0.0.0.0:8080" $window | quote }}
+  JCBIN_STATE_DIR: "/var/lib/jc/state"
+  # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
+  # rolls by Recreate (updateStrategy below) and declares itself the only one.
+  ANTARES_BUS: "local"
+  ANTARES_ALLOW_SHARED_LOCAL: "1"
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
@@ -479,7 +491,7 @@ extraVolumes:
   - name: realm-secrets
     emptyDir:
       medium: Memory
-      sizeLimit: 2Mi
+      sizeLimit: 8Mi  # 900+ secret files at 4 KiB tmpfs pages each
   - name: realm-src
     secret:
       secretName: {{ $realm.secret }}

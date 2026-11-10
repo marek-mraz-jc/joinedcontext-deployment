@@ -24,6 +24,7 @@ spec:
           annotations:
             # A Job pod with a mesh proxy never completes.
             linkerd.io/inject: disabled
+            mesh.joinedcontext.com/opt-out-reason: "a Job pod with a Linkerd proxy never completes: the proxy outlives the job container"
         spec:
           restartPolicy: OnFailure
           automountServiceAccountToken: false
