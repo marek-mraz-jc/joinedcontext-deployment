@@ -164,6 +164,8 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
+    # The edge blocks /git: a shako mount on a host made the Portal's forge calls leave the pod.
+    assert "host" not in jc_toml(docs)["mounts"]["shako"]
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 

@@ -187,8 +187,9 @@ configMap:
       host = "{{ $global.domain }}"
       path_prefix = "/grafana"
 
+      # No host: shako stays inside the pod like the broker (the edge blocks /git), so the Portal
+      # calls it on jc's loopback; with a host the Portal called it through the edge and got 404.
       [mounts.shako]
-      host = "{{ $global.domain }}"
       path_prefix = "/git"
 
       [mounts.assistant]
