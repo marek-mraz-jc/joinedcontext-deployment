@@ -159,6 +159,22 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
 
 
 @requires_helmfile
+@pytest.mark.parametrize("env", ["jc-prod", "jc-dev"])
+def test_jc_catalogue_carries_prods_publisher_badges_and_logo(rendered, env):
+    # Owner 2026-11-10 15:28Z "logos are missing": old prod drew each publisher's badge and words
+    # from the CKAN chart's `organizations` and the footer mark and favicon from global.branding.
+    dataroom = jc_toml(rendered(env))["dataroom"]
+    pubs = dataroom["publishers"]
+    assert len(pubs) == 8 and pubs["praha"]["initials"] == "PHA" and pubs["praha"]["colour"] == "#b4232a"
+    assert pubs["hel-fi"]["description"]["sk"].startswith("Otvorené údaje regiónu Helsinki")
+    assert sum(bool(p.get("description")) for p in pubs.values()) == 6, "none for banskabystrica and bbsk, as on prod"
+    logo = (ENVIRONMENTS / env / "branding/logo.svg").read_text()
+    branding = dataroom["branding"]
+    assert (branding["logo"], branding["favicon"]) == ("logo.svg", "logo.svg")
+    assert branding["logo_svg"].strip() == logo.strip()
+
+
+@requires_helmfile
 def test_jc_prod_carries_the_cutover_parts(rendered):
     # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. keeps its own certificate, off
     # the copied edge certificate's SAN list; App functions run on jc-prod's realm and gateway; the
