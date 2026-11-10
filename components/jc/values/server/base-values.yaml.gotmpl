@@ -4,6 +4,11 @@
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
 {{- $proxies := $jc.trustedProxies | default list }}
+{{- /* jc-prod's cutover (default-environment.yaml.gotmpl realmImport, importWindow). */}}
+{{- $realm := dig "realmImport" dict $jc }}
+{{- $window := dig "importWindow" false $jc }}
+{{- $modules := list "shako" "daiya" "dataroom" "ekiben" }}
+{{- $assistant := dig "assistant" dict $jc }}
 {{- if not $proxies }}
 {{- fail "jc.server.trustedProxies: name the pod network the edge (APISIX) runs in, e.g. [\"10.42.0.0/16\"] on k3s, in the environment's jc values" }}
 {{- end }}
@@ -40,15 +45,18 @@ args: ["--config", "/etc/jc/jc.toml"]
 containerPort: 8080
 
 service:
-  enabled: true
+  # The import window renders no Service, so neither the edge nor a pod finds jc's endpoints.
+  enabled: {{ not $window }}
   type: ClusterIP
   port: 8080
   targetPort: 8080
   name: http
 # Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
 # of the same pod still waits on the realm (apisix-routes.yaml).
+{{- if not $window }}
 headlessService:
   name: jc-pods
+{{- end }}
 
 # The admin listener: /metrics behind the admin token (every module's series), open /healthz.
 metrics:
@@ -57,6 +65,8 @@ metrics:
   name: admin
 
 probes:
+  # The window's loopback listener answers no kubelet probe.
+  enabled: {{ not $window }}
   readiness:
     # The Portal answers once jc has built it after serving (503 until then), so a ready pod
     # serves every mount.
@@ -98,7 +108,12 @@ configMap:
   data:
     jc.toml: |
       role = "all"
+      {{- if $window }}
+      # Import window: only `kubectl port-forward` (the pod's loopback) reaches jc.
+      listen = "127.0.0.1:8080"
+      {{- else }}
       listen = "0.0.0.0:8080"
+      {{- end }}
       admin_listen = "0.0.0.0:9091"
       admin_token_file = "/run/jc/admin/token"
       {{- if eq (dig "mode" "slug" $jc) "host" }}
@@ -170,12 +185,56 @@ configMap:
       database_url_file = "/etc/jc/kaisatsu-database-url"
       db_password_file = "/run/jc/db/kaisatsu-app/password"
       db_max_connections = {{ $jc.kaisatsuPool }}
+      {{- if $realm }}
+      # The export's realm (seed-realm below), its $(file:...) secrets only under import_secrets_dir.
+      import_dir = "/var/lib/jc-realms"
+      import_secrets_dir = "/run/jc/realm-secrets"
+      {{- end }}
 
       [ekiben]
       file_root = "/var/lib/jc-data/streams"
 
       [shako]
       repo_root = "/var/lib/jc-data/git"
+
+      # A [dataroom] section must name its organization and catalogue: jc's defaults.
+      [dataroom]
+      org_id = "00000000-0000-7000-8000-000000000001"
+      catalogue_id = "00000000-0000-7000-8000-000000000010"
+      {{- with (dig "dataroomAliases" dict $jc) }}
+
+      [dataroom.aliases]
+      {{- range $from, $to := . }}
+      {{ $from | quote }} = {{ $to | quote }}
+      {{- end }}
+      {{- end }}
+      {{- with (dig "catalogueHidden" dict $jc) }}
+
+      # prod's publish-gate hidden list (bins/jc/docs/catalogue-hidden.toml).
+      [dataroom.hidden]
+      {{- range $slug, $why := . }}
+      {{ $slug | quote }} = {{ $why | quote }}
+      {{- end }}
+      {{- end }}
+      {{- range $modules }}
+
+      [{{ . }}.database]
+      url = "postgres://{{ . }}_app@{{ $pg }}:5432/jc_{{ . }}"
+      password_file = "/run/jc/db/{{ . }}-app/password"
+      max_connections = {{ dig "modulePool" 3 $jc }}
+      migrate_url = "postgres://{{ . }}_migrate@{{ $pg }}:5432/jc_{{ . }}"
+      migrate_password_file = "/run/jc/db/{{ . }}-migrate/password"
+      {{- end }}
+
+      [assistant.database]
+      url = "postgres://jc_assistant@{{ $pg }}:5432/jc_assistant"
+      password_file = "/run/jc/db/assistant/password"
+      max_connections = {{ dig "assistantPool" 3 $jc }}
+      {{- with (dig "realm" "" $realm) }}
+
+      [identity]
+      realm = {{ . | quote }}
+      {{- end }}
     # kaisatsu's request role on its database; the password comes from its own file.
     kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
 
@@ -192,6 +251,18 @@ env:
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  {{- if (dig "ageKeySecret" "" $jc) }}
+  # The age identity that decrypts each project's SOPS secrets, so a secretRef resolves in jc.
+  JCBIN_PORTAL_AGE_KEY_FILE: "/run/jc/age/key"
+  {{- end }}
+  {{- if $assistant }}
+  # The model key's file (a file only: jc refuses the key in the environment).
+  JCBIN_MODEL_KEY_FILE: "/run/jc/model/key"
+  {{- end }}
+  {{- if $window }}
+  # Import window only: the import's writes carry no subject. Never outside it (tests/test_jc_component.py).
+  ANTARES_POLICY: "allow-all"
+  {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
 
@@ -233,6 +304,40 @@ extraInitContainers:
       limits: { cpu: 500m, memory: 128Mi }
     volumeMounts:
       - { name: db-kaisatsu-migrate, mountPath: /run/jc/db/kaisatsu-migrate, readOnly: true }
+  {{- if $realm }}
+  # The export's realm: realm.json.gz unpacked to the import dir, each realm secret a 0600 file
+  # under import_secrets_dir (a Secret volume holds links, which ekiben refuses), the
+  # <project>-pipelines copies, and jc's own client secrets into the state dir (CLUSTER-IMPORT.md 4).
+  - name: seed-realm
+    image: {{ printf "%s@%s" .Values.images.jc.seed.repository .Values.images.jc.seed.digest | quote }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        for f in /run/jc/realm-secrets-src/*; do install -m 0600 "$f" "/run/jc/realm-secrets/$(basename "$f")"; done
+        while read -r client name; do
+          [ -n "$client" ] || continue
+          install -m 0600 "/run/jc/realm-secrets/$name" "/run/jc/realm-secrets/$client"
+        done < /run/jc/realm-src/pipeline-clients.txt
+        while read -r file name; do
+          [ -n "$file" ] || continue
+          install -m 0600 "/run/jc/realm-secrets/$name" "/var/lib/jc/state/$file"
+        done < /run/jc/realm-src/state-secrets.txt
+        gunzip -c /run/jc/realm-src/realm.json.gz > "/var/lib/jc-realms/{{ $realm.realm }}.json"
+        chmod 0600 "/var/lib/jc-realms/{{ $realm.realm }}.json"
+    securityContext:
+      {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { cpu: 200m, memory: 64Mi }
+    volumeMounts:
+      - { name: state, mountPath: /var/lib/jc }
+      - { name: realms, mountPath: /var/lib/jc-realms }
+      - { name: realm-secrets, mountPath: /run/jc/realm-secrets }
+      - { name: realm-src, mountPath: /run/jc/realm-src, readOnly: true }
+      - { name: realm-secrets-src, mountPath: /run/jc/realm-secrets-src, readOnly: true }
+  {{- end }}
 
 extraVolumes:
   - name: state
@@ -257,11 +362,75 @@ extraVolumes:
       secretName: db-jc-kaisatsu
       defaultMode: 0440
       items: [{ key: password, path: password }]
+  - name: db-assistant
+    secret:
+      secretName: db-jc-assistant
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- with (dig "ageKeySecret" "" $jc) }}
+  - name: age-key
+    secret:
+      secretName: {{ . }}
+      defaultMode: 0400
+      items: [{ key: key, path: key }]
+  {{- end }}
+  {{- with (dig "modelKeySecret" "" $assistant) }}
+  - name: model-key
+    secret:
+      secretName: {{ . }}
+      defaultMode: 0440
+      items: [{ key: key, path: key }]
+  {{- end }}
+  {{- range $modules }}
+  - name: db-{{ . }}-app
+    secret:
+      secretName: db-jc-{{ . }}-app
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  - name: db-{{ . }}-migrate
+    secret:
+      secretName: db-jc-{{ . }}
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- end }}
+  {{- if $realm }}
+  - name: realms
+    emptyDir:
+      medium: Memory
+      sizeLimit: 16Mi
+  - name: realm-secrets
+    emptyDir:
+      medium: Memory
+      sizeLimit: 2Mi
+  - name: realm-src
+    secret:
+      secretName: {{ $realm.secret }}
+      defaultMode: 0440
+  - name: realm-secrets-src
+    secret:
+      secretName: {{ $realm.secretsSecret }}
+      defaultMode: 0440
+  {{- end }}
 
 extraVolumeMounts:
   - { name: state, mountPath: /var/lib/jc }
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
+  - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
+  {{- if (dig "ageKeySecret" "" $jc) }}
+  - { name: age-key, mountPath: /run/jc/age, readOnly: true }
+  {{- end }}
+  {{- if (dig "modelKeySecret" "" $assistant) }}
+  - { name: model-key, mountPath: /run/jc/model, readOnly: true }
+  {{- end }}
+  {{- range $modules }}
+  - { name: db-{{ . }}-app, mountPath: /run/jc/db/{{ . }}-app, readOnly: true }
+  - { name: db-{{ . }}-migrate, mountPath: /run/jc/db/{{ . }}-migrate, readOnly: true }
+  {{- end }}
+  {{- if $realm }}
+  - { name: realms, mountPath: /var/lib/jc-realms, readOnly: true }
+  - { name: realm-secrets, mountPath: /run/jc/realm-secrets, readOnly: true }
+  {{- end }}
 
 # shako's repositories and ekiben's file root (jc.toml above).
 persistence:

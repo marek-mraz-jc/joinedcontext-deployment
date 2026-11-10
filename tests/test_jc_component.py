@@ -69,6 +69,58 @@ def test_jc_trusts_forwarded_for_only_from_the_edge(rendered, env):
     assert client_of(proxies, "10.42.1.7", "198.51.100.1, 10.42.0.1") == "198.51.100.1"
 
 
+def jc_container(docs) -> dict:
+    (dep,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    (container,) = [c for c in dep["spec"]["template"]["spec"]["containers"] if c["name"] in ("jc", "jc-server")]
+    return container
+
+
+def jc_upstreams(docs) -> list[str]:
+    """Every APISIX upstream node naming one of jc's Services, in the rendered standalone config."""
+    nodes = []
+    for d in docs:
+        if d.get("kind") in ("Secret", "ConfigMap") and d["metadata"]["name"].startswith("apisix-standalone"):
+            text = (d.get("stringData") or d.get("data") or {}).get("apisix.yaml", "")
+            nodes += [line.strip() for line in text.splitlines() if "jc.jc-" in line or "jc-pods." in line or ".svc.cluster.local:8080" in line and line.strip().startswith('"jc')]
+    return nodes
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
+def test_jc_default_values_open_no_import_window(rendered, env):
+    # The import window (CLUSTER-IMPORT.md 6) lets an anonymous write in: it must never be the default.
+    docs = rendered(env)
+    assert jc_toml(docs)["listen"] == "0.0.0.0:8080", f"{env}: jc listens on loopback only outside the window"
+    container = jc_container(docs)
+    env_vars = {e["name"]: e.get("value") for e in container.get("env", [])}
+    assert "ANTARES_POLICY" not in env_vars, f"{env}: ANTARES_POLICY={env_vars.get('ANTARES_POLICY')} overrides jc's joinedcontext policy"
+    assert "readinessProbe" in container and "livenessProbe" in container, f"{env}: jc renders without probes"
+    services = {d["metadata"]["name"] for d in docs if d.get("kind") == "Service"}
+    assert {"jc", "jc-pods"} <= services, f"{env}: jc's Services are missing: {services}"
+
+
+@requires_helmfile
+def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
+    def window_on(tree):
+        values = tree / "deployment/environments/jc-prod/global.yaml.gotmpl"
+        text = values.read_text()
+        assert "    mode: host\n" in text, "jc-prod names no host mode"
+        values.write_text(text.replace("    mode: host\n", "    mode: host\n    importWindow: true\n", 1))
+
+    docs = rendered_variant("jc-prod", window_on)
+    assert jc_toml(docs)["listen"] == "127.0.0.1:8080", "the window listens beyond the pod's loopback"
+    container = jc_container(docs)
+    assert {e["name"]: e.get("value") for e in container.get("env", [])}.get("ANTARES_POLICY") == "allow-all"
+    jc_services = [d["metadata"]["name"] for d in docs if d.get("kind") == "Service" and d["metadata"]["name"] in ("jc", "jc-pods")]
+    assert not jc_services, f"the window renders Service(s) {jc_services}: their endpoints would reach jc"
+    ingresses = [d["metadata"]["name"] for d in docs if d.get("kind") == "Ingress" and "jc" in str(d["spec"].get("rules", [])) and "jc-prod" == d["metadata"].get("namespace") and d["metadata"]["name"].startswith("jc")]
+    assert not ingresses, f"the window renders jc Ingress(es) {ingresses}"
+    assert not jc_upstreams(docs), f"the window routes the edge to jc: {jc_upstreams(docs)}"
+    # Red check of the reader: the default render routes the edge to jc.
+    default = rendered_variant("jc-prod", lambda tree: None)
+    assert jc_upstreams(default), "the upstream reader finds no jc route in the default render"
+
+
 def render_addons_with(tmp_path, proxies_yaml: str) -> subprocess.CompletedProcess:
     if not (PROJECT_ROOT / "deployment/environments/addons").is_dir():
         pytest.skip("run `just _dev-assemble` first")

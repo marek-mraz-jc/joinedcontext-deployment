@@ -1,7 +1,7 @@
 ---
 # jc (one pod, every module): the edge reaches its public listener on 8080, nothing reaches the
 # admin listener (9091) or the Portal's internal listener (9090) from outside the pod. It reaches
-# its three databases on postgres-cluster, the cluster's ingress (the Portal reads the OIDC
+# its databases on postgres-cluster, the cluster's ingress (the Portal reads the OIDC
 # discovery of kaisatsu at its public issuer URL, jc.{domain}/id) and public addresses on 443
 # (catalogue harvests, pipeline sources, the model provider), plus DNS. The modules call each
 # other on jc's own listener inside the pod, which no policy sees.

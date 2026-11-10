@@ -1,5 +1,7 @@
 routes:
-{{ include "jc.configFiles" (dict "components" .Values.components "file" "apisix-routes.yaml" "global" .) | nindent 2 }}
+{{- /* jc's import window (jc.server.importWindow) routes nothing to jc: its listener is the pod's loopback. */}}
+{{- $jcWindow := dig "jc" "server" "importWindow" false .Values }}
+{{ include "jc.configFiles" (dict "components" (ternary (without .Values.components "jc") .Values.components $jcWindow) "file" "apisix-routes.yaml" "global" .) | nindent 2 }}
 {{- /* Every catalogue beside `catalogue` (T-4636): the default instance's two routes, on its own
        host and to its own Service; the /ckan redirect stays the default instance's. */}}
 {{- if has "ckan" .Values.components }}
@@ -26,11 +28,12 @@ routes:
 {{- if and (has "jc" .Values.components) (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}
 {{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
 {{- range $host := .Values.jc.server.hosts | default list }}
-{{- if not (has $host (list "portal" "idm")) }}
+{{- $upstream := index ($.Values.jc.server.hostUpstreams | default dict) $host }}
+{{- if and (not (has $host (list "portal" "idm"))) (or $upstream (not $jcWindow)) }}
   jc-host-{{ $host | default "apex" }}:
     name: jc-host-{{ $host | default "apex" }}
     description: jc on {{ if $host }}{{ $host }}.{{ end }}{domain}
-    upstream: {{ index ($.Values.jc.server.hostUpstreams | default dict) $host | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
+    upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     {{- if $host }}
     subDomain: {{ $host }}
     {{- end }}

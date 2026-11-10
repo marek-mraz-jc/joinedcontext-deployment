@@ -73,10 +73,10 @@ def sql(name: str, query: str, db: str = "postgres") -> str:
     return done.stdout.strip()
 
 
-def run_job(name: str) -> subprocess.CompletedProcess:
+def run_job(name: str, role: str = "app_read", role_type: str = "readonly") -> subprocess.CompletedProcess:
     env = {"HOME": "/tmp", "PGHOST": "127.0.0.1", "PGPORT": "5432", "PGDATABASE": "app",
-           "PGUSER": "postgres", "PGPASSWORD": "su", "ROLE_NAME": "app_read",
-           "ROLE_PASSWORD": PASSWORD, "ROLE_TYPE": "readonly", "DB_OWNER": "app"}
+           "PGUSER": "postgres", "PGPASSWORD": "su", "ROLE_NAME": role,
+           "ROLE_PASSWORD": PASSWORD, "ROLE_TYPE": role_type, "DB_OWNER": "app"}
     flags = [f for key, value in env.items() for f in ("-e", f"{key}={value}")]
     return subprocess.run(["docker", "exec", *flags, name, "/bin/sh", "-c", role_script()],
                           capture_output=True, text=True)
@@ -96,6 +96,20 @@ def test_the_password_reaches_no_statement_statistics(postgres):
     seen = sql(postgres, "SELECT count(*) FROM pg_stat_statements"
                          " WHERE strpos(query, 'pass\"word') > 0 OR query ~* 'app_read.*password'", db="app")
     assert seen == "0", "a statement carrying the password is in pg_stat_statements"
+
+
+def test_a_login_role_keeps_the_grants_its_program_migrated(postgres):
+    # jc's daiya grants its tables in schema public to daiya_app in a one-time migration: a rerun
+    # of the job at the next upgrade must not revoke them (type login).
+    assert run_job(postgres, "app_login", "login").returncode == 0
+    sql(postgres, "CREATE TABLE IF NOT EXISTS migrated (id int)", db="app")
+    sql(postgres, "GRANT SELECT, INSERT ON migrated TO app_login", db="app")
+    done = run_job(postgres, "app_login", "login")
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert sql(postgres, "SELECT has_table_privilege('app_login', 'migrated', 'INSERT')", db="app") == "t"
+    # Red check: the readonly type strips the same grant.
+    assert run_job(postgres, "app_login", "readonly").returncode == 0
+    assert sql(postgres, "SELECT has_table_privilege('app_login', 'migrated', 'INSERT')", db="app") == "f"
 
 
 def test_a_role_made_earlier_as_superuser_loses_its_rights(postgres):
