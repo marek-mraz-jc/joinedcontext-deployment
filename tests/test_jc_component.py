@@ -164,8 +164,9 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
     assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
-    # The edge blocks /git: a shako mount on a host made the Portal's forge calls leave the pod.
-    assert "host" not in jc_toml(docs)["mounts"]["shako"]
+    # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
+    assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
+    assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
     # Each harvest reads its Endpoints on this instance's gateway and links under its catalogue.
     for h in jc_toml(docs)["dataroom"]["harvest"]:
         assert "api.smartcity.joinedcontext.com" in h["allowed_hosts"]

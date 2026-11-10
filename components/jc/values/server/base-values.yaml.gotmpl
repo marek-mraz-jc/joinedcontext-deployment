@@ -187,9 +187,16 @@ configMap:
       host = "{{ $global.domain }}"
       path_prefix = "/grafana"
 
-      # No host: shako stays inside the pod like the broker (the edge blocks /git), so the Portal
-      # calls it on jc's loopback; with a host the Portal called it through the edge and got 404.
-      [mounts.shako]
+      [[mounts.shako]]
+      host = "{{ $global.domain }}"
+      path_prefix = "/git"
+
+      # The Portal's own forge address (JC_SHAKO_URL below): in host mode jc points the Portal at
+      # shako's public base, which the edge refuses (/git stays inside the pod) and which needs
+      # jc Ready before the Portal is built. A request naming this host through the edge meets the
+      # same /git block on the host-less apex route.
+      [[mounts.shako]]
+      host = "localhost:8080"
       path_prefix = "/git"
 
       [mounts.assistant]
@@ -321,6 +328,17 @@ envSecret:
   CKAN_API_TOKEN:
     secret: jc-setup
     key: catalogue-token
+{{- if eq $mode "host" }}
+  JC_SHAKO_TOKEN:
+    secret: jc-setup
+    key: shako-token
+  JC_SHAKO_APPS_TOKEN:
+    secret: jc-setup
+    key: shako-token
+  JC_SHAKO_WEBHOOK_SECRET:
+    secret: jc-setup
+    key: forge-webhook-secret
+{{- end }}
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
@@ -354,6 +372,21 @@ env:
   JCBIN_EKIBEN_TOKEN_FILE: "/run/jc/setup/ekiben-token"
   JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
   JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
+  {{- if eq $mode "host" }}
+  # The Portal's forge on jc's loopback ([[mounts.shako]] localhost:8080 above). Naming the URL
+  # turns off jc's fill of the whole group, so the group is named here (siblings.rs JC_SHAKO_URL).
+  JC_SHAKO_URL: "http://localhost:8080/git"
+  JC_SHAKO_PUBLIC_URL: "https://{{ $global.domain }}/git"
+  JC_SHAKO_APPS_OWNER: "jc-apps"
+  {{- end }}
+  {{- if $realm }}
+  # The imported deployment's configuration repository, as the rehearsal kit points jc at it.
+  JC_SHAKO_OWNER: "joinedcontext"
+  JC_SHAKO_REPO: "configuration"
+  {{- else if eq $mode "host" }}
+  JC_SHAKO_OWNER: "jc"
+  JC_SHAKO_REPO: "config"
+  {{- end }}
   # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
   # rolls by Recreate (updateStrategy below) and declares itself the only one.
   ANTARES_BUS: "local"
