@@ -2,11 +2,12 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 7b963836, ci run 42702031687 (scan green, cosign tlog 3771284691).
+  # main 9c42bdd2, ci run 42747608909 (cosign tlog 3776639292). Never pin an image older than
+  # 520e299e: without its reconciler guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '7b9638367c5f360f006a8f89433266ccca1a95d1'
-    digest: 'sha256:e7f8942699ae654872d3458dcffddb58182b739c717d197fb38087d10eab6c95'
+    tag: '9c42bdd2be3ac618c3a61b5dda42b232245a939a'
+    digest: 'sha256:236cc022cd364dfa61529b2ff25c2cc1e5a0339d2f7bc4ab787652ff535dca75'
   # The init container that copies Secret jc-setup into the state dir: busybox's sh and install,
   # the same pin as components/keycloak/images.yaml dbchecker.
   seed:
