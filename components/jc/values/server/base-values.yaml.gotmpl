@@ -3,6 +3,7 @@
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
+{{- $mqtt := has "mqtt-brokers" .Values.components }}
 {{- $proxies := $jc.trustedProxies | default list }}
 {{- if not $proxies }}
 {{- fail "jc.server.trustedProxies: name the pod network the edge (APISIX) runs in, e.g. [\"10.42.0.0/16\"] on k3s, in the environment's jc values" }}
@@ -18,7 +19,8 @@
 # - [x] Health probes -> readiness /api/v1/health (the Portal, built last), liveness /streams/ping
 # - [x] Graceful shutdown -> jc drains on SIGTERM
 # - [x] Standard labels
-# - [x] ServiceAccount with least privilege -> no API token
+# - [x] ServiceAccount with least privilege -> no API token, except beside mqtt-brokers: the
+#       Portal stamps the brokers with the Role the brokers chart grants in their namespace alone
 # - [x] Named ports -> 8080 public (every mount), 9091 admin (/metrics behind its token, /healthz)
 # - [x] Ingress with TLS -> APISIX routes jc.{domain} (apisix-routes.yaml)
 
@@ -45,6 +47,16 @@ service:
   port: 8080
   targetPort: 8080
   name: http
+{{- if $mqtt }}
+  # The MQTT brokers' CONNECT and publish checks (ADR-N-048) on 8082, the port the brokers chart's
+  # Linkerd Server names: no APISIX route names it, and the NetworkPolicy and that Server admit
+  # the broker pods alone.
+  extraPorts:
+    - name: mqtt-auth
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+{{- end }}
 # Every pod, Ready or not: the edge route jc-identity reaches kaisatsu through it while the Portal
 # of the same pod still waits on the realm (apisix-routes.yaml).
 headlessService:
@@ -202,6 +214,24 @@ env:
   JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc/apps-cache
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+{{- if $mqtt }}
+  {{- $brokers := index .Values "mqtt-brokers" "brokers" "namespace" }}
+  # The MQTT edge brokers (ADR-N-048). The gateway's CONNECT check on its internal listener; the
+  # tokenless CONNECTs it admits from jc's own pods (ekiben's DataSource reads, the Portal's
+  # capture) and from the broker pods, which is where a meshed client of 1883 appears; the
+  # Portal's identity, the one caller of the refusals route.
+  JC_GATEWAY_INTERNAL_BIND: "0.0.0.0:8082"
+  JC_GATEWAY_MQTT_RUNNER_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_HOST: "jc-pods.{{ $jc.namespace }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_BROKER_HOST: "mqtt-broker-pods.{{ $brokers }}.svc.cluster.local"
+  JC_GATEWAY_MQTT_PORTAL_IDENTITY: "jc.{{ $jc.namespace }}"
+  # Where the Portal stamps one release per MqttBroker from the chart's broker-template.
+  JC_PORTAL_MQTT_NAMESPACE: {{ $brokers | quote }}
+  # A DataSource on a platform broker reads tcp://<release>.${JC_MQTT_NAMESPACE}.svc:1883, so
+  # ekiben's JC_MQTT_NAMESPACE is the brokers' namespace (it also keeps an outside broker's
+  # client id apart per installation).
+  EKIBEN_VAR_JC_MQTT_NAMESPACE: {{ $brokers | quote }}
+{{- end }}
 
 # The generated secrets of jc's first-start setup (bins/jc/src/setup.rs) live in Secret jc-setup,
 # so a new pod reads the same values: the init container copies them into the state dir as
@@ -283,6 +313,22 @@ podSecurityContext:
 
 securityContext:
   {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+{{- if $mqtt }}
+# The Portal's API client for the brokers (KubeClient::in_cluster). Its only grant is the Role
+# portal-mqtt-brokers of the brokers chart, in the brokers' namespace: none in this one.
+serviceAccount:
+  automountServiceAccountToken: true
+# The brokers reach the Linkerd inbound proxy (4143) for 8082, and the proxy would hand them 8080
+# too (the namespace admits every meshed identity). On 8080 it admits APISIX's alone, which is
+# what the NetworkPolicy lets reach it, so the X-Forwarded-For trust stays the edge's
+# (tests/test_jc_component.py). No HTTPRoute: the kubelet's probes stay authorized.
+meshAuthorization:
+  port: 8080
+  clients:
+    - serviceAccount: apisix
+      namespace: {{ .Values.apisix.apisix.namespace }}
+{{- end }}
 
 serviceMesh:
   enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

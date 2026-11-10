@@ -12,6 +12,10 @@ components:
   - postgres
   - apisix
   - jc
+  # Prod's three MQTT edge brokers (ADR-N-048), stamped by jc's Portal from the chart's template
+  # into a namespace of their own (jc-prod-mqtt, not jc-prod: the gateway's Linkerd rule admits
+  # every identity of that namespace to jc's internal port).
+  - mqtt-brokers
 
 global:
   # Prod's names. Until the owner moves DNS they reach this node only by Host header or a hosts
@@ -118,9 +122,17 @@ jc:
           memory: 1280Mi
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
-# to, so the edge's Keycloak dependency does not hold here.
+# to, so the edge's Keycloak dependency does not hold here. jc's gateway answers the brokers'
+# CONNECT check, its ekiben reads them and its Portal stamps them.
 componentDependencies:
   apisix: [secrets]
+  mqtt-brokers: [jc, networkpolicies]
+
+mqtt-brokers:
+  brokers:
+    # The three TLS Secrets mqtt-<project>-<name>-tls are copied here from jc-prod before DNS
+    # moves (evidence/jc-prod/RUNBOOK-apply.md), so each broker's certificate serves at once.
+    namespace: jc-prod-mqtt
 
 # This edge to dev's status page and tile server (hostUpstreams above), both halves, the Linkerd
 # proxy port beside the app port.
