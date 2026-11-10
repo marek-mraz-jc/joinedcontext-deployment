@@ -547,13 +547,6 @@ def esri_count(e: dict) -> str:
     return f"{e['source']['url']}/query?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote, safe=',*')}"
 
 
-def esri_cap(s: dict) -> int:
-    """Rows one run of an Esri layer may read: twice what it held when mapped, at least ten pages.
-    Bento holds every page of a run until its end, so past that the layer is remapped and its
-    pipeline's quota sized for it rather than read into an out-of-memory kill (T-5288)."""
-    return max(2 * s["rows"], 10 * PAGE)
-
-
 def layer_query(layer: dict, offset: str) -> str:
     """One page of one layer of the city's ArcGIS Server (T-4317): its own columns and the object id,
     which the GeoJSON answer then carries as the feature's `id`; in object id order, so the pages
@@ -628,15 +621,14 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
             "", "pipeline:", "  processors:"]
     steps: list[str] = []
     if s["kind"] == "esri-featureserver":
-        cap = esri_cap(s)
         steps.append(f"""\
     # A layer that answers an error or no feature list is the service failing, so the run fails
     # where it can be seen rather than writing nothing.
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null {{ throw("the layer answered no features: %v".format(this.error.message.or(""))) }} else {{ this }}
     # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
-    # every further page of them is read (T-5288). One run holds every page, so a layer past
-    # {cap} rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    # every further page of them is read (T-5288), one page at a time: the runner fetches, maps and
+    # writes a page before the next, so a layer of any size runs in a page's memory (jc-ekiben-paging).
     - branch:
         request_map: |
           root = if this.properties.exceededTransferLimit.or(false) {{ "" }} else {{ deleted() }}
@@ -653,9 +645,12 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
           root.rowCount = this.count.or(this.error.message.or("no count"))
     - mapping: |
         let rows = this.rowCount.or(null)
-        root = if !this.properties.exceededTransferLimit.or(false) {{ [this] }} else if errored() || $rows.type() != "number" {{ [{{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }}] }} else if $rows > {cap} {{ [{{ "problem": "the layer holds %v rows, more than the {cap} one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }}] }} else if this.features.length() < [{PAGE}, $rows].min() {{ [{{ "problem": "the layer answered %v rows where {PAGE} were asked, so its pages would skip rows".format(this.features.length()) }}] }} else if $rows <= {PAGE} {{ [this] }} else {{ [this].concat(range(1, (($rows + {PAGE - 1}) / {PAGE}).floor()).map_each(p -> {{ "offset": p * {PAGE}, "rowCount": $rows }})) }}
+        root = if !this.properties.exceededTransferLimit.or(false) {{ [this] }} else if errored() || $rows.type() != "number" {{ [{{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }}] }} else if this.features.length() < [{PAGE}, $rows].min() {{ [{{ "problem": "the layer answered %v rows where {PAGE} were asked, so its pages would skip rows".format(this.features.length()) }}] }} else if $rows <= {PAGE} {{ [this] }} else {{ [this].concat(range(1, (($rows + {PAGE - 1}) / {PAGE}).floor()).map_each(p -> {{ "offset": p * {PAGE}, "rowCount": $rows }})) }}
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.offset.or(null) != null
           processors:
@@ -673,7 +668,8 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
                 rate_limit: pipeline_egress
             - mapping: |
                 root = if errored() {{ throw("the page at %v did not come: %v".format(@offset, error())) }} else if this.features.or(null) == null {{ {{ "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) }} }} else if this.features.length() < [{PAGE}, @rows - @offset].min() {{ {{ "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [{PAGE}, @rows - @offset].min()) }} }} else {{ this }}
-    # A refusal above fails the run and writes none of its message's rows.
+    # A refusal above fails the run and writes none of its page's rows; earlier pages stay written
+    # and the failed run deletes nothing (sourceDeletes waits for a finished run).
     - mapping: |
         root = if this.problem.or(null) != null {{ throw(this.problem) }} else {{ this }}
     - mapping: |
@@ -694,6 +690,9 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
         root = [{{ "page": this }}.merge({json.dumps(tag(first), ensure_ascii=False)})].concat($rest)
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.url.or(null) != null
           processors:
@@ -745,14 +744,12 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
     - mapping: |
         root = if this.type() == "array" {{ this }} else {{ [] }}""")
     else:
-        cap = max(2 * s["rows"], 10 * WP_PAGE)
         steps.append(f"""\
     - mapping: |
         root = if this.type() != "array" {{ throw("the site answered no post list") }} else {{ {{ "posts": this }} }}
     # Page 1 as it came. A full page means there may be more: the feed is asked how many posts it
     # holds (X-WP-Total) and every further page of them is read, so the replace-mode run does not
-    # delete each post past the newest {WP_PAGE} (F-BNT1-011). One run holds every page, so a feed
-    # past {cap} posts fails the run with its count: regenerate the mapping and size the quota.
+    # delete each post past the newest {WP_PAGE} (F-BNT1-011), one page at a time (jc-ekiben-paging).
     - branch:
         request_map: |
           root = if this.posts.length() < {WP_PAGE} {{ deleted() }} else {{ "" }}
@@ -771,9 +768,12 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
           root.total = if errored() {{ error() }} else {{ metadata("x-wp-total").or("no X-WP-Total header").number().catch("no X-WP-Total header") }}
     - mapping: |
         let total = this.total.or(null)
-        root = if this.posts.length() < {WP_PAGE} {{ [this] }} else if $total.type() != "number" {{ [{{ "problem": "the feed did not say how many posts it holds: %v".format($total) }}] }} else if $total > {cap} {{ [{{ "problem": "the feed holds %v posts, more than the {cap} one run reads: regenerate the mapping with scripts/open-data/generate.py".format($total) }}] }} else {{ [this].concat(range(2, (($total + {WP_PAGE - 1}) / {WP_PAGE}).floor() + 1).map_each(p -> {{ "page": p }})) }}
+        root = if this.posts.length() < {WP_PAGE} {{ [this] }} else if $total.type() != "number" {{ [{{ "problem": "the feed did not say how many posts it holds: %v".format($total) }}] }} else {{ [this].concat(range(2, (($total + {WP_PAGE - 1}) / {WP_PAGE}).floor() + 1).map_each(p -> {{ "page": p }})) }}
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.page.or(null) != null
           processors:
@@ -790,7 +790,8 @@ def bento(e: dict, slug: str, model_ranges: dict[str, str]) -> str:
                 rate_limit: pipeline_egress
             - mapping: |
                 root = if errored() {{ throw("the page %v did not come: %v".format(@page, error())) }} else if this.type() != "array" {{ {{ "problem": "the page %v answered no post list".format(@page) }} }} else {{ {{ "posts": this }} }}
-    # A refusal above fails the run and writes none of its message's rows.
+    # A refusal above fails the run and writes none of its page's rows; earlier pages stay written
+    # and the failed run deletes nothing (sourceDeletes waits for a finished run).
     - mapping: |
         root = if this.problem.or(null) != null {{ throw(this.problem) }} else {{ this.posts }}""")
     maps = MAPS + ("\n" + krovak_maps() if s["kind"] == "zip-geojson" else "")

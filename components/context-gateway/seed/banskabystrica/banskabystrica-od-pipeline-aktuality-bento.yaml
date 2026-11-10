@@ -7,8 +7,7 @@ pipeline:
         root = if this.type() != "array" { throw("the site answered no post list") } else { { "posts": this } }
     # Page 1 as it came. A full page means there may be more: the feed is asked how many posts it
     # holds (X-WP-Total) and every further page of them is read, so the replace-mode run does not
-    # delete each post past the newest 100 (F-BNT1-011). One run holds every page, so a feed
-    # past 3114 posts fails the run with its count: regenerate the mapping and size the quota.
+    # delete each post past the newest 100 (F-BNT1-011), one page at a time (jc-ekiben-paging).
     - branch:
         request_map: |
           root = if this.posts.length() < 100 { deleted() } else { "" }
@@ -27,9 +26,12 @@ pipeline:
           root.total = if errored() { error() } else { metadata("x-wp-total").or("no X-WP-Total header").number().catch("no X-WP-Total header") }
     - mapping: |
         let total = this.total.or(null)
-        root = if this.posts.length() < 100 { [this] } else if $total.type() != "number" { [{ "problem": "the feed did not say how many posts it holds: %v".format($total) }] } else if $total > 3114 { [{ "problem": "the feed holds %v posts, more than the 3114 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($total) }] } else { [this].concat(range(2, (($total + 99) / 100).floor() + 1).map_each(p -> { "page": p })) }
+        root = if this.posts.length() < 100 { [this] } else if $total.type() != "number" { [{ "problem": "the feed did not say how many posts it holds: %v".format($total) }] } else { [this].concat(range(2, (($total + 99) / 100).floor() + 1).map_each(p -> { "page": p })) }
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.page.or(null) != null
           processors:
@@ -46,7 +48,8 @@ pipeline:
                 rate_limit: pipeline_egress
             - mapping: |
                 root = if errored() { throw("the page %v did not come: %v".format(@page, error())) } else if this.type() != "array" { { "problem": "the page %v answered no post list".format(@page) } } else { { "posts": this } }
-    # A refusal above fails the run and writes none of its message's rows.
+    # A refusal above fails the run and writes none of its page's rows; earlier pages stay written
+    # and the failed run deletes nothing (sourceDeletes waits for a finished run).
     - mapping: |
         root = if this.problem.or(null) != null { throw(this.problem) } else { this.posts }
     - unarchive:

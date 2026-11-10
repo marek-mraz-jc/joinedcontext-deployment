@@ -8,8 +8,8 @@ pipeline:
     - mapping: |
         root = if this.error.or(null) != null || this.features.or(null) == null { throw("the layer answered no features: %v".format(this.error.message.or(""))) } else { this }
     # Page 0 as it came. When the layer says there is more, it is asked how many rows it holds and
-    # every further page of them is read (T-5288). One run holds every page, so a layer past
-    # 179340 rows fails the run with its count: regenerate the mapping and size the pipeline's quota.
+    # every further page of them is read (T-5288), one page at a time: the runner fetches, maps and
+    # writes a page before the next, so a layer of any size runs in a page's memory (jc-ekiben-paging).
     - branch:
         request_map: |
           root = if this.properties.exceededTransferLimit.or(false) { "" } else { deleted() }
@@ -26,9 +26,12 @@ pipeline:
           root.rowCount = this.count.or(this.error.message.or("no count"))
     - mapping: |
         let rows = this.rowCount.or(null)
-        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if $rows > 179340 { [{ "problem": "the layer holds %v rows, more than the 179340 one run reads: regenerate the mapping with scripts/open-data/generate.py".format($rows) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
+        root = if !this.properties.exceededTransferLimit.or(false) { [this] } else if errored() || $rows.type() != "number" { [{ "problem": "the layer did not say how many rows it holds: %v".format(error().or($rows)) }] } else if this.features.length() < [1000, $rows].min() { [{ "problem": "the layer answered %v rows where 1000 were asked, so its pages would skip rows".format(this.features.length()) }] } else if $rows <= 1000 { [this] } else { [this].concat(range(1, (($rows + 999) / 1000).floor()).map_each(p -> { "offset": p * 1000, "rowCount": $rows })) }
     - unarchive:
         format: json_array
+    # Each page its own batch: fetched, mapped and written before the next is read.
+    - split:
+        size: 1
     - switch:
         - check: this.offset.or(null) != null
           processors:
@@ -46,7 +49,8 @@ pipeline:
                 rate_limit: pipeline_egress
             - mapping: |
                 root = if errored() { throw("the page at %v did not come: %v".format(@offset, error())) } else if this.features.or(null) == null { { "problem": "the page at %v answered no features: %v".format(@offset, this.error.message.or("")) } } else if this.features.length() < [1000, @rows - @offset].min() { { "problem": "the page at %v answered %v rows where %v were due".format(@offset, this.features.length(), [1000, @rows - @offset].min()) } } else { this }
-    # A refusal above fails the run and writes none of its message's rows.
+    # A refusal above fails the run and writes none of its page's rows; earlier pages stay written
+    # and the failed run deletes nothing (sourceDeletes waits for a finished run).
     - mapping: |
         root = if this.problem.or(null) != null { throw(this.problem) } else { this }
     - mapping: |
