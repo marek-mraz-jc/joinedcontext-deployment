@@ -1,6 +1,16 @@
 {{- $global := .Values.global }}
 {{- $jc := .Values.jc.server }}
 {{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- /* The App pods of components/app-pods, when the environment lists it: the Portal proxies
+       each App's host to its Service, and the pod reads its Endpoint on jc's own Service. */}}
+{{- $pods := list }}
+{{- if has "app-pods" .Values.components }}
+{{- range $name, $pod := index .Values "app-pods" }}
+{{- if and (kindIs "map" $pod) $pod.enabled }}
+{{- $pods = append $pods (printf "%s=http://app-%s.%s.svc.cluster.local:8080" $name $name $pod.namespace) }}
+{{- end }}
+{{- end }}
+{{- end }}
 {{- /* The hops jc takes X-Forwarded-For from: the edge's pod network, named by the environment.
        Without it every caller is the edge's address and per-address limits are one bucket. */}}
 {{- $proxies := $jc.trustedProxies | default list }}
@@ -165,6 +175,14 @@ configMap:
       host = "portal.{{ $global.domain }}"
       path_prefix = "{{ . }}"
       {{- end }}
+      {{- if $pods }}
+
+      # The App pods' Endpoint reads on jc's Service, inside the cluster, as prod's pods read the
+      # gateway's Service (components/app-pods); its NetworkPolicy admits the App pods alone.
+      [[mounts.gateway]]
+      host = "jc.{{ $jc.namespace }}.svc.cluster.local"
+      path_prefix = "/api/endpoint"
+      {{- end }}
       {{- else }}
       # The Portal's UI and redirects assume the root of its host (bins/jc/STATUS.md stage 7).
       [mounts.portal]
@@ -200,6 +218,10 @@ env:
   # The builds the Portal fetches from shako's package registry (the own-repository Apps, prod's
   # builds imported by jc-migrate), checked against status.build before they are unpacked.
   JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc/apps-cache
+  {{- with $pods }}
+  # The ui-rust Apps whose pod runs beside jc (components/app-pods): the Portal proxies their hosts.
+  JC_PORTAL_APP_PODS: {{ join "," . | quote }}
+  {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
 

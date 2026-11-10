@@ -1,0 +1,11 @@
+---
+# ghcr.io/marek-mraz-jc/jc-app-<app>, built from crates/portal/apps/<app>, smoke-tested, signed and
+# scanned by the monorepo's .github/workflows/image-apps.yml on main. No digest is pinned yet: no
+# run on main has published one. Pin the first with
+#   app-pods:
+#     hsl-transport:
+#       repository: 'ghcr.io/marek-mraz-jc/jc-app-hsl-transport'
+#       tag: 'main'
+#       digest: 'sha256:<the digest image-apps.yml printed>'
+# before an environment that deploys this component is applied (the render refuses an empty pin).
+app-pods: {}

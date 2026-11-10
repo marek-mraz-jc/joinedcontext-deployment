@@ -390,6 +390,8 @@ componentDependencies:
   observability: [portal, keycloak]
   # Its one caller (networkpolicies.yaml, meshAuthorization) is jc's pod.
   embedder: [jc, networkpolicies]
+  # Its one caller is jc's Portal (networkpolicies.yaml, meshAuthorization), which proxies each App host.
+  app-pods: [jc, networkpolicies]
 
 # List of components to deploy (order matters for dependencies)
 # To "disable" a component, remove it from the list.

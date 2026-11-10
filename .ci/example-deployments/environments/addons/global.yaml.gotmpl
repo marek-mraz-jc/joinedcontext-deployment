@@ -37,6 +37,9 @@ components:
   # The embedding model as a service the deployments share (monorepo crates/embedder): rendered
   # here with an example image pin and jc as its one caller (embedder.yaml.gotmpl).
   - embedder
+  # The ui-rust App pods jc's Portal proxies on their hosts (hsl-transport): rendered here with an
+  # example image pin and Endpoint slug (app-pods.yaml.gotmpl); jc-prod lists them with the real pin.
+  - app-pods
 
 global:
   domain: addons.example.org

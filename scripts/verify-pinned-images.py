@@ -42,12 +42,13 @@ ISSUER = "https://token.actions.githubusercontent.com"
 # (2026-10-26: image.yml of platform and portal, image-viz/image-ckan of deployment, Antares
 # ship.yml on dev) plus the other signers of the same images (promote.yml, the deployment's
 # image-gitops, image-patched (T-6114) and reusable-container-sign, Antares image-jc.yml and full.yml on a tag)
-# and the monorepo joinedcontext's image.yml (components/jc, the one binary). A preview.yml
+# and the monorepo joinedcontext's image.yml (components/jc, the one binary), image-embedder.yml
+# and image-apps.yml (components/embedder, components/app-pods). image-scan.yml only attests. A preview.yml
 # or any branch build signs too and is refused here (F-DEP2-005).
 IDENTITY = (
     rf"^https://github\.com/{OWNER}/("
     r"(joinedcontext-platform|joinedcontext-portal)/\.github/workflows/(image|promote)\.yml@refs/heads/main"
-    r"|joinedcontext/\.github/workflows/image\.yml@refs/heads/main"
+    r"|joinedcontext/\.github/workflows/(image|image-embedder|image-apps)\.yml@refs/heads/main"
     r"|joinedcontext-deployment/\.github/workflows/(image-[a-z]+|reusable-container-sign)\.yml@refs/heads/main"
     r"|Antares-NGSI-LD-Context-Broker/\.github/workflows/(ship|image-jc)\.yml@refs/heads/dev"
     r"|Antares-NGSI-LD-Context-Broker/\.github/workflows/full\.yml@refs/tags/v[0-9][0-9a-z.+-]*"

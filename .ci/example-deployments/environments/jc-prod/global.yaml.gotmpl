@@ -117,6 +117,13 @@ jc:
           cpu: '2'
           memory: 1280Mi
 
+# Prod's hsl-transport pod (components/app-pods), proxied by jc's Portal on its App host. Its
+# Endpoint is prod's `app-hsl-transport` of space helsinki (the App's JC_APP_CONFIG on prod). The
+# component joins `components:` with the first digest image-apps.yml signs (components/app-pods/images.yaml).
+app-pods:
+  hsl-transport:
+    endpointSlug: sv4ibpmhwowb6gnzqy6vp2b3iy
+
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
 # to, so the edge's Keycloak dependency does not hold here.
 componentDependencies:
