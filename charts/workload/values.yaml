@@ -147,3 +147,4 @@ meshAuthorization:
   port: 0
   clients: []         # [{serviceAccount: <name>, namespace: <namespace>}]
   includeSelf: false  # also admit the workload's own ServiceAccount
+  extraPorts: []      # [{name, port, clients}]: one more Server per port, <fullname>-<name>

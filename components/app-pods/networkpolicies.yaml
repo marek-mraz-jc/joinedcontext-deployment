@@ -1,7 +1,8 @@
 ---
 # An App pod takes calls on 8080 from jc's pod (the Portal on the App's host) and from nobody
-# else, and calls jc's pod on 8080 alone (the gateway's /api/endpoint), plus DNS. The jc-* policies
-# are jc's halves in its own namespace.
+# else, and calls jc's pod on 8083 alone (the apps listener: the gateway's Endpoint reads), plus
+# DNS; jc's public listener (8080) stays the edge's. The jc-* policies are jc's halves in its own
+# namespace.
 hsl-transport-pod:
   podSelector:
     app.kubernetes.io/name: app-hsl-transport
@@ -40,7 +41,7 @@ hsl-transport-pod:
           componentNamespace: jc
       ports:
         - protocol: TCP
-          port: 8080
+          port: 8083
 jc-egress-to-app-pods:
   componentNamespace: jc
   podSelector:
@@ -74,4 +75,4 @@ jc-from-app-pods:
           componentNamespace: app-pods
       ports:
         - protocol: TCP
-          port: 8080
+          port: 8083

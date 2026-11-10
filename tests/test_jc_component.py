@@ -458,9 +458,14 @@ def planted(namespace: str, pod_selector: dict, ports: list | None) -> dict:
 )
 def test_a_policy_opening_jc_to_every_pod_is_caught(rendered, pod_selector, ports):
     """Each way a NetworkPolicy can select jc or name its port reaches the check: none reads as
-    "does not apply" (both used to, for matchExpressions and named ports)."""
-    docs = rendered(jc_environments()[0])
-    jc_ns, _ = pod_of(docs, "jc")
+    "does not apply" (both used to, for matchExpressions and named ports). Planted where no
+    Linkerd Server holds 8080 for the edge (jc-dev: no MQTT brokers, no App pods), so the inbound
+    proxy port (4143, inside the port range) still reaches the public listener."""
+    docs = rendered("jc-dev")
+    jc_ns, jc_labels = pod_of(docs, "jc")
+    edge_ns, _ = pod_of(docs, "apisix")
+    edge_sa = workload(docs, "apisix")["spec"]["template"]["spec"].get("serviceAccountName", "default")
+    assert not mesh_admits_only_the_edge(docs, jc_ns, jc_labels, named_ports(docs, "jc"), (edge_ns, edge_sa))
     with pytest.raises(AssertionError, match="admits every pod"):
         check_only_the_edge_reaches_jc([*docs, planted(jc_ns, pod_selector, ports)], "planted")
 

@@ -378,6 +378,27 @@
         },
         "includeSelf": {
           "type": "boolean"
+        },
+        "extraPorts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "port", "clients"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z]([-a-z0-9]*[a-z0-9])?$"
+              },
+              "port": {
+                "type": "number"
+              },
+              "clients": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
         }
       }
     },

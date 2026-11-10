@@ -49,12 +49,12 @@ probes:
     failureThreshold: 3
     initialDelaySeconds: 5
 
-# What prod's reconciler set on the pod, the Endpoint now jc's gateway on jc's Service: jc mounts
-# the gateway's /api/endpoint on that host for this caller (components/jc base-values).
+# What prod's reconciler set on the pod, the Endpoint now jc's gateway on jc's apps listener (8083:
+# GET/HEAD /api/endpoint/... alone, components/jc base-values JCBIN_APPS_LISTEN).
 env:
   JC_BIND_ADDRESS: "0.0.0.0:8080"
   JC_BASE_PATH: "/"
-  JC_ENDPOINT_URL: "http://jc.{{ .Values.jc.server.namespace }}.svc.cluster.local:8080/api/endpoint/{{ $app.endpointSlug }}/"
+  JC_ENDPOINT_URL: "http://jc.{{ .Values.jc.server.namespace }}.svc.cluster.local:8083/api/endpoint/{{ $app.endpointSlug }}/"
   JC_APP_CONFIG: {{ dict
       "appName" "hsl-transport"
       "basemap" (printf "https://portal.%s/api/v1/projects/%s/basemap/default/style.json" $global.domain $app.project)
