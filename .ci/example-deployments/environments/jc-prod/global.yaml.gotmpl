@@ -30,6 +30,47 @@ global:
     enabled: true
     clusterIssuer: 'letsencrypt-prod'
     ingressClass: 'traefik'
+    # Prod's App hosts (kubectl get ingress,certificate -n smartcity app-*, 2026-11-09: 38, one
+    # host and Secret app-{name}-tls each). The prod-deployer copies each Secret before DNS moves.
+    appHosts:
+      - air-quality
+      - air-weather-explorer
+      - alerts-desk
+      - alerts-heatmap
+      - banskabystrica-data
+      - banskabystrica-mapa
+      - banskabystrica-ovzdusie
+      - banskabystrica-skoly
+      - banskabystrica-zaznamy
+      - bbsk-data
+      - bbsk-mapa
+      - bbsk-mosty
+      - bbsk-podujatia
+      - bbsk-ukazovatele
+      - bbsk-zaznamy
+      - bike-rebalancing
+      - bike-stations
+      - bike-weather-demand
+      - data-quality-inspector
+      - district-compare
+      - event-day-planner
+      - helsinki-alerts
+      - helsinki-bikes
+      - helsinki-data
+      - helsinki-events
+      - helsinki-kartta
+      - hsl-transport
+      - kpi-forecast
+      - news-topics
+      - praha-data
+      - praha-mapa
+      - praha-mesto
+      - praha-odpad
+      - transit-reach
+      - zilina-mapa
+      - zilina-ukazovatele
+      - zilina-vyskum
+      - zilina-zaznamy
   kubeApiCidrs: [10.255.0.101/32]
 
 # The operator is the dev environment's (namespace dev, clusterWide since this change).

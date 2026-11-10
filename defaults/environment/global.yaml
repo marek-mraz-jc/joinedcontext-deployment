@@ -217,6 +217,11 @@ global:
       enabled: false
       certManagerNamespace: 'cert-manager'
       tokenSecret: 'hetzner-dns'
+    # App hosts `{name}.apps.{domain}` the edge serves one by one when no Portal stamps them (jc,
+    # edge-session-design S4a): each gets an Ingress rule, TLS from Secret `app-{name}-tls` and a
+    # Certificate `app-{name}` by HTTP-01. jc-prod lists prod's App Ingresses so the copied
+    # certificates are served the second DNS moves. Empty renders nothing.
+    appHosts: []
 
   # Storage class mappings (leave empty to use cluster defaults)
   storage:
