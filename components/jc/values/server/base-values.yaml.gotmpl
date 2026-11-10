@@ -108,6 +108,10 @@ probes:
     # The Portal answers once jc has built it after serving (503 until then), so a ready pod
     # serves every mount.
     path: /api/v1/health
+    {{- if eq $mode "host" }}
+    # Host mode routes by name: the kubelet's request names the Portal's host.
+    host: "portal.{{ $global.domain }}"
+    {{- end }}
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
@@ -119,6 +123,9 @@ probes:
   liveness:
     # ekiben's /ping: open, answered by the process itself, no module dependency.
     path: /streams/ping
+    {{- if eq $mode "host" }}
+    host: "localhost:8080"
+    {{- end }}
     periodSeconds: 15
     timeoutSeconds: 3
     failureThreshold: 3
@@ -201,9 +208,26 @@ configMap:
       host = "{{ $global.domain }}"
       path_prefix = "/grafana"
 
-      [mounts.shako]
+      [[mounts.shako]]
       host = "{{ $global.domain }}"
       path_prefix = "/git"
+
+      # The Portal's own forge address (JC_SHAKO_URL below): in host mode jc points the Portal at
+      # shako's public base, which the edge refuses (/git stays inside the pod) and which needs
+      # jc Ready before the Portal is built. A request naming this host through the edge meets the
+      # same /git block on the host-less apex route.
+      [[mounts.shako]]
+      host = "localhost:8080"
+      path_prefix = "/git"
+
+      # ekiben and the broker stay inside the pod too: on loopback only, never on a public name.
+      [[mounts.ekiben]]
+      host = "localhost:8080"
+      path_prefix = "/streams"
+
+      [[mounts.antares]]
+      host = "localhost:8080"
+      path_prefix = "/broker"
 
       [mounts.assistant]
       host = "assistant.{{ $global.domain }}"
@@ -294,7 +318,9 @@ configMap:
 
       # prod's two catalogue harvests, copied from the monorepo (files/harvest-sources.toml); each
       # reads od-datasets.json beside jc.toml.
-{{ readFile "../../files/harvest-sources.toml" | indent 6 }}
+      # A source reads its datasets' Endpoint doors on this instance's own gateway (api.{domain} in
+      # host mode, refused unless listed) and links the datasets under this instance's catalogue.
+{{ readFile "../../files/harvest-sources.toml" | replace "https://opendata.dev.joinedcontext.com/" (printf "https://opendata.%s/" $global.domain) | replace "allowed_hosts = [" (printf "allowed_hosts = [%q, " (printf "api.%s" $global.domain)) | indent 6 }}
       {{- end }}
       {{- if $proxy.enabled }}
 
@@ -332,6 +358,20 @@ envSecret:
   CKAN_API_TOKEN:
     secret: jc-setup
     key: catalogue-token
+{{- if eq $mode "host" }}
+  JC_SHAKO_TOKEN:
+    secret: jc-setup
+    key: shako-token
+  JC_SHAKO_APPS_TOKEN:
+    secret: jc-setup
+    key: shako-token
+  JC_SHAKO_WEBHOOK_SECRET:
+    secret: jc-setup
+    key: forge-webhook-secret
+  JC_PORTAL_PIPELINE_RUNNER_TOKEN:
+    secret: jc-setup
+    key: ekiben-token
+{{- end }}
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
@@ -358,12 +398,32 @@ env:
   JCBIN_LISTEN: {{ ternary "127.0.0.1:8080" "0.0.0.0:8080" $window | quote }}
   JCBIN_STATE_DIR: "/var/lib/jc/state"
   # jc holds these in-process tokens per boot in memory unless given a file: the ones Secret
-  # jc-setup keeps (seed-state copies them into the state dir), so the cluster import, the smoke
-  # suites and the Apps' catalogue publishing read the value jc checks (up.sh does the same).
-  JCBIN_SHAKO_TOKEN_FILE: "/var/lib/jc/state/shako-token"
-  JCBIN_EKIBEN_TOKEN_FILE: "/var/lib/jc/state/ekiben-token"
-  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/var/lib/jc/state/dashboards-password"
-  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/var/lib/jc/state/catalogue-token"
+  # jc-setup keeps, read from its volume (jc deletes an in-memory token's file from the state dir
+  # at start, setup.rs remove_stale), so the cluster import, the smoke suites and the Apps'
+  # catalogue publishing read the value jc checks (up.sh does the same).
+  JCBIN_SHAKO_TOKEN_FILE: "/run/jc/setup/shako-token"
+  JCBIN_EKIBEN_TOKEN_FILE: "/run/jc/setup/ekiben-token"
+  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
+  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
+  {{- if eq $mode "host" }}
+  # The Portal's forge on jc's loopback ([[mounts.shako]] localhost:8080 above). Naming the URL
+  # turns off jc's fill of the whole group, so the group is named here (siblings.rs JC_SHAKO_URL).
+  JC_SHAKO_URL: "http://localhost:8080/git"
+  JC_SHAKO_PUBLIC_URL: "https://{{ $global.domain }}/git"
+  JC_SHAKO_APPS_OWNER: "jc-apps"
+  JC_PORTAL_PIPELINE_RUNNER_URL: "http://localhost:8080/streams"
+  JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
+  JC_PORTAL_BROKER_URL: "http://localhost:8080/broker"
+  JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: "/run/jc/setup/antares-admin-token"
+  {{- end }}
+  {{- if $realm }}
+  # The imported deployment's configuration repository, as the rehearsal kit points jc at it.
+  JC_SHAKO_OWNER: "joinedcontext"
+  JC_SHAKO_REPO: "configuration"
+  {{- else if eq $mode "host" }}
+  JC_SHAKO_OWNER: "jc"
+  JC_SHAKO_REPO: "config"
+  {{- end }}
   # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
   # rolls by Recreate (updateStrategy below) and declares itself the only one.
   ANTARES_BUS: "local"
@@ -588,6 +648,7 @@ extraVolumeMounts:
   - { name: daiya-provisioning, mountPath: /etc/jc-daiya, readOnly: true }
   {{- end }}
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
+  - { name: setup, mountPath: /run/jc/setup, readOnly: true }
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
   - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
   {{- if (dig "ageKeySecret" "" $jc) }}

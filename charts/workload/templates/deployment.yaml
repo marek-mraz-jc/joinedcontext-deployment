@@ -124,6 +124,11 @@ spec:
             httpGet:
               path: {{ .Values.probes.readiness.path | default "/" }}
               port: {{ .Values.containerPort }}
+              {{- with .Values.probes.readiness.host }}
+              # A server that routes by Host (jc in host mode) answers the probe only on its name.
+              httpHeaders:
+                - { name: Host, value: {{ . | quote }} }
+              {{- end }}
             periodSeconds: {{ .Values.probes.readiness.periodSeconds | default 5 }}
             timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds | default 3 }}
             failureThreshold: {{ .Values.probes.readiness.failureThreshold | default 3 }}
@@ -138,6 +143,10 @@ spec:
             httpGet:
               path: {{ $.Values.probes.liveness.path | default "/" }}
               port: {{ $.Values.containerPort }}
+              {{- with $.Values.probes.liveness.host }}
+              httpHeaders:
+                - { name: Host, value: {{ . | quote }} }
+              {{- end }}
             {{- end }}
             periodSeconds: {{ .periodSeconds | default 15 }}
             timeoutSeconds: {{ .timeoutSeconds | default 3 }}
@@ -153,6 +162,10 @@ spec:
             httpGet:
               path: {{ .Values.probes.liveness.path | default "/" }}
               port: {{ .Values.containerPort }}
+              {{- with .Values.probes.liveness.host }}
+              httpHeaders:
+                - { name: Host, value: {{ . | quote }} }
+              {{- end }}
             {{- end }}
             periodSeconds: {{ .Values.probes.liveness.periodSeconds | default 15 }}
             timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds | default 3 }}

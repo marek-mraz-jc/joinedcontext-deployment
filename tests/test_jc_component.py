@@ -187,7 +187,21 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     # Antares' in-process bus: one jc process per database, so no rollout overlaps two.
     assert (env["ANTARES_BUS"], env["ANTARES_ALLOW_SHARED_LOCAL"]) == ("local", "1")
     # The import's shako calls were refused (401) while jc held a per-boot token: jc reads jc-setup's.
-    assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/var/lib/jc/state/shako-token"
+    assert env["JCBIN_SHAKO_TOKEN_FILE"] == "/run/jc/setup/shako-token"
+    # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
+    assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
+    assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
+    mounts = jc_toml(docs)["mounts"]
+    assert [m["host"] for m in mounts["ekiben"] + mounts["antares"]] == ["localhost:8080", "localhost:8080"]
+    assert (env["JC_PORTAL_PIPELINE_RUNNER_URL"], env["JC_PORTAL_BROKER_URL"]) == ("http://localhost:8080/streams", "http://localhost:8080/broker")
+    # Host mode routes by name: the kubelet's probes name the hosts jc answers them on.
+    probes = jc["spec"]["template"]["spec"]["containers"][0]
+    assert probes["readinessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "portal.smartcity.joinedcontext.com"}]
+    assert probes["livenessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "localhost:8080"}]
+    # Each harvest reads its Endpoints on this instance's gateway and links under its catalogue.
+    for h in jc_toml(docs)["dataroom"]["harvest"]:
+        assert "api.smartcity.joinedcontext.com" in h["allowed_hosts"]
+        assert h.get("datasets_base", "https://opendata.smartcity.joinedcontext.com/") == "https://opendata.smartcity.joinedcontext.com/"
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 
