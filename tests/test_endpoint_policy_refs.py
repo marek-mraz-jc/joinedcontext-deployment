@@ -66,7 +66,8 @@ def test_the_jc_pin_binds_a_pipeline_through_an_endpoint_with_policyrefs():
     if not any(writes and (project, name) in named for project, _, name, writes in pipeline_doors(docs)):
         return
     pin = (ROOT / "components/jc/images.yaml").read_text(encoding="utf-8")
-    server = pin[: pin.index("  server:")].rsplit("jc:", 1)[-1]
+    assert (yaml.safe_load(pin).get("jc") or {}).get("server"), "components/jc/images.yaml: jc.server pin missing"
+    server = pin.split("  server:", 1)[0].rsplit("jc:", 1)[-1]
     assert "T-6736" in server, (
         "seed Endpoints a Pipeline writes through name policyRefs: pin a jc build carrying T-6736 (the Pipeline door)"
         " in components/jc/images.yaml and name T-6736 in its comment"
