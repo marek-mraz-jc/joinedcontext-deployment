@@ -276,8 +276,28 @@ spec:
               containerPort: 6060
               protocol: TCP
             {{- end }}
-          # No probe: a TCP probe from the kubelet is an unmeshed peer, which the Linkerd Servers
-          # below refuse on both ports, and RMQTT serves no HTTP health without its HTTP API.
+          # Exec probes on the pod's loopback (G-16, T-6727): a kubelet TCP or HTTP probe is an
+          # unmeshed peer, which the Linkerd Servers below refuse on every port, while loopback
+          # never passes the proxy. Readiness: the clients' MQTT port accepts. Liveness: RMQTT's
+          # own health read when its HTTP API runs, else the same accept; slower than readiness.
+          {{- $mqttPort := ternary 1883 (ternary 8884 1884 $tlsIn) (not $cert) }}
+          readinessProbe:
+            exec:
+              command: ["nc", "-z", "-w", "2", "127.0.0.1", {{ $mqttPort | quote }}]
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              {{- if $api }}
+              command: ["wget", "-q", "-T", "2", "-O", "/dev/null", "http://127.0.0.1:6060/api/v1/health/check"]
+              {{- else }}
+              command: ["nc", "-z", "-w", "2", "127.0.0.1", {{ $mqttPort | quote }}]
+              {{- end }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 6
           resources:
             {{- toYaml $root.Values.resources | nindent 12 }}
           volumeMounts:
