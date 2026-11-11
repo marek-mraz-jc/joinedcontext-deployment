@@ -27,8 +27,8 @@ Specialises `Entity`.
 | `refParentArea` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refParentArea` | The district a municipality lies in; absent on a district. |
 | `surfaceArea` | Property | `float` |  | m2 | `jc:surfaceArea` | The area's surface as the cadastre states it. |
 | `isPartOf` | Property | `uri` |  |  | `jc:isPartOf` | The catalogue dataset the record belongs to, which tells the region's districts from its municipalities in one type. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `dataProvider` | Property | `string` |  |  | `smartdatamodels:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `smartdatamodels:source` | The open-data service the entity was read from. |
 | `childAreas` | Relationship | [`AdministrativeArea`](#administrativearea) (list) |  |  | `jc:childAreas` | The municipalities of a district, computed from their refParentArea and never stored. |
 | `publicOrganizations` | Relationship | [`PublicOrganization`](#publicorganization) (list) |  |  | `jc:publicOrganizations` | The organisations the region founded in this municipality, computed from their refMunicipality and never stored. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
@@ -54,8 +54,8 @@ Specialises `Entity`.
 | `organizationCategory` | Property | [`OrganizationCategory`](#organizationcategory) | yes |  | `jc:organizationCategory` | The field the region founded the organisation for. |
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed. |
 | `refMunicipality` | Relationship | [`AdministrativeArea`](#administrativearea) |  |  | `jc:refMunicipality` | The municipality the record lies in. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `dataProvider` | Property | `string` |  |  | `smartdatamodels:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `smartdatamodels:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -85,8 +85,8 @@ Specialises `Entity`.
 | `address` | Property | [`PostalAddress`](#postaladdress) |  |  | `schema:address` | The postal address as the register publishes it, field by field (Smart Data Models' common PostalAddress); a field the register leaves out is absent, never guessed. |
 | `districtName` | Property | `string` |  |  | `jc:districtName` | The district the record lies in, by name, as the publisher writes it. |
 | `url` | Property | `string` |  |  | `schema:url` | The web page the publisher gives for it. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `dataProvider` | Property | `string` |  |  | `smartdatamodels:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `smartdatamodels:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
@@ -127,8 +127,8 @@ Specialises `Entity`.
 | `heritageStatus` | Property | [`HeritageStatus`](#heritagestatus) |  |  | `jc:heritageStatus` | Whether the bridge is a listed monument; absent where the databank does not say. |
 | `managerName` | Property | `string` |  |  | `jc:managerName` | The road administration that manages the bridge. |
 | `districtName` | Property | `string` |  |  | `jc:districtName` | The district the record lies in, by name, as the publisher writes it. |
-| `dataProvider` | Property | `string` |  |  | `sdm:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
-| `source` | Property | `uri` |  |  | `sdm:source` | The open-data service the entity was read from. |
+| `dataProvider` | Property | `string` |  |  | `smartdatamodels:dataProvider` | Who publishes the data the entity was read from, with the credit its licence asks for, as an application shows it beside the data. |
+| `source` | Property | `uri` |  |  | `smartdatamodels:source` | The open-data service the entity was read from. |
 | `id` | Property | `string` | yes |  | `ngsi-ld:hasId` | The entity id, urn:ngsi-ld:{Type}:{orgDomain}:{space}:{localId}. |
 | `type` | Property | `string` | yes |  | `ngsi-ld:hasType` | The entity type, one class of a published data model. |
 | `location` | GeoProperty | `string` |  |  | `geojson:geometry` | Where the entity is, as GeoJSON geometry. |
