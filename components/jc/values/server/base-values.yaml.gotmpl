@@ -508,9 +508,13 @@ env:
   JC_SHAKO_APPS_OWNER: "jc-apps"
   JC_PORTAL_PIPELINE_RUNNER_URL: "http://localhost:8080/streams"
   JC_PORTAL_PIPELINES_BATCH_CONCURRENCY: "3"
+  {{- end }}
+  # The Portal writes every Endpoint's view and every space's rule document into Antares with this
+  # token, the one jc-setup holds. In slug mode jc's own fill left the views step without a token
+  # file: jc-dev's broker held views and no rule document, and every Endpoint answered anonymous
+  # reads 403 "no policy grants" (T-6723, 2026-11-11). Both modes name it, as host mode did.
   JC_PORTAL_BROKER_URL: "http://localhost:8080/broker"
   JC_PORTAL_BROKER_ADMIN_TOKEN_FILE: "/run/jc/setup/antares-admin-token"
-  {{- end }}
   {{- if $realm }}
   # The imported deployment's configuration repository, as the rehearsal kit points jc at it.
   JC_SHAKO_OWNER: "joinedcontext"
