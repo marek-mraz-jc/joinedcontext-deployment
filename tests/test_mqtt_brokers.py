@@ -174,6 +174,22 @@ def test_no_state_on_disk_and_no_token_mounted(docs):
     assert not [d for d in docs if d["kind"] == "PersistentVolumeClaim"]
 
 
+@pytest.mark.parametrize("extra, live", [({}, "nc"), ({"portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}, "wget")],
+                         ids=["no http api", "http api"])
+def test_a_hung_broker_leaves_the_service_and_is_restarted(tmp_path, extra, live):
+    """G-16, T-6727: both probes run inside the container on loopback, since the Linkerd Servers
+    refuse the kubelet as an unmeshed peer; liveness gives up after readiness."""
+    result = helm({**BASE, **extra}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    for name, deployment in of([d for d in yaml.safe_load_all(result.stdout) if d], "Deployment").items():
+        (container,) = deployment["spec"]["template"]["spec"]["containers"]
+        ready, alive = container["readinessProbe"], container["livenessProbe"]
+        assert ready["exec"]["command"] == ["nc", "-z", "-w", "2", "127.0.0.1", "1883"], name
+        assert alive["exec"]["command"][0] == live, name
+        assert all("127.0.0.1" in " ".join(p["exec"]["command"]) for p in (ready, alive)), name
+        assert alive["periodSeconds"] * alive["failureThreshold"] > ready["periodSeconds"] * ready["failureThreshold"], name
+
+
 def test_each_listener_admits_one_mesh_identity(docs):
     servers = of(docs, "Server")
     authentications = of(docs, "MeshTLSAuthentication")

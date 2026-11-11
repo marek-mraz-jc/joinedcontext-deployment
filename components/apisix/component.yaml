@@ -35,6 +35,24 @@ parts:
           - op: add
             path: /spec/template/spec/terminationGracePeriodSeconds
             value: 45
+          # The chart ships a readiness probe only, so a gateway whose listener died stayed in
+          # place until someone looked (G-16, T-6727). Liveness reads the same proxy port: the
+          # status API (7085) exists only in the chart's traditional mode, not standalone, and
+          # every HTTP path here answers through a route. ponytail: a TCP accept proves the
+          # listener, not a worker that hangs after accepting; an HTTP probe needs a status
+          # listener first. Slower than readiness, so a busy edge leaves the Service first.
+          - op: test
+            path: /spec/template/spec/containers/0/readinessProbe/tcpSocket/port
+            value: 9080
+          - op: add
+            path: /spec/template/spec/containers/0/livenessProbe
+            value:
+              tcpSocket:
+                port: 9080
+              initialDelaySeconds: 30
+              periodSeconds: 20
+              timeoutSeconds: 3
+              failureThreshold: 6
   # Only with global.ingress.appsWildcard (ADR-N-037 §6, T-3013). The chart grants the webhook
   # get/list/watch on every Secret of the cluster so an Issuer may name its token by reference.
   # Ours reads the token from a mounted file instead, so the grant is emptied: a solver pod
