@@ -345,6 +345,14 @@ def test_the_dumps_role_grants_restore_under_the_drills_own_superuser(smartcity,
         "GRANT x TO y GRANTED BY z;",
     ]
 
+def test_jc_prods_scratch_holds_every_database_it_restores(rendered):
+    # jc-prod's databases were 21.7 GiB live on 2026-11-11; at the default 8Gi the kubelet evicted
+    # the drill mid-restore (T-6725, dr-drill-manual-0919).
+    job = one(rendered("jc-prod"), "CronJob", NAME)["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    scratch = next(v for v in job["volumes"] if v["name"] == "dump-data")["emptyDir"]["sizeLimit"]
+    assert scratch.endswith("Gi") and int(scratch[:-2]) >= 27, scratch
+
+
 def test_dev_restores_the_dump_and_then_the_archive(dev, tmp_path):
     restored = {"portal": "public.a|100\npublic.b|7", "keycloak": "public.user_entity|3"}
     code, result, log = run(dev, tmp_path, {"portal": ("10", "10"), "keycloak": ("3", "3")},
