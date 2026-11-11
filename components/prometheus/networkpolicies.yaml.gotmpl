@@ -17,7 +17,9 @@
     {{- end }}
   {{- end }}
 {{- end }}
-{{- $namespaces = concat $namespaces (dig "prometheus" "stack" "scrapeNamespaces" list $.Values) }}
+{{- /* Another instance's namespaces on the same cluster (dev scrapes jc-prod, T-6727). A global
+       value: an environment's per-component values files are not loaded when this renders. */}}
+{{- $namespaces = concat $namespaces (dig "scrapeNamespaces" list $.Values.global.metrics) }}
 prometheus-server:
   podSelector:
     app.kubernetes.io/name: prometheus
