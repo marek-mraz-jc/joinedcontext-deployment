@@ -113,9 +113,17 @@ if [ "${1:-}" = dump ]; then
     unseal() {
       python3 "${AGE_PY:-/opt/age/age.py}" decrypt --identity-file "${AGE_KEY:-/key/key}" <"$file" || : >"$work/refused"
     }
+    # The role memberships name their grantor (`GRANT pg_monitor TO x GRANTED BY postgres`), and
+    # PostgreSQL 16 refuses a grantor without ADMIN on the role unless it is the bootstrap
+    # superuser, which here is `drill`: jc-prod's dump stopped at its first GRANT (T-6725,
+    # 2026-11-11). Only the roles section, before the first \connect, loses the clause; the
+    # memberships restore as granted by the restoring superuser, every database line is untouched.
+    ungrant() {
+      sed -E '1,/^\\connect /{/^GRANT .* GRANTED BY [^;]+;$/s/ GRANTED BY [^;]+;$/;/}'
+    }
     # gzip -t reads the whole file first: a truncated dump fails here, not halfway through psql.
     if ! { unseal | gzip -t && [ ! -e "$work/refused" ] \
-      && unseal | gunzip | psql -X -q -v ON_ERROR_STOP=1 -d postgres >/dev/null && [ ! -e "$work/refused" ]; } 2>"$work/restore.err"; then
+      && unseal | gunzip | ungrant | psql -X -q -v ON_ERROR_STOP=1 -d postgres >/dev/null && [ ! -e "$work/refused" ]; } 2>"$work/restore.err"; then
       # The first error, cut at its first quote: a quoted value may be a row of the dump.
       local_detail="${file##*/} did not restore: $(grep -m 1 -E 'age.py:|ERROR|gzip:' "$work/restore.err" | sed 's/".*//' | tr -d '\134')"
       return 1

@@ -361,6 +361,32 @@ def test_the_hostname_template_serves_the_city_name_on_8883_with_its_own_certifi
     assert {(d["kind"], d["metadata"]["name"]) for d in stamped} == {(d["kind"], d["metadata"]["name"]) for d in platform}
 
 
+
+def test_the_api_server_refuses_a_portal_deployment_that_is_no_broker(docs, tmp_path):
+    """T-6719, G-1: RBAC cannot narrow a Deployment's spec, so a native admission policy holds the
+    Portal's Deployments here to the template: mqtt-… names, the chart's pinned RMQTT image in
+    every container, nothing privileged, no host namespace or path; Deny, failing closed."""
+    assert not [d for d in docs if d["kind"].startswith("ValidatingAdmissionPolicy")]
+    result = helm({**BASE, "portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}, tmp_path)
+    assert result.returncode == 0, result.stderr
+    rendered = [d for d in yaml.safe_load_all(result.stdout) if d]
+    (policy,) = [d for d in rendered if d["kind"] == "ValidatingAdmissionPolicy"]
+    (binding,) = [d for d in rendered if d["kind"] == "ValidatingAdmissionPolicyBinding"]
+    spec = policy["spec"]
+    assert spec["failurePolicy"] == "Fail" and binding["spec"]["validationActions"] == ["Deny"]
+    assert binding["spec"]["policyName"] == policy["metadata"]["name"] == "jc-mqtt-portal-mqtt-brokers"
+    assert spec["matchConstraints"]["namespaceSelector"]["matchLabels"] == {"kubernetes.io/metadata.name": "jc-mqtt"}
+    assert spec["matchConstraints"]["resourceRules"] == [
+        {"apiGroups": ["apps"], "apiVersions": ["v1"], "resources": ["deployments"], "operations": ["CREATE", "UPDATE"]}]
+    assert spec["matchConditions"][0]["expression"] == 'request.userInfo.username == "system:serviceaccount:jc-portal:portal"'
+    rules = " ".join(v["expression"] for v in spec["validations"] + spec["variables"])
+    (broker,) = [d for d in of(rendered, "Deployment").values() if d["metadata"]["name"] == "mqtt-helsinki-cameras"]
+    image = broker["spec"]["template"]["spec"]["containers"][0]["image"]
+    assert f'c.image == "{image}"' in rules, "the image the template stamps is the one admitted"
+    for clause in ('startsWith("mqtt-")', "privileged", "allowPrivilegeEscalation", "capabilities.add",
+                   "hostNetwork", "hostPID", "hostIPC", "hostPath", "initContainers"):
+        assert clause in rules, clause
+
 def test_the_portal_gets_its_role_only_when_named(docs, tmp_path):
     assert not [d for d in docs if d["kind"] in ("Role", "RoleBinding")]
     result = helm({**BASE, "portal": {"namespace": "jc-portal", "serviceAccount": "portal"}}, tmp_path)

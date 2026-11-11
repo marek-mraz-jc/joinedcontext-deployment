@@ -14,6 +14,7 @@ on PATH as `curl`, so the order of its steps and the shape of its requests are w
 import base64
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -31,6 +32,13 @@ requires_helmfile = pytest.mark.skipif(
 ORG = "joinedcontext"
 REPO = "configuration"
 MANIFEST = ".jc/seed-manifest.txt"
+
+
+def recorded_paths(record: str) -> list[str]:
+    """The paths of the seed's record, one `path blob` line each (T-6711)."""
+    lines = record.splitlines()
+    assert all(re.fullmatch(r"\S+ [0-9a-f]{40}", line) for line in lines), lines
+    return [line.split(" ")[0] for line in lines]
 COMMIT = f"POST http://forge.test/api/v1/repos/{ORG}/{REPO}/contents"
 
 SHARE = """apiVersion: joinedcontext.com/v1alpha1
@@ -158,7 +166,7 @@ def test_a_renamed_seed_path_leaves_exactly_one_file(script, tmp_path):
     first = forge.run(script)
     assert first.returncode == 0, first.stderr
     assert "projects/bbsk/shares/mesto-kpi.yaml" in forge.contents
-    assert forge.contents[MANIFEST].splitlines() == [
+    assert recorded_paths(forge.contents[MANIFEST]) == [
         "projects/bbsk/project.yaml",
         "projects/bbsk/shares/mesto-kpi.yaml",
     ]
@@ -175,7 +183,7 @@ def test_a_renamed_seed_path_leaves_exactly_one_file(script, tmp_path):
     )
     assert "seed: removed projects/bbsk/shares/mesto-kpi.yaml" in second.stdout
     assert forge.log.count(COMMIT) == 2, "each run that changed something is one commit"
-    assert forge.contents[MANIFEST].splitlines() == [
+    assert recorded_paths(forge.contents[MANIFEST]) == [
         "projects/bbsk/project.yaml",
         "projects/bbsk/shared/mesto-kpi.yaml",
     ]
@@ -213,6 +221,80 @@ def test_a_file_the_seed_never_wrote_is_left_alone(script, tmp_path):
     )
 
 
+
+def edit(forge: Forge, path: str, text: str) -> None:
+    """A merged Change (or a person) writes the file on the branch between two applies."""
+    state = json.loads(forge.state.read_text())
+    state["contents"][path] = text
+    forge.state.write_text(json.dumps(state))
+
+
+@requires_helmfile
+def test_an_apply_never_reverts_an_edit_merged_since_the_seed_wrote_the_file(script, tmp_path):
+    """T-6711, P-11: the seed is a post-upgrade hook, so every helm apply ran it, and it put its own
+    version back over an edit approved in the Portal. It changes a file only while the branch
+    still holds what the seed wrote there; an edited file is kept and reported, and is the
+    person's from then on, even once the seed drops the path."""
+    forge = Forge(tmp_path, {})
+    forge.put("projects/bbsk/project.yaml", PROJECT)
+    forge.put("projects/bbsk/shared/mesto-kpi.yaml", SHARE)
+    assert forge.run(script).returncode == 0
+    edited = SHARE.replace("mesto-kpi", "mesto-kpi") + "# approved in the Portal\n"
+    edit(forge, "projects/bbsk/shared/mesto-kpi.yaml", edited)
+
+    # The seed's own version moves on too: still not the seed's to write.
+    forge.put("projects/bbsk/shared/mesto-kpi.yaml", SHARE + "# the seed's next version\n")
+    forge.put("projects/bbsk/project.yaml", PROJECT + "# the seed's next version\n")
+    second = forge.run(script)
+    assert second.returncode == 0, second.stderr
+    assert forge.contents["projects/bbsk/shared/mesto-kpi.yaml"] == edited, "the apply reverted the merged edit"
+    assert "seed: kept projects/bbsk/shared/mesto-kpi.yaml" in second.stdout
+    assert forge.contents["projects/bbsk/project.yaml"].endswith("# the seed's next version\n"), (
+        "a file nobody edited still converges on the seed"
+    )
+    assert recorded_paths(forge.contents[MANIFEST]) == ["projects/bbsk/project.yaml"]
+
+    # A third run over the same state writes nothing, and a seed without the path deletes nothing.
+    commits = forge.log.count(COMMIT)
+    third = forge.run(script)
+    assert third.returncode == 0 and forge.log.count(COMMIT) == commits, third.stdout
+    (forge.seed / "projects__bbsk__shared__mesto-kpi.yaml").unlink()
+    fourth = forge.run(script)
+    assert fourth.returncode == 0, fourth.stderr
+    assert forge.contents["projects/bbsk/shared/mesto-kpi.yaml"] == edited
+    assert not any("mesto-kpi" in call for call in forge.log if call.startswith("DELETE"))
+
+
+@requires_helmfile
+def test_a_dropped_path_the_seed_wrote_and_nobody_edited_still_goes(script, tmp_path):
+    """The rename of T-2392 keeps working under P-11's rule: the old path is unedited, so it goes."""
+    forge = Forge(tmp_path, {})
+    forge.put("projects/bbsk/project.yaml", PROJECT)
+    forge.put("projects/bbsk/shares/mesto-kpi.yaml", SHARE)
+    assert forge.run(script).returncode == 0
+    (forge.seed / "projects__bbsk__shares__mesto-kpi.yaml").unlink()
+    forge.put("projects/bbsk/shared/mesto-kpi.yaml", SHARE)
+    second = forge.run(script)
+    assert second.returncode == 0, second.stderr
+    assert "projects/bbsk/shares/mesto-kpi.yaml" not in forge.contents
+    assert "seed: removed projects/bbsk/shares/mesto-kpi.yaml" in second.stdout
+
+
+@requires_helmfile
+def test_a_record_of_before_names_no_blob_so_a_differing_file_is_kept(script, tmp_path):
+    """A repository seeded before T-6711 holds a record of paths alone: whether a differing file
+    is the seed's old version or a person's edit cannot be told, so it is kept, never guessed."""
+    forge = Forge(tmp_path, {
+        "projects/bbsk/project.yaml": PROJECT + "# someone's line\n",
+        MANIFEST: "projects/bbsk/project.yaml\n",
+    })
+    forge.put("projects/bbsk/project.yaml", PROJECT)
+    result = forge.run(script)
+    assert result.returncode == 0, result.stderr
+    assert forge.contents["projects/bbsk/project.yaml"] == PROJECT + "# someone's line\n"
+    assert "seed: kept projects/bbsk/project.yaml" in result.stdout
+    assert recorded_paths(forge.contents[MANIFEST]) == []
+
 @requires_helmfile
 def test_two_seed_files_of_one_identity_fail_the_job_before_anything_is_written(script, tmp_path):
     """The gateway refuses the repository on a duplicate; the Job refuses the seed on one.
@@ -247,7 +329,7 @@ def test_a_file_that_is_not_a_manifest_takes_part_in_no_clash(script, tmp_path):
 
     assert result.returncode == 0, result.stderr
     assert len(forge.contents) == 5, forge.contents  # four files and the record
-    assert forge.contents[MANIFEST].splitlines() == [
+    assert recorded_paths(forge.contents[MANIFEST]) == [
         "projects/bbsk/datamodels/observation.linkml.yaml",
         "projects/bbsk/datamodels/observation.v1.context.jsonld",
         "projects/bbsk/datamodels/observation.v1.md",
@@ -273,7 +355,7 @@ def test_the_record_is_committed_with_what_it_records_and_names_no_secret(script
     for secret in forge.secrets.values():
         token = base64.b64decode(secret["data"]["token"]).decode()
         assert token not in record
-    assert record == "projects/bbsk/project.yaml\n"
+    assert recorded_paths(record) == ["projects/bbsk/project.yaml"]
 
 
 @requires_helmfile
@@ -386,7 +468,7 @@ def test_layout_2_seeds_the_organization_and_one_repository_per_project(script, 
     assert helsinki["project.yaml"] == HELSINKI
     assert helsinki["shared/mesto-kpi.yaml"] == SHARE
     assert helsinki[".jc/layout"] == "2\n"
-    assert helsinki[MANIFEST].splitlines() == [".jc/layout", "project.yaml", "shared/mesto-kpi.yaml"]
+    assert recorded_paths(helsinki[MANIFEST]) == [".jc/layout", "project.yaml", "shared/mesto-kpi.yaml"]
     assert repos["helsinki"]["private"] is True
     assert set(repos) == {"helsinki", "bbsk"}
     # F-R2DEP2-001: `{slug}-writers` write a project repository, so its `main` carries the
