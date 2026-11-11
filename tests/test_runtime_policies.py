@@ -493,6 +493,56 @@ def test_the_platform_images_are_verified_against_their_workflow_identity(pod_se
     keyless = verify["attestors"][0]["entries"][0]["keyless"]
     assert keyless["issuer"] == "https://token.actions.githubusercontent.com"
     assert keyless["subjectRegExp"] == "^https://github.com/marek-mraz-jc/"
+    assert "verify-production-images" not in docs  # no production namespace, no policy
+
+
+def production_images(tmp_path, *extra):
+    out = subprocess.run(
+        ["helm", "template", "runtime-policies", str(CHART), "--set", "driftReader.enabled=false",
+         "--set", "linkerd.enabled=false", "--set", "operators.enabled=false",
+         "--set", "podSecurity.namespaces={dev}",
+         "--set", "imageSignatures.production.namespaces={jc-prod,jc-prod-mqtt}", *extra, "--namespace", "dev"],
+        capture_output=True, text=True,
+    )
+    return out
+
+
+@requires_helm
+def test_production_namespaces_admit_only_images_the_main_image_workflows_signed(tmp_path):
+    """T-6719, G-1: jc-prod's pods admit our images only when image.yml (or the embedder's
+    image-embedder.yml) on main signed them; dev's rule keeps admitting any workflow of the org."""
+    result = production_images(tmp_path)
+    assert result.returncode == 0, result.stderr
+    docs = {d["metadata"]["name"]: d for d in yaml.safe_load_all(result.stdout) if d}
+    policy = docs["verify-production-images"]["spec"]
+    [rule] = policy["rules"]
+    assert rule["match"]["any"][0]["resources"]["namespaces"] == ["jc-prod", "jc-prod-mqtt"]
+    [verify] = rule["verifyImages"]
+    assert (verify["imageReferences"], verify["required"], verify["verifyDigest"]) == (["ghcr.io/marek-mraz-jc/*"], True, True)
+    subject = re.compile(verify["attestors"][0]["entries"][0]["keyless"]["subjectRegExp"])
+    # The identities jc-prod's images carry (cosign verify, 2026-11-11), and what must not pass.
+    for signed in ("https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/heads/main",
+                   "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image-embedder.yml@refs/heads/main",
+                   "https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/image.yml@refs/heads/main"):
+        assert subject.match(signed), signed
+    for forged in ("https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/heads/jc-portal-1",
+                   "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/ci.yml@refs/heads/main",
+                   "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/heads/main-x",
+                   "https://github.com/marek-mraz-jcx/joinedcontext/.github/workflows/image.yml@refs/heads/main",
+                   "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/tags/v1"):
+        assert not subject.match(forged), forged
+    # Audit while staged never holds a pod; Enforce fails closed.
+    assert (verify["failureAction"], policy["failurePolicy"]) == ("Audit", "Ignore")
+    enforced = production_images(tmp_path, "--set", "imageSignatures.production.failureAction=Enforce")
+    spec = {d["metadata"]["name"]: d for d in yaml.safe_load_all(enforced.stdout) if d}["verify-production-images"]["spec"]
+    assert (spec["rules"][0]["verifyImages"][0]["failureAction"], spec["failurePolicy"]) == ("Enforce", "Fail")
+
+
+@requires_helm
+def test_a_production_subject_on_any_branch_but_main_refuses_to_render(tmp_path):
+    result = production_images(tmp_path, "--set-string",
+                               "imageSignatures.production.subjectRegExp=^https://github\\.com/marek-mraz-jc/.*")
+    assert result.returncode != 0 and "subjectRegExp" in result.stderr, result.stderr
 
 
 

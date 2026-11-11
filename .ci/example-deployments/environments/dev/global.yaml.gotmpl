@@ -99,6 +99,10 @@ global:
   # Workers read this cluster through the read-only agent-reader account (T-6546); never production.
   runtimePolicies:
     agentReader: true
+    # jc-prod (the smartcity hosts), its MQTT brokers and jc-dev run on this cluster too, and
+    # dev owns the cluster-wide policies: their pods admit only images the main image workflows
+    # signed (T-6719), in Audit until one PolicyReport pass shows no refusal.
+    productionNamespaces: [jc-prod, jc-prod-mqtt, jc-dev]
 
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
 
