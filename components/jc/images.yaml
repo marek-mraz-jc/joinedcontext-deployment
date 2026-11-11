@@ -2,17 +2,18 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 28989e4d, ci run 42994885771 (cosign tlog 3807378385, githubWorkflowSha 28989e4d): 16dd5c43 +
+  # main da6650b2, ci run 42997161104 (cosign tlog 3807618995, githubWorkflowSha da6650b2): 16dd5c43 +
   # T-6706 (only the Portal merges into main and writes Change branches; the reconciler sets the
-  # branch rules on existing repositories; approve compares the head commit's e-mail, 7a9d1c6c),
-  # memory-peak cuts 1-3 (histogram buckets 8a44f0d4, streams as JSON text 606d48d6, one ekiben
-  # regex cache per process 28989e4d); 13 commits, none behind; config.rs, migrations and Dockerfile
-  # unchanged. Never pin an image older than 520e299e: without its reconciler guard a fresh start
-  # deletes managed groups and their members.
+  # branch rules on existing repositories; self-approval compares the e-mail the Portal writes,
+  # 7a9d1c6c), memory-peak cuts 1-3 (histogram buckets 8a44f0d4, streams as JSON text 606d48d6, one
+  # ekiben regex cache per process 28989e4d); 16 commits, none behind; config.rs, migrations and
+  # Dockerfile unchanged. 28989e4d, pinned before it, lacked 7a9d1c6c and never ran. Never pin an
+  # image older than 520e299e: without its reconciler guard a fresh start deletes managed groups
+  # and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '28989e4d0e2469e3413db463525895afbd5a38af'
-    digest: 'sha256:eaf6c3aff3d86e1a01c35e816155078f336d0ac98c9266533d10b150768881e0'
+    tag: 'da6650b2a803f29444374554bdfbd5124296d555'
+    digest: 'sha256:f461cd1d528248af964923895711d4f259f35b0a365bd7475a50bfbd6e408435'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
