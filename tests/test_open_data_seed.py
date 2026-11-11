@@ -272,7 +272,10 @@ def test_every_open_data_endpoint_serves_each_standard_and_the_catalogue_lists_e
     slugs = {}
     for project in ("bbsk", "banskabystrica"):
         endpoint = yaml.safe_load((SEED / project / f"{project}-od-endpoint.yaml").read_text())["spec"]
-        assert endpoint["enabledRepresentations"] == generate.REPRESENTATIONS
+        # A space with Article adds `feed` and its base preset `news` (T-6756).
+        news = endpoint.get("representations", {}).get("feed", [])
+        assert endpoint["enabledRepresentations"] == generate.REPRESENTATIONS + (["feed"] if news else [])
+        assert [o["name"] for o in news] == (["news"] if project == "banskabystrica" else [])
         slugs[project] = endpoint["slug"]
     rows = json.loads(generate.DISTRIBUTIONS.read_text())
     # A dataset no Pipeline fills since T-5729 (source.kind endpoint) lists no distribution (T-5788).

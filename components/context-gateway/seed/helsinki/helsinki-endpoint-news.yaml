@@ -13,7 +13,16 @@ spec:
   audience: public
   # The one Policy this endpoint evaluates: the slice of the space it publishes (EP-14).
   policyRef: urn:ngsi-ld:Policy:hel.fi:helsinki:public-news
-  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata]
+  enabledRepresentations: [ngsi-ld, csv, mcp, websocket, ogc-features, odata, feed]
+  # The base preset `news` (T-6756, API/02 §4a): feeds/news.rss, .atom and .json.
+  representations:
+    feed:
+      - name: news
+        title: { fi: Helsingin kaupungin uutiset, sv: Helsingfors stads nyheter, en: Helsinki city news }
+        lang: fi
+        sources:
+          - type: Article
+            preset: article
   # Its own dataset in the hel-fi catalogue (T-4344): one type, every mandatory surface (EP-118).
   publish:
     ckan:
