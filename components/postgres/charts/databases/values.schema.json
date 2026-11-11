@@ -41,6 +41,10 @@
         "cap": {
           "type": "string"
         },
+        "storageClass": {
+          "type": "string",
+          "description": "the dumps' volume class, e.g. local-path-retain; empty: the cluster's default"
+        },
         "ageRecipients": {
           "type": "array",
           "description": "age1... public keys the nightly dump is encrypted to besides the drill key, e.g. the operator's",
