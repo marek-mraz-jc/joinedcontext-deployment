@@ -49,13 +49,14 @@ jc:
     # Mounted in jc but never public (decided jc-ship, owner may override): ekiben (/streams)
     # takes one shared token, the in-binary broker (/broker) runs no views or Policy engine,
     # shako (/git) is the Portal's forge. The Portal reaches all three inside the pod; the edge
-    # answers 404 without dialling jc. `metrics` stays on the admin listener (9091), off the
-    # Service's public port.
+    # answers 404 without dialling jc. `metrics` stays on the admin listener (9091): jc's public
+    # port answers /metrics too, empty but 200 (G-17, T-6727), so the edge closes it as well.
     uri-blocker:
       block_rules:
         - '^/streams([/?]|$)'
         - '^/broker([/?]|$)'
         - '^/git([/?]|$)'
+        - '^/metrics([/?]|$)'
       rejected_code: 404
     proxy-rewrite:
       headers:

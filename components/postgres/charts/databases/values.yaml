@@ -16,6 +16,9 @@ localBackup:
   # What the dumps may fill, when more than `size`: local-path neither enforces nor expands a PVC's
   # request, so a larger cap goes here, never into `size` (empty: `size`).
   cap: ''
+  # The dumps' volume class; empty: the cluster's default (T-6718: a Retain class where the dumps
+  # must outlive a deleted claim).
+  storageClass: ''
   # Databases left out of the dump and its counts, e.g. [antares]: what the drill then restores.
   excludeDatabases: []
   # The age1... public keys each dump is encrypted to besides the drill key (T-5839): the

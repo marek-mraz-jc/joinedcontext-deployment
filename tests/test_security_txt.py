@@ -74,3 +74,17 @@ def test_a_production_render_without_a_contact_stops(rendered_variant):
 
     with pytest.raises(AssertionError, match="global.securityTxt.contact is empty"):
         rendered_variant("production", without_contact)
+
+
+@requires_helmfile
+def test_jc_prod_is_judged_by_the_production_guard_under_the_development_profile(rendered_variant):
+    """T-6720, F-3: jc-prod serves the smartcity hosts with the development profile's sizes; the
+    guard judges it all the same, so an approver without a one-time code stops its render."""
+    def without_mfa(root):
+        path = root / "deployment/environments/jc-prod/global.yaml.gotmpl"
+        text = path.read_text()
+        assert "  profile: development\n" in text and "  productionGuard: true\n" in text
+        path.write_text(text.replace("  productionGuard: true\n", "  productionGuard: true\n  approverMfa: false\n"))
+
+    with pytest.raises(AssertionError, match="global.approverMfa is false"):
+        rendered_variant("jc-prod", without_mfa)

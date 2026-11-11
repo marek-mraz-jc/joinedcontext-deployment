@@ -4,7 +4,9 @@
   (the node's sslip.io host before T-2806); a production render that inherits any of them is dev
   under another name, so it stops here and says which value to set.
 */}}
-{{- if eq .Values.global.profile "production" }}
+{{- /* T-6720: an instance that serves production hosts under the development profile (jc-prod:
+       its sizes are dev's, its names and users are production's) is judged here too. */}}
+{{- if or (eq .Values.global.profile "production") (dig "productionGuard" false .Values.global) }}
 {{- range $key := list "domain" "orgDomain" }}
 {{- $value := index $.Values.global $key | default "" | toString }}
 {{- if or (eq $value "") (hasSuffix ".test" $value) (hasSuffix ".localhost" $value) (eq $value "localhost") (contains "sslip.io" $value) (eq $value "dev.joinedcontext.com") (hasSuffix ".dev.joinedcontext.com" $value) }}

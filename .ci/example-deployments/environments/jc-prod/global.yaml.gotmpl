@@ -42,6 +42,9 @@ global:
   orgDomain: hel.fi
   instanceSlug: jc-prod
   profile: development
+  # The smartcity hosts and their users are production's: the production guard judges this
+  # render though the sizes stay the development profile's (T-6720).
+  productionGuard: true
   # The installation's logo as old prod's smartcity branding named it: jc's catalogue footer mark,
   # favicon and /logo.svg ([dataroom.branding], components/jc/values/server).
   branding:
@@ -126,6 +129,8 @@ postgres:
       enabled: true
       keepDays: 2
       cap: 16Gi
+      # The dumps outlive a deleted claim (T-6718, cluster/hetzner local-path-retain).
+      storageClass: local-path-retain
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
@@ -137,6 +142,9 @@ artifact-store:
     storage:
       size: 2Gi
     rawValues:
+      # A claim not made yet: it outlives its deletion (T-6718, local-path-retain).
+      storage:
+        storageClass: local-path-retain
       resources:
         requests:
           cpu: 50m
@@ -714,3 +722,11 @@ networkpolicies:
             port: 9091
           - protocol: TCP
             port: 4143
+
+# The Apps' database has no claim yet: it outlives its deletion (T-6718, local-path-retain).
+apps-db:
+  cluster:
+    rawValues:
+      cluster:
+        storage:
+          storageClass: local-path-retain
