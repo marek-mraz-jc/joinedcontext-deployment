@@ -58,7 +58,7 @@
       "@type": "@id"
     },
     "dataProvider": {
-      "@id": "sdm:dataProvider"
+      "@id": "smartdatamodels:dataProvider"
     },
     "districtName": {
       "@id": "jc:districtName"
@@ -164,7 +164,7 @@
       "@id": "jc:roadNumber"
     },
     "schema": "http://schema.org/",
-    "sdm": "https://smartdatamodels.org/",
+    "smartdatamodels": "https://smartdatamodels.org/",
     "sdm-cpsv": "https://smartdatamodels.org/dataModel.CPSV-AP/",
     "sdm-poi": "https://smartdatamodels.org/dataModel.PointOfInterest/",
     "serviceForm": {
@@ -181,7 +181,7 @@
     "shex": "http://www.w3.org/ns/shex#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "source": {
-      "@id": "sdm:source",
+      "@id": "smartdatamodels:source",
       "@type": "xsd:anyURI"
     },
     "spanCount": {

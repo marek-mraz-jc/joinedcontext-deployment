@@ -11,11 +11,12 @@ license: https://joinedcontext.com/licenses/cc-by-4.0
 prefixes:
   linkml: https://w3id.org/linkml/
   jc: https://joinedcontext.com/models/
-  sdm: https://smartdatamodels.org/
+  smartdatamodels: https://smartdatamodels.org/
   sdm-poi: https://smartdatamodels.org/dataModel.PointOfInterest/
   sdm-cpsv: https://smartdatamodels.org/dataModel.CPSV-AP/
   ngsi-ld: https://uri.etsi.org/ngsi-ld/
-default_prefix: sdm
+  schema: http://schema.org/
+default_prefix: smartdatamodels
 default_range: string
 imports:
   - linkml:types
@@ -173,7 +174,7 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://schema.org/url
   dataProvider:
-    slot_uri: sdm:dataProvider
+    slot_uri: smartdatamodels:dataProvider
     description: >-
       Who publishes the data the entity was read from, with the credit its licence asks for, as
       an application shows it beside the data.
@@ -188,7 +189,7 @@ slots:
       ngsi_ld_kind: Property
       upstream_source: https://github.com/smart-data-models/data-models
   source:
-    slot_uri: sdm:source
+    slot_uri: smartdatamodels:source
     description: The open-data service the entity was read from.
     range: uri
     annotations:

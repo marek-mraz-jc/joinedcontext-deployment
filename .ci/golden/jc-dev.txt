@@ -3,6 +3,7 @@ apps/v1/Deployment jc-dev/jc
 apps/v1/Deployment jc-dev/jc-wasm-host-0
 apps/v1/Deployment jc-dev/jc-wasm-host-1
 apps/v1/StatefulSet jc-dev/artifact-store
+batch/v1/CronJob jc-dev/jc-retain
 batch/v1/CronJob jc-dev/postgres-cluster-dr-drill
 batch/v1/Job jc-dev/artifact-store-bucket
 batch/v1/Job jc-dev/jc-daiya-db-create-role-daiya-app-login

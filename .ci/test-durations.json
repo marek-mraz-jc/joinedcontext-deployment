@@ -308,6 +308,7 @@
  "test_seed_identity_unique.py": 8.9,
  "test_seed_mapping_host_reads.py": 0.3,
  "test_seed_model_help_text.py": 5.5,
+ "test_seed_models_lint.py": 36.0,
  "test_seed_no_rate_limits.py": 13.4,
  "test_seed_one_model_per_space.py": 7.8,
  "test_seed_published_models_commit_four_artifacts.py": 0.0,
