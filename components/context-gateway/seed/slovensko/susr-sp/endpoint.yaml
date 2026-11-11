@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Inflácia: spotrebiteľské ceny medziročne: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube sp0005ms), jedna položka na zverejnenú bunku.", en: "Inflation: consumer prices year on year: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube sp0005ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-sp
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-sp:susr-sp-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-sp:susr-sp-public-read
   slug: l7q5rbcjcqwn6xyo5q5gocjphsfdfib2
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

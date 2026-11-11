@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Priemerná mesačná mzda: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube pr0204qs), jedna položka na zverejnenú bunku.", en: "Average monthly wage: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube pr0204qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-pr-mzdy
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pr-mzdy:susr-pr-mzdy-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pr-mzdy:susr-pr-mzdy-public-read
   slug: ookuklgyy6dtlpgrhnaxexb5fgjj4pqy
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Pracovníci výskumu a vývoja: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube vt0001rs), jedna položka na zverejnenú bunku.", en: "Research and development personnel: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube vt0001rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-vt-pracovnici
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-vt-pracovnici:susr-vt-pracovnici-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-vt-pracovnici:susr-vt-pracovnici-public-read
   slug: stydygk2di4litxfhy5zo3m3ejqgbk7p
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

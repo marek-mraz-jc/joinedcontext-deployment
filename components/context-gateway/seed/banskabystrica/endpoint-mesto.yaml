@@ -10,6 +10,11 @@ metadata:
     en: Banská Bystrica, raw data
 spec:
   contextSpaceRef: banskabystrica-mesto
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-mesto:mesto-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-mesto:mesto-steward-note
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-mesto:mesto-steward-read
   slug: ovr4ttzywhad2oiogf67n7zyn2g2elfc
   audience: organization
   enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]

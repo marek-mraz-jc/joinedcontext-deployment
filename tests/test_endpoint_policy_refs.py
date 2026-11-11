@@ -2,9 +2,10 @@
 
 An Endpoint without `policyRefs` evaluates every Policy of its space, so a Policy written for one
 Endpoint opens every other Endpoint of that space. scripts/policy-refs-migrate.py wrote the
-Policies each seed Endpoint bound into it (a space a Pipeline writes or reads waits for T-6736);
-these tests keep the seed that way and keep each reference binding a Policy, as the gateway
-resolves it (`store.rs` `bound_policies`).
+Policies each seed Endpoint bound into it; these tests keep the seed that way and keep each
+reference binding a Policy, as the gateway resolves it (`store.rs` `bound_policies`). A Pipeline's
+derived `pl-*` grants are not written: since T-6736 each binds the Endpoint its manifest names,
+whatever that Endpoint lists (T-6741).
 """
 
 import importlib.util
@@ -28,6 +29,47 @@ def test_every_seed_endpoint_names_its_policies():
     assert not todo, (
         "Endpoints without policyRefs bind every Policy of their space; run scripts/policy-refs-migrate.py --write: "
         + ", ".join(f"{path.relative_to(ROOT)} {name}" for path, name, _ in todo)
+    )
+
+
+def pipeline_doors(docs):
+    """(project, pipeline, endpoint name) of each Endpoint a Pipeline writes or reads through."""
+    for _, d in docs:
+        if d["kind"] != "Pipeline":
+            continue
+        project, s = d["metadata"].get("namespace"), d.get("spec") or {}
+        for o in [s, *(s.get("outputs") or [])]:
+            if isinstance(o, dict) and o.get("targetEndpoint"):
+                yield project, d["metadata"]["name"], o["targetEndpoint"].rsplit(":", 1)[-1]
+        for x in [s.get("source") or {}, *(s.get("sources") or [])]:
+            if isinstance(x, dict) and x.get("endpointRef"):
+                yield project, d["metadata"]["name"], migrate.ref_name(x["endpointRef"])
+
+
+def test_each_pipeline_door_is_an_endpoint_of_its_project():
+    # A Pipeline's derived grant binds an Endpoint with policyRefs only when its manifest names that
+    # Endpoint of its own project (T-6736 `endpoint_grants`); any other door would answer its writes 404.
+    docs = seed()
+    endpoints = {(d["metadata"].get("namespace"), d["metadata"]["name"]) for _, d in docs if d["kind"] == "Endpoint"}
+    doors = list(pipeline_doors(docs))
+    assert doors
+    missing = [f"{project}/{pipeline} -> {name}" for project, pipeline, name in doors if (project, name) not in endpoints]
+    assert not missing, "Pipelines naming no Endpoint of their project: " + ", ".join(missing)
+
+
+def test_the_jc_pin_binds_a_pipeline_through_an_endpoint_with_policyrefs():
+    # jc builds before T-6736 bind a Pipeline's derived grants only on an Endpoint naming no Policy:
+    # piped seed Endpoints with policyRefs need the pinned jc to carry T-6736, or dev answers their writes 404.
+    docs = seed()
+    named = {(d["metadata"].get("namespace"), d["metadata"]["name"]) for _, d in docs
+             if d["kind"] == "Endpoint" and ((d.get("spec") or {}).get("policyRefs") or (d.get("spec") or {}).get("policyRef"))}
+    if not any((project, name) in named for project, _, name in pipeline_doors(docs)):
+        return
+    pin = (ROOT / "components/jc/images.yaml").read_text(encoding="utf-8")
+    server = pin[: pin.index("  server:")].rsplit("jc:", 1)[-1]
+    assert "T-6736" in server, (
+        "seed Endpoints a Pipeline writes name policyRefs: pin a jc build carrying T-6736 (the Pipeline door)"
+        " in components/jc/images.yaml and name T-6736 in its comment"
     )
 
 
@@ -95,9 +137,9 @@ def test_migration_writes_exactly_todays_bound_set():
     ]
     todo, skipped = migrate.plan(docs)
     refs = ["urn:ngsi-ld:Policy:city.sk:city-air:read", "urn:ngsi-ld:Policy:city.sk:city-air:write"]
-    assert todo == [(path, "air-public", refs)]
-    # feed-door's space takes the derived write of Pipeline ingest, which binds only a door naming no Policy (PL-20).
-    assert [name for _, name, _ in skipped] == ["app-map", "empty", "feed-door"]
+    # feed-door names its space's manifest Policy only: Pipeline ingest's derived write binds it as its target (T-6736).
+    assert todo == [(Path("e4.yaml"), "feed-door", ["urn:ngsi-ld:Policy:city.sk:city-feed:feed-read"]), (path, "air-public", refs)]
+    assert [name for _, name, _ in skipped] == ["app-map", "empty"]
 
     written = yaml.safe_load(migrate.write_refs(textwrap.dedent(FIXTURE), "air-public", refs))
     assert written["spec"]["policyRefs"] == refs

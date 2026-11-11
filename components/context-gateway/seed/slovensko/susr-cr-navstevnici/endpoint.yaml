@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Návštevníci ubytovacích zariadení: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube cr1004rs), jedna položka na zverejnenú bunku.", en: "Visitors in accommodation establishments: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube cr1004rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-cr-navstevnici
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-cr-navstevnici:susr-cr-navstevnici-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-cr-navstevnici:susr-cr-navstevnici-public-read
   slug: qczxsxskvcj6rst2t4h6ervanln7oppy
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

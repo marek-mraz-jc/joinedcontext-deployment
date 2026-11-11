@@ -12,6 +12,10 @@ metadata:
     en: Hourly concentrations of PM10, PM2.5, NO2 and O3 at every air-quality monitoring station in Slovakia, one record per station with its latest measured hour and a week of history.
 spec:
   contextSpaceRef: ovzdusie-sk
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:ovzdusie-sk:pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:ovzdusie-sk:public-read
   slug: wtvuppkop6y3qv7bnvzqwifv4uts4e2k
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

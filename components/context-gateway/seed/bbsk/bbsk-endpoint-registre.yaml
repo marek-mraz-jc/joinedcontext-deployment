@@ -13,6 +13,17 @@ metadata:
     en: "District and municipality outlines, the region's organisations, hospitals, the social services of public providers and bridges. Source: Banská Bystrica Self-Governing Region, https://opendata.bbsk.sk/, CC BY-SA 4.0."
 spec:
   contextSpaceRef: bbsk-registre
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:app-bbsk-data-1
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:app-bbsk-mapa-1
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:app-bbsk-mosty-1-viewer
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:hranice-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:mosty-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:organizacie-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:registre-pipelines-write
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:registre-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:zariadenia-read
   slug: lws6dd7o56veegwxsjtvak3goeta4mfn
   audience: public
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public

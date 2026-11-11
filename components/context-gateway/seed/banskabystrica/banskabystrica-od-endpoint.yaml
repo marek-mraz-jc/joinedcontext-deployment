@@ -15,6 +15,10 @@ metadata:
       orders, grants, council meetings, greenery, parking) and the city''s news (Aktuality) as Articles.'
 spec:
   contextSpaceRef: banskabystrica-otvorene-data
+  policyRefs:
+  - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-otvorene-data:otvorene-data-pipelines-write
+  - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-otvorene-data:otvorene-data-read
+  - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-otvorene-data:otvorene-data-read-history
   slug: 4ysiqy53qik5qyvawwaj7wgylpt4uoxa
   audience: public
   enabledRepresentations:
