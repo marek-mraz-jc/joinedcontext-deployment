@@ -66,6 +66,8 @@ postgres:
       size: 10Gi
       # The dumps' limit when above `size` (local-path cannot grow the PVC); empty: `size`.
       cap: ''
+      # The dumps' volume class; empty: the cluster's default.
+      storageClass: ''
       # Databases left out of the dump, e.g. [antares]. The dump of the rest stops at `size`
       # and does not start when it would leave the node's disk under 10 % free.
       excludeDatabases: []

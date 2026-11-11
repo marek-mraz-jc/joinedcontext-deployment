@@ -126,6 +126,8 @@ postgres:
       enabled: true
       keepDays: 2
       cap: 16Gi
+      # The dumps outlive a deleted claim (T-6718, cluster/hetzner local-path-retain).
+      storageClass: local-path-retain
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
@@ -137,6 +139,9 @@ artifact-store:
     storage:
       size: 2Gi
     rawValues:
+      # A claim not made yet: it outlives its deletion (T-6718, local-path-retain).
+      storage:
+        storageClass: local-path-retain
       resources:
         requests:
           cpu: 50m
@@ -714,3 +719,11 @@ networkpolicies:
             port: 9091
           - protocol: TCP
             port: 4143
+
+# The Apps' database has no claim yet: it outlives its deletion (T-6718, local-path-retain).
+apps-db:
+  cluster:
+    rawValues:
+      cluster:
+        storage:
+          storageClass: local-path-retain

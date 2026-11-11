@@ -185,6 +185,9 @@ metadata:
     helm.sh/resource-policy: keep
 spec:
   accessModes: [ReadWriteOnce]
+  {{- with .storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .size }}
