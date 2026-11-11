@@ -788,11 +788,17 @@ spec:
               #    so one renamed seed file stopped every endpoint on the cluster. Two rules fix
               #    it, in this order:
               #
-              #      * what the seed wrote last run is committed as `.jc/seed-manifest.txt`, and
-              #        a path that was in it and is not in the seed any more is deleted. A path
-              #        that was never in it is somebody's own file and is left alone — which is
-              #        why the record is generated here from the mounted seed and never read out of
-              #        the repository's own manifests, where a file could name itself.
+              #      * what the seed wrote last run is committed as `.jc/seed-manifest.txt`, one
+              #        `path blob` line each, and a path that was in it and is not in the seed any
+              #        more is deleted. A path that was never in it is somebody's own file and is
+              #        left alone — which is why the record is generated here from the mounted seed
+              #        and never read out of the repository's own manifests, where a file could
+              #        name itself.
+              #      * the seed changes or deletes a path only while the branch still holds the blob
+              #        the seed wrote there (T-6711, P-11). A file edited since, through a merged
+              #        Change or by hand, is reported as kept and leaves the record: it is the
+              #        person's from then on, and no apply reverts it. A record of before this rule
+              #        names no blob, so a file that differs from the seed is kept, never guessed.
               #      * two seed entries that resolve to one identity fail the Job, naming both
               #        paths, before anything is written. The gateway would refuse them at
               #        start-up; refusing here says which two files, while there is still a
@@ -849,6 +855,26 @@ spec:
               held() {
                 awk -v p="$1" '$1 == p {print $2}' $WORK/seed-remote
               }
+              # What the seed wrote last run, `path blob` per line (a record of before T-6711 holds
+              # paths alone). A path already gone from the record is not an error: this step runs
+              # on every apply.
+              : > $WORK/seed-previous-record
+              status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
+              case "$status" in
+                200)
+                  grep -o '"content": *"[^"]*"' $WORK/body | head -1 \
+                    | sed 's/^"content": *"//; s/"$//; s/\\n//g' | base64 -d > $WORK/seed-previous-record ;;
+                404)
+                  echo "seed: no record of an earlier run; nothing is removed this time" ;;
+                *)
+                  echo "the forge answered $status for $SEED_MANIFEST" >&2; cat $WORK/body >&2; exit 1 ;;
+              esac
+              cut -d' ' -f1 $WORK/seed-previous-record | sed '/^$/d' | sort -u > $WORK/seed-previous
+              # recorded <path>: the blob the seed wrote at the path last run, or nothing.
+              recorded() {
+                awk -v p="$1" '$1 == p {print $2}' $WORK/seed-previous-record
+              }
+              : > $WORK/seed-record
 
               # One commit for the whole seed (T-4709): a commit per file cost the forge a clone
               # each, and 1,600 of them outran helm's 900 s on a fresh cluster. Each operation
@@ -872,38 +898,34 @@ spec:
               }
 
               seeded=0
+              kept=0
               for f in "$SEED_FROM"/* "$SEED_FROM"/.[!.]*; do
                 [ -f "$f" ] || continue
                 path=$(basename "$f" | sed 's|__|/|g')
                 sha=$(held "$path")
-                [ "$sha" = "$(blob_id "$f")" ] && continue
-                if [ -n "$sha" ]; then
+                want=$(blob_id "$f")
+                if [ "$sha" = "$want" ]; then
+                  echo "$path $want" >> $WORK/seed-record
+                  continue
+                fi
+                if [ -z "$sha" ]; then
+                  change create "$path" "" "$f"
+                  echo "seed: created $path"
+                elif [ "$sha" = "$(recorded "$path")" ]; then
                   change update "$path" "$sha" "$f"
                   echo "seed: updated $path"
                 else
-                  change create "$path" "" "$f"
-                  echo "seed: created $path"
+                  echo "seed: kept $path: changed since the seed wrote it, the seed's version is not applied"
+                  kept=$((kept + 1))
+                  continue
                 fi
+                echo "$path $want" >> $WORK/seed-record
                 seeded=$((seeded + 1))
               done
-              echo "seed: $seeded file(s) written, the rest already matched"
+              echo "seed: $seeded file(s) written, $kept kept as edited, the rest already matched"
 
               # 5b. What the seed owned last run and does not own now. `comm -23` is the paths
-              #     that are in the committed record and not in this run's list; a path that is
-              #     already gone is not an error, because this step is repeated on every apply.
-              : > $WORK/seed-previous
-              status=$(portal_code GET "/api/v1/repos/$ORG/$SEED_REPO/contents/$SEED_MANIFEST?ref=$BRANCH")
-              case "$status" in
-                200)
-                  grep -o '"content": *"[^"]*"' $WORK/body | head -1 \
-                    | sed 's/^"content": *"//; s/"$//; s/\\n//g' | base64 -d > $WORK/seed-previous
-                  sort -o $WORK/seed-previous $WORK/seed-previous ;;
-                404)
-                  echo "seed: no record of an earlier run; nothing is removed this time" ;;
-                *)
-                  echo "the forge answered $status for $SEED_MANIFEST" >&2; cat $WORK/body >&2; exit 1 ;;
-              esac
-
+              #     that are in the committed record and not in this run's list.
               removed=0
               comm -23 $WORK/seed-previous $WORK/seed-paths > $WORK/seed-gone
               while IFS= read -r gone; do
@@ -911,6 +933,10 @@ spec:
                 sha=$(held "$gone")
                 if [ -z "$sha" ]; then
                   echo "seed: $gone is already gone"
+                  continue
+                fi
+                if [ "$sha" != "$(recorded "$gone")" ]; then
+                  echo "seed: kept $gone: changed since the seed wrote it, so it is not the seed's to remove"
                   continue
                 fi
                 change delete "$gone" "$sha"
@@ -922,10 +948,11 @@ spec:
               # 5c. The record for the next run, in the same commit as what it records: a run
               #     that died before the commit leaves the older record and the older files
               #     together, and the next one does the same work again.
+              sort -o $WORK/seed-record $WORK/seed-record
               sha=$(held "$SEED_MANIFEST")
-              if [ "$sha" != "$(blob_id $WORK/seed-paths)" ]; then
-                if [ -n "$sha" ]; then change update "$SEED_MANIFEST" "$sha" $WORK/seed-paths
-                else change create "$SEED_MANIFEST" "" $WORK/seed-paths; fi
+              if [ "$sha" != "$(blob_id $WORK/seed-record)" ]; then
+                if [ -n "$sha" ]; then change update "$SEED_MANIFEST" "$sha" $WORK/seed-record
+                else change create "$SEED_MANIFEST" "" $WORK/seed-record; fi
               fi
               printf ']}' >> $WORK/request
               if [ "$changes" -gt 0 ]; then

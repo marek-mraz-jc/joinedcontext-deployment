@@ -144,7 +144,7 @@ def run(docs: list[dict], tmp_path: Path, rows: dict[str, tuple[str, str]], mem_
             "psql": textwrap.dedent(f"""\
                 #!/bin/sh
                 [ "$2" = -At ] && exec cat {tmp_path}/restored.$4
-                cat >/dev/null
+                cat >{tmp_path}/restore-input.sql
                 {f"echo '{fail}' >&2; exit 3" if fail else ""}
                 """),
             "initdb": "#!/bin/sh\nmkdir -p \"$2\" && echo row > \"$2/PG_VERSION\"\n",
@@ -323,6 +323,34 @@ def test_prod_restores_its_local_dump_and_still_says_it_has_no_off_site_backup(s
     newest = tmp_path / "backup" / DUMP
     assert result["localDumpBytes"] == str(newest.stat().st_size)
     assert log == [], "the dump restores in the drill's own pod: nothing created, no Cluster without an archive"
+
+
+
+def test_the_dumps_role_grants_restore_under_the_drills_own_superuser(smartcity, tmp_path):
+    """T-6725: pg_dumpall names each membership's grantor, and PostgreSQL 16 refuses one that is
+    not the bootstrap superuser (`drill` here): jc-prod's first restore stopped at
+    `GRANT pg_monitor ... GRANTED BY postgres`. The roles section loses the clause, a line after
+    the first \\connect (a database's own text) reaches psql as written."""
+    data = (b"CREATE ROLE postgres;\n"
+            b"GRANT pg_monitor TO cnpg_metrics_exporter WITH INHERIT TRUE GRANTED BY postgres;\n"
+            b"\\connect portal\n"
+            b"GRANT x TO y GRANTED BY z;\n")
+    restored = {"portal": "public.a|100\npublic.b|7", "keycloak": "public.user_entity|3"}
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "restored": restored, "data": gzip.compress(data)})
+    assert code == 0 and result["localDump"] == "local-dump-passed", result
+    assert (tmp_path / "restore-input.sql").read_text().splitlines() == [
+        "CREATE ROLE postgres;",
+        "GRANT pg_monitor TO cnpg_metrics_exporter WITH INHERIT TRUE;",
+        "\\connect portal",
+        "GRANT x TO y GRANTED BY z;",
+    ]
+
+def test_jc_prods_scratch_holds_every_database_it_restores(rendered):
+    # jc-prod's databases were 21.7 GiB live on 2026-11-11; at the default 8Gi the kubelet evicted
+    # the drill mid-restore (T-6725, dr-drill-manual-0919).
+    job = one(rendered("jc-prod"), "CronJob", NAME)["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    scratch = next(v for v in job["volumes"] if v["name"] == "dump-data")["emptyDir"]["sizeLimit"]
+    assert scratch.endswith("Gi") and int(scratch[:-2]) >= 27, scratch
 
 
 def test_dev_restores_the_dump_and_then_the_archive(dev, tmp_path):
