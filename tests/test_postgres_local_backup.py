@@ -77,6 +77,22 @@ def helm_template(tmp_path: Path, *sets: str) -> subprocess.CompletedProcess:
     return subprocess.run(args, capture_output=True, text=True, check=False)
 
 
+def test_jc_prod_dumps_every_database_nightly_and_the_drill_restores_the_dump(rendered):
+    # F-1 (owner 2026-11-11): jc-prod serves the public smartcity hosts and declared no backup.
+    docs = rendered("jc-prod")
+    cron = one(docs, "CronJob", "postgres-cluster-local-backup")
+    assert cron["metadata"]["namespace"] == "jc-prod" and cron["spec"]["schedule"] == "30 2 * * *"
+    env = {e["name"]: e.get("value") for e in cron["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["env"]}
+    assert env["EXCLUDE_DATABASES"] == "", "jc_antares is the data; the dump leaves nothing out"
+    # Its own volume, never the database's PVC: a lost data volume keeps the dumps.
+    pvc = one(docs, "PersistentVolumeClaim", "postgres-cluster-local-backup")
+    assert pvc["metadata"]["namespace"] == "jc-prod"
+    drill = one(docs, "CronJob", "postgres-cluster-dr-drill")["spec"]["jobTemplate"]["spec"]["template"]["spec"]
+    claims = {v["persistentVolumeClaim"]["claimName"] for v in drill["volumes"] if "persistentVolumeClaim" in v}
+    assert claims == {"postgres-cluster-local-backup"}
+    assert [c["name"] for c in drill["initContainers"]] == ["dump"], "the drill restores the newest dump first"
+
+
 def test_the_render_refuses_a_dump_sealed_to_no_operator_key(tmp_path):
     refused = helm_template(tmp_path)
     assert refused.returncode != 0 and "localBackup.ageRecipients is empty" in refused.stderr
