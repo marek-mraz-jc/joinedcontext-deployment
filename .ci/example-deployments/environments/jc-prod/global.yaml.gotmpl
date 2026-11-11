@@ -26,6 +26,10 @@ components:
   # into a namespace of their own (jc-prod-mqtt, not jc-prod: the gateway's Linkerd rule admits
   # every identity of that namespace to jc's internal port).
   - mqtt-brokers
+  # The dataset map's and the map Apps' basemap on tiles.{domain} (components/basemap): its own
+  # style host and CORS for this domain. It replaces dev's kept basemap-tiles, whose style named
+  # tiles.dev and admitted only viz.dev (owner 2026-11-11 05:48Z, empty catalogue map).
+  - basemap
   # Scrape configuration only (ServiceMonitor/PodMonitor in this namespace), read by dev's
   # Prometheus; no rule set of its own, which dev's Prometheus would evaluate a second time.
   - monitoring
@@ -144,19 +148,18 @@ jc:
   server:
     mode: host
     # Prod's edge certificate names (kubectl get ingress -n smartcity apisix, 2026-11-09): the same
-    # set, so the copied certificate stays Ready. status. and tiles. are no jc modules (prod serves
-    # them from status-page and basemap-tiles): `hostUpstreams` sends them to the ones dev kept
-    # (supervisor 20:2xZ), opened to this edge by the policies below.
+    # set, so the copied certificate stays Ready. status. is no jc module (prod serves it from
+    # status-page): `hostUpstreams` sends it to the one dev kept (supervisor 20:2xZ), opened to this
+    # edge by the policies below. tiles. is components/basemap's own route (subDomain tiles).
     hostUpstreams:
       status: status-page.dev.svc.cluster.local:8080
-      tiles: basemap-tiles.dev.svc.cluster.local:8080
       # prod's BBSK demo landing alone (demos/bbsk-landing, namespace bbsk-landing).
       bbsk: demo-bbsk-landing.bbsk-landing.svc.cluster.local:8080
     # bbsk. keeps prod's own certificate (Secret demo-bbsk-tls, copied by prod-deployer): off the
     # edge certificate's SAN list, so the copied apisix-edge-tls stays Ready.
     hostTls:
       bbsk: demo-bbsk-tls
-    hosts: ["", api, assistant, bbsk, data, idm, opendata, portal, status, tiles, viz]
+    hosts: ["", api, assistant, bbsk, data, idm, opendata, portal, status, viz]
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:
@@ -434,13 +437,6 @@ networkpolicies:
                 app.kubernetes.io/instance: probes-status
           - namespaceSelector:
               matchLabels:
-                kubernetes.io/metadata.name: dev
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/instance: basemap-tiles
-                app.kubernetes.io/component: server
-          - namespaceSelector:
-              matchLabels:
                 kubernetes.io/metadata.name: bbsk-landing
             podSelector:
               matchLabels:
@@ -455,27 +451,6 @@ networkpolicies:
     namespace: dev
     podSelector:
       app.kubernetes.io/instance: probes-status
-    policyTypes:
-      - Ingress
-    ingress:
-      - from:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: jc-prod
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: apisix
-        ports:
-          - protocol: TCP
-            port: 8080
-          - protocol: TCP
-            port: 4143
-  dev-basemap-from-jc-prod-edge:
-    _component: apisix
-    namespace: dev
-    podSelector:
-      app.kubernetes.io/instance: basemap-tiles
-      app.kubernetes.io/component: server
     policyTypes:
       - Ingress
     ingress:

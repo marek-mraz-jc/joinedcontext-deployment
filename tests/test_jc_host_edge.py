@@ -14,6 +14,7 @@ import re
 import shutil
 import subprocess
 import time
+import tomllib
 
 import pytest
 import yaml
@@ -160,6 +161,22 @@ def test_the_pinned_edge_reaches_no_inside_module_on_a_forged_host_or_path(edge,
         seen = json.loads(body)
         assert seen["host"] in {DOMAIN, f"api.{DOMAIN}", f"portal.{DOMAIN}"}, (host, path, seen)
         assert not BLOCKED.match(seen["uri"]), (host, path, seen)
+
+
+def test_the_tiles_host_is_this_installations_own_basemap(edge, rendered):
+    # The dataset map stayed an empty grey box (owner 2026-11-11): jc named no tiles address, and
+    # dev's kept basemap-tiles wrote tiles.dev into its style and admitted only viz.dev.
+    upstreams = {u["id"]: u for u in edge["upstreams"]}
+    tiles = [r for r in edge["routes"] if r.get("host") == f"tiles.{DOMAIN}"]
+    assert [list(upstreams[r["upstream_id"]]["nodes"]) for r in tiles] == [["basemap-tiles.jc-prod.svc.cluster.local:8080"]]
+    docs = rendered(ENV)
+    (cm,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "jc"
+             and d["metadata"]["namespace"] == "jc-prod"]
+    assert tomllib.loads(cm["data"]["jc.toml"])["dataroom"]["addresses"] == {"tiles": f"https://tiles.{DOMAIN}"}
+    (styles,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == "basemap-tiles-styles"]
+    assert json.loads(styles["data"]["light-sk.json"])["sources"]["protomaps"]["url"] == f"pmtiles://https://tiles.{DOMAIN}/basemap.pmtiles"
+    assert not [d for d in docs if d.get("kind") == "NetworkPolicy" and d["metadata"]["namespace"] == "dev"
+                and "basemap" in d["metadata"]["name"]]
 
 
 def test_the_api_host_answers_the_platforms_own_origins_like_old_prod(edge):

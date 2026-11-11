@@ -311,6 +311,13 @@ configMap:
       {{ $from | quote }} = {{ $to | quote }}
       {{- end }}
       {{- end }}
+      {{- if has "basemap" .Values.components }}
+
+      # The dataset map's basemap (components/basemap in this environment): jc serves no tiles, so
+      # unset the explorer draws an empty grey box and its CSP names no tiles host (jc-prod 2026-11-11).
+      [dataroom.addresses]
+      tiles = {{ printf "https://tiles.%s" $global.domain | quote }}
+      {{- end }}
       {{- with (dig "catalogueHidden" dict $jc) }}
 
       # prod's publish-gate hidden list (bins/jc/docs/catalogue-hidden.toml).
