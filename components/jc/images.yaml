@@ -2,17 +2,17 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 5669f7e5, ci run 43017094923 (cosign tlog 3809783491, githubWorkflowSha 5669f7e5): da6650b2 +
-  # T-6715, T-6707 (a manifest its kind rejects is Refused, the last good one serves), T-6711, T-6732,
-  # T-6708 (the reconciler keeps its last render in JC_PORTAL_RECONCILER_STATE_DIR and holds removals
-  # for an unloaded project or a mass deletion, JC_PORTAL_REMOVAL_HOLD_PERCENT default 25),
-  # memory-peak cut 4, jc-footer, jc-dataset-live; 67 commits, none behind; config.rs adds only those
-  # two optional variables, migrations and Dockerfile unchanged. Never pin an image older than 520e299e:
-  # without its reconciler guard a fresh start deletes managed groups and their members.
+  # main f7ba9a13, ci run 43083855292 (image/build, scan, promote/sign green; cosign githubWorkflowSha
+  # f7ba9a13): 5669f7e5 + T-6759 (an Endpoint's policyRef binds only on its project's own domains),
+  # T-6764 (a Portal held from its start writes every view and rule document), T-6755/T-6760 (gateway
+  # feeds/ and entities.* routes), T-6748, T-6717 (jc refuses to start without a profile; base-values
+  # sets profile = "production"), smoke retry. Smoke 05911dba: 44 fail vs 45 on 5669f7e5, no
+  # regression (supervisor 20:04Z). Never pin an image older than 520e299e: without its reconciler
+  # guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '5669f7e54d914c87d109ee406746c886fcab0616'
-    digest: 'sha256:7ed2d8b8b501475f8e347efc99a0df35c8fa776a6878ca6bb88310a900dd2224'
+    tag: 'f7ba9a13138478d73ea3f5b57c7f837d279e355b'
+    digest: 'sha256:8b204db8df0d2c02dc2a0188b219f684245db2fb0827898ace1795eb14c949af'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
