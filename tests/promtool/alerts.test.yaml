@@ -207,6 +207,7 @@ tests:
         severity: critical
       exp_annotations:
         summary: '/ on node-1 is more than 85 % full: Postgres and local-path volumes stop at 100 %'
+        runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#nodediskalmostfull
   - eval_time: 40m
     alertname: NodeDiskAlmostFull
     exp_alerts: []
@@ -226,6 +227,7 @@ tests:
         severity: critical
       exp_annotations:
         summary: Volume jc/data-postgres-1 is more than 85 % full
+        runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#volumealmostfull
   - eval_time: 40m
     alertname: VolumeAlmostFull
     exp_alerts: []
@@ -244,6 +246,7 @@ tests:
         severity: critical
       exp_annotations:
         summary: 'node-1 has used more than 90 % of its memory for 10 minutes: the next pod to grow gets OOM-killed'
+        runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#nodememoryhigh
   - eval_time: 40m
     alertname: NodeMemoryHigh
     exp_alerts: []
@@ -261,6 +264,7 @@ tests:
         severity: critical
       exp_annotations:
         summary: 'The newest Postgres backup in jc is older than 26 hours: check the backup job and its volume'
+        runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#postgresbackupstale
   - eval_time: 1850m
     alertname: PostgresBackupStale
     exp_alerts: []
@@ -278,6 +282,7 @@ tests:
         severity: critical
       exp_annotations:
         summary: 'The newest Postgres backup in jc is older than 26 hours: check the backup job and its volume'
+        runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#postgresbackupstale
   - eval_time: 1850m
     alertname: PostgresBackupStale
     exp_alerts: []

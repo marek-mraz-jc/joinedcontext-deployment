@@ -198,6 +198,9 @@ def test_the_api_host_answers_the_platforms_own_origins_like_old_prod(edge):
         assert cors["allow_credential"] is False and "allow_origins" not in cors
         assert route["priority"] > routes["jc-host-api"]["priority"]
         assert route["plugin_config_id"] == routes["jc-host-api"]["plugin_config_id"]  # headers cleared, uri-blocker
+    # The grid's total and the map's unplaced count read NGSILD-Results-Count across origins (owner
+    # 2026-11-11 10:05Z: no total on jc-prod's catalogue), as old prod's endpoint rule exposed it.
+    assert routes["jc-host-api-endpoint"]["plugins"]["cors"]["expose_headers"] == "NGSILD-Results-Count,Content-Range,Link"
     for origin in (f"https://viz.{DOMAIN}", f"https://app-praha-mapa.apps.{DOMAIN}", f"https://portal.{DOMAIN}"):
         assert rule.match(origin), origin
     for origin in ("https://evil.smartcity-joinedcontext.com", f"http://viz.{DOMAIN}", f"https://{DOMAIN}.evil.org",

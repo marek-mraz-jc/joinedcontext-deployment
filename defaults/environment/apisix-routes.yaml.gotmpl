@@ -72,6 +72,10 @@ routes:
           - '^https://[^@/]+\.${DOMAIN_RE}$'
         allow_methods: 'GET,HEAD,OPTIONS'
         allow_headers: 'Authorization,Content-Type'
+        # What a browser page may read of the answer, as old prod's endpoint rule: how many records
+        # a query matched (the catalogue grid's total, the map's "N without position", T-4333) and
+        # where a cut temporal answer continues (T-5414). Counts and ranges are no credential.
+        expose_headers: 'NGSILD-Results-Count,Content-Range,Link'
         allow_credential: false
     timeout:
       connect: 6

@@ -95,6 +95,17 @@ serviceMonitors:
         regex: jc_gateway_request_duration_seconds;.+
         action: drop
   {{- end }}
+  {{- if dig "monitoring" "monitoring" "certManagerMonitor" false $root }}
+  # The cluster's cert-manager controller (the kit's, namespace cert-manager): every Certificate's
+  # expiry and readiness, read by JcProdCertificateExpiresSoon (T-6727). One instance per cluster
+  # turns it on, or the series would be scraped twice.
+  - name: cert-manager
+    namespace: cert-manager
+    selector:
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/component: controller
+    port: http-metrics
+  {{- end }}
   {{- if has "gitops" $components }}
   # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
   - name: argocd-application-controller
@@ -268,6 +279,7 @@ alertGroups:
           severity: critical
         annotations:
           summary: '{{`{{ $labels.mountpoint }}`}} on {{`{{ $labels.instance }}`}} is more than 85 % full: Postgres and local-path volumes stop at 100 %'
+          runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#nodediskalmostfull
       - alert: VolumeAlmostFull
         expr: kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85
         for: 10m
@@ -275,6 +287,7 @@ alertGroups:
           severity: critical
         annotations:
           summary: 'Volume {{`{{ $labels.namespace }}`}}/{{`{{ $labels.persistentvolumeclaim }}`}} is more than 85 % full'
+          runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#volumealmostfull
       - alert: NodeMemoryHigh
         expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes > 0.90
         for: 10m
@@ -282,6 +295,7 @@ alertGroups:
           severity: critical
         annotations:
           summary: '{{`{{ $labels.instance }}`}} has used more than 90 % of its memory for 10 minutes: the next pod to grow gets OOM-killed'
+          runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#nodememoryhigh
   {{- if has "postgres" $components }}
   # T-5104: a nightly backup older than 26 h missed a night. The local pg_dumpall CronJob
   # (`<cluster>-local-backup`, through kube-state-metrics) and CNPG's own backups where enabled.
@@ -297,6 +311,7 @@ alertGroups:
           severity: critical
         annotations:
           summary: 'The newest Postgres backup in {{`{{ $labels.namespace }}`}} is older than 26 hours: check the backup job and its volume'
+          runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#postgresbackupstale
       # T-5662: a base backup that failed after the last good one, within minutes rather than after
       # the 26 h of PostgresBackupStale (dev's nightly failed on 10-23 and 10-25 and the page said only "stale").
       - alert: PostgresBackupFailed

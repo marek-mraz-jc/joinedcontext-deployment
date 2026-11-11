@@ -101,8 +101,11 @@ global:
     agentReader: true
     # jc-prod (the smartcity hosts), its MQTT brokers and jc-dev run on this cluster too, and
     # dev owns the cluster-wide policies: their pods admit only images the main image workflows
-    # signed (T-6719), in Audit until one PolicyReport pass shows no refusal.
+    # signed (T-6719). Enforce since the audit pass of 2026-11-11 09:50Z: jc's pod passed at
+    # admission (kyverno.io/verify-images pass), and cosign verified the embedder, jc-functions
+    # and app-hsl-transport digests that predate the policy against the same subject.
     productionNamespaces: [jc-prod, jc-prod-mqtt, jc-dev]
+    productionFailureAction: Enforce
 
   domain: {{ env "JC_DEV_DOMAIN" | default "dev.joinedcontext.com" }}
 

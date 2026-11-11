@@ -11,6 +11,10 @@ metadata:
     en: Test entities of the smoke run and the ETSI NGSI-LD suite; not city data.
 spec:
   contextSpaceRef: conformance
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:conformance:conformance-steward-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:conformance:conformance-write
   slug: dv7iyelohbhylxfilexaneobbl
   audience: organization
   # The surfaces every seeded Endpoint serves (T-3957, T-4074), so the suites reach each one here; OData,

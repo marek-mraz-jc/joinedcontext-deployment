@@ -13,6 +13,10 @@ metadata:
     en: Find a dataset of the project by its title, theme or place (type=Dataset, q=searchText~=…, georel=near), then go on to its own Endpoint.
 spec:
   contextSpaceRef: catalog
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:hel.fi:helsinki-catalog:catalog-portal-write
+    - urn:ngsi-ld:Policy:hel.fi:helsinki-catalog:catalog-public-read
   slug: emzask3opaecj2x4td52pjc6zzxeciii
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, mcp]
