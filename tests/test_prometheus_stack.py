@@ -126,6 +126,9 @@ def test_prometheus_egress_names_its_namespaces(env):
     namespace = one(env, "Prometheus")["metadata"]["namespace"]
     scrape = server["spec"]["egress"][0]["to"][0]["namespaceSelector"]["matchExpressions"][0]
     assert scrape["operator"] == "In" and {namespace, "kube-system"} <= set(scrape["values"])
+    # dev's Prometheus is jc-prod's too (T-6727): it reaches jc-prod's exporters and cert-manager.
+    if namespace == "dev":
+        assert {"cert-manager", "jc-dev", "jc-prod"} <= set(scrape["values"]), scrape["values"]
 
 
 def test_the_api_token_is_mounted_only_with_a_reason(env):

@@ -121,6 +121,13 @@ global:
   # Scraped by the prometheus component's own Prometheus, alerts through Alertmanager (T-5154).
   metrics:
     enabled: true
+    # Namespaces outside dev's own components that its Prometheus may scrape (components/prometheus
+    # networkpolicies.yaml.gotmpl): jc-prod's and jc-dev's exporters (jc's admin listener, APISIX,
+    # Postgres) and cert-manager's certificate expiry, read by JcProdCertificateExpiresSoon (T-6727).
+    # Each target's own policy still has to admit dev's Prometheus. Dev's stack runs for jc-prod although the old dev environment is off (RETIRED):
+    # jc-prod's alert rules, its Alertmanager and the daiya panels read it (owner order 2026-11-03
+    # had stopped it at 98-100 % node memory; dev's own workloads are at zero now).
+    scrapeNamespaces: [cert-manager, jc-dev, jc-prod]
 
   # The person the owner presents as (T-6542, components/keycloak/presenter.yaml): this id on dev,
   # stage and prod alike, its password and TOTP seed from components/keycloak/presenter.enc.yaml.
