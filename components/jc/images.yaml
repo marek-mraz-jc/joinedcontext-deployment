@@ -2,15 +2,15 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 39a4b2ba, ci run 42908501162 (cosign tlog 3794505418): d4b2de4d (jc-dataroom-brand de560b57, the
-  # [dataroom.publishers]/[dataroom.branding] keys; login exchange and pages; pipeline-audience) +
-  # jc-self-reads f283aba4 (assistant counts on jc's loopback) + jc-ekiben-paging 4c866a7a (the
-  # runner pages big layers itself: the seeds without esri_cap need at least this image). Never pin an image older than
+  # main 5d52086d, ci run 42955943009 (cosign tlog 3801589496): 39a4b2ba (d4b2de4d dataroom keys, login
+  # exchange and pages, pipeline-audience; jc-self-reads f283aba4; jc-ekiben-paging 4c866a7a) +
+  # jc-garden-zip d779d5e4 (antares-ogc whole-file time 120 s -> 240 s, cuts logged at WARN) +
+  # dataroom harvest scheduler logs through tracing; config.rs unchanged. Never pin an image older than
   # 520e299e: without its reconciler guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '39a4b2bae9266daffde8fde382e54d129de5175e'
-    digest: 'sha256:71d6fa9f4b12e57423140fa9fe43385c7b87728b475da9063d592308327d4097'
+    tag: '5d52086dfa02c8020d5962f04f0934b42a20c1e5'
+    digest: 'sha256:d1db77c167415dd4fe4ac9125e1eb78742177477fe1849c9b91cf36ab0a535f3'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
