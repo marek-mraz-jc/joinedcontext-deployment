@@ -116,6 +116,16 @@ postgres:
             memory: 640Mi
           limits:
             memory: 2Gi
+  # jc-prod serves the public smartcity hosts and had no backup at all (F-1, owner 2026-11-11). Until
+  # the owner gives an object store for CNPG's own backups, the nightly age-encrypted pg_dumpall onto
+  # a volume of its own (not the database's PVC), every database with jc_antares (17 GB live), and
+  # the monthly drill restores the newest dump into a scratch Postgres and compares row counts.
+  # Two dumps: one is ~4-5 GB gzipped, the node had 74 G free after the basemap (2026-11-11).
+  databases:
+    localBackup:
+      enabled: true
+      keepDays: 2
+      cap: 16Gi
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
