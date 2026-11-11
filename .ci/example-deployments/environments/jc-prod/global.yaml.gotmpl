@@ -131,6 +131,12 @@ postgres:
       cap: 16Gi
       # The dumps outlive a deleted claim (T-6718, cluster/hetzner local-path-retain).
       storageClass: local-path-retain
+    # The drill's scratch Postgres holds every restored database at once: 21.7 GiB live on
+    # 2026-11-11 (jc_antares 17 GB, jc_assistant 3.3 GB, jc_portal 1 GB). At 8Gi the kubelet evicted
+    # the first drill that got past the grants (dr-drill-manual-0919). 28Gi is that plus 25 %; the
+    # copy lives only for the drill's minutes, and the node had 68 GiB free when it was set (T-6725).
+    drDrill:
+      storageSize: 28Gi
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
