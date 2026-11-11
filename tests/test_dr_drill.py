@@ -362,6 +362,19 @@ def test_dev_restores_the_dump_and_then_the_archive(dev, tmp_path):
     assert log.count("create") == 2, "after the dump, the latest and the point-in-time copy"
 
 
+def test_a_table_restored_between_its_two_counts_matches_and_one_outside_fails(smartcity, tmp_path):
+    """T-6725, jc-prod 2026-11-11: subscriptions counted 70, then 52 in the dump pg_dumpall took
+    minutes later. A count between the dump job's two counts matches; one beyond both does not."""
+    counts = "portal.public.a|70|50\nportal.public.b|7\nkeycloak.public.user_entity|3\n"
+    restored = {"portal": "public.a|52\npublic.b|7", "keycloak": "public.user_entity|3"}
+    code, result, _ = run(smartcity, tmp_path, {}, dump={"counts": counts, "restored": restored})
+    assert code == 0 and result["localDump"] == "local-dump-passed", result
+    restored["portal"] = "public.a|40\npublic.b|7"
+    (tmp_path / "beyond").mkdir()
+    code, result, _ = run(smartcity, tmp_path / "beyond", {}, dump={"counts": counts, "restored": restored})
+    assert code != 0 and result["localDumpDetail"] == f"{DUMP} short: portal.public.a(40 of 50..70)", result
+
+
 def test_a_dump_missing_a_table_fails_the_drill_and_names_the_table(smartcity, tmp_path):
     restored = {"portal": "public.a|100", "keycloak": "public.user_entity|3"}
     code, result, log = run(smartcity, tmp_path, {}, dump={"counts": COUNTS, "restored": restored})
@@ -496,11 +509,11 @@ def test_the_dump_job_writes_the_counts_and_fails_a_dump_over_80_percent(smartci
 
 def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096, size: str = "1Mi",
              disk_kib: tuple[int, int] = (10_000_000, 5_000_000), exclude: str = "",
-             seal_fails: bool = False) -> tuple[int, str, Path]:
+             seal_fails: bool = False, rows_after: int = 3) -> tuple[int, str, Path]:
     """Runs the rendered dump script of the CronJob (mode dump) or the apply's Job (mode bind)
     over a scratch directory: psql answers two databases, pg_dumpall writes `dump_bytes` of noise
     (also kept in `dumpall.out`) and records its arguments, df reports `disk_kib` (total,
-    available). `python3 age.py encrypt` is the age CLI sealing to the recipients it is handed
+    available); after pg_dumpall ran, psql counts `rows_after` rows. `python3 age.py encrypt` is the age CLI sealing to the recipients it is handed
     (kept in `age.args`) and to the test identity, which stands for the drill key."""
     name = "postgres-cluster-local-backup"
     job = one(docs, "CronJob", name)["spec"]["jobTemplate"]["spec"] if mode == "dump" else one(docs, "Job", f"{name}-now")["spec"]
@@ -511,7 +524,8 @@ def dump_job(docs: list[dict], tmp_path: Path, mode: str, dump_bytes: int = 4096
     for d in (backup, scratch, bin_):
         d.mkdir(exist_ok=True)
     stubs = {
-        "psql": """case "$*" in *datname*) printf 'antares\\nportal\\n' ;; *) echo "public.t|3" ;; esac""",
+        "psql": f"""case "$*" in *datname*) printf 'antares\\nportal\\n' ;;
+  *) if [ -e {tmp_path}/dumpall.args ]; then echo "public.t|{rows_after}"; else echo "public.t|3"; fi ;; esac""",
         "pg_dumpall": f"""echo "$*" > {tmp_path}/dumpall.args; head -c {dump_bytes} /dev/urandom | tee {tmp_path}/dumpall.out""",
         "python3": "exit 1" if seal_fails else f"""[ "$2 $3 $4" = "encrypt --identity-file /key/key" ] || exit 64; shift 4
 echo "$*" > {tmp_path}/age.args
@@ -605,6 +619,15 @@ def test_an_excluded_database_is_neither_counted_nor_dumped(dev, smartcity, tmp_
     assert (tmp_path / "dumpall.args").read_text().split() == ["--clean", "--if-exists", "--exclude-database=antares"]
     counts, = backup.glob("*.counts")
     assert counts.read_text() == "portal.public.t|3\n"
+
+
+def test_a_table_written_during_the_dump_carries_its_count_after_it(smartcity, tmp_path):
+    """T-6725: pg_dumpall reaches each database minutes after the counts; a table that changed
+    meanwhile gets its count after the dump as a third field, an unchanged one stays as it was."""
+    code, log, backup = dump_job(smartcity, tmp_path, "dump", rows_after=5)
+    assert code == 0, log
+    counts, = backup.glob("*.counts")
+    assert counts.read_text() == "antares.public.t|3|5\nportal.public.t|3|5\n"
 
 
 @pytest.mark.parametrize("env", ["dev", "smartcity"])

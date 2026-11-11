@@ -124,10 +124,13 @@ template:
         tables="SELECT schemaname || '.' || relname, (xpath('/row/c/text()', query_to_xml(format('SELECT count(*) AS c FROM %I.%I', schemaname, relname), false, true, '')))[1]::text FROM pg_stat_user_tables ORDER BY 1"
         set --
         for db in $EXCLUDE_DATABASES; do set -- "$@" "--exclude-database=$db"; done
-        for db in $(psql -X -At -d postgres -c "SELECT datname FROM pg_database WHERE NOT datistemplate AND datname <> 'postgres' ORDER BY 1"); do
-          case " $EXCLUDE_DATABASES " in *" $db "*) continue ;; esac
-          psql -X -At -d "$db" -c "$tables" | sed "s|^|$db.|"
-        done > /tmp/counts
+        count_all() {
+          for db in $(psql -X -At -d postgres -c "SELECT datname FROM pg_database WHERE NOT datistemplate AND datname <> 'postgres' ORDER BY 1"); do
+            case " $EXCLUDE_DATABASES " in *" $db "*) continue ;; esac
+            psql -X -At -d "$db" -c "$tables" | sed "s|^|$db.|"
+          done
+        }
+        count_all > /tmp/counts
         # pipefail is not POSIX: a failed pg_dumpall would hide behind gzip's exit 0. The dump is
         # sealed in the pipe, so no plain byte of it reaches the volume.
         # shellcheck disable=SC2086 # one word per recipient
@@ -142,7 +145,14 @@ template:
         fi
         if [ -e /tmp/failed ]; then rm -f "$file.part"; echo "pg_dumpall failed" >&2; exit 1; fi
         if [ -e /tmp/sealed ]; then rm -f "$file.part"; echo "the dump could not be encrypted (age.py above): nothing was written" >&2; exit 1; fi
-        cp /tmp/counts "$file.counts"
+        # pg_dumpall takes each database's snapshot when it reaches it, minutes after the counts on
+        # a large instance: a table written meanwhile (sessions, subscriptions) restores between
+        # its two counts. A table that changed gets `|rows after` as a third field (T-6725, jc-prod
+        # 2026-11-11: subscriptions 70 before, 52 in the dump).
+        count_all > /tmp/counts-after
+        awk -F'|' 'NR == FNR { after[$1] = $2; next }
+          { print $0 (($1 in after) && after[$1] != $2 ? "|" after[$1] : "") }' /tmp/counts-after /tmp/counts > /tmp/counts-both
+        cp /tmp/counts-both "$file.counts"
         mv "$file.part" "$file"
         ls -l /backup
         # One dump over 80 % of the volume leaves no room for the next night's: the job fails
