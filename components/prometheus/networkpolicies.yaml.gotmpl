@@ -17,6 +17,7 @@
     {{- end }}
   {{- end }}
 {{- end }}
+{{- $namespaces = concat $namespaces (dig "prometheus" "stack" "scrapeNamespaces" list $.Values) }}
 prometheus-server:
   podSelector:
     app.kubernetes.io/name: prometheus

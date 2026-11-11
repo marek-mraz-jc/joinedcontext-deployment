@@ -1,13 +1,27 @@
 ---
 prometheus:
   stack:
-    # Owner order 2026-11-03 05:0xZ: dev's node sat at 98-100 % memory and the owner could not
-    # sign in, so Prometheus and Alertmanager run no pod on dev (their volumes stay). Restore:
-    # delete this file and apply the prometheus release.
+    # Dev's stack is jc-prod's monitoring (T-6727): jc-prod's alert rules, its Alertmanager and the
+    # daiya panels read this one Prometheus, so it runs again though the old dev environment is off
+    # (RETIRED). Owner order 2026-11-03 had stopped it at 98-100 % node memory; with dev's own
+    # workloads at zero it scrapes jc-prod, jc-dev, kube-system and cert-manager only. Seven days
+    # in at most 2 GB keep it small on the node disk; the 30-day SLO windows need the probes,
+    # which jc-prod does not run.
+    retention: 7d
+    retentionSize: 2GB
+    # jc-prod's and jc-dev's exporters (jc's admin listener, APISIX, Postgres) and cert-manager's
+    # certificate expiry, which JcProdCertificateExpiresSoon reads.
+    scrapeNamespaces: [cert-manager, jc-dev, jc-prod]
     rawValues:
       prometheus:
-        prometheusSpec:
-          replicas: 0
-      alertmanager:
-        alertmanagerSpec:
-          replicas: 0
+        additionalServiceMonitors:
+          - name: cert-manager
+            selector:
+              matchLabels:
+                app.kubernetes.io/name: cert-manager
+                app.kubernetes.io/component: controller
+            namespaceSelector:
+              matchNames: [cert-manager]
+            endpoints:
+              - port: http-metrics
+                interval: 60s

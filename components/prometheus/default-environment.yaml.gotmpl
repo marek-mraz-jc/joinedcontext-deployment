@@ -11,3 +11,7 @@ prometheus:
     retention: 31d
     retentionSize: 8GB
     storageSize: 10Gi
+    # Namespaces outside this deployment's own components that Prometheus may scrape: another
+    # instance's on the same cluster (dev scrapes jc-prod, T-6727). The target's own policy still
+    # has to admit it.
+    scrapeNamespaces: []

@@ -30,8 +30,8 @@ components:
   # style host and CORS for this domain. It replaces dev's kept basemap-tiles, whose style named
   # tiles.dev and admitted only viz.dev (owner 2026-11-11 05:48Z, empty catalogue map).
   - basemap
-  # Scrape configuration only (ServiceMonitor/PodMonitor in this namespace), read by dev's
-  # Prometheus; no rule set of its own, which dev's Prometheus would evaluate a second time.
+  # Scrape configuration (ServiceMonitor/PodMonitor in this namespace) and jc-prod's own alert
+  # rules, read by dev's Prometheus (T-6727).
   - monitoring
 
 global:
@@ -396,16 +396,70 @@ jc:
 # Metrics (jc-prod-metrics, Decided (supervisor, owner may override)): no second Prometheus on the
 # 16 GB node. Dev's Prometheus (namespace dev) scrapes this namespace's jc, APISIX and Postgres
 # exporters; jc's daiya reads it only through the metricsProxy part, which pins every query to
-# namespace="jc-prod" (dev's and jc-dev's series stay out of reach). While dev's Prometheus runs no
-# pod (environments/dev/prometheus.yaml.gotmpl, owner order 2026-11-03) the panels stay empty.
+# namespace="jc-prod" (dev's and jc-dev's series stay out of reach). Dev's Prometheus runs again for
+# jc-prod's alerts since T-6727 (environments/dev/prometheus.yaml.gotmpl).
 monitoring:
   monitoring:
     # On without global.metrics.enabled, which would also render the CloudNativePG chart's rules.
     enabled: true
     # Admits dev's Prometheus to the Postgres exporter (namespaceFrom in components/postgres).
     prometheusNamespace: dev
+    # jc-prod's own rules (T-6727), namespace-scoped so dev's Prometheus evaluates them once
+    # beside dev's cluster-wide ones (node disk and memory, volumes, backup age, which carry their
+    # runbook links in components/monitoring). kube-state-metrics and cert-manager are the sources:
+    # neither needs a hole in jc-prod's default-deny. Alerts reach Alertmanager's `null` receiver;
+    # the deployer's hourly tick reads /api/v2/alerts (components/monitoring/README.md, Delivery).
     rawValues:
-      alertGroups: []
+      alertGroups:
+        - name: jc-prod
+          rules:
+            - alert: JcProdWorkloadDown
+              expr: |
+                kube_deployment_status_replicas_available{namespace=~"jc-prod|jc-prod-mqtt"}
+                  < kube_deployment_spec_replicas{namespace=~"jc-prod|jc-prod-mqtt"}
+              for: 10m
+              labels:
+                severity: critical
+              annotations:
+                summary: '{{`{{ $labels.namespace }}`}}/{{`{{ $labels.deployment }}`}} has fewer available replicas than it asks for: read its pods'
+                runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#jcprodworkloaddown
+            - alert: JcProdMetricsMissing
+              expr: absent(kube_deployment_spec_replicas{namespace="jc-prod",deployment="jc"})
+              for: 15m
+              labels:
+                severity: critical
+              annotations:
+                summary: 'kube-state-metrics reports no jc Deployment in jc-prod: jc is gone or every jc-prod rule is blind'
+                runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#jcprodmetricsmissing
+            - alert: JcProdContainerRestarting
+              expr: increase(kube_pod_container_status_restarts_total{namespace=~"jc-prod|jc-prod-mqtt"}[1h]) > 3
+              labels:
+                severity: warning
+              annotations:
+                summary: '{{`{{ $labels.namespace }}`}}/{{`{{ $labels.pod }}`}} container {{`{{ $labels.container }}`}} restarted more than 3 times in an hour'
+                runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#jcprodcontainerrestarting
+            - alert: JcProdPostgresDown
+              expr: |
+                max(kube_pod_status_ready{namespace="jc-prod",pod=~"postgres-cluster-[0-9]+",condition="true"}) < 1
+                  or
+                absent(kube_pod_status_ready{namespace="jc-prod",pod=~"postgres-cluster-[0-9]+",condition="true"})
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: 'No postgres-cluster instance in jc-prod is Ready: jc fails its writes'
+                runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#jcprodpostgresdown
+            - alert: JcProdCertificateExpiresSoon
+              expr: |
+                certmanager_certificate_expiration_timestamp_seconds{namespace="jc-prod"} - time() < 14 * 86400
+                  or
+                certmanager_certificate_ready_status{namespace="jc-prod",condition="True"} == 0
+              for: 1h
+              labels:
+                severity: critical
+              annotations:
+                summary: 'Certificate jc-prod/{{`{{ $labels.name }}`}} expires within 14 days or is not Ready: renewal has failed'
+                runbook_url: https://github.com/marek-mraz-jc/joinedcontext-deployment/blob/main/components/monitoring/RUNBOOK.md#jcprodcertificateexpiressoon
 apisix:
   apisix:
     rawValues:
