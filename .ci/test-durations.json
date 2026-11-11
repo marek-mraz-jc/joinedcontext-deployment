@@ -188,6 +188,7 @@
  "test_keycloak_theme.py": 0.3,
  "test_keycloak_workload_identity.py": 0.0,
  "test_kit_linkerd_cni.py": 0.0,
+ "test_kit_prod_namespaces.py": 16.0,
  "test_lane_token.py": 0.2,
  "test_manifest_format.py": 3.7,
  "test_mcp_connectors_seed.py": 1.4,

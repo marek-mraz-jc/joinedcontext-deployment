@@ -48,8 +48,11 @@ def test_jc_prod_daiya_reads_the_proxy_alone(rendered):
     assert [(d["uid"], d["orgId"], d["url"]) for d in ds] == [("prometheus", 1, PROXY_URL)]
     args = _one(docs, "Deployment", "jc-metrics-proxy")["spec"]["template"]["spec"]["containers"][0]["args"]
     assert "--label=namespace" in args and "--label-value=jc-prod" in args
-    # Scrape configuration only: dev's Prometheus would evaluate a second rule set.
-    assert not [d for d in docs if d.get("kind") == "PrometheusRule"]
+    # jc-prod's own rule set alone (T-6727): dev's Prometheus evaluates it beside dev's cluster-wide
+    # rules, so jc-prod renders no copy of them (test_alert_rules checks each rule is jc-prod-scoped).
+    rules = [d for d in docs if d.get("kind") == "PrometheusRule"]
+    assert [r["metadata"]["name"] for r in rules] == ["monitoring-monitoring-alerts"]
+    assert [g["name"] for g in rules[0]["spec"]["groups"]] == ["jc-prod"]
 
 
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
