@@ -65,6 +65,15 @@
         "subjectRegExp": {
           "type": "string"
         },
+        "production": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "namespaces": {"type": "array", "items": {"type": "string"}},
+            "failureAction": {"enum": ["Audit", "Enforce"]},
+            "subjectRegExp": {"type": "string", "pattern": "^\\^https://github\\\\.com/.*@refs/heads/main\\$$"}
+          }
+        },
         "productionTier": {
           "type": "object",
           "additionalProperties": false,

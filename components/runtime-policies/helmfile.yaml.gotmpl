@@ -84,6 +84,14 @@ releases:
             {{- range $ns := concat $podSecurityNamespaces $runtimeNamespaces }}
             - {{ $ns | quote }}
             {{- end }}
+        # T-6719: the production-shaped namespaces this cluster also runs, held to the image
+        # workflows on main (charts/runtime-policies values.yaml, imageSignatures.production).
+        {{- with index ($root.global.runtimePolicies | default dict) "productionNamespaces" }}
+        imageSignatures:
+          production:
+            namespaces:
+              {{- toYaml . | nindent 14 }}
+        {{- end }}
   {{- end }}
 
 commonLabels:

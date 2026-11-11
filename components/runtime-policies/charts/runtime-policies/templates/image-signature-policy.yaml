@@ -44,6 +44,52 @@ spec:
                       url: https://rekor.sigstore.dev
 {{- end }}
 {{- /*
+T-6719, G-1: the production-shaped namespaces (jc-prod and its brokers, jc-dev) admit our images
+only when the image workflow on main signed them, not any workflow or branch of the
+organization: a digest pushed from a branch or a fork's workflow is refused there. Its own
+policy and action, staged in Audit until one pass of its PolicyReports shows no refusal, then
+Enforce for those namespaces alone, so dev's broader rule above keeps its own pace.
+*/ -}}
+{{- $prod := $sig.production }}
+{{- if and $sig.enabled $prod.namespaces }}
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-production-images
+  annotations:
+    policies.kyverno.io/title: Production runs only images the main image workflow signed
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+spec:
+  background: false
+  failurePolicy: {{ ternary "Fail" "Ignore" (eq $prod.failureAction "Enforce") }}
+  webhookTimeoutSeconds: 15
+  rules:
+    - name: signed-by-the-image-workflow-on-main
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              namespaces:
+                {{- toYaml $prod.namespaces | nindent 16 }}
+      verifyImages:
+        - imageReferences:
+            {{- toYaml $sig.references | nindent 12 }}
+          failureAction: {{ $prod.failureAction }}
+          mutateDigest: false
+          verifyDigest: true
+          required: true
+          attestors:
+            - entries:
+                - keyless:
+                    issuer: {{ $sig.issuer | quote }}
+                    subjectRegExp: {{ $prod.subjectRegExp | quote }}
+                    rekor:
+                      url: https://rekor.sigstore.dev
+{{- end }}
+{{- /*
 T-4721: a namespace labelled `joinedcontext.com/tier=production` admits only images that passed
 the full tests: besides the signature above, the digest must carry the `full-tests/v1`
 attestation the source repository's promote.yml adds when its full suites were green. A
