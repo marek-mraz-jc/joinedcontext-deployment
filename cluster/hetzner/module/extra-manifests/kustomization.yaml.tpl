@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - 00-letsencrypt-clusterissuer.yaml
   - 05-local-path-retain.yaml
+  - 06-prod-namespaces.yaml
   - 10-kyverno.yaml
 %{ if enable_monitoring == "true" ~}
   - 20-monitoring.yaml
