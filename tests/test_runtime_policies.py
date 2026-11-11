@@ -523,6 +523,7 @@ def test_production_namespaces_admit_only_images_the_main_image_workflows_signed
     # The identities jc-prod's images carry (cosign verify, 2026-11-11), and what must not pass.
     for signed in ("https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/heads/main",
                    "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image-embedder.yml@refs/heads/main",
+                   "https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image-apps.yml@refs/heads/main",
                    "https://github.com/marek-mraz-jc/joinedcontext-platform/.github/workflows/image.yml@refs/heads/main"):
         assert subject.match(signed), signed
     for forged in ("https://github.com/marek-mraz-jc/joinedcontext/.github/workflows/image.yml@refs/heads/jc-portal-1",
@@ -536,6 +537,14 @@ def test_production_namespaces_admit_only_images_the_main_image_workflows_signed
     enforced = production_images(tmp_path, "--set", "imageSignatures.production.failureAction=Enforce")
     spec = {d["metadata"]["name"]: d for d in yaml.safe_load_all(enforced.stdout) if d}["verify-production-images"]["spec"]
     assert (spec["rules"][0]["verifyImages"][0]["failureAction"], spec["failurePolicy"]) == ("Enforce", "Fail")
+
+
+def test_dev_enforces_the_signature_rule_on_the_production_namespaces(rendered):
+    # T-6719: after one audit pass the rule refuses, and the webhook fails closed.
+    policy = next(d for d in rendered("dev") if d.get("kind") == "ClusterPolicy"
+                  and d["metadata"]["name"] == "verify-production-images")["spec"]
+    assert policy["rules"][0]["verifyImages"][0]["failureAction"] == "Enforce"
+    assert policy["failurePolicy"] == "Fail"
 
 
 @requires_helm
