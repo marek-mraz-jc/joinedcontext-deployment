@@ -5,6 +5,7 @@ admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-gitea-boot
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-edge
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-mqtt-brokers
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/smartcity-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/sandbox-reaper-reaper
@@ -13,6 +14,7 @@ admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-git
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-bindings
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-apps-namespaces
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-edge
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-mqtt-brokers
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-secrets
 admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/smartcity-portal-workloads
 admissionregistration.k8s.io/v1/ValidatingWebhookConfiguration -/cnpg-validating-webhook-configuration

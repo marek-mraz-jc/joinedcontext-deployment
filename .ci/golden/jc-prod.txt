@@ -1,3 +1,5 @@
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicy -/jc-prod-mqtt-portal-mqtt-brokers
+admissionregistration.k8s.io/v1/ValidatingAdmissionPolicyBinding -/jc-prod-mqtt-portal-mqtt-brokers
 apps/v1/Deployment jc-prod/apisix
 apps/v1/Deployment jc-prod/app-hsl-transport
 apps/v1/Deployment jc-prod/basemap-tiles
