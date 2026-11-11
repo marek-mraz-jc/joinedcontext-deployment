@@ -35,16 +35,22 @@ count_tables() { # pod database file
   [ -z "$rows" ] || printf '%s\n' "$rows" | sed "s|^|$2.|" >>"$3"
 }
 # The tables of the second file that differ from the first: missing, or apart by more than the
-# tolerance in percent of the first's count, and at least one row.
+# tolerance in percent of the first's count, and at least one row. A first-file line may carry a
+# second count (`table|before|after`, the dump job's counts around pg_dumpall): a restored count
+# anywhere between the two matches.
 compare() { # want got
   awk -F'|' -v tol="$TOLERANCE_PERCENT" '
-    NR == FNR { want[$1] = $2; next }
+    NR == FNR {
+      lo[$1] = $2 + 0; hi[$1] = ($3 == "" ? $2 : $3) + 0
+      if (lo[$1] > hi[$1]) { x = lo[$1]; lo[$1] = hi[$1]; hi[$1] = x }
+      want[$1] = (lo[$1] == hi[$1] ? lo[$1] : lo[$1] ".." hi[$1]); next
+    }
     { got[$1] = $2 }
     END {
       for (t in want) {
         if (!(t in got)) { print t "(missing)"; continue }
-        d = got[t] - want[t]; if (d < 0) d = -d
-        lim = want[t] * tol / 100; if (lim < 1) lim = 1
+        d = 0; if (got[t] < lo[t]) d = lo[t] - got[t]; else if (got[t] > hi[t]) d = got[t] - hi[t]
+        lim = lo[t] * tol / 100; if (lim < 1) lim = 1
         if (d > lim) print t "(" got[t] " of " want[t] ")"
       }
     }' "$1" "$2" | sort | tr '\n' ' '
