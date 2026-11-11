@@ -18,7 +18,7 @@ jc:
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
-    digest: 'sha256:1fb4a6360e2be04c99f5a4cd5d38c38eddbff85d844b853697385072a7a2b8d5'
+    digest: 'sha256:0020212d990b4d13d855b6ff1a90d994ab3665a859865ccae5f4a44021a5d1a5'
   # The init container that copies Secret jc-setup into the state dir: busybox's sh and install,
   # the same pin as components/keycloak/images.yaml dbchecker.
   seed:
