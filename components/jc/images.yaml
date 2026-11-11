@@ -2,17 +2,16 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main f7ba9a13, ci run 43083855292 (image/build, scan, promote/sign green; cosign githubWorkflowSha
-  # f7ba9a13): 5669f7e5 + T-6759 (an Endpoint's policyRef binds only on its project's own domains),
-  # T-6764 (a Portal held from its start writes every view and rule document), T-6755/T-6760 (gateway
-  # feeds/ and entities.* routes), T-6748, T-6717 (jc refuses to start without a profile; base-values
-  # sets profile = "production"), smoke retry. Smoke 05911dba: 44 fail vs 45 on 5669f7e5, no
-  # regression (supervisor 20:04Z). Never pin an image older than 520e299e: without its reconciler
-  # guard a fresh start deletes managed groups and their members.
+  # main eaa7b015, ci run 43107216509 (image/build, scan, promote/sign green; cosign githubWorkflowSha
+  # eaa7b015): f7ba9a13 + T-6774 (kaisatsu grants mcp:portal to CIMD clients: the claude.ai
+  # connector), T-6659, T-6788 (jc-router cuts X-Forwarded-For at the resolved client, so the
+  # anonymous MCP limit keys the caller), T-6758 (spec.facets), feed entry id test fix. No T-6769
+  # (URN owner check). Never pin an image older than 520e299e: without its reconciler guard a
+  # fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'f7ba9a13138478d73ea3f5b57c7f837d279e355b'
-    digest: 'sha256:8b204db8df0d2c02dc2a0188b219f684245db2fb0827898ace1795eb14c949af'
+    tag: 'eaa7b01560a5cf5410cd673e8055509e0ecc6f7e'
+    digest: 'sha256:4908375ebcfc0ec2e4df68f1561e4a2537175c74d71d4d79e1cd5955714b6401'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
