@@ -120,3 +120,15 @@ def test_jc_mounts_the_portal_on_every_app_host_and_caches_fetched_builds(docs):
     env = {e["name"]: e.get("value") for c in deployments[0]["spec"]["template"]["spec"]["containers"] for e in c.get("env", [])}
     # On the data volume: /var/lib/jc is the state dir, a 1 MiB memory emptyDir no build fits in.
     assert env["JC_PORTAL_APPS_CACHE_DIR"] == "/var/lib/jc-data/apps-cache"
+
+
+def test_jc_keeps_the_reconcilers_last_render_on_the_data_volume(docs):
+    """T-6708: the last good render of each project repository survives a restart, so it is on
+    the persistent data volume, never the 1 MiB memory state dir."""
+    deployments = [d for d in of_kind(docs, "Deployment") if d["metadata"]["name"] == "jc"]
+    pod = deployments[0]["spec"]["template"]["spec"]
+    env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
+    state = env["JC_PORTAL_RECONCILER_STATE_DIR"]
+    mounts = [m["mountPath"] for c in pod["containers"] for m in c.get("volumeMounts", [])]
+    assert state.startswith("/var/lib/jc-data/"), state
+    assert "/var/lib/jc-data" in mounts, mounts

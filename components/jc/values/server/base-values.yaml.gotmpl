@@ -544,6 +544,10 @@ env:
   # builds imported by jc-migrate), checked against status.build before they are unpacked. On the
   # data volume: /var/lib/jc is the 1 MiB memory state dir.
   JC_PORTAL_APPS_CACHE_DIR: /var/lib/jc-data/apps-cache
+  # The reconciler's last good render of each project repository and the objects it last applied
+  # (T-6708): on the data volume, so after a restart a project whose repository does not load keeps
+  # its views, streams and clients, and a mass deletion is still held for a confirm.
+  JC_PORTAL_RECONCILER_STATE_DIR: /var/lib/jc-data/reconciler
   {{- if $wasmOn }}
   # Server WASM Apps (ADR-N-044): their database, the shards the Portal places them on, the
   # bucket of their components and files, and the namespace where it writes each shard's
