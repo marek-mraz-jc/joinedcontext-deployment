@@ -30,6 +30,10 @@ global:
   # owner's order of 2026-10-26 (T-5776); a production instance never does.
   approverMfa: true
 
+  # The production guard (production-guard.yaml.gotmpl) judges every `profile: production`
+  # render; an instance that serves production hosts under another profile sets this (T-6720).
+  productionGuard: false
+
   # RFC 9116 security.txt, served by the edge at /.well-known/security.txt on every host
   # (T-1721, OPS-52): where a vulnerability is reported (`mailto:` or `https:`) and when the
   # file stops being valid (RFC 3339, at most a year ahead). A production instance must set both.

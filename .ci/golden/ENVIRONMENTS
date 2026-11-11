@@ -8,3 +8,5 @@ recovery-test
 addons
 minimal
 broker-only
+jc-prod
+jc-dev
