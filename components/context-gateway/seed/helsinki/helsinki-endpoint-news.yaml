@@ -18,7 +18,10 @@ spec:
   representations:
     feed:
       - name: news
-        title: { fi: Helsingin kaupungin uutiset, sv: Helsingfors stads nyheter, en: Helsinki city news }
+        title:
+          fi: Helsingin kaupungin uutiset
+          sv: Helsingfors stads nyheter
+          en: Helsinki city news
         lang: fi
         sources:
           - type: Article
