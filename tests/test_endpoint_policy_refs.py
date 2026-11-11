@@ -33,17 +33,17 @@ def test_every_seed_endpoint_names_its_policies():
 
 
 def pipeline_doors(docs):
-    """(project, pipeline, endpoint name) of each Endpoint a Pipeline writes or reads through."""
+    """(project, pipeline, endpoint name, writes) of each Endpoint a Pipeline writes or reads through."""
     for _, d in docs:
         if d["kind"] != "Pipeline":
             continue
         project, s = d["metadata"].get("namespace"), d.get("spec") or {}
         for o in [s, *(s.get("outputs") or [])]:
             if isinstance(o, dict) and o.get("targetEndpoint"):
-                yield project, d["metadata"]["name"], o["targetEndpoint"].rsplit(":", 1)[-1]
+                yield project, d["metadata"]["name"], o["targetEndpoint"].rsplit(":", 1)[-1], True
         for x in [s.get("source") or {}, *(s.get("sources") or [])]:
             if isinstance(x, dict) and x.get("endpointRef"):
-                yield project, d["metadata"]["name"], migrate.ref_name(x["endpointRef"])
+                yield project, d["metadata"]["name"], migrate.ref_name(x["endpointRef"]), False
 
 
 def test_each_pipeline_door_is_an_endpoint_of_its_project():
@@ -53,22 +53,22 @@ def test_each_pipeline_door_is_an_endpoint_of_its_project():
     endpoints = {(d["metadata"].get("namespace"), d["metadata"]["name"]) for _, d in docs if d["kind"] == "Endpoint"}
     doors = list(pipeline_doors(docs))
     assert doors
-    missing = [f"{project}/{pipeline} -> {name}" for project, pipeline, name in doors if (project, name) not in endpoints]
+    missing = [f"{project}/{pipeline} -> {name}" for project, pipeline, name, _ in doors if (project, name) not in endpoints]
     assert not missing, "Pipelines naming no Endpoint of their project: " + ", ".join(missing)
 
 
 def test_the_jc_pin_binds_a_pipeline_through_an_endpoint_with_policyrefs():
     # jc builds before T-6736 bind a Pipeline's derived grants only on an Endpoint naming no Policy:
-    # piped seed Endpoints with policyRefs need the pinned jc to carry T-6736, or dev answers their writes 404.
+    # a Pipeline's target Endpoint with policyRefs needs the pinned jc to carry T-6736, or dev answers its writes 404.
     docs = seed()
     named = {(d["metadata"].get("namespace"), d["metadata"]["name"]) for _, d in docs
              if d["kind"] == "Endpoint" and ((d.get("spec") or {}).get("policyRefs") or (d.get("spec") or {}).get("policyRef"))}
-    if not any((project, name) in named for project, _, name in pipeline_doors(docs)):
+    if not any(writes and (project, name) in named for project, _, name, writes in pipeline_doors(docs)):
         return
     pin = (ROOT / "components/jc/images.yaml").read_text(encoding="utf-8")
     server = pin[: pin.index("  server:")].rsplit("jc:", 1)[-1]
     assert "T-6736" in server, (
-        "seed Endpoints a Pipeline writes name policyRefs: pin a jc build carrying T-6736 (the Pipeline door)"
+        "seed Endpoints a Pipeline writes through name policyRefs: pin a jc build carrying T-6736 (the Pipeline door)"
         " in components/jc/images.yaml and name T-6736 in its comment"
     )
 
