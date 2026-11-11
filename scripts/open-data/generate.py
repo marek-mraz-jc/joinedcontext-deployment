@@ -151,6 +151,19 @@ PROJECTS = {
 # One file, `csv`: xlsx, parquet, json, zip and geojson were removed (owner 2026-10-18, T-4597);
 # a map reads GeoJSON from NGSI-LD (Accept: application/geo+json) or OGC API Features.
 REPRESENTATIONS = ["ngsi-ld", "csv", "websocket", "ogc-features", "odata", "mcp"]
+
+
+def news_feed(p, types):
+    """The base preset `news` of a space with Article (T-6756, API/02 §4a): feeds/news.rss, .atom
+    and .json. The WordPress mapping writes its own columns (dateGmt, modifiedGmt), so the roles name them."""
+    if "Article" not in types:
+        return {}
+    title = {lang: f"{text}: aktuality" if lang == "sk" else f"{text}: news" for lang, text in p["title"].items()}
+    return {"representations": {"feed": [{
+        "name": "news", "title": title, "lang": "sk",
+        "sources": [{"type": "Article", "preset": "article",
+                     "mapping": {"title": "name", "updated": "modifiedGmt", "published": "dateGmt",
+                                 "content": "content", "link": "url"}}]}]}}
 # What the catalogue's harvests read to list each converted dataset's standard APIs (T-4279).
 DISTRIBUTIONS = ROOT / "charts/ckan/files/od-datasets.json"
 # The attribution every entity carries (Open data integration rules §3), declared in the model.
@@ -1004,7 +1017,8 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
          "spec": {"contextSpaceRef": space, "slug": slug_for(endpoint), "audience": "public",
-                  "enabledRepresentations": REPRESENTATIONS, "catalog": catalog_block(project, p, entries)}})
+                  "enabledRepresentations": REPRESENTATIONS + (["feed"] if "Article" in types else []),
+                  **news_feed(p, types), "catalog": catalog_block(project, p, entries)}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"

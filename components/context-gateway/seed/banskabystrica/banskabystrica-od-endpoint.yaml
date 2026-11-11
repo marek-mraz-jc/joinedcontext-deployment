@@ -24,6 +24,23 @@ spec:
   - ogc-features
   - odata
   - mcp
+  - feed
+  representations:
+    feed:
+    - name: news
+      title:
+        sk: 'Banská Bystrica — otvorené dáta mesta: aktuality'
+        en: 'Banská Bystrica, the city''s open data: news'
+      lang: sk
+      sources:
+      - type: Article
+        preset: article
+        mapping:
+          title: name
+          updated: modifiedGmt
+          published: dateGmt
+          content: content
+          link: url
   catalog:
     license: CC_BYSA_4_0
     themes:
