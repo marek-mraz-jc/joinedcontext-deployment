@@ -52,12 +52,13 @@ imageSignatures:
   # demo): with `failurePolicy: Fail` the webhook would otherwise stand in front of every Pod, and
   # a Kyverno outage would hold every Pod on the single node. Turn it on with that first label.
   # T-6719: the production-shaped namespaces, held to the image workflows on main
-  # (image.yml; jc's embedder ships from image-embedder.yml). Checked on 2026-11-11 with
-  # `cosign verify --certificate-identity-regexp` against every ghcr image jc-prod runs.
+  # (image.yml; jc's embedder ships from image-embedder.yml, jc's App pods from image-apps.yml, as
+  # scripts/verify-pinned-images.py admits). Checked on 2026-11-11 with `cosign verify
+  # --certificate-identity-regexp` against every ghcr image jc-prod runs or scales up.
   production:
     namespaces: []
     failureAction: Audit
-    subjectRegExp: "^https://github\\.com/marek-mraz-jc/[^/]+/\\.github/workflows/(image|image-embedder)\\.yml@refs/heads/main$"
+    subjectRegExp: "^https://github\\.com/marek-mraz-jc/[^/]+/\\.github/workflows/(image|image-embedder|image-apps)\\.yml@refs/heads/main$"
   productionTier:
     enabled: false
     label: joinedcontext.com/tier

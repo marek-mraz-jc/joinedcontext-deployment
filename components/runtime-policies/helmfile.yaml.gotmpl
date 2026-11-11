@@ -91,6 +91,7 @@ releases:
           production:
             namespaces:
               {{- toYaml . | nindent 14 }}
+            failureAction: {{ index ($root.global.runtimePolicies | default dict) "productionFailureAction" | default "Audit" }}
         {{- end }}
   {{- end }}
 
