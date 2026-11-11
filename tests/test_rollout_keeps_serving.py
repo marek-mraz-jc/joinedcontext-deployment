@@ -70,3 +70,23 @@ def test_the_edge_keeps_serving_while_it_rolls(rendered, env):
     assert template["spec"]["terminationGracePeriodSeconds"] > wait, (
         f"{env}: the kubelet kills the pod before the proxy's wait ends"
     )
+
+
+def test_every_jc_prod_container_is_restarted_when_it_stops_answering(rendered):
+    """G-16, T-6727: a hung edge or service is restarted, not left in place. Both probes on every
+    long-running container of jc-prod; liveness gives up later than readiness, so a busy pod
+    leaves the Service before the kubelet restarts it."""
+    missing = []
+    for d in rendered("jc-prod"):
+        if d.get("kind") not in ("Deployment", "StatefulSet", "DaemonSet"):
+            continue
+        for c in d["spec"]["template"]["spec"]["containers"]:
+            where = f"{d['metadata']['name']}/{c['name']}"
+            if not (c.get("livenessProbe") and c.get("readinessProbe")):
+                missing.append(where)
+                continue
+            if d["metadata"]["name"] == "apisix":
+                live, ready = c["livenessProbe"], c["readinessProbe"]
+                assert live["periodSeconds"] * live["failureThreshold"] > (
+                    ready["periodSeconds"] * ready["failureThreshold"]), f"{where} restarts before it leaves the Service"
+    assert not missing, f"no liveness or readiness probe: {missing}"
