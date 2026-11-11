@@ -2,15 +2,15 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 5d52086d, ci run 42955943009 (cosign tlog 3801589496): 39a4b2ba (d4b2de4d dataroom keys, login
-  # exchange and pages, pipeline-audience; jc-self-reads f283aba4; jc-ekiben-paging 4c866a7a) +
-  # jc-garden-zip d779d5e4 (antares-ogc whole-file time 120 s -> 240 s, cuts logged at WARN) +
-  # dataroom harvest scheduler logs through tracing; config.rs unchanged. Never pin an image older than
+  # main 16dd5c43, ci run 42980427383 (cosign tlog 3805978716, githubWorkflowSha 16dd5c43): 5d52086d +
+  # explorer actions 15a195f8 (one action group, dataroom frame allows downloads, pager without a
+  # total), changes.sh cache re-seed 25fe0818, the rehearsal's allocator settings a272b1d1; 36
+  # commits, none behind; config.rs, migrations and Dockerfile unchanged. Never pin an image older than
   # 520e299e: without its reconciler guard a fresh start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '5d52086dfa02c8020d5962f04f0934b42a20c1e5'
-    digest: 'sha256:d1db77c167415dd4fe4ac9125e1eb78742177477fe1849c9b91cf36ab0a535f3'
+    tag: '16dd5c431464d7e5fd6cd52c80fe15be7eb18b62'
+    digest: 'sha256:38dc3ea038780fee3e15f0b6f1d67cb581e41add4928c8532f7199be39a88d86'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
