@@ -24,7 +24,7 @@ from test_jc_app_hosts import edge_file
 ENV = "jc-prod"
 DOMAIN = "smartcity.joinedcontext.com"
 JC = "jc.jc-prod.svc.cluster.local:8080"
-BLOCKED = re.compile(r"^/(git|streams|broker)([/?]|$)")
+BLOCKED = re.compile(r"^/(git|streams|broker|metrics)([/?]|$)")
 
 
 @pytest.fixture(scope="module")
@@ -66,6 +66,12 @@ FORGED = [
     (DOMAIN, "/broker/ngsi-ld/v1/entities"),
     (f"api.{DOMAIN}", "/git/api/v1/version"),
     (f"portal.{DOMAIN}", "//broker/ngsi-ld/v1/entities"),
+    # jc's public listener answers /metrics too (G-17, T-6727): the series stay on the admin port.
+    (f"api.{DOMAIN}", "/metrics"),
+    (f"api.{DOMAIN}", "/%6detrics"),
+    (f"api.{DOMAIN}", "//metrics?x=1"),
+    (DOMAIN, "/metrics"),
+    (f"data.{DOMAIN}", "/metrics"),
 ]
 # And the hosts it routes still reach jc.
 ROUTED = [(DOMAIN, "/grafana/"), (f"portal.{DOMAIN}", "/"), (f"api.{DOMAIN}", "/api/endpoint/x")]
