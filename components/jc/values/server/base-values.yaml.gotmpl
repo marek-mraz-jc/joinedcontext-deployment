@@ -178,6 +178,9 @@ configMap:
   mountPath: /etc/jc
   data:
     jc.toml: |
+      # jc refuses to start without a profile (P-29); production warns about secrets given as
+      # environment values.
+      profile = "production"
       role = "all"
       {{- if $window }}
       # Import window: only `kubectl port-forward` (the pod's loopback) reaches jc.

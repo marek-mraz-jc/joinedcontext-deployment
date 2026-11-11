@@ -81,6 +81,13 @@ def test_each_private_broker_host_names_its_own_project(rendered, env):
 
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
+def test_jc_toml_names_its_profile(rendered, env):
+    """jc refuses a jc.toml without `profile` (P-29, T-6717): every environment names production."""
+    assert jc_toml(rendered(env)).get("profile") == "production", f"{env}: jc.toml names no production profile"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
 def test_jc_trusts_forwarded_for_only_from_the_edge(rendered, env):
     proxies = jc_toml(rendered(env)).get("trusted_proxies")
     assert proxies, f"{env}: jc.toml has no trusted_proxies, every caller is the edge's address"
