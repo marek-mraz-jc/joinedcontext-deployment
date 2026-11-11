@@ -6,18 +6,6 @@ prometheus:
     # (RETIRED). Owner order 2026-11-03 had stopped it at 98-100 % node memory; with dev's own
     # workloads at zero it scrapes jc-prod, jc-dev, kube-system and cert-manager only.
     # jc-prod's and jc-dev's exporters (jc's admin listener, APISIX, Postgres) and cert-manager's
-    # certificate expiry, which JcProdCertificateExpiresSoon reads.
+    # certificate expiry, which JcProdCertificateExpiresSoon reads (jc-prod's monitoring renders
+    # that monitor).
     scrapeNamespaces: [cert-manager, jc-dev, jc-prod]
-    rawValues:
-      prometheus:
-        additionalServiceMonitors:
-          - name: cert-manager
-            selector:
-              matchLabels:
-                app.kubernetes.io/name: cert-manager
-                app.kubernetes.io/component: controller
-            namespaceSelector:
-              matchNames: [cert-manager]
-            endpoints:
-              - port: http-metrics
-                interval: 60s

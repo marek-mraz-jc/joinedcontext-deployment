@@ -410,6 +410,8 @@ monitoring:
     enabled: true
     # Admits dev's Prometheus to the Postgres exporter (namespaceFrom in components/postgres).
     prometheusNamespace: dev
+    # cert-manager's series for JcProdCertificateExpiresSoon; the only instance on this cluster with it.
+    certManagerMonitor: true
     # jc-prod's own rules (T-6727), namespace-scoped so dev's Prometheus evaluates them once
     # beside dev's cluster-wide ones (node disk and memory, volumes, backup age, which carry their
     # runbook links in components/monitoring). kube-state-metrics and cert-manager are the sources:

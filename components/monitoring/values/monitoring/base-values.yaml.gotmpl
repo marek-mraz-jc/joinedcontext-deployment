@@ -95,6 +95,17 @@ serviceMonitors:
         regex: jc_gateway_request_duration_seconds;.+
         action: drop
   {{- end }}
+  {{- if dig "monitoring" "monitoring" "certManagerMonitor" false $root }}
+  # The cluster's cert-manager controller (the kit's, namespace cert-manager): every Certificate's
+  # expiry and readiness, read by JcProdCertificateExpiresSoon (T-6727). One instance per cluster
+  # turns it on, or the series would be scraped twice.
+  - name: cert-manager
+    namespace: cert-manager
+    selector:
+      app.kubernetes.io/name: cert-manager
+      app.kubernetes.io/component: controller
+    port: http-metrics
+  {{- end }}
   {{- if has "gitops" $components }}
   # Argo CD's sync and health of every Application (ADR-N-056 §2.9).
   - name: argocd-application-controller

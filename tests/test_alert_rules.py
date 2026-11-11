@@ -96,6 +96,18 @@ def test_jc_prod_has_an_alert_with_a_runbook_for_every_failure_the_owner_named(g
     test_every_alert_has_a_fault_that_fires_it_and_a_recovery_that_clears_it(jc_prod_groups, JC_PROD_TESTS)
 
 
+
+def test_the_certificate_alert_has_cert_managers_series_scraped_once(rendered):
+    # JcProdCertificateExpiresSoon reads cert-manager's controller; jc-prod's monitoring renders the
+    # one monitor for it, and no other instance on the cluster renders a second.
+    def monitors(env):
+        return [d for d in rendered(env) if d.get("kind") == "ServiceMonitor" and d["metadata"].get("namespace") == "cert-manager"]
+    [monitor] = monitors("jc-prod")
+    assert monitor["spec"]["selector"]["matchLabels"] == {"app.kubernetes.io/name": "cert-manager", "app.kubernetes.io/component": "controller"}
+    assert [e["port"] for e in monitor["spec"]["endpoints"]] == ["http-metrics"]
+    assert monitors("dev") == [] and monitors("jc-dev") == []
+
+
 @pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 @pytest.mark.parametrize("env", ["dev", "jc-prod"])
 def test_promtool_checks_the_rules_and_runs_every_case(env, groups, jc_prod_groups, tmp_path):
