@@ -11,6 +11,10 @@ metadata:
     en: Find a dataset by its title, theme or place (type=Dataset, q=searchText~=…, georel=near), then go on to its own Endpoint.
 spec:
   contextSpaceRef: catalog
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:catalog:catalog-portal-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:catalog:catalog-public-read
   slug: wxq5kcz6vmiowctob6erdffxb5kdg2bb
   audience: public
   enabledRepresentations: [ngsi-ld, mcp]
