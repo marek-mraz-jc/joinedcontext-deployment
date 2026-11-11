@@ -42,6 +42,9 @@ global:
   orgDomain: hel.fi
   instanceSlug: jc-prod
   profile: development
+  # The smartcity hosts and their users are production's: the production guard judges this
+  # render though the sizes stay the development profile's (T-6720).
+  productionGuard: true
   # The installation's logo as old prod's smartcity branding named it: jc's catalogue footer mark,
   # favicon and /logo.svg ([dataroom.branding], components/jc/values/server).
   branding:
