@@ -2,6 +2,11 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
+  # main 12e72d5b (signed, cosign githubWorkflowSha 12e72d5b, refs/heads/main). 749b9a71 (T-6819 merge on main,
+  # no image of its own) differs from it only in bins/jc/smoke; its smoke 43225400970: 10 fail, 0 not on the
+  # known list, no row new against 4ddda006. = 75e834b6 + T-6768 (Antares visible under a metadata narrowing),
+  # T-6806 (binding scope must exist), T-6810/6811/6815/6816/6817/6821/6822/6826 (Portal OData per Organization),
+  # T-6823 (OGC export 429 when busy, 413 past ANTARES_EXPORT_FILE_ROWS). T-6825's stricter validation is not in it.
   # main 75e834b6 (signed, cosign githubWorkflowSha 75e834b6, refs/heads/main), smoke 43181308851: 10 fail,
   # 0 not on the known list, no row new against 4ddda006. = ffc8fdf7 + 9adaf071 (T-6805 subscribe builder
   # on stored presets) + e9a7f865 (T-6803 round 2, smoke only) + T-6802 (Endpoint edit page waits for the
@@ -28,8 +33,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '75e834b60120254e1f302c5eb327c00a76824da2'
-    digest: 'sha256:98f0b5a7b6b47186174e94b6d76589c9a4975ee60e92c9cd528c69c9fc19b807'
+    tag: '12e72d5bf5e3836e146cda1891e26ec10637b4b3'
+    digest: 'sha256:c9dfafdfa831e51a7b346a0f042b35a1b360fb6f7515250c9005a2e0ffedc119'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
