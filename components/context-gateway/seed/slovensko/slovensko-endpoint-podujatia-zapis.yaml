@@ -13,6 +13,10 @@ metadata:
     en: The internal door the ingestion pipelines write the events through; people read them through the public Endpoint slovensko-podujatia.
 spec:
   contextSpaceRef: slovensko-podujatia
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:slovensko-podujatia:podujatia-bratislava-read
+    - urn:ngsi-ld:Policy:joinedcontext.com:slovensko-podujatia:podujatia-read
   slug: 5kmumrgpatf2xaclhqh5zbnzzvpkilcm
   audience: organization
   enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

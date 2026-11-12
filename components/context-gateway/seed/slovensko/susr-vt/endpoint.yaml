@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Výdavky na výskum a vývoj: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube vt0002rs), jedna položka na zverejnenú bunku.", en: "Research and development expenditure: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube vt0002rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-vt
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-vt:susr-vt-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-vt:susr-vt-public-read
   slug: gwxmhyqit2dvveu4kkhi3w7nqjunjo3p
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

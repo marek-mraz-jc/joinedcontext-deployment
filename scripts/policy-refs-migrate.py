@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes into every seed Endpoint without Policy references the Policies it binds today (P-18, T-6735).
+"""Writes into every seed Endpoint without Policy references the Policies it binds today (P-18, T-6735, T-6741).
 
 An Endpoint without `policyRefs` (or `policyRef`) evaluates every Policy of its space, so a
 Policy written for one Endpoint also opens every other Endpoint of that space. Before the
@@ -12,12 +12,12 @@ Left alone, each reported:
 - an App's generated Endpoint (`app-{name}` beside an App `{name}` of its project): it binds the
   App's own grants and the space's prohibitions (AP-139), a rule of its own;
 - an Endpoint whose space holds no Policy: it grants nothing today, and an empty list is refused
-  (ADR-N-057);
-- an Endpoint of a space a Pipeline writes or reads through an Endpoint: each Pipeline brings
-  Policies derived with it, `pl-{pipeline}-w-{n}` and `-r-{n}` (PL-20, `jc_core::kinds::pipeline_identity`),
-  which bind only an Endpoint naming no references; naming the manifest Policies alone would
-  answer every Pipeline write 404. Those Endpoints wait until a Pipeline's derived grants bind the
-  Endpoint it names (T-6736).
+  (ADR-N-057).
+
+A space a Pipeline writes or reads also holds the Policies derived with each Pipeline,
+`pl-{pipeline}-w-{n}` and `-r-{n}` (PL-20, `jc_core::kinds::pipeline_identity`). They are not
+written: each binds the one Endpoint its Pipeline's manifest names (targetEndpoint, a source's
+endpointRef), whatever that Endpoint lists (T-6736), so the manifest Policies alone are the refs.
 
 A reference is `urn:ngsi-ld:Policy:{domain}:{segment}:{name}`: the Project's `spec.domain`, else
 its Organization's, else the installation's (`--installation-domain`); the space's
@@ -84,19 +84,6 @@ def plan(manifests, installation_domain=INSTALLATION_DOMAIN):
         key = (d["metadata"].get("namespace"), ref_name(spec(d).get("contextSpaceRef")))
         policies.setdefault(key, set()).add(d["metadata"]["name"].split("#", 1)[0])
 
-    endpoint_spaces = {
-        (d["metadata"].get("namespace"), d["metadata"]["name"]): ref_name(spec(d).get("contextSpaceRef"))
-        for _, d in by_kind.get("Endpoint", [])
-    }
-    piped = set()
-    for _, d in by_kind.get("Pipeline", []):
-        project, s = d["metadata"].get("namespace"), spec(d)
-        outputs = [s, *(s.get("outputs") or [])]
-        sources = [s.get("source") or {}, *(s.get("sources") or [])]
-        names = [o["targetEndpoint"].rsplit(":", 1)[-1] for o in outputs if isinstance(o, dict) and o.get("targetEndpoint")]
-        names += [ref_name(x["endpointRef"]) for x in sources if isinstance(x, dict) and x.get("endpointRef")]
-        piped |= {(project, endpoint_spaces.get((project, n))) for n in names}
-
     migrate, skipped = [], []
     for path, d in by_kind.get("Endpoint", []):
         project, name, s = d["metadata"].get("namespace"), d["metadata"]["name"], spec(d)
@@ -105,9 +92,6 @@ def plan(manifests, installation_domain=INSTALLATION_DOMAIN):
         space = ref_name(s.get("contextSpaceRef"))
         if name.startswith("app-") and (project, name[len("app-"):]) in apps:
             skipped.append((path, name, "App Endpoint: binds the App's own grants (AP-139)"))
-            continue
-        if (project, space) in piped:
-            skipped.append((path, name, f"space {space} carries Pipeline grants derived per Pipeline (PL-20): T-6736"))
             continue
         names = sorted(policies.get((project, space), ()))
         if not names:

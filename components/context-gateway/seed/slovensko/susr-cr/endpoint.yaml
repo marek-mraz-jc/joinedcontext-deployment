@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Prenocovania v cestovnom ruchu: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube cr1804rs), jedna položka na zverejnenú bunku.", en: "Nights spent in tourism: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube cr1804rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-cr
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-cr:susr-cr-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-cr:susr-cr-public-read
   slug: 5xmxkf2b5lxznfcy2akxevmbagdx6arc
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

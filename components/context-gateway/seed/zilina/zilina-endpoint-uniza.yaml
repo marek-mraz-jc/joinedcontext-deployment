@@ -12,6 +12,11 @@ metadata:
     en: "The openly licensed works of the University of Žilina's digital repository (DREPO): title, kind, year, collection, publisher, licence and persistent handle, without author names."
 spec:
   contextSpaceRef: zilina-uniza
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-uniza:app-zilina-vyskum-1
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-uniza:uniza-pipelines-write
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-uniza:uniza-read
   slug: os4quyrmvhijr3x7x4fno2jicej4ifv5
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

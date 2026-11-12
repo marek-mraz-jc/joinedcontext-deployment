@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Zdroje elektriny: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube en1001ms), jedna položka na zverejnenú bunku.", en: "Sources of electricity: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube en1001ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-en
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-en:susr-en-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-en:susr-en-public-read
   slug: uollbyawh4uo2o73wvlot4u7dmkacu6q
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

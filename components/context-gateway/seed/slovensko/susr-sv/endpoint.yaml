@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Vysoké školy: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube sv2005rs), jedna položka na zverejnenú bunku.", en: "Higher education: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube sv2005rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-sv
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-sv:susr-sv-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-sv:susr-sv-public-read
   slug: xutej6p46cqde27cjvjbysv6yhtamfnd
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

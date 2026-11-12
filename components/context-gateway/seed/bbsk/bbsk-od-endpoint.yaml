@@ -13,6 +13,10 @@ metadata:
     en: Every dataset of the Banská Bystrica Self-Governing Region in the catalogue (opendata.bbsk.sk).
 spec:
   contextSpaceRef: bbsk-otvorene-data
+  policyRefs:
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-pipelines-write
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read-history
   slug: 6b4yqhzqieutqcoeew5rnxrx5udqeert
   audience: public
   enabledRepresentations:

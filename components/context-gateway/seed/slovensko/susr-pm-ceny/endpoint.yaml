@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Ceny priemyselných výrobcov: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube pm0048ms), jedna položka na zverejnenú bunku.", en: "Industrial producer prices: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube pm0048ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-pm-ceny
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pm-ceny:susr-pm-ceny-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pm-ceny:susr-pm-ceny-public-read
   slug: mmio3jkuh5e2naw2f4kwss7adgtqo2n7
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]
