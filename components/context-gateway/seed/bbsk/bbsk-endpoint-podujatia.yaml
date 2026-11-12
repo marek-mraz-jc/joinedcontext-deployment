@@ -14,6 +14,8 @@ spec:
   slug: hqgmj6ieuq57y37g5g4ckz5eyhebklox
   audience: public
   policyRef: urn:ngsi-ld:Policy:bbsk.sk:bbsk-podujatia:podujatia-kraj-read
+  # facets: the dataset page's builder draws a Town and a Genre select from these (EP-178, T-6768).
+  facets: [address.addressLocality, eventCategory]
   # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
   # representations.ical (EP-125, EP-159); events.ics is the first one (deprecated alias).
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]

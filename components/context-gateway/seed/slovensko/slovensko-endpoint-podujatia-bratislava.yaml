@@ -15,6 +15,8 @@ spec:
   slug: g7hot6lsrwn3gjes5flpm4en6dosssxf
   audience: public
   policyRef: urn:ngsi-ld:Policy:joinedcontext.com:slovensko-podujatia:podujatia-bratislava-read
+  # facets: the dataset page's builder draws a Town and a Genre select from these (EP-178, T-6768).
+  facets: [address.addressLocality, eventCategory]
   # ical: the calendars a person subscribes to, /api/endpoint/{slug}/ical/v1/{name}.ics, one per output of
   # representations.ical (EP-125, EP-159).
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp, ical]
