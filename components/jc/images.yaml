@@ -2,7 +2,11 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main f0b6e756 (signed, cosign githubWorkflowSha f0b6e756, refs/heads/main), smoke 43153936254: 11 fail,
+  # main ffc8fdf7 (signed, cosign githubWorkflowSha ffc8fdf7, refs/heads/main), smoke 43161732041: 27 fail,
+  # 16 rows new against 4ddda006, all smoke-harness races of T-6803's gate (worker-t6803, round 2 e9a7f865);
+  # pinned on the supervisor's 07:34Z order. = f0b6e756 + T-6803 (smoke only, ckan.rs keeps published
+  # datasets in host mode) + T-6800 (restore gate VACUUM ANALYZE).
+  # f0b6e756 (signed, cosign githubWorkflowSha f0b6e756, refs/heads/main), smoke 43153936254: 11 fail,
   # none new against 4ddda006 (17). = 54f8a5e2 + T-6772/T-6777/T-6779/T-6780 (Organization
   # appearance), T-6800 (beside-types reads), T-6801 (dataroom /logo.svg sandbox CSP + nosniff),
   # T-6798, T-6799, T-6802. 54f8a5e2 is 4ddda006 + T-6795,
@@ -20,8 +24,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'f0b6e756bbec039370915af36d7cd8cf39301bcf'
-    digest: 'sha256:2c6c67b9d25adabfdad22a61cd48bd634cbfc4521321c90616a5524083e3c2a6'
+    tag: 'ffc8fdf79d672def0ae7ee89e60affbf96a2411e'
+    digest: 'sha256:e238d96a2d3ce008f88226b8271050613db343e72632d3f5ebef75f16395c9ce'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
