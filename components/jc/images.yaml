@@ -2,7 +2,9 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 4ddda006 (signed, cosign githubWorkflowSha 4ddda006, refs/heads/main): 1a970fe8 + T-6790,
+  # main 54f8a5e2 (signed, cosign githubWorkflowSha 54f8a5e2, refs/heads/main): 4ddda006 + T-6795,
+  # T-6796, T-6797 (a [[hosts]] registry, active only with [[organizations]]: jc-dev and jc-prod
+  # configure none, so no host answers 421). 4ddda006 is 1a970fe8 + T-6790,
   # T-6791 and T-6783 round 2 (portal-api audience mapper: the exported realms need rehearsal.py
   # add_portal_audience on their stored realm, jc's shipped realm has it). 1a970fe8 is
   # 6ef2f405 (T-6769, T-6770, T-6793 warn: values/server keeps JC_GATEWAY_URN_OWNER_PREFIX=warn until
@@ -13,8 +15,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '4ddda0069caf685f68dc9c3bd7f8c0e0d75261ef'
-    digest: 'sha256:e0b20d4d8afe12ed836a3d635bd57dea95a958d5e61633acfdcbbffb6172490a'
+    tag: '54f8a5e23dd76924290ffcbe65838ec90019c0a5'
+    digest: 'sha256:f92840b8159a3ca2b52331d435b0c1d9a7329626f0dee7c9818089708b4f4323'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
