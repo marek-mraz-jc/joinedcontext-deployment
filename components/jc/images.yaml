@@ -11,6 +11,8 @@ jc:
   # 2026-11-25) + T-6788 (MCP limit keys the caller, not jc's own pod), T-6785, T-6776, T-6766 (with
   # 2+ Organizations only that Organization's members open its projects; org-admins no longer change
   # its domain, gitRepositoryUrl, limits or catalog), T-6739, T-6749, T-6750, T-6752, T-6753, T-6763.
+  # T-6736 (P-18: a Pipeline's derived grants bind on an Endpoint with policyRefs) is in every jc image
+  # since e8d794c0, this one included.
   # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
   # managed groups and their members.
   server:
