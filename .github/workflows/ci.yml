@@ -264,6 +264,10 @@ jobs:
         # the other repositories.
         run: gitleaks detect --source . --config .ci/shared/gitleaks.toml --redact --exit-code 1
       - run: pip install --quiet --require-hashes --no-deps -r .github/requirements-tests.txt
+      # check-docs-pin.sh accepts a pinned digest whose tag a same-commit rebuild moved only when
+      # our workflow on main signed it from the pinned commit.
+      - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+        if: matrix.shard == 1
       - name: the docs this release serves hold for the code it runs (T-4483, TS-19)
         # The Portal's /docs is the docs commit pinned beside its digest; the pinned Portal and
         # platform commits and this tree are checked out and that docs commit's own checkers

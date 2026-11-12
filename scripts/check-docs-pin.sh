@@ -39,11 +39,26 @@ registry_digest() {
     -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
     "https://ghcr.io/v2/marek-mraz-jc/$1/manifests/$2" | tr -d '\r' | awk 'tolower($1) == "docker-content-digest:" { print $2 }'
 }
+# The commits our own image workflow on main signed `digest` from (cosign githubWorkflowSha), one
+# per line; nothing when the image carries no such signature or cosign is absent.
+built_from() {
+  command -v cosign >/dev/null || return 0
+  cosign verify "ghcr.io/marek-mraz-jc/$1@$2" \
+    --certificate-identity-regexp "^https://github.com/marek-mraz-jc/$1/.github/workflows/.+@refs/heads/main$" \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com 2>/dev/null |
+    python3 -c 'import json,sys; print("\n".join(sorted({s["optional"].get("githubWorkflowSha", "") for s in json.load(sys.stdin)})))' 2>/dev/null || true
+}
 red=0
 for pair in "joinedcontext-portal $portal $portal_digest components/portal/images.yaml" \
             "joinedcontext-platform $platform $platform_digest components/context-gateway/images.yaml"; do
   read -r repo commit digest file <<<"$pair"
   found=$(registry_digest "$repo" "$commit" || true)
+  # A scheduled rebuild of the same commit moves its tag to a new digest (the platform's ship
+  # run, 2026-11-12): the pinned digest still runs that commit when our image workflow signed it
+  # from that commit, which is what the tag stood for.
+  if [ "$found" != "$digest" ] && built_from "$repo" "$digest" | grep -qx "$commit"; then
+    found=$digest
+  fi
   if [ "$found" != "$digest" ]; then
     echo "$file: $repo $commit is ${found:-not in the registry}, the pin says $digest: move commit: with the digest" >&2
     red=1
