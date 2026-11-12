@@ -12,6 +12,59 @@ metadata:
     en: 'Prague city data: air quality, shared bikes, park and ride car parks, sorted-waste containers and collection points, the budget, cultural and school facilities, public toilets, city districts, municipal police stations, libraries, municipal offices, gardens, playgrounds, waste collection yards, city amenities, cool spots, on-street parking, parks, green areas and trees, air pollution sources, radon risk, flood areas, flood defences, the weather, Mr.Parkit garages and shared cars free to rent. Sources: ČHMÚ, Golemio, ROPID, IPR Praha and the City of Prague.'
 spec:
   contextSpaceRef: praha-mesto
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-data-1
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-mapa-1
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-odpad-1-viewer
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:pipelines-write
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-bilancni-celky
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cerpani-rozpoctu
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cinnost-mestske-policie
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cinnost-mestske-policie-utvary
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cyklotrasy
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-financni-vztahy-mc
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-garaze
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-hluk
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-hrbitovy
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-kola
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-letni-udrzba
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-linky-pid
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-mestske-casti
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-mista
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-naucne-stezky
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-odpad
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-opravy-a-uzavirky
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-ovzdusi
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-parkovaci-automaty
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-parkovani
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-parkovani-pr
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-pietni-mista
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-pocasi
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-posty
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-protipovodnova-ochrana
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-psi-zony
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-radon
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-read
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-read-history
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-rozpocet
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-scitace-cyklistu
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-sdilena-auta
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-sluzby
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-stromy
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-tarifni-pasma
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-technicke-prvky-zelene
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-ulicni-useky
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-vodni-plochy
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-vozidla-pid
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-vstupy-metra
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-vybavenost
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zakazy-stani
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zaplavova-uzemi
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zastavky-pid
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zdravotni-a-socialni-sluzby
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zdroje-znecisteni
+    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zelen
   slug: jw7tffshzip7igmzcszgffkkkuetnc6v
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

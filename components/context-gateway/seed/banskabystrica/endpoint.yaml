@@ -14,6 +14,10 @@ metadata:
     en: 'Hourly air-quality readings at station SK0263A in Banská Bystrica (urban background, SHMÚ) as the European Environment Agency republishes them: PM10, PM2.5 and the time of the reading. CC BY 4.0, copyright holder EEA.'
 spec:
   contextSpaceRef: ovzdusie
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:ovzdusie:ovzdusie-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:ovzdusie:public-read
   slug: mluyob4nz52lok3ssk7pgn5vwt
   audience: public
   # `csv` is what a tabular consumer reads, and what the catalogue's DataStore sheet is filled

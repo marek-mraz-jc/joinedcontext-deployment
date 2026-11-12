@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Pohyb obyvateľstva: oficiálna štatistika Štatistického úradu SR za Slovensko aj jeho územia (kraje, okresy alebo obce, ako ich tabuľka člení; územie v refArea, SK0 je celá SR) (DATAcube om2801ms, om7104rr), jedna položka na zverejnenú bunku.", en: "Population change: official statistics of the Statistical Office of the Slovak Republic for Slovakia and its territories (regions, districts or municipalities as the table divides them; the territory in refArea, SK0 the whole country) (DATAcube om2801ms, om7104rr), one record per published cell." }
 spec:
   contextSpaceRef: susr-om-pohyb
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-om-pohyb:susr-om-pohyb-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-om-pohyb:susr-om-pohyb-public-read
   slug: ptj22i44igzp4z3qxsvnunoh2gfg2yjb
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

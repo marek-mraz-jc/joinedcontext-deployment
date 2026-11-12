@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Zdravé roky života a stredná dĺžka života: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube kz1016rs), jedna položka na zverejnenú bunku.", en: "Healthy life years and life expectancy: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube kz1016rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-kz-zdravie
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-kz-zdravie:susr-kz-zdravie-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-kz-zdravie:susr-kz-zdravie-public-read
   slug: 4m5qe2n5rchxoj5lcrufykp6qn4ordx6
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

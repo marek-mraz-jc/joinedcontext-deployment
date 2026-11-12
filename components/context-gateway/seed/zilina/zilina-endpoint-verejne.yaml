@@ -13,6 +13,16 @@ metadata:
     en: "Hourly PM10, PM2.5, NO2, O3 and CO at station SK0020A, the city's immovable national cultural monuments placed through the register of addresses, and the city's railway stations with the trains leaving each that day. Sources: the European Environment Agency (SHMÚ's data), the Monuments Board of the SR, the Ministry of Interior of the SR, ŽSR."
 spec:
   contextSpaceRef: zilina-verejne
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:app-zilina-mapa-1
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:app-zilina-zaznamy-1
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:ovzdusie-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:pamiatky-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:stanice-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:verejne-pipelines-write
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:verejne-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:verejne-read-history
   slug: zhu42lbyivllciy7pluenlhxmqn5hi7c
   audience: public
   enabledRepresentations: [ngsi-ld, csv, websocket, ogc-features, odata, mcp]

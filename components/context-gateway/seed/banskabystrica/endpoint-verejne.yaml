@@ -14,6 +14,24 @@ metadata:
     en: "The city's events, the schools in the city, hourly PM10, PM2.5, NO2 and O3 at station SK0263A, and the weather at SHMÚ's automatic stations Banská Bystrica - Zelená and Donovaly (every five minutes). Sources: the City of Banská Bystrica, the Slovak Ministry of Education (Digitálna mapa škôl), the European Environment Agency (SHMÚ's data), the Slovak Hydrometeorological Institute; CC BY 4.0."
 spec:
   contextSpaceRef: banskabystrica-verejne
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-data-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-mapa-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-ovzdusie-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-ovzdusie-1-history
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-skoly-1-viewer
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:kataster-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:nabijanie-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:pocasie-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:podujatia-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:skoly-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-osm-account
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-osm-delete
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-read-history
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:zdravie-read
   slug: rpfqszwlbp5bonvg7kckhdsne5qedjor
   audience: public
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public

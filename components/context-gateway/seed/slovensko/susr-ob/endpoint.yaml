@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Maloobchod: tržby: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube ob0004ms), jedna položka na zverejnenú bunku.", en: "Retail trade turnover: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube ob0004ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-ob
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ob:susr-ob-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ob:susr-ob-public-read
   slug: l4bwpgiadi4f3pztzujbczanuliwbton
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

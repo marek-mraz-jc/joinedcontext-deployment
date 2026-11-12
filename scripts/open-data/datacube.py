@@ -493,6 +493,10 @@ metadata:
   description: {{ sk: {q(desc['sk'])}, en: {q(desc['en'])} }}
 spec:
   contextSpaceRef: {space}
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-public-read
   slug: {slug}
   audience: public
   enabledRepresentations: [{", ".join(REPRESENTATIONS)}]

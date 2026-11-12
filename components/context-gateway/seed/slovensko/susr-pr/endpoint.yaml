@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Nezamestnanosť: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube pr0101qs), jedna položka na zverejnenú bunku.", en: "Unemployment: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube pr0101qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-pr
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pr:susr-pr-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-pr:susr-pr-public-read
   slug: enulf35isjc5bnobvepmamp75sm3ii24
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

@@ -10,6 +10,10 @@ metadata:
   description: { sk: "HDP podľa odvetví: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube nu0005qs), jedna položka na zverejnenú bunku.", en: "GDP by industry: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube nu0005qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-nu-odvetvia
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-nu-odvetvia:susr-nu-odvetvia-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-nu-odvetvia:susr-nu-odvetvia-public-read
   slug: xe336h6hvltlyatay2dxc4cyncl77mzk
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

@@ -8,6 +8,9 @@ metadata:
   title: { en: HSL trams through our MQTT broker (test) }
 spec:
   contextSpaceRef: hsl-mqtt-test
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:hel.fi:hsl-mqtt-test:hsl-mqtt-test-pipelines-write
   slug: bxh7tot5zee4ndom364owjtyf2ppinsy
   audience: organization
   enabledRepresentations: [ngsi-ld, mcp, websocket, ogc-features]

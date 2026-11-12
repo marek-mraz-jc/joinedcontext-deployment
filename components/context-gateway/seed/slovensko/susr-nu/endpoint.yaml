@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Rýchly odhad HDP a zamestnanosti: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube nu0001qs), jedna položka na zverejnenú bunku.", en: "Flash estimate of GDP and employment: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube nu0001qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-nu
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-nu:susr-nu-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-nu:susr-nu-public-read
   slug: lmobgyt3nmvjty46tug2hrpswqy7w3qv
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

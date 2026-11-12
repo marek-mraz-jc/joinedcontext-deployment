@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Trhové služby: tržby: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube ts0003ms), jedna položka na zverejnenú bunku.", en: "Market services turnover: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube ts0003ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-ts
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ts:susr-ts-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ts:susr-ts-public-read
   slug: jquhkkvh3ukkok6zm7j3vyahd4zohwj3
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

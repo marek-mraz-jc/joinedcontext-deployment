@@ -12,6 +12,14 @@ metadata:
     en: Banská Bystrica Region, raw data
 spec:
   contextSpaceRef: bbsk-kraj
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:app-bbsk-zaznamy-1
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:app-bbsk-zaznamy-2-steward
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-public-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-steward-note
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-steward-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:pipelines-write
   slug: 7u4ns3cdg2mqlx5gmxhk7rqai6pmokdj
   audience: organization
   enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]

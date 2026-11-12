@@ -1012,11 +1012,14 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
                                 "docs": f"./{space}.v1.md", "example": f"./{space}.v1.example.jsonld"}}})
     files[f"{space}.linkml.yaml"] = linkml(project, space, entries, model_ranges)
     endpoint = SEED / project / f"{pre}endpoint.yaml"
+    # The Policies drafted below, the door's whole set (P-18); the Pipelines' derived writes bind it through their targetEndpoint.
+    policies = ["otvorene-data-pipelines-write", "otvorene-data-read", *(["otvorene-data-read-history"] if any(t in MEASURED for t in types) else [])]
     files[f"{pre}endpoint.yaml"] = manifest(
         "The space's one door, public: every row is the publisher's open data under the licence its\n"
         "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
-         "spec": {"contextSpaceRef": space, "slug": slug_for(endpoint), "audience": "public",
+         "spec": {"contextSpaceRef": space, "policyRefs": [f"urn:ngsi-ld:Policy:{p['domain']}:{space}:{n}" for n in policies],
+                  "slug": slug_for(endpoint), "audience": "public",
                   "enabledRepresentations": REPRESENTATIONS + (["feed"] if "Article" in types else []),
                   **news_feed(p, types), "catalog": catalog_block(project, p, entries)}})
     information = [{"entities": [{"type": t} for t in types]}]
