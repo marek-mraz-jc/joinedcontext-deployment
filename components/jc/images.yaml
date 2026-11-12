@@ -2,16 +2,17 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 6ef2f405, image.yml run 43129995225 (signed, cosign githubWorkflowSha 6ef2f405, refs/heads/main):
-  # eaa7b015 + T-6769 (URN owner check), T-6770 (re-mint functions), T-6793 (warn mode: pinned only
-  # together with JC_GATEWAY_URN_OWNER_PREFIX=warn and its date in values/server, same commit),
-  # T-6774 round 2 (imported claude.ai clients under the CIMD policy), T-6762, T-6786, T-6784,
-  # T-6782, T-6783. Never pin an image older than 520e299e: without its reconciler guard a fresh
-  # start deletes managed groups and their members.
+  # main 1a970fe8, image.yml run 43134505176 (signed, cosign githubWorkflowSha 1a970fe8, refs/heads/main):
+  # 6ef2f405 (T-6769, T-6770, T-6793 warn: values/server keeps JC_GATEWAY_URN_OWNER_PREFIX=warn until
+  # 2026-11-25) + T-6788 (MCP limit keys the caller, not jc's own pod), T-6785, T-6776, T-6766 (with
+  # 2+ Organizations only that Organization's members open its projects; org-admins no longer change
+  # its domain, gitRepositoryUrl, limits or catalog), T-6739, T-6749, T-6750, T-6752, T-6753, T-6763.
+  # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
+  # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '6ef2f405992a6d0cf0ab0bade587b4d61dad23fc'
-    digest: 'sha256:78493370bc5a782b7c67c66f30e0ae11555398a86899481578d7493ae1ce6636'
+    tag: '1a970fe8557f5fbd9dba02f9795b168febe35966'
+    digest: 'sha256:29a9de2b21b752e2a322b3e7b15533bf45212a0a21960532da30398a88d53d3b'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
