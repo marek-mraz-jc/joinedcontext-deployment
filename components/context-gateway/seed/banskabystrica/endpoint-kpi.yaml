@@ -9,6 +9,11 @@ metadata:
   title: { sk: Ukazovatele mesta, en: City indicators }
 spec:
   contextSpaceRef: banskabystrica-kpi
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-kpi:kpi-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-kpi:kpi-shared-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-kpi:kpi-steward-read
   slug: y4royli3pip6yrhv3olxxf2522b3dovt
   audience: project-list
   allowedProjects: [bbsk]

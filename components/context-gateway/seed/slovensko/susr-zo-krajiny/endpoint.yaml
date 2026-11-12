@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Zahraničný obchod podľa krajín: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube zo0011ms), jedna položka na zverejnenú bunku.", en: "Foreign trade by country: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube zo0011ms), one record per published cell." }
 spec:
   contextSpaceRef: susr-zo-krajiny
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-zo-krajiny:susr-zo-krajiny-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-zo-krajiny:susr-zo-krajiny-public-read
   slug: 3bayn5lqwhce7opxqu3e7ruibkhqmfew
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

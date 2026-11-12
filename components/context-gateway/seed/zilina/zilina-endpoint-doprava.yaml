@@ -12,6 +12,14 @@ metadata:
     en: Žilina, mobility live
 spec:
   contextSpaceRef: zilina-doprava
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:doprava-pipelines-write
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:doprava-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:mhd-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:parkoviska-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:scitace-read
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:svietidla-read
   slug: 4aw6iqtjp7h7vrsjcfmfvir2ubpukmnf
   audience: public
   enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]

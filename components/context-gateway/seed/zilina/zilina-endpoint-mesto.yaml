@@ -11,6 +11,9 @@ metadata:
     en: Žilina, raw data
 spec:
   contextSpaceRef: zilina-mesto
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-mesto:mesto-pipelines-write
   slug: 6cm7hh73b7igmmekf3a5ucwmjyqspf62
   audience: organization
   enabledRepresentations: [ngsi-ld, mcp, csv, websocket, ogc-features, odata]

@@ -17,6 +17,14 @@ metadata:
     en: "The Statistical Office's yearly data for the region and its districts as the region mirrors them: residents (om7102rr), registered jobseekers (pr5001rr) and solid particulate emissions per km² (zp3803rs), and the monthly cyclist counts of the region's bicycle counters (Scitace_new), CC BY-SA 4.0. Without the data steward's notes."
 spec:
   contextSpaceRef: bbsk-kraj
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:app-bbsk-zaznamy-1
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:app-bbsk-zaznamy-2-steward
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-public-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-steward-note
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:kraj-steward-read
+    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:pipelines-write
   slug: 2lwz27hvqjvxaow2hr73lxmxx743irui
   audience: public
   # mcp: the members of the public `otvorene-data` MCP server (T-4141) and the public

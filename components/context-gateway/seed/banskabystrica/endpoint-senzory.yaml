@@ -11,6 +11,10 @@ metadata:
     en: Test readings of the demo sensors over MQTT; not city data.
 spec:
   contextSpaceRef: senzory
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:senzory:senzory-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:senzory:senzory-steward-read
   slug: yo6wz4xydtpgfhqi7ivj3ixqgxhzjuim
   audience: organization
   enabledRepresentations: [ngsi-ld, mcp, ogc-features, websocket]

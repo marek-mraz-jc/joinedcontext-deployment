@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Bytová výstavba: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube st2022qs), jedna položka na zverejnenú bunku.", en: "Housing construction: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube st2022qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-st
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-st:susr-st-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-st:susr-st-public-read
   slug: nr6udfzsnvaejtnochjpkssfxidm55tn
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

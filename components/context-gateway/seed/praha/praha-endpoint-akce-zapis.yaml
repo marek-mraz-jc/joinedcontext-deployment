@@ -13,6 +13,9 @@ metadata:
     en: The internal door the ingestion pipelines write the events through; people read them through the public Endpoint praha-akce.
 spec:
   contextSpaceRef: praha-akce
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:praha.eu:praha-akce:akce-read
   slug: qbeo3lkbe7j4dtpoblcemudp3l6ulsfn
   audience: organization
   enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

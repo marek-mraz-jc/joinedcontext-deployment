@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Zdravotnícke zariadenia: lôžka a lekárne: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube zd1004rs), jedna položka na zverejnenú bunku.", en: "Health facilities: beds and pharmacies: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube zd1004rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-zd
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-zd:susr-zd-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-zd:susr-zd-public-read
   slug: eicsvjehoiwoykalzmpqqp6hakoj426t
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

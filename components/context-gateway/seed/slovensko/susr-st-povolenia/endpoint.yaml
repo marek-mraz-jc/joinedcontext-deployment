@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Stavebné povolenia: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube st2024qs), jedna položka na zverejnenú bunku.", en: "Building permits: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube st2024qs), one record per published cell." }
 spec:
   contextSpaceRef: susr-st-povolenia
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-st-povolenia:susr-st-povolenia-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-st-povolenia:susr-st-povolenia-public-read
   slug: ssyq2yewnyqs4rypdmghumswi3haak3t
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

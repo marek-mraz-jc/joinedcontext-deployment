@@ -10,6 +10,55 @@ metadata:
     en: 'The whole Helsinki space in one place: events, city bike stations, transit stops and lines, news, road weather, traffic messages, beach water, parking, public-area permits and districts. Each source under its own licence.'
 spec:
   contextSpaceRef: helsinki
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:app-helsinki-data-1
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:app-helsinki-kartta-1
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:bikes-ops-read
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:bikes-ops-steward
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:gtfs-routes-account
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:pipelines-delete-alerts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:pipelines-write
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-air-quality
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-all
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-all-history
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-bikes
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-cycle-counts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-districts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-events
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-feedback
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-heat-vulnerability
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-heritage
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-nature
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-news
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-noise
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-parking
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-permits
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-places
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-service-property-energy
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-education
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-employment
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-environment
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-housing
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-income
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-population
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-services
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-statistics-welfare
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-street-cleaning-air
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-traffic-counts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-traffic-signals
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-traffic-volumes
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-transport
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-trees
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-vision-counts
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-water-quality
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:public-weather
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-history-journey
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-import-journey
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-row-journey
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-versions
+    - urn:ngsi-ld:Policy:hel.fi:helsinki:transit-stops-account
   slug: si6epqkx364lprho5uaigutk274r5grb
   audience: public
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).

@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Obyvateľstvo podľa veku: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube as1001rs), jedna položka na zverejnenú bunku.", en: "Population by age: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube as1001rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-as
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-as:susr-as-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-as:susr-as-public-read
   slug: p5d4v5vgbbvyfdhkgsroy3qbzmspzxks
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]

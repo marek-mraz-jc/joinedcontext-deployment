@@ -10,6 +10,10 @@ metadata:
   description: { sk: "Príjmy a chudoba domácností: oficiálna štatistika Štatistického úradu SR za celé Slovensko (DATAcube ps1002rs), jedna položka na zverejnenú bunku.", en: "Household income and poverty: official statistics of the Statistical Office of the Slovak Republic for the whole of Slovakia (DATAcube ps1002rs), one record per published cell." }
 spec:
   contextSpaceRef: susr-ps
+  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ps:susr-ps-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:susr-ps:susr-ps-public-read
   slug: lk4xgzahvxywq2cwdblfxpsqarby2wmk
   audience: public
   enabledRepresentations: [ngsi-ld, csv, ogc-features, odata, mcp]
