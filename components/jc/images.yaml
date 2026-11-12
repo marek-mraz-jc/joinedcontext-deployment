@@ -2,6 +2,11 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
+  # main 799d0eab (signed, cosign githubWorkflowSha 799d0eab, refs/heads/main), smoke 43245641340: 10 fail,
+  # 0 not on the known list, no row new against 4ddda006. = 12e72d5b + T-6829 A/B/E (MCP fixes), T-6830
+  # (antares_remint_batched, migration 0034 at boot), T-6824 (dataroom CKAN CORS for the viz origin),
+  # T-6825 (DataSource/Pipeline types outside ekiben's registry refused at save with 422; jc-prod's 1486
+  # DataSources+Pipelines use none of them), T-6831 (SDM mirror in the image at /srv/sdm-mirror).
   # main 12e72d5b (signed, cosign githubWorkflowSha 12e72d5b, refs/heads/main). 749b9a71 (T-6819 merge on main,
   # no image of its own) differs from it only in bins/jc/smoke; its smoke 43225400970: 10 fail, 0 not on the
   # known list, no row new against 4ddda006. = 75e834b6 + T-6768 (Antares visible under a metadata narrowing),
@@ -33,8 +38,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '12e72d5bf5e3836e146cda1891e26ec10637b4b3'
-    digest: 'sha256:c9dfafdfa831e51a7b346a0f042b35a1b360fb6f7515250c9005a2e0ffedc119'
+    tag: '799d0eabb06f41f446f3dc7f9f3a0d35515285e7'
+    digest: 'sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
