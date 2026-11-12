@@ -571,6 +571,12 @@ env:
   {{- end }}
   # jemalloc as the image sets it (bins/jc/Dockerfile), kept here so the pod spec says it.
   _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+  # T-6793: the gateway's URN owner check (T-6769) only warns and counts
+  # (jc_gateway_urn_owner_mismatch_total) until T-6770's re-mint has moved the hel.fi ids of every
+  # city onto their owner; past the date it refuses with 422 urn-owner as enforce does. Decided
+  # (supervisor 2026-11-12 00:34Z, owner may override): 2026-11-25, under the 14-day cap.
+  JC_GATEWAY_URN_OWNER_PREFIX: "warn"
+  JC_GATEWAY_URN_OWNER_WARN_UNTIL: "2026-11-25"
 {{- if $mqtt }}
   {{- $brokers := index .Values "mqtt-brokers" "brokers" "namespace" }}
   # The MQTT edge brokers (ADR-N-048). The gateway's CONNECT check on its internal listener; the

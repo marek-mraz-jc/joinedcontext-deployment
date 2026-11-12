@@ -2,16 +2,16 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main eaa7b015, ci run 43107216509 (image/build, scan, promote/sign green; cosign githubWorkflowSha
-  # eaa7b015): f7ba9a13 + T-6774 (kaisatsu grants mcp:portal to CIMD clients: the claude.ai
-  # connector), T-6659, T-6788 (jc-router cuts X-Forwarded-For at the resolved client, so the
-  # anonymous MCP limit keys the caller), T-6758 (spec.facets), feed entry id test fix. No T-6769
-  # (URN owner check). Never pin an image older than 520e299e: without its reconciler guard a
-  # fresh start deletes managed groups and their members.
+  # main 6ef2f405, image.yml run 43129995225 (signed, cosign githubWorkflowSha 6ef2f405, refs/heads/main):
+  # eaa7b015 + T-6769 (URN owner check), T-6770 (re-mint functions), T-6793 (warn mode: pinned only
+  # together with JC_GATEWAY_URN_OWNER_PREFIX=warn and its date in values/server, same commit),
+  # T-6774 round 2 (imported claude.ai clients under the CIMD policy), T-6762, T-6786, T-6784,
+  # T-6782, T-6783. Never pin an image older than 520e299e: without its reconciler guard a fresh
+  # start deletes managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'eaa7b01560a5cf5410cd673e8055509e0ecc6f7e'
-    digest: 'sha256:4908375ebcfc0ec2e4df68f1561e4a2537175c74d71d4d79e1cd5955714b6401'
+    tag: '6ef2f405992a6d0cf0ab0bade587b4d61dad23fc'
+    digest: 'sha256:78493370bc5a782b7c67c66f30e0ae11555398a86899481578d7493ae1ce6636'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
