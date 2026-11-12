@@ -2,7 +2,10 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 54f8a5e2 (signed, cosign githubWorkflowSha 54f8a5e2, refs/heads/main): 4ddda006 + T-6795,
+  # main f0b6e756 (signed, cosign githubWorkflowSha f0b6e756, refs/heads/main), smoke 43153936254: 11 fail,
+  # none new against 4ddda006 (17). = 54f8a5e2 + T-6772/T-6777/T-6779/T-6780 (Organization
+  # appearance), T-6800 (beside-types reads), T-6801 (dataroom /logo.svg sandbox CSP + nosniff),
+  # T-6798, T-6799, T-6802. 54f8a5e2 is 4ddda006 + T-6795,
   # T-6796, T-6797 (a [[hosts]] registry, active only with [[organizations]]: jc-dev and jc-prod
   # configure none, so no host answers 421). 4ddda006 is 1a970fe8 + T-6790,
   # T-6791 and T-6783 round 2 (portal-api audience mapper: the exported realms need rehearsal.py
@@ -17,8 +20,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '54f8a5e23dd76924290ffcbe65838ec90019c0a5'
-    digest: 'sha256:f92840b8159a3ca2b52331d435b0c1d9a7329626f0dee7c9818089708b4f4323'
+    tag: 'f0b6e756bbec039370915af36d7cd8cf39301bcf'
+    digest: 'sha256:2c6c67b9d25adabfdad22a61cd48bd634cbfc4521321c90616a5524083e3c2a6'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
