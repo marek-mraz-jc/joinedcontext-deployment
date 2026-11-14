@@ -30,8 +30,9 @@ jc:
     # Secret (key `key`) with the age identity the projects' SOPS files name; unset: no secretRef
     # of a project resolves.
     ageKeySecret: ""
-    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica; files/harvest-sources.toml and
-    # files/od-datasets.json from the monorepo's bins/jc/docs at the pinned jc). Egress: public 443.
+    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica): their hosts on the harvest
+    # allow-list and files/od-datasets.json beside jc.toml; the sources themselves are the
+    # installation's default Portal manifest since T-6880. Egress: public 443.
     catalogueHarvest: false
     # Hours of temporal history kept (KPI whole, audit rows kept), deleted by CronJob jc-retain;
     # 0 keeps everything.
