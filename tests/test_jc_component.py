@@ -88,6 +88,15 @@ def test_jc_toml_names_its_profile(rendered, env):
 
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
+def test_only_jc_dev_requires_a_second_factor(rendered, env):
+    """jc-dev requires a TOTP of every person (owner 2026-11-14, T-6894); another environment leaves the
+    key out, so a jc older than the floor still starts there."""
+    got = jc_toml(rendered(env)).get("kaisatsu", {}).get("second_factor")
+    assert got == ("required" if env == "jc-dev" else None), f"{env}: second_factor {got!r}"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
 def test_jc_trusts_forwarded_for_only_from_the_edge(rendered, env):
     proxies = jc_toml(rendered(env)).get("trusted_proxies")
     assert proxies, f"{env}: jc.toml has no trusted_proxies, every caller is the edge's address"

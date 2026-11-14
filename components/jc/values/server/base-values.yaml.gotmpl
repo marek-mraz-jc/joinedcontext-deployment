@@ -291,6 +291,10 @@ configMap:
       database_url_file = "/etc/jc/kaisatsu-database-url"
       db_password_file = "/run/jc/db/kaisatsu-app/password"
       db_max_connections = {{ $jc.kaisatsuPool }}
+      {{- with (dig "secondFactor" "" $jc) }}
+      # The deployment's second-factor floor (T-6894): "required" makes every person enrol a TOTP.
+      second_factor = {{ . | quote }}
+      {{- end }}
       {{- if $realm }}
       # The export's realm (seed-realm below), its $(file:...) secrets only under import_secrets_dir.
       import_dir = "/var/lib/jc-realms"
