@@ -91,6 +91,11 @@ jc:
       realm: dev
       secret: jc-realm
       secretsSecret: jc-realm-secrets
+      # Streams sign in as their Pipeline's own client by its secret, as on jc-prod: dev's realm
+      # lists its <project>-pl-<pipeline> clients in pipeline-clients.txt. Unset, they signed in as
+      # the imported <project>-pipelines, whose audience lacks banskabystrica-otvorene-data, and every
+      # od-* upsert answered 401 (T-6899). A Pipeline made later gets its client from jc (T-6899).
+      pipelineIdentity: pipeline-secret
     ageKeySecret: jc-age
     retainHours: 24
     # jc-prod's embedder, shared (components/embedder in jc-prod, callerNamespaces): the assistant
