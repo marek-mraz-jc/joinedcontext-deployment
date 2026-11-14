@@ -2,7 +2,11 @@
 # ghcr.io/marek-mraz-jc/jc, built, smoke-tested and signed by the monorepo's
 # .github/workflows/image.yml on main and scanned by its image-scan.yml.
 jc:
-  # main 799d0eab (signed, cosign githubWorkflowSha 799d0eab, refs/heads/main), smoke 43245641340: 10 fail,
+  # main d4dd3992 (signed, cosign githubWorkflowSha d4dd3992, refs/heads/main), smoke 43574649163: 10 fail,
+  # 0 not on the known list, the same 10 fail rows as 799d0eab's 43245641340. = 799d0eab + T-6829 G (PL-111
+  # write check on the project's own domain), T-6820 (memory round 2). Applied to jc-dev only first (GOAL-multiorg
+  # Order: no jc-prod change until jc-dev is green twice).
+  # was: main 799d0eab (signed, cosign githubWorkflowSha 799d0eab, refs/heads/main), smoke 43245641340: 10 fail,
   # 0 not on the known list, no row new against 4ddda006. = 12e72d5b + T-6829 A/B/E (MCP fixes), T-6830
   # (antares_remint_batched, migration 0034 at boot), T-6824 (dataroom CKAN CORS for the viz origin),
   # T-6825 (DataSource/Pipeline types outside ekiben's registry refused at save with 422; jc-prod's 1486
@@ -38,8 +42,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '799d0eabb06f41f446f3dc7f9f3a0d35515285e7'
-    digest: 'sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284'
+    tag: 'd4dd3992daaf615bf8acb9c47e343f9cd57e7200'
+    digest: 'sha256:ef71b680fcf8038968ddb12d0d68c34d3c4d3fc00ed5fd2cd9b85623b2a9053f'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
