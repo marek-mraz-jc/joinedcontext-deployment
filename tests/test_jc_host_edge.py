@@ -110,6 +110,19 @@ def test_the_uri_blocker_opens_the_read_door_alone(edge):
                 assert blocked(path), (config["id"], path)
 
 
+def test_slug_mode_keeps_all_of_git_closed(rendered):
+    """jc-dev runs slug mode, where jc mounts raw shako at /git: the door's paths stay blocked."""
+    configs = [
+        c for c in edge_file(rendered("jc-dev")).get("plugin_configs", []) if "uri-blocker" in c["plugins"]
+    ]
+    assert configs
+    for config in configs:
+        rules = [re.compile(r) for r in config["plugins"]["uri-blocker"]["block_rules"]]
+        for _, path in ROUTED + FORGED:
+            if path.startswith("/git"):
+                assert any(r.search(path) for r in rules), (config["id"], path)
+
+
 def ask(port: int, host: str, path: str) -> tuple[int, str]:
     conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
     try:
