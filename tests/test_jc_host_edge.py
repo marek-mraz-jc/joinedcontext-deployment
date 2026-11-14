@@ -73,8 +73,41 @@ FORGED = [
     (DOMAIN, "/metrics"),
     (f"data.{DOMAIN}", "/metrics"),
 ]
+# The read door's two paths, spelt exactly (T-6896), pass to jc; every other /git path is 404.
+DOOR = "/git/joinedcontext/configuration.git"
+FORGED += [
+    (DOMAIN, f"{DOOR}/info/refs?service=git-receive-pack"),
+    (DOMAIN, f"{DOOR}/git-receive-pack"),
+    (DOMAIN, f"{DOOR}/info/refs?service=git-upload-pack&access_token=x"),
+    (DOMAIN, f"{DOOR}/info/refs"),
+    (DOMAIN, f"{DOOR}/HEAD"),
+    (DOMAIN, f"{DOOR}/%69nfo/refs?service=git-upload-pack"),
+    (DOMAIN, "/git/joinedcontext/../x.git/git-upload-pack"),
+    (DOMAIN, "/git/joinedcontext/configuration/git-upload-pack"),
+    (DOMAIN, "/git/joinedcontext/a/b.git/git-upload-pack"),
+]
 # And the hosts it routes still reach jc.
-ROUTED = [(DOMAIN, "/grafana/"), (f"portal.{DOMAIN}", "/"), (f"api.{DOMAIN}", "/api/endpoint/x")]
+ROUTED = [(DOMAIN, "/grafana/"), (f"portal.{DOMAIN}", "/"), (f"api.{DOMAIN}", "/api/endpoint/x"),
+          (DOMAIN, f"{DOOR}/info/refs?service=git-upload-pack"), (DOMAIN, f"{DOOR}/git-upload-pack")]
+
+
+def door_path(uri: str) -> bool:
+    return uri in {f"{DOOR}/info/refs?service=git-upload-pack", f"{DOOR}/git-upload-pack"}
+
+
+def test_the_uri_blocker_opens_the_read_door_alone(edge):
+    """The rendered block rules, as PCRE reads them (Python's `re` agrees on this subset): the
+    door's two paths pass, every forged /git spelling is blocked."""
+    configs = [c for c in edge.get("plugin_configs", []) if "uri-blocker" in c["plugins"]]
+    assert configs
+    for config in configs:
+        rules = [re.compile(r) for r in config["plugins"]["uri-blocker"]["block_rules"]]
+        blocked = lambda uri: any(r.search(uri) for r in rules)  # noqa: E731
+        for _, path in ROUTED:
+            assert not blocked(path), (config["id"], path)
+        for _, path in FORGED:
+            if path.startswith("/git/"):
+                assert blocked(path), (config["id"], path)
 
 
 def ask(port: int, host: str, path: str) -> tuple[int, str]:
@@ -166,7 +199,7 @@ def test_the_pinned_edge_reaches_no_inside_module_on_a_forged_host_or_path(edge,
         # must name no blocked mount, on a host jc's edge routes.
         seen = json.loads(body)
         assert seen["host"] in {DOMAIN, f"api.{DOMAIN}", f"portal.{DOMAIN}"}, (host, path, seen)
-        assert not BLOCKED.match(seen["uri"]), (host, path, seen)
+        assert door_path(seen["uri"]) or not BLOCKED.match(seen["uri"]), (host, path, seen)
 
 
 def test_the_tiles_host_is_this_installations_own_basemap(edge, rendered):
