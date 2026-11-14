@@ -38,8 +38,8 @@ jc:
   # managed groups and their members.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '799d0eabb06f41f446f3dc7f9f3a0d35515285e7'
-    digest: 'sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284'
+    tag: 'ee4e240d0ca1cbdd22659b13da8d8145057f6ae9'
+    digest: 'sha256:46be99bef8327a0c568c6228db2638a6fa6288232c0c68474903292428089e99'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   functions:
