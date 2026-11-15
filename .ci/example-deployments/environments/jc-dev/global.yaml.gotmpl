@@ -100,6 +100,30 @@ jc:
     retainHours: 24
     # TOTP for every person on jc-dev (owner 2026-11-14 "TURN ON TOTP FOR NOW"; T-6894, SHA1 enrolments).
     secondFactor: required
+    # Six Organizations on hosts of their own (T-7005 phase A, owner 2026-11-15 12:1xZ; the dev layout of
+    # evidence/T-6991/design.md): labels under jcdev.dev.joinedcontext.com; mcp. because jc refuses one host
+    # for api and mcp. Each catalogue is new (jc-dev has no harvest seed to move into it); the datasets stay
+    # in the shared one until the Portal publishes there. The other Organizations stay in slug form on jc.
+    # until `host = "auto"` reaches jc-dev's pin (phase B).
+    organizations:
+      - name: bbsk
+        catalogueId: 00000000-0000-7000-8000-0000000000b1
+        hosts: { portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk }
+      - name: hel
+        catalogueId: 00000000-0000-7000-8000-0000000000b2
+        hosts: { portal: smartcity.hel, opendata: opendata.hel, api: api.hel, mcp: mcp.hel }
+      - name: marek-mraz
+        catalogueId: 00000000-0000-7000-8000-0000000000b3
+        hosts: { portal: smartcity.marek-mraz, opendata: opendata.marek-mraz, api: api.marek-mraz, mcp: mcp.marek-mraz }
+      - name: banskabystrica
+        catalogueId: 00000000-0000-7000-8000-0000000000b4
+        hosts: { portal: smartcity.banskabystrica, opendata: opendata.banskabystrica, api: api.banskabystrica, mcp: mcp.banskabystrica }
+      - name: bratislava
+        catalogueId: 00000000-0000-7000-8000-0000000000b5
+        hosts: { portal: smartcity.bratislava, opendata: opendata.bratislava, api: api.bratislava, mcp: mcp.bratislava }
+      - name: praha
+        catalogueId: 00000000-0000-7000-8000-0000000000b6
+        hosts: { portal: smartcity.praha, opendata: opendata.praha, api: api.praha, mcp: mcp.praha }
     # jc-prod's embedder, shared (components/embedder in jc-prod, callerNamespaces): the assistant
     # signs in with this realm's jc-assistant token; no model loads in this jc.
     embedder:

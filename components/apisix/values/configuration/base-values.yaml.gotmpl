@@ -83,6 +83,15 @@ edge:
   appsWildcard: {{ if dig "ingress" "appsWildcard" "enabled" false $global }}{{ printf "*.apps.%s" $global.domain | quote }}{{ else }}''{{ end }}
   # App hosts one by one (global.ingress.appHosts): a Certificate `app-{name}` each.
   appHosts: {{ dig "ingress" "appHosts" list $global | toJson }}
+  # Routes with `ownCertificate`: one HTTP-01 Certificate each, named by the route, its Secret the
+  # route's `tlsSecret` (jc-dev's Organization hosts, T-7005); off the shared SAN list.
+  {{- $own := list }}
+  {{- range $component, $config := .Values.routes }}
+  {{- if and (dig "ownCertificate" false $config) (hasKey $config "subDomain") (hasKey $config "tlsSecret") }}
+  {{- $own = append $own (dict "name" $config.name "secret" $config.tlsSecret "host" (printf "%s.%s" $config.subDomain $global.domain)) }}
+  {{- end }}
+  {{- end }}
+  ownHosts: {{ $own | toJson }}
 
 # Authorize the ingress edge to reach the APISIX data plane when the
 # namespace enforces mandatory mTLS via the Linkerd default-inbound-policy.
