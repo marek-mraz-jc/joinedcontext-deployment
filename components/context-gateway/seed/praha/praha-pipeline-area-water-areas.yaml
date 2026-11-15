@@ -12,7 +12,7 @@ spec:
   schedule: '45 2 * * 5'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-area-water-areas }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: PointOfInterest, mode: upsert }
   # 9043515 bytes on 2026-10-25.
   quotas: { maxMemoryMb: 512, cpuMillicores: 100 }

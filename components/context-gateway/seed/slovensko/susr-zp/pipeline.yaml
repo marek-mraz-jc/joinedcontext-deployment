@@ -27,7 +27,7 @@ spec:
             area: zp1005rs_kraj
             indicator: zp1005rs_ukaz
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zp:susr-zp
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zp:susr-zp-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

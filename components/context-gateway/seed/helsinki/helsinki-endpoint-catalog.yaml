@@ -1,7 +1,7 @@
 # The organization's own catalogue door (T-5493, T-4746 owner addendum): one NGSI-LD query finds
 # the datasets this organization publishes. The Portal writes it as the project's slice of the
-# catalogue; it is a dataset of the organization itself, so it publishes to its CKAN. No
-# policyRef: the Portal's write and the public read are both Policies of its space.
+# catalogue; it is a dataset of the organization itself, so it publishes to its CKAN. Read-only:
+# the Portal writes it through catalog-write (EP-187, T-6990).
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -13,9 +13,9 @@ metadata:
     en: Find a dataset of the project by its title, theme or place (type=Dataset, q=searchText~=…, georel=near), then go on to its own Endpoint.
 spec:
   contextSpaceRef: catalog
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the Portal writes
+  # the catalogue through catalog-write.
   policyRefs:
-    - urn:ngsi-ld:Policy:hel.fi:helsinki-catalog:catalog-portal-write
     - urn:ngsi-ld:Policy:hel.fi:helsinki-catalog:catalog-public-read
   slug: emzask3opaecj2x4td52pjc6zzxeciii
   audience: public

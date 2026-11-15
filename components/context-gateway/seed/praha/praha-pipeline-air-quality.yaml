@@ -12,6 +12,6 @@ spec:
   schedule: '*/30 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: chmi-air-quality }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: AirQualityObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

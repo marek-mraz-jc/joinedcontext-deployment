@@ -27,7 +27,7 @@ spec:
             indicator: as1001rs_ukaz
             keys: [as1001rs_poh]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-as:susr-as
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-as:susr-as-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

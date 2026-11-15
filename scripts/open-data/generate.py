@@ -1011,17 +1011,29 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
                   "artifacts": {"jsonSchema": f"./{space}.v1.schema.json", "context": f"./{space}.v1.context.jsonld",
                                 "docs": f"./{space}.v1.md", "example": f"./{space}.v1.example.jsonld"}}})
     files[f"{space}.linkml.yaml"] = linkml(project, space, entries, model_ranges)
-    endpoint = SEED / project / f"{pre}endpoint.yaml"
-    # The Policies drafted below, the door's whole set (P-18); the Pipelines' derived writes bind it through their targetEndpoint.
-    policies = ["otvorene-data-pipelines-write", "otvorene-data-read", *(["otvorene-data-read-history"] if any(t in MEASURED for t in types) else [])]
+    endpoint, door = SEED / project / f"{pre}endpoint.yaml", SEED / project / f"{pre}endpoint-zapis.yaml"
+    # The Policies drafted below (P-18): the public door serves the reads alone, since open data is
+    # read-only (EP-187, T-6980); the write door serves all of them, and the Pipelines' derived
+    # writes bind it through their targetEndpoint.
+    reads = ["otvorene-data-read", *(["otvorene-data-read-history"] if any(t in MEASURED for t in types) else [])]
+    urns = lambda names: [f"urn:ngsi-ld:Policy:{p['domain']}:{space}:{n}" for n in names]  # noqa: E731
     files[f"{pre}endpoint.yaml"] = manifest(
-        "The space's one door, public: every row is the publisher's open data under the licence its\n"
-        "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.",
+        "The space's public door: every row is the publisher's open data under the licence its\n"
+        "`dataProvider` names. A member of the project's public MCP server, which the public assistant reads.\n"
+        f"Open data is read-only (EP-187): the pipelines write through {space}-zapis.",
         {**head, "kind": "Endpoint", "metadata": {**meta(space, p["title"]), "description": p["about"]},
-         "spec": {"contextSpaceRef": space, "policyRefs": [f"urn:ngsi-ld:Policy:{p['domain']}:{space}:{n}" for n in policies],
+         "spec": {"contextSpaceRef": space, "policyRefs": urns(reads),
                   "slug": slug_for(endpoint), "audience": "public",
                   "enabledRepresentations": REPRESENTATIONS + (["feed"] if "Article" in types else []),
                   **news_feed(p, types), "catalog": catalog_block(project, p, entries)}})
+    files[f"{pre}endpoint-zapis.yaml"] = manifest(
+        "The space's write door (EP-187, T-6980): the generated pipelines write through it; the audience\n"
+        "keeps out anyone outside the organization. People read the data through the public door.",
+        {**head, "kind": "Endpoint",
+         "metadata": meta(f"{space}-zapis", {"sk": f"{p['title']['sk']}: zápis kanálov", "en": f"{p['title']['en']}: pipeline writes"}),
+         "spec": {"contextSpaceRef": space, "policyRefs": urns(["otvorene-data-pipelines-write", *reads]),
+                  "slug": slug_for(door), "audience": "organization",
+                  "enabledRepresentations": ["ngsi-ld", "websocket", "ogc-features", "mcp"]}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"
@@ -1054,6 +1066,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
              *(f"{space}.{x}: projects/{project}/spaces/{space}/datamodels/{space}.{x}"
                for x in ("linkml.yaml", "v1.schema.json", "v1.context.jsonld", "v1.md", "v1.example.jsonld")),
              f"{pre}endpoint.yaml: projects/{project}/spaces/{space}/endpoints/{space}.yaml",
+             f"{pre}endpoint-zapis.yaml: projects/{project}/spaces/{space}/endpoints/{space}-zapis.yaml",
              f"{pre}policy-read.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read.yaml",
              *([f"{pre}policy-read-history.yaml: projects/{project}/spaces/{space}/policies/otvorene-data-read-history.yaml"]
                if measured else []),
@@ -1083,7 +1096,7 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
             {**head, "kind": "Pipeline", "metadata": meta(f"od-{slug}", {"sk": e["title"][:120], "en": e["title"][:120]}),
              "spec": {"class": "scheduled", "enabled": ENABLED and i % HALVES == 0, "schedule": schedule(e, i, first[e["name"]]),
                       "source": {"dataSourceRef": {"kind": "DataSource", "name": f"od-{slug}"}},
-                      "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}",
+                      "targetEndpoint": f"urn:ngsi-ld:Endpoint:{p['domain']}:{space}:{space}-zapis",
                       # Each od pipeline alone writes its rows (the id carries its slug), so it
                       # replaces them whole: an attribute a mapping drops leaves at the next run
                       # (PL-79, T-4407; T-4289's `dataset`).

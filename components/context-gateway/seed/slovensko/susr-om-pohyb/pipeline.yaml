@@ -48,7 +48,7 @@ spec:
             area: om7104rr_vuc
             indicator: om7104rr_ukaz
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-om-pohyb:susr-om-pohyb
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-om-pohyb:susr-om-pohyb-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

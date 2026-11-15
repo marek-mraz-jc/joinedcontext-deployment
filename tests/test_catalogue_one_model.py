@@ -211,10 +211,14 @@ RECONCILER = {"kind": "user", "id": "service-account-portal-reconciler"}
 # dropping the class closes it.
 UNFED = {
     "bratislava/bratislava-endpoint.yaml": ["AirQualityObserved"],
+    # Its write door (EP-187, T-6980) serves the same space and so advertises the same gap.
+    "bratislava/bratislava-endpoint-bratislava-zapis.yaml": ["AirQualityObserved"],
     # The legacy uploads whose one copy was the CKAN DataStore, filled back from this Endpoint (T-4742):
     # their entities stay in the Endpoint and no Pipeline reads the catalogue for them (T-5060, T-5729).
     "banskabystrica/banskabystrica-od-endpoint.yaml": ["Contract", "CouncilMeeting", "Grant", "KeyPerformanceIndicator",
                                                        "PurchaseOrder"],
+    "banskabystrica/banskabystrica-od-endpoint-zapis.yaml": ["Contract", "CouncilMeeting", "Grant", "KeyPerformanceIndicator",
+                                                             "PurchaseOrder"],
     # The conformance suites' own door (F-BNT1-002): their fixtures live only for a run, no Pipeline
     # feeds the space, and the Endpoint is neither public nor catalogued.
     "banskabystrica/endpoint-conformance.yaml": ["AirQualityObserved"],

@@ -361,7 +361,7 @@ def indicator(spec: dict) -> bool:
     """An indicator pipeline computes KPIs into the project's KPI space. The open-data seed writes
     the same Smart Data Model type into its own space from a source (T-4319), which is not one."""
     return (any(o["type"] == "KeyPerformanceIndicator" for o in outputs(spec))
-            and spec.get("targetEndpoint", "").split(":")[-1].endswith("-kpi"))
+            and spec.get("targetEndpoint", "").split(":")[-1].removesuffix("-zapis").endswith("-kpi"))
 
 
 def test_every_indicator_pipeline_reads_through_an_endpoint_and_writes_through_one():
@@ -379,7 +379,8 @@ def test_every_indicator_pipeline_reads_through_an_endpoint_and_writes_through_o
                 # PL-18, PF-39: never the store, always the space's own Endpoint.
                 assert "endpointRef" in spec["source"], doc["metadata"]["name"]
                 assert "dataSourceRef" not in spec["source"], doc["metadata"]["name"]
-                assert spec["targetEndpoint"].split(":")[-1].endswith("-kpi"), spec["targetEndpoint"]
+                # The space's KPI Endpoint, or its write door where that one is open data (EP-187).
+                assert spec["targetEndpoint"].split(":")[-1].removesuffix("-zapis").endswith("-kpi"), spec["targetEndpoint"]
                 assert spec["compute"]["kind"] == "bloblang"
 
 

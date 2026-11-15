@@ -27,7 +27,7 @@ spec:
             indicator: pr0101qs_ukaz
             keys: [pr0101qs_stv, pr0101qs_nace]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pr:susr-pr
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pr:susr-pr-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -12,6 +12,6 @@ spec:
   schedule: '5 3 * * 0'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-flood-small-streams }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: FloodZone, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

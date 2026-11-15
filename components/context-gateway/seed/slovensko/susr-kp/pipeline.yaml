@@ -27,7 +27,7 @@ spec:
             indicator: kp0022ms_indic
             keys: [kp0022ms_month]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kp:susr-kp
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kp:susr-kp-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

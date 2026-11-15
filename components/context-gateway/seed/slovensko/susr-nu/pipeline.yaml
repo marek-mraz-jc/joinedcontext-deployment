@@ -27,7 +27,7 @@ spec:
             indicator: nu0001qs_ukaz
             keys: [nu0001qs_stv, nu0001qs_obd]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-nu:susr-nu
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-nu:susr-nu-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

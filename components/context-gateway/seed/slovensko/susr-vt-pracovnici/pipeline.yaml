@@ -27,7 +27,7 @@ spec:
             indicator: vt0001rs_mj
             keys: [vt0001rs_ukaz]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vt-pracovnici:susr-vt-pracovnici
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vt-pracovnici:susr-vt-pracovnici-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

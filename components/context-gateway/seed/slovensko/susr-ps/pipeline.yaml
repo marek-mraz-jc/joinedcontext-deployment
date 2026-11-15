@@ -28,7 +28,7 @@ spec:
             unit: ps1002rs_unit
             keys: [ps1002rs_sex, ps1002rs_specu, ps1002rs_age]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ps:susr-ps
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ps:susr-ps-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

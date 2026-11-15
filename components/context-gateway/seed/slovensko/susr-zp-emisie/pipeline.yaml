@@ -28,7 +28,7 @@ spec:
             indicator: zp3803rs_ukaz
             keys: [zp3803rs_dim1]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zp-emisie:susr-zp-emisie
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zp-emisie:susr-zp-emisie-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

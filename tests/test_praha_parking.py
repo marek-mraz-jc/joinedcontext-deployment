@@ -248,7 +248,7 @@ def test_each_pipeline_reads_its_ipr_layer_into_the_city_space_weekly():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-geo-{name}"
         assert pipeline["spec"]["period"] == "168h"
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         # Measured with docker run --memory over the whole layer of 2026-10-24: the 11.6 MB segments
         # layer needs 384 MiB, the 7.2 MB no-parking one 256 and the 4.9 MB sections 128.
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 512

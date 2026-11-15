@@ -1,0 +1,43 @@
+# The write door of barcelona (T-6980, EP-187): an open-data Endpoint is read-only, so the
+# writes barcelona served move here. The audience keeps out anyone outside the organization;
+# people read the data through the public Endpoint barcelona.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: barcelona-write
+  namespace: barcelona
+  title: { sk: 'Barcelona, open data: zápis', en: 'Barcelona, open data: writes' }
+  description:
+    sk: Interný vstup, cez ktorý sa zapisujú údaje; čítajú sa cez verejný Endpoint barcelona.
+    en: The internal door the data is written through; people read it through the public Endpoint barcelona.
+spec:
+  contextSpaceRef: barcelona
+  # The Policies this Endpoint evaluates: the ones the open-data Endpoint served before (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:pipelines-write
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-accidents
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-air-quality
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-areas
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-bike-lanes
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-charging
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-city-works
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-dog-areas
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-events
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-groundwater
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-heritage
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-local-trees
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-parking
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-pedestrian-crossings
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-places
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-read
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-housing
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-population
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-statistics-vehicles
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-street-furniture
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-tourist-flats
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-traffic
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-weather
+    - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-weather-forecast
+  slug: 5t2ztgmonbejfs5r25fbzmhjezdfomf2
+  audience: organization
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

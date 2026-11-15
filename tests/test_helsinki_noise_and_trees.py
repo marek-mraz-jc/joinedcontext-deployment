@@ -218,7 +218,7 @@ def test_each_source_is_a_kartta_layer_read_over_https_with_a_timeout_and_no_cre
         kind = "Tree" if name in TREES else "NoiseZone"
         assert pipeline["output"] == {"type": kind, "mode": "upsert"}
         assert pipeline["period"] == ("24h" if kind == "Tree" else "168h")
-        assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+        assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
         for file in (f"helsinki-datasource-{name}.yaml", f"helsinki-pipeline-{name}.yaml", f"helsinki-pipeline-{name}-bento.yaml"):
             assert file in index, file
     rail_url = yaml.safe_load((HELSINKI / "helsinki-datasource-noise-rail.yaml").read_text())["spec"]["http"]["url"]

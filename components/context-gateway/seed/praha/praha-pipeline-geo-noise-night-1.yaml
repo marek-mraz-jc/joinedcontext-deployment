@@ -14,6 +14,6 @@ spec:
   schedule: '45 2 * * 0'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-noise-night }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: NoiseZone, mode: upsert }
   quotas: { maxMemoryMb: 384, cpuMillicores: 100 }

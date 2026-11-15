@@ -13,6 +13,6 @@ spec:
   schedule: '40 1 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: lidotiku-traffic-counters }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: TrafficFlowObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -13,7 +13,7 @@ spec:
   period: 60s
   source:
     dataSourceRef: { kind: DataSource, name: hsl-service-alerts }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: Alert, mode: upsert }
   quotas:
     # 21 kB of protobuf; Bento held a few MB over its baseline for it (2026-10-12).

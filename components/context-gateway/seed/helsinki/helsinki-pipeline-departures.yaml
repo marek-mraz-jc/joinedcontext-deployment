@@ -13,7 +13,7 @@ spec:
   period: 30s
   source:
     dataSourceRef: { kind: DataSource, name: hsl-trip-updates }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: GtfsStop, mode: upsert }
   quotas:
     # The day's feed decoded is about 5 MB of JSON; measured locally under 64 MB over Bento's

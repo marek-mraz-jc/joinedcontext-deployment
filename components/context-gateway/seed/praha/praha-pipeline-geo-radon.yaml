@@ -14,7 +14,7 @@ spec:
   schedule: '0 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-radon }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: RadonRiskArea, mode: upsert }
   # 8421773 bytes on 2026-10-24.
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

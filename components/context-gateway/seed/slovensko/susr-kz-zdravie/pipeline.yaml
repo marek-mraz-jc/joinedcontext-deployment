@@ -27,7 +27,7 @@ spec:
             indicator: kz1016rs_ukaz
             keys: [kz1016rs_pohl]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kz-zdravie:susr-kz-zdravie
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kz-zdravie:susr-kz-zdravie-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

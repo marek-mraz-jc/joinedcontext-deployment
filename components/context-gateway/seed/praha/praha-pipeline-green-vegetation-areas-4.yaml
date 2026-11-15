@@ -14,6 +14,6 @@ spec:
   schedule: '10 4 * * 6'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-green-vegetation-areas }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: Garden, mode: upsert }
   quotas: { maxMemoryMb: 192, cpuMillicores: 100 }

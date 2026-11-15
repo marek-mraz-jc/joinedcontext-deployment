@@ -168,7 +168,7 @@ def test_every_source_is_the_portal_without_credentials_and_with_a_timeout():
         assert http["url"].startswith(f"{PORTAL}/api/datasets/"), path.name
         assert http["verb"] == "POST" and http["timeout"] in {"30s", "60s"}, path.name
         assert "authorization" not in http, "the portal needs no key, so none is sent"
-        assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:zilina.sk:{SPACE}:{SPACE}"
+        assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:zilina.sk:{SPACE}:{SPACE}-zapis"
         assert spec["output"]["type"] == PIPELINES[pipeline][1]
 
 

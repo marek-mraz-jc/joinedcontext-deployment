@@ -27,7 +27,7 @@ spec:
             unit: cr1804rs_mj
             keys: [cr1804rs_ucelc, cr1804rs_cestr, cr1804rs_cesuz]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-cr:susr-cr
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-cr:susr-cr-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

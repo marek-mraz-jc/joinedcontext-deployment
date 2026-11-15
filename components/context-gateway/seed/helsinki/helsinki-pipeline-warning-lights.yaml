@@ -12,6 +12,6 @@ spec:
   schedule: '0 5 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: hel-warning-lights }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: TrafficSignalJunction, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

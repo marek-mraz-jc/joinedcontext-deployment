@@ -15,7 +15,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: od-obyvatelstvo-podla-dalsej-narodnosti-2
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data-zapis
   output:
     type: KeyPerformanceIndicator
     mode: replace

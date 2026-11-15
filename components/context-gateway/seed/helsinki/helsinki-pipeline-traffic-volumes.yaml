@@ -13,7 +13,7 @@ spec:
   schedule: '20 4 15 * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-traffic-volumes }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: TrafficFlowObserved, mode: upsert }
   # The 5 MB file and 1695 entities ran in 128 MiB (docker run --memory 128m, 2026-10-25).
   quotas: { maxMemoryMb: 192, cpuMillicores: 200 }

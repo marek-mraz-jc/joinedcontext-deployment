@@ -18,6 +18,6 @@ spec:
     - name: golemio
       key: token
       envVar: PRAHA_GOLEMIO_TOKEN
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: TrafficFlowObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

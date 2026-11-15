@@ -12,6 +12,6 @@ spec:
   schedule: '40 4 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-pid-fare-zones }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: FareZone, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

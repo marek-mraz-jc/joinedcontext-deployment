@@ -12,6 +12,6 @@ spec:
   schedule: '10 3 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-servicemap-units }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: PointOfInterest, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

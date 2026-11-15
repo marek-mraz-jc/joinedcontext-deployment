@@ -462,7 +462,7 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         datasource = yaml.safe_load((PRAHA / f"praha-datasource-{name}.yaml").read_text())
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         assert pipeline["spec"]["output"]["type"] == kind
-        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto"
+        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis"
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= QUOTAS.get(name, 256), name
         assert datasource["spec"]["http"]["url"].startswith("https://")
         assert kind in model["spec"]["classes"] and kind in readable

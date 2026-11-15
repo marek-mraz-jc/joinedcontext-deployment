@@ -17,6 +17,6 @@ spec:
   schedule: '20 6 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-traffic-counters }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   output: { type: TrafficFlowObserved, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

@@ -21,7 +21,7 @@ spec:
     query:
       type: KeyPerformanceIndicator
       q: dataSet=="om7101qr","om7052rr","om7105rr","pr5001rr","cr3803mr";indicator=="IN010115","IN010087","IN010089","IN010082","U15061","U_CR_0005"
-  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-kpi:zilina-kpi
+  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-kpi:zilina-kpi-zapis
   output: { type: KeyPerformanceIndicator, mode: upsert }
   # Every run rewrites each of the six its cube carries, so one missing for three weeks is an
   # indicator the city stopped publishing: it is removed rather than shown with a stale value (PL-64). Safe here and

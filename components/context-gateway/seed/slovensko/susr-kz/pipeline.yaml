@@ -26,7 +26,7 @@ spec:
             period: kz1001rs_rok
             keys: [kz1001rs_veks]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kz:susr-kz
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-kz:susr-kz-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

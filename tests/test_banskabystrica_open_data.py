@@ -270,7 +270,7 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         datasource = manifest(f"datasource-{name}.yaml")
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:{SPACE}:{SPACE}"
+        assert pipeline["spec"]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:{SPACE}:{SPACE}-zapis"
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
         assert datasource["spec"]["http"]["url"].startswith("https://")
         assert kind in model["spec"]["classes"] and kind in readable and kind in writable
@@ -394,7 +394,7 @@ def test_public_air_is_the_spaces_one_writer_and_expires_what_it_stops_renewing(
     assert pipeline["apiVersion"] == "joinedcontext.com/v1alpha2"
     assert [s["dataSourceRef"]["name"] for s in spec["sources"]] == ["eea-sk0263a-pm10", "eea-sk0263a-pm25"]
     assert spec["outputs"] == [{
-        "targetEndpoint": f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air",
+        "targetEndpoint": f"urn:ngsi-ld:Endpoint:{DOMAIN}:{AIR_SPACE}:public-air-zapis",
         "type": "AirQualityObserved", "mode": "upsert",
     }]
     assert spec["expiry"] == {"after": "7d", "types": ["AirQualityObserved"]}

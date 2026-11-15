@@ -14,6 +14,6 @@ spec:
   schedule: '*/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-park-and-ride }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: OffStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

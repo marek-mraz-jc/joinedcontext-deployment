@@ -14,7 +14,7 @@ spec:
   schedule: '10,40 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-weather-forecast }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Replace: only this pipeline writes WeatherForecast, and a day the newest issue no longer lists
   # leaves. A file the mapping refuses fails the run and deletes nothing.
   output: { type: WeatherForecast, mode: replace }

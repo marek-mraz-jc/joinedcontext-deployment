@@ -13,7 +13,7 @@ spec:
   schedule: '20 5 * * 2'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-pedestrian-crossings }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert: a crossing the file drops or marks as gone leaves by its expiresAt, three weeks after
   # its last listing (T-5264).
   output: { type: PedestrianCrossing, mode: upsert }

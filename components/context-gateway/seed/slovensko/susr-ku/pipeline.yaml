@@ -27,7 +27,7 @@ spec:
             area: nuts13
             keys: [ku3802rr_spsup, ku3802rr_spsut]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ku:susr-ku
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ku:susr-ku-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

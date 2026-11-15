@@ -229,6 +229,6 @@ def test_every_pipeline_writes_through_the_door_with_a_type_the_write_policy_gra
     write = granted_types(by_name("Policy")["pipelines-write"])
     for name, pipeline in by_name("Pipeline").items():
         spec = pipeline["spec"]
-        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava", name
+        assert spec["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava-zapis", name
         assert spec["output"]["type"] in write and spec["output"]["mode"] == "upsert", name
         assert spec["source"]["dataSourceRef"]["name"] in by_name("DataSource"), name

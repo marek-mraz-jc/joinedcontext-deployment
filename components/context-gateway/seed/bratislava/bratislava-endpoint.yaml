@@ -11,9 +11,9 @@ metadata:
     en: Bratislava, open data
 spec:
   contextSpaceRef: bratislava
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through bratislava-zapis.
   policyRefs:
-    - urn:ngsi-ld:Policy:bratislava.sk:bratislava:pipelines-write
     - urn:ngsi-ld:Policy:bratislava.sk:bratislava:public-autorizacie-dtmb-2019
     - urn:ngsi-ld:Policy:bratislava.sk:bratislava:public-autorizacie-dtmb-2020-2025
     - urn:ngsi-ld:Policy:bratislava.sk:bratislava:public-bajk

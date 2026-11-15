@@ -28,7 +28,7 @@ spec:
             unit: pr0204qs_mj
             keys: [pr0204qs_stv]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pr-mzdy:susr-pr-mzdy
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pr-mzdy:susr-pr-mzdy-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

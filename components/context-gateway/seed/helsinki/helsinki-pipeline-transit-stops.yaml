@@ -14,7 +14,7 @@ spec:
   schedule: '20 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-gtfs-stops }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: GtfsStop, mode: upsert }
   quotas:
     # 1.1 MB of CSV parsed at once; Bento held 120 to 135 MB over its own baseline for it

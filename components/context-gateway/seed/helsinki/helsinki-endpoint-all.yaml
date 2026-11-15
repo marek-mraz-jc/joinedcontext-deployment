@@ -10,15 +10,12 @@ metadata:
     en: 'The whole Helsinki space in one place: events, city bike stations, transit stops and lines, news, road weather, traffic messages, beach water, parking, public-area permits and districts. Each source under its own licence.'
 spec:
   contextSpaceRef: helsinki
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through helsinki-all-write.
   policyRefs:
     - urn:ngsi-ld:Policy:hel.fi:helsinki:app-helsinki-data-1
     - urn:ngsi-ld:Policy:hel.fi:helsinki:app-helsinki-kartta-1
     - urn:ngsi-ld:Policy:hel.fi:helsinki:bikes-ops-read
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:bikes-ops-steward
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:gtfs-routes-account
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:pipelines-delete-alerts
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:pipelines-write
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-air-quality
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-alerts
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-all
@@ -54,11 +51,7 @@ spec:
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-vision-counts
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-water-quality
     - urn:ngsi-ld:Policy:hel.fi:helsinki:public-weather
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-history-journey
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-import-journey
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-row-journey
     - urn:ngsi-ld:Policy:hel.fi:helsinki:steward-versions
-    - urn:ngsi-ld:Policy:hel.fi:helsinki:transit-stops-account
   slug: si6epqkx364lprho5uaigutk274r5grb
   audience: public
   # `ogc-features` is the OGC API Features surface dev-smoke reads per Endpoint kind (T-3957).

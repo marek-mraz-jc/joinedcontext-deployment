@@ -15,7 +15,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: od-dtm-bb-register-verejnej-zelene-p2
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-otvorene-data:banskabystrica-otvorene-data-zapis
   output:
     type: Garden
     mode: replace

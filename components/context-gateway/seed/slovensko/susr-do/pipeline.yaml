@@ -28,7 +28,7 @@ spec:
             unit: do1012rs_mj
             keys: [do1012rs_dopr]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-do:susr-do
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-do:susr-do-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

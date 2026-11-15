@@ -11,6 +11,6 @@ spec:
   period: 300s
   source:
     dataSourceRef: { kind: DataSource, name: liipi-utilizations }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: OffStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

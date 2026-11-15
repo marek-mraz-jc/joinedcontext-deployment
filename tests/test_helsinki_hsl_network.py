@@ -87,7 +87,7 @@ def test_every_pipeline_reads_its_own_datasource_and_writes_its_type_through_the
         manifest = yaml.safe_load((HELSINKI / f"helsinki-pipeline-{pipeline}.yaml").read_text())
         spec = manifest["spec"]
         assert spec["source"]["dataSourceRef"]["name"] == source
-        assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{{orgDomain}}:{space}:{space if space != 'helsinki' else 'helsinki-all'}"
+        assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{{orgDomain}}:{space}:{space + '-write' if space != 'helsinki' else 'helsinki-all-write'}"
         assert spec["output"] == {"type": kind, "mode": "upsert"}, "upsert: a run never deletes what it did not read"
         assert spec["period"] == "24h" and spec["schedule"]
         datasource = yaml.safe_load((HELSINKI / f"helsinki-datasource-{pipeline}.yaml").read_text())

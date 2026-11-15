@@ -242,7 +242,7 @@ def test_each_pipeline_reads_a_fixed_https_source_without_a_key_into_the_city_sp
         assert re.match(rf"https://{re.escape(host)}/", source["spec"]["http"]["url"]), name
         assert "authorization" not in source["spec"]["http"]
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         mapping = (PRAHA / f"praha-pipeline-{name}-bento.yaml").read_text()
         assert "content().length() > 16777216" in mapping, name
     # The layers the FeatureServer simplifies to about 5 m, so the lines fit under the 16 MiB cap.

@@ -12,6 +12,6 @@ spec:
   schedule: '17 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: mesto-podujatia }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: Event, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -27,7 +27,7 @@ spec:
             indicator: sk1001rs_ukaz
             unit: sk1001rs_mj
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sk:susr-sk
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sk:susr-sk-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:
