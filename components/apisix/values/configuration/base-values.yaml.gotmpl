@@ -44,6 +44,19 @@ composer:
 {{- end }}
 {{- end }}
 {{- $subDomains = $subDomains | uniq | sortAlpha }}
+{{- /* Hosts that serve content nobody vouches for (T-6991 §8): their own certificate, so an order
+       that fails for one of them never holds the sign-in or Portal names back. */}}
+{{- $untrusted := list }}
+{{- /* global.ingress.untrustedCertificate false (jc-prod until its DNS moves) keeps them on the
+       installation certificate. */}}
+{{- if dig "ingress" "untrustedCertificate" true $global }}
+{{- range $subDomains }}
+{{- if has . (list "embed" "tiles" "viz") }}
+{{- $untrusted = append $untrusted . }}
+{{- end }}
+{{- end }}
+{{- $subDomains = without $subDomains "embed" "tiles" "viz" }}
+{{- end }}
 {{- /* The hosts an Endpoint WebSocket route answers on, from the same route map (T-5931). */}}
 {{- $websocketHosts := list }}
 {{- range $component, $config := .Values.routes }}
@@ -66,12 +79,28 @@ edge:
     {{- range $subDomains }}
     - {{ printf "%s.%s" . $global.domain | quote }}
     {{- end }}
+  # embed., tiles. and viz.: Certificate `apisix-edge-untrusted`, Secret `apisix-edge-untrusted-tls`.
+  untrustedHosts:
+    {{- range $untrusted }}
+    - {{ printf "%s.%s" . $global.domain | quote }}
+    {{- else }} []
+    {{- end }}
+  # The installation's sign-in host (T-6991 §5; jc.server.loginHost, a label under the domain): it
+  # must be one of the edge's hosts, on the installation certificate. jc's import window routes no
+  # jc host, so none is checked then.
+  loginHost: {{ with and (not (dig "jc" "server" "importWindow" false .Values)) (dig "jc" "server" "loginHost" "" .Values) }}{{ printf "%s.%s" . $global.domain | quote }}{{ else }}''{{ end }}
+  # Organizations on hosts of their own (T-6991 §1, §8): a Certificate per host that resolves, one
+  # per Organization once all do (organization-tls.yaml).
+  organizations: {{ dig "jc" "server" "organizations" list .Values | toJson }}
+  issuedCertificates: {{ dig "jc" "server" "issuedCertificates" list .Values | toJson }}
+  certificateStage: {{ dig "jc" "server" "certificateStage" 10 .Values }}
+  dns01: {{ dig "ingress" "dns01" dict $global | toJson }}
   # A domain the edge is moving to is proven on the staging issuer first (T-2806).
   {{- $stagingDomain := $global.ingress.stagingDomain | default "" }}
   stagingHosts:
     {{- if $stagingDomain }}
     - {{ $stagingDomain | quote }}
-    {{- range $subDomains }}
+    {{- range concat $subDomains $untrusted | sortAlpha }}
     - {{ printf "%s.%s" . $stagingDomain | quote }}
     {{- end }}
     {{- else }} []
@@ -83,15 +112,6 @@ edge:
   appsWildcard: {{ if dig "ingress" "appsWildcard" "enabled" false $global }}{{ printf "*.apps.%s" $global.domain | quote }}{{ else }}''{{ end }}
   # App hosts one by one (global.ingress.appHosts): a Certificate `app-{name}` each.
   appHosts: {{ dig "ingress" "appHosts" list $global | toJson }}
-  # Routes with `ownCertificate`: one HTTP-01 Certificate each, named by the route, its Secret the
-  # route's `tlsSecret` (jc-dev's Organization hosts, T-7005); off the shared SAN list.
-  {{- $own := list }}
-  {{- range $component, $config := .Values.routes }}
-  {{- if and (dig "ownCertificate" false $config) (hasKey $config "subDomain") (hasKey $config "tlsSecret") }}
-  {{- $own = append $own (dict "name" $config.name "secret" $config.tlsSecret "host" (printf "%s.%s" $config.subDomain $global.domain)) }}
-  {{- end }}
-  {{- end }}
-  ownHosts: {{ $own | toJson }}
 
 # Authorize the ingress edge to reach the APISIX data plane when the
 # namespace enforces mandatory mTLS via the Linkerd default-inbound-policy.

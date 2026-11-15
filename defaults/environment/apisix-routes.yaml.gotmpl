@@ -23,20 +23,23 @@ routes:
 {{- end }}
 {{- end }}
 {{- /* jc's Organizations on hosts of their own (jc.server.organizations, T-7005): each host to jc,
-       which binds it to its Organization; each on an HTTP-01 certificate of its own. */}}
+       which binds it to its Organization. The Certificate is organization-tls.yaml's (components/apisix
+       configuration chart): `jc-org-<label>` per host, or `jc-org-<name>` with `certificate:
+       organization`. `host: auto` and hosts under a customer `domain` get their certificate first and
+       a route once jc serves them (T-6995). */}}
 {{- if and (has "jc" .Values.components) (not $jcWindow) }}
 {{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
 {{- range $org := dig "jc" "server" "organizations" list .Values }}
+{{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
 {{- range $role := list "portal" "opendata" "api" "mcp" }}
-{{- $sub := index $org.hosts $role }}
+{{- with $sub := dig $role "" $org.hosts }}
 {{- $id := printf "jc-org-%s" ($sub | replace "." "-") }}
   {{ $id }}:
     name: {{ $id }}
     description: jc, {{ $role }} host of Organization {{ $org.name }}
     upstream: {{ printf "jc.%s.svc.cluster.local:8080" $ns }}
     subDomain: {{ $sub }}
-    tlsSecret: {{ $id }}-tls
-    ownCertificate: true
+    tlsSecret: {{ if eq (dig "certificate" "hosts" $org) "organization" }}{{ printf "jc-org-%s" $org.name }}{{ else }}{{ $id }}{{ end }}-tls
     uri: '/*'
     priority: 1
     pluginConfig: jc
@@ -44,6 +47,8 @@ routes:
       connect: 6
       send: 120
       read: 120
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

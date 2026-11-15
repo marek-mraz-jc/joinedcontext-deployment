@@ -61,6 +61,9 @@ global:
     enabled: true
     clusterIssuer: 'letsencrypt-prod'
     ingressClass: 'traefik'
+    # tiles. and viz. stay on apisix-edge until prod's DNS moves (edgeAddress below): a new HTTP-01
+    # order for a prod name would be answered by the dev node and fail (T-7002 bounce).
+    untrustedCertificate: false
     # Prod's App hosts (kubectl get ingress,certificate -n smartcity app-*, 2026-11-09: 38, one
     # host and Secret app-{name}-tls each). The prod-deployer copies each Secret before DNS moves.
     appHosts:

@@ -57,30 +57,163 @@
             "type": "string"
           }
         },
-        "ownHosts": {
+        "untrustedHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "loginHost": {
+          "type": "string"
+        },
+        "issuedCertificates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "organizations": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "name",
-              "secret",
-              "host"
+              "name"
             ],
             "properties": {
               "name": {
                 "type": "string",
                 "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
               },
-              "secret": {
+              "catalogueId": {
                 "type": "string"
               },
               "host": {
+                "enum": [
+                  "auto"
+                ]
+              },
+              "domain": {
                 "type": "string",
-                "pattern": "^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$"
+                "pattern": "^([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+              },
+              "hosts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "portal"
+                ],
+                "properties": {
+                  "portal": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$"
+                  },
+                  "opendata": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$"
+                  },
+                  "api": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$"
+                  },
+                  "mcp": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$"
+                  }
+                }
+              },
+              "resolved": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?)*$"
+                }
+              },
+              "certificate": {
+                "enum": [
+                  "hosts",
+                  "organization"
+                ]
+              }
+            },
+            "oneOf": [
+              {
+                "required": [
+                  "host"
+                ],
+                "not": {
+                  "required": [
+                    "hosts"
+                  ]
+                }
+              },
+              {
+                "required": [
+                  "hosts"
+                ],
+                "not": {
+                  "required": [
+                    "host"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "dns01": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "validationZone": {
+              "anyOf": [
+                {
+                  "const": ""
+                },
+                {
+                  "type": "string",
+                  "pattern": "^([a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+                }
+              ]
+            },
+            "provider": {
+              "enum": [
+                "",
+                "cloudflare",
+                "rfc2136"
+              ]
+            },
+            "secretRef": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string"
+                }
+              }
+            },
+            "rfc2136": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "nameserver": {
+                  "type": "string"
+                },
+                "tsigKeyName": {
+                  "type": "string"
+                },
+                "tsigAlgorithm": {
+                  "type": "string"
+                }
               }
             }
           }
+        },
+        "certificateStage": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

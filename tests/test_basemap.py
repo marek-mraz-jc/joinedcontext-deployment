@@ -53,8 +53,9 @@ def test_dev_renders_the_job_the_volume_the_server_and_its_route(dev):
     one(dev, "Service", "basemap-tiles")
     routes = yaml.safe_load((COMPONENT / "apisix-routes.yaml").read_text().replace("{{", "#{{"))
     assert routes["basemap"]["subDomain"] == "tiles" and routes["basemap"]["uri"] == "/*"
-    # The host is on the edge certificate (HTTP-01, one name among the others).
-    certificate = one(dev, "Certificate", "apisix-edge")
+    # The host is on the untrusted-content certificate (HTTP-01, T-6991 §8), apart from the
+    # sign-in and Portal names.
+    certificate = one(dev, "Certificate", "apisix-edge-untrusted")
     assert HOST in certificate["spec"]["dnsNames"]
 
 
