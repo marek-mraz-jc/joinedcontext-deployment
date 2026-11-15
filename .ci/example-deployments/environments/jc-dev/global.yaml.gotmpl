@@ -160,11 +160,12 @@ jc:
         storageClass: local-path-retain
       # With dev's data jc needs about what jc-prod's measured (jc-memory-1g: peak RSS 2.13-2.28 GiB,
       # import VmHWM ~3 GiB): Burstable under jc-prod's Guaranteed pod, so on node pressure jc-dev
-      # goes first. T-6723 step 2 sets the request from jc-dev's own measured peak after the import.
+      # goes first. T-6723 step 2 sets the request from jc-dev's own measured peak after the import:
+      # working set 1315 Mi 12 min and 1768 Mi 54 min after a start (2026-11-15), so 2 GiB.
       resources:
         requests:
           cpu: 100m
-          memory: 768Mi
+          memory: 2Gi
         limits:
           cpu: '2'
           memory: 3Gi
