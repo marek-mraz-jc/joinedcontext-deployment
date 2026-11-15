@@ -281,6 +281,7 @@
  "test_publisher_domains.py": 39.6,
  "test_release.py": 1.9,
  "test_release_gate.py": 0.2,
+ "test_render_parity.py": 0.3,
  "test_render_retry.py": 12.5,
  "test_report_to_junit.py": 0.0,
  "test_restore_drill.py": 0.0,
