@@ -221,6 +221,16 @@ def test_jc_catalogue_carries_prods_publisher_badges_and_logo(rendered, env):
 
 
 @requires_helmfile
+@pytest.mark.parametrize("env", ["jc-prod", "jc-dev"])
+def test_jc_streams_sign_in_as_their_pipelines_own_client(rendered, env):
+    # T-6899: jc-dev rendered no JC_PORTAL_PIPELINE_IDENTITY, so its streams signed in as the
+    # imported <project>-pipelines, whose audience lacked banskabystrica-otvorene-data: every od-*
+    # upsert answered 401 (realm state: 4 audience mappers, none 4ysiqy53...).
+    env_of = {e["name"]: e.get("value") for e in jc_container(rendered(env))["env"]}
+    assert env_of.get("JC_PORTAL_PIPELINE_IDENTITY") == "pipeline-secret"
+
+
+@requires_helmfile
 def test_jc_prod_carries_the_cutover_parts(rendered):
     # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. keeps its own certificate, off
     # the copied edge certificate's SAN list; App functions run on jc-prod's realm and gateway; the
