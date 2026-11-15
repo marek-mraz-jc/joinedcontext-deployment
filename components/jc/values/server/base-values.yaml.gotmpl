@@ -807,6 +807,9 @@ persistence:
 cronJobs:
   - name: jc-retain
     schedule: "17 * * * *"
+    # Meshed: the cluster's Postgres takes only mesh-authenticated clients (T-6959: unmeshed, every
+    # run since 2026-11-11 was refused at connect and no history was ever cut).
+    mesh: true
     podLabels:
       app.kubernetes.io/name: jc-retain
     podSpec:
