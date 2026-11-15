@@ -344,8 +344,9 @@ def test_jc_prod_opts_no_pod_out_of_the_mesh_without_a_reason(rendered_variant):
             spec = spec["jobTemplate"]["spec"]
         if d.get("kind") in ("Deployment", "StatefulSet", "DaemonSet", "Job", "CronJob"):
             templates.append((d["metadata"]["name"], spec["template"]["metadata"].get("annotations") or {}))
+    # The reader sees CronJob templates (jc-retain, meshed since T-6959, so it is no opt-out sample).
+    assert any(n == "jc-retain" for n, _ in templates), "the reader finds no CronJob template (jc-retain)"
     opted = [(n, a) for n, a in templates if a.get("linkerd.io/inject") == "disabled"]
-    assert any(n == "jc-retain" for n, _ in opted), "the reader finds no opted-out pod (jc-retain)"
     assert not [n for n, a in opted if not str(a.get("mesh.joinedcontext.com/opt-out-reason", "")).strip()]
 
 
