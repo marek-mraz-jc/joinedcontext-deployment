@@ -81,6 +81,20 @@ def test_each_private_broker_host_names_its_own_project(rendered, env):
 
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
+def test_jc_in_process_broker_reaches_only_listed_private_hosts(rendered, env):
+    """jc's in-process broker turns private egress off (T-6923): the Antares default is on, so an
+    unset key lets a subscription reach any internal address a name resolves to. The list holds
+    in-cluster service names only, never an address literal or the local host."""
+    docs = rendered(env)
+    assert env_values(docs, "ANTARES_EGRESS_ALLOW_PRIVATE") == ["false"], env
+    (hosts,) = env_values(docs, "ANTARES_EGRESS_PRIVATE_HOSTS")
+    for host in filter(None, hosts.split(",")):
+        assert host.endswith(".svc.cluster.local"), f"{env}: {host}"
+        assert ":" not in host and not host.startswith(("localhost", "127.")), f"{env}: {host}"
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", jc_environments())
 def test_jc_toml_names_its_profile(rendered, env):
     """jc refuses a jc.toml without `profile` (P-29, T-6717): every environment names production."""
     assert jc_toml(rendered(env)).get("profile") == "production", f"{env}: jc.toml names no production profile"

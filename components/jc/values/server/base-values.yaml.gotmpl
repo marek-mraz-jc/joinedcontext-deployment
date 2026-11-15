@@ -14,10 +14,12 @@
        import window opens neither. */}}
 {{- $pods := list }}
 {{- $podClients := list }}
+{{- $podHosts := list }}
 {{- if and (has "app-pods" .Values.components) (not (dig "importWindow" false $jc)) }}
 {{- range $name, $pod := index .Values "app-pods" }}
 {{- if and (kindIs "map" $pod) $pod.enabled }}
 {{- $pods = append $pods (printf "%s=http://app-%s.%s.svc.cluster.local:8080" $name $name $pod.namespace) }}
+{{- $podHosts = append $podHosts (printf "app-%s.%s.svc.cluster.local" $name $pod.namespace) }}
 {{- $podClients = append $podClients (dict "serviceAccount" (printf "app-%s" $name) "namespace" $pod.namespace) }}
 {{- end }}
 {{- end }}
@@ -527,6 +529,17 @@ env:
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  # The in-process broker's notification, federation and @context egress (T-6923): no private
+  # address but the in-cluster hosts listed here, the App pods and the MQTT brokers; loopback
+  # stays refused whatever the list says. A sink missing here fails at delivery.
+  ANTARES_EGRESS_ALLOW_PRIVATE: "false"
+  {{- $egressHosts := $podHosts }}
+  {{- if $mqtt }}
+  {{- range $jc.mqttBrokers | default list }}
+  {{- $egressHosts = append $egressHosts (printf "%s.%s.svc.cluster.local" .release (index $.Values "mqtt-brokers" "brokers" "namespace")) }}
+  {{- end }}
+  {{- end }}
+  ANTARES_EGRESS_PRIVATE_HOSTS: {{ join "," $egressHosts | quote }}
   {{- if dig "jc" "functions" "enabled" false .Values }}
   # The App functions runtime beside jc (values/functions); the Portal calls it with its token.
   JC_FUNCTIONS_URL: "http://jc-functions.{{ .Values.jc.functions.namespace }}.svc.cluster.local:8080"
