@@ -9,6 +9,7 @@ let no pod but APISIX reach its public listener (8080) or the Linkerd inbound pr
 
 import copy
 import ipaddress
+import re
 import shutil
 import subprocess
 import tomllib
@@ -77,6 +78,35 @@ def test_each_private_broker_host_names_its_own_project(rendered, env):
             project, _, host = entry.partition("=")
             assert project and host.endswith(":1883"), f"{env}: {entry}"
             assert host.startswith(f"mqtt-{project}-"), f"{env}: {entry} is another project's broker"
+
+
+def jc_server_images(docs) -> set[str]:
+    """The jc-server image of the rendered jc Deployment (its containers and init containers)."""
+    out = set()
+    for d in docs:
+        if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc":
+            spec = d["spec"]["template"]["spec"]
+            out |= {c["image"] for c in spec.get("containers", []) + spec.get("initContainers", [])
+                    if "/marek-mraz-jc/jc" in c["image"]}
+    return out
+
+
+@requires_helmfile
+def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_variant):
+    """jc-dev and jc-prod pin jc apart (T-6723): `serverJcDev` moves with jc main for jc-dev,
+    `server` only when @prod-deployer moves jc-prod from a jc-dev green batch."""
+    fake = "sha256:" + "0" * 64
+
+    def edit(tree):
+        p = tree / "components/jc/images.yaml"
+        text = p.read_text()
+        start = text.index("  serverJcDev:")
+        head, tail = text[:start], text[start:]
+        p.write_text(head + re.sub(r"digest: '[^']+'", f"digest: '{fake}'", tail, count=1))
+
+    assert jc_server_images(rendered_variant("jc-prod", edit)) == jc_server_images(rendered("jc-prod"))
+    dev = jc_server_images(rendered_variant("jc-dev", edit))
+    assert dev and all(i.endswith(fake) for i in dev), dev
 
 
 @requires_helmfile

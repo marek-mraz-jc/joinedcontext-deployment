@@ -63,6 +63,11 @@ fullnameOverride: jc
 nameOverride: jc-server
 
 {{- $images := index .Values.images "jc" "server" | default dict }}
+{{- /* jc-dev runs its own pin (T-6723): it moves on every jc main merge, jc-prod's `server` only by
+       @prod-deployer from a jc-dev green batch. */}}
+{{- if eq .Environment.Name "jc-dev" }}
+{{- $images = index .Values.images "jc" "serverJcDev" | default dict }}
+{{- end }}
 {{- if not $images.digest }}
 {{- fail "jc.server: components/jc/images.yaml pins no digest yet; pin the one the monorepo's image.yml signed before deploying jc" }}
 {{- end }}

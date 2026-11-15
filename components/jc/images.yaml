@@ -42,6 +42,14 @@ jc:
     digest: 'sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
+  # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
+  # c61599fb (signed, promote/sign green in ci 43658368346), smoke 43651239746: 10 fail, 0 rows new
+  # against 799d0eab; on jc-dev since 01:15Z with second_factor required, 0 restarts. `server` above
+  # stays jc-prod's.
+  serverJcDev:
+    repository: 'ghcr.io/marek-mraz-jc/jc'
+    tag: 'c61599fb98b5d7dd2d0a01deabea579232ef5afb'
+    digest: 'sha256:05d5204753677a7039701d67dbc3df60d9e4751d439a764dc5bd82d16d4bd838'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
