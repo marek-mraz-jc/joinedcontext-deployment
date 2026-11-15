@@ -3,7 +3,7 @@ jc:
   server:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
-    # The public host every mount answers on (slug mode: /id, /opendata, /dashboards and the
+    # The public host every mount answers on (slug mode: /login, /opendata, /dashboards and the
     # Portal at the root): jc.{domain}, so nothing collides with the separate components' hosts
     # while both run on one cluster.
     subDomain: jc
