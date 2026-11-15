@@ -110,6 +110,26 @@ def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_var
 
 
 @requires_helmfile
+def test_jc_retain_reaches_the_meshed_postgres(rendered):
+    """jc-dev's hourly history cut (retainHours) connects to a Postgres whose inbound proxy takes only
+    mesh-authenticated clients (T-6959: unmeshed, every run was refused at connect). The pod is meshed
+    with a native sidecar so the Job still completes, and the policies open the proxy path."""
+    docs = rendered("jc-dev")
+    (cron,) = [d for d in docs if d.get("kind") == "CronJob" and d["metadata"]["name"] == "jc-retain"]
+    notes = cron["spec"]["jobTemplate"]["spec"]["template"]["metadata"]["annotations"]
+    assert notes.get("linkerd.io/inject") == "enabled", notes
+    assert notes.get("config.alpha.linkerd.io/proxy-enable-native-sidecar") == "true", notes
+    pols = {d["metadata"]["name"]: d["spec"] for d in docs if d.get("kind") == "NetworkPolicy"}
+    retain = lambda peer: (peer.get("podSelector") or {}).get("matchLabels", {}).get("app.kubernetes.io/name") == "jc-retain"
+    pg = pols["postgres-linkerd-from-jc"]
+    assert any(retain(peer) and 4143 in [p["port"] for p in rule["ports"]]
+               for rule in pg["ingress"] for peer in rule["from"]), pg
+    egress = pols["jc-retain-linkerd-control-plane"]["egress"]
+    assert {8080, 8086, 8090} <= {p["port"] for rule in egress for p in rule.get("ports", [])}, egress
+    assert any(p["port"] == 4143 for rule in egress for p in rule.get("ports", [])), egress
+
+
+@requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
 def test_jc_toml_names_its_profile(rendered, env):
     """jc refuses a jc.toml without `profile` (P-29, T-6717): every environment names production."""

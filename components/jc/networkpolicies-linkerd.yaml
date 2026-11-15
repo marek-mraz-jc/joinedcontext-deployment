@@ -34,6 +34,10 @@ postgres-linkerd-from-jc:
               app.kubernetes.io/name: jc-server
               app.kubernetes.io/instance: jc-server
           componentNamespace: jc
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-retain
+          componentNamespace: jc
       ports:
         - protocol: TCP
           port: 4143
@@ -41,6 +45,31 @@ postgres-linkerd-from-jc:
           port: 4190
         - protocol: TCP
           port: 4191
+jc-retain-linkerd-control-plane:
+  podSelector:
+    app.kubernetes.io/name: jc-retain
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+      ports:
+        - protocol: TCP
+          port: 4143
 jc-server-linkerd-control-plane:
   podSelector:
     app.kubernetes.io/name: jc-server
