@@ -105,6 +105,9 @@ jc:
     # for api and mcp. Each catalogue is new (jc-dev has no harvest seed to move into it); the datasets stay
     # in the shared one until the Portal publishes there. The other Organizations stay in slug form on jc.
     # until `host = "auto"` reaches jc-dev's pin (phase B).
+    # The 24 host certificates of the six below order in one apply (T-7005; joinedcontext.com had 2
+    # new certificates in the week to 2026-11-15, so 24 fit under Let's Encrypt's 50).
+    certificateStage: 24
     organizations:
       - name: bbsk
         catalogueId: 00000000-0000-7000-8000-0000000000b1

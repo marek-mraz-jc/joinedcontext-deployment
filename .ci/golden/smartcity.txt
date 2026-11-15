@@ -87,6 +87,7 @@ batch/v1/Job smartcity/keycloak-user-ids
 batch/v1/Job smartcity/postgres-cluster-local-backup-now
 batch/v1/Job smartcity/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate smartcity/apisix-edge
+cert-manager.io/v1/Certificate smartcity/apisix-edge-untrusted
 kyverno.io/v1/ClusterPolicy -/disallow-host-namespaces
 kyverno.io/v1/ClusterPolicy -/disallow-host-path
 kyverno.io/v1/ClusterPolicy -/disallow-privileged-containers
