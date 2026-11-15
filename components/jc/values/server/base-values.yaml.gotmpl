@@ -140,6 +140,10 @@ probes:
     {{- if eq $mode "host" }}
     # Host mode routes by name: the kubelet's request names the Portal's host.
     host: "portal.{{ $global.domain }}"
+    {{- else if and (not $window) (dig "organizations" list $jc) }}
+    # [[organizations]] turn on jc's host registry in slug mode too: a probe with the pod-IP Host
+    # gets 421 (jc-dev down 2026-11-15T13:21Z, T-7005), so it names base_host.
+    host: "{{ $jc.subDomain }}.{{ $global.domain }}"
     {{- end }}
     periodSeconds: 5
     timeoutSeconds: 3
@@ -154,6 +158,8 @@ probes:
     path: /streams/ping
     {{- if eq $mode "host" }}
     host: "localhost:8080"
+    {{- else if and (not $window) (dig "organizations" list $jc) }}
+    host: "{{ $jc.subDomain }}.{{ $global.domain }}"
     {{- end }}
     periodSeconds: 15
     timeoutSeconds: 3

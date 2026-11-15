@@ -129,6 +129,18 @@ def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certifi
 
 
 @requires_helmfile
+def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_registry(rendered):
+    """With `[[organizations]]` jc routes by Host in slug mode too: a kubelet probe with the pod-IP
+    Host got 421 and Recreate took every jc-dev host down (2026-11-15T13:21Z, T-7005). Each probe
+    names base_host, the name every public request through the edge carries."""
+    (dep,) = [d for d in rendered("jc-dev") if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    (c,) = [c for c in dep["spec"]["template"]["spec"]["containers"] if c["name"] == "jc-server"]
+    for probe in ("startupProbe", "readinessProbe", "livenessProbe"):
+        headers = c[probe]["httpGet"].get("httpHeaders") or []
+        assert {"name": "Host", "value": "jc.jcdev.dev.joinedcontext.com"} in headers, (probe, c[probe])
+
+
+@requires_helmfile
 def test_jc_retain_reaches_the_meshed_postgres(rendered):
     """jc-dev's hourly history cut (retainHours) connects to a Postgres whose inbound proxy takes only
     mesh-authenticated clients (T-6959: unmeshed, every run was refused at connect). The pod is meshed
