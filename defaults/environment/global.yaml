@@ -226,6 +226,24 @@ global:
     # Certificate `app-{name}` by HTTP-01. jc-prod lists prod's App Ingresses so the copied
     # certificates are served the second DNS moves. Empty renders nothing.
     appHosts: []
+    # embed., tiles. and viz. on a Certificate of their own, `apisix-edge-untrusted` (T-6991 §8);
+    # false keeps them on `apisix-edge` (jc-prod until its DNS moves).
+    untrustedCertificate: true
+    # The validation zone of the installation's Apps wildcard `*.apps.<domain>` (T-6975 §6), used
+    # instead of the Hetzner webhook when set: one zone the operator owns at a provider with a
+    # cert-manager built-in solver, a token scoped to that zone in the operator-made Secret
+    # `secretRef` (cert-manager's namespace, never in Git); `_acme-challenge.apps.<domain>` is a
+    # CNAME into it. No Organization gets a wildcard (owner rule): its Apps keep a certificate each
+    # by HTTP-01. Empty: no DNS-01 issuer.
+    dns01:
+      validationZone: ''
+      # cloudflare (secretRef: an API token with Zone:DNS:Edit on that zone) or rfc2136 (secretRef:
+      # the TSIG secret; rfc2136.nameserver and tsigKeyName set).
+      provider: ''
+      secretRef:
+        name: ''
+        key: ''
+      rfc2136: {}
 
   # Storage class mappings (leave empty to use cluster defaults)
   storage:

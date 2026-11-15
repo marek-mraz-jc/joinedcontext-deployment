@@ -14,6 +14,21 @@ jc:
     # certificate names; a host no mount claims answers jc's 404.
     mode: slug
     hosts: ["", idm, portal, api, opendata, data, assistant, viz]
+    # The installation's sign-in host, a label of `hosts` (T-6991 §5): on the installation
+    # certificate, checked at render. Empty: none named.
+    loginHost: ''
+    # Organizations on hosts of their own (T-6991 §1, §8; T-7005). Each entry is `{name, host: auto}`
+    # or `{name, catalogueId, domain?, hosts: {portal, opendata?, api?, mcp?}, resolved?, certificate?}`:
+    # `hosts` (and `resolved`) are labels under `domain` (default global.domain). jc.toml gets the
+    # entries today's jc reads (catalogueId and all four hosts), the edge a route per host under
+    # global.domain, organization-tls.yaml a Certificate per resolved host (absent: every host), one
+    # `jc-org-<name>` with `certificate: organization` once all resolve. E.g.
+    # {name: bbsk, catalogueId: <uuid>, hosts: {portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk}}
+    organizations: []
+    # Organization Certificates already issued (kubectl get certificate): any other counts as new,
+    # and a render with more than certificateStage new fails, so a cut-over is staged.
+    issuedCertificates: []
+    certificateStage: 10
     # Pool ceilings on the shared postgres-cluster (tests/test_postgres_connection_budget.py):
     # kaisatsu's request role, Antares' store. The Portal's pool is compiled in (5).
     kaisatsuPool: 4

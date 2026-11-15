@@ -1,0 +1,137 @@
+{{- /*
+  Certificates of the Organizations on hosts of their own (T-6991 §8, T-6975 §6).
+
+  The one producer of these Certificates (jc.server.organizations, the shape jc.toml's
+  `[[organizations]]` is rendered from): `hosts` are labels under `domain` (default the
+  installation's), each Certificate is HTTP-01, never a wildcard.
+  - A Certificate `jc-org-<label with dashes>` per host that resolves to the edge (`resolved`, the
+    labels `jc doctor domains` shows on the edge; absent: every host, as for jc-dev's labels under
+    its own `*.dev` record), so a record not made yet blocks only its own host;
+    `certificate: organization` folds them into one `jc-org-<name>` once every host resolves. The
+    edge route of a host (defaults/environment/apisix-routes.yaml.gotmpl) names the same Secret.
+  - `host: auto`: `<name>.<domain>` alone; the shared open data, API and sign-in hosts are the
+    installation's, on `apisix-edge`.
+  - Staged: at most `certificateStage` (10) Certificates not in `issuedCertificates` per render
+    (Let's Encrypt allows 50 new a week per registered domain, jc-dev and jc-prod together).
+  - The validation zone below serves the installation's `*.apps.<domain>` only (edge-tls.yaml).
+*/}}
+{{- $edge := .Values.edge }}
+{{- $dns01 := $edge.dns01 | default dict }}
+{{- $zone := $dns01.validationZone | default "" }}
+{{- $ns := .Release.Namespace }}
+{{- if $zone }}
+{{- if not (has ($dns01.provider | default "") (list "cloudflare" "rfc2136")) }}
+{{- fail (printf "global.ingress.dns01.provider: %q is none of cloudflare, rfc2136 (cert-manager's built-in solvers this deployment renders)" ($dns01.provider | default "")) }}
+{{- end }}
+{{- $ref := $dns01.secretRef | default dict }}
+{{- if not (and $ref.name $ref.key) }}
+{{- fail "global.ingress.dns01.secretRef: name and key of the operator's Secret in cert-manager's namespace are required (the zone's token never sits in values)" }}
+{{- end }}
+---
+# The validation zone's solver (T-6975 §6). A ClusterIssuer, so its Secret stays in cert-manager's
+# own namespace; named after this release's namespace, so two instances on one cluster own one each.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: jc-dns01-{{ $ns }}
+  labels:
+    {{- include "configuration.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: jc-dns01-{{ $ns }}-account-key
+    solvers:
+      - dns01:
+          # Every `_acme-challenge.<name>` is a CNAME into the validation zone.
+          cnameStrategy: Follow
+          {{- if eq $dns01.provider "cloudflare" }}
+          cloudflare:
+            apiTokenSecretRef:
+              name: {{ $ref.name | quote }}
+              key: {{ $ref.key | quote }}
+          {{- else }}
+          {{- $r := $dns01.rfc2136 | default dict }}
+          {{- if not (and $r.nameserver $r.tsigKeyName) }}
+          {{- fail "global.ingress.dns01.rfc2136: nameserver and tsigKeyName are required" }}
+          {{- end }}
+          rfc2136:
+            nameserver: {{ $r.nameserver | quote }}
+            tsigKeyName: {{ $r.tsigKeyName | quote }}
+            tsigAlgorithm: {{ $r.tsigAlgorithm | default "HMACSHA256" | quote }}
+            tsigSecretSecretRef:
+              name: {{ $ref.name | quote }}
+              key: {{ $ref.key | quote }}
+          {{- end }}
+{{- end }}
+{{- if and $edge.enabled $edge.organizations }}
+{{- $seen := dict }}
+{{- range concat ($edge.hosts | default list) ($edge.untrustedHosts | default list) }}
+{{- $_ := set $seen . "the installation" }}
+{{- end }}
+{{- $certs := list }}
+{{- range $org := $edge.organizations }}
+{{- $domain := $org.domain | default $.Values.domain }}
+{{- $labels := list }}
+{{- if eq (toString $org.host) "auto" }}
+{{- $labels = list $org.name }}
+{{- else }}
+{{- $h := $org.hosts | default dict }}
+{{- if not $h.portal }}
+{{- fail (printf "jc.server.organizations %s: hosts.portal (the working host) is required, or host: auto" $org.name) }}
+{{- end }}
+{{- range list "portal" "opendata" "api" "mcp" }}{{ with index $h . }}{{ $labels = append $labels . }}{{ end }}{{ end }}
+{{- end }}
+{{- $own := list }}
+{{- range $labels }}
+{{- $host := printf "%s.%s" . $domain }}
+{{- with index $seen $host }}
+{{- fail (printf "jc.server.organizations %s: host %q is already %s's" $org.name $host .) }}
+{{- end }}
+{{- $_ := set $seen $host $org.name }}
+{{- $own = append $own $host }}
+{{- end }}
+{{- $resolved := $labels }}
+{{- if hasKey $org "resolved" }}{{ $resolved = $org.resolved }}{{ end }}
+{{- if eq ($org.certificate | default "hosts") "organization" }}
+{{- range $labels }}
+{{- if not (has . $resolved) }}
+{{- fail (printf "jc.server.organizations %s: certificate organization needs every host resolving, %q is not in resolved (jc doctor domains)" $org.name .) }}
+{{- end }}
+{{- end }}
+{{- $certs = append $certs (dict "name" (printf "jc-org-%s" $org.name) "hosts" $own) }}
+{{- else }}
+{{- range $i, $label := $labels }}
+{{- if has $label $resolved }}
+{{- $host := index $own $i }}
+{{- $certs = append $certs (dict "name" (printf "jc-org-%s" (trimSuffix (printf ".%s" $.Values.domain) $host | replace "." "-")) "hosts" (list $host)) }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- $new := 0 }}
+{{- range $certs }}{{ if not (has .name ($edge.issuedCertificates | default list)) }}{{ $new = add1 $new }}{{ end }}{{ end }}
+{{- $stage := $edge.certificateStage | default 10 | int }}
+{{- if gt $new $stage }}
+{{- fail (printf "jc.server.organizations: %d new Certificates in one apply, over jc.server.certificateStage %d; stage them and list the issued ones in jc.server.issuedCertificates (Let's Encrypt: 50 new a week per registered domain)" $new $stage) }}
+{{- end }}
+{{- range $certs }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+  namespace: {{ $ns }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  secretName: {{ .name }}-tls
+  issuerRef:
+    name: {{ $edge.clusterIssuer | quote }}
+    kind: ClusterIssuer
+  dnsNames:
+    {{- range .hosts }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}
