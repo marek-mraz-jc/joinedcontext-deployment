@@ -114,6 +114,25 @@ spec:
   dnsNames:
     - {{ . | quote }}
 {{- end }}
+{{- range $edge.ownHosts | default list }}
+---
+# One host on an HTTP-01 certificate of its own (a route with `ownCertificate`): a failed order
+# for it leaves the shared edge certificate and every other host alone.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  secretName: {{ .secret | quote }}
+  issuerRef:
+    name: {{ $edge.clusterIssuer | quote }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ .host | quote }}
+{{- end }}
 {{- range $edge.appHosts | default list }}
 ---
 # One App host on a certificate of its own (jc, no Portal stamping App hosts): the name and

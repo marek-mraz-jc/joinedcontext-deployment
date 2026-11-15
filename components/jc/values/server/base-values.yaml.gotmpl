@@ -385,6 +385,20 @@ configMap:
       [identity]
       realm = {{ . | quote }}
       {{- end }}
+      {{- if not $window }}
+      {{- range $o := (dig "organizations" list $jc) }}
+
+      # An Organization on hosts of its own (bins/jc config.rs OrganizationSection, T-7005); the
+      # edge routes each host to jc (defaults/environment/apisix-routes.yaml.gotmpl).
+      [[organizations]]
+      name = {{ $o.name | quote }}
+      catalogue_id = {{ $o.catalogueId | quote }}
+      [organizations.hosts]
+      {{- range $role := list "portal" "opendata" "api" "mcp" }}
+      {{ $role }} = {{ printf "%s.%s" (index $o.hosts $role) $global.domain | quote }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
       {{- if (dig "catalogueHarvest" false $jc) }}
 
       # prod's two catalogue harvests, copied from the monorepo (files/harvest-sources.toml); each
