@@ -57,6 +57,22 @@ def test_each_pipeline_door_is_an_endpoint_of_its_project():
     assert not missing, "Pipelines naming no Endpoint of their project: " + ", ".join(missing)
 
 
+def test_each_catalog_is_read_only_and_its_door_keeps_the_portal_write():
+    # Open data is read-only (EP-187, T-6990): the public catalog binds only its read Policy, and the
+    # Portal's catalogue wave writes through catalog-write (T-6980), which must still bind the write.
+    endpoints = {
+        (d["metadata"].get("namespace"), d["metadata"]["name"]): (d.get("spec") or {}).get("policyRefs") or []
+        for _, d in seed()
+        if d["kind"] == "Endpoint"
+    }
+    catalogs = [project for project, name in endpoints if name == "catalog"]
+    assert len(catalogs) == 6
+    names = lambda refs: [migrate.ref_name(r).rsplit(":", 1)[-1] for r in refs]
+    for project in catalogs:
+        assert names(endpoints[project, "catalog"]) == ["catalog-public-read"], project
+        assert "catalog-portal-write" in names(endpoints[project, "catalog-write"]), project
+
+
 def test_the_jc_pin_binds_a_pipeline_through_an_endpoint_with_policyrefs():
     # jc builds before T-6736 bind a Pipeline's derived grants only on an Endpoint naming no Policy:
     # a Pipeline's target Endpoint with policyRefs needs the pinned jc to carry T-6736, or dev answers its writes 404.
