@@ -14,7 +14,7 @@ spec:
   schedule: '35 5 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-tourist-flats }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert: a licence the file drops leaves by its expiresAt, three weeks after its last listing.
   output: { type: TouristRental, mode: upsert }
   # The whole 1.4 MB file ran in under 96 MiB on 2026-10-23 (docker run --memory 96m).

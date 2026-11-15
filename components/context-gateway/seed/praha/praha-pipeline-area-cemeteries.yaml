@@ -12,7 +12,7 @@ spec:
   schedule: '35 2 * * 5'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-area-cemeteries }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: PointOfInterest, mode: upsert }
   # 268869 bytes on 2026-10-25.
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

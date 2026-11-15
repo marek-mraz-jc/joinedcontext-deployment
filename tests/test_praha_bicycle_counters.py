@@ -235,7 +235,7 @@ def test_the_pipeline_reads_golemio_by_the_secret_every_five_minutes_into_the_ci
     assert pipeline["spec"]["period"] == "5m"
     assert pipeline["spec"]["secretRefs"] == [{"name": "golemio", "key": "token", "envVar": "PRAHA_GOLEMIO_TOKEN"}]
     assert pipeline["spec"]["output"] == {"type": "TrafficFlowObserved", "mode": "upsert"}
-    assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+    assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
     (fetch,) = [p["branch"]["processors"][0]["http"] for p in yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"][0]["try"] if "branch" in p]
     assert fetch["url"].startswith(f"{SERVICE}/v2/bicyclecounters/detections?")
     assert fetch["headers"]["X-Access-Token"] == "${PRAHA_GOLEMIO_TOKEN}"

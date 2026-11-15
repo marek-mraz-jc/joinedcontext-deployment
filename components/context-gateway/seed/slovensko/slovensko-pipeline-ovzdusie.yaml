@@ -14,7 +14,7 @@ spec:
   schedule: '40 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: eea-sk-stations }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:ovzdusie-sk:ovzdusie-sk
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:ovzdusie-sk:ovzdusie-sk-zapis
   output: { type: AirQualityObserved, mode: upsert }
   # The files are read one at a time, so one decoded file (about 7,000 rows) is the most it holds of
   # them; the first run's week of 53 stations (8,883 entities) peaked at 231 MB (VmHWM, 2026-10-16).

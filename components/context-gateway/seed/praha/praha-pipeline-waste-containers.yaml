@@ -15,7 +15,7 @@ spec:
   schedule: '40 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-waste-all-containers }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: WasteContainer, mode: upsert }
   # Measured with docker run --memory over the whole answer of 2026-10-25 (11.4 MB, 20 587
   # containers written): 288 MiB is killed, 320 MiB runs it in 3 s.

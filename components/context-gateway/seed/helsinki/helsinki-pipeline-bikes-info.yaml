@@ -12,5 +12,5 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: hsl-citybikes-gbfs-info }
   # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
-  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

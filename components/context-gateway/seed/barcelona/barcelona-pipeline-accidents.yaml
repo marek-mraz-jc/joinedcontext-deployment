@@ -14,7 +14,7 @@ spec:
   schedule: '50 5 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-accidents }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert without expiry: the accidents of every year read stay, so the dataset grows a year at a
   # time (about 8,000 accidents each).
   output: { type: RoadAccident, mode: upsert }

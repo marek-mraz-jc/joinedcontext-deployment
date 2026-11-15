@@ -28,7 +28,7 @@ spec:
             indicator: zo0011ms_mes
             keys: [zo0011ms_ukaz, zo0011ms_ukaz2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zo-krajiny:susr-zo-krajiny
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zo-krajiny:susr-zo-krajiny-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -14,7 +14,7 @@ spec:
   schedule: '17 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-feedback }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: ServiceRequest, mode: upsert }
   # At most 200 reports of a few kB per window, one window at a time.
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

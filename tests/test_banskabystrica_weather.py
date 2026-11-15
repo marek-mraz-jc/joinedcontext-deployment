@@ -275,7 +275,7 @@ def test_the_source_the_pipeline_and_the_catalogue_agree():
     spec = pipeline["spec"]
     assert spec["source"]["dataSourceRef"]["name"] == source["metadata"]["name"]
     assert spec["output"] == {"type": "WeatherObserved", "mode": "upsert"}
-    assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:{SPACE}:{SPACE}"
+    assert spec["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:{DOMAIN}:{SPACE}:{SPACE}-zapis"
     assert (spec["period"], spec["schedule"]) == ("5m", "2-59/5 * * * *")
     index = yaml.safe_load((CITY / "index.yaml").read_text())
     for seeded in ("datasource-pocasie.yaml", "pipeline-pocasie.yaml", "pipeline-pocasie-bento.yaml"):

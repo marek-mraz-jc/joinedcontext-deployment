@@ -27,7 +27,7 @@ spec:
             indicator: st2024qs_ukaz1
             keys: [st2024qs_stv, st2024qs_ukaz2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-st-povolenia:susr-st-povolenia
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-st-povolenia:susr-st-povolenia-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

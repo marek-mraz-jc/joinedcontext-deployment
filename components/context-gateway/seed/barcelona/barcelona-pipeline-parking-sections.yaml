@@ -15,6 +15,6 @@ spec:
   schedule: '20 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-parking-sections }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:barcelona:barcelona-write
   output: { type: OnStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 320, cpuMillicores: 200 }

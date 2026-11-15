@@ -107,7 +107,7 @@ def test_every_generated_manifest_is_a_slovensko_manifest_of_its_own_space(tmp_p
         if doc["kind"] == "Policy" and doc["spec"]["assignee"]["kind"] == "serviceAccount":
             assert "deleteBatch" not in doc["spec"]["operations"]
         if doc["kind"] == "Pipeline":
-            assert doc["spec"]["outputs"][0]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}"
+            assert doc["spec"]["outputs"][0]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}-zapis"
     for space, ks in kinds.items():
         assert sorted(set(ks)) == ["ContextSpace", "DataModel", "DataSource", "Endpoint", "Pipeline", "Policy"], space
 
@@ -433,7 +433,7 @@ def test_the_generated_pipeline_lists_every_slice_and_its_memory_follows_the_lar
     topic = {"name": "susr-zo-krajiny", "theme": "zo", "title": TITLE, "cubes": ["zo0011ms"]}
     d = ZO0011MS | {"theme": "zo", "update": "2026-10-01", "title": TITLE}
     parts = {"zo0011ms": datacube.slices(d, ZO0011MS_CATEGORIES)}
-    files = datacube.topic_files(topic, [d], parts, "slug", 0)
+    files = datacube.topic_files(topic, [d], parts, "slug", "door", 0)
     pipeline = yaml.safe_load(files["pipeline.yaml"])
     assert [s["dataSourceRef"]["name"] for s in pipeline["spec"]["sources"]] == ["susr-zo0011ms-1", "susr-zo0011ms-2"]
     sources = {yaml.safe_load(t)["metadata"]["name"]: yaml.safe_load(t)["spec"]["http"]["url"]

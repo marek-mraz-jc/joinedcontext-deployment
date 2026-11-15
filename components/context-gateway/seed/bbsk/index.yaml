@@ -28,6 +28,7 @@ bbsk-endpoint-kraj-verejne.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-k
 bbsk-policy-kraj-public-read.yaml: projects/bbsk/spaces/bbsk-kraj/policies/kraj-public-read.yaml
 bbsk-space-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/space.yaml
 bbsk-endpoint-kpi.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi.yaml
+bbsk-endpoint-bbsk-kpi-zapis.yaml: projects/bbsk/spaces/bbsk-kpi/endpoints/bbsk-kpi-zapis.yaml
 bbsk-policy-kpi-pipelines-write.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-pipelines-write.yaml
 bbsk-policy-kpi-read.yaml: projects/bbsk/spaces/bbsk-kpi/policies/kpi-read.yaml
 # The region's three public Endpoints as one public, read-only MCP connector (T-4141).
@@ -124,6 +125,7 @@ bbsk-app-mosty-group-viewer.yaml: users/groups/bbsk-mosty-viewer.yaml
 # Portal compiles for it are seeded beside it, because the seed commits the App past the Portal's door.
 bbsk-app-zaznamy.yaml: projects/bbsk/apps/bbsk-zaznamy/app.yaml
 bbsk-app-zaznamy-endpoint.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/app-bbsk-zaznamy.yaml
+bbsk-endpoint-bbsk-kraj-verejne-zapis.yaml: projects/bbsk/spaces/bbsk-kraj/endpoints/bbsk-kraj-verejne-zapis.yaml
 bbsk-app-zaznamy-policy.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-1.yaml
 bbsk-app-zaznamy-policy-note.yaml: projects/bbsk/spaces/bbsk-kraj/policies/app-bbsk-zaznamy-2-steward.yaml
 bbsk-app-zaznamy-group-steward.yaml: users/groups/bbsk-zaznamy-steward.yaml
@@ -146,6 +148,7 @@ bbsk-otvorene-data.v1.context.jsonld: projects/bbsk/spaces/bbsk-otvorene-data/da
 bbsk-otvorene-data.v1.md: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.md
 bbsk-otvorene-data.v1.example.jsonld: projects/bbsk/spaces/bbsk-otvorene-data/datamodels/bbsk-otvorene-data.v1.example.jsonld
 bbsk-od-endpoint.yaml: projects/bbsk/spaces/bbsk-otvorene-data/endpoints/bbsk-otvorene-data.yaml
+bbsk-od-endpoint-zapis.yaml: projects/bbsk/spaces/bbsk-otvorene-data/endpoints/bbsk-otvorene-data-zapis.yaml
 bbsk-od-policy-read.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read.yaml
 bbsk-od-policy-read-history.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-read-history.yaml
 bbsk-od-policy-pipelines-write.yaml: projects/bbsk/spaces/bbsk-otvorene-data/policies/otvorene-data-pipelines-write.yaml
@@ -408,6 +411,7 @@ bbsk-policy-organizacie-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/o
 bbsk-endpoint-zariadenia.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-zariadenia.yaml
 bbsk-policy-zariadenia-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/zariadenia-read.yaml
 bbsk-endpoint-mosty.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-mosty.yaml
+bbsk-endpoint-bbsk-registre-zapis.yaml: projects/bbsk/spaces/bbsk-registre/endpoints/bbsk-registre-zapis.yaml
 bbsk-policy-mosty-read.yaml: projects/bbsk/spaces/bbsk-registre/policies/mosty-read.yaml
 # The data catalogue's one general assistant over every publisher (T-4342): every dataset of
 # the catalogue as its knowledge, every body's public Endpoints as its connectors; the deployment
@@ -635,5 +639,6 @@ bbsk-space-catalog.yaml: projects/bbsk/spaces/catalog/space.yaml
 bbsk-datamodel-catalog.yaml: projects/bbsk/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/bbsk/spaces/catalog/datamodels/catalog.linkml.yaml
 bbsk-endpoint-catalog.yaml: projects/bbsk/spaces/catalog/endpoints/catalog.yaml
+bbsk-endpoint-catalog-write.yaml: projects/bbsk/spaces/catalog/endpoints/catalog-write.yaml
 bbsk-policy-catalog-portal-write.yaml: projects/bbsk/spaces/catalog/policies/catalog-portal-write.yaml
 bbsk-policy-catalog-public-read.yaml: projects/bbsk/spaces/catalog/policies/catalog-public-read.yaml

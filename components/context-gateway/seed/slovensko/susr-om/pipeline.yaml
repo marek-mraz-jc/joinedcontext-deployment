@@ -26,7 +26,7 @@ spec:
             period: om2019rs_rok
             indicator: om2019rs_ukaz
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-om:susr-om
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-om:susr-om-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

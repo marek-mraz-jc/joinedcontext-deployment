@@ -15,6 +15,6 @@ spec:
   schedule: '35 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-statistics-table }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: KeyPerformanceIndicator, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

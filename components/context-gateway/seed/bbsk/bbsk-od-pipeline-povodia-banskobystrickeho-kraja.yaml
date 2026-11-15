@@ -15,7 +15,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: od-povodia-banskobystrickeho-kraja
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data-zapis
   output:
     type: RiverBasin
     mode: replace

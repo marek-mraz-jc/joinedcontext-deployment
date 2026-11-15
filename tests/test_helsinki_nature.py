@@ -159,7 +159,7 @@ def test_the_source_reads_the_ten_layers_in_one_query_over_https_with_a_timeout_
     pipeline = yaml.safe_load((HELSINKI / "helsinki-pipeline-nature.yaml").read_text())["spec"]
     assert pipeline["source"]["dataSourceRef"]["name"] == "hel-nature"
     assert pipeline["output"] == {"type": "NatureSite", "mode": "upsert"} and pipeline["period"] == "24h"
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
     steps = yaml.safe_load((HELSINKI / "helsinki-pipeline-nature-bento.yaml").read_text())["pipeline"]["processors"]
     assert [list(step) for step in steps] == [["try"]]
     assert [list(step) for step in steps[0]["try"]] == [["mapping"], ["log"], ["unarchive"]]

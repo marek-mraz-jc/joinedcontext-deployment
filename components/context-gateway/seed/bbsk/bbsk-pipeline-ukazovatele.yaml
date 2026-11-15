@@ -24,7 +24,7 @@ spec:
     query:
       type: KeyPerformanceIndicator
       q: dataSet=="om7102rr","zp3803rs"
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kpi:bbsk-kpi
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-kpi:bbsk-kpi-zapis
   output: { type: KeyPerformanceIndicator, mode: upsert }
   # Every run rewrites every indicator its cubes carry, so one missing for three weeks is an
   # indicator the region stopped publishing: it is removed rather than shown with a stale value (PL-64).

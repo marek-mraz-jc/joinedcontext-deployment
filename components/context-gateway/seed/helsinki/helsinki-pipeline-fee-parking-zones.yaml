@@ -12,6 +12,6 @@ spec:
   schedule: '5 4 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: hel-parking-fee-zones }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: OnStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

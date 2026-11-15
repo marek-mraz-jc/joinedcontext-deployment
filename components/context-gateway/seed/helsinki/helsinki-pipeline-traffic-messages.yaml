@@ -10,7 +10,7 @@ spec:
   schedule: '*/10 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: digitraffic-traffic-messages }
-  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }
   # An Alert's end (PL-80, NGSI-LD 4.22 expiresAt): its validTo, and at most an hour after the
   # write; without a validTo, an hour after the write. The feed lists only running situations

@@ -200,7 +200,7 @@ def test_the_parcels_keep_no_history_and_the_pipeline_runs_weekly_over_the_https
     assert {"entityType": "CadastralParcel", "history": "off"} in space["retention"]
     pipeline = yaml.safe_load((CITY / "pipeline-kataster.yaml").read_text())["spec"]
     assert pipeline["output"]["type"] == "CadastralParcel"
-    assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}"
+    assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}-zapis"
     processors = yaml.safe_load(MAPPING.read_text())["pipeline"]["processors"]
     (fetch,) = [p["http"] for p in processors if "http" in p]
     assert fetch["url"].startswith(SERVICE + "/geoserver/cp/ogc/features/v1/")

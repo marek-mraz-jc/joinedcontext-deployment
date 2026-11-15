@@ -12,9 +12,9 @@ metadata:
     en: Žilina, mobility live
 spec:
   contextSpaceRef: zilina-doprava
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through zilina-doprava-zapis.
   policyRefs:
-    - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:doprava-pipelines-write
     - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:doprava-read
     - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:mhd-read
     - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:parkoviska-read

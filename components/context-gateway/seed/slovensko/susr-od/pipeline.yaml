@@ -28,7 +28,7 @@ spec:
             unit: od0008ms_unit
             keys: [od0008ms_month, od0008ms_specu, od0008ms_nace2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-od:susr-od
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-od:susr-od-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

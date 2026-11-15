@@ -12,6 +12,6 @@ spec:
   schedule: '30 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-fare-zones }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: AdministrativeArea, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

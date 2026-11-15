@@ -28,7 +28,7 @@ spec:
             unit: cr1004rs_unit
             keys: [cr1004rs_specu, cr1004rs_refarea]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-cr-navstevnici:susr-cr-navstevnici
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-cr-navstevnici:susr-cr-navstevnici-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

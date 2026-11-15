@@ -28,7 +28,7 @@ spec:
             unit: ps1009rs_unit
             keys: [ps1009rs_specu, ps1009rs_sex, ps1009rs_ecact1, ps1009rs_ecact2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ps-vydavky:susr-ps-vydavky
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ps-vydavky:susr-ps-vydavky-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

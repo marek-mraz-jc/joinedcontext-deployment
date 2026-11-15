@@ -12,6 +12,6 @@ spec:
   schedule: '*/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: nextbike-station-status }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: BikeHireDockingStation, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -11,5 +11,5 @@ spec:
   schedule: '*/30 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: fmi-air-quality }
-  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

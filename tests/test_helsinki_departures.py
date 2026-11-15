@@ -208,7 +208,7 @@ def test_the_seed_reads_the_feed_every_30_s_into_gtfsstop_through_the_city_endpo
     assert pipeline["period"] == "30s" and pipeline["output"] == {"type": "GtfsStop", "mode": "upsert"}
     assert pipeline["source"]["dataSourceRef"]["name"] == source["metadata"]["name"] == "hsl-trip-updates"
     assert source["spec"]["http"]["url"] == "https://realtime.hsl.fi/realtime/trip-updates/v2/hsl"
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
     index = yaml.safe_load((HELSINKI / "index.yaml").read_text())
     for seeded in ("helsinki-datasource-trip-updates.yaml", "helsinki-pipeline-departures.yaml",
                    "helsinki-pipeline-departures-bento.yaml"):

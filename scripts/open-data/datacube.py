@@ -424,7 +424,30 @@ def chart(topic: dict) -> str:
         spec: {json.dumps(spec, ensure_ascii=False)}"""
 
 
-def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, int]]], slug: str, index: int) -> dict[str, str]:
+def door(space: str, t: dict, slug: str) -> str:
+    """The topic's write door: open data is read-only (EP-187, T-6980), so its pipeline writes here."""
+    return f"""{BEGIN}
+# The topic's write door (EP-187, T-6980): its pipeline writes through it; the audience keeps out
+# anyone outside the organization. People read the topic through the public door {space}.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: {space}-zapis
+  namespace: slovensko
+  title: {title({"sk": f"{t['sk']}: zápis kanála", "en": f"{t['en']}: pipeline writes"})}
+spec:
+  contextSpaceRef: {space}
+  policyRefs:
+    - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-pipelines-write
+    - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-public-read
+  slug: {slug}
+  audience: organization
+  enabledRepresentations: [ngsi-ld]
+"""
+
+
+def topic_files(topic: dict, ds: list[dict], parts: dict[str, list[tuple[str, int]]], slug: str, door_slug: str,
+                index: int) -> dict[str, str]:
     theme, space, t = topic["theme"], topic["name"], topic["title"]
     name, eu = THEMES[theme]
     head = "apiVersion: joinedcontext.com/v1alpha1"
@@ -482,7 +505,7 @@ spec:
     example: ./statistical-observation.v1.example.jsonld
 """,
         "endpoint.yaml": f"""{BEGIN}
-# The topic's one door, public: ŠÚ SR publishes the tables under CC BY-SA 4.0 (NKOD
+# The topic's public door: ŠÚ SR publishes the tables under CC BY-SA 4.0 (NKOD
 # l:termsOfUse CC_BYSA_4_0), which allows republishing them with its credit, as the attribution gives.
 {head}
 kind: Endpoint
@@ -493,9 +516,9 @@ metadata:
   description: {{ sk: {q(desc['sk'])}, en: {q(desc['en'])} }}
 spec:
   contextSpaceRef: {space}
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through {space}-zapis.
   policyRefs:
-    - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-pipelines-write
     - urn:ngsi-ld:Policy:joinedcontext.com:{space}:{space}-public-read
   slug: {slug}
   audience: public
@@ -557,6 +580,7 @@ spec:
         - type: {TYPE}
 """,
     }
+    files["endpoint-zapis.yaml"] = door(space, {"sk": f"{t['sk']} — štatistika SR", "en": f"{t['en']}, Slovak statistics"}, door_slug)
     sources = "\n".join(f"    - dataSourceRef: {{ kind: DataSource, name: {n} }}" for d in ds for n in source_names(d, parts))
     steps = "".join("    " + line + "\n" for line in step(cubes(ds)).splitlines())
     files["pipeline.yaml"] = f"""{BEGIN}
@@ -577,7 +601,7 @@ spec:
 {sources}
   steps:
 {steps}  outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}-zapis
       type: {TYPE}
       mode: upsert
   quotas:
@@ -614,7 +638,7 @@ def render(chosen: list[tuple[dict, list[dict]]], parts: dict[str, list[tuple[st
     for i, (topic, ds) in enumerate(chosen):
         folder = seed / topic["name"]
         slug = slug_for(folder / "endpoint.yaml")
-        for name, text in topic_files(topic, ds, parts, slug, i).items():
+        for name, text in topic_files(topic, ds, parts, slug, slug_for(folder / "endpoint-zapis.yaml"), i).items():
             out[folder / name] = text
         for f in MODEL_FILES:
             out[folder / f] = (MODEL / f).read_text()
@@ -635,6 +659,7 @@ def placed(chosen: list[tuple[dict, list[dict]]], parts: dict[str, list[tuple[st
         for f in MODEL_FILES:
             out[f"{n}/{f}"] = f"{space}/datamodels/{f}"
         out[f"{n}/endpoint.yaml"] = f"{space}/endpoints/{n}.yaml"
+        out[f"{n}/endpoint-zapis.yaml"] = f"{space}/endpoints/{n}-zapis.yaml"
         out[f"{n}/policy-pipelines-write.yaml"] = f"{space}/policies/{n}-pipelines-write.yaml"
         out[f"{n}/policy-public-read.yaml"] = f"{space}/policies/{n}-public-read.yaml"
         out[f"{n}/pipeline.yaml"] = f"projects/slovensko/pipelines/{n}/pipeline.yaml"

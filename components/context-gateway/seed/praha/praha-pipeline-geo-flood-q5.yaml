@@ -12,7 +12,7 @@ spec:
   schedule: '5 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-flood-q5 }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: FloodZone, mode: upsert }
   # 4622899 bytes on 2026-10-24.
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

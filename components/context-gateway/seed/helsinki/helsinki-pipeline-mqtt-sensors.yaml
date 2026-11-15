@@ -32,7 +32,7 @@ spec:
         "dateObserved": { "type": "Property", "value": $seen, "observedAt": $seen },
         "source": { "type": "Property", "value": "MQTT demo device %v".format($sensor), "observedAt": $seen }
       } }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }
   lifetime:
     - type: AirQualityObserved

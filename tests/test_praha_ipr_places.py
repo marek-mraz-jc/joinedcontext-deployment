@@ -213,7 +213,7 @@ def test_each_pipeline_reads_its_ipr_layer_into_the_city_space_weekly():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-geo-{name}"
         assert pipeline["spec"]["period"] == "168h"
         assert pipeline["spec"]["output"] == {"type": "PointOfInterest", "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         mapping = (PRAHA / f"praha-pipeline-geo-{name}-bento.yaml").read_text()
         assert f'let item = "{item}"' in mapping
 

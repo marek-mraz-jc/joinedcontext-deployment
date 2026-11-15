@@ -13,6 +13,6 @@ spec:
   schedule: '30 3 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: rpss-social-services }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: PointOfInterest, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

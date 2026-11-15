@@ -12,12 +12,12 @@ metadata:
     en: 'Prague city data: air quality, shared bikes, park and ride car parks, sorted-waste containers and collection points, the budget, cultural and school facilities, public toilets, city districts, municipal police stations, libraries, municipal offices, gardens, playgrounds, waste collection yards, city amenities, cool spots, on-street parking, parks, green areas and trees, air pollution sources, radon risk, flood areas, flood defences, the weather, Mr.Parkit garages and shared cars free to rent. Sources: ČHMÚ, Golemio, ROPID, IPR Praha and the City of Prague.'
 spec:
   contextSpaceRef: praha-mesto
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through praha-mesto-zapis.
   policyRefs:
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-data-1
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-mapa-1
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:app-praha-odpad-1-viewer
-    - urn:ngsi-ld:Policy:praha.eu:praha-mesto:pipelines-write
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-bilancni-celky
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cerpani-rozpoctu
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-cinnost-mestske-policie

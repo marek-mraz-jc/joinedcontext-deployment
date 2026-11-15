@@ -278,7 +278,7 @@ def test_the_datasets_are_odbl_with_the_osm_credit_and_the_pipeline_alone_may_de
     assert [e["type"] for rule in delete["information"] for e in rule["entities"]] == ["PointOfInterest", "EVChargingStation"]
     pipeline = yaml.safe_load((CITY / "pipeline-osm.yaml").read_text())["spec"]
     assert pipeline["period"] == "168h"
-    assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}"
+    assert pipeline["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:banskabystrica.sk:{SPACE}:{SPACE}-zapis"
 
 
 def grants(account: str) -> dict[str, set[str]]:

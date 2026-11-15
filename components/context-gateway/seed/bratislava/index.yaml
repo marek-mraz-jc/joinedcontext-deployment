@@ -978,4 +978,5 @@ bratislava-policy-public-rozpocet-prijmy-2019.yaml: projects/bratislava/spaces/b
 bratislava-endpoint-osv-cerpanie-2019-09-06.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-osv-cerpanie-2019-09-06.yaml
 bratislava-policy-public-osv-cerpanie-2019-09-06.yaml: projects/bratislava/spaces/bratislava/policies/public-osv-cerpanie-2019-09-06.yaml
 bratislava-endpoint-osv-cerpanie-2019-06-30.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-osv-cerpanie-2019-06-30.yaml
+bratislava-endpoint-bratislava-zapis.yaml: projects/bratislava/spaces/bratislava/endpoints/bratislava-zapis.yaml
 bratislava-policy-public-osv-cerpanie-2019-06-30.yaml: projects/bratislava/spaces/bratislava/policies/public-osv-cerpanie-2019-06-30.yaml

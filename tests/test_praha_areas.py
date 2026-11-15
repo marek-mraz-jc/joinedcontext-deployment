@@ -209,7 +209,7 @@ def test_each_layer_is_read_weekly_from_its_ipr_download_into_the_city_space():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-area-{name}"
         assert pipeline["spec"]["period"] == "168h"
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         text = (PRAHA / f"praha-pipeline-area-{name}-bento.yaml").read_text()
         assert f'let item = "{item}"' in text and "16777216" in text
         # Water areas (9.0 MB) ran in 320 MiB and not in 256, dog zones (7.1 MB) in 256, cycle routes

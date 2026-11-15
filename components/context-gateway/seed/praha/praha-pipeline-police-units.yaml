@@ -12,7 +12,7 @@ spec:
   schedule: '45 3 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: mp-utvary }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: KeyPerformanceIndicator, mode: upsert }
   # 9,152 figures from a 460 KB file; 256 MiB leaves room for the tree walk.
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

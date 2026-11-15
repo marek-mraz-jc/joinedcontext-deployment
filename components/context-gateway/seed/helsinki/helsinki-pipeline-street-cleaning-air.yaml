@@ -13,6 +13,6 @@ spec:
   schedule: '20 4 * * 2'
   source:
     dataSourceRef: { kind: DataSource, name: fvh-swarco-street-cleaning-air }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: AirQualityObserved, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 200 }

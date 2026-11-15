@@ -13,6 +13,6 @@ spec:
   schedule: '2-59/5 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: shmu-aws1min }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: WeatherObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

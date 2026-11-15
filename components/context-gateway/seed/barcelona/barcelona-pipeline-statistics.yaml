@@ -17,6 +17,6 @@ spec:
   schedule: '40 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-statistics-dimensions }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   output: { type: KeyPerformanceIndicator, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

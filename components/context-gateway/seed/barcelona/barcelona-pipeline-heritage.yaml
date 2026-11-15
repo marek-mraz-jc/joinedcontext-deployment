@@ -13,7 +13,7 @@ spec:
   schedule: '41 6 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-heritage }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert, as the equipaments: both write PointOfInterest, so a replace would delete the other's.
   # A building Wikidata drops leaves by its expiresAt, three weeks after its last listing.
   output: { type: PointOfInterest, mode: upsert }

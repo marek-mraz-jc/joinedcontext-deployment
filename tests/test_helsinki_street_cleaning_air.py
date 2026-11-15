@@ -123,7 +123,7 @@ def test_the_pilot_is_seeded_as_a_datasource_a_pipeline_a_mapping_and_a_public_e
     policy = yaml.safe_load((HELSINKI / "helsinki-policy-public-street-cleaning-air.yaml").read_text())
     assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
     assert pipeline["spec"]["output"]["type"] == "AirQualityObserved"
-    assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+    assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
     assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
     assert datasource["spec"]["http"]["url"].startswith("https://dl.fvh.fi/")
     for seeded in ("helsinki-datasource-street-cleaning-air.yaml", "helsinki-pipeline-street-cleaning-air.yaml",

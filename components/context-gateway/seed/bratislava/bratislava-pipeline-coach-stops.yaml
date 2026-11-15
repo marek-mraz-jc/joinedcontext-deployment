@@ -13,6 +13,6 @@ spec:
   schedule: '55 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bratislava-hub }
-  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava-zapis
   output: { type: OnStreetParking, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

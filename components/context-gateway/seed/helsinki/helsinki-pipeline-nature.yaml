@@ -13,6 +13,6 @@ spec:
   schedule: '35 2 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-nature }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: NatureSite, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

@@ -13,6 +13,6 @@ spec:
   schedule: '5 4 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: hel-noise-roads-night-2 }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: NoiseZone, mode: upsert }
   quotas: { maxMemoryMb: 384, cpuMillicores: 100 }

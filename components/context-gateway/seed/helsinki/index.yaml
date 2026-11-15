@@ -55,6 +55,7 @@ helsinki-kpi.v1.context.jsonld: projects/helsinki/spaces/helsinki-kpi/datamodels
 helsinki-kpi.v1.example.jsonld: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.example.jsonld
 helsinki-kpi.v1.md: projects/helsinki/spaces/helsinki-kpi/datamodels/helsinki-kpi.v1.md
 helsinki-endpoint-kpi.yaml: projects/helsinki/spaces/helsinki-kpi/endpoints/helsinki-kpi.yaml
+helsinki-endpoint-helsinki-kpi-write.yaml: projects/helsinki/spaces/helsinki-kpi/endpoints/helsinki-kpi-write.yaml
 helsinki-policy-kpi-pipelines-write.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-pipelines-write.yaml
 helsinki-policy-kpi-read.yaml: projects/helsinki/spaces/helsinki-kpi/policies/kpi-read.yaml
 helsinki-serviceaccount-pipelines.yaml: projects/helsinki/access/serviceaccounts/pipelines.yaml
@@ -406,6 +407,7 @@ helsinki-datasource-service-property-energy.yaml: projects/helsinki/datasources/
 helsinki-pipeline-service-property-energy.yaml: projects/helsinki/pipelines/service-property-energy/pipeline.yaml
 helsinki-pipeline-service-property-energy-bento.yaml: projects/helsinki/pipelines/service-property-energy/bento.yaml
 helsinki-endpoint-service-property-energy.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-service-property-energy.yaml
+helsinki-endpoint-helsinki-all-write.yaml: projects/helsinki/spaces/helsinki/endpoints/helsinki-all-write.yaml
 helsinki-policy-public-service-property-energy.yaml: projects/helsinki/spaces/helsinki/policies/public-service-property-energy.yaml
 helsinki-policy-public-cycle-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-cycle-counts.yaml
 helsinki-policy-public-traffic-counts.yaml: projects/helsinki/spaces/helsinki/policies/public-traffic-counts.yaml
@@ -416,6 +418,7 @@ helsinki-space-catalog.yaml: projects/helsinki/spaces/catalog/space.yaml
 helsinki-datamodel-catalog.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/helsinki/spaces/catalog/datamodels/catalog.linkml.yaml
 helsinki-endpoint-catalog.yaml: projects/helsinki/spaces/catalog/endpoints/catalog.yaml
+helsinki-endpoint-catalog-write.yaml: projects/helsinki/spaces/catalog/endpoints/catalog-write.yaml
 helsinki-policy-catalog-portal-write.yaml: projects/helsinki/spaces/catalog/policies/catalog-portal-write.yaml
 helsinki-policy-catalog-public-read.yaml: projects/helsinki/spaces/catalog/policies/catalog-public-read.yaml
 # The MQTT demo (T-4857): two brokers, one device each, and the pipelines writing their messages.

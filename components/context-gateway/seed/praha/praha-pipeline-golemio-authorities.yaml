@@ -12,6 +12,6 @@ spec:
   schedule: '25 4 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: golemio-authorities }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: PointOfInterest, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

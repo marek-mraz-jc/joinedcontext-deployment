@@ -12,6 +12,7 @@ bb-air-quality.v1.context.jsonld: projects/banskabystrica/spaces/ovzdusie/datamo
 bb-air-quality.v1.example.jsonld: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.example.jsonld
 bb-air-quality.v1.md: projects/banskabystrica/spaces/ovzdusie/datamodels/bb-air-quality.v1.md
 endpoint.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air.yaml
+banskabystrica-endpoint-public-air-zapis.yaml: projects/banskabystrica/spaces/ovzdusie/endpoints/public-air-zapis.yaml
 policy-public-read.yaml: projects/banskabystrica/spaces/ovzdusie/policies/public-read.yaml
 # The conformance suite's own space (F-BNT1-002): the smoke run and the ETSI suite write their
 # fixtures there through `conformance`, never into ovzdusie's published readings.
@@ -186,6 +187,7 @@ banskabystrica-otvorene-data.v1.context.jsonld: projects/banskabystrica/spaces/b
 banskabystrica-otvorene-data.v1.md: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.md
 banskabystrica-otvorene-data.v1.example.jsonld: projects/banskabystrica/spaces/banskabystrica-otvorene-data/datamodels/banskabystrica-otvorene-data.v1.example.jsonld
 banskabystrica-od-endpoint.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/endpoints/banskabystrica-otvorene-data.yaml
+banskabystrica-od-endpoint-zapis.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/endpoints/banskabystrica-otvorene-data-zapis.yaml
 banskabystrica-od-policy-read.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read.yaml
 banskabystrica-od-policy-read-history.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-read-history.yaml
 banskabystrica-od-policy-pipelines-write.yaml: projects/banskabystrica/spaces/banskabystrica-otvorene-data/policies/otvorene-data-pipelines-write.yaml
@@ -225,12 +227,14 @@ datasource-kataster.yaml: projects/banskabystrica/datasources/kataster-inspire.y
 pipeline-kataster.yaml: projects/banskabystrica/pipelines/kataster/pipeline.yaml
 pipeline-kataster-bento.yaml: projects/banskabystrica/pipelines/kataster/bento.yaml
 endpoint-kataster.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-kataster.yaml
+banskabystrica-endpoint-banskabystrica-verejne-zapis.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/endpoints/banskabystrica-verejne-zapis.yaml
 policy-kataster-read.yaml: projects/banskabystrica/spaces/banskabystrica-verejne/policies/kataster-read.yaml
 # The organization's own NGSI-LD catalogue (T-5493): written by the Portal reconciler, read by anyone.
 space-catalog.yaml: projects/banskabystrica/spaces/catalog/space.yaml
 datamodel-catalog.yaml: projects/banskabystrica/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/banskabystrica/spaces/catalog/datamodels/catalog.linkml.yaml
 endpoint-catalog.yaml: projects/banskabystrica/spaces/catalog/endpoints/catalog.yaml
+banskabystrica-endpoint-catalog-write.yaml: projects/banskabystrica/spaces/catalog/endpoints/catalog-write.yaml
 policy-catalog-portal-write.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-portal-write.yaml
 policy-catalog-public-read.yaml: projects/banskabystrica/spaces/catalog/policies/catalog-public-read.yaml
 # The MQTT demo (T-4857): one broker, its device and the pipeline writing the device's readings.

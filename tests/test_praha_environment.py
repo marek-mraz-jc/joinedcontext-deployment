@@ -216,7 +216,7 @@ def test_each_layer_is_read_weekly_from_its_ipr_download_into_the_city_space():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-geo-{name}"
         assert pipeline["spec"]["period"] == "168h"
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         text = (PRAHA / f"praha-pipeline-geo-{name}-bento.yaml").read_text()
         assert f'let item = "{item}"' in text and "16777216" in text
         # The radon map and the Q layers are 2.5 to 8.4 MB: 256 MiB holds them (128 MiB did not, 2026-10-24).

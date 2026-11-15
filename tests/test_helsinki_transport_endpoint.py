@@ -67,7 +67,7 @@ def test_only_the_pipelines_account_writes_a_vehicle_and_through_the_write_endpo
     target binds the pipeline's derived Policy (no policyRef, T-5033), and every Policy of the space
     that lets anyone change a Vehicle is the pipelines account's; the public reads every mode."""
     pipeline = load("helsinki-pipeline-hfp.yaml")["spec"]
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all-write"
     assert "policyRef" not in load("helsinki-endpoint-all.yaml")["spec"]
     writers = []
     for path in sorted(HELSINKI.glob("helsinki-policy-*.yaml")):

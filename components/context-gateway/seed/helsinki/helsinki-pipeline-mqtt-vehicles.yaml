@@ -34,5 +34,5 @@ spec:
         "speed": { "type": "Property", "value": $speed, "unitCode": "MTS", "observedAt": $seen },
         "heading": { "type": "Property", "value": $heading, "unitCode": "DD", "observedAt": $seen }
       } }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

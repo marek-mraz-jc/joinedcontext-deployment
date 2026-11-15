@@ -27,7 +27,7 @@ spec:
             unit: nu0005qs_mj
             keys: [nu0005qs_stv, nu0005qs_nace]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-nu-odvetvia:susr-nu-odvetvia
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-nu-odvetvia:susr-nu-odvetvia-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

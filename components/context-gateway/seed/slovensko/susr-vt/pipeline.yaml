@@ -27,7 +27,7 @@ spec:
             indicator: vt0002rs_ukaz
             keys: [vt0002rs_fina]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vt:susr-vt
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vt:susr-vt-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

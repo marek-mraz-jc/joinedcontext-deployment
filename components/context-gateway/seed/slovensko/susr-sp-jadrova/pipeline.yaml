@@ -27,7 +27,7 @@ spec:
             indicator: sp0008ms_ukaz
             keys: [sp0008ms_mes]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sp-jadrova:susr-sp-jadrova
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sp-jadrova:susr-sp-jadrova-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

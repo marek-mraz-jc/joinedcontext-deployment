@@ -26,7 +26,7 @@ spec:
             period: og2019qs_rok
             keys: [og2019qs_stv, og2019qs_ukaz]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-og:susr-og
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-og:susr-og-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

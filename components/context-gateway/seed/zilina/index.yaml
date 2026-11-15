@@ -131,12 +131,14 @@ zilina-app-mapa-endpoint.yaml: projects/zilina/spaces/zilina-verejne/endpoints/a
 zilina-app-mapa-policy.yaml: projects/zilina/spaces/zilina-verejne/policies/app-zilina-mapa-1.yaml
 zilina-app-ukazovatele.yaml: projects/zilina/apps/zilina-ukazovatele/app.yaml
 zilina-app-ukazovatele-endpoint.yaml: projects/zilina/spaces/zilina-kpi/endpoints/app-zilina-ukazovatele.yaml
+zilina-endpoint-zilina-kpi-zapis.yaml: projects/zilina/spaces/zilina-kpi/endpoints/zilina-kpi-zapis.yaml
 zilina-app-ukazovatele-policy.yaml: projects/zilina/spaces/zilina-kpi/policies/app-zilina-ukazovatele-1.yaml
 zilina-app-zaznamy.yaml: projects/zilina/apps/zilina-zaznamy/app.yaml
 zilina-app-zaznamy-endpoint.yaml: projects/zilina/spaces/zilina-verejne/endpoints/app-zilina-zaznamy.yaml
 zilina-app-zaznamy-policy.yaml: projects/zilina/spaces/zilina-verejne/policies/app-zilina-zaznamy-1.yaml
 zilina-app-vyskum.yaml: projects/zilina/apps/zilina-vyskum/app.yaml
 zilina-app-vyskum-endpoint.yaml: projects/zilina/spaces/zilina-uniza/endpoints/app-zilina-vyskum.yaml
+zilina-endpoint-zilina-uniza-zapis.yaml: projects/zilina/spaces/zilina-uniza/endpoints/zilina-uniza-zapis.yaml
 zilina-app-vyskum-policy.yaml: projects/zilina/spaces/zilina-uniza/policies/app-zilina-vyskum-1.yaml
 zilina-knowledge-catalogue-ngsi.yaml: projects/zilina/assistant/sources/catalogue.yaml
 # Žilina's public assistant over its own knowledge and Endpoints (T-4281).
@@ -150,6 +152,7 @@ zilina-policy-ovzdusie-read.yaml: projects/zilina/spaces/zilina-verejne/policies
 zilina-endpoint-pamiatky.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-pamiatky.yaml
 zilina-policy-pamiatky-read.yaml: projects/zilina/spaces/zilina-verejne/policies/pamiatky-read.yaml
 zilina-endpoint-stanice.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-zeleznicne-stanice.yaml
+zilina-endpoint-zilina-verejne-zapis.yaml: projects/zilina/spaces/zilina-verejne/endpoints/zilina-verejne-zapis.yaml
 zilina-policy-stanice-read.yaml: projects/zilina/spaces/zilina-verejne/policies/stanice-read.yaml
 # The city's own open data portal (opendata.zilina.sk, T-5232): car parks, buses and trolleybuses,
 # traffic counters and street lights, live, in one space; seeds/zilina-opendata/inventory.csv
@@ -170,6 +173,7 @@ zilina-policy-mhd-read.yaml: projects/zilina/spaces/zilina-doprava/policies/mhd-
 zilina-endpoint-scitace.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-scitace.yaml
 zilina-policy-scitace-read.yaml: projects/zilina/spaces/zilina-doprava/policies/scitace-read.yaml
 zilina-endpoint-svietidla.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-svietidla.yaml
+zilina-endpoint-zilina-doprava-zapis.yaml: projects/zilina/spaces/zilina-doprava/endpoints/zilina-doprava-zapis.yaml
 zilina-policy-svietidla-read.yaml: projects/zilina/spaces/zilina-doprava/policies/svietidla-read.yaml
 zilina-datasource-parkovanie.yaml: projects/zilina/datasources/zilina-opendata-parkoviska.yaml
 zilina-datasource-mhd-vozidla.yaml: projects/zilina/datasources/zilina-opendata-mhd-vozidla.yaml
@@ -189,5 +193,6 @@ zilina-space-catalog.yaml: projects/zilina/spaces/catalog/space.yaml
 zilina-datamodel-catalog.yaml: projects/zilina/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/zilina/spaces/catalog/datamodels/catalog.linkml.yaml
 zilina-endpoint-catalog.yaml: projects/zilina/spaces/catalog/endpoints/catalog.yaml
+zilina-endpoint-catalog-write.yaml: projects/zilina/spaces/catalog/endpoints/catalog-write.yaml
 zilina-policy-catalog-portal-write.yaml: projects/zilina/spaces/catalog/policies/catalog-portal-write.yaml
 zilina-policy-catalog-public-read.yaml: projects/zilina/spaces/catalog/policies/catalog-public-read.yaml

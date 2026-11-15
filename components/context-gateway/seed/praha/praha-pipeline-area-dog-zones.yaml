@@ -12,7 +12,7 @@ spec:
   schedule: '50 2 * * 5'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-area-dog-zones }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: PointOfInterest, mode: upsert }
   # 7050359 bytes on 2026-10-25.
   quotas: { maxMemoryMb: 384, cpuMillicores: 100 }

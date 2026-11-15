@@ -13,6 +13,6 @@ spec:
   period: 5m
   source:
     dataSourceRef: { kind: DataSource, name: golemio-shared-cars }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: Vehicle, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

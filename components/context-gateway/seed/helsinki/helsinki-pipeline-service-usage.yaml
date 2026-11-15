@@ -16,6 +16,6 @@ spec:
   schedule: '50 5 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-web-analytics-sites }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: KeyPerformanceIndicator, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

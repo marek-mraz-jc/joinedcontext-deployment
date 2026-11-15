@@ -575,7 +575,7 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         assert pipeline["spec"]["output"]["type"] == kind
         # The domain is the organization's, rendered when the repository is loaded (CC-74).
-        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
         # Every pipeline states what it may use on the one node (Development/12 §4).
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
         assert datasource["spec"]["http"]["url"].startswith("https://")
