@@ -26,7 +26,7 @@ spec:
             period: so3801rr_rok
             area: nuts14
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-so:susr-so
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-so:susr-so-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

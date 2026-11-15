@@ -17,6 +17,6 @@ spec:
   schedule: '23 3 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: osm-overpass }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: PointOfInterest, mode: replace }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

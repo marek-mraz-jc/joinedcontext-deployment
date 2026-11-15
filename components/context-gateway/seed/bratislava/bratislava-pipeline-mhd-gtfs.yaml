@@ -12,7 +12,7 @@ spec:
   schedule: '45 3 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: dpb-gtfs }
-  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava-zapis
   output: { type: GtfsStop, mode: upsert }
   # 111 kB of CSV at most per message. Measured in the runner's Bento over the 22 Oct 2026 zip
   # (T-5766): one run of the three members is killed at 64 MiB and passes at 96 MiB.

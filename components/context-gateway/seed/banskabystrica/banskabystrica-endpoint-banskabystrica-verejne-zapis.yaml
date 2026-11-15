@@ -1,0 +1,35 @@
+# The write door of banskabystrica-verejne (T-6980, EP-187): an open-data Endpoint is read-only, so the
+# writes banskabystrica-verejne served move here. The audience keeps out anyone outside the organization;
+# people read the data through the public Endpoint banskabystrica-verejne.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: banskabystrica-verejne-zapis
+  namespace: banskabystrica
+  title: { sk: 'Banská Bystrica — verejné údaje: zápis', en: 'Banská Bystrica, open data: writes' }
+  description:
+    sk: Interný vstup, cez ktorý sa zapisujú údaje; čítajú sa cez verejný Endpoint banskabystrica-verejne.
+    en: The internal door the data is written through; people read it through the public Endpoint banskabystrica-verejne.
+spec:
+  contextSpaceRef: banskabystrica-verejne
+  # The Policies this Endpoint evaluates: the ones the open-data Endpoint served before (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-data-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-mapa-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-ovzdusie-1
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-ovzdusie-1-history
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:app-banskabystrica-skoly-1-viewer
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:kataster-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:nabijanie-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:pocasie-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:podujatia-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:skoly-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-osm-account
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-osm-delete
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-pipelines-write
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-read
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:verejne-read-history
+    - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:zdravie-read
+  slug: uneghfimtggnrpflgjsvar7cvrdsc4fw
+  audience: organization
+  enabledRepresentations: [ngsi-ld]

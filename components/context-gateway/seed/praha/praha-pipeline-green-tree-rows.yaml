@@ -12,6 +12,6 @@ spec:
   schedule: '25 3 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-green-tree-rows }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: Tree, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

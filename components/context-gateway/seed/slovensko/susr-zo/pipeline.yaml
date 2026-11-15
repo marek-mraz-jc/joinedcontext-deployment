@@ -28,7 +28,7 @@ spec:
             unit: zo0001ms_mj
             keys: [zo0001ms_mes]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zo:susr-zo
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-zo:susr-zo-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

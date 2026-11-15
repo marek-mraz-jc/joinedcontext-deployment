@@ -28,7 +28,7 @@ spec:
             unit: pm0048ms_unit
             keys: [pm0048ms_month, pm0048ms_specu, pm0048ms_nace2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pm-ceny:susr-pm-ceny
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pm-ceny:susr-pm-ceny-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -12,6 +12,6 @@ spec:
   schedule: '42 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: eea-sk0263a-pm25 }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: AirQualityObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

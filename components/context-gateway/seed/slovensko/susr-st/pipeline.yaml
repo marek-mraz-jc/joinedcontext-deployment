@@ -27,7 +27,7 @@ spec:
             indicator: st2022qs_ukaz1
             keys: [st2022qs_stv, st2022qs_ukaz2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-st:susr-st
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-st:susr-st-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

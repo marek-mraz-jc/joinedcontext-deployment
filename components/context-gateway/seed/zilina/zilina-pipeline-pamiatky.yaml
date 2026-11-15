@@ -12,6 +12,6 @@ spec:
   schedule: '41 3 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: mksr-pamiatky-zsk }
-  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne-zapis
   output: { type: PointOfInterest, mode: upsert }
   quotas: { maxMemoryMb: 384, cpuMillicores: 200 }

@@ -17,6 +17,6 @@ spec:
   schedule: '0 5 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: bratislava-hub }
-  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava-zapis
   output: { type: KeyPerformanceIndicator, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

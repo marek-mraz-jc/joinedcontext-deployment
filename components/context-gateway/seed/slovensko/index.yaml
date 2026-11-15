@@ -11,6 +11,7 @@ ovzdusie-sk.v1.context.jsonld: projects/slovensko/spaces/ovzdusie-sk/datamodels/
 ovzdusie-sk.v1.example.jsonld: projects/slovensko/spaces/ovzdusie-sk/datamodels/ovzdusie-sk.v1.example.jsonld
 ovzdusie-sk.v1.md: projects/slovensko/spaces/ovzdusie-sk/datamodels/ovzdusie-sk.v1.md
 slovensko-endpoint-ovzdusie.yaml: projects/slovensko/spaces/ovzdusie-sk/endpoints/ovzdusie-sk.yaml
+slovensko-endpoint-ovzdusie-sk-zapis.yaml: projects/slovensko/spaces/ovzdusie-sk/endpoints/ovzdusie-sk-zapis.yaml
 slovensko-policy-pipelines-write.yaml: projects/slovensko/spaces/ovzdusie-sk/policies/pipelines-write.yaml
 slovensko-policy-public-read.yaml: projects/slovensko/spaces/ovzdusie-sk/policies/public-read.yaml
 slovensko-serviceaccount-pipelines.yaml: projects/slovensko/access/serviceaccounts/pipelines.yaml
@@ -25,6 +26,7 @@ slovensko-space-catalog.yaml: projects/slovensko/spaces/catalog/space.yaml
 slovensko-datamodel-catalog.yaml: projects/slovensko/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/slovensko/spaces/catalog/datamodels/catalog.linkml.yaml
 slovensko-endpoint-catalog.yaml: projects/slovensko/spaces/catalog/endpoints/catalog.yaml
+slovensko-endpoint-catalog-write.yaml: projects/slovensko/spaces/catalog/endpoints/catalog-write.yaml
 slovensko-policy-catalog-public-read.yaml: projects/slovensko/spaces/catalog/policies/catalog-public-read.yaml
 slovensko-policy-catalog-portal-write.yaml: projects/slovensko/spaces/catalog/policies/catalog-portal-write.yaml
 # ŠÚ SR's DATAcube, 44 public Endpoints (T-4402): written by scripts/open-data/datacube.py.
@@ -36,6 +38,7 @@ susr-as/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-as/statistical-observation.v1.md: projects/slovensko/spaces/susr-as/datamodels/statistical-observation.v1.md
 susr-as/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-as/datamodels/statistical-observation.v1.example.jsonld
 susr-as/endpoint.yaml: projects/slovensko/spaces/susr-as/endpoints/susr-as.yaml
+susr-as/endpoint-zapis.yaml: projects/slovensko/spaces/susr-as/endpoints/susr-as-zapis.yaml
 susr-as/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-as/policies/susr-as-pipelines-write.yaml
 susr-as/policy-public-read.yaml: projects/slovensko/spaces/susr-as/policies/susr-as-public-read.yaml
 susr-as/pipeline.yaml: projects/slovensko/pipelines/susr-as/pipeline.yaml
@@ -48,6 +51,7 @@ susr-cr/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-cr/statistical-observation.v1.md: projects/slovensko/spaces/susr-cr/datamodels/statistical-observation.v1.md
 susr-cr/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-cr/datamodels/statistical-observation.v1.example.jsonld
 susr-cr/endpoint.yaml: projects/slovensko/spaces/susr-cr/endpoints/susr-cr.yaml
+susr-cr/endpoint-zapis.yaml: projects/slovensko/spaces/susr-cr/endpoints/susr-cr-zapis.yaml
 susr-cr/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-cr/policies/susr-cr-pipelines-write.yaml
 susr-cr/policy-public-read.yaml: projects/slovensko/spaces/susr-cr/policies/susr-cr-public-read.yaml
 susr-cr/pipeline.yaml: projects/slovensko/pipelines/susr-cr/pipeline.yaml
@@ -60,6 +64,7 @@ susr-cr-navstevnici/statistical-observation.v1.context.jsonld: projects/slovensk
 susr-cr-navstevnici/statistical-observation.v1.md: projects/slovensko/spaces/susr-cr-navstevnici/datamodels/statistical-observation.v1.md
 susr-cr-navstevnici/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-cr-navstevnici/datamodels/statistical-observation.v1.example.jsonld
 susr-cr-navstevnici/endpoint.yaml: projects/slovensko/spaces/susr-cr-navstevnici/endpoints/susr-cr-navstevnici.yaml
+susr-cr-navstevnici/endpoint-zapis.yaml: projects/slovensko/spaces/susr-cr-navstevnici/endpoints/susr-cr-navstevnici-zapis.yaml
 susr-cr-navstevnici/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-cr-navstevnici/policies/susr-cr-navstevnici-pipelines-write.yaml
 susr-cr-navstevnici/policy-public-read.yaml: projects/slovensko/spaces/susr-cr-navstevnici/policies/susr-cr-navstevnici-public-read.yaml
 susr-cr-navstevnici/pipeline.yaml: projects/slovensko/pipelines/susr-cr-navstevnici/pipeline.yaml
@@ -72,6 +77,7 @@ susr-do/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-do/statistical-observation.v1.md: projects/slovensko/spaces/susr-do/datamodels/statistical-observation.v1.md
 susr-do/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-do/datamodels/statistical-observation.v1.example.jsonld
 susr-do/endpoint.yaml: projects/slovensko/spaces/susr-do/endpoints/susr-do.yaml
+susr-do/endpoint-zapis.yaml: projects/slovensko/spaces/susr-do/endpoints/susr-do-zapis.yaml
 susr-do/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-do/policies/susr-do-pipelines-write.yaml
 susr-do/policy-public-read.yaml: projects/slovensko/spaces/susr-do/policies/susr-do-public-read.yaml
 susr-do/pipeline.yaml: projects/slovensko/pipelines/susr-do/pipeline.yaml
@@ -84,6 +90,7 @@ susr-do-preprava/statistical-observation.v1.context.jsonld: projects/slovensko/s
 susr-do-preprava/statistical-observation.v1.md: projects/slovensko/spaces/susr-do-preprava/datamodels/statistical-observation.v1.md
 susr-do-preprava/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-do-preprava/datamodels/statistical-observation.v1.example.jsonld
 susr-do-preprava/endpoint.yaml: projects/slovensko/spaces/susr-do-preprava/endpoints/susr-do-preprava.yaml
+susr-do-preprava/endpoint-zapis.yaml: projects/slovensko/spaces/susr-do-preprava/endpoints/susr-do-preprava-zapis.yaml
 susr-do-preprava/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-do-preprava/policies/susr-do-preprava-pipelines-write.yaml
 susr-do-preprava/policy-public-read.yaml: projects/slovensko/spaces/susr-do-preprava/policies/susr-do-preprava-public-read.yaml
 susr-do-preprava/pipeline.yaml: projects/slovensko/pipelines/susr-do-preprava/pipeline.yaml
@@ -96,6 +103,7 @@ susr-en/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-en/statistical-observation.v1.md: projects/slovensko/spaces/susr-en/datamodels/statistical-observation.v1.md
 susr-en/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-en/datamodels/statistical-observation.v1.example.jsonld
 susr-en/endpoint.yaml: projects/slovensko/spaces/susr-en/endpoints/susr-en.yaml
+susr-en/endpoint-zapis.yaml: projects/slovensko/spaces/susr-en/endpoints/susr-en-zapis.yaml
 susr-en/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-en/policies/susr-en-pipelines-write.yaml
 susr-en/policy-public-read.yaml: projects/slovensko/spaces/susr-en/policies/susr-en-public-read.yaml
 susr-en/pipeline.yaml: projects/slovensko/pipelines/susr-en/pipeline.yaml
@@ -108,6 +116,7 @@ susr-ik/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ik/statistical-observation.v1.md: projects/slovensko/spaces/susr-ik/datamodels/statistical-observation.v1.md
 susr-ik/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ik/datamodels/statistical-observation.v1.example.jsonld
 susr-ik/endpoint.yaml: projects/slovensko/spaces/susr-ik/endpoints/susr-ik.yaml
+susr-ik/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ik/endpoints/susr-ik-zapis.yaml
 susr-ik/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ik/policies/susr-ik-pipelines-write.yaml
 susr-ik/policy-public-read.yaml: projects/slovensko/spaces/susr-ik/policies/susr-ik-public-read.yaml
 susr-ik/pipeline.yaml: projects/slovensko/pipelines/susr-ik/pipeline.yaml
@@ -120,6 +129,7 @@ susr-kp/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-kp/statistical-observation.v1.md: projects/slovensko/spaces/susr-kp/datamodels/statistical-observation.v1.md
 susr-kp/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-kp/datamodels/statistical-observation.v1.example.jsonld
 susr-kp/endpoint.yaml: projects/slovensko/spaces/susr-kp/endpoints/susr-kp.yaml
+susr-kp/endpoint-zapis.yaml: projects/slovensko/spaces/susr-kp/endpoints/susr-kp-zapis.yaml
 susr-kp/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-kp/policies/susr-kp-pipelines-write.yaml
 susr-kp/policy-public-read.yaml: projects/slovensko/spaces/susr-kp/policies/susr-kp-public-read.yaml
 susr-kp/pipeline.yaml: projects/slovensko/pipelines/susr-kp/pipeline.yaml
@@ -132,6 +142,7 @@ susr-kp-priemysel/statistical-observation.v1.context.jsonld: projects/slovensko/
 susr-kp-priemysel/statistical-observation.v1.md: projects/slovensko/spaces/susr-kp-priemysel/datamodels/statistical-observation.v1.md
 susr-kp-priemysel/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-kp-priemysel/datamodels/statistical-observation.v1.example.jsonld
 susr-kp-priemysel/endpoint.yaml: projects/slovensko/spaces/susr-kp-priemysel/endpoints/susr-kp-priemysel.yaml
+susr-kp-priemysel/endpoint-zapis.yaml: projects/slovensko/spaces/susr-kp-priemysel/endpoints/susr-kp-priemysel-zapis.yaml
 susr-kp-priemysel/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-kp-priemysel/policies/susr-kp-priemysel-pipelines-write.yaml
 susr-kp-priemysel/policy-public-read.yaml: projects/slovensko/spaces/susr-kp-priemysel/policies/susr-kp-priemysel-public-read.yaml
 susr-kp-priemysel/pipeline.yaml: projects/slovensko/pipelines/susr-kp-priemysel/pipeline.yaml
@@ -144,6 +155,7 @@ susr-ku/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ku/statistical-observation.v1.md: projects/slovensko/spaces/susr-ku/datamodels/statistical-observation.v1.md
 susr-ku/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ku/datamodels/statistical-observation.v1.example.jsonld
 susr-ku/endpoint.yaml: projects/slovensko/spaces/susr-ku/endpoints/susr-ku.yaml
+susr-ku/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ku/endpoints/susr-ku-zapis.yaml
 susr-ku/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ku/policies/susr-ku-pipelines-write.yaml
 susr-ku/policy-public-read.yaml: projects/slovensko/spaces/susr-ku/policies/susr-ku-public-read.yaml
 susr-ku/pipeline.yaml: projects/slovensko/pipelines/susr-ku/pipeline.yaml
@@ -156,6 +168,7 @@ susr-kz/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-kz/statistical-observation.v1.md: projects/slovensko/spaces/susr-kz/datamodels/statistical-observation.v1.md
 susr-kz/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-kz/datamodels/statistical-observation.v1.example.jsonld
 susr-kz/endpoint.yaml: projects/slovensko/spaces/susr-kz/endpoints/susr-kz.yaml
+susr-kz/endpoint-zapis.yaml: projects/slovensko/spaces/susr-kz/endpoints/susr-kz-zapis.yaml
 susr-kz/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-kz/policies/susr-kz-pipelines-write.yaml
 susr-kz/policy-public-read.yaml: projects/slovensko/spaces/susr-kz/policies/susr-kz-public-read.yaml
 susr-kz/pipeline.yaml: projects/slovensko/pipelines/susr-kz/pipeline.yaml
@@ -168,6 +181,7 @@ susr-kz-zdravie/statistical-observation.v1.context.jsonld: projects/slovensko/sp
 susr-kz-zdravie/statistical-observation.v1.md: projects/slovensko/spaces/susr-kz-zdravie/datamodels/statistical-observation.v1.md
 susr-kz-zdravie/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-kz-zdravie/datamodels/statistical-observation.v1.example.jsonld
 susr-kz-zdravie/endpoint.yaml: projects/slovensko/spaces/susr-kz-zdravie/endpoints/susr-kz-zdravie.yaml
+susr-kz-zdravie/endpoint-zapis.yaml: projects/slovensko/spaces/susr-kz-zdravie/endpoints/susr-kz-zdravie-zapis.yaml
 susr-kz-zdravie/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-kz-zdravie/policies/susr-kz-zdravie-pipelines-write.yaml
 susr-kz-zdravie/policy-public-read.yaml: projects/slovensko/spaces/susr-kz-zdravie/policies/susr-kz-zdravie-public-read.yaml
 susr-kz-zdravie/pipeline.yaml: projects/slovensko/pipelines/susr-kz-zdravie/pipeline.yaml
@@ -180,6 +194,7 @@ susr-np/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-np/statistical-observation.v1.md: projects/slovensko/spaces/susr-np/datamodels/statistical-observation.v1.md
 susr-np/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-np/datamodels/statistical-observation.v1.example.jsonld
 susr-np/endpoint.yaml: projects/slovensko/spaces/susr-np/endpoints/susr-np.yaml
+susr-np/endpoint-zapis.yaml: projects/slovensko/spaces/susr-np/endpoints/susr-np-zapis.yaml
 susr-np/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-np/policies/susr-np-pipelines-write.yaml
 susr-np/policy-public-read.yaml: projects/slovensko/spaces/susr-np/policies/susr-np-public-read.yaml
 susr-np/pipeline.yaml: projects/slovensko/pipelines/susr-np/pipeline.yaml
@@ -192,6 +207,7 @@ susr-nu/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-nu/statistical-observation.v1.md: projects/slovensko/spaces/susr-nu/datamodels/statistical-observation.v1.md
 susr-nu/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-nu/datamodels/statistical-observation.v1.example.jsonld
 susr-nu/endpoint.yaml: projects/slovensko/spaces/susr-nu/endpoints/susr-nu.yaml
+susr-nu/endpoint-zapis.yaml: projects/slovensko/spaces/susr-nu/endpoints/susr-nu-zapis.yaml
 susr-nu/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-nu/policies/susr-nu-pipelines-write.yaml
 susr-nu/policy-public-read.yaml: projects/slovensko/spaces/susr-nu/policies/susr-nu-public-read.yaml
 susr-nu/pipeline.yaml: projects/slovensko/pipelines/susr-nu/pipeline.yaml
@@ -204,6 +220,7 @@ susr-nu-odvetvia/statistical-observation.v1.context.jsonld: projects/slovensko/s
 susr-nu-odvetvia/statistical-observation.v1.md: projects/slovensko/spaces/susr-nu-odvetvia/datamodels/statistical-observation.v1.md
 susr-nu-odvetvia/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-nu-odvetvia/datamodels/statistical-observation.v1.example.jsonld
 susr-nu-odvetvia/endpoint.yaml: projects/slovensko/spaces/susr-nu-odvetvia/endpoints/susr-nu-odvetvia.yaml
+susr-nu-odvetvia/endpoint-zapis.yaml: projects/slovensko/spaces/susr-nu-odvetvia/endpoints/susr-nu-odvetvia-zapis.yaml
 susr-nu-odvetvia/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-nu-odvetvia/policies/susr-nu-odvetvia-pipelines-write.yaml
 susr-nu-odvetvia/policy-public-read.yaml: projects/slovensko/spaces/susr-nu-odvetvia/policies/susr-nu-odvetvia-public-read.yaml
 susr-nu-odvetvia/pipeline.yaml: projects/slovensko/pipelines/susr-nu-odvetvia/pipeline.yaml
@@ -216,6 +233,7 @@ susr-ob/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ob/statistical-observation.v1.md: projects/slovensko/spaces/susr-ob/datamodels/statistical-observation.v1.md
 susr-ob/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ob/datamodels/statistical-observation.v1.example.jsonld
 susr-ob/endpoint.yaml: projects/slovensko/spaces/susr-ob/endpoints/susr-ob.yaml
+susr-ob/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ob/endpoints/susr-ob-zapis.yaml
 susr-ob/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ob/policies/susr-ob-pipelines-write.yaml
 susr-ob/policy-public-read.yaml: projects/slovensko/spaces/susr-ob/policies/susr-ob-public-read.yaml
 susr-ob/pipeline.yaml: projects/slovensko/pipelines/susr-ob/pipeline.yaml
@@ -228,6 +246,7 @@ susr-od/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-od/statistical-observation.v1.md: projects/slovensko/spaces/susr-od/datamodels/statistical-observation.v1.md
 susr-od/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-od/datamodels/statistical-observation.v1.example.jsonld
 susr-od/endpoint.yaml: projects/slovensko/spaces/susr-od/endpoints/susr-od.yaml
+susr-od/endpoint-zapis.yaml: projects/slovensko/spaces/susr-od/endpoints/susr-od-zapis.yaml
 susr-od/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-od/policies/susr-od-pipelines-write.yaml
 susr-od/policy-public-read.yaml: projects/slovensko/spaces/susr-od/policies/susr-od-public-read.yaml
 susr-od/pipeline.yaml: projects/slovensko/pipelines/susr-od/pipeline.yaml
@@ -240,6 +259,7 @@ susr-og/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-og/statistical-observation.v1.md: projects/slovensko/spaces/susr-og/datamodels/statistical-observation.v1.md
 susr-og/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-og/datamodels/statistical-observation.v1.example.jsonld
 susr-og/endpoint.yaml: projects/slovensko/spaces/susr-og/endpoints/susr-og.yaml
+susr-og/endpoint-zapis.yaml: projects/slovensko/spaces/susr-og/endpoints/susr-og-zapis.yaml
 susr-og/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-og/policies/susr-og-pipelines-write.yaml
 susr-og/policy-public-read.yaml: projects/slovensko/spaces/susr-og/policies/susr-og-public-read.yaml
 susr-og/pipeline.yaml: projects/slovensko/pipelines/susr-og/pipeline.yaml
@@ -252,6 +272,7 @@ susr-om/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-om/statistical-observation.v1.md: projects/slovensko/spaces/susr-om/datamodels/statistical-observation.v1.md
 susr-om/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-om/datamodels/statistical-observation.v1.example.jsonld
 susr-om/endpoint.yaml: projects/slovensko/spaces/susr-om/endpoints/susr-om.yaml
+susr-om/endpoint-zapis.yaml: projects/slovensko/spaces/susr-om/endpoints/susr-om-zapis.yaml
 susr-om/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-om/policies/susr-om-pipelines-write.yaml
 susr-om/policy-public-read.yaml: projects/slovensko/spaces/susr-om/policies/susr-om-public-read.yaml
 susr-om/pipeline.yaml: projects/slovensko/pipelines/susr-om/pipeline.yaml
@@ -264,6 +285,7 @@ susr-om-pohyb/statistical-observation.v1.context.jsonld: projects/slovensko/spac
 susr-om-pohyb/statistical-observation.v1.md: projects/slovensko/spaces/susr-om-pohyb/datamodels/statistical-observation.v1.md
 susr-om-pohyb/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-om-pohyb/datamodels/statistical-observation.v1.example.jsonld
 susr-om-pohyb/endpoint.yaml: projects/slovensko/spaces/susr-om-pohyb/endpoints/susr-om-pohyb.yaml
+susr-om-pohyb/endpoint-zapis.yaml: projects/slovensko/spaces/susr-om-pohyb/endpoints/susr-om-pohyb-zapis.yaml
 susr-om-pohyb/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-om-pohyb/policies/susr-om-pohyb-pipelines-write.yaml
 susr-om-pohyb/policy-public-read.yaml: projects/slovensko/spaces/susr-om-pohyb/policies/susr-om-pohyb-public-read.yaml
 susr-om-pohyb/pipeline.yaml: projects/slovensko/pipelines/susr-om-pohyb/pipeline.yaml
@@ -291,6 +313,7 @@ susr-pl/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-pl/statistical-observation.v1.md: projects/slovensko/spaces/susr-pl/datamodels/statistical-observation.v1.md
 susr-pl/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-pl/datamodels/statistical-observation.v1.example.jsonld
 susr-pl/endpoint.yaml: projects/slovensko/spaces/susr-pl/endpoints/susr-pl.yaml
+susr-pl/endpoint-zapis.yaml: projects/slovensko/spaces/susr-pl/endpoints/susr-pl-zapis.yaml
 susr-pl/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-pl/policies/susr-pl-pipelines-write.yaml
 susr-pl/policy-public-read.yaml: projects/slovensko/spaces/susr-pl/policies/susr-pl-public-read.yaml
 susr-pl/pipeline.yaml: projects/slovensko/pipelines/susr-pl/pipeline.yaml
@@ -303,6 +326,7 @@ susr-pm/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-pm/statistical-observation.v1.md: projects/slovensko/spaces/susr-pm/datamodels/statistical-observation.v1.md
 susr-pm/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-pm/datamodels/statistical-observation.v1.example.jsonld
 susr-pm/endpoint.yaml: projects/slovensko/spaces/susr-pm/endpoints/susr-pm.yaml
+susr-pm/endpoint-zapis.yaml: projects/slovensko/spaces/susr-pm/endpoints/susr-pm-zapis.yaml
 susr-pm/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-pm/policies/susr-pm-pipelines-write.yaml
 susr-pm/policy-public-read.yaml: projects/slovensko/spaces/susr-pm/policies/susr-pm-public-read.yaml
 susr-pm/pipeline.yaml: projects/slovensko/pipelines/susr-pm/pipeline.yaml
@@ -315,6 +339,7 @@ susr-pm-ceny/statistical-observation.v1.context.jsonld: projects/slovensko/space
 susr-pm-ceny/statistical-observation.v1.md: projects/slovensko/spaces/susr-pm-ceny/datamodels/statistical-observation.v1.md
 susr-pm-ceny/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-pm-ceny/datamodels/statistical-observation.v1.example.jsonld
 susr-pm-ceny/endpoint.yaml: projects/slovensko/spaces/susr-pm-ceny/endpoints/susr-pm-ceny.yaml
+susr-pm-ceny/endpoint-zapis.yaml: projects/slovensko/spaces/susr-pm-ceny/endpoints/susr-pm-ceny-zapis.yaml
 susr-pm-ceny/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-pm-ceny/policies/susr-pm-ceny-pipelines-write.yaml
 susr-pm-ceny/policy-public-read.yaml: projects/slovensko/spaces/susr-pm-ceny/policies/susr-pm-ceny-public-read.yaml
 susr-pm-ceny/pipeline.yaml: projects/slovensko/pipelines/susr-pm-ceny/pipeline.yaml
@@ -327,6 +352,7 @@ susr-pr/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-pr/statistical-observation.v1.md: projects/slovensko/spaces/susr-pr/datamodels/statistical-observation.v1.md
 susr-pr/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-pr/datamodels/statistical-observation.v1.example.jsonld
 susr-pr/endpoint.yaml: projects/slovensko/spaces/susr-pr/endpoints/susr-pr.yaml
+susr-pr/endpoint-zapis.yaml: projects/slovensko/spaces/susr-pr/endpoints/susr-pr-zapis.yaml
 susr-pr/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-pr/policies/susr-pr-pipelines-write.yaml
 susr-pr/policy-public-read.yaml: projects/slovensko/spaces/susr-pr/policies/susr-pr-public-read.yaml
 susr-pr/pipeline.yaml: projects/slovensko/pipelines/susr-pr/pipeline.yaml
@@ -339,6 +365,7 @@ susr-pr-mzdy/statistical-observation.v1.context.jsonld: projects/slovensko/space
 susr-pr-mzdy/statistical-observation.v1.md: projects/slovensko/spaces/susr-pr-mzdy/datamodels/statistical-observation.v1.md
 susr-pr-mzdy/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-pr-mzdy/datamodels/statistical-observation.v1.example.jsonld
 susr-pr-mzdy/endpoint.yaml: projects/slovensko/spaces/susr-pr-mzdy/endpoints/susr-pr-mzdy.yaml
+susr-pr-mzdy/endpoint-zapis.yaml: projects/slovensko/spaces/susr-pr-mzdy/endpoints/susr-pr-mzdy-zapis.yaml
 susr-pr-mzdy/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-pr-mzdy/policies/susr-pr-mzdy-pipelines-write.yaml
 susr-pr-mzdy/policy-public-read.yaml: projects/slovensko/spaces/susr-pr-mzdy/policies/susr-pr-mzdy-public-read.yaml
 susr-pr-mzdy/pipeline.yaml: projects/slovensko/pipelines/susr-pr-mzdy/pipeline.yaml
@@ -351,6 +378,7 @@ susr-ps/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ps/statistical-observation.v1.md: projects/slovensko/spaces/susr-ps/datamodels/statistical-observation.v1.md
 susr-ps/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ps/datamodels/statistical-observation.v1.example.jsonld
 susr-ps/endpoint.yaml: projects/slovensko/spaces/susr-ps/endpoints/susr-ps.yaml
+susr-ps/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ps/endpoints/susr-ps-zapis.yaml
 susr-ps/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ps/policies/susr-ps-pipelines-write.yaml
 susr-ps/policy-public-read.yaml: projects/slovensko/spaces/susr-ps/policies/susr-ps-public-read.yaml
 susr-ps/pipeline.yaml: projects/slovensko/pipelines/susr-ps/pipeline.yaml
@@ -363,6 +391,7 @@ susr-ps-vydavky/statistical-observation.v1.context.jsonld: projects/slovensko/sp
 susr-ps-vydavky/statistical-observation.v1.md: projects/slovensko/spaces/susr-ps-vydavky/datamodels/statistical-observation.v1.md
 susr-ps-vydavky/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ps-vydavky/datamodels/statistical-observation.v1.example.jsonld
 susr-ps-vydavky/endpoint.yaml: projects/slovensko/spaces/susr-ps-vydavky/endpoints/susr-ps-vydavky.yaml
+susr-ps-vydavky/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ps-vydavky/endpoints/susr-ps-vydavky-zapis.yaml
 susr-ps-vydavky/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ps-vydavky/policies/susr-ps-vydavky-pipelines-write.yaml
 susr-ps-vydavky/policy-public-read.yaml: projects/slovensko/spaces/susr-ps-vydavky/policies/susr-ps-vydavky-public-read.yaml
 susr-ps-vydavky/pipeline.yaml: projects/slovensko/pipelines/susr-ps-vydavky/pipeline.yaml
@@ -375,6 +404,7 @@ susr-ra/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ra/statistical-observation.v1.md: projects/slovensko/spaces/susr-ra/datamodels/statistical-observation.v1.md
 susr-ra/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ra/datamodels/statistical-observation.v1.example.jsonld
 susr-ra/endpoint.yaml: projects/slovensko/spaces/susr-ra/endpoints/susr-ra.yaml
+susr-ra/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ra/endpoints/susr-ra-zapis.yaml
 susr-ra/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ra/policies/susr-ra-pipelines-write.yaml
 susr-ra/policy-public-read.yaml: projects/slovensko/spaces/susr-ra/policies/susr-ra-public-read.yaml
 susr-ra/pipeline.yaml: projects/slovensko/pipelines/susr-ra/pipeline.yaml
@@ -387,6 +417,7 @@ susr-sk/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-sk/statistical-observation.v1.md: projects/slovensko/spaces/susr-sk/datamodels/statistical-observation.v1.md
 susr-sk/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-sk/datamodels/statistical-observation.v1.example.jsonld
 susr-sk/endpoint.yaml: projects/slovensko/spaces/susr-sk/endpoints/susr-sk.yaml
+susr-sk/endpoint-zapis.yaml: projects/slovensko/spaces/susr-sk/endpoints/susr-sk-zapis.yaml
 susr-sk/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-sk/policies/susr-sk-pipelines-write.yaml
 susr-sk/policy-public-read.yaml: projects/slovensko/spaces/susr-sk/policies/susr-sk-public-read.yaml
 susr-sk/pipeline.yaml: projects/slovensko/pipelines/susr-sk/pipeline.yaml
@@ -399,6 +430,7 @@ susr-so/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-so/statistical-observation.v1.md: projects/slovensko/spaces/susr-so/datamodels/statistical-observation.v1.md
 susr-so/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-so/datamodels/statistical-observation.v1.example.jsonld
 susr-so/endpoint.yaml: projects/slovensko/spaces/susr-so/endpoints/susr-so.yaml
+susr-so/endpoint-zapis.yaml: projects/slovensko/spaces/susr-so/endpoints/susr-so-zapis.yaml
 susr-so/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-so/policies/susr-so-pipelines-write.yaml
 susr-so/policy-public-read.yaml: projects/slovensko/spaces/susr-so/policies/susr-so-public-read.yaml
 susr-so/pipeline.yaml: projects/slovensko/pipelines/susr-so/pipeline.yaml
@@ -411,6 +443,7 @@ susr-sp/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-sp/statistical-observation.v1.md: projects/slovensko/spaces/susr-sp/datamodels/statistical-observation.v1.md
 susr-sp/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-sp/datamodels/statistical-observation.v1.example.jsonld
 susr-sp/endpoint.yaml: projects/slovensko/spaces/susr-sp/endpoints/susr-sp.yaml
+susr-sp/endpoint-zapis.yaml: projects/slovensko/spaces/susr-sp/endpoints/susr-sp-zapis.yaml
 susr-sp/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-sp/policies/susr-sp-pipelines-write.yaml
 susr-sp/policy-public-read.yaml: projects/slovensko/spaces/susr-sp/policies/susr-sp-public-read.yaml
 susr-sp/pipeline.yaml: projects/slovensko/pipelines/susr-sp/pipeline.yaml
@@ -423,6 +456,7 @@ susr-sp-jadrova/statistical-observation.v1.context.jsonld: projects/slovensko/sp
 susr-sp-jadrova/statistical-observation.v1.md: projects/slovensko/spaces/susr-sp-jadrova/datamodels/statistical-observation.v1.md
 susr-sp-jadrova/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-sp-jadrova/datamodels/statistical-observation.v1.example.jsonld
 susr-sp-jadrova/endpoint.yaml: projects/slovensko/spaces/susr-sp-jadrova/endpoints/susr-sp-jadrova.yaml
+susr-sp-jadrova/endpoint-zapis.yaml: projects/slovensko/spaces/susr-sp-jadrova/endpoints/susr-sp-jadrova-zapis.yaml
 susr-sp-jadrova/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-sp-jadrova/policies/susr-sp-jadrova-pipelines-write.yaml
 susr-sp-jadrova/policy-public-read.yaml: projects/slovensko/spaces/susr-sp-jadrova/policies/susr-sp-jadrova-public-read.yaml
 susr-sp-jadrova/pipeline.yaml: projects/slovensko/pipelines/susr-sp-jadrova/pipeline.yaml
@@ -435,6 +469,7 @@ susr-st/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-st/statistical-observation.v1.md: projects/slovensko/spaces/susr-st/datamodels/statistical-observation.v1.md
 susr-st/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-st/datamodels/statistical-observation.v1.example.jsonld
 susr-st/endpoint.yaml: projects/slovensko/spaces/susr-st/endpoints/susr-st.yaml
+susr-st/endpoint-zapis.yaml: projects/slovensko/spaces/susr-st/endpoints/susr-st-zapis.yaml
 susr-st/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-st/policies/susr-st-pipelines-write.yaml
 susr-st/policy-public-read.yaml: projects/slovensko/spaces/susr-st/policies/susr-st-public-read.yaml
 susr-st/pipeline.yaml: projects/slovensko/pipelines/susr-st/pipeline.yaml
@@ -447,6 +482,7 @@ susr-st-povolenia/statistical-observation.v1.context.jsonld: projects/slovensko/
 susr-st-povolenia/statistical-observation.v1.md: projects/slovensko/spaces/susr-st-povolenia/datamodels/statistical-observation.v1.md
 susr-st-povolenia/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-st-povolenia/datamodels/statistical-observation.v1.example.jsonld
 susr-st-povolenia/endpoint.yaml: projects/slovensko/spaces/susr-st-povolenia/endpoints/susr-st-povolenia.yaml
+susr-st-povolenia/endpoint-zapis.yaml: projects/slovensko/spaces/susr-st-povolenia/endpoints/susr-st-povolenia-zapis.yaml
 susr-st-povolenia/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-st-povolenia/policies/susr-st-povolenia-pipelines-write.yaml
 susr-st-povolenia/policy-public-read.yaml: projects/slovensko/spaces/susr-st-povolenia/policies/susr-st-povolenia-public-read.yaml
 susr-st-povolenia/pipeline.yaml: projects/slovensko/pipelines/susr-st-povolenia/pipeline.yaml
@@ -459,6 +495,7 @@ susr-sv/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-sv/statistical-observation.v1.md: projects/slovensko/spaces/susr-sv/datamodels/statistical-observation.v1.md
 susr-sv/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-sv/datamodels/statistical-observation.v1.example.jsonld
 susr-sv/endpoint.yaml: projects/slovensko/spaces/susr-sv/endpoints/susr-sv.yaml
+susr-sv/endpoint-zapis.yaml: projects/slovensko/spaces/susr-sv/endpoints/susr-sv-zapis.yaml
 susr-sv/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-sv/policies/susr-sv-pipelines-write.yaml
 susr-sv/policy-public-read.yaml: projects/slovensko/spaces/susr-sv/policies/susr-sv-public-read.yaml
 susr-sv/pipeline.yaml: projects/slovensko/pipelines/susr-sv/pipeline.yaml
@@ -471,6 +508,7 @@ susr-ts/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-ts/statistical-observation.v1.md: projects/slovensko/spaces/susr-ts/datamodels/statistical-observation.v1.md
 susr-ts/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-ts/datamodels/statistical-observation.v1.example.jsonld
 susr-ts/endpoint.yaml: projects/slovensko/spaces/susr-ts/endpoints/susr-ts.yaml
+susr-ts/endpoint-zapis.yaml: projects/slovensko/spaces/susr-ts/endpoints/susr-ts-zapis.yaml
 susr-ts/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-ts/policies/susr-ts-pipelines-write.yaml
 susr-ts/policy-public-read.yaml: projects/slovensko/spaces/susr-ts/policies/susr-ts-public-read.yaml
 susr-ts/pipeline.yaml: projects/slovensko/pipelines/susr-ts/pipeline.yaml
@@ -483,6 +521,7 @@ susr-vh/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-vh/statistical-observation.v1.md: projects/slovensko/spaces/susr-vh/datamodels/statistical-observation.v1.md
 susr-vh/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-vh/datamodels/statistical-observation.v1.example.jsonld
 susr-vh/endpoint.yaml: projects/slovensko/spaces/susr-vh/endpoints/susr-vh.yaml
+susr-vh/endpoint-zapis.yaml: projects/slovensko/spaces/susr-vh/endpoints/susr-vh-zapis.yaml
 susr-vh/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-vh/policies/susr-vh-pipelines-write.yaml
 susr-vh/policy-public-read.yaml: projects/slovensko/spaces/susr-vh/policies/susr-vh-public-read.yaml
 susr-vh/pipeline.yaml: projects/slovensko/pipelines/susr-vh/pipeline.yaml
@@ -495,6 +534,7 @@ susr-vt/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-vt/statistical-observation.v1.md: projects/slovensko/spaces/susr-vt/datamodels/statistical-observation.v1.md
 susr-vt/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-vt/datamodels/statistical-observation.v1.example.jsonld
 susr-vt/endpoint.yaml: projects/slovensko/spaces/susr-vt/endpoints/susr-vt.yaml
+susr-vt/endpoint-zapis.yaml: projects/slovensko/spaces/susr-vt/endpoints/susr-vt-zapis.yaml
 susr-vt/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-vt/policies/susr-vt-pipelines-write.yaml
 susr-vt/policy-public-read.yaml: projects/slovensko/spaces/susr-vt/policies/susr-vt-public-read.yaml
 susr-vt/pipeline.yaml: projects/slovensko/pipelines/susr-vt/pipeline.yaml
@@ -507,6 +547,7 @@ susr-vt-pracovnici/statistical-observation.v1.context.jsonld: projects/slovensko
 susr-vt-pracovnici/statistical-observation.v1.md: projects/slovensko/spaces/susr-vt-pracovnici/datamodels/statistical-observation.v1.md
 susr-vt-pracovnici/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-vt-pracovnici/datamodels/statistical-observation.v1.example.jsonld
 susr-vt-pracovnici/endpoint.yaml: projects/slovensko/spaces/susr-vt-pracovnici/endpoints/susr-vt-pracovnici.yaml
+susr-vt-pracovnici/endpoint-zapis.yaml: projects/slovensko/spaces/susr-vt-pracovnici/endpoints/susr-vt-pracovnici-zapis.yaml
 susr-vt-pracovnici/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-vt-pracovnici/policies/susr-vt-pracovnici-pipelines-write.yaml
 susr-vt-pracovnici/policy-public-read.yaml: projects/slovensko/spaces/susr-vt-pracovnici/policies/susr-vt-pracovnici-public-read.yaml
 susr-vt-pracovnici/pipeline.yaml: projects/slovensko/pipelines/susr-vt-pracovnici/pipeline.yaml
@@ -519,6 +560,7 @@ susr-zd/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-zd/statistical-observation.v1.md: projects/slovensko/spaces/susr-zd/datamodels/statistical-observation.v1.md
 susr-zd/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zd/datamodels/statistical-observation.v1.example.jsonld
 susr-zd/endpoint.yaml: projects/slovensko/spaces/susr-zd/endpoints/susr-zd.yaml
+susr-zd/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zd/endpoints/susr-zd-zapis.yaml
 susr-zd/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zd/policies/susr-zd-pipelines-write.yaml
 susr-zd/policy-public-read.yaml: projects/slovensko/spaces/susr-zd/policies/susr-zd-public-read.yaml
 susr-zd/pipeline.yaml: projects/slovensko/pipelines/susr-zd/pipeline.yaml
@@ -531,6 +573,7 @@ susr-zo/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-zo/statistical-observation.v1.md: projects/slovensko/spaces/susr-zo/datamodels/statistical-observation.v1.md
 susr-zo/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zo/datamodels/statistical-observation.v1.example.jsonld
 susr-zo/endpoint.yaml: projects/slovensko/spaces/susr-zo/endpoints/susr-zo.yaml
+susr-zo/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zo/endpoints/susr-zo-zapis.yaml
 susr-zo/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zo/policies/susr-zo-pipelines-write.yaml
 susr-zo/policy-public-read.yaml: projects/slovensko/spaces/susr-zo/policies/susr-zo-public-read.yaml
 susr-zo/pipeline.yaml: projects/slovensko/pipelines/susr-zo/pipeline.yaml
@@ -543,6 +586,7 @@ susr-zo-kapitoly/statistical-observation.v1.context.jsonld: projects/slovensko/s
 susr-zo-kapitoly/statistical-observation.v1.md: projects/slovensko/spaces/susr-zo-kapitoly/datamodels/statistical-observation.v1.md
 susr-zo-kapitoly/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zo-kapitoly/datamodels/statistical-observation.v1.example.jsonld
 susr-zo-kapitoly/endpoint.yaml: projects/slovensko/spaces/susr-zo-kapitoly/endpoints/susr-zo-kapitoly.yaml
+susr-zo-kapitoly/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zo-kapitoly/endpoints/susr-zo-kapitoly-zapis.yaml
 susr-zo-kapitoly/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zo-kapitoly/policies/susr-zo-kapitoly-pipelines-write.yaml
 susr-zo-kapitoly/policy-public-read.yaml: projects/slovensko/spaces/susr-zo-kapitoly/policies/susr-zo-kapitoly-public-read.yaml
 susr-zo-kapitoly/pipeline.yaml: projects/slovensko/pipelines/susr-zo-kapitoly/pipeline.yaml
@@ -555,6 +599,7 @@ susr-zo-krajiny/statistical-observation.v1.context.jsonld: projects/slovensko/sp
 susr-zo-krajiny/statistical-observation.v1.md: projects/slovensko/spaces/susr-zo-krajiny/datamodels/statistical-observation.v1.md
 susr-zo-krajiny/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zo-krajiny/datamodels/statistical-observation.v1.example.jsonld
 susr-zo-krajiny/endpoint.yaml: projects/slovensko/spaces/susr-zo-krajiny/endpoints/susr-zo-krajiny.yaml
+susr-zo-krajiny/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zo-krajiny/endpoints/susr-zo-krajiny-zapis.yaml
 susr-zo-krajiny/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zo-krajiny/policies/susr-zo-krajiny-pipelines-write.yaml
 susr-zo-krajiny/policy-public-read.yaml: projects/slovensko/spaces/susr-zo-krajiny/policies/susr-zo-krajiny-public-read.yaml
 susr-zo-krajiny/pipeline.yaml: projects/slovensko/pipelines/susr-zo-krajiny/pipeline.yaml
@@ -568,6 +613,7 @@ susr-zp/statistical-observation.v1.context.jsonld: projects/slovensko/spaces/sus
 susr-zp/statistical-observation.v1.md: projects/slovensko/spaces/susr-zp/datamodels/statistical-observation.v1.md
 susr-zp/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zp/datamodels/statistical-observation.v1.example.jsonld
 susr-zp/endpoint.yaml: projects/slovensko/spaces/susr-zp/endpoints/susr-zp.yaml
+susr-zp/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zp/endpoints/susr-zp-zapis.yaml
 susr-zp/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zp/policies/susr-zp-pipelines-write.yaml
 susr-zp/policy-public-read.yaml: projects/slovensko/spaces/susr-zp/policies/susr-zp-public-read.yaml
 susr-zp/pipeline.yaml: projects/slovensko/pipelines/susr-zp/pipeline.yaml
@@ -580,6 +626,7 @@ susr-zp-emisie/statistical-observation.v1.context.jsonld: projects/slovensko/spa
 susr-zp-emisie/statistical-observation.v1.md: projects/slovensko/spaces/susr-zp-emisie/datamodels/statistical-observation.v1.md
 susr-zp-emisie/statistical-observation.v1.example.jsonld: projects/slovensko/spaces/susr-zp-emisie/datamodels/statistical-observation.v1.example.jsonld
 susr-zp-emisie/endpoint.yaml: projects/slovensko/spaces/susr-zp-emisie/endpoints/susr-zp-emisie.yaml
+susr-zp-emisie/endpoint-zapis.yaml: projects/slovensko/spaces/susr-zp-emisie/endpoints/susr-zp-emisie-zapis.yaml
 susr-zp-emisie/policy-pipelines-write.yaml: projects/slovensko/spaces/susr-zp-emisie/policies/susr-zp-emisie-pipelines-write.yaml
 susr-zp-emisie/policy-public-read.yaml: projects/slovensko/spaces/susr-zp-emisie/policies/susr-zp-emisie-public-read.yaml
 susr-zp-emisie/pipeline.yaml: projects/slovensko/pipelines/susr-zp-emisie/pipeline.yaml

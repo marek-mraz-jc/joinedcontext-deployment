@@ -15,7 +15,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: od-cykloturisticke-trasy-linie
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data-zapis
   output:
     type: CycleRoute
     mode: replace

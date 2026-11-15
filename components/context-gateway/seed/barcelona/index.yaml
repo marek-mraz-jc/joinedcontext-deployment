@@ -161,4 +161,5 @@ barcelona-datasource-heritage.yaml: projects/barcelona/datasources/bcn-heritage.
 barcelona-pipeline-heritage.yaml: projects/barcelona/pipelines/heritage/pipeline.yaml
 barcelona-pipeline-heritage-bento.yaml: projects/barcelona/pipelines/heritage/bento.yaml
 barcelona-endpoint-heritage.yaml: projects/barcelona/spaces/barcelona/endpoints/heritage.yaml
+barcelona-endpoint-barcelona-write.yaml: projects/barcelona/spaces/barcelona/endpoints/barcelona-write.yaml
 barcelona-policy-public-heritage.yaml: projects/barcelona/spaces/barcelona/policies/public-heritage.yaml

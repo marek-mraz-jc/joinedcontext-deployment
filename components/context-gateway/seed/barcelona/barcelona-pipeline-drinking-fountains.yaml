@@ -14,7 +14,7 @@ spec:
   schedule: '30 5 * * 3'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-drinking-fountains }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert: a fountain the file drops leaves by its expiresAt, three weeks after its last listing.
   output: { type: PointOfInterest, mode: upsert }
   # A file under 300 kB, read whole.

@@ -12,7 +12,7 @@ spec:
   schedule: '35 2 * * 4'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-flood-sandbags }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: FloodDefence, mode: upsert }
   # 9019 bytes on 2026-10-24.
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

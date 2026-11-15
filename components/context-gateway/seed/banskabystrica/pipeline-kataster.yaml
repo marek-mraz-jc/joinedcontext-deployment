@@ -18,7 +18,7 @@ spec:
   schedule: '41 2,10,18 * * 0'
   source:
     dataSourceRef: { kind: DataSource, name: kataster-inspire }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: CadastralParcel, mode: replace }
   quotas:
     # One page of 1,000 parcels (about 1.6 MB of GeoJSON) is held at a time.

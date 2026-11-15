@@ -12,6 +12,6 @@ spec:
   schedule: '42 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: eea-sk0020a-pm25 }
-  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne-zapis
   output: { type: AirQualityObserved, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

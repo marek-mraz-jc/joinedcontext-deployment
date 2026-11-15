@@ -12,6 +12,6 @@ spec:
   schedule: '20 4 * * 2'
   source:
     dataSourceRef: { kind: DataSource, name: hel-landscape-culture }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: HeritageArea, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

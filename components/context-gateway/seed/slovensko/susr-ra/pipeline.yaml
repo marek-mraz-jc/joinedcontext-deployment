@@ -27,7 +27,7 @@ spec:
             indicator: ra1003rs_ukaz
             keys: [ra1003rs_poh]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ra:susr-ra
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-ra:susr-ra-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

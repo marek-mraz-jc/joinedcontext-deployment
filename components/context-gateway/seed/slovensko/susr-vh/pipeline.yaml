@@ -27,7 +27,7 @@ spec:
             area: nuts14
             indicator: vh3001rr_ukaz
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vh:susr-vh
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-vh:susr-vh-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -13,6 +13,6 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: bratislava-districts }
   # Every stream writes through the one door that evaluates the pipelines-write Policy.
-  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava
+  targetEndpoint: urn:ngsi-ld:Endpoint:bratislava.sk:bratislava:bratislava-zapis
   output: { type: AdministrativeArea, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

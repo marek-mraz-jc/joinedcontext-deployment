@@ -12,6 +12,6 @@ spec:
   schedule: '30 */6 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-allu-traffic-arrangements }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: CityWork, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 100 }

@@ -14,6 +14,6 @@ spec:
   period: 300s
   source:
     dataSourceRef: { kind: DataSource, name: bcn-traffic-routes }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:barcelona:barcelona-write
   output: { type: TrafficFlowObserved, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

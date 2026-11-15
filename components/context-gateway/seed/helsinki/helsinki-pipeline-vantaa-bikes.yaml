@@ -13,6 +13,6 @@ spec:
   schedule: '40 4 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hsl-vantaa-bikes }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: BikeHireDockingStation, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 100 }

@@ -12,6 +12,6 @@ spec:
   schedule: '47 4 * * 1'
   source:
     dataSourceRef: { kind: DataSource, name: minedu-mapa-skol }
-  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:banskabystrica-verejne:banskabystrica-verejne-zapis
   output: { type: Organization, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

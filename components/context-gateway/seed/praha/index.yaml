@@ -416,6 +416,7 @@ praha-space-catalog.yaml: projects/praha/spaces/catalog/space.yaml
 praha-datamodel-catalog.yaml: projects/praha/spaces/catalog/datamodels/catalog.yaml
 catalog.linkml.yaml: projects/praha/spaces/catalog/datamodels/catalog.linkml.yaml
 praha-endpoint-catalog.yaml: projects/praha/spaces/catalog/endpoints/catalog.yaml
+praha-endpoint-catalog-write.yaml: projects/praha/spaces/catalog/endpoints/catalog-write.yaml
 praha-policy-catalog-portal-write.yaml: projects/praha/spaces/catalog/policies/catalog-portal-write.yaml
 praha-policy-catalog-public-read.yaml: projects/praha/spaces/catalog/policies/catalog-public-read.yaml
 # The IPR place layers drawn as areas or lines (T-5426): cemeteries, nature trails, water areas, dog zones,
@@ -567,4 +568,5 @@ praha-pipeline-tsk-letni-1-bento.yaml: projects/praha/pipelines/tsk-letni-1/bent
 praha-endpoint-ulicni-useky.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-ulicni-useky.yaml
 praha-policy-public-ulicni-useky.yaml: projects/praha/spaces/praha-mesto/policies/public-ulicni-useky.yaml
 praha-endpoint-letni-udrzba.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-letni-udrzba.yaml
+praha-endpoint-praha-mesto-zapis.yaml: projects/praha/spaces/praha-mesto/endpoints/praha-mesto-zapis.yaml
 praha-policy-public-letni-udrzba.yaml: projects/praha/spaces/praha-mesto/policies/public-letni-udrzba.yaml

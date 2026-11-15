@@ -13,7 +13,7 @@ spec:
   schedule: '40 6 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: bcn-city-works }
-  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona
+  targetEndpoint: urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write
   # Upsert: a work the file drops leaves by its expiresAt, three days after its last listing (T-5264).
   output: { type: CityWork, mode: upsert }
   # The whole 7.7 MB file ran in 128 MiB on 2026-10-23; 192 leaves room for its growth.

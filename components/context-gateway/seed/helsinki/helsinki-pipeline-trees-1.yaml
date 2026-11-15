@@ -13,6 +13,6 @@ spec:
   schedule: '17 2 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: hel-trees-1 }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: Tree, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 100 }

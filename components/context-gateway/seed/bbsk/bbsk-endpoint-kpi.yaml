@@ -12,9 +12,9 @@ metadata:
     en: 'The indicators of the Banská Bystrica self-governing region, computed from the open data of the Slovak Statistical Office: value, unit, territory, period and when it was computed, one record per indicator and period.'
 spec:
   contextSpaceRef: bbsk-kpi
-  # The Policies this Endpoint evaluates; a Policy added to the space later binds only once named here (P-18).
+  # Open data is read-only (EP-187, T-6980): the Policies that write nothing; the writes go
+  # through bbsk-kpi-zapis.
   policyRefs:
-    - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kpi:kpi-pipelines-write
     - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kpi:kpi-read
   slug: qfhhh5no5wz4lk3rfjisdtx3chiyfig3
   # Public: the indicators are what the region publishes, and the gateway synthesises the

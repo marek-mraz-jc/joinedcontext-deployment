@@ -9,7 +9,7 @@ spec:
   source:
     dataSourceRef: { kind: DataSource, name: hsl-hfp }
   # Every stream writes through the one endpoint that evaluates the pipelines-write Policy.
-  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:hel.fi:helsinki:helsinki-all-write
   quotas: { maxMemoryMb: 128, cpuMillicores: 250 }
   # A vehicle's end (PL-80, NGSI-LD 4.22 expiresAt): five minutes after the newest position it
   # reports. Every write moves it on, so a vehicle that stops reporting leaves every read then

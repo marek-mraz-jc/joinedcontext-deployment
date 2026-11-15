@@ -28,7 +28,7 @@ spec:
             unit: pm0043ms_unit
             keys: [pm0043ms_month, pm0043ms_specu, pm0043ms_nace2]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pm:susr-pm
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pm:susr-pm-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

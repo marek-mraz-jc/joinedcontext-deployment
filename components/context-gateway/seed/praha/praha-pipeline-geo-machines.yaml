@@ -12,6 +12,6 @@ spec:
   schedule: '20 3 * * 2'
   source:
     dataSourceRef: { kind: DataSource, name: ipr-geo-machines }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:praha-mesto:praha-mesto-zapis
   output: { type: FareCollectionSystem, mode: upsert }
   quotas: { maxMemoryMb: 128, cpuMillicores: 200 }

@@ -27,7 +27,7 @@ spec:
             indicator: sp0005ms_ukaz
             keys: [sp0005ms_mes]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sp:susr-sp
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-sp:susr-sp-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -12,7 +12,7 @@ spec:
   class: auto
   source:
     dataSourceRef: { kind: DataSource, name: fvh-vision-counts }
-  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all
+  targetEndpoint: urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write
   output: { type: TrafficFlowObserved, mode: upsert }
   # The 2.8 MB file and 1024 entities ran in 128 MiB (docker run --memory 128m, 2026-10-25).
   quotas: { maxMemoryMb: 192, cpuMillicores: 200 }

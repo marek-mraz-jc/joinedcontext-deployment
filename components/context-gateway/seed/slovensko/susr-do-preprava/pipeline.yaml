@@ -28,7 +28,7 @@ spec:
             unit: do1007rs_mj
             keys: [do1007rs_prep, do1007rs_dopr]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-do-preprava:susr-do-preprava
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-do-preprava:susr-do-preprava-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

@@ -56,7 +56,7 @@ spec:
           "location": { "type": "GeoProperty", "value": { "type": "Point", "coordinates": [19.115268, 48.733256] } }
         }] }
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:ovzdusie:public-air
+    - targetEndpoint: urn:ngsi-ld:Endpoint:banskabystrica.sk:ovzdusie:public-air-zapis
       type: AirQualityObserved
       mode: upsert
   expiry:

@@ -1,0 +1,21 @@
+# The write door of catalog (T-6980, EP-187): an open-data Endpoint is read-only, so the
+# writes catalog served move here. The audience keeps out anyone outside the organization;
+# people read the data through the public Endpoint catalog.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: catalog-write
+  namespace: zilina
+  title: { sk: 'Žilina – katalóg dát: zápis', en: 'Žilina – data catalogue: writes' }
+  description:
+    sk: Interný vstup, cez ktorý sa zapisujú údaje; čítajú sa cez verejný Endpoint catalog.
+    en: The internal door the data is written through; people read it through the public Endpoint catalog.
+spec:
+  contextSpaceRef: catalog
+  # The Policies this Endpoint evaluates: the ones the open-data Endpoint served before (P-18).
+  policyRefs:
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-catalog:catalog-portal-write
+    - urn:ngsi-ld:Policy:zilina.sk:zilina-catalog:catalog-public-read
+  slug: em3wsis5dr23wftcsprcesc2k3rggvga
+  audience: organization
+  enabledRepresentations: [ngsi-ld]

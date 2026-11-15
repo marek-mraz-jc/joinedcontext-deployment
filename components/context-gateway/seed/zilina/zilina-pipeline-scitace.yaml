@@ -14,6 +14,6 @@ spec:
   schedule: '12 * * * *'
   source:
     dataSourceRef: { kind: DataSource, name: zilina-opendata-portal }
-  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-doprava:zilina-doprava
+  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-doprava:zilina-doprava-zapis
   output: { type: TrafficFlowObserved, mode: upsert }
   quotas: { maxMemoryMb: 64, cpuMillicores: 50 }

@@ -27,7 +27,7 @@ spec:
             indicator: en1001ms_ukaz
             keys: [en1001ms_mes]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-en:susr-en
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-en:susr-en-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

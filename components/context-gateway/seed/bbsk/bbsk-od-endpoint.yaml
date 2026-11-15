@@ -1,5 +1,6 @@
-# The space's one door, public: every row is the publisher's open data under the licence its
+# The space's public door: every row is the publisher's open data under the licence its
 # `dataProvider` names. A member of the project's public MCP server, which the public assistant reads.
+# Open data is read-only (EP-187): the pipelines write through bbsk-otvorene-data-zapis.
 apiVersion: joinedcontext.com/v1alpha1
 kind: Endpoint
 metadata:
@@ -14,7 +15,6 @@ metadata:
 spec:
   contextSpaceRef: bbsk-otvorene-data
   policyRefs:
-  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-pipelines-write
   - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read
   - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read-history
   slug: 6b4yqhzqieutqcoeew5rnxrx5udqeert

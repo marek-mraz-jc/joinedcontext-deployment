@@ -26,7 +26,7 @@ spec:
             period: pl2016rs_rok
             keys: [pl2016rs_ukaz]
   outputs:
-    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pl:susr-pl
+    - targetEndpoint: urn:ngsi-ld:Endpoint:joinedcontext.com:susr-pl:susr-pl-zapis
       type: KeyPerformanceIndicator
       mode: upsert
   quotas:

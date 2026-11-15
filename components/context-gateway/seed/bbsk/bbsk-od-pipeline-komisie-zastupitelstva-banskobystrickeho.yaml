@@ -15,7 +15,7 @@ spec:
     dataSourceRef:
       kind: DataSource
       name: od-komisie-zastupitelstva-banskobystrickeho
-  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data
+  targetEndpoint: urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-otvorene-data:bbsk-otvorene-data-zapis
   output:
     type: CommitteeSeat
     mode: replace

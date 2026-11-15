@@ -1,0 +1,20 @@
+# The space's write door (EP-187, T-6980): the generated pipelines write through it; the audience
+# keeps out anyone outside the organization. People read the data through the public door.
+apiVersion: joinedcontext.com/v1alpha1
+kind: Endpoint
+metadata:
+  name: bbsk-otvorene-data-zapis
+  namespace: bbsk
+  title:
+    sk: 'Banskobystrický kraj — tabuľky katalógu: zápis kanálov'
+    en: 'Banská Bystrica Region, catalogue tables: pipeline writes'
+spec:
+  contextSpaceRef: bbsk-otvorene-data
+  policyRefs:
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-pipelines-write
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read
+  - urn:ngsi-ld:Policy:bbsk.sk:bbsk-otvorene-data:otvorene-data-read-history
+  slug: 5k7ivmtryx2ucj25wqrzvmmguyfs7hup
+  audience: organization
+  enabledRepresentations:
+  - ngsi-ld

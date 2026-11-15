@@ -13,6 +13,6 @@ spec:
   schedule: '15 23 * * *'
   source:
     dataSourceRef: { kind: DataSource, name: zsr-gtfs }
-  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne
+  targetEndpoint: urn:ngsi-ld:Endpoint:zilina.sk:zilina-verejne:zilina-verejne-zapis
   output: { type: GtfsStop, mode: upsert }
   quotas: { maxMemoryMb: 256, cpuMillicores: 200 }

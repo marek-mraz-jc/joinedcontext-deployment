@@ -433,7 +433,7 @@ def test_the_generated_pipeline_lists_every_slice_and_its_memory_follows_the_lar
     topic = {"name": "susr-zo-krajiny", "theme": "zo", "title": TITLE, "cubes": ["zo0011ms"]}
     d = ZO0011MS | {"theme": "zo", "update": "2026-10-01", "title": TITLE}
     parts = {"zo0011ms": datacube.slices(d, ZO0011MS_CATEGORIES)}
-    files = datacube.topic_files(topic, [d], parts, "slug", 0)
+    files = datacube.topic_files(topic, [d], parts, "slug", "door", 0)
     pipeline = yaml.safe_load(files["pipeline.yaml"])
     assert [s["dataSourceRef"]["name"] for s in pipeline["spec"]["sources"]] == ["susr-zo0011ms-1", "susr-zo0011ms-2"]
     sources = {yaml.safe_load(t)["metadata"]["name"]: yaml.safe_load(t)["spec"]["http"]["url"]
