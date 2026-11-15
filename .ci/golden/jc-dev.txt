@@ -151,6 +151,7 @@ v1/Secret jc-dev/db-jc-shako
 v1/Secret jc-dev/db-jc-shako-app
 v1/Secret jc-dev/etcd-apisix
 v1/Secret jc-dev/jc-admin-token
+v1/Secret jc-dev/jc-catalogue-tokens
 v1/Secret jc-dev/jc-setup
 v1/Secret jc-dev/keycloak-client-apisix-gateway
 v1/Secret jc-dev/keycloak-client-edge

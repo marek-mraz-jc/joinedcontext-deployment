@@ -128,6 +128,34 @@ def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certifi
         d["data"]["jc.toml"] for d in rendered("jc-prod") if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {}))
 
 
+def test_each_jc_dev_organization_publishes_with_a_token_of_its_own_catalogue(rendered):
+    """T-7020: an Organization's projects publish into its own catalogue only with a token that
+    catalogue alone accepts (dataroom portal_publisher_on). Each `[[organizations]]` entry names its
+    own file, the file comes from one generated key per Organization, mounted read-only, and no
+    Organization's token is the shared catalogue's `catalogue-token`."""
+    orgs = ["bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha"]
+    docs = rendered("jc-dev")
+    toml = jc_toml(docs)
+    assert {o["name"]: o.get("portal_token_file") for o in toml["organizations"]} == {
+        o: f"/run/jc/catalogue-tokens/{o}" for o in orgs}
+    secrets = [d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-catalogue-tokens"]
+    assert len(secrets) == 1 and sorted(secrets[0]["data"]) == sorted(orgs), secrets
+    tokens = [secrets[0]["data"][o] for o in orgs]
+    setup = next(d for d in docs if d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-setup")
+    assert len(set(tokens)) == len(orgs) and setup["data"]["catalogue-token"] not in tokens
+    (pod,) = [d["spec"]["template"]["spec"] for d in docs
+              if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    volumes = {v["name"]: v for v in pod["volumes"]}
+    assert volumes["catalogue-tokens"]["secret"] == {"secretName": "jc-catalogue-tokens", "defaultMode": 0o440}
+    mounts = [m for c in pod["containers"] for m in c.get("volumeMounts", []) if m["name"] == "catalogue-tokens"]
+    assert mounts and all(m == {"name": "catalogue-tokens", "mountPath": "/run/jc/catalogue-tokens", "readOnly": True}
+                          for m in mounts), mounts
+    # jc-prod runs no [[organizations]]: no such Secret, volume or file there.
+    prod = rendered("jc-prod")
+    assert not any(d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-catalogue-tokens" for d in prod)
+    assert "catalogue-tokens" not in str(jc_toml(prod))
+
+
 @requires_helmfile
 def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_registry(rendered):
     """With `[[organizations]]` jc routes by Host in slug mode too: a kubelet probe with the pod-IP

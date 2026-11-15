@@ -262,7 +262,11 @@ ROUTE_CLASSES = {
     },
     "jc-identity": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
-        "why": "kaisatsu, jc's identity provider, under /id: discovery, sign-in and token endpoints are public by OIDC and authenticate themselves; the route reaches a starting pod so the Portal of that pod can read the realm",
+        "why": "kaisatsu, jc's identity provider, under /login: discovery, sign-in and token endpoints are public by OIDC and authenticate themselves; the route reaches a starting pod so the Portal of that pod can read the realm",
+    },
+    "jc-identity-old": {
+        "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",
+        "why": "kaisatsu's slug before T-7006, /id: a jc image after the move answers 308 to /login there, one before serves the sign-in there; the same reach as jc-identity",
     },
     "ckan-webassets": {
         "reach": UPSTREAM, "cacheable": True, "framing": "SAMEORIGIN",

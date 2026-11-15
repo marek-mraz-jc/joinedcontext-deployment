@@ -106,6 +106,7 @@
  "test_dev_recipes.py": 0.8,
  "test_disk_full.py": 0.2,
  "test_docs_pin.py": 16.7,
+ "test_domain_certificates.py": 74.2,
  "test_dr_drill.py": 152.5,
  "test_edge_api_cache.py": 2.4,
  "test_edge_asset_cache.py": 11.7,

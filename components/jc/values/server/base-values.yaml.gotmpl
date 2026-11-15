@@ -401,6 +401,9 @@ configMap:
       [[organizations]]
       name = {{ $o.name | quote }}
       catalogue_id = {{ $o.catalogueId | quote }}
+      # The Portal's publisher token for this catalogue alone (dataroom portal_publisher_on): each
+      # project of the Organization publishes its datasets here and nowhere else (T-7020).
+      portal_token_file = {{ printf "/run/jc/catalogue-tokens/%s" $o.name | quote }}
       [organizations.hosts]
       {{- range $role := list "portal" "opendata" "api" "mcp" }}
       {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
@@ -727,6 +730,13 @@ extraVolumes:
     secret:
       secretName: jc-admin-token
       defaultMode: 0440
+  {{- if (dig "organizations" list $jc) }}
+  # One publisher token per Organization's catalogue (defaults/environment/secrets.yaml.gotmpl).
+  - name: catalogue-tokens
+    secret:
+      secretName: jc-catalogue-tokens
+      defaultMode: 0440
+  {{- end }}
   - name: db-kaisatsu-app
     secret:
       secretName: db-jc-kaisatsu-app
@@ -803,6 +813,9 @@ extraVolumeMounts:
   {{- end }}
   - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
   - { name: setup, mountPath: /run/jc/setup, readOnly: true }
+  {{- if (dig "organizations" list $jc) }}
+  - { name: catalogue-tokens, mountPath: /run/jc/catalogue-tokens, readOnly: true }
+  {{- end }}
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
   - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
   {{- if (dig "ageKeySecret" "" $jc) }}

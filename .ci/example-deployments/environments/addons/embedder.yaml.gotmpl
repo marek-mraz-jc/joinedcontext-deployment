@@ -15,8 +15,8 @@ embedder:
   server:
     deployments:
       - name: addons
-        issuer: https://jc.addons.example.org/id/realms/jc
-        jwksUrl: https://jc.addons.example.org/id/realms/jc/protocol/openid-connect/certs
+        issuer: https://jc.addons.example.org/login/realms/jc
+        jwksUrl: https://jc.addons.example.org/login/realms/jc/protocol/openid-connect/certs
         clients:
           - jc-assistant
         maxTextsPerMinute: 1200
