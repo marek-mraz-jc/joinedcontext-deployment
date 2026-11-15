@@ -38,6 +38,10 @@ OWNER_ACCOUNT = {"keycloak-user-initial": {"password": 32}}
 # The Decidim administrator of a production realm (T-6448): global.participationStewardId, declared
 # in defaults/environment/secrets.yaml.gotmpl, with a TOTP seed where the realm reads one.
 PARTICIPATION_STEWARD = "keycloak-user-participacia-steward"
+# jc's Portal publisher token per [[organizations]] catalogue (T-7020): declared in
+# defaults/environment/secrets.yaml.gotmpl, one key per jc.server.organizations name.
+JC_CATALOGUE_TOKENS = "jc-catalogue-tokens"
+JC_CATALOGUE_TOKEN_LENGTH = 64
 # Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
 # under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
 # held to the length components/ckan/secrets.yaml declares for its family.
@@ -114,6 +118,11 @@ def main() -> int:
         expected = declared.get(meta["name"])
         if expected is None and meta["name"].startswith(DERIVED_PREFIX):
             expected = DERIVED_KEYS
+        if expected is None and meta["name"] == JC_CATALOGUE_TOKENS:
+            expected = {key: JC_CATALOGUE_TOKEN_LENGTH for key in secret.get("data") or {}}
+            if not expected:
+                problems.append(f"{where}: holds no Organization's token")
+                continue
         if expected is None:
             expected = next((declared.get(family) for family in CATALOGUE_FAMILIES
                              if meta["name"].startswith(family + "-")
