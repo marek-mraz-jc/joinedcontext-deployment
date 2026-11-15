@@ -138,6 +138,7 @@ networking.k8s.io/v1/NetworkPolicy jc-prod/jc-linkerd-egress-to-embedder
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-linkerd-from-app-pods
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-metrics-proxy
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-retain
+networking.k8s.io/v1/NetworkPolicy jc-prod/jc-retain-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-server
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-server-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-server-kube-api
