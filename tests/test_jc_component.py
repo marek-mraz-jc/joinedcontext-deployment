@@ -110,6 +110,25 @@ def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_var
 
 
 @requires_helmfile
+def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certificate(rendered):
+    """T-7005 phase A: each of the six Organizations' four hosts is in its `[[organizations]]` entry in
+    jc.toml, an edge route to jc and one HTTP-01 Certificate each (never a wildcard, never on the
+    shared SAN list)."""
+    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha")
+    hosts = [f"{h}.{o}.jcdev.dev.joinedcontext.com" for o in orgs for h in ("smartcity", "opendata", "api", "mcp")]
+    docs = rendered("jc-dev")
+    toml = next(d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {}))
+    assert all(f'name = "{o}"' in toml for o in orgs) and all(f'"{h}"' in toml for h in hosts), toml[-600:]
+    certs = {d["metadata"]["name"]: d["spec"] for d in docs if d.get("kind") == "Certificate"}
+    own = {n: s["dnsNames"] for n, s in certs.items() if n.startswith("jc-org-")}
+    assert sorted(sum(own.values(), [])) == sorted(hosts) and all(len(v) == 1 for v in own.values()), own
+    assert not any(h in certs["apisix-edge"]["dnsNames"] for h in hosts)
+    assert not any("*" in n for s in certs.values() for n in s["dnsNames"] if "jcdev" in n)
+    assert "[[organizations]]" not in next(
+        d["data"]["jc.toml"] for d in rendered("jc-prod") if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {}))
+
+
+@requires_helmfile
 def test_jc_retain_reaches_the_meshed_postgres(rendered):
     """jc-dev's hourly history cut (retainHours) connects to a Postgres whose inbound proxy takes only
     mesh-authenticated clients (T-6959: unmeshed, every run was refused at connect). The pod is meshed
