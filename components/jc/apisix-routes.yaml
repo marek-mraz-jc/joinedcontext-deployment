@@ -1,7 +1,7 @@
 ---
 # jc serves every module on one host, jc.{domain}, in slug mode: the Portal at the root,
-# kaisatsu (identity) under /id, dataroom (catalogue) under /opendata, daiya (dashboards)
-# under /dashboards. jc authenticates every caller itself (kaisatsu sessions and bearers), so the
+# kaisatsu (identity) under /login (/id before T-7006), dataroom (catalogue) under /opendata,
+# daiya (dashboards) under /dashboards. jc authenticates every caller itself (kaisatsu sessions and bearers), so the
 # edge proxies anonymous requests and refuses the mounts that stay inside the pod
 # (apisix-plugins.yaml). `subDomain` puts jc.{domain} on the edge Ingress and its certificate.
 jc:
@@ -20,14 +20,30 @@ jc:
     read: 120
 # kaisatsu's realm through the headless Service jc-pods, which lists a pod before it is Ready. At
 # boot jc serves kaisatsu first, then builds the Portal, which reads the realm's discovery at its
-# public issuer https://jc.{domain}/id/realms/jc. Through `jc` that read would wait for the very
+# public issuer https://jc.{domain}/login/realms/jc. Through `jc` that read would wait for the very
 # readiness the Portal gives, and jc stops on the failed read: a crash loop on every start.
 jc-identity:
   name: jc-identity
   description: jc identity (kaisatsu), reachable while the pod starts
   upstream: jc-pods.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
   subDomain: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}idm{{ else }}jc{{ end }}'
-  uri: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}/*{{ else }}/id/*{{ end }}'
+  uri: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}/*{{ else }}/login/*{{ end }}'
+  priority: 5
+  pluginConfig: jc
+  timeout:
+    connect: 6
+    send: 60
+    read: 60
+# kaisatsu's slug before T-7006: a jc image after the move answers 308 to /login there, one
+# before it serves the sign-in (and the starting Portal's discovery read) there, so slug mode
+# routes it like /login/* while the jc pin moves. Host mode has no slug: on idm. the path is
+# kaisatsu's 404. Drop the route when no pinned image predates T-7006.
+jc-identity-old:
+  name: jc-identity-old
+  description: jc identity's old slug /id (308 to /login), reachable while the pod starts
+  upstream: jc-pods.{{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}.svc.cluster.local:8080 # yamllint disable-line rule:line-length
+  subDomain: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}idm{{ else }}jc{{ end }}'
+  uri: /id/*
   priority: 5
   pluginConfig: jc
   timeout:

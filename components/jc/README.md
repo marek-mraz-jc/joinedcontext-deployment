@@ -20,7 +20,7 @@ One release of `charts/workload`, `jc-server`:
 
 - **Deployment `jc`**, one replica, image pinned by digest in `images.yaml`. It starts
   `jc --config /etc/jc/jc.toml` (ConfigMap `jc`): slug mode, the Portal at `/`, kaisatsu at
-  `/id`, dataroom at `/opendata`, daiya at `/dashboards`, ekiben at `/streams`, Antares at
+  `/login` (`/id` answers 308 there, T-7006), dataroom at `/opendata`, daiya at `/dashboards`, ekiben at `/streams`, Antares at
   `/broker`, shako at `/git`. Public listener 8080, admin listener 9091 (`/metrics` behind the
   bearer of Secret `jc-admin-token`, `/healthz` open).
 - **Init container `seed-state`** copies Secret `jc-setup` into the state directory
@@ -52,12 +52,13 @@ bucket and the security headers. It refuses `/streams`, `/broker` and `/git` wit
 takes one shared token, the in-binary broker runs no views or Policy engine, and shako is the
 Portal's forge. The Portal reaches all three inside the pod.
 
-A second route `jc-identity` sends `/id/*` (kaisatsu) to the headless Service `jc-pods`, which
+A second route `jc-identity` sends `/login/*` (kaisatsu) to the headless Service `jc-pods`, which
 lists a pod before it is Ready. At start jc serves kaisatsu, then builds the Portal, which reads
-the realm's discovery at its public issuer `https://jc.{domain}/id/realms/jc`. Through the
+the realm's discovery at its public issuer `https://jc.{domain}/login/realms/jc`. Through the
 Service `jc` that read would wait for the readiness only the built Portal gives, and jc stops on
 the failed read: a crash loop on every start. The pod's egress to the cluster ingress on 443
-carries that read.
+carries that read. In slug mode `jc-identity-old` routes the old slug `/id/*` the same way,
+so a jc image from before or after the move starts while the pin moves.
 
 ## 3. Network
 
