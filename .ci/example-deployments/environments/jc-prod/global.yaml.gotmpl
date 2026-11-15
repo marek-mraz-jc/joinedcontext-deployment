@@ -187,6 +187,8 @@ jc:
     hostTls:
       bbsk: demo-bbsk-tls
     hosts: ["", api, assistant, bbsk, data, idm, opendata, portal, status, viz]
+    # The installation's sign-in host (T-6991 §10): login_host = idm.smartcity.joinedcontext.com.
+    loginHost: idm
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:

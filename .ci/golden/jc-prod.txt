@@ -22,6 +22,7 @@ batch/v1/Job jc-prod/jc-shako-db-create-role-shako-app-login
 batch/v1/Job jc-prod/postgres-cluster-local-backup-now
 batch/v1/Job jc-prod/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate jc-prod/apisix-edge
+cert-manager.io/v1/Certificate jc-prod/apisix-edge-untrusted
 cert-manager.io/v1/Certificate jc-prod/app-air-quality
 cert-manager.io/v1/Certificate jc-prod/app-air-weather-explorer
 cert-manager.io/v1/Certificate jc-prod/app-alerts-desk

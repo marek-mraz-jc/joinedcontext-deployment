@@ -23,6 +23,32 @@ spec:
     {{- range $edge.hosts }}
     - {{ . | quote }}
     {{- end }}
+{{- with $edge.untrustedHosts }}
+---
+# Untrusted content (embed., tiles., viz.; T-6991 §8): a failed order for one of them never holds
+# the sign-in or Portal names back.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: apisix-edge-untrusted
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "configuration.labels" $ | nindent 4 }}
+spec:
+  secretName: apisix-edge-untrusted-tls
+  issuerRef:
+    name: {{ $edge.clusterIssuer | quote }}
+    kind: ClusterIssuer
+  dnsNames:
+    {{- range . }}
+    - {{ . | quote }}
+    {{- end }}
+{{- end }}
+{{- with $edge.loginHost }}
+{{- if not (has . $edge.hosts) }}
+{{- fail (printf "jc.server.loginHost: %q is no host of the edge certificate; add its label to jc.server.hosts" .) }}
+{{- end }}
+{{- end }}
 {{- if $edge.stagingHosts }}
 ---
 # Staging first (T-2806, OPS-35): a failed or looping order here costs nothing, while five
@@ -65,10 +91,12 @@ spec:
     - {{ . | quote }}
     {{- end }}
 {{- end }}
+{{- $zone := ($edge.dns01 | default dict).validationZone | default "" }}
 {{- with $edge.appsWildcard }}
 {{- if not (hasPrefix "*.apps." .) }}
 {{- fail (printf "edge.appsWildcard: %q is not *.apps.<domain>" .) }}
 {{- end }}
+{{- if not $zone }}
 ---
 # The App wildcard (ADR-N-037 §6, T-3013): DNS-01 in the delegated App zone through Hetzner's
 # webhook, which reads its token from a mounted file and holds no right to read Secrets.
@@ -96,6 +124,7 @@ spec:
             solverName: hetzner
             config:
               tokenFilePath: /var/run/secrets/hetzner/token
+{{- end }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -109,8 +138,15 @@ spec:
   # certificate per App (AP-133).
   secretName: apisix-apps-wildcard-tls
   issuerRef:
+    {{- if $zone }}
+    # The validation zone's ClusterIssuer (organization-tls.yaml): `_acme-challenge.apps.<domain>`
+    # is a CNAME into it, so no Hetzner token is needed.
+    name: jc-dns01-{{ $.Release.Namespace }}
+    kind: ClusterIssuer
+    {{- else }}
     name: letsencrypt-dns01
     kind: Issuer
+    {{- end }}
   dnsNames:
     - {{ . | quote }}
 {{- end }}

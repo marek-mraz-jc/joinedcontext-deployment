@@ -60,13 +60,15 @@ def test_every_prod_app_host_keeps_its_ingress_rule_secret_and_certificate(docs)
         assert spec["secretName"] == f"app-{app}-tls"
         assert spec["dnsNames"] == [host]
         assert spec["issuerRef"]["name"] == "letsencrypt-prod"
-    # No wildcard reaches a certificate: HTTP-01 cannot prove one, and the edge certificate keeps
-    # prod's exact names, so the copied apisix-edge-tls stays Ready.
+    # No wildcard reaches a certificate: HTTP-01 cannot prove one. The edge certificate keeps prod's
+    # names but tiles. and viz., which sit on their own (T-6991 §8): one new order each on DNS that
+    # points here, the copied apisix-edge-tls served until the reissue is Ready.
     for name, spec in certificates.items():
         assert not any("*" in n for n in spec["dnsNames"]), name
     assert sorted(certificates["apisix-edge"]["dnsNames"]) == sorted(
-        [DOMAIN] + [f"{h}.{DOMAIN}" for h in ("api", "assistant", "data", "idm", "opendata", "portal", "status", "tiles", "viz")]
+        [DOMAIN] + [f"{h}.{DOMAIN}" for h in ("api", "assistant", "data", "idm", "opendata", "portal", "status")]
     )
+    assert sorted(certificates["apisix-edge-untrusted"]["dnsNames"]) == [f"tiles.{DOMAIN}", f"viz.{DOMAIN}"]
     assert not any("*" in host for host in rules)
 
 

@@ -53,6 +53,16 @@ edge:
   # Hosts that serve an Endpoint WebSocket (`/api/endpoint/{slug}/ws`). On Traefik their
   # non-upgrade answers carry `Upgrade: websocket` again (T-5931). Empty renders nothing.
   websocketHosts: []
+  # embed., tiles., viz.: Certificate `apisix-edge-untrusted` (T-6991 §8). Empty renders nothing.
+  untrustedHosts: []
+  # The installation's sign-in host (T-6991 §5); one of `hosts`, or the render fails.
+  loginHost: ''
+  # Organizations on hosts of their own (jc.server.organizations, organization-tls.yaml).
+  organizations: []
+  # Organization Certificates already issued: the rest count against 10 new per render.
+  issuedCertificates: []
+  # The validation zone for every wildcard (global.ingress.dns01). Empty: no DNS-01.
+  dns01: {}
 
 # Service mesh integration: a Linkerd `Server` marks the APISIX data plane as the
 # public edge reachable by the ingress controller.

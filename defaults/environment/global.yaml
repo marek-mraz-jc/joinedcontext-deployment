@@ -226,6 +226,22 @@ global:
     # Certificate `app-{name}` by HTTP-01. jc-prod lists prod's App Ingresses so the copied
     # certificates are served the second DNS moves. Empty renders nothing.
     appHosts: []
+    # The validation zone every wildcard is proven in (T-6991 §8, T-6975 §6): one zone the operator
+    # owns at a provider with a cert-manager built-in solver, a token scoped to that zone in the
+    # operator-made Secret `secretRef` (cert-manager's namespace, never in Git). A customer's Apps
+    # wildcard `*.<apps>` then needs one record, `_acme-challenge.<apps> CNAME <apps with dots as
+    # dashes>.<validationZone>` (jc doctor domains prints it), and no DNS key of theirs. Set, the
+    # installation's `*.apps.<domain>` uses it too instead of the Hetzner webhook. Empty: no DNS-01,
+    # every App host of an Organization gets a certificate of its own by HTTP-01.
+    dns01:
+      validationZone: ''
+      # cloudflare (secretRef: an API token with Zone:DNS:Edit on that zone) or rfc2136 (secretRef:
+      # the TSIG secret; rfc2136.nameserver and tsigKeyName set).
+      provider: ''
+      secretRef:
+        name: ''
+        key: ''
+      rfc2136: {}
 
   # Storage class mappings (leave empty to use cluster defaults)
   storage:

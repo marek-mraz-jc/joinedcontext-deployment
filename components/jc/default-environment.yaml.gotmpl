@@ -14,6 +14,19 @@ jc:
     # certificate names; a host no mount claims answers jc's 404.
     mode: slug
     hosts: ["", idm, portal, api, opendata, data, assistant, viz]
+    # The installation's sign-in host, a label of `hosts` (T-6991 §5): on the installation
+    # certificate, checked at render. Empty: none named.
+    loginHost: ''
+    # Organizations on hosts of their own (T-6991 §1, §8), certificates only: the edge routes them
+    # once jc serves the hosts (T-6995). Each entry is `{name, host: auto}` or `{name, hosts: {portal,
+    # opendata?, api?, apps?, portals?}, resolved: [hosts jc doctor domains shows on the edge],
+    # certificate: hosts|organization}`: a Certificate per resolved host, one for all once every
+    # host resolves, and `*.<apps>` by global.ingress.dns01. E.g.
+    # {name: bbsk, hosts: {portal: smartcity.bbsk.sk, opendata: opendata.bbsk.sk}, resolved: [smartcity.bbsk.sk]}
+    organizations: []
+    # Organization Certificates already issued (kubectl get certificate): any other counts as new,
+    # and a render with more than 10 new fails, so a cut-over is staged.
+    issuedCertificates: []
     # Pool ceilings on the shared postgres-cluster (tests/test_postgres_connection_budget.py):
     # kaisatsu's request role, Antares' store. The Portal's pool is compiled in (5).
     kaisatsuPool: 4
