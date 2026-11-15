@@ -222,6 +222,11 @@ def test_jc_prod_orders_no_new_certificate_while_its_dns_points_elsewhere(render
     assert {f"tiles.{domain}", f"viz.{domain}"} <= set(certs["apisix-edge"]["dnsNames"])
     assert "apisix-edge-untrusted" not in certs
     assert not [n for n in certs if n.startswith("jc-org-")]
+    # The Ingress serves them from the Secret apisix-edge writes, never from one nobody fills.
+    ingress = next(d for d in docs if d.get("kind") == "Ingress" and d["metadata"]["name"] == "apisix")
+    tls = {t["secretName"]: t["hosts"] for t in ingress["spec"]["tls"]}
+    assert "apisix-edge-untrusted-tls" not in tls
+    assert {f"tiles.{domain}", f"viz.{domain}"} <= set(tls["apisix-edge-tls"])
 
 
 def test_dev_keeps_untrusted_content_apart(rendered):

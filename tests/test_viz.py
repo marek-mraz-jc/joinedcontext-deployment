@@ -41,7 +41,9 @@ def test_dev_renders_a_read_only_server_and_its_route_on_its_own_host(dev):
     one(dev, "Service", "viz-renderer")
     routes = yaml.safe_load((COMPONENT / "apisix-routes.yaml").read_text().replace("{{", "#{{"))
     assert routes["viz"]["subDomain"] == "viz" and routes["viz"]["uri"] == "/*"
-    assert HOST in one(dev, "Certificate", "apisix-edge")["spec"]["dnsNames"]
+    # Untrusted content (T-6991 §8): its own certificate, off the sign-in and Portal one.
+    assert HOST in one(dev, "Certificate", "apisix-edge-untrusted")["spec"]["dnsNames"]
+    assert HOST not in one(dev, "Certificate", "apisix-edge")["spec"]["dnsNames"]
     # Any site may frame the host page (the embed snippet): the edge adds no X-Frame-Options.
     plugins = yaml.safe_load((COMPONENT / "apisix-plugins.yaml").read_text())["viz"]["plugins"]
     assert "X-Frame-Options" not in plugins["response-rewrite"]["headers"]["set"]
