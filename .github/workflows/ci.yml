@@ -377,8 +377,9 @@ jobs:
       # each (JC_TEST_SHARD, tests/conftest.py; T-5886: test_smoke_script.py's 1,393 s held one shard).
       # A moved pin verifies every platform digest the dev render pins, as `just dev-apply` does
       # before it syncs (T-5564): a pin reaches dev without the six shards, never without this.
+      # Every shard: scripts/check-docs-pin.sh (tests/test_docs_pin.py, in whichever shard holds it)
+      # reads the signature when a same-commit rebuild moved a pinned tag.
       - uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
-        if: needs.changes.outputs.pins == 'true' && matrix.shard == 1
       - name: the pinned images carry our workflows' signatures (T-5564)
         if: needs.changes.outputs.pins == 'true' && matrix.shard == 1
         run: |
