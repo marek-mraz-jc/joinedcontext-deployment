@@ -413,7 +413,8 @@ def test_the_portal_may_read_the_base_and_update_the_served_file_and_nothing_els
 def edge_objects(docs: list[dict]) -> dict[str, dict]:
     kinds = ("Certificate", "TLSOption", "Ingress")
     # The staging Certificate and the MQTT brokers' own TLSOption (T-5562) are not the edge's.
-    others = ("apisix-edge-staging", "mqtt-bsi-tr-02102")
+    # Untrusted content has its own (T-6991 §8, test_domain_certificates.py).
+    others = ("apisix-edge-staging", "apisix-edge-untrusted", "mqtt-bsi-tr-02102")
     return {
         d["kind"]: d
         for d in docs
@@ -492,13 +493,13 @@ def test_certificate_covers_the_apex_and_every_routed_subdomain(rendered):
         "opendata.dev.joinedcontext.com",
         "portal.dev.joinedcontext.com",
         "status.dev.joinedcontext.com",
-        "tiles.dev.joinedcontext.com",
-        "viz.dev.joinedcontext.com",
     ]
+    untrusted = ["tiles.dev.joinedcontext.com", "viz.dev.joinedcontext.com"]
 
     ingress = objects["Ingress"]
     hosts = [rule["host"] for rule in ingress["spec"]["rules"]]
-    assert hosts == certificate["spec"]["dnsNames"], "the apex must be routed, not only certified"
+    assert hosts == certificate["spec"]["dnsNames"] + untrusted, "the apex must be routed, not only certified"
+    assert ingress["spec"]["tls"][1] == {"secretName": "apisix-edge-untrusted-tls", "hosts": untrusted}
     assert ingress["spec"]["tls"][0]["hosts"] == certificate["spec"]["dnsNames"]
     assert ingress["spec"]["tls"][0]["secretName"] == certificate["spec"]["secretName"]
     # Two owners of one Secret means two ACME orders for the same names.

@@ -393,6 +393,8 @@ configMap:
       {{- end }}
       {{- if not $window }}
       {{- range $o := (dig "organizations" list $jc) }}
+      {{- $h := dig "hosts" dict $o }}
+      {{- if and (dig "catalogueId" "" $o) (dig "portal" "" $h) (dig "opendata" "" $h) (dig "api" "" $h) (dig "mcp" "" $h) }}
 
       # An Organization on hosts of its own (bins/jc config.rs OrganizationSection, T-7005); the
       # edge routes each host to jc (defaults/environment/apisix-routes.yaml.gotmpl).
@@ -401,7 +403,12 @@ configMap:
       catalogue_id = {{ $o.catalogueId | quote }}
       [organizations.hosts]
       {{- range $role := list "portal" "opendata" "api" "mcp" }}
-      {{ $role }} = {{ printf "%s.%s" (index $o.hosts $role) $global.domain | quote }}
+      {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
+      {{- end }}
+      {{- else }}
+
+      # Organization {{ $o.name | quote }}: certificates only (T-7002). Today's jc reads an Organization
+      # with catalogueId and all four hosts; `host = "auto"` and fewer hosts come with T-6995.
       {{- end }}
       {{- end }}
       {{- end }}

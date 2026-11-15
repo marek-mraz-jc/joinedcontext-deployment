@@ -664,9 +664,22 @@ ingress:
     - secretName: apisix-edge-tls
       hosts:
         - {{ $global.domain }}
-      {{- range $subDomains }}
+    {{- /* Untrusted content on a certificate of its own (T-6991 §8), as the configuration chart;
+           global.ingress.untrustedCertificate false (jc-prod) keeps it on apisix-edge. */}}
+    {{- $untrusted := list }}
+    {{- if dig "ingress" "untrustedCertificate" true $global }}
+    {{- range $subDomains }}{{ if has . (list "embed" "tiles" "viz") }}{{ $untrusted = append $untrusted . }}{{ end }}{{ end }}
+    {{- end }}
+      {{- range $subDomains }}{{ if not (has . $untrusted) }}
+        - {{ . }}.{{ $global.domain }}
+      {{- end }}{{ end }}
+    {{- with $untrusted }}
+    - secretName: apisix-edge-untrusted-tls
+      hosts:
+      {{- range . }}
         - {{ . }}.{{ $global.domain }}
       {{- end }}
+    {{- end }}
     {{- range $sub, $secret := $ownTls }}
     - secretName: {{ $secret }}
       hosts:
