@@ -1,0 +1,6 @@
+---
+# The Golemio key of the Praha seed's three Golemio datasources (T-2785), SOPS-encrypted to the age
+# recipients of .sops.yaml; the reconciler decrypts it at apply time (CC-06, Architecture/06 §1.4).
+# Private, so it lives beside the environments, never in the public seed folder (T-6982).
+encryptedSeedFiles:
+  projects/praha/secrets/golemio.enc.yaml: {{ readFile "../secrets/praha/praha-secrets-golemio.enc.yaml" | toJson }}

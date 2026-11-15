@@ -92,7 +92,7 @@ status:
 """
     prod = """url: https://opendata.smartcity.joinedcontext.com/x
 api: https://api.smartcity.joinedcontext.com
-owner: marek.mraz@joinedcontext.com
+owner: owner@joinedcontext.com
 source:
   ref: 9a731442bca8b2cb185caefe57800da2a1ceb22e
 """

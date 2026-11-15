@@ -123,6 +123,10 @@ seed:
 {{- /* Seed folders one environment adds under components/ (extraSeeds; T-6545: stage registers prod). */}}
 {{- range $dir := index .Values "extraSeeds" | default list }}{{ $sources = append $sources $dir }}{{ end }}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
+{{- /* Encrypted files a private environment adds (encryptedSeedFiles: repository path -> text,
+       T-6982): a sops file never lives in a public seed folder. They are laid out and seeded as
+       the files an index names. */}}
+{{- range $path, $text := index .Values "encryptedSeedFiles" | default dict }}{{ $_ := set $assistants $path $text }}{{ end }}
 {{- range $path, $_ := $assistants }}{{ $_ := set $projects (index (splitList "/" $path) 1) true }}{{ end }}
 {{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources "extra" $assistants) | fromJson }}
 {{- $parts := list }}

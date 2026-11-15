@@ -63,7 +63,8 @@ def test_the_hosted_clusters_name_the_hosted_layer_and_every_named_layer_exists(
     assert named_layers(ENVIRONMENTS / "dev") == ["hosted"]
     assert named_layers(ENVIRONMENTS / "smartcity") == ["hosted"]
     for env in ENVIRONMENTS.iterdir():
-        if env.is_dir() and env != LAYERS:
+        # secrets/ holds the sops files environments seed (encryptedSeedFiles, T-6982), no environment.
+        if env.is_dir() and env not in (LAYERS, ENVIRONMENTS / "secrets"):
             for layer in named_layers(env):
                 assert list((LAYERS / layer).glob("*.yaml.gotmpl")), f"{env.name} names layer {layer!r}, which holds no file"
 

@@ -445,13 +445,11 @@ def test_the_golemio_key_is_named_by_reference_and_committed_only_encrypted():
         assert http["authorization"] == {"header": "X-Access-Token", "headerRef": {"name": "golemio", "key": "token"}}
         assert not any(h.lower() in ("x-access-token", "authorization") for h in http["headers"])
         assert http["url"].startswith("https://api.golemio.cz/") and "token" not in http["url"].lower()
-    secret = yaml.safe_load((PRAHA / "praha-secrets-golemio.enc.yaml").read_text())
-    assert index["praha-secrets-golemio.enc.yaml"] == "projects/praha/secrets/golemio.enc.yaml"
-    # Every value encrypted, the file sealed by its MAC, to an age recipient (CC-06, Architecture/06 §1.4).
-    assert set(secret) == {"golemio", "sops"} and set(secret["golemio"]) == {"token"}
-    assert re.fullmatch(r"ENC\[AES256_GCM,data:[^,]+,iv:[^,]+,tag:[^,]+,type:str\]", secret["golemio"]["token"])
-    assert secret["sops"]["mac"].startswith("ENC[AES256_GCM,")
-    assert [a["recipient"] for a in secret["sops"]["age"]] and all(a["recipient"].startswith("age1") for a in secret["sops"]["age"])
+    # The encrypted key itself is private: an environment adds it (encryptedSeedFiles, T-6982;
+    # the private environments/tests, T-6984), so no seed folder holds or names a sops file.
+    seeds = PRAHA.parent
+    assert not sorted(seeds.glob("**/*.enc.y*ml"))
+    assert not [f for f in index if f.endswith((".enc.yaml", ".enc.yml"))]
 
 
 def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():

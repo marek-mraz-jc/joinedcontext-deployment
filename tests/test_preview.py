@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 import yaml
 from conftest import PROJECT_ROOT, load_yaml_all, set_global
+from test_dev_recipes import write_nodes
 
 CHART = PROJECT_ROOT / "components/preview/charts/preview"
 GOLDEN = PROJECT_ROOT / ".ci/golden/preview.txt"
@@ -212,7 +213,7 @@ STUB = textwrap.dedent("""\
     #!/usr/bin/env bash
     # kubectl as the recipe's guards ask it: answers from STUB_* variables, records nothing else.
     case "$*" in
-      "config view --minify -o jsonpath={.clusters[0].cluster.server}") echo "https://116.203.134.249:6443" ;;
+      "config view --minify -o jsonpath={.clusters[0].cluster.server}") echo "https://203.0.113.10:6443" ;;
       *"get clusters.postgresql.cnpg.io postgres-cluster"*) echo "${STUB_ROLES:-portal pv_previews}" ;;
       "get cronjobs -A -o name") echo "${STUB_CRONJOBS:-cronjob.batch/sandbox-reaper-reaper}" ;;
       "top nodes --no-headers") echo "node-1 900m 11% ${STUB_MEMORY_BYTES:-12000Mi} ${STUB_MEMORY:-50%}" ;;
@@ -227,7 +228,8 @@ STUB = textwrap.dedent("""\
 def stub_env(tmp_path):
     (tmp_path / "kubectl").write_text(STUB)
     (tmp_path / "kubectl").chmod(0o755)
-    return {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "JUST_NO_DOTENV": "true"}
+    return {**os.environ, "PATH": f"{tmp_path}:{os.environ['PATH']}", "JUST_NO_DOTENV": "true",
+            "JC_ENVIRONMENTS": str(write_nodes(tmp_path / "environments"))}
 
 
 def check(stub_env, slug="fix-login", **stub):
@@ -283,7 +285,7 @@ def test_just_dev_preview_refuses_any_context_but_dev(stub_env, tmp_path):
     if shutil.which("just") is None:
         pytest.skip("just not installed")
     stub = tmp_path / "kubectl"
-    stub.write_text(STUB.replace("https://116.203.134.249:6443", "https://10.0.0.1:6443"))
+    stub.write_text(STUB.replace("https://203.0.113.10:6443", "https://10.0.0.1:6443"))
     result = subprocess.run(["just", "dev-preview", "x"], env=stub_env, capture_output=True, text=True,
                             check=False, cwd=str(PROJECT_ROOT))
     assert result.returncode != 0 and "not the dev cluster" in result.stderr, result.stderr

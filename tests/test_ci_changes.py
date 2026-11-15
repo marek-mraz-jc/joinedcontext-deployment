@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from test_dev_recipes import write_nodes
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -282,7 +283,7 @@ esac
 
 KUBECTL_STUB = """#!/usr/bin/env bash
 case "$*" in
-  "config view"*) echo "https://116.203.134.249:6443" ;;
+  "config view"*) echo "https://203.0.113.10:6443" ;;
   *"get configmap jc-release"*) cat "$STUB_DIR/applied" ;;
   *"get configmap jc-apply-red"*) cat "$STUB_DIR/red" 2>/dev/null || true ;;
   *"create configmap jc-apply-red"*) echo "HOLD $*" ;;
@@ -326,7 +327,8 @@ def tree(tmp_path):
     git(work, "add", ".")
     git(work, "commit", "-qm", "applied")
     (tmp_path / "applied").write_text(git(work, "rev-parse", "HEAD"))
-    env = {**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}", "STUB_DIR": str(tmp_path), "JUST_NO_DOTENV": "true"}
+    env = {**os.environ, "PATH": f"{stubs}:{os.environ['PATH']}", "STUB_DIR": str(tmp_path), "JUST_NO_DOTENV": "true",
+           "JC_ENVIRONMENTS": str(write_nodes(tmp_path / "environments"))}
     return work, env
 
 

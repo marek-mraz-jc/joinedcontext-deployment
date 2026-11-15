@@ -9,6 +9,7 @@ and keeps the last result patched into the result ConfigMap.
 import gzip
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -17,8 +18,13 @@ from pathlib import Path
 
 import pytest
 import yaml
+from conftest import PROJECT_ROOT
 
 NAME = "postgres-cluster-dr-drill"
+# The keys smartcity's dumps are sealed to: its environment value (T-6982), never a literal here.
+SMARTCITY_RECIPIENTS = yaml.safe_load(re.search(
+    r"^\s*ageRecipients: (\[.*\])$",
+    (PROJECT_ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text(), re.M)[1])
 DUMP = "2026-10-24T0230Z.sql.gz.age"
 
 
@@ -561,8 +567,8 @@ def test_the_dump_on_the_volume_is_sealed_to_the_operator_and_the_drill_key(smar
     assert code == 0, log
     dump, = backup.glob("*.sql.gz.age")
     assert dump.read_bytes().startswith(b"age-encryption.org/v1\n")
-    assert (tmp_path / "age.args").read_text().split() == ["age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55"], \
-        "smartcity's operator key, the dev age key of .sops.yaml"
+    assert (tmp_path / "age.args").read_text().split() == SMARTCITY_RECIPIENTS, \
+        "smartcity's operator key (its environment value; the key itself: the private environments/tests, T-6984)"
     identity, _ = age_identity(tmp_path)
     opened = subprocess.run(["age", "-d", "-i", str(identity), str(dump)], check=True, capture_output=True).stdout
     assert gzip.decompress(opened) == (tmp_path / "dumpall.out").read_bytes()

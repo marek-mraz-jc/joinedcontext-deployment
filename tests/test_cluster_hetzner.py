@@ -1,5 +1,6 @@
 """T-6444: one kube-hetzner module, one tfvars per cluster, state outside Git, guarded recipes."""
 
+import ipaddress
 import os
 import re
 import stat
@@ -64,7 +65,9 @@ def test_tfvars_holds_no_token_like_string(path):
 def test_admin_cidrs_are_never_open(path):
     line = re.search(r"^firewall_allowed_ips\s*=\s*\[(.*?)\]", path.read_text(), re.M).group(1)
     cidrs = re.findall(r'"([^"]+)"', line)
-    assert cidrs == ["89.167.20.156/32"], "the agents' server; a person's address goes in private.tfvars"
+    # One host each (the agents' server; its address is private, the private environments/tests, T-6984);
+    # a person's address goes in private.tfvars.
+    assert cidrs and all(ipaddress.ip_network(c).prefixlen == 32 for c in cidrs), cidrs
 
 
 def test_module_refuses_an_open_cidr():

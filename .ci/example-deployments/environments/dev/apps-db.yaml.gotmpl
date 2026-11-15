@@ -3,6 +3,11 @@
 # beside the platform's cluster in the artifact store (T-5662), under apps-db/ with a key that
 # reaches that prefix alone. Seven days, as postgres-cluster: the store's volume is shared.
 apps-db:
+  backup:
+    localBackup:
+      # The dumps are age-encrypted to the dev age key of .sops.yaml, whose private half only the
+      # operator's secret store holds (an environment value since T-6982: the component has no default).
+      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
   cluster:
     backups:
       enabled: true
