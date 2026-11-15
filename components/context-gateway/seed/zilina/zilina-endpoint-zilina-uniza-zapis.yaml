@@ -19,4 +19,4 @@ spec:
     - urn:ngsi-ld:Policy:zilina.sk:zilina-uniza:uniza-read
   slug: luvxxq6frkmxhzw5ehujhssdql4sz6pr
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

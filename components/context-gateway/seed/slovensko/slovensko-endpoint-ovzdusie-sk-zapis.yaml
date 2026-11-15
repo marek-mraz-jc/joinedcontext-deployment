@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:joinedcontext.com:ovzdusie-sk:public-read
   slug: 72mu23f3fgzfvidgg5l45lw2tbbi4y2n
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

@@ -179,7 +179,7 @@ def test_the_pipeline_upserts_from_the_one_datasource_through_the_spaces_door():
     source = yaml.safe_load((CITY / "barcelona-datasource-air-quality.yaml").read_text())["spec"]["http"]
     assert source["url"].startswith("https://opendata-ajuntament.barcelona.cat/")
     assert pipeline["output"] == {"type": "AirQualityObserved", "mode": "upsert"}
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write"
 
 
 def test_the_dataset_endpoint_publishes_to_ckan_through_its_read_only_policy():
@@ -341,7 +341,7 @@ def test_the_weather_and_groundwater_datasets_upsert_from_the_city_and_publish_r
     assert source["url"].startswith("https://opendata-ajuntament.barcelona.cat/")
     assert pipeline["source"]["dataSourceRef"]["name"] == f"bcn-{name}"
     assert pipeline["output"] == {"type": kind, "mode": "upsert"}
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write"
     assert endpoint["policyRef"].endswith(f":public-{name}")
     assert endpoint["catalog"]["pipelineRef"] == {"kind": "Pipeline", "name": name}
     assert {"ngsi-ld", "csv", "ogc-features", "odata"} <= set(endpoint["enabledRepresentations"])

@@ -25,4 +25,4 @@ spec:
     - urn:ngsi-ld:Policy:bbsk.sk:bbsk-registre:zariadenia-read
   slug: hxceoszwlvceltm2hlpplae6w4ixfxiz
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

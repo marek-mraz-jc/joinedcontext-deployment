@@ -20,4 +20,4 @@ spec:
     - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-catalog:catalog-public-read
   slug: 5fetryw46rpwcc3z5xkngq3slhljx5xw
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

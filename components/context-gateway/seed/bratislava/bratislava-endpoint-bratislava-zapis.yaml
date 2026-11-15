@@ -470,4 +470,4 @@ spec:
     - urn:ngsi-ld:Policy:bratislava.sk:bratislava:public-zs-ziaci
   slug: zfhuunlin6jkjl5z2iclrzvmatojwnl2
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

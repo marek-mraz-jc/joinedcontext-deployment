@@ -186,7 +186,7 @@ def test_each_pipeline_reads_its_golemio_endpoint_by_the_secret_into_the_city_sp
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"golemio-{name}"
         assert pipeline["spec"]["period"] in ("24h", "168h")
         assert pipeline["spec"]["output"] == {"type": "PointOfInterest", "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
 
 
 def test_the_cc_by_and_the_golemio_places_are_separate_datasets():

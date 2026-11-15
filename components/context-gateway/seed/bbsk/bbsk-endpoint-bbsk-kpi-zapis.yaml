@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kpi:kpi-read
   slug: x3zanwf6mc2v5zt25ifzdrmvrjp3yfl7
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

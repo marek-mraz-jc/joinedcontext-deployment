@@ -313,7 +313,7 @@ def test_every_feed_is_seeded_as_a_datasource_a_pipeline_and_a_mapping():
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         # Replace, so a retyped or dropped attribute leaves at the next run (PL-79, T-5167).
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "replace"}
-        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre"
+        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:bbsk.sk:bbsk-registre:bbsk-registre-zapis"
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
         assert kind in model["spec"]["classes"] and kind in readable and kind in writable
         for seeded in (f"bbsk-datasource-{name}.yaml", f"bbsk-pipeline-{name}.yaml", f"bbsk-pipeline-{name}-bento.yaml"):

@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:hel.fi:helsinki-kpi:kpi-read
   slug: gagl72sfertxzsagw77ij36jslpbkxvk
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

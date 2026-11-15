@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:hel.fi:helsinki-catalog:catalog-public-read
   slug: qhkkueqhi2q73ainw2kpic3njjcaa6st
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

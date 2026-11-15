@@ -19,4 +19,4 @@ spec:
     - urn:ngsi-ld:Policy:zilina.sk:zilina-kpi:kpi-read
   slug: surbfjufso7hr2svy6xyglmgggmxd4zn
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

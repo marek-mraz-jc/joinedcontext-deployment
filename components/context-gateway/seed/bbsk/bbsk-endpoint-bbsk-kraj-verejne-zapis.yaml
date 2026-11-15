@@ -24,4 +24,4 @@ spec:
     - urn:ngsi-ld:Policy:bbsk.sk:bbsk-kraj:pipelines-write
   slug: trd6a6cbtlcpfqynsuebohblkaokcxzz
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

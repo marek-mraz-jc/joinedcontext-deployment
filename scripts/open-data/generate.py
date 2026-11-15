@@ -1032,7 +1032,8 @@ def project_files(project: str, entries: list[dict], names: dict[str, str]) -> d
         {**head, "kind": "Endpoint",
          "metadata": meta(f"{space}-zapis", {"sk": f"{p['title']['sk']}: zápis kanálov", "en": f"{p['title']['en']}: pipeline writes"}),
          "spec": {"contextSpaceRef": space, "policyRefs": urns(["otvorene-data-pipelines-write", *reads]),
-                  "slug": slug_for(door), "audience": "organization", "enabledRepresentations": ["ngsi-ld"]}})
+                  "slug": slug_for(door), "audience": "organization",
+                  "enabledRepresentations": ["ngsi-ld", "websocket", "ogc-features", "mcp"]}})
     information = [{"entities": [{"type": t} for t in types]}]
     files[f"{pre}policy-read.yaml"] = manifest(
         "Anyone reads every type of the space: each is open data, and no mapping reads a column that names\n"

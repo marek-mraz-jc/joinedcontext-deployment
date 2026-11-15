@@ -164,4 +164,4 @@ def test_the_pipeline_reads_golemio_by_the_secret_once_a_minute_into_the_city_sp
     pipeline = yaml.safe_load((PRAHA / "praha-pipeline-pid-vehicles.yaml").read_text())
     assert pipeline["spec"]["period"] == "60s"
     assert pipeline["spec"]["output"] == {"type": "Vehicle", "mode": "upsert"}
-    assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+    assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")

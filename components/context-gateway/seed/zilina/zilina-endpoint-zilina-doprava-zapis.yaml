@@ -22,4 +22,4 @@ spec:
     - urn:ngsi-ld:Policy:zilina.sk:zilina-doprava:svietidla-read
   slug: tcqlroavwwpp753bjyroev7bapvznrnz
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

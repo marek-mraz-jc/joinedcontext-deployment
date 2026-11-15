@@ -20,4 +20,4 @@ spec:
     - urn:ngsi-ld:Policy:bbsk.sk:bbsk-catalog:catalog-public-read
   slug: fzo6nqnbxuplo6wiex5s2zshbffsv23j
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

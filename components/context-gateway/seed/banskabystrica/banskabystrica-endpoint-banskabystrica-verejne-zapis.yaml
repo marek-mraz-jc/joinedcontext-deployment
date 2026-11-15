@@ -32,4 +32,4 @@ spec:
     - urn:ngsi-ld:Policy:banskabystrica.sk:banskabystrica-verejne:zdravie-read
   slug: uneghfimtggnrpflgjsvar7cvrdsc4fw
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

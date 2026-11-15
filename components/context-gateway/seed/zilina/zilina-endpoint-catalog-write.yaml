@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:zilina.sk:zilina-catalog:catalog-public-read
   slug: em3wsis5dr23wftcsprcesc2k3rggvga
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

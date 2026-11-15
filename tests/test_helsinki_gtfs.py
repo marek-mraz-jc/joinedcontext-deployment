@@ -193,7 +193,7 @@ def test_each_source_reads_only_its_named_members_of_the_zip_within_a_bound():
         http = datasource["spec"]["http"]
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == datasource["metadata"]["name"]
         assert pipeline["spec"]["output"]["type"] == kind
-        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all"
+        assert pipeline["spec"]["targetEndpoint"] == "urn:ngsi-ld:Endpoint:{orgDomain}:helsinki:helsinki-all-write"
         assert pipeline["spec"]["quotas"]["maxMemoryMb"] <= 256
         # Never the whole 79 MB archive: the named members by Range, each bounded (PL-72).
         assert http["url"] == "https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip"

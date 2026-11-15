@@ -108,7 +108,7 @@ def test_the_dog_areas_upsert_from_the_city_and_publish_only_their_own_ids():
     assert source["url"].startswith("https://opendata-ajuntament.barcelona.cat/")
     assert pipeline["source"]["dataSourceRef"]["name"] == "bcn-dog-areas"
     assert pipeline["output"] == {"type": "PointOfInterest", "mode": "upsert"}
-    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona"
+    assert pipeline["targetEndpoint"] == "urn:ngsi-ld:Endpoint:barcelona.cat:barcelona:barcelona-write"
     assert endpoint["policyRef"].endswith(":public-dog-areas")
     assert endpoint["catalog"]["pipelineRef"] == {"kind": "Pipeline", "name": "dog-areas"}
     # Off the catalogue while prod holds none of it (T-5788, owner 2026-10-26): no publish block, harvest false.

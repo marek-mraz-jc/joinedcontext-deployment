@@ -282,7 +282,7 @@ def test_every_layer_is_seeded_as_a_datasource_a_pipeline_and_a_mapping_on_iprs_
         assert pipeline["metadata"]["name"] == name
         assert pipeline["spec"]["source"]["dataSourceRef"]["name"] == f"ipr-{name}"
         assert pipeline["spec"]["output"] == {"type": kind, "mode": "upsert"}
-        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto")
+        assert pipeline["spec"]["targetEndpoint"].endswith(":praha-mesto:praha-mesto-zapis")
         mapping = (PRAHA / f"praha-pipeline-{name}-bento.yaml").read_text()
         assert f'let item = "{item}"' in mapping and f'let service = "{service}"' in mapping
         assert f'let prefix = "{prefix}"' in mapping and f"let cap = {cap}" in mapping

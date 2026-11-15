@@ -65,4 +65,4 @@ spec:
     - urn:ngsi-ld:Policy:hel.fi:helsinki:transit-stops-account
   slug: kpozxcalvmcockfawrbca4gibvjvj4uu
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

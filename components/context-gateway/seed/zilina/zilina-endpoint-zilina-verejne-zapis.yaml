@@ -24,4 +24,4 @@ spec:
     - urn:ngsi-ld:Policy:zilina.sk:zilina-verejne:verejne-read-history
   slug: iyjqibogjx6gbm4t7m6h2dkgfpss2qav
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

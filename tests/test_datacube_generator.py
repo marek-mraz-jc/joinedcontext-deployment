@@ -107,7 +107,7 @@ def test_every_generated_manifest_is_a_slovensko_manifest_of_its_own_space(tmp_p
         if doc["kind"] == "Policy" and doc["spec"]["assignee"]["kind"] == "serviceAccount":
             assert "deleteBatch" not in doc["spec"]["operations"]
         if doc["kind"] == "Pipeline":
-            assert doc["spec"]["outputs"][0]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}"
+            assert doc["spec"]["outputs"][0]["targetEndpoint"] == f"urn:ngsi-ld:Endpoint:joinedcontext.com:{space}:{space}-zapis"
     for space, ks in kinds.items():
         assert sorted(set(ks)) == ["ContextSpace", "DataModel", "DataSource", "Endpoint", "Pipeline", "Policy"], space
 

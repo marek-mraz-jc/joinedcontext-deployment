@@ -40,4 +40,4 @@ spec:
     - urn:ngsi-ld:Policy:barcelona.cat:barcelona:public-weather-forecast
   slug: 5t2ztgmonbejfs5r25fbzmhjezdfomf2
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

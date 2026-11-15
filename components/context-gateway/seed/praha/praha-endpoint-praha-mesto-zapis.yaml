@@ -67,4 +67,4 @@ spec:
     - urn:ngsi-ld:Policy:praha.eu:praha-mesto:public-zelen
   slug: 5tu6oj7uuebidnlutlsiaxc3jjwqscpk
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]

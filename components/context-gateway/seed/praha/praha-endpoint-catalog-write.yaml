@@ -18,4 +18,4 @@ spec:
     - urn:ngsi-ld:Policy:praha.eu:praha-catalog:catalog-public-read
   slug: ura3fv6637b4wgq4gqmamee7tjsce6xv
   audience: organization
-  enabledRepresentations: [ngsi-ld]
+  enabledRepresentations: [ngsi-ld, websocket, ogc-features, mcp]
