@@ -10,7 +10,6 @@ App's own test fixtures. It also proves the production guard of the recipes refu
 
 import base64
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -18,10 +17,11 @@ from datetime import datetime, timezone
 
 import pytest
 
-from test_dev_recipes import DEV_SERVER, PROJECT_ROOT, kubeconfig
+from test_dev_recipes import DEV_SERVER, NODES, PROJECT_ROOT, guard_env
+from test_keycloak_people import SMARTCITY_OWNER_EMAIL
 from test_production_is_not_dev import DETECTORS, name_of, strings
 
-PROD_SERVER = "https://2.28.56.179:6443"
+PROD_SERVER = f"https://{NODES['smartcity']}:6443"
 DOMAIN = "smartcity.joinedcontext.com"
 # The detectors a city seed trips by design; each is replaced by a narrower test below.
 REPLACED = {"demo_accounts_and_feeds", "demo_people", "placeholder_domains"}
@@ -66,7 +66,7 @@ def people_ids(docs):
 
 
 def test_the_owner_is_the_realm_account_and_holds_the_stewards_bindings(smartcity):
-    owner = "marek.mraz@joinedcontext.com"
+    owner = SMARTCITY_OWNER_EMAIL
     humans = [u for u in realm(smartcity)["users"] if not u["username"].startswith("service-account-")]
     # Beside the owner: the Decidim administrator, who holds no right (test_decidim_component,
     # T-6448), and the presenter (tests/test_presenter.py, T-6542).
@@ -125,12 +125,12 @@ def test_security_txt_expires_in_the_future():
 
 
 def run_prod_guard(tmp_path, server):
-    env = dict(os.environ, KUBECONFIG=str(kubeconfig(tmp_path, server)))
+    env = guard_env(tmp_path, server)
     return subprocess.run(["just", "_prod-guard"], cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, check=False)
 
 
 @pytest.mark.skipif(shutil.which("just") is None or shutil.which("kubectl") is None, reason="just and kubectl")
-@pytest.mark.parametrize("server", [DEV_SERVER, "https://2.28.56.17:6443", "https://12.28.56.179:6443"])
+@pytest.mark.parametrize("server", [DEV_SERVER, "https://203.0.113.2:6443", "https://1203.0.113.20:6443"])
 def test_the_prod_guard_refuses_dev_and_lookalikes(tmp_path, server):
     result = run_prod_guard(tmp_path, server)
     assert result.returncode != 0 and "refusing" in result.stderr

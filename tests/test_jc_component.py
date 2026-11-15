@@ -153,7 +153,7 @@ def test_jc_trusts_forwarded_for_only_from_the_edge(rendered, env):
     for net in proxies:
         assert ipaddress.ip_network(net).prefixlen > 0, f"{env}: {net} trusts every address"
     # A caller outside the edge's network, the Service network and the node itself name nobody.
-    for outsider in ("203.0.113.7", "10.43.0.10", "116.203.134.249"):
+    for outsider in ("203.0.113.7", "10.43.0.10", "203.0.113.10"):
         assert client_of(proxies, outsider, "198.51.100.1") == outsider, f"{env}: {outsider} set the client address"
     # The edge's pod forwards the real caller.
     assert client_of(proxies, "10.42.1.7", "198.51.100.1, 10.42.0.1") == "198.51.100.1"

@@ -453,16 +453,28 @@ install-dependencies:
 # ---------------------------------------------------------------------------
 
 dev_domain := env('JC_DEV_DOMAIN', 'dev.joinedcontext.com')
-# The node the dev domain points at (primaleto since 2026-09-26, T-3042); the guard compares it
-# with the kube context's server.
-dev_node_ip := env('JC_DEV_NODE_IP', '116.203.134.249')
+# Private values live in the private environments/ checkout JC_ENVIRONMENTS names (an absolute path;
+# T-6979 §3, T-6982, T-6984), never in this public repository.
+environments_dir := env('JC_ENVIRONMENTS', '')
+
+# The address of one cluster's node, from <environments>/nodes.yaml; there is no default address.
+# The guards compare it with the kube context's server.
+_node-ip cluster:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	[ -n "{{ environments_dir }}" ] || { echo "no node address for {{ cluster }}: set JC_ENVIRONMENTS to the private environments/ checkout" >&2; exit 1; }
+	nodes="{{ environments_dir }}/nodes.yaml"
+	[ -f "$nodes" ] || { echo "no node address for {{ cluster }}: $nodes is missing; set JC_ENVIRONMENTS to the environments/ checkout" >&2; exit 1; }
+	ip=$(yq '.["{{ cluster }}"] // ""' "$nodes")
+	[[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || { echo "$nodes names no IPv4 address for {{ cluster }} (got '$ip')" >&2; exit 1; }
+	echo "$ip"
 
 # Refuse to touch anything but the dev cluster
 [group('dev cluster')]
 _dev-guard:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	ip="{{ dev_node_ip }}"
+	ip="${JC_DEV_NODE_IP:-$(just _node-ip dev)}"
 	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
 	case "$server" in
 		*"$ip"*) ;;
@@ -996,14 +1008,13 @@ dev-destroy:
 # ---------------------------------------------------------------------------
 
 prod_domain := 'smartcity.joinedcontext.com'
-prod_node_ip := '2.28.56.179'
 
 # Refuse to touch anything but the production cluster
 [group('prod cluster')]
 _prod-guard:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	ip="{{ prod_node_ip }}"
+	ip=$(just _node-ip smartcity)
 	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
 	case "$server" in
 		"https://${ip}:"*|"https://${ip}") ;;
@@ -1056,14 +1067,13 @@ prod-smoke:
 # ---------------------------------------------------------------------------
 
 stage_domain := 'stage.joinedcontext.com'
-stage_node_ip := '2.31.157.248'
 
 # Refuse to touch anything but the stage cluster
 [group('stage cluster')]
 _stage-guard:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	ip="{{ stage_node_ip }}"
+	ip=$(just _node-ip stage)
 	server=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null || true)
 	case "$server" in
 		"https://${ip}:"*|"https://${ip}") ;;

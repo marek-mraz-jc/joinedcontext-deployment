@@ -5,6 +5,7 @@ it by itself, so it is there whatever else a host serves, and a production insta
 not set its own contact does not render.
 """
 
+import re
 import shutil
 from datetime import datetime, timedelta, timezone
 
@@ -49,7 +50,8 @@ def test_dev_answers_security_txt_on_every_host_with_the_owners_contact(rendered
     abort = plugins["fault-injection"]["abort"]
     assert abort["http_status"] == 200
     body = fields(abort["body"])
-    assert body["Contact"] == "mailto:contact@marek-mraz.com"
+    # The address itself is private (the private environments/tests, T-6984, T-6982).
+    assert re.fullmatch(r"mailto:[^@\s]+@[^@\s]+", body["Contact"])
     assert plugins["response-rewrite"]["headers"]["set"]["Content-Type"] == "text/plain; charset=utf-8"
 
 

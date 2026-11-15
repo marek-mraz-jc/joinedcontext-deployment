@@ -244,7 +244,7 @@ def config_map(content: dict) -> dict:
 # One document per detector that carries its defect, the way a careless overlay would write it.
 DEFECTS = {
     "dev_hosts": [
-        workload({"JC_PUBLIC_URL": "https://portal.2.28.67.127.sslip.io"}),
+        workload({"JC_PUBLIC_URL": "https://portal.203.0.113.40.sslip.io"}),
         workload({"JC_PUBLIC_URL": f"https://portal.{DEV_DOMAIN}"}, name="other"),
     ],
     "placeholder_domains": [workload({"JC_PORTAL_ORG_DOMAIN": "joinedcontext.test"})],

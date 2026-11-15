@@ -34,6 +34,10 @@
 {{- end }}
 {{- /* Each catalogue instance's assistant, rendered from its values block (T-4636). */}}
 {{- $assistants := tpl (printf "%s{{ include \"gitea.catalogueAssistants\" . }}" (readFile "../seed-layout.tpl")) (dict "values" .Values) | fromJson }}
+{{- /* Encrypted files a private environment adds (encryptedSeedFiles: repository path -> text,
+       T-6982): a sops file never lives in a public seed folder. They are laid out and seeded as
+       the files an index names. */}}
+{{- range $path, $text := index .Values "encryptedSeedFiles" | default dict }}{{ $_ := set $assistants $path $text }}{{ end }}
 {{- range $path, $text := $assistants }}{{ $_ := set $seed $path $text }}{{ end }}
 {{- /* Which part of which project each release holds: values/seed-layout.tpl (T-4431). */}}
 {{- $layout := tpl (printf "%s{{ include \"gitea.seedLayout\" . }}" (readFile "../seed-layout.tpl")) (dict "sources" $sources "extra" $assistants) | fromJson }}

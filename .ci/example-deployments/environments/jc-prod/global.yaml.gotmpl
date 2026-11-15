@@ -128,6 +128,9 @@ postgres:
     localBackup:
       enabled: true
       keepDays: 2
+      # The dumps are age-encrypted to the dev age key of .sops.yaml, whose private half only the
+      # operator's secret store holds (an environment value since T-6982: the component has no default).
+      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
       cap: 16Gi
       # The dumps outlive a deleted claim (T-6718, cluster/hetzner local-path-retain).
       storageClass: local-path-retain
@@ -787,6 +790,11 @@ networkpolicies:
 
 # The Apps' database has no claim yet: it outlives its deletion (T-6718, local-path-retain).
 apps-db:
+  backup:
+    localBackup:
+      # The dumps are age-encrypted to the dev age key of .sops.yaml, whose private half only the
+      # operator's secret store holds (an environment value since T-6982: the component has no default).
+      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
   cluster:
     rawValues:
       cluster:

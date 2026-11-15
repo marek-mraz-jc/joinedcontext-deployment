@@ -35,6 +35,10 @@ SMARTCITY_STEWARD = re.search(
 SMARTCITY_OWNER = re.search(
     r"initialUserId: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
 )[1]
+# The owner's e-mail (global.initialUserEmail): a private value, read where it is set (T-6982).
+SMARTCITY_OWNER_EMAIL = re.search(
+    r"initialUserEmail: (\S+)", (ROOT / ".ci/example-deployments/environments/smartcity/global.yaml.gotmpl").read_text()
+)[1]
 
 # One worker runs the module, so one Keycloak serves its tests (T-3897, T-5370).
 pytestmark = [pytest.mark.xdist_group("docker-keycloak-people")]
@@ -111,7 +115,7 @@ def test_a_production_instance_names_its_owner_by_id_and_never_deletes_them(rend
     assert lines == [
         [SMARTCITY_STEWARD, "participacia.steward@hel.fi", "true"],
         [PRESENTER, "presenter@hel.fi", "false"],
-        [SMARTCITY_OWNER, "marek.mraz@joinedcontext.com", "false"],
+        [SMARTCITY_OWNER, SMARTCITY_OWNER_EMAIL, "false"],
     ]
     assert not SMARTCITY_STEWARD.startswith(("0a000000-", "de300000-"))
     seeds = "\n".join(

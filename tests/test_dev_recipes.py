@@ -10,8 +10,10 @@ from pathlib import Path
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# The node the justfile's dev_node_ip names: primaleto since the 2026-09-26 migration (T-3042).
-DEV_SERVER = "https://116.203.134.249:6443"
+# TEST-NET-3 addresses (RFC 5737) for the guards; the real node addresses live only in the private
+# environments' nodes.yaml (T-6982), which `just _node-ip` reads from JC_ENVIRONMENTS.
+NODES = {"dev": "203.0.113.10", "smartcity": "203.0.113.20", "stage": "203.0.113.30"}
+DEV_SERVER = f"https://{NODES['dev']}:6443"
 FOREIGN_SERVER = "https://10.11.12.13:6443"
 
 requires_just = pytest.mark.skipif(shutil.which("just") is None, reason="just not installed")
@@ -42,8 +44,21 @@ def kubeconfig(tmp_path: Path, server: str) -> Path:
     return path
 
 
+def write_nodes(environments: Path) -> Path:
+    """An environments tree holding only the test nodes.yaml; returns its path."""
+    environments.mkdir(parents=True, exist_ok=True)
+    (environments / "nodes.yaml").write_text("".join(f"{name}: {ip}\n" for name, ip in NODES.items()))
+    return environments
+
+
+def guard_env(tmp_path: Path, server: str) -> dict:
+    """The environment a guard runs in: a kube context at `server`, the test node addresses."""
+    return dict(os.environ, KUBECONFIG=str(kubeconfig(tmp_path, server)),
+                JC_ENVIRONMENTS=str(write_nodes(tmp_path / "environments")))
+
+
 def run_guard(tmp_path: Path, server: str) -> subprocess.CompletedProcess:
-    env = dict(os.environ, KUBECONFIG=str(kubeconfig(tmp_path, server)))
+    env = guard_env(tmp_path, server)
     return subprocess.run(
         ["just", "_dev-guard"], cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, check=False
     )

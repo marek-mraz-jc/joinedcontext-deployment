@@ -61,4 +61,7 @@ postgres:
     localBackup:
       enabled: true
       keepDays: 1
+      # The dumps are age-encrypted to the dev age key of .sops.yaml, whose private half only the
+      # operator's secret store holds (an environment value since T-6982: the component has no default).
+      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
       excludeDatabases: [antares, ckan_datastore]

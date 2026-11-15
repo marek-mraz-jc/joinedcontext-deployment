@@ -37,5 +37,5 @@ apps-db:
       keepDays: 7
       size: 1Gi
       excludeDatabases: []
-      # As postgres.databases.localBackup.ageRecipients: the dev age key of .sops.yaml.
-      ageRecipients: [age1dwqmmfzz3d953uawww9nzp56vhl9j4ljg3l06mrzp8xuwu6l09cq3mwj55]
+      # As postgres.databases.localBackup.ageRecipients: an environment value, no default (T-6982).
+      ageRecipients: []

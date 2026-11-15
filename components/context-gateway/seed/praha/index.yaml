@@ -193,10 +193,8 @@ praha-pipeline-geo-no-parking-bento.yaml: projects/praha/pipelines/geo-no-parkin
 praha-pipeline-geo-machines-bento.yaml: projects/praha/pipelines/geo-machines/bento.yaml
 praha-pipeline-waste-fill-bento.yaml: projects/praha/pipelines/waste-fill/bento.yaml
 praha-pipeline-waste-containers-bento.yaml: projects/praha/pipelines/waste-containers/bento.yaml
-# The Golemio key of the three Golemio datasources above, SOPS-encrypted to the dev age recipient
-# (age1dwqmmfzz…3mwj55, the public half of portal-age-identity); the reconciler decrypts it at
-# apply time (CC-06, Architecture/06 §1.4). Never a plaintext value here.
-praha-secrets-golemio.enc.yaml: projects/praha/secrets/golemio.enc.yaml
+# The Golemio key of the three Golemio datasources above, projects/praha/secrets/golemio.enc.yaml,
+# is SOPS-encrypted and private: an environment adds it through `encryptedSeedFiles` (T-6982).
 # The one application of the space (T-2917): a static bundle the Portal serves at /apps/praha-mesto/.
 praha-app-mesto.yaml: projects/praha/apps/praha-mesto/app.yaml
 # Prague's map for its residents (T-2786): a public static bundle the Portal image ships, reading
