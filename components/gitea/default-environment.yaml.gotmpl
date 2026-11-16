@@ -93,6 +93,9 @@ gitea:
   seed-16:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
+  seed-17:
+    enabled: true
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}
   bootstrap:
     enabled: true
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "gitea") }}

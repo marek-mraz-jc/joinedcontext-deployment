@@ -21,7 +21,7 @@ lists, gitea.catalogueAssistants>); gives JSON
 {"parts": {"<part>": <release>}, "count": {"<project>": <parts>}, "files": {"<path>": <part index + 1>}}.
 */ -}}
 {{- define "gitea.seedLayout" -}}
-{{- $releases := 16 }}
+{{- $releases := 17 }}
 {{- $budget := 1000000 }}
 {{- $sizes := dict }}
 {{- range $dir := .sources }}

@@ -111,8 +111,12 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     # No App reads it: the city's air-quality screen reads the live EEA readings in
     # banskabystrica-verejne, not the conformance suite's seeded stations (T-2916, T-2949). The
     # second Policy is the pipelines' write, which pipeline public-air and its expiry sweep need
-    # (T-3120, PL-64). The conformance account writes in its own space (F-BNT1-002).
-    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Policy", "Policy"], kinds
+    # (T-3120, PL-64). The conformance account writes in its own space (F-BNT1-002). The second
+    # Endpoint is the space's write door: open data is read-only, so the pipelines write through an
+    # organization Endpoint beside the public one (T-6980, EP-187).
+    assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Endpoint", "Policy", "Policy"], kinds
+    audiences = sorted(m["spec"]["audience"] for (kind, _), m in ovzdusie.items() if kind == "Endpoint")
+    assert audiences == ["organization", "public"], audiences
 
 
 @requires_helmfile
