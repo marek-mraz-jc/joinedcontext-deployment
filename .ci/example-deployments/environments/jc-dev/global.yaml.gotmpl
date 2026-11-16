@@ -108,25 +108,51 @@ jc:
     # The 24 host certificates of the six below order in one apply (T-7005; joinedcontext.com had 2
     # new certificates in the week to 2026-11-15, so 24 fit under Let's Encrypt's 50).
     certificateStage: 24
+    # The 24 Certificates of the four hosts each (T-7005), issued: only the `idm.` ones of T-7001 are new.
+    issuedCertificates:
+      - jc-org-smartcity-bbsk
+      - jc-org-opendata-bbsk
+      - jc-org-api-bbsk
+      - jc-org-mcp-bbsk
+      - jc-org-smartcity-hel
+      - jc-org-opendata-hel
+      - jc-org-api-hel
+      - jc-org-mcp-hel
+      - jc-org-smartcity-marek-mraz
+      - jc-org-opendata-marek-mraz
+      - jc-org-api-marek-mraz
+      - jc-org-mcp-marek-mraz
+      - jc-org-smartcity-banskabystrica
+      - jc-org-opendata-banskabystrica
+      - jc-org-api-banskabystrica
+      - jc-org-mcp-banskabystrica
+      - jc-org-smartcity-bratislava
+      - jc-org-opendata-bratislava
+      - jc-org-api-bratislava
+      - jc-org-mcp-bratislava
+      - jc-org-smartcity-praha
+      - jc-org-opendata-praha
+      - jc-org-api-praha
+      - jc-org-mcp-praha
     organizations:
       - name: bbsk
         catalogueId: 00000000-0000-7000-8000-0000000000b1
-        hosts: { portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk }
+        hosts: { portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk, idm: idm.bbsk }
       - name: hel
         catalogueId: 00000000-0000-7000-8000-0000000000b2
-        hosts: { portal: smartcity.hel, opendata: opendata.hel, api: api.hel, mcp: mcp.hel }
+        hosts: { portal: smartcity.hel, opendata: opendata.hel, api: api.hel, mcp: mcp.hel, idm: idm.hel }
       - name: marek-mraz
         catalogueId: 00000000-0000-7000-8000-0000000000b3
-        hosts: { portal: smartcity.marek-mraz, opendata: opendata.marek-mraz, api: api.marek-mraz, mcp: mcp.marek-mraz }
+        hosts: { portal: smartcity.marek-mraz, opendata: opendata.marek-mraz, api: api.marek-mraz, mcp: mcp.marek-mraz, idm: idm.marek-mraz }
       - name: banskabystrica
         catalogueId: 00000000-0000-7000-8000-0000000000b4
-        hosts: { portal: smartcity.banskabystrica, opendata: opendata.banskabystrica, api: api.banskabystrica, mcp: mcp.banskabystrica }
+        hosts: { portal: smartcity.banskabystrica, opendata: opendata.banskabystrica, api: api.banskabystrica, mcp: mcp.banskabystrica, idm: idm.banskabystrica }
       - name: bratislava
         catalogueId: 00000000-0000-7000-8000-0000000000b5
-        hosts: { portal: smartcity.bratislava, opendata: opendata.bratislava, api: api.bratislava, mcp: mcp.bratislava }
+        hosts: { portal: smartcity.bratislava, opendata: opendata.bratislava, api: api.bratislava, mcp: mcp.bratislava, idm: idm.bratislava }
       - name: praha
         catalogueId: 00000000-0000-7000-8000-0000000000b6
-        hosts: { portal: smartcity.praha, opendata: opendata.praha, api: api.praha, mcp: mcp.praha }
+        hosts: { portal: smartcity.praha, opendata: opendata.praha, api: api.praha, mcp: mcp.praha, idm: idm.praha }
     # jc-prod's embedder, shared (components/embedder in jc-prod, callerNamespaces): the assistant
     # signs in with this realm's jc-assistant token; no model loads in this jc.
     embedder:

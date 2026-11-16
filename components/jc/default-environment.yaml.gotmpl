@@ -23,7 +23,7 @@ jc:
     # entries today's jc reads (catalogueId and all four hosts), the edge a route per host under
     # global.domain, organization-tls.yaml a Certificate per resolved host (absent: every host), one
     # `jc-org-<name>` with `certificate: organization` once all resolve. E.g.
-    # {name: bbsk, catalogueId: <uuid>, hosts: {portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk}}
+    # {name: bbsk, catalogueId: <uuid>, hosts: {portal: smartcity.bbsk, opendata: opendata.bbsk, api: api.bbsk, mcp: mcp.bbsk, idm: idm.bbsk}}
     organizations: []
     # Organization Certificates already issued (kubectl get certificate): any other counts as new,
     # and a render with more than certificateStage new fails, so a cut-over is staged.

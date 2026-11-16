@@ -31,7 +31,7 @@ routes:
 {{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
 {{- range $org := dig "jc" "server" "organizations" list .Values }}
 {{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
-{{- range $role := list "portal" "opendata" "api" "mcp" }}
+{{- range $role := list "portal" "opendata" "api" "mcp" "idm" }}
 {{- with $sub := dig $role "" $org.hosts }}
 {{- $id := printf "jc-org-%s" ($sub | replace "." "-") }}
   {{ $id }}:

@@ -111,14 +111,16 @@ def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_var
 
 @requires_helmfile
 def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certificate(rendered):
-    """T-7005 phase A: each of the six Organizations' four hosts is in its `[[organizations]]` entry in
-    jc.toml, an edge route to jc and one HTTP-01 Certificate each (never a wildcard, never on the
-    shared SAN list)."""
+    """T-7005 phase A: each of the six Organizations' five hosts (T-7001: its own sign-in host `idm.`)
+    is in its `[[organizations]]` entry in jc.toml, an edge route to jc and one HTTP-01 Certificate
+    each (never a wildcard, never on the shared SAN list)."""
     orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha")
-    hosts = [f"{h}.{o}.jcdev.dev.joinedcontext.com" for o in orgs for h in ("smartcity", "opendata", "api", "mcp")]
+    labels = ("smartcity", "opendata", "api", "mcp", "idm")
+    hosts = [f"{h}.{o}.jcdev.dev.joinedcontext.com" for o in orgs for h in labels]
     docs = rendered("jc-dev")
     toml = next(d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {}))
     assert all(f'name = "{o}"' in toml for o in orgs) and all(f'"{h}"' in toml for h in hosts), toml[-600:]
+    assert all(f'idm = "idm.{o}.jcdev.dev.joinedcontext.com"' in toml for o in orgs), toml[-600:]
     certs = {d["metadata"]["name"]: d["spec"] for d in docs if d.get("kind") == "Certificate"}
     own = {n: s["dnsNames"] for n, s in certs.items() if n.startswith("jc-org-")}
     assert sorted(sum(own.values(), [])) == sorted(hosts) and all(len(v) == 1 for v in own.values()), own
