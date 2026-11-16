@@ -42,6 +42,9 @@ PARTICIPATION_STEWARD = "keycloak-user-participacia-steward"
 # defaults/environment/secrets.yaml.gotmpl, one key per jc.server.organizations name.
 JC_CATALOGUE_TOKENS = "jc-catalogue-tokens"
 JC_CATALOGUE_TOKEN_LENGTH = 64
+# jc's role split (jc.server.split, T-7009): portal-remote's client secret and the NATS password,
+# declared in defaults/environment/secrets.yaml.gotmpl.
+JC_SPLIT = {"jc-split": {"portal-remote": 64, "nats-password": 64}}
 # Every further catalogue (global.catalogues, T-4636) gets the default instance's CKAN Secrets
 # under its own name, `<family>-<catalogue>` (defaults/environment/secrets.yaml.gotmpl), so each is
 # held to the length components/ckan/secrets.yaml declares for its family.
@@ -101,7 +104,7 @@ def main() -> int:
     components = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("components")
     docs = [d for d in yaml.safe_load_all(rendered.read_text()) if isinstance(d, dict)]
     steward_keys = DEMO_USER_KEYS | (MFA_SEED_KEYS if "USER_TOTP_PARTICIPACIA_STEWARD" in rendered.read_text() else {})
-    declared = (declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT
+    declared = (declarations(components) | demo_user_declarations(components, mfa_roles(docs)) | OWNER_ACCOUNT | JC_SPLIT
                 | {PARTICIPATION_STEWARD: steward_keys})
     generated = [
         d for d in docs
