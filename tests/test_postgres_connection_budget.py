@@ -96,15 +96,21 @@ def antares(docs: list[dict], jc: bool = False) -> int:
     )
 
 
+def jc_toml_text(docs: list[dict], name: str = "jc") -> str:
+    # The jc.toml of ConfigMap `name`: the server's, or a role's with jc.server.split (T-7009).
+    toml = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == name
+            and "jc.toml" in d.get("data", {})]
+    assert len(toml) == 1, f"the {name} ConfigMap with jc.toml is not in the render"
+    return toml[0]
+
+
 def jc_kaisatsu(docs: list[dict]) -> int:
     # kaisatsu in jc: its pool as kaisatsu_app (jc.toml [kaisatsu] db_max_connections, read by
     # the pool builder in kaisatsu store-pg, clamped to 50), counted under the database's owner
     # kaisatsu_migrate, plus the one login of the `kaisatsu migrate` init container.
     found = named(docs, "jc")
     assert found, "role kaisatsu_migrate has a database but no jc workload in the render"
-    toml = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
-    assert len(toml) == 1, "the jc ConfigMap with jc.toml is not in the render"
-    match = re.search(r"^db_max_connections = (\d+)$", toml[0], re.MULTILINE)
+    match = re.search(r"^db_max_connections = (\d+)$", jc_toml_text(docs), re.MULTILINE)
     assert match, "jc.toml sets no [kaisatsu] db_max_connections"
     return sum(replicas(w) for w in found) * (min(int(match[1]), 50) + 1)
 
@@ -112,13 +118,13 @@ def jc_kaisatsu(docs: list[dict]) -> int:
 def jc_module(module: str):
     # shako, daiya, dataroom and ekiben in jc: each pool as <module>_app (jc.toml [<module>.database]
     # max_connections, bins/jc/src/pg.rs), counted under the database's owner <module>_migrate,
-    # plus that owner's one migration login at start.
+    # plus that owner's one migration login at start. With jc.server.split (T-7009) the module runs
+    # in Deployment jc-<module> on its own jc.toml.
     def count(docs: list[dict]) -> int:
-        found = named(docs, "jc")
+        workload = f"jc-{module}" if named(docs, f"jc-{module}") else "jc"
+        found = named(docs, workload)
         assert found, f"role {module}_migrate has a database but no jc workload in the render"
-        toml = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
-        assert len(toml) == 1, "the jc ConfigMap with jc.toml is not in the render"
-        section = tomllib.loads(toml[0]).get(module, {}).get("database", {})
+        section = tomllib.loads(jc_toml_text(docs, workload)).get(module, {}).get("database", {})
         assert "max_connections" in section, f"jc.toml sets no [{module}.database] max_connections"
         return sum(replicas(w) for w in found) * (section["max_connections"] + 1)
 
@@ -129,8 +135,7 @@ def jc_assistant(docs: list[dict]) -> int:
     # The assistant in jc migrates and serves as jc_assistant: [assistant.database] max_connections.
     found = named(docs, "jc")
     assert found, "role jc_assistant has a database but no jc workload in the render"
-    (toml,) = [d["data"]["jc.toml"] for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in d.get("data", {})]
-    section = tomllib.loads(toml).get("assistant", {}).get("database", {})
+    section = tomllib.loads(jc_toml_text(docs)).get("assistant", {}).get("database", {})
     assert "max_connections" in section, "jc.toml sets no [assistant.database] max_connections"
     return sum(replicas(w) for w in found) * section["max_connections"]
 

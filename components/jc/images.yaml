@@ -67,3 +67,9 @@ jc:
     repository: 'quay.io/prometheuscommunity/prom-label-proxy'
     tag: 'v0.16.2'
     digest: 'sha256:9812cce38fa78c39250c9c59c78bbe75895ef9126952a098cd44adef2e21dbc5'
+  # NATS for the role split's Antares bus (values/nats, T-7009): the same pin as
+  # components/demo-feeds/images.yaml nats, the official static image.
+  nats:
+    repository: 'docker.io/library/nats'
+    tag: '2.14.6-scratch'
+    digest: 'sha256:54eac64d71b1b04360c2bba312a6b652ff7da0b7e7328865c977518aa5e29d11'

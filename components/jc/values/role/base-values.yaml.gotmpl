@@ -1,0 +1,211 @@
+{{- /* One module of jc in a process of its own (jc.server.split, T-7009): the parts shako, daiya and
+       dataroom render with this file, each `jc --role <module>` behind [door], which admits a token
+       of client portal-remote (realm jc-split) with the module as audience: the Portal in `server`
+       calls it through [remote] (bins/jc deploy/rehearsal/split.sh, T-7014). */}}
+{{- $global := .Values.global }}
+{{- $jc := .Values.jc.server }}
+{{- $role := .Release.Name | trimPrefix "jc-" }}
+{{- $this := index .Values.jc $role }}
+{{- $pg := printf "postgres-cluster-rw.%s.svc.cluster.local" .Values.postgres.cluster.namespace }}
+{{- $base := printf "%s.%s" $jc.subDomain $global.domain }}
+{{- $slug := index (dict "shako" "git" "daiya" "dashboards" "dataroom" "opendata") $role }}
+{{- $images := index .Values.images "jc" "server" | default dict }}
+{{- if eq .Environment.Name "jc-dev" }}
+{{- $images = index .Values.images "jc" "serverJcDev" | default dict }}
+{{- end }}
+{{- if not (dig "split" false $jc) }}
+{{- fail (printf "jc.%s runs only with jc.server.split" $role) }}
+{{- end }}
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`; writable: /tmp, the state dir
+#       (seeded from Secret jc-setup) and, for shako, its repositories on jc's data claim
+# - [x] Health probes -> the module's own health path on its slug, on jc's base host
+# - [x] Graceful shutdown -> jc drains on SIGTERM
+# - [x] ServiceAccount with least privilege -> no API token
+# - [x] Named ports -> 8080 the module, 9091 admin (/metrics behind its token)
+# - [x] NetworkPolicy of its own (components/jc/networkpolicies.yaml.gotmpl)
+
+fullnameOverride: jc-{{ $role }}
+nameOverride: jc-{{ $role }}
+
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+args: ["--config", "/etc/jc/jc.toml"]
+
+containerPort: 8080
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+  name: http
+
+metrics:
+  enabled: true
+  port: 9091
+  name: admin
+
+probes:
+  readiness:
+    path: {{ index (dict "shako" "/git/api/healthz" "daiya" "/dashboards/api/health" "dataroom" "/opendata/api/3/action/status_show") $role }}
+    # dataroom carries the Organizations' host registry, which answers 421 to the pod's address.
+    host: {{ $base | quote }}
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  # Migrations run before the module listens.
+  startup:
+    periodSeconds: 10
+    failureThreshold: 18
+  liveness:
+    path: {{ index (dict "shako" "/git/api/healthz" "daiya" "/dashboards/api/health" "dataroom" "/opendata/api/3/action/status_show") $role }}
+    host: {{ $base | quote }}
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# shako keeps its repositories on disk and dataroom its harvest set in memory (T-7008's table): one.
+replicaCount: 1
+updateStrategy: Recreate
+
+resources:
+  {{- toYaml $this.resources | nindent 2 }}
+
+configMap:
+  enabled: true
+  mountPath: /etc/jc
+  data:
+    jc.toml: |
+      profile = "production"
+      role = {{ $role | quote }}
+      listen = "0.0.0.0:8080"
+      admin_listen = "0.0.0.0:9091"
+      admin_token_file = "/run/jc/admin/token"
+      mode = "slug"
+      base_host = {{ $base | quote }}
+      scheme = "https"
+      log_format = "json"
+      state_dir = "/var/lib/jc/state"
+      trusted_proxies = {{ $jc.trustedProxies | toJson }}
+
+      # The Portal's calls: a token kaisatsu signed for portal-remote with this module's audience.
+      [door]
+      issuer = "https://{{ $base }}/login/realms/jc-split"
+      jwks_url = "https://{{ $base }}/login/realms/jc-split/protocol/openid-connect/certs"
+      clients = ["portal-remote"]
+      {{- if eq $role "shako" }}
+
+      [shako]
+      repo_root = "/var/lib/jc-data/git"
+      {{- else if eq $role "dataroom" }}
+      {{- /* Where the catalogue's live parts answer: beside the gateway, the Portal and viz jc takes
+             them from its siblings; apart, from here (T-7014 defect 3). */}}
+      {{- $at := printf "https://%s" $base }}
+      {{- tpl (readFile "../server/dataroom.toml.gotmpl") (dict "Values" .Values "addresses" (dict "api" $at "portal" $at "viz" (printf "%s/embed" $at))) | trimSuffix "\n" }}
+      {{- tpl (readFile "../server/organizations.toml.gotmpl") (dict "Values" .Values) | trimSuffix "\n" }}
+      {{- end }}
+
+      [{{ $role }}.database]
+      url = "postgres://{{ $role }}_app@{{ $pg }}:5432/jc_{{ $role }}"
+      password_file = "/run/jc/db/{{ $role }}-app/password"
+      max_connections = {{ dig "modulePool" 3 $jc }}
+      migrate_url = "postgres://{{ $role }}_migrate@{{ $pg }}:5432/jc_{{ $role }}"
+      migrate_password_file = "/run/jc/db/{{ $role }}-migrate/password"
+
+env:
+  # The image's JCBIN_LISTEN and JCBIN_STATE_DIR beat jc.toml (as in values/server).
+  JCBIN_LISTEN: "0.0.0.0:8080"
+  JCBIN_STATE_DIR: "/var/lib/jc/state"
+  {{- if eq $role "shako" }}
+  JCBIN_SHAKO_TOKEN_FILE: "/run/jc/setup/shako-token"
+  {{- else if eq $role "daiya" }}
+  JCBIN_DAIYA_PORTAL_PASSWORD_FILE: "/run/jc/setup/dashboards-password"
+  {{- else if eq $role "dataroom" }}
+  JCBIN_DATAROOM_PORTAL_TOKEN_FILE: "/run/jc/setup/catalogue-token"
+  {{- end }}
+  _RJEM_MALLOC_CONF: "background_thread:true,narenas:4,dirty_decay_ms:1000,muzzy_decay_ms:0"
+
+# The first-start secrets of Secret jc-setup as 0600 files of the pod's user (values/server).
+extraInitContainers:
+  - name: seed-state
+    image: {{ printf "%s@%s" .Values.images.jc.seed.repository .Values.images.jc.seed.digest | quote }}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        install -d -m 0700 /var/lib/jc/state
+        for f in /run/jc/setup/*; do install -m 0600 "$f" "/var/lib/jc/state/$(basename "$f")"; done
+    securityContext:
+      {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { cpu: 100m, memory: 32Mi }
+    volumeMounts:
+      - { name: state, mountPath: /var/lib/jc }
+      - { name: setup, mountPath: /run/jc/setup, readOnly: true }
+
+extraVolumes:
+  - name: state
+    emptyDir:
+      medium: Memory
+      sizeLimit: 32Mi
+  - name: setup
+    secret:
+      secretName: jc-setup
+      defaultMode: 0440
+  - name: admin-token
+    secret:
+      secretName: jc-admin-token
+      defaultMode: 0440
+  - name: db-app
+    secret:
+      secretName: db-jc-{{ $role }}-app
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  - name: db-migrate
+    secret:
+      secretName: db-jc-{{ $role }}
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- if and (eq $role "dataroom") (dig "organizations" list $jc) }}
+  - name: catalogue-tokens
+    secret:
+      secretName: jc-catalogue-tokens
+      defaultMode: 0440
+  {{- end }}
+  {{- if eq $role "shako" }}
+  # jc's data claim stays `server`'s (ekiben's files, the reconciler's state, the Apps cache beside
+  # the repositories); shako mounts its repositories' directory of it. ReadWriteOnce on the one
+  # node. ponytail: a second node needs shako's own claim and a copy of git/ first.
+  - name: repositories
+    persistentVolumeClaim:
+      claimName: jc-files
+  {{- end }}
+
+extraVolumeMounts:
+  - { name: state, mountPath: /var/lib/jc }
+  - { name: admin-token, mountPath: /run/jc/admin, readOnly: true }
+  - { name: setup, mountPath: /run/jc/setup, readOnly: true }
+  - { name: db-app, mountPath: /run/jc/db/{{ $role }}-app, readOnly: true }
+  - { name: db-migrate, mountPath: /run/jc/db/{{ $role }}-migrate, readOnly: true }
+  {{- if and (eq $role "dataroom") (dig "organizations" list $jc) }}
+  - { name: catalogue-tokens, mountPath: /run/jc/catalogue-tokens, readOnly: true }
+  {{- end }}
+  {{- if eq $role "shako" }}
+  - { name: repositories, mountPath: /var/lib/jc-data/git, subPath: git }
+  {{- end }}
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

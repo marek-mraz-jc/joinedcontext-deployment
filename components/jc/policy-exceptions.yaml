@@ -9,7 +9,9 @@ metadata:
       whose matcher would double-fire notifications beside a second process, and jc refuses to
       start without ANTARES_ALLOW_SHARED_LOCAL=1. A rolling update with maxUnavailable 0 starts
       the second process; Recreate stops the old pod first, as for context-broker. Re-check when
-      a NATS bus allows two replicas.
+      a NATS bus allows two replicas. The role split (jc.server.split, T-7009) runs each of shako
+      (repositories on disk), dataroom (harvest set in memory), daiya (advisory lock at start)
+      and NATS (one JetStream server) once, by Recreate too (T-7008's module table).
 spec:
   exceptions:
     - policyName: require-rolling-update
@@ -23,3 +25,7 @@ spec:
             - Deployment
           names:
             - jc
+            - jc-shako
+            - jc-daiya
+            - jc-dataroom
+            - jc-nats
