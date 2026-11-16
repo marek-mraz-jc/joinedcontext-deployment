@@ -181,6 +181,96 @@ def split_objects(docs, kind: str) -> dict:
 
 
 @requires_helmfile
+def test_jc_dev_runs_shako_daiya_and_dataroom_apart_each_behind_its_door(rendered):
+    """T-7009: jc-dev as separate services. The server keeps the core roles and calls shako, daiya and
+    dataroom through [remote] with client portal-remote of realm jc-split; each role runs `--role <m>`
+    with a [door] admitting that client alone, its own database login and none of the others'."""
+    docs = rendered("jc-dev")
+    core = jc_toml(docs)
+    assert core["role"] == "kaisatsu,antares,gateway,portal,model-tools,assistant,viz,ekiben"
+    assert core["remote"]["client_id"] == "portal-remote"
+    assert core["remote"]["client_secret_file"] == "/run/jc/realm-secrets/portal-remote"
+    assert core["remote"]["token_url"].endswith("/login/realms/jc-split/protocol/openid-connect/token")
+    assert sorted(core["remote"]["modules"]) == sorted(SPLIT_ROLES)
+    assert not any(m in core for m in SPLIT_ROLES), "the server still holds a split module's sections"
+    for role in SPLIT_ROLES:
+        toml = jc_toml(docs, f"jc-{role}")
+        assert toml["role"] == role and toml["door"]["clients"] == ["portal-remote"], toml
+        assert toml["door"]["issuer"] == core["remote"]["token_url"].removesuffix("/protocol/openid-connect/token")
+        assert toml[role]["database"]["url"].startswith(f"postgres://{role}_app@"), toml[role]
+        assert not any(m in toml for m in SPLIT_ROLES if m != role)
+    # The T-7005 Organizations stay on the server and on dataroom, which answers their opendata hosts.
+    assert jc_toml(docs)["organizations"] == jc_toml(docs, "jc-dataroom")["organizations"]
+
+
+@requires_helmfile
+def test_each_split_deployment_is_sized_probed_non_root_and_fenced(rendered):
+    """T-7009: every role Deployment and NATS has requests and limits, probes, a non-root read-only
+    container and a NetworkPolicy of its own; shako and NATS admit only the server's pods."""
+    docs = rendered("jc-dev")
+    deployments = split_objects(docs, "Deployment")
+    policies = split_objects(docs, "NetworkPolicy")
+    assert sorted(deployments) == sorted(policies) == sorted(f"jc-{r}" for r in (*SPLIT_ROLES, "nats"))
+    for name, dep in deployments.items():
+        pod = dep["spec"]["template"]["spec"]
+        (c,) = [c for c in pod["containers"] if c["name"] == name]
+        assert c["resources"]["requests"]["memory"] and c["resources"]["limits"]["memory"], name
+        assert "readinessProbe" in c and "livenessProbe" in c, name
+        assert pod["securityContext"]["runAsNonRoot"] is True, name
+        assert c["securityContext"]["readOnlyRootFilesystem"] is True, name
+        policy = policies[name]["spec"]
+        assert policy["podSelector"]["matchLabels"] == {"app.kubernetes.io/name": name}
+        assert set(policy["policyTypes"]) == {"Ingress", "Egress"}
+    for name in ("jc-shako", "jc-nats"):
+        (rule,) = policies[name]["spec"]["ingress"]
+        assert [f["podSelector"]["matchLabels"]["app.kubernetes.io/name"] for f in rule["from"]] == ["jc-server"], rule
+
+
+@requires_helmfile
+def test_jc_devs_bus_is_nats_with_a_password_from_a_secret_and_no_public_listener(rendered):
+    """T-7009: Antares in the split runs on NATS (ANTARES_BUS=nats), never the shared local bus; the
+    password comes from Secret jc-split into the environment of both sides, never into argv or a
+    ConfigMap; NATS has no Ingress and no edge route."""
+    docs = rendered("jc-dev")
+    env = {e["name"]: e for e in jc_container(docs)["env"]}
+    assert env["ANTARES_BUS"]["value"] == "nats" and "ANTARES_ALLOW_SHARED_LOCAL" not in env
+    assert env["ANTARES_NATS_URL"]["value"].startswith("nats://jc:$(NATS_PASSWORD)@jc-nats.")
+    assert env["NATS_PASSWORD"]["valueFrom"]["secretKeyRef"] == {"name": "jc-split", "key": "nats-password"}
+    nats = split_objects(docs, "Deployment")["jc-nats"]["spec"]["template"]["spec"]
+    (c,) = nats["containers"]
+    assert {"name": "NATS_PASSWORD", "valueFrom": {"secretKeyRef": {"name": "jc-split", "key": "nats-password"}}} in c["env"]
+    assert "password: $NATS_PASSWORD" in split_objects(docs, "ConfigMap")["jc-nats"]["data"]["nats.conf"]
+    assert not any(d.get("kind") == "Ingress" and "nats" in d["metadata"]["name"] for d in docs)
+    assert not any("jc-nats" in u for u in jc_upstreams(docs))
+
+
+@requires_helmfile
+def test_the_edge_sends_only_dataroom_and_daiya_paths_to_their_deployments(rendered):
+    """T-7009: the routes keep their shape; /opendata and /dashboards on jc., each Organization's
+    opendata host and its working host's /data go to the role's Service, everything else to jc."""
+    docs = rendered("jc-dev")
+    text = next((d.get("stringData") or d.get("data") or {}).get("apisix.yaml", "") for d in docs
+                if d.get("kind") in ("Secret", "ConfigMap") and d["metadata"]["name"].startswith("apisix-standalone"))
+    standalone = yaml.safe_load(text)
+    upstream = {u["id"]: u for u in standalone.get("upstreams", [])}
+    def target(route):
+        nodes = route.get("upstream", {}).get("nodes") or upstream.get(route.get("upstream_id"), {}).get("nodes")
+        return " ".join(str(n.get("host", n)) if isinstance(n, dict) else str(n) for n in (nodes if isinstance(nodes, list) else list(nodes or {})))
+    to = {r.get("name") or r.get("id"): (r.get("uri"), r.get("host"), target(r)) for r in standalone["routes"]}
+    roles = {n: v for n, v in to.items() if "jc-dataroom" in v[2] or "jc-daiya" in v[2]}
+    assert {(u, h) for u, h, _ in roles.values() if h == "jc.jcdev.dev.joinedcontext.com"} == {
+        ("/opendata", "jc.jcdev.dev.joinedcontext.com"), ("/opendata/*", "jc.jcdev.dev.joinedcontext.com"),
+        ("/dashboards", "jc.jcdev.dev.joinedcontext.com"), ("/dashboards/*", "jc.jcdev.dev.joinedcontext.com")}, roles
+    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha")
+    for o in orgs:
+        assert to[f"jc-org-opendata-{o}"][2].startswith("jc-dataroom."), to[f"jc-org-opendata-{o}"]
+        for h in ("smartcity", "api", "mcp"):
+            assert to[f"jc-org-{h}-{o}"][2].startswith("jc."), to[f"jc-org-{h}-{o}"]
+        assert {to[f"jc-org-smartcity-{o}-data{s}"][0] for s in ("", "-path")} == {"/data", "/data/*"}
+    assert not any("jc-shako" in v[2] for v in to.values()), "shako must stay off the edge"
+
+
+@requires_helmfile
 def test_jc_prod_runs_no_split(rendered):
     """T-7009 is jc-dev's alone: jc-prod keeps one process on the local bus, no role Deployment, no NATS."""
     docs = rendered("jc-prod")
