@@ -404,3 +404,29 @@ helsinki-agent-proxy:
           included.custom.audience: bxh7tot5zee4ndom364owjtyf2ppinsy
           access.token.claim: 'true'
           id.token.claim: 'false'
+      # The write doors of the open-data Endpoints (T-6980, EP-187): a run reads as its person, who
+      # may read through a door of their organization; the Policies still decide.
+      - name: helsinki-catalog-write-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: qhkkueqhi2q73ainw2kpic3njjcaa6st
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-kpi-write-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: gagl72sfertxzsagw77ij36jslpbkxvk
+          access.token.claim: 'true'
+          id.token.claim: 'false'
+      - name: helsinki-all-write-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        consentRequired: false
+        config:
+          included.custom.audience: kpozxcalvmcockfawrbca4gibvjvj4uu
+          access.token.claim: 'true'
+          id.token.claim: 'false'
