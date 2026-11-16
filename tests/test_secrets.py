@@ -111,6 +111,18 @@ def test_jc_catalogue_tokens_are_held_to_64_characters_per_organization(tmp_path
     assert "holds no Organization's token" in result.stdout
 
 
+def test_jc_split_is_held_to_64_characters_per_key(tmp_path):
+    """defaults/environment/secrets.yaml.gotmpl declares jc-split (T-7009, jc.server.split): the
+    portal-remote client secret and the NATS password, 64 hex each."""
+    ok = secret_manifest("jc-split", {"portal-remote": "a" * 64, "nats-password": "b" * 64})
+    result = check(ok, {"demo": DECLARATION}, tmp_path)
+    assert result.returncode == 0, result.stdout
+    short = secret_manifest("jc-split", {"portal-remote": "a" * 64, "nats-password": "b" * 32})
+    result = check(short, {"demo": DECLARATION}, tmp_path)
+    assert result.returncode == 1
+    assert "key 'nats-password' decodes to 32 characters, declared 64" in result.stdout
+
+
 def demo_users(tmp_path: Path, *names: str) -> None:
     """components/keycloak/demo-users.yaml, the file the password generator reads."""
     keycloak = tmp_path / "components" / "keycloak"
