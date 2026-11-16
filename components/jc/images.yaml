@@ -48,8 +48,8 @@ jc:
   # stays jc-prod's.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'd57b554195c5f1e6a196017b9e3188dc9d9887ae'
-    digest: 'sha256:105b6933411d3b28a4d80e2226c3a0130034dd6c35f82083ad9b5f6b029bfbd6'
+    tag: '95ea4ca9b7403af7cf9688d7abf6655a64614c31'
+    digest: 'sha256:2bce2ff55915494fa3aa6fc8c1754986a3fa15f77ec08d1909864acb176873fb'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
@@ -67,3 +67,9 @@ jc:
     repository: 'quay.io/prometheuscommunity/prom-label-proxy'
     tag: 'v0.16.2'
     digest: 'sha256:9812cce38fa78c39250c9c59c78bbe75895ef9126952a098cd44adef2e21dbc5'
+  # NATS for the role split's Antares bus (values/nats, T-7009): the same pin as
+  # components/demo-feeds/images.yaml nats, the official static image.
+  nats:
+    repository: 'docker.io/library/nats'
+    tag: '2.14.6-scratch'
+    digest: 'sha256:54eac64d71b1b04360c2bba312a6b652ff7da0b7e7328865c977518aa5e29d11'

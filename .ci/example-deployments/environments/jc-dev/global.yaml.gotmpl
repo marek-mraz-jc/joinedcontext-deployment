@@ -98,6 +98,9 @@ jc:
       pipelineIdentity: pipeline-secret
     ageKeySecret: jc-age
     retainHours: 24
+    # Separate services (owner 2026-11-16 16:5xZ, T-7009): shako, daiya and dataroom each in a
+    # Deployment of its own, Antares' bus on NATS (components/jc default-environment `split`).
+    split: true
     # TOTP for every person on jc-dev (owner 2026-11-14 "TURN ON TOTP FOR NOW"; T-6894, SHA1 enrolments).
     secondFactor: required
     # Six Organizations on hosts of their own (T-7005 phase A, owner 2026-11-15 12:1xZ; the dev layout of
@@ -215,13 +218,21 @@ jc:
       # import VmHWM ~3 GiB): Burstable under jc-prod's Guaranteed pod, so on node pressure jc-dev
       # goes first. T-6723 step 2 sets the request from jc-dev's own measured peak after the import:
       # working set 1315 Mi 12 min and 1768 Mi 54 min after a start (2026-11-15), so 2 GiB.
+      # Split (T-7009): T-7014 measured the split at 1.8x one process (core 419 + daiya 101 + dataroom
+      # 144 + shako 134 of 798 MiB), about 1.9 GiB on jc-dev; the core's 52 % of it is about 1 GiB,
+      # requested at 1.25x. The three roles request theirs on jc.shako/daiya/dataroom (defaults).
       resources:
         requests:
           cpu: 100m
-          memory: 2Gi
+          memory: 1280Mi
         limits:
           cpu: '2'
           memory: 3Gi
+  # The split's role Deployments and NATS (values/role, values/nats).
+  shako: { enabled: true }
+  daiya: { enabled: true }
+  dataroom: { enabled: true }
+  nats: { enabled: true }
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
 # to, so the edge's Keycloak dependency does not hold here.

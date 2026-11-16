@@ -46,3 +46,171 @@ jc-egress-to-shared-embedder:
           port: 4143
         {{- end }}
 {{- end }}
+{{- /* The role split (jc.server.split, T-7009): each role Deployment and NATS with a policy of its
+       own, admitting only its callers (T-7008's table): shako the `server` pods (the Portal's
+       forwarder, the gateway's checkouts), daiya and dataroom the edge (people and the Portal's
+       forwarder both come through it), NATS the `server` pods. Each reaches DNS, Postgres and the
+       edge, where kaisatsu's keys of realm jc-split are (443/8443, as `server`). Meshed, every rule
+       has its 4143 half and each pod reaches the Linkerd control plane. */}}
+{{- if dig "jc" "server" "split" false .Values }}
+{{- $mesh := and (dig "global" "serviceMesh" "enable" false .Values) (eq (dig "global" "serviceMesh" "type" "" .Values) "linkerd") }}
+{{- $server := dict "app.kubernetes.io/name" "jc-server" "app.kubernetes.io/instance" "jc-server" }}
+{{- range $role := list "shako" "daiya" "dataroom" "nats" }}
+jc-{{ $role }}:
+  podSelector:
+    app.kubernetes.io/name: jc-{{ $role }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        {{- if has $role (list "shako" "nats") }}
+        - podSelector:
+            matchLabels:
+              {{- toYaml $server | nindent 14 }}
+        {{- else }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: apisix
+          componentNamespace: apisix
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ ternary 4222 8080 (eq $role "nats") }}
+        {{- if $mesh }}
+        - protocol: TCP
+          port: 4143
+        - protocol: TCP
+          port: 4190
+        - protocol: TCP
+          port: 4191
+        {{- end }}
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if ne $role "nats" }}
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgres-cluster
+          componentNamespace: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+        {{- if $mesh }}
+        - protocol: TCP
+          port: 4143
+        {{- end }}
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - traefik
+                  - kube-system
+                  - ingress-nginx
+          podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - traefik
+                  - ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 8443
+    {{- end }}
+    {{- if $mesh }}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+      ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 8086
+        - protocol: TCP
+          port: 8090
+    {{- end }}
+{{- end }}
+jc-server-to-split-roles:
+  podSelector:
+    {{- toYaml $server | nindent 4 }}
+  policyTypes:
+    - Egress
+  egress:
+    {{- range $role, $port := dict "shako" 8080 "nats" 4222 }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-{{ $role }}
+      ports:
+        - protocol: TCP
+          port: {{ $port }}
+        {{- if $mesh }}
+        - protocol: TCP
+          port: 4143
+        {{- end }}
+    {{- end }}
+postgres-from-jc-split-roles:
+  componentNamespace: postgres
+  podSelector:
+    cnpg.io/cluster: postgres-cluster
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        {{- range $role := list "shako" "daiya" "dataroom" }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-{{ $role }}
+          componentNamespace: jc
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 5432
+        {{- if $mesh }}
+        - protocol: TCP
+          port: 4143
+        - protocol: TCP
+          port: 4190
+        - protocol: TCP
+          port: 4191
+        {{- end }}
+apisix-egress-to-jc-split-roles:
+  componentNamespace: apisix
+  podSelector:
+    app.kubernetes.io/name: apisix
+    app.kubernetes.io/instance: apisix-apisix
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        {{- range $role := list "daiya" "dataroom" }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: jc-{{ $role }}
+          componentNamespace: jc
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8080
+        {{- if $mesh }}
+        - protocol: TCP
+          port: 4143
+        {{- end }}
+{{- end }}

@@ -6,3 +6,11 @@ jc:
     chart: ../../charts/workload
   metricsProxy:
     chart: ../../charts/workload
+  shako:
+    chart: ../../charts/workload
+  daiya:
+    chart: ../../charts/workload
+  dataroom:
+    chart: ../../charts/workload
+  nats:
+    chart: ../../charts/workload

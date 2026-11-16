@@ -66,6 +66,35 @@ jc:
     importWindow: false
     # shako's repositories and ekiben's file root.
     dataSize: 5Gi
+    # The role split (T-7009, bins/jc deploy/rehearsal/split.sh): `server` runs the core (kaisatsu,
+    # antares, gateway, portal, model-tools, assistant, viz, ekiben) with Antares' bus on the `nats`
+    # part, and calls shako, daiya and dataroom, each a part of its own, through [remote] with a
+    # token of realm jc-split; each answers it at its [door]. Needs realmImport (the realm's import
+    # dir) and jc.shako, jc.daiya, jc.dataroom and jc.nats enabled with it.
+    split: false
+  # The split's role Deployments (values/role) and NATS (values/nats): off unless jc.server.split.
+  # `resources` per role: requests about 1.25x the role's share of jc's one-process RSS (T-7014).
+  shako:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    resources:
+      requests: { cpu: 20m, memory: 416Mi }
+      limits: { cpu: '1', memory: 1Gi }
+  daiya:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    resources:
+      requests: { cpu: 20m, memory: 320Mi }
+      limits: { cpu: '1', memory: 768Mi }
+  dataroom:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    resources:
+      requests: { cpu: 20m, memory: 448Mi }
+      limits: { cpu: '1', memory: 1Gi }
+  nats:
+    enabled: false
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
   # The App functions runtime beside jc (values/functions): its realm is realmImport's, its
   # gateway and identity jc's public hosts (host mode), reached over the edge (edgeAddress).
   functions:

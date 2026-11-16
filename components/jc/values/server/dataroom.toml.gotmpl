@@ -1,0 +1,58 @@
+{{- /* jc.toml's dataroom sections, in `server`'s jc.toml or, with jc.server.split, the dataroom
+       role's (values/role): context {Values, addresses}; `addresses` adds [dataroom.addresses]
+       keys (where a dataroom apart reaches the gateway, the Portal and viz). */}}
+{{- $jc := .Values.jc.server }}{{- $global := .Values.global }}
+
+      # A [dataroom] section must name its organization and catalogue: jc's defaults.
+      [dataroom]
+      org_id = "00000000-0000-7000-8000-000000000001"
+      catalogue_id = "00000000-0000-7000-8000-000000000010"
+      {{- with (dig "dataroomAliases" dict $jc) }}
+
+      [dataroom.aliases]
+      {{- range $from, $to := . }}
+      {{ $from | quote }} = {{ $to | quote }}
+      {{- end }}
+      {{- end }}
+      {{- if or (has "basemap" .Values.components) .addresses }}
+
+      {{- if has "basemap" .Values.components }}
+
+      # The dataset map's basemap (components/basemap in this environment): jc serves no tiles, so
+      # unset the explorer draws an empty grey box and its CSP names no tiles host (jc-prod 2026-11-11).
+      {{- end }}
+      [dataroom.addresses]
+      {{- if has "basemap" .Values.components }}
+      tiles = {{ printf "https://tiles.%s" $global.domain | quote }}
+      {{- end }}
+      {{- range $key, $url := .addresses }}
+      {{ $key }} = {{ $url | quote }}
+      {{- end }}
+      {{- end }}
+      {{- with (dig "catalogueHidden" dict $jc) }}
+
+      # prod's publish-gate hidden list (bins/jc/docs/catalogue-hidden.toml).
+      [dataroom.hidden]
+      {{- range $slug, $why := . }}
+      {{ $slug | quote }} = {{ $why | quote }}
+      {{- end }}
+      {{- end }}
+      {{- range $name, $p := (dig "dataroomPublishers" dict $jc) }}
+
+      # prod's publisher badges and words (CKAN chart `organizations`; bins/jc/docs/dataroom-publishers.toml).
+      [dataroom.publishers.{{ $name | quote }}]
+      initials = {{ $p.initials | quote }}
+      colour = {{ $p.colour | quote }}
+      {{- range $lang, $words := (dig "description" dict $p) }}
+      description.{{ $lang | quote }} = {{ $words | quote }}
+      {{- end }}
+      {{- end }}
+      {{- with (dig "branding" "logoSvg" "" $global) }}
+
+      # The installation's logo (global.branding logo, favicon, logoSvg): the footer mark, the favicon
+      # and /logo.svg; jc refuses an SVG with script, event handlers or external references.
+      [dataroom.branding]
+      logo = {{ dig "branding" "logo" "logo.svg" $global | quote }}
+      favicon = {{ dig "branding" "favicon" "logo.svg" $global | quote }}
+      logo_svg = {{ . | toJson }}
+      {{- end }}

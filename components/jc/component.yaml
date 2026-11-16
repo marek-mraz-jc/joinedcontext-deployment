@@ -13,3 +13,13 @@ parts:
   # (jc-prod beside dev), the only path from this jc's daiya to it, every query pinned to this
   # namespace's series ([daiya] prometheus_reach names it).
   - name: metricsProxy
+  # The role split (jc.server.split, T-7009): shako, daiya and dataroom each in a jc process of its
+  # own behind [door], the Portal in `server` calling them through [remote], Antares' bus on NATS.
+  # Off unless the environment turns the split on; values/role renders all three.
+  - name: shako
+    valuesFrom: role
+  - name: daiya
+    valuesFrom: role
+  - name: dataroom
+    valuesFrom: role
+  - name: nats
