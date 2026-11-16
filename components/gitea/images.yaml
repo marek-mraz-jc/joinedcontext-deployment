@@ -1,15 +1,16 @@
 ---
 gitea:
   forge:
-    # The chart builds the reference as `<registry>/<repository>:<tag>-rootless@<digest>`,
-    # so this digest is the one of docker.gitea.com/gitea:1.27.3-rootless, not of the
-    # root-based tag. Re-pin both together:
-    #   curl -sI -H 'Accept: application/vnd.oci.image.index.v1+json' \
-    #     https://docker.gitea.com/v2/gitea/manifests/<tag>-rootless | grep -i docker-content-digest
-    registry: 'docker.gitea.com'
-    repository: 'gitea'
-    # 1.27.1 fixes CVE-2026-60004 (git-hook RCE, CISA KEV), owner decision 2026-10-07 (T-3231).
-    # 1.27.3, the newest patch, still ships the two fixable CRITICALs of 1.27.1 (openssh-keygen,
-    # the bundled runner), excused in .ci/pinned-images-ignore.yaml until a release carries them (T-3297).
+    # images/patched-gitea: docker.gitea.com/gitea 1.27.3-rootless rebuilt with `apk upgrade`
+    # (T-7124), because 1.27.3, the newest 1.27 patch, ships openssh-keygen 10.3_p1-r0
+    # (CVE-2026-123158 CRITICAL, fixed in 10.3_p1-r2) and brotli-libs 1.2.0-r1. Published and
+    # signed by .github/workflows/image-patched.yml, whose run summary prints the digest. The chart
+    # builds `<registry>/<repository>:<tag>-rootless@<digest>`, so the image is published as
+    # 1.27.3-rootless and the tag here carries no suffix. Re-pin when image-patched rebuilds it
+    # (monthly) and drop the rebuild once an upstream 1.27 tag scans clean or the forge moves to 28.
+    # 1.27.1 fixes CVE-2026-60004 (git-hook RCE, CISA KEV), owner decision 2026-10-07 (T-3231);
+    # the bundled runner's CRITICAL is excused in .ci/pinned-images-ignore.yaml (T-6696).
+    registry: 'ghcr.io'
+    repository: 'marek-mraz-jc/joinedcontext-gitea'
     tag: '1.27.3'
-    digest: 'sha256:1c17ecaead42eb3b5391553d8708103a4beb0e86edf5b9ebc1eb269c318845f2'
+    digest: 'sha256:20218ff12543238061ee1931b0e35b081324b5981180781d8311e84a403e7726'

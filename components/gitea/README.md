@@ -51,9 +51,11 @@ per-repository and are created by whoever creates the repository.
 
 ## Image
 
-`docker.gitea.com/gitea`, rootless variant, pinned by digest. The chart appends
-`-rootless` to the tag, so the digest in `images.yaml` is the one of `<tag>-rootless`; the
-file carries the one-line command that resolves it. The root-based image cannot run under
+`ghcr.io/marek-mraz-jc/joinedcontext-gitea`: `docker.gitea.com/gitea`, rootless variant,
+rebuilt by `images/patched-gitea` with its Alpine packages upgraded (T-7124, T-7125) and pinned
+by digest. The chart appends `-rootless` to the tag, so the image is published as
+`<tag>-rootless` and `images.yaml` carries the tag without it; `image-patched.yml` prints the
+digest in its run summary. The root-based image cannot run under
 the restricted Pod Security Standards this deployment enforces — it starts as uid 0 to drop
 privileges itself.
 
