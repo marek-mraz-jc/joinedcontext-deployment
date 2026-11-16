@@ -47,6 +47,9 @@ WORKDIR /code
 # images/decidim/check-zip.rb proves the three zip users on the built image (T-6448).
 # faker: production eager-loads Decidim's seed classes (decidim-core lib/decidim/seeds.rb), which
 # require it, and only decidim-dev, a development gem, depends on it; same range as decidim-dev.
+# oauth and oauth2: left to the update list, the resolver keeps hashie 6.0.0 and settles on oauth 1.1.3 and
+# oauth2 2.0.10 (CVE-2026-54605, CVE-2026-54603, HIGH; T-7124), so the fixed releases are floors here, not
+# required at boot; hashie stays 5.2.0, which omniauth accepts (>= 3.4.6). msgpack: CVE-2026-126366, 1.8.7.
 # decidim-joinedcontext: Publish to context space (T-6458), pinned by commit; the repository is
 # public, so no token enters a layer. Its engine adds its migration path, so db:migrate runs it.
 RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3.4".freeze]/' \
@@ -54,11 +57,13 @@ RUN sed -i 's/%q<rubyzip>.freeze, \["~> 2.0".freeze\]/%q<rubyzip>.freeze, ["~> 3
     && grep -q '%q<rubyzip>.freeze, \["~> 3.4".freeze\]' /usr/local/bundle/specifications/decidim-core-0.32.2.gemspec \
     && bundle add omniauth_openid_connect --version '0.8.0' --skip-install \
     && bundle add faker --version '~> 3.2' --skip-install \
+    && bundle add oauth --version '>= 1.1.6' --require false --skip-install \
+    && bundle add oauth2 --version '>= 2.0.22' --require false --skip-install \
     && bundle add decidim-joinedcontext --git https://github.com/marek-mraz-jc/decidim-module-joinedcontext --ref d94108bb9e8278964f01d8c2e133c70d550fe561 --skip-install \
     && bundle lock --update rails actioncable actionmailbox actionmailer actionpack actiontext \
          actionview activejob activemodel activerecord activestorage activesupport railties \
          concurrent-ruby crass css_parser decidim-core doc2text erb faraday graphql jwt net-imap \
-         nokogiri oauth oauth2 puma rack ransack rubyzip websocket-driver \
+         msgpack nokogiri oauth oauth2 puma rack ransack rubyzip websocket-driver \
     && bundle config set --local without development:test \
     && bundle install \
     && RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile \
