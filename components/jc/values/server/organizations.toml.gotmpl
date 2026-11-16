@@ -17,6 +17,10 @@
       {{- range $role := list "portal" "opendata" "api" "mcp" }}
       {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
       {{- end }}
+      {{- with (dig "idm" "" $h) }}
+      # Its own sign-in host and realm (T-7001): needs a jc that reads hosts.idm.
+      idm = {{ printf "%s.%s" . (dig "domain" $global.domain $o) | quote }}
+      {{- end }}
       {{- else }}
 
       # Organization {{ $o.name | quote }}: certificates only (T-7002). Today's jc reads an Organization

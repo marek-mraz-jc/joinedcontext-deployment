@@ -141,9 +141,11 @@ def test_a_host_whose_record_is_missing_blocks_only_itself(tmp_path):
 def test_labels_under_the_installation_domain_keep_the_route_names(tmp_path):
     """jc-dev's form (T-7005): no `domain`, no `resolved`: every host, named like its edge route."""
     docs = render(tmp_path, values([{"name": "bbsk", "catalogueId": "c", "hosts": {
-        "portal": "smartcity.bbsk", "opendata": "opendata.bbsk", "api": "api.bbsk", "mcp": "mcp.bbsk"}}]))
+        "portal": "smartcity.bbsk", "opendata": "opendata.bbsk", "api": "api.bbsk", "mcp": "mcp.bbsk",
+        "idm": "idm.bbsk"}}]))
     org = {n: s["dnsNames"] for n, s in certificates(docs).items() if n.startswith("jc-org-")}
-    assert org == {f"jc-org-{r}-bbsk": [f"{r}.bbsk.{DOMAIN}"] for r in ("smartcity", "opendata", "api", "mcp")}
+    labels = ("smartcity", "opendata", "api", "mcp", "idm")
+    assert org == {f"jc-org-{r}-bbsk": [f"{r}.bbsk.{DOMAIN}"] for r in labels}
 
 
 def test_one_certificate_per_organization_once_every_host_resolves(tmp_path):
@@ -243,11 +245,12 @@ def test_dev_keeps_untrusted_content_apart(rendered):
 
 def test_jc_devs_organization_routes_name_the_secrets_their_certificates_write(rendered):
     """One shape (T-7005 + T-7002): each Organization host's Ingress TLS entry names the Secret of
-    the organization-tls.yaml Certificate for that host, and no host has two Certificates."""
+    the organization-tls.yaml Certificate for that host, and no host has two Certificates: six
+    Organizations of five hosts each (T-7001 adds `idm.`)."""
     docs = rendered("jc-dev")
     certs = {s["secretName"]: s["dnsNames"] for s in certificates(docs).values()}
     ingress = next(d for d in docs if d.get("kind") == "Ingress" and d["metadata"]["name"] == "apisix")
     org_tls = {t["secretName"]: t["hosts"] for t in ingress["spec"]["tls"] if t["secretName"].startswith("jc-org-")}
-    assert len(org_tls) == 24 and all(certs[s] == h for s, h in org_tls.items()), org_tls
+    assert len(org_tls) == 30 and all(certs[s] == h for s, h in org_tls.items()), org_tls
     names = [n for h in certs.values() for n in h]
     assert len(names) == len(set(names))

@@ -80,7 +80,7 @@ spec:
 {{- if not $h.portal }}
 {{- fail (printf "jc.server.organizations %s: hosts.portal (the working host) is required, or host: auto" $org.name) }}
 {{- end }}
-{{- range list "portal" "opendata" "api" "mcp" }}{{ with index $h . }}{{ $labels = append $labels . }}{{ end }}{{ end }}
+{{- range list "portal" "opendata" "api" "mcp" "idm" }}{{ with index $h . }}{{ $labels = append $labels . }}{{ end }}{{ end }}
 {{- end }}
 {{- $own := list }}
 {{- range $labels }}

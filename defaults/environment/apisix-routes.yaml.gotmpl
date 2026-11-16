@@ -55,7 +55,7 @@ routes:
 {{- end }}
 {{- range $org := dig "jc" "server" "organizations" list .Values }}
 {{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
-{{- range $role := list "portal" "opendata" "api" "mcp" }}
+{{- range $role := list "portal" "opendata" "api" "mcp" "idm" }}
 {{- with $sub := dig $role "" $org.hosts }}
 {{- $id := printf "jc-org-%s" ($sub | replace "." "-") }}
 {{- $tls := printf "%s-tls" (ternary (printf "jc-org-%s" $org.name) $id (eq (dig "certificate" "hosts" $org) "organization")) }}
