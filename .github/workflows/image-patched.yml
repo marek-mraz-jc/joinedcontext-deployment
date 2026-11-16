@@ -22,6 +22,8 @@ jobs:
         include:
           - { context: patched-keycloak-config-cli, image: joinedcontext-keycloak-config-cli, tag: "6.5.1-26", pin: "keycloak.configCli in components/keycloak/images.yaml" }
           - { context: patched-ckan-solr, image: joinedcontext-ckan-solr, tag: "2.11-solr9", pin: "ckan.solr in components/ckan/images.yaml" }
+          # The forge chart appends -rootless to the pinned tag, so this tag carries it (pin tag '1.27.3').
+          - { context: patched-gitea, image: joinedcontext-gitea, tag: "1.27.3-rootless", pin: "gitea.forge in components/gitea/images.yaml (registry ghcr.io, tag '1.27.3')" }
     env:
       IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
     steps:
