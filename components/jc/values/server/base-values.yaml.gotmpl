@@ -33,7 +33,25 @@
 {{- $window := dig "importWindow" false $jc }}
 {{- /* The window serves slug mounts on loopback whatever the environment's mode. */}}
 {{- $mode := ternary "slug" (dig "mode" "slug" $jc) $window }}
-{{- $modules := list "shako" "daiya" "dataroom" "ekiben" }}
+{{- /* The role split (jc.server.split, T-7009): shako, daiya and dataroom run in the role parts
+       (values/role), so this process holds neither their sections nor their database logins. */}}
+{{- $split := and (dig "split" false $jc) (not $window) }}
+{{- $splitCore := "kaisatsu,antares,gateway,portal,model-tools,assistant,viz,ekiben" }}
+{{- $splitBase := printf "https://%s.%s" $jc.subDomain $global.domain }}
+{{- $modules := ternary (list "ekiben") (list "shako" "daiya" "dataroom" "ekiben") $split }}
+{{- if $split }}
+{{- range $part := list "shako" "daiya" "dataroom" "nats" }}
+{{- if not (dig "jc" $part "enabled" false $.Values) }}
+{{- fail (printf "jc.server.split needs jc.%s.enabled: true" $part) }}
+{{- end }}
+{{- end }}
+{{- if not $realm }}
+{{- fail "jc.server.split needs jc.server.realmImport: the realm jc-split goes into its import dir" }}
+{{- end }}
+{{- if or (ne (dig "mode" "slug" $jc) "slug") $proxy.enabled (dig "catalogueHarvest" false $jc) }}
+{{- fail "jc.server.split runs in slug mode without metricsProxy or catalogueHarvest (T-7009 step 2)" }}
+{{- end }}
+{{- end }}
 {{- $assistant := dig "assistant" dict $jc }}
 {{- /* The window opens no path to the App runtime: no API token, no store or apps-db login. */}}
 {{- $wasmOn := and $wasm (not $window) }}
@@ -192,7 +210,7 @@ configMap:
       # jc refuses to start without a profile (P-29); production warns about secrets given as
       # environment values.
       profile = "production"
-      role = "all"
+      role = {{ ternary $splitCore "all" $split | quote }}
       {{- if $window }}
       # Import window: only `kubectl port-forward` (the pod's loopback) reaches jc.
       listen = "127.0.0.1:8080"
@@ -314,54 +332,11 @@ configMap:
 
       [ekiben]
       file_root = "/var/lib/jc-data/streams"
+      {{- if not $split }}
 
       [shako]
       repo_root = "/var/lib/jc-data/git"
-
-      # A [dataroom] section must name its organization and catalogue: jc's defaults.
-      [dataroom]
-      org_id = "00000000-0000-7000-8000-000000000001"
-      catalogue_id = "00000000-0000-7000-8000-000000000010"
-      {{- with (dig "dataroomAliases" dict $jc) }}
-
-      [dataroom.aliases]
-      {{- range $from, $to := . }}
-      {{ $from | quote }} = {{ $to | quote }}
-      {{- end }}
-      {{- end }}
-      {{- if has "basemap" .Values.components }}
-
-      # The dataset map's basemap (components/basemap in this environment): jc serves no tiles, so
-      # unset the explorer draws an empty grey box and its CSP names no tiles host (jc-prod 2026-11-11).
-      [dataroom.addresses]
-      tiles = {{ printf "https://tiles.%s" $global.domain | quote }}
-      {{- end }}
-      {{- with (dig "catalogueHidden" dict $jc) }}
-
-      # prod's publish-gate hidden list (bins/jc/docs/catalogue-hidden.toml).
-      [dataroom.hidden]
-      {{- range $slug, $why := . }}
-      {{ $slug | quote }} = {{ $why | quote }}
-      {{- end }}
-      {{- end }}
-      {{- range $name, $p := (dig "dataroomPublishers" dict $jc) }}
-
-      # prod's publisher badges and words (CKAN chart `organizations`; bins/jc/docs/dataroom-publishers.toml).
-      [dataroom.publishers.{{ $name | quote }}]
-      initials = {{ $p.initials | quote }}
-      colour = {{ $p.colour | quote }}
-      {{- range $lang, $words := (dig "description" dict $p) }}
-      description.{{ $lang | quote }} = {{ $words | quote }}
-      {{- end }}
-      {{- end }}
-      {{- with (dig "branding" "logoSvg" "" $global) }}
-
-      # The installation's logo (global.branding logo, favicon, logoSvg): the footer mark, the favicon
-      # and /logo.svg; jc refuses an SVG with script, event handlers or external references.
-      [dataroom.branding]
-      logo = {{ dig "branding" "logo" "logo.svg" $global | quote }}
-      favicon = {{ dig "branding" "favicon" "logo.svg" $global | quote }}
-      logo_svg = {{ . | toJson }}
+      {{- tpl (readFile "dataroom.toml.gotmpl") (dict "Values" .Values "addresses" dict) | trimSuffix "\n" }}
       {{- end }}
       {{- range $modules }}
 
@@ -392,28 +367,24 @@ configMap:
       realm = {{ . | quote }}
       {{- end }}
       {{- if not $window }}
-      {{- range $o := (dig "organizations" list $jc) }}
-      {{- $h := dig "hosts" dict $o }}
-      {{- if and (dig "catalogueId" "" $o) (dig "portal" "" $h) (dig "opendata" "" $h) (dig "api" "" $h) (dig "mcp" "" $h) }}
+      {{- tpl (readFile "organizations.toml.gotmpl") (dict "Values" .Values) | trimSuffix "\n" }}
+      {{- end }}
+      {{- if $split }}
 
-      # An Organization on hosts of its own (bins/jc config.rs OrganizationSection, T-7005); the
-      # edge routes each host to jc (defaults/environment/apisix-routes.yaml.gotmpl).
-      [[organizations]]
-      name = {{ $o.name | quote }}
-      catalogue_id = {{ $o.catalogueId | quote }}
-      # The Portal's publisher token for this catalogue alone (dataroom portal_publisher_on): each
-      # project of the Organization publishes its datasets here and nowhere else (T-7020).
-      portal_token_file = {{ printf "/run/jc/catalogue-tokens/%s" $o.name | quote }}
-      [organizations.hosts]
-      {{- range $role := list "portal" "opendata" "api" "mcp" }}
-      {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
-      {{- end }}
-      {{- else }}
+      # The role split (T-7009): the Portal calls shako, daiya and dataroom in their own Deployments
+      # (values/role) on a loopback forwarder, which swaps its per-boot credential for a token of
+      # client portal-remote (realm jc-split) with the module as scope and audience. daiya and
+      # dataroom at their public bases (the Portal links people there), shako at its Service: the
+      # edge refuses /git (apisix-plugins.yaml).
+      [remote]
+      token_url = "{{ $splitBase }}/login/realms/jc-split/protocol/openid-connect/token"
+      client_id = "portal-remote"
+      client_secret_file = "/run/jc/realm-secrets/portal-remote"
 
-      # Organization {{ $o.name | quote }}: certificates only (T-7002). Today's jc reads an Organization
-      # with catalogueId and all four hosts; `host = "auto"` and fewer hosts come with T-6995.
-      {{- end }}
-      {{- end }}
+      [remote.modules]
+      shako = "http://jc-shako.{{ $jc.namespace }}.svc.cluster.local:8080/git"
+      daiya = "{{ $splitBase }}/dashboards"
+      dataroom = "{{ $splitBase }}/opendata"
       {{- end }}
       {{- if (dig "catalogueHarvest" false $jc) }}
 
@@ -457,6 +428,18 @@ configMap:
           jsonData:
             timeInterval: 15s
     {{- end }}
+    {{- if $split }}
+    # The split's realm (seed-realm copies it into kaisatsu's import dir): client portal-remote,
+    # one optional scope per remote module whose audience mapper names it (as split.sh's jc-split).
+    jc-split-realm.json: |
+      {{- $scopes := list }}
+      {{- range $m := list "shako" "daiya" "dataroom" }}
+      {{- $mapper := dict "name" (printf "%s-audience" $m) "protocol" "openid-connect" "protocolMapper" "oidc-audience-mapper" "consentRequired" false "config" (dict "access.token.claim" "true" "id.token.claim" "false" "included.custom.audience" $m) }}
+      {{- $scopes = append $scopes (dict "name" $m "protocol" "openid-connect" "attributes" (dict "include.in.token.scope" "true") "protocolMappers" (list $mapper)) }}
+      {{- end }}
+      {{- $client := dict "clientId" "portal-remote" "enabled" true "protocol" "openid-connect" "publicClient" false "clientAuthenticatorType" "client-secret" "secret" "$(file:portal-remote)" "standardFlowEnabled" false "directAccessGrantsEnabled" false "serviceAccountsEnabled" true "defaultClientScopes" (list) "optionalClientScopes" (list "shako" "daiya" "dataroom") }}
+      {{- dict "realm" "jc-split" "enabled" true "clientScopes" $scopes "clients" (list $client) | toJson | nindent 6 }}
+    {{- end }}
     # kaisatsu's request role on its database; the password comes from its own file.
     kaisatsu-database-url: "postgres://kaisatsu_app@{{ $pg }}:5432/jc_kaisatsu"
 
@@ -483,6 +466,11 @@ envSecret:
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
+{{- if $split }}
+  NATS_PASSWORD:
+    secret: jc-split
+    key: nats-password
+{{- end }}
   BROKER_DB_PASSWORD:
     secret: db-jc-antares
     key: password
@@ -560,8 +548,15 @@ env:
   {{- end }}
   # One jc process per database: Antares' in-process bus runs one matcher per process, so jc
   # rolls by Recreate (updateStrategy below) and declares itself the only one.
+  {{- if $split }}
+  # The role split: Antares' bus on the `nats` part (values/nats), with the password of Secret
+  # jc-split; the URL with it stays in this environment, never in argv or jc.toml.
+  ANTARES_BUS: "nats"
+  ANTARES_NATS_URL: "nats://jc:$(NATS_PASSWORD)@jc-nats.{{ $jc.namespace }}.svc.cluster.local:4222"
+  {{- else }}
   ANTARES_BUS: "local"
   ANTARES_ALLOW_SHARED_LOCAL: "1"
+  {{- end }}
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
   ANTARES_STORE: "postgres"
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
@@ -700,6 +695,10 @@ extraInitContainers:
         done < /run/jc/realm-src/state-secrets.txt
         gunzip -c /run/jc/realm-src/realm.json.gz > "/var/lib/jc-realms/{{ $realm.realm }}.json"
         chmod 0600 "/var/lib/jc-realms/{{ $realm.realm }}.json"
+        {{- if $split }}
+        install -m 0600 /run/jc/split/portal-remote /run/jc/realm-secrets/portal-remote
+        install -m 0600 /etc/jc/jc-split-realm.json /var/lib/jc-realms/jc-split.json
+        {{- end }}
     securityContext:
       {{- .Values.securityDefaults.securityContext | toYaml | nindent 6 }}
     resources:
@@ -711,6 +710,10 @@ extraInitContainers:
       - { name: realm-secrets, mountPath: /run/jc/realm-secrets }
       - { name: realm-src, mountPath: /run/jc/realm-src, readOnly: true }
       - { name: realm-secrets-src, mountPath: /run/jc/realm-secrets-src, readOnly: true }
+      {{- if $split }}
+      - { name: split-client, mountPath: /run/jc/split, readOnly: true }
+      - { name: config, mountPath: /etc/jc, readOnly: true }
+      {{- end }}
   {{- end }}
 
 extraVolumes:
@@ -795,6 +798,14 @@ extraVolumes:
     secret:
       secretName: {{ $realm.secretsSecret }}
       defaultMode: 0440
+  {{- end }}
+  {{- if $split }}
+  # portal-remote's client secret, for the realm jc-split and [remote] (seed-realm copies it).
+  - name: split-client
+    secret:
+      secretName: jc-split
+      defaultMode: 0440
+      items: [{ key: portal-remote, path: portal-remote }]
   {{- end }}
   {{- if $proxy.enabled }}
   # daiya's provisioning root: the datasource file of this pod's ConfigMap under datasources/.

@@ -1,0 +1,106 @@
+{{- $global := .Values.global }}
+{{- if not (dig "jc" "server" "split" false .Values) }}
+{{- fail "jc.nats runs only with jc.server.split" }}
+{{- end }}
+# Antares' bus for the role split (jc.server.split, T-7009): NATS with JetStream, one user whose
+# password comes from Secret jc-split (the server reads it from its environment), no Ingress, no
+# route, and a NetworkPolicy admitting jc's `server` pods alone.
+# Checklist:
+# - [x] Containers run as non-root with `readOnlyRootFilesystem`; writable: /tmp and the JetStream dir
+# - [x] Health probes -> /healthz on the monitoring port (8222, no Service names it)
+# - [x] Graceful shutdown
+# - [x] Standard labels
+# - [x] ServiceAccount with least privilege -> no API token
+# - [x] Named ports -> 4222 clients
+# - [ ] Ingress with TLS -> not applicable, internal bus
+
+fullnameOverride: jc-nats
+nameOverride: jc-nats
+
+{{- $images := index .Values.images "jc" "nats" }}
+image:
+  repository: {{ $images.repository }}
+  tag: {{ $images.tag | quote }}
+  digest: {{ $images.digest }}
+  pullPolicy: IfNotPresent
+
+args: ["--config", "/etc/nats/nats.conf"]
+
+containerPort: 8222
+
+probes:
+  readiness:
+    path: /healthz
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  liveness:
+    path: /healthz
+    periodSeconds: 15
+    timeoutSeconds: 3
+    failureThreshold: 3
+    initialDelaySeconds: 5
+
+replicaCount: 1
+updateStrategy: Recreate
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 4222
+  targetPort: 4222
+  name: nats
+  # NATS speaks first (INFO on connect): Linkerd's protocol detection would stall every client.
+  annotations:
+    config.linkerd.io/opaque-ports: "4222"
+
+podAnnotations:
+  config.linkerd.io/opaque-ports: "4222"
+
+envSecret:
+  NATS_PASSWORD:
+    secret: jc-split
+    key: nats-password
+
+configMap:
+  enabled: true
+  mountPath: /etc/nats
+  data:
+    nats.conf: |
+      listen: "0.0.0.0:4222"
+      http: "0.0.0.0:8222"
+      # The bus is a transport: an emptyDir, Antares recreates its streams on connect.
+      jetstream {
+        store_dir: "/data"
+        max_memory_store: 64MB
+        max_file_store: 256MB
+      }
+      authorization {
+        user: "jc"
+        password: $NATS_PASSWORD
+      }
+
+extraVolumes:
+  - name: data
+    emptyDir:
+      sizeLimit: 320Mi
+
+extraVolumeMounts:
+  - { name: data, mountPath: /data }
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+podSecurityContext:
+  {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
+
+securityContext:
+  {{ .Values.securityDefaults.securityContext | toYaml | nindent 2 }}
+
+serviceMesh:
+  enabled: {{ and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") }}

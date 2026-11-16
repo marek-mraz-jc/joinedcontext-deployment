@@ -1,0 +1,25 @@
+{{- /* jc.toml's [[organizations]], in `server`'s jc.toml and, with jc.server.split, the dataroom
+       role's (values/role): each serves its own modules on the Organization's hosts. */}}
+{{- $jc := .Values.jc.server }}{{- $global := .Values.global }}
+      {{- range $o := (dig "organizations" list $jc) }}
+      {{- $h := dig "hosts" dict $o }}
+      {{- if and (dig "catalogueId" "" $o) (dig "portal" "" $h) (dig "opendata" "" $h) (dig "api" "" $h) (dig "mcp" "" $h) }}
+
+      # An Organization on hosts of its own (bins/jc config.rs OrganizationSection, T-7005); the
+      # edge routes each host to jc (defaults/environment/apisix-routes.yaml.gotmpl).
+      [[organizations]]
+      name = {{ $o.name | quote }}
+      catalogue_id = {{ $o.catalogueId | quote }}
+      # The Portal's publisher token for this catalogue alone (dataroom portal_publisher_on): each
+      # project of the Organization publishes its datasets here and nowhere else (T-7020).
+      portal_token_file = {{ printf "/run/jc/catalogue-tokens/%s" $o.name | quote }}
+      [organizations.hosts]
+      {{- range $role := list "portal" "opendata" "api" "mcp" }}
+      {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
+      {{- end }}
+      {{- else }}
+
+      # Organization {{ $o.name | quote }}: certificates only (T-7002). Today's jc reads an Organization
+      # with catalogueId and all four hosts; `host = "auto"` and fewer hosts come with T-6995.
+      {{- end }}
+      {{- end }}

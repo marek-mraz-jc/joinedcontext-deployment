@@ -29,17 +29,42 @@ routes:
        a route once jc serves them (T-6995). */}}
 {{- if and (has "jc" .Values.components) (not $jcWindow) }}
 {{- $ns := include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+{{- /* The role split (jc.server.split, T-7009): dataroom answers in its own Deployment, so each
+       Organization's opendata host and its working host's /data go to jc-dataroom ... */}}
+{{- $jcSplit := dig "jc" "server" "split" false .Values }}
+{{- if $jcSplit }}
+{{- /* ... and dataroom's and daiya's slugs on jc. to their own Deployments (values/role); every other
+       path stays on `jc`. shako has no route: the edge refuses /git (components/jc/apisix-plugins.yaml).
+       Each slug as `/x` and `/x/*`, so no Portal path that only starts with the same letters moves. */}}
+{{- range $role, $slug := dict "dataroom" "opendata" "daiya" "dashboards" }}
+{{- range $uri := list (printf "/%s" $slug) (printf "/%s/*" $slug) }}
+  jc-{{ $role }}{{ if hasSuffix "*" $uri }}-path{{ end }}:
+    name: jc-{{ $role }}{{ if hasSuffix "*" $uri }}-path{{ end }}
+    description: jc {{ $role }} (role split) on /{{ $slug }}
+    upstream: {{ printf "jc-%s.%s.svc.cluster.local:8080" $role $ns }}
+    subDomain: jc
+    uri: {{ $uri | quote }}
+    priority: 5
+    pluginConfig: jc
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+{{- end }}
+{{- end }}
+{{- end }}
 {{- range $org := dig "jc" "server" "organizations" list .Values }}
 {{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
 {{- range $role := list "portal" "opendata" "api" "mcp" }}
 {{- with $sub := dig $role "" $org.hosts }}
 {{- $id := printf "jc-org-%s" ($sub | replace "." "-") }}
+{{- $tls := printf "%s-tls" (ternary (printf "jc-org-%s" $org.name) $id (eq (dig "certificate" "hosts" $org) "organization")) }}
   {{ $id }}:
     name: {{ $id }}
     description: jc, {{ $role }} host of Organization {{ $org.name }}
-    upstream: {{ printf "jc.%s.svc.cluster.local:8080" $ns }}
+    upstream: {{ printf "%s.%s.svc.cluster.local:8080" (ternary "jc-dataroom" "jc" (and $jcSplit (eq $role "opendata"))) $ns }}
     subDomain: {{ $sub }}
-    tlsSecret: {{ if eq (dig "certificate" "hosts" $org) "organization" }}{{ printf "jc-org-%s" $org.name }}{{ else }}{{ $id }}{{ end }}-tls
+    tlsSecret: {{ $tls }}
     uri: '/*'
     priority: 1
     pluginConfig: jc
@@ -47,6 +72,23 @@ routes:
       connect: 6
       send: 120
       read: 120
+{{- if and $jcSplit (eq $role "portal") }}
+{{- range $uri := list "/data" "/data/*" }}
+  {{ $id }}-data{{ if hasSuffix "*" $uri }}-path{{ end }}:
+    name: {{ $id }}-data{{ if hasSuffix "*" $uri }}-path{{ end }}
+    description: jc dataroom (role split) on the working host of Organization {{ $org.name }}
+    upstream: {{ printf "jc-dataroom.%s.svc.cluster.local:8080" $ns }}
+    subDomain: {{ $sub }}
+    tlsSecret: {{ $tls }}
+    uri: {{ $uri | quote }}
+    priority: 5
+    pluginConfig: jc
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

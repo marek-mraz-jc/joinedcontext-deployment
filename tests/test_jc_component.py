@@ -16,6 +16,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 from conftest import TREE_IGNORE
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -33,8 +34,10 @@ def jc_environments() -> list[str]:
     )
 
 
-def jc_toml(docs) -> dict:
-    (cm,) = [d for d in docs if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {})]
+def jc_toml(docs, name: str = "jc") -> dict:
+    """The jc.toml of ConfigMap `name`: `jc` (the server), or a role's with jc.server.split."""
+    (cm,) = [d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == name
+             and "jc.toml" in (d.get("data") or {})]
     return tomllib.loads(cm["data"]["jc.toml"])
 
 
@@ -168,6 +171,25 @@ def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_re
         assert {"name": "Host", "value": "jc.jcdev.dev.joinedcontext.com"} in headers, (probe, c[probe])
 
 
+SPLIT_ROLES = ("shako", "daiya", "dataroom")
+
+
+def split_objects(docs, kind: str) -> dict:
+    """The role split's objects of `kind` (T-7009), by name: jc-shako, jc-daiya, jc-dataroom, jc-nats."""
+    return {d["metadata"]["name"]: d for d in docs if d.get("kind") == kind
+            and d["metadata"]["name"] in [f"jc-{r}" for r in (*SPLIT_ROLES, "nats")]}
+
+
+@requires_helmfile
+def test_jc_prod_runs_no_split(rendered):
+    """T-7009 is jc-dev's alone: jc-prod keeps one process on the local bus, no role Deployment, no NATS."""
+    docs = rendered("jc-prod")
+    assert jc_toml(docs)["role"] == "all" and "remote" not in jc_toml(docs)
+    assert not split_objects(docs, "Deployment") and not split_objects(docs, "NetworkPolicy")
+    assert {e["name"]: e.get("value") for e in jc_container(docs)["env"]}["ANTARES_BUS"] == "local"
+    assert not any(d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-split" for d in docs)
+
+
 @requires_helmfile
 def test_jc_retain_reaches_the_meshed_postgres(rendered):
     """jc-dev's hourly history cut (retainHours) connects to a Postgres whose inbound proxy takes only
@@ -288,7 +310,9 @@ def test_jc_import_window_routes_nothing_to_jc(rendered_variant):
 def test_jc_catalogue_carries_prods_publisher_badges_and_logo(rendered, env):
     # Owner 2026-11-10 15:28Z "logos are missing": old prod drew each publisher's badge and words
     # from the CKAN chart's `organizations` and the footer mark and favicon from global.branding.
-    dataroom = jc_toml(rendered(env))["dataroom"]
+    docs = rendered(env)
+    # With jc.server.split (T-7009) dataroom's sections are in its role's jc.toml.
+    dataroom = jc_toml(docs, "jc-dataroom" if "jc-dataroom" in split_objects(docs, "ConfigMap") else "jc")["dataroom"]
     pubs = dataroom["publishers"]
     assert len(pubs) == 8 and pubs["praha"]["initials"] == "PHA" and pubs["praha"]["colour"] == "#b4232a"
     assert pubs["hel-fi"]["description"]["sk"].startswith("Otvorené údaje regiónu Helsinki")
