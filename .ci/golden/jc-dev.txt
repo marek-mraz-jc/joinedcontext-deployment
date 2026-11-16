@@ -19,6 +19,12 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-api-bratislava
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-praha
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-banskabystrica
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-bbsk
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-hel
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-marek-mraz
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-praha
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-bratislava
