@@ -57,6 +57,8 @@ routes:
 {{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
 {{- range $role := list "portal" "opendata" "api" "mcp" "idm" }}
 {{- with $sub := dig $role "" $org.hosts }}
+{{- /* A host left out of `resolved` has no Certificate yet (organization-tls.yaml): no route names one. */}}
+{{- if or (not (hasKey $org "resolved")) (has $sub $org.resolved) }}
 {{- $id := printf "jc-org-%s" ($sub | replace "." "-") }}
 {{- $tls := printf "%s-tls" (ternary (printf "jc-org-%s" $org.name) $id (eq (dig "certificate" "hosts" $org) "organization")) }}
   {{ $id }}:
@@ -87,6 +89,7 @@ routes:
       connect: 6
       send: 120
       read: 120
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
