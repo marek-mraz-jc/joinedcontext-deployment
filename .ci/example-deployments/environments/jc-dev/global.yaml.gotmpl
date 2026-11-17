@@ -156,6 +156,33 @@ jc:
       - name: praha
         catalogueId: 00000000-0000-7000-8000-0000000000b6
         hosts: { portal: smartcity.praha, opendata: opendata.praha, api: api.praha, mcp: mcp.praha, idm: idm.praha }
+      # T-7201 (deployer 2026-11-17, supervisor order 18:56Z): the Organizations jc-dev's Projects name in Git but the
+      # registry lacked, so their rows get a project key before 0080 forces it. `resolved: []`: no Certificate yet
+      # (36 would pass certificateStage and eat the Let's Encrypt week); list a host there when it needs TLS.
+      - name: barcelona
+        catalogueId: 00000000-0000-7000-8000-0000000000b7
+        hosts: { portal: smartcity.barcelona, opendata: opendata.barcelona, api: api.barcelona, mcp: mcp.barcelona, idm: idm.barcelona }
+        resolved: []
+      - name: ctl-a
+        catalogueId: 00000000-0000-7000-8000-0000000000b8
+        hosts: { portal: smartcity.ctl-a, opendata: opendata.ctl-a, api: api.ctl-a, mcp: mcp.ctl-a, idm: idm.ctl-a }
+        resolved: []
+      - name: ctl-b
+        catalogueId: 00000000-0000-7000-8000-0000000000b9
+        hosts: { portal: smartcity.ctl-b, opendata: opendata.ctl-b, api: api.ctl-b, mcp: mcp.ctl-b, idm: idm.ctl-b }
+        resolved: []
+      - name: demo-mcp
+        catalogueId: 00000000-0000-7000-8000-0000000000ba
+        hosts: { portal: smartcity.demo-mcp, opendata: opendata.demo-mcp, api: api.demo-mcp, mcp: mcp.demo-mcp, idm: idm.demo-mcp }
+        resolved: []
+      - name: slovensko
+        catalogueId: 00000000-0000-7000-8000-0000000000bb
+        hosts: { portal: smartcity.slovensko, opendata: opendata.slovensko, api: api.slovensko, mcp: mcp.slovensko, idm: idm.slovensko }
+        resolved: []
+      - name: zilina
+        catalogueId: 00000000-0000-7000-8000-0000000000bc
+        hosts: { portal: smartcity.zilina, opendata: opendata.zilina, api: api.zilina, mcp: mcp.zilina, idm: idm.zilina }
+        resolved: []
     # The model key for Applications' Generate and the assistant (T-7009 step 0, owner 2026-11-16):
     # Secret jc-model-key in jc-dev, copied from jc-prod's by the deployer, never in Git. The
     # OpenRouter key's own limit caps spend.
