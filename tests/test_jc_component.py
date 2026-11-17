@@ -138,7 +138,8 @@ def test_each_jc_dev_organization_publishes_with_a_token_of_its_own_catalogue(re
     catalogue alone accepts (dataroom portal_publisher_on). Each `[[organizations]]` entry names its
     own file, the file comes from one generated key per Organization, mounted read-only, and no
     Organization's token is the shared catalogue's `catalogue-token`."""
-    orgs = ["bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha"]
+    orgs = ["bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha",
+            "barcelona", "ctl-a", "ctl-b", "demo-mcp", "slovensko", "zilina"]
     docs = rendered("jc-dev")
     toml = jc_toml(docs)
     assert {o["name"]: o.get("portal_token_file") for o in toml["organizations"]} == {
