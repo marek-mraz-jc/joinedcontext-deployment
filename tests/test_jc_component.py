@@ -130,8 +130,6 @@ def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certifi
     assert sorted(sum(own.values(), [])) == sorted(hosts) and all(len(v) == 1 for v in own.values()), own
     assert not any(h in certs["apisix-edge"]["dnsNames"] for h in hosts)
     assert not any("*" in n for s in certs.values() for n in s["dnsNames"] if "jcdev" in n)
-    assert "[[organizations]]" not in next(
-        d["data"]["jc.toml"] for d in rendered("jc-prod") if d.get("kind") == "ConfigMap" and "jc.toml" in (d.get("data") or {}))
 
 
 def test_each_jc_dev_organization_publishes_with_a_token_of_its_own_catalogue(rendered):
@@ -157,10 +155,32 @@ def test_each_jc_dev_organization_publishes_with_a_token_of_its_own_catalogue(re
     mounts = [m for c in pod["containers"] for m in c.get("volumeMounts", []) if m["name"] == "catalogue-tokens"]
     assert mounts and all(m == {"name": "catalogue-tokens", "mountPath": "/run/jc/catalogue-tokens", "readOnly": True}
                           for m in mounts), mounts
-    # jc-prod runs no [[organizations]]: no such Secret, volume or file there.
-    prod = rendered("jc-prod")
-    assert not any(d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-catalogue-tokens" for d in prod)
-    assert "catalogue-tokens" not in str(jc_toml(prod))
+
+
+@requires_helmfile
+def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_holds_the_old_projects(rendered):
+    """T-7010 (owner 2026-11-18): jc-prod serves smartcity (the installation, its catalogue the one
+    the installation's datasets are in), marek-mraz, bbsk and slovensko, each its Portal host and,
+    for the three new ones, its own sign-in host; open data and API stay the installation's hosts.
+    T-7264: the upgrading start keys every old project under smartcity. bbsk. leaves the demo
+    landing for Organization bbsk."""
+    docs = rendered("jc-prod")
+    toml = jc_toml(docs)
+    d = "smartcity.joinedcontext.com"
+    assert {o["name"]: o["hosts"] for o in toml["organizations"]} == {
+        "smartcity": {"portal": f"smartcity.{d}"},
+        **{o: {"portal": f"{o}.{d}", "idm": f"idm.{o}.{d}"} for o in ("marek-mraz", "bbsk", "slovensko")},
+    }
+    assert toml["organizations"][0]["catalogue_id"] == toml["dataroom"]["catalogue_id"]
+    (pod,) = [x["spec"]["template"]["spec"] for x in docs
+              if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
+    env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_INSTALLATION_ORGANIZATION"] == "smartcity"
+    own = sorted(n for x in docs if x.get("kind") == "Certificate"
+                 for n in x["spec"]["dnsNames"] if x["metadata"]["name"].startswith("jc-org-"))
+    assert len(own) == 7 and f"bbsk.{d}" in own, own
+    routes = str([x for x in docs if x.get("kind") == "ConfigMap"])
+    assert "demo-bbsk-landing" not in routes
 
 
 @requires_helmfile
@@ -429,14 +449,14 @@ def test_jc_streams_sign_in_as_their_pipelines_own_client(rendered, env):
 
 @requires_helmfile
 def test_jc_prod_carries_the_cutover_parts(rendered):
-    # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. keeps its own certificate, off
-    # the copied edge certificate's SAN list; App functions run on jc-prod's realm and gateway; the
+    # Supervisor 2026-11-10 06:3xZ: prod parity on jc-prod. bbsk. stays off the copied edge
+    # certificate's SAN list (its own Certificate, Organization bbsk's since T-7010); App functions run on jc-prod's realm and gateway; the
     # 24 h temporal rule runs hourly and keeps KPI history and audit rows.
     docs = rendered("jc-prod")
     (cert,) = [d for d in docs if d.get("kind") == "Certificate" and d["metadata"]["name"] == "apisix-edge"]
     assert "bbsk.smartcity.joinedcontext.com" not in cert["spec"]["dnsNames"], "bbsk. on the edge SANs: cert-manager would re-order the copied certificate"
     tls = [t for d in docs if d.get("kind") == "Ingress" for t in d["spec"].get("tls", [])]
-    assert {"hosts": ["bbsk.smartcity.joinedcontext.com"], "secretName": "demo-bbsk-tls"} in tls
+    assert {"hosts": ["bbsk.smartcity.joinedcontext.com"], "secretName": "jc-org-bbsk-tls"} in tls
     (functions,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc-functions"]
     env = {e["name"]: e.get("value") for e in functions["spec"]["template"]["spec"]["containers"][0]["env"]}
     assert env["JC_OIDC_ISSUER"] == "https://idm.smartcity.joinedcontext.com/realms/smartcity"

@@ -183,13 +183,29 @@ jc:
     # edge by the policies below. tiles. is components/basemap's own route (subDomain tiles).
     hostUpstreams:
       status: status-page.dev.svc.cluster.local:8080
-      # prod's BBSK demo landing alone (demos/bbsk-landing, namespace bbsk-landing).
-      bbsk: demo-bbsk-landing.bbsk-landing.svc.cluster.local:8080
-    # bbsk. keeps prod's own certificate (Secret demo-bbsk-tls, copied by prod-deployer): off the
-    # edge certificate's SAN list, so the copied apisix-edge-tls stays Ready.
-    hostTls:
-      bbsk: demo-bbsk-tls
-    hosts: ["", api, assistant, bbsk, data, idm, opendata, portal, status, viz]
+    # bbsk. is Organization bbsk's working host since T-7010 (owner 2026-11-18 ~19:50Z), no longer
+    # the BBSK demo landing (demos/bbsk-landing) behind demo-bbsk-tls.
+    hosts: ["", api, assistant, data, idm, opendata, portal, status, viz]
+    # Four Organizations, each its own realm (idm.<org>.), Portal host and catalogue (T-7010, owner
+    # 2026-11-18 ~19:50Z). smartcity is the installation: every project of the release-56 Portal
+    # database is keyed under it on the upgrading start (T-7264), and its catalogue is the one the
+    # installation's datasets are in ([dataroom] catalogue_id). Open data and API stay the
+    # installation's opendata./api. hosts (shared); a new Organization's own api./opendata./mcp.
+    # wait for the next Let's Encrypt week (7 new Certificates here).
+    installationOrganization: smartcity
+    organizations:
+      - name: smartcity
+        catalogueId: 00000000-0000-7000-8000-000000000010
+        hosts: { portal: smartcity }
+      - name: marek-mraz
+        catalogueId: 00000000-0000-7000-8000-0000000000c1
+        hosts: { portal: marek-mraz, idm: idm.marek-mraz }
+      - name: bbsk
+        catalogueId: 00000000-0000-7000-8000-0000000000c2
+        hosts: { portal: bbsk, idm: idm.bbsk }
+      - name: slovensko
+        catalogueId: 00000000-0000-7000-8000-0000000000c3
+        hosts: { portal: slovensko, idm: idm.slovensko }
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:

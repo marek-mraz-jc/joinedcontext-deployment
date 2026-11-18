@@ -3,7 +3,7 @@
 {{- $jc := .Values.jc.server }}{{- $global := .Values.global }}
       {{- range $o := (dig "organizations" list $jc) }}
       {{- $h := dig "hosts" dict $o }}
-      {{- if and (dig "catalogueId" "" $o) (dig "portal" "" $h) (dig "opendata" "" $h) (dig "api" "" $h) (dig "mcp" "" $h) }}
+      {{- if and (dig "catalogueId" "" $o) (dig "portal" "" $h) }}
 
       # An Organization on hosts of its own (bins/jc config.rs OrganizationSection, T-7005); the
       # edge routes each host to jc (defaults/environment/apisix-routes.yaml.gotmpl).
@@ -13,9 +13,13 @@
       # The Portal's publisher token for this catalogue alone (dataroom portal_publisher_on): each
       # project of the Organization publishes its datasets here and nowhere else (T-7020).
       portal_token_file = {{ printf "/run/jc/catalogue-tokens/%s" $o.name | quote }}
+      # An absent open data or API host is served as paths of the working host (/data, the
+      # gateway's root paths).
       [organizations.hosts]
       {{- range $role := list "portal" "opendata" "api" "mcp" }}
-      {{ $role }} = {{ printf "%s.%s" (index $h $role) (dig "domain" $global.domain $o) | quote }}
+      {{- with (dig $role "" $h) }}
+      {{ $role }} = {{ printf "%s.%s" . (dig "domain" $global.domain $o) | quote }}
+      {{- end }}
       {{- end }}
       {{- with (dig "idm" "" $h) }}
       # Its own sign-in host and realm (T-7001): needs a jc that reads hosts.idm.
@@ -23,7 +27,7 @@
       {{- end }}
       {{- else }}
 
-      # Organization {{ $o.name | quote }}: certificates only (T-7002). Today's jc reads an Organization
-      # with catalogueId and all four hosts; `host = "auto"` and fewer hosts come with T-6995.
+      # Organization {{ $o.name | quote }}: certificates only (T-7002): jc reads an Organization with
+      # a catalogueId and its working host (hosts.portal); `host = "auto"` comes with T-6995.
       {{- end }}
       {{- end }}
