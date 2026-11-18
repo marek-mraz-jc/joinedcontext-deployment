@@ -48,6 +48,10 @@ jc:
     # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica; files/harvest-sources.toml and
     # files/od-datasets.json from the monorepo's bins/jc/docs at the pinned jc). Egress: public 443.
     catalogueHarvest: false
+    # The operator's price table for Administration -> Costs (T-7009, as portal.costPrices T-5126):
+    # { currency, perUsd, nodes: [{name, monthly}], volumes, fixed }. {} renders no file and the page
+    # says no table is set.
+    costPrices: {}
     # kaisatsu second-factor floor (T-6894): "" leaves jc's default (optional), "required" makes every
     # person enrol a TOTP. jc before c418ee1e refuses the key: set it only with a pin that carries it.
     secondFactor: ""

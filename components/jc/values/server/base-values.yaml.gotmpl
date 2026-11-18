@@ -407,6 +407,11 @@ configMap:
     od-datasets.json: |
 {{ readFile "../../files/od-datasets.json" | indent 6 }}
     {{- end }}
+    {{- with (dig "costPrices" dict $jc) }}
+    # Administration -> Costs (T-7009): jc.server.costPrices as the Portal reads it.
+    cost-prices.yaml: |
+{{ toYaml . | indent 6 }}
+    {{- end }}
     # The runner's shared resources (`-r`: project caches, source rate limits) and the GTFS-RT schema a
     # stream's `import_paths: [/proto]` reads, as the pipeline-runner component and up.sh give them.
     # Without them hsl-service-alerts and hsl-departures were refused: lstat .../streams/proto (jc-prod).
@@ -512,6 +517,9 @@ env:
   JC_BASEMAP_URL: "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
   JC_BASEMAP_ATTRIBUTION: "© OpenStreetMap contributors"
   JC_BASEMAP_CACHE_MAX_BYTES: "67108864"
+  {{- if (dig "costPrices" dict $jc) }}
+  JC_PORTAL_COST_PRICES_FILE: "/etc/jc/cost-prices.yaml"
+  {{- end }}
   {{- with (dig "pipelineIdentity" "" $realm) }}
   # How streams sign in (jc-pipeline-audience, d4b2de4d): `pipeline-secret` makes each stream its
   # Pipeline's own client <project>-pl-<pipeline>, whose audience names the Endpoints it writes (as
