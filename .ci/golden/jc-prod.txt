@@ -60,6 +60,13 @@ cert-manager.io/v1/Certificate jc-prod/app-zilina-mapa
 cert-manager.io/v1/Certificate jc-prod/app-zilina-ukazovatele
 cert-manager.io/v1/Certificate jc-prod/app-zilina-vyskum
 cert-manager.io/v1/Certificate jc-prod/app-zilina-zaznamy
+cert-manager.io/v1/Certificate jc-prod/jc-org-bbsk
+cert-manager.io/v1/Certificate jc-prod/jc-org-idm-bbsk
+cert-manager.io/v1/Certificate jc-prod/jc-org-idm-marek-mraz
+cert-manager.io/v1/Certificate jc-prod/jc-org-idm-slovensko
+cert-manager.io/v1/Certificate jc-prod/jc-org-marek-mraz
+cert-manager.io/v1/Certificate jc-prod/jc-org-slovensko
+cert-manager.io/v1/Certificate jc-prod/jc-org-smartcity
 monitoring.coreos.com/v1/PodMonitor jc-prod/apps-db
 monitoring.coreos.com/v1/PodMonitor jc-prod/postgres-cluster
 monitoring.coreos.com/v1/PrometheusRule jc-prod/monitoring-monitoring-alerts
@@ -244,6 +251,7 @@ v1/Secret jc-prod/db-jc-shako
 v1/Secret jc-prod/db-jc-shako-app
 v1/Secret jc-prod/etcd-apisix
 v1/Secret jc-prod/jc-admin-token
+v1/Secret jc-prod/jc-catalogue-tokens
 v1/Secret jc-prod/jc-setup
 v1/Secret jc-prod/keycloak-client-apisix-gateway
 v1/Secret jc-prod/keycloak-client-edge

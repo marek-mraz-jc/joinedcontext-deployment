@@ -535,6 +535,12 @@ env:
   JC_GATEWAY_ORG_DOMAIN: {{ . | quote }}
   JC_ASSISTANT_ORG_DOMAIN: {{ . | quote }}
   {{- end }}
+  {{- with (dig "installationOrganization" "" $jc) }}
+  # The [[organizations]] entry every project of a Portal database from before the project
+  # registry belongs to (T-7264): read only on the start that upgrades such a database, which
+  # keys the project rows under it before migration 0080 forces the key.
+  JC_PORTAL_INSTALLATION_ORGANIZATION: {{ . | quote }}
+  {{- end }}
   {{- if eq $mode "host" }}
   # The Portal's forge on jc's loopback ([[mounts.shako]] localhost:8080 above). Naming the URL
   # turns off jc's fill of the whole group, so the group is named here (siblings.rs JC_SHAKO_URL).

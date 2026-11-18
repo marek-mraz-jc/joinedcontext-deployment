@@ -116,7 +116,7 @@ routes:
     # name a host jc serves inside the pod only (broker., streams., localhost:8080) (T-6705).
     host: {{ $.Values.global.domain | quote }}
     {{- end }}
-    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    {{- with index (dig "hostTls" dict $.Values.jc.server) $host }}
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/*'
@@ -135,7 +135,7 @@ routes:
     description: jc's endpoint surface on api.{domain}, readable by the platform's own origins
     upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     subDomain: api
-    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    {{- with index (dig "hostTls" dict $.Values.jc.server) $host }}
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/api/endpoint/*'
@@ -167,7 +167,7 @@ routes:
     description: jc's endpoint surface for the pod network, counted per bearer as on old prod
     upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     subDomain: api
-    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    {{- with index (dig "hostTls" dict $.Values.jc.server) $host }}
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/api/endpoint/*'
@@ -195,7 +195,7 @@ routes:
     description: jc's MCP servers on api.{domain}, callable from the platform's own origins
     upstream: {{ $upstream | default (printf "jc.%s.svc.cluster.local:8080" $ns) }}
     subDomain: api
-    {{- with index ($.Values.jc.server.hostTls | default dict) $host }}
+    {{- with index (dig "hostTls" dict $.Values.jc.server) $host }}
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/api/mcp*'

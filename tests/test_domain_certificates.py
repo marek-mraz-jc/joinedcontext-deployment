@@ -215,15 +215,16 @@ def test_the_sign_in_host_must_be_on_the_edge(tmp_path):
     assert "jc.server.loginHost" in refused(tmp_path, values([], loginHost=f"login.{DOMAIN}"))
 
 
-def test_jc_prod_orders_no_new_certificate_while_its_dns_points_elsewhere(rendered):
-    """jc-prod's names still resolve to the dev node (edgeAddress): tiles. and viz. stay on
-    apisix-edge, no untrusted certificate and no Organization certificate is ordered."""
+def test_jc_prod_orders_only_its_organizations_certificates(rendered):
+    """jc-prod's names resolve to the dev node (edgeAddress): tiles. and viz. stay on apisix-edge,
+    no untrusted certificate; the only new ones are T-7010's Organization hosts, one each."""
     docs = rendered("jc-prod")
     certs = certificates(docs)
     domain = "smartcity.joinedcontext.com"
     assert {f"tiles.{domain}", f"viz.{domain}"} <= set(certs["apisix-edge"]["dnsNames"])
     assert "apisix-edge-untrusted" not in certs
-    assert not [n for n in certs if n.startswith("jc-org-")]
+    assert sorted(n for n in certs if n.startswith("jc-org-")) == sorted(
+        ["jc-org-smartcity"] + [f"jc-org-{p}{o}" for o in ("marek-mraz", "bbsk", "slovensko") for p in ("", "idm-")])
     # The Ingress serves them from the Secret apisix-edge writes, never from one nobody fills.
     ingress = next(d for d in docs if d.get("kind") == "Ingress" and d["metadata"]["name"] == "apisix")
     tls = {t["secretName"]: t["hosts"] for t in ingress["spec"]["tls"]}
