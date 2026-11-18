@@ -53,3 +53,47 @@ def test_the_table_the_operator_sets_is_the_file_the_portal_reads(rendered_varia
         "perUsd": 0.86,
         "nodes": [{"name": "cpx42 nbg1", "monthly": 30.0}],
     }
+
+
+def jc_prices_file(docs):
+    """The table the jc server reads (T-7009): `JC_PORTAL_COST_PRICES_FILE` through its mount."""
+    pod = next(d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc")["spec"]["template"]["spec"]
+    container = next(c for c in pod["containers"] if c["name"] == "jc-server")
+    env = {e["name"]: e.get("value") for e in container.get("env", [])}
+    if "JC_PORTAL_COST_PRICES_FILE" not in env:
+        return None
+    directory, name = env["JC_PORTAL_COST_PRICES_FILE"].rsplit("/", 1)
+    mount = next(m for m in container["volumeMounts"] if m["mountPath"] == directory)
+    volume = next(v for v in pod["volumes"] if v["name"] == mount["name"])
+    config_map = next(
+        d for d in docs if d.get("kind") == "ConfigMap" and d["metadata"]["name"] == volume["configMap"]["name"]
+    )
+    return yaml.safe_load(config_map["data"][name])
+
+
+def test_jc_without_a_price_table_names_no_file(rendered):
+    assert jc_prices_file(rendered("jc-prod")) is None
+
+
+def jc_with_prices(tree):
+    path = tree / "components/jc/default-environment.yaml.gotmpl"
+    text = path.read_text()
+    line = "    costPrices: {}\n"
+    assert line in text
+    path.write_text(
+        text.replace(
+            line,
+            "    costPrices:\n"
+            "      currency: EUR\n"
+            "      perUsd: 0.86\n"
+            "      nodes: [{ name: cpx42 nbg1, monthly: 30.0 }]\n",
+        )
+    )
+
+
+def test_the_table_set_on_jc_is_the_file_jc_reads(rendered_variant):
+    assert jc_prices_file(rendered_variant("jc-prod", jc_with_prices)) == {
+        "currency": "EUR",
+        "perUsd": 0.86,
+        "nodes": [{"name": "cpx42 nbg1", "monthly": 30.0}],
+    }
