@@ -36,12 +36,10 @@ jc:
   # since e8d794c0, this one included.
   # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
   # managed groups and their members.
-  # jc-prod moves to jc-dev's 9691981c (T-7010, owner 2026-11-18 13:5xZ, image only, current layout);
-  # rollback pin: 799d0eabb06f41f446f3dc7f9f3a0d35515285e7 sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '9691981c12e5db29d959865267f5c2f0271b8f60'
-    digest: 'sha256:3a337354837df1a11b0fd8d71f817dee02809b2156e4e8a72a1398f60441464f'
+    tag: '799d0eabb06f41f446f3dc7f9f3a0d35515285e7'
+    digest: 'sha256:f0baf5e7bbc21032426003d39c047fd18f09fcd1537749b3af672240b92d2284'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
