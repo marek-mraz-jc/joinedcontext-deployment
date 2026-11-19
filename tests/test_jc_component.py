@@ -512,9 +512,11 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     assert env["JC_BASEMAP_CACHE_MAX_BYTES"] == "67108864"
     # Without it the gateway refused the pipelines' writes: "token is not bound to this resource".
     assert env["JC_PORTAL_PIPELINE_IDENTITY"] == "pipeline-secret"
-    # The edge blocks /git: the Portal reaches its forge on jc's loopback, the public base stays.
-    assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com", "localhost:8080"]
-    assert (env["JC_SHAKO_URL"], env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("http://localhost:8080/git", "joinedcontext", "configuration")
+    # The edge blocks /git: jc hands the Portal shako on its in-pod listener (JC_SHAKO_URL unset);
+    # a named localhost:8080/git meets the read-only git door alone (jc T-6896) and the sync 404s.
+    assert [m["host"] for m in jc_toml(docs)["mounts"]["shako"]] == ["smartcity.joinedcontext.com"]
+    assert "JC_SHAKO_URL" not in env
+    assert (env["JC_SHAKO_OWNER"], env["JC_SHAKO_REPO"]) == ("joinedcontext", "configuration")
     mounts = jc_toml(docs)["mounts"]
     assert [m["host"] for m in mounts["ekiben"] + mounts["antares"]] == ["localhost:8080", "localhost:8080"]
     assert (env["JC_PORTAL_PIPELINE_RUNNER_URL"], env["JC_PORTAL_BROKER_URL"]) == ("http://localhost:8080/streams", "http://localhost:8080/broker")

@@ -268,14 +268,6 @@ configMap:
       host = "{{ $global.domain }}"
       path_prefix = "/git"
 
-      # The Portal's own forge address (JC_SHAKO_URL below): in host mode jc points the Portal at
-      # shako's public base, which the edge refuses (/git stays inside the pod) and which needs
-      # jc Ready before the Portal is built. A request naming this host through the edge meets the
-      # same /git block on the host-less apex route.
-      [[mounts.shako]]
-      host = "localhost:8080"
-      path_prefix = "/git"
-
       # ekiben and the broker stay inside the pod too: on loopback only, never on a public name.
       [[mounts.ekiben]]
       host = "localhost:8080"
@@ -546,9 +538,10 @@ env:
   JC_PORTAL_INSTALLATION_ORGANIZATION: {{ . | quote }}
   {{- end }}
   {{- if eq $mode "host" }}
-  # The Portal's forge on jc's loopback ([[mounts.shako]] localhost:8080 above). Naming the URL
-  # turns off jc's fill of the whole group, so the group is named here (siblings.rs JC_SHAKO_URL).
-  JC_SHAKO_URL: "http://localhost:8080/git"
+  # JC_SHAKO_URL stays unset: jc fills it with shako on its in-pod listener (siblings.rs
+  # set_in_pod). A host's /git path mount answers only the read-only git door since jc T-6896, so
+  # a named http://localhost:8080/git left the Portal's config sync on 404 (jc-prod 2026-11-19).
+  # The other JC_SHAKO_* keys named here win over jc's fill.
   JC_SHAKO_PUBLIC_URL: "https://{{ $global.domain }}/git"
   JC_SHAKO_APPS_OWNER: "jc-apps"
   JC_PORTAL_PIPELINE_RUNNER_URL: "http://localhost:8080/streams"
