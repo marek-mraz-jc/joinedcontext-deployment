@@ -191,9 +191,9 @@ jc:
     # database is keyed under it on the upgrading start (T-7264). Its catalogue is a new id of its own:
     # jc a185cffe refuses an Organization catalogue_id equal to [dataroom] catalogue_id (that would move
     # the deployment-wide catalogue, bins/jc dataroom.rs), so the installation's existing datasets stay
-    # in the deployment-wide catalogue ...0010 (prod-deployer 2026-11-19, T-7010). Open data and API stay the
-    # installation's opendata./api. hosts (shared); a new Organization's own api./opendata./mcp.
-    # wait for the next Let's Encrypt week (7 new Certificates here).
+    # in the deployment-wide catalogue ...0010 (prod-deployer 2026-11-19, T-7010). smartcity keeps the
+    # installation's opendata./api. hosts; marek-mraz, bbsk and slovensko each serve their own catalogue on
+    # opendata.<org>. (T-7408, as jc-dev does; 3 new Certificates). Their own api./mcp. hosts wait.
     installationOrganization: smartcity
     organizations:
       - name: smartcity
@@ -201,13 +201,13 @@ jc:
         hosts: { portal: smartcity }
       - name: marek-mraz
         catalogueId: 00000000-0000-7000-8000-0000000000c1
-        hosts: { portal: marek-mraz, idm: idm.marek-mraz }
+        hosts: { portal: marek-mraz, idm: idm.marek-mraz, opendata: opendata.marek-mraz }
       - name: bbsk
         catalogueId: 00000000-0000-7000-8000-0000000000c2
-        hosts: { portal: bbsk, idm: idm.bbsk }
+        hosts: { portal: bbsk, idm: idm.bbsk, opendata: opendata.bbsk }
       - name: slovensko
         catalogueId: 00000000-0000-7000-8000-0000000000c3
-        hosts: { portal: slovensko, idm: idm.slovensko }
+        hosts: { portal: slovensko, idm: idm.slovensko, opendata: opendata.slovensko }
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:

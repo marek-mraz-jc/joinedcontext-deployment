@@ -161,15 +161,16 @@ def test_each_jc_dev_organization_publishes_with_a_token_of_its_own_catalogue(re
 def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_holds_the_old_projects(rendered):
     """T-7010 (owner 2026-11-18): jc-prod serves smartcity (the installation, its catalogue the one
     the installation's datasets are in), marek-mraz, bbsk and slovensko, each its Portal host and,
-    for the three new ones, its own sign-in host; open data and API stay the installation's hosts.
-    T-7264: the upgrading start keys every old project under smartcity. bbsk. leaves the demo
+    for the three new ones, its own sign-in host and open data host (T-7408); API stays the
+    installation's host. T-7264: the upgrading start keys every old project under smartcity. bbsk. leaves the demo
     landing for Organization bbsk."""
     docs = rendered("jc-prod")
     toml = jc_toml(docs)
     d = "smartcity.joinedcontext.com"
     assert {o["name"]: o["hosts"] for o in toml["organizations"]} == {
         "smartcity": {"portal": f"smartcity.{d}"},
-        **{o: {"portal": f"{o}.{d}", "idm": f"idm.{o}.{d}"} for o in ("marek-mraz", "bbsk", "slovensko")},
+        **{o: {"portal": f"{o}.{d}", "idm": f"idm.{o}.{d}", "opendata": f"opendata.{o}.{d}"}
+           for o in ("marek-mraz", "bbsk", "slovensko")},
     }
     # jc refuses an Organization reusing [dataroom] catalogue_id (first start stopped on it, 94b935bc5)
     ids = [o["catalogue_id"] for o in toml["organizations"]] + [toml["dataroom"]["catalogue_id"]]
@@ -180,7 +181,7 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
     assert env["JC_PORTAL_INSTALLATION_ORGANIZATION"] == "smartcity"
     own = sorted(n for x in docs if x.get("kind") == "Certificate"
                  for n in x["spec"]["dnsNames"] if x["metadata"]["name"].startswith("jc-org-"))
-    assert len(own) == 7 and f"bbsk.{d}" in own, own
+    assert len(own) == 10 and f"bbsk.{d}" in own and f"opendata.bbsk.{d}" in own, own
     routes = str([x for x in docs if x.get("kind") == "ConfigMap"])
     assert "demo-bbsk-landing" not in routes
 
