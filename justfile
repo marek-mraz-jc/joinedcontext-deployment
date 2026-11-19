@@ -1002,6 +1002,31 @@ dev-destroy:
 	done
 	echo "remaining platform namespaces:"; kubectl get ns -o name | sed 's|namespace/||' | grep -E '^(dev|dev-.*|jc-operators)$' || echo "  none"
 
+# The sessions that would hold a jc rollout: idle in a transaction or holding the module databases
+# longer than 5 min (T-7383). Lists pid, role and start of each and exits 1; it kills nothing.
+[group('dev cluster')]
+pg-blockers env:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	case "{{ env }}" in jc-dev|jc-prod) ;; *) echo "refusing: '{{ env }}' is not jc-dev or jc-prod" >&2; exit 1 ;; esac
+	just _dev-guard
+	pod=$(kubectl -n "{{ env }}" get pod -l cnpg.io/cluster=postgres-cluster,cnpg.io/instanceRole=primary -o 'jsonpath={.items[0].metadata.name}')
+	[ -n "$pod" ] || { echo "refusing: no primary of postgres-cluster in {{ env }}" >&2; exit 1; }
+	# Captured first: a failed psql fails the recipe instead of reading as "no sessions".
+	rows=$(kubectl -n "{{ env }}" exec "$pod" -c postgres -- psql -X -At -v ON_ERROR_STOP=1 -c "$(python3 scripts/pg-blockers.py --sql)")
+	printf '%s\n' "$rows" | python3 scripts/pg-blockers.py
+	echo "postgres-cluster in {{ env }}: no session holds a transaction over 5 min"
+
+# Apply jc's releases (default jc-server) to jc-dev or jc-prod, after pg-blockers is clean: the
+# c5405e24 rollout hung 6 min behind two dump sessions idle in transaction for 8 days (T-7383).
+[group('dev cluster')]
+jc-apply env selector='name=jc-server':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	just pg-blockers "{{ env }}"
+	just _dev-assemble
+	helmfile -f deployment/helmfile.yaml -e "{{ env }}" -l "{{ selector }}" sync --concurrency {{helmfile_concurrency}}
+
 # ---------------------------------------------------------------------------
 # The production instance smartcity (T-4678, docs Deployment/14): its own cluster, never dev.
 # Run with KUBECONFIG=.secrets/kubeconfig-prod.yaml per command; the guard refuses anything else.

@@ -32,6 +32,8 @@ DEV_PARAMETERS = {
 
 # The development profile's sizing (T-4933), which dev, local and smartcity all render.
 PROFILE_PARAMETERS = {"max_connections": "55", "max_parallel_workers": "2", "autovacuum_work_mem": "32MB"}
+# Every environment's (T-7383, tests/test_pg_blockers.py).
+BASE_PARAMETERS = {"idle_in_transaction_session_timeout": "5min"}
 
 requires_docker = pytest.mark.skipif(shutil.which("docker") is None, reason="docker not installed")
 
@@ -54,7 +56,7 @@ def env_of(container: dict) -> dict:
 
 def test_dev_postgres_carries_the_broker_sizing(rendered):
     spec = cluster(rendered("dev"))["spec"]
-    assert spec["postgresql"]["parameters"] == PROFILE_PARAMETERS | DEV_PARAMETERS
+    assert spec["postgresql"]["parameters"] == BASE_PARAMETERS | PROFILE_PARAMETERS | DEV_PARAMETERS
     # The overlay adds parameters and nothing else: the TLS-only pg_hba of the base stays.
     assert spec["postgresql"]["pg_hba"] == ["hostnossl all all all reject", "hostssl all all all scram-sha-256"]
     # The limit is unchanged: the node has no memory to give it.
@@ -64,7 +66,7 @@ def test_dev_postgres_carries_the_broker_sizing(rendered):
 def test_prod_waits_for_the_dev_measurement(rendered):
     parameters = cluster(rendered("smartcity"))["spec"]["postgresql"].get("parameters", {})
     # Only Decidim's connections differ from the profile (T-6448, environments/smartcity/postgres).
-    assert parameters == PROFILE_PARAMETERS | {"max_connections": "61"}
+    assert parameters == BASE_PARAMETERS | PROFILE_PARAMETERS | {"max_connections": "61"}
     assert env_of(stat_statements_job(rendered("smartcity")))["PRELOADED"] == "false"
 
 
