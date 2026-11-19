@@ -14,10 +14,10 @@ embedder:
         jwksUrl: https://idm.smartcity.joinedcontext.com/realms/smartcity/protocol/openid-connect/certs
         clients: [jc-assistant]
         maxTextsPerMinute: 1200
-      # Slug mode: kaisatsu at jc.{domain}/login (/id before T-7006), jc's default realm `jc`.
+      # Slug mode: kaisatsu at jc.{domain}/login (/id before T-7006); jc-dev signs in realm `dev` (T-6723).
       - name: jc-dev
-        issuer: https://jc.jcdev.dev.joinedcontext.com/login/realms/jc
-        jwksUrl: https://jc.jcdev.dev.joinedcontext.com/login/realms/jc/protocol/openid-connect/certs
+        issuer: https://jc.jcdev.dev.joinedcontext.com/login/realms/dev
+        jwksUrl: https://jc.jcdev.dev.joinedcontext.com/login/realms/dev/protocol/openid-connect/certs
         clients: [jc-assistant]
         maxTextsPerMinute: 600
     rawValues:
