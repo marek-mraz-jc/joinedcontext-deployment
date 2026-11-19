@@ -174,10 +174,6 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
     # jc refuses an Organization reusing [dataroom] catalogue_id (first start stopped on it, 94b935bc5)
     ids = [o["catalogue_id"] for o in toml["organizations"]] + [toml["dataroom"]["catalogue_id"]]
     assert len(set(ids)) == len(ids), ids
-    # T-6898: both harvest seeds name smartcity, so its Portal takes them over (a seed with no
-    # organization beside [[organizations]] stays a seed in jc a185cffe)
-    assert {h["name"]: h.get("organization") for h in toml["dataroom"]["harvest"]} == {
-        "nkod-banskabystrica": "smartcity", "hub-bbsk": "smartcity"}
     (pod,) = [x["spec"]["template"]["spec"] for x in docs
               if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
     env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
@@ -524,10 +520,13 @@ def test_jc_prod_carries_the_cutover_parts(rendered):
     probes = jc["spec"]["template"]["spec"]["containers"][0]
     assert probes["readinessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "portal.smartcity.joinedcontext.com"}]
     assert probes["livenessProbe"]["httpGet"]["httpHeaders"] == [{"name": "Host", "value": "localhost:8080"}]
-    # Each harvest reads its Endpoints on this instance's gateway and links under its catalogue.
-    for h in jc_toml(docs)["dataroom"]["harvest"]:
-        assert "api.smartcity.joinedcontext.com" in h["allowed_hosts"]
-        assert h.get("datasets_base", "https://opendata.smartcity.joinedcontext.com/") == "https://opendata.smartcity.joinedcontext.com/"
+    # The harvests live in Organization smartcity's default Portal manifest since T-6898 (ODP-11):
+    # jc.toml holds no seed block, only the allow-list naming this instance's gateway and each
+    # source's hosts.
+    dataroom = jc_toml(docs)["dataroom"]
+    assert "harvest" not in dataroom, "a [[dataroom.harvest]] seed is the Portal's now"
+    assert dataroom["harvest_allowed_hosts"][0] == "api.smartcity.joinedcontext.com"
+    assert {"data.slovensko.sk", "egov.banskabystrica.sk", "opendata.bbsk.sk", "services-eu1.arcgis.com"} <= set(dataroom["harvest_allowed_hosts"])
     assert jc["spec"]["strategy"]["type"] == "Recreate" and jc["spec"]["replicas"] == 1
 
 
