@@ -91,7 +91,14 @@ cluster:
   {{- end }}
 
   postgresql:
-    parameters: {}
+    parameters:
+      # A session idle inside a transaction holds its locks and its snapshot until it ends: two
+      # ad-hoc pg_dump sessions sat so for 8 days on jc-prod and hung the c5405e24 rollout behind
+      # their locks on jc_daiya and jc_kaisatsu (T-7383). Every login gets this server default, the
+      # dumps run as postgres through `kubectl exec` included, without changing any role. A healthy
+      # dump or migration is never idle that long; an App that needs more sets it on its own
+      # connection. Reloaded, no restart. `just jc-apply` refuses while such a session is open.
+      idle_in_transaction_session_timeout: "5min"
     synchronous: {}
     pg_hba:
       # CloudNativePG always appends `host all all all scram-sha-256` as its own last rule,
