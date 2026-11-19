@@ -36,14 +36,13 @@ jc:
   # since e8d794c0, this one included.
   # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
   # managed groups and their members.
-  # jc-prod 292bfc47 (2026-11-19, prod-deployer, owner order via supervisor 15:05Z, ahead of the jc-dev
-  # pin): signed by jc main's ci 44546715895 (green), train smoke 44539389528 green; carries T-7380,
-  # T-7389, T-7387, T-7390, T-7384, T-7385, T-7381, T-7319; no migration and no deploy change since
-  # 1e0fe5ba. T-7010.
+  # jc-prod 9b951dbf (2026-11-19, prod-deployer, after jc-dev held it): signed by jc main's ci
+  # 44581712866 (green), train smoke 44570076313 green; carries T-7388, T-7398, T-7400, T-7401;
+  # portal migration 0090 (additive; jc-prod operator_changes empty). T-7010.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '292bfc474218f5b323abe8c42e0d3a9f36813d81'
-    digest: 'sha256:2908c754b43b1370fae13844f4b8bedd5c353d267fb1a9466243d6a3a32f981c'
+    tag: '9b951dbfc864ff9935315117794b7d28f170ee25'
+    digest: 'sha256:979eae903f283e1d9005cf3f016259fa56ea0a4f7c116cfd88f82c86c52a2f0c'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
