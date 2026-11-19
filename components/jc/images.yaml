@@ -36,14 +36,14 @@ jc:
   # since e8d794c0, this one included.
   # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
   # managed groups and their members.
-  # jc-prod 1e0fe5ba (2026-11-19, prod-deployer): the serverJcDev digest below, signed, train smoke
-  # 44522359242 green; carries T-7310 (deploy half, antaresRoleSplit off), T-7317, T-7318, T-7378,
-  # T-6898; migration preflight green on jc-prod jc_antares (0043 RLS enable, 78 tenants still read
-  # by the owner role), no Portal migration. T-7010.
+  # jc-prod 292bfc47 (2026-11-19, prod-deployer, owner order via supervisor 15:05Z, ahead of the jc-dev
+  # pin): signed by jc main's ci 44546715895 (green), train smoke 44539389528 green; carries T-7380,
+  # T-7389, T-7387, T-7390, T-7384, T-7385, T-7381, T-7319; no migration and no deploy change since
+  # 1e0fe5ba. T-7010.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '1e0fe5ba4c326c9d20fffaeec0c7d85c713e9b69'
-    digest: 'sha256:5356441eb821f27ba346123160488e6e839eccd69497b240a455142d7e00ea94'
+    tag: '292bfc474218f5b323abe8c42e0d3a9f36813d81'
+    digest: 'sha256:2908c754b43b1370fae13844f4b8bedd5c353d267fb1a9466243d6a3a32f981c'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
