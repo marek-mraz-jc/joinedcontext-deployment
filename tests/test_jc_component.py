@@ -171,7 +171,9 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
         "smartcity": {"portal": f"smartcity.{d}"},
         **{o: {"portal": f"{o}.{d}", "idm": f"idm.{o}.{d}"} for o in ("marek-mraz", "bbsk", "slovensko")},
     }
-    assert toml["organizations"][0]["catalogue_id"] == toml["dataroom"]["catalogue_id"]
+    # jc refuses an Organization reusing [dataroom] catalogue_id (first start stopped on it, 94b935bc5)
+    ids = [o["catalogue_id"] for o in toml["organizations"]] + [toml["dataroom"]["catalogue_id"]]
+    assert len(set(ids)) == len(ids), ids
     (pod,) = [x["spec"]["template"]["spec"] for x in docs
               if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
     env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
