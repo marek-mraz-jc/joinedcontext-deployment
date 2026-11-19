@@ -18,7 +18,7 @@ import sys
 SEP = "\x1f"
 FIELDS = ("pid", "role", "database", "state", "application", "client", "backend_start", "xact_start",
           "xact_seconds", "state_seconds", "locks")
-SQL = f"""select concat_ws(E'\\x1f', a.pid, coalesce(a.usename, ''), coalesce(a.datname, ''),
+SQL = """select concat_ws(E'\\x1f', a.pid, coalesce(a.usename, ''), coalesce(a.datname, ''),
  coalesce(a.state, ''), replace(coalesce(a.application_name, ''), E'\\x1f', ' '),
  coalesce(host(a.client_addr), 'local'),
  coalesce(to_char(a.backend_start at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), ''),
