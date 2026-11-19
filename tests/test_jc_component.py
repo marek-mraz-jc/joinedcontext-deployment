@@ -174,6 +174,10 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
     # jc refuses an Organization reusing [dataroom] catalogue_id (first start stopped on it, 94b935bc5)
     ids = [o["catalogue_id"] for o in toml["organizations"]] + [toml["dataroom"]["catalogue_id"]]
     assert len(set(ids)) == len(ids), ids
+    # T-6898: both harvest seeds name smartcity, so its Portal takes them over (a seed with no
+    # organization beside [[organizations]] stays a seed in jc a185cffe)
+    assert {h["name"]: h.get("organization") for h in toml["dataroom"]["harvest"]} == {
+        "nkod-banskabystrica": "smartcity", "hub-bbsk": "smartcity"}
     (pod,) = [x["spec"]["template"]["spec"] for x in docs
               if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
     env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}

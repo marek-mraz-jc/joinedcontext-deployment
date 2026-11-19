@@ -238,6 +238,9 @@ jc:
     # prod's catalog dataset moved to zilina-catalog (bins/jc RENAMES.md, rehearsal.py aliases).
     # prod's harvests of hub-bbsk and nkod-banskabystrica (jc-catalogue-17).
     catalogueHarvest: true
+    # Both harvests belong to Organization smartcity, which holds the installation's projects, so
+    # its Portal takes them over as portals/smartcity-default.yaml (integrator decision, T-6898).
+    catalogueHarvestOrganization: smartcity
     # prod's publisher badges and words (owner 2026-10-12, release 23a43801 components/ckan/values/catalogue/
     # development-values.yaml.gotmpl `organizations`), copied from the monorepo's
     # bins/jc/docs/dataroom-publishers.toml: CKAN's own picture or description still wins.

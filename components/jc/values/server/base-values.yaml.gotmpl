@@ -392,7 +392,9 @@ configMap:
       # reads od-datasets.json beside jc.toml.
       # A source reads its datasets' Endpoint doors on this instance's own gateway (api.{domain} in
       # host mode, refused unless listed) and links the datasets under this instance's catalogue.
-{{ readFile "../../files/harvest-sources.toml" | replace "https://opendata.dev.joinedcontext.com/" (printf "https://opendata.%s/" $global.domain) | replace "allowed_hosts = [" (printf "allowed_hosts = [%q, " (printf "api.%s" $global.domain)) | indent 6 }}
+      # catalogueHarvestOrganization names the [[organizations]] entry the sources belong to (its
+      # Portal then holds them as portals/<org>-default.yaml, T-6898); unset: the [dataroom] catalogue.
+{{ readFile "../../files/harvest-sources.toml" | replace "https://opendata.dev.joinedcontext.com/" (printf "https://opendata.%s/" $global.domain) | replace "allowed_hosts = [" (printf "allowed_hosts = [%q, " (printf "api.%s" $global.domain)) | replace "\n[[dataroom.harvest]]\n" (ternary (printf "\n[[dataroom.harvest]]\norganization = %q\n" (dig "catalogueHarvestOrganization" "" $jc)) "\n[[dataroom.harvest]]\n" (ne (dig "catalogueHarvestOrganization" "" $jc) "")) | indent 6 }}
       {{- end }}
       {{- if $proxy.enabled }}
 
