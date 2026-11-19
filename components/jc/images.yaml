@@ -36,13 +36,13 @@ jc:
   # since e8d794c0, this one included.
   # Never pin an image older than 520e299e: without its reconciler guard a fresh start deletes
   # managed groups and their members.
-  # jc-prod c5405e24 (2026-11-19, prod-deployer): the serverJcDev digest below, signed, on jc-dev since
-  # 09:40Z; carries T-7288 (Organization-realm syncers use the realm's own secret), T-7289, T-7290;
-  # migration preflight green on the 07:55Z jc-prod backup (jc_portal 84 -> 88). T-7010.
+  # jc-prod 582f0817 (2026-11-19, prod-deployer): the serverJcDev digest below, signed, train smoke
+  # 44497555549 green; carries T-7300, T-7302, T-7305 (project_move), T-7307, T-7309; migration
+  # preflight green on the 11:21Z jc-prod backup (jc_portal 88 -> 89, Antares 0040-0042). T-7010.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'c5405e246f9ba16e70d310e38f8efcd4718d6d53'
-    digest: 'sha256:6ac2d0e9e973a4d67a42316f7d17bbd5f49e41e4d48e943a3b58a4284a88a0c7'
+    tag: '582f0817be51103d47e51e3778f37d33de4ed08e'
+    digest: 'sha256:2a9bfcdb5df2ddda6aec116a004312b3ee7563e72b5c89240d01f540413e2948'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
