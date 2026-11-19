@@ -54,8 +54,8 @@ jc:
   # stays jc-prod's.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '153976c66ad269372f06a7b39629ea689f94c573'
-    digest: 'sha256:dd3eef18bdf659bbdc963cf16366bad1b0d35075435da7a6510b39487b268cce'
+    tag: '63d77b458ce7606d966b85935efd6e622e297c35'
+    digest: 'sha256:8ed571d0b8933ac7f2f33b65b83e263faa0ff628dc16b6ba2397fc6abf445b88'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
