@@ -190,6 +190,16 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
 
 
 @requires_helmfile
+def test_jc_devs_deployment_host_people_belong_to_marek_mraz(rendered):
+    """T-7282: the Portal keys jc-dev's connectors, calls and preferences under the installation
+    Organization before migration 0088 forces the key, and refuses to start without one."""
+    (pod,) = [x["spec"]["template"]["spec"] for x in rendered("jc-dev")
+              if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
+    env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
+    assert env["JC_PORTAL_INSTALLATION_ORGANIZATION"] == "marek-mraz"
+    assert "marek-mraz" in {o["name"] for o in jc_toml(rendered("jc-dev"))["organizations"]}
+
+
 def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_registry(rendered):
     """With `[[organizations]]` jc routes by Host in slug mode too: a kubelet probe with the pod-IP
     Host got 421 and Recreate took every jc-dev host down (2026-11-15T13:21Z, T-7005). Each probe

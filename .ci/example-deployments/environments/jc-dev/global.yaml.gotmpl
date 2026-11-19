@@ -144,6 +144,11 @@ jc:
       - jc-org-idm-banskabystrica
       - jc-org-idm-bratislava
       - jc-org-idm-praha
+    # The deployment host's people (their connectors, connector calls and preferences) belong to
+    # marek-mraz, the owner's Organization: the Portal keys the 35 connectors, 637 calls and 8
+    # preference rows of jc-dev under its reserved project before migration 0088 forces the key
+    # (T-7282, supervisor decision 2026-11-19T03:50Z). Merge before the jc-dev pin that carries 0088.
+    installationOrganization: marek-mraz
     organizations:
       - name: bbsk
         catalogueId: 00000000-0000-7000-8000-0000000000b1

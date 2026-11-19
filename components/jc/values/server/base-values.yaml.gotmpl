@@ -540,7 +540,9 @@ env:
   {{- with (dig "installationOrganization" "" $jc) }}
   # The [[organizations]] entry every project of a Portal database from before the project
   # registry belongs to (T-7264): read only on the start that upgrades such a database, which
-  # keys the project rows under it before migration 0080 forces the key.
+  # keys the project rows under it before migration 0080 forces the key. Also the Organization of
+  # the deployment host's people while no Organization manifest sets installation: their connectors
+  # and preferences live under it, and the start that runs migration 0088 keys the older ones (T-7282).
   JC_PORTAL_INSTALLATION_ORGANIZATION: {{ . | quote }}
   {{- end }}
   {{- if eq $mode "host" }}
