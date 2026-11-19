@@ -45,12 +45,10 @@ jc:
     # Secret (key `key`) with the age identity the projects' SOPS files name; unset: no secretRef
     # of a project resolves.
     ageKeySecret: ""
-    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica; files/harvest-sources.toml and
-    # files/od-datasets.json from the monorepo's bins/jc/docs at the pinned jc). Egress: public 443.
+    # prod's catalogue harvests (hub-bbsk, nkod-banskabystrica): their hosts on the harvest
+    # allow-list and files/od-datasets.json beside jc.toml; the sources themselves are Organization
+    # smartcity's default Portal manifest since T-6898. Egress: public 443.
     catalogueHarvest: false
-    # The [[organizations]] name the catalogue harvests belong to (T-6898); "" keeps them on the
-    # [dataroom] catalogue.
-    catalogueHarvestOrganization: ""
     # The operator's price table for Administration -> Costs (T-7009, as portal.costPrices T-5126):
     # { currency, perUsd, nodes: [{name, monthly}], volumes, fixed }. {} renders no file and the page
     # says no table is set.
