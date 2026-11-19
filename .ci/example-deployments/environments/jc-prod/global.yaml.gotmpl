@@ -188,14 +188,16 @@ jc:
     hosts: ["", api, assistant, data, idm, opendata, portal, status, viz]
     # Four Organizations, each its own realm (idm.<org>.), Portal host and catalogue (T-7010, owner
     # 2026-11-18 ~19:50Z). smartcity is the installation: every project of the release-56 Portal
-    # database is keyed under it on the upgrading start (T-7264), and its catalogue is the one the
-    # installation's datasets are in ([dataroom] catalogue_id). Open data and API stay the
+    # database is keyed under it on the upgrading start (T-7264). Its catalogue is a new id of its own:
+    # jc a185cffe refuses an Organization catalogue_id equal to [dataroom] catalogue_id (that would move
+    # the deployment-wide catalogue, bins/jc dataroom.rs), so the installation's existing datasets stay
+    # in the deployment-wide catalogue ...0010 (prod-deployer 2026-11-19, T-7010). Open data and API stay the
     # installation's opendata./api. hosts (shared); a new Organization's own api./opendata./mcp.
     # wait for the next Let's Encrypt week (7 new Certificates here).
     installationOrganization: smartcity
     organizations:
       - name: smartcity
-        catalogueId: 00000000-0000-7000-8000-000000000010
+        catalogueId: 00000000-0000-7000-8000-0000000000c0
         hosts: { portal: smartcity }
       - name: marek-mraz
         catalogueId: 00000000-0000-7000-8000-0000000000c1
