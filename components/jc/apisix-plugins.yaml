@@ -112,3 +112,31 @@ jc-apps:
                 "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
             end
           end
+
+# The chart renderer and the explorer on /embed (jc slug mode; bins/jc/src/modules/viz.rs): the same
+# chain, but no X-Frame-Options. There every viz page shares the Portal's origin and runs in a CSP
+# sandbox without allow-same-origin; the chart host, an opaque origin, frames /embed/render.html,
+# which SAMEORIGIN refuses for an opaque ancestor (a dataset page's charts stayed blank, T-7464).
+# Each page's own policy says who may frame it (`frame-ancestors`, or the renderer's sandbox, which
+# connects nowhere); an answer without a policy is framed by nobody. The Portal keeps `jc`.
+jc-embed:
+  name: jc-embed
+  description: jc's chart renderer and explorer, framed as each page's own policy says
+  plugins:
+    <<: *jc-plugins
+    response-rewrite:
+      headers:
+        set:
+          Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+          X-Content-Type-Options: "nosniff"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+    serverless-post-function:
+      phase: header_filter
+      functions:
+        - >-
+          return function()
+            if ngx.header["Content-Security-Policy"] == nil then
+              ngx.header["Content-Security-Policy"] =
+                "frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+            end
+          end

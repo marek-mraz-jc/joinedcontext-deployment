@@ -33,9 +33,11 @@ ANCESTORS = {"DENY": "'none'", "SAMEORIGIN": "'self'"}
 # (AG-114, and a public form's page, EP-101); the edge sets no X-Frame-Options there, and an
 # answer without a policy gets DENY's.
 # The chart renderer (T-4641) too: any site may frame its host page; and the standalone
-# assistant (T-4694), whose app.js shows a framed copy only inside its deployment's origins.
+# assistant (T-4694), whose app.js shows a framed copy only inside its deployment's origins; and
+# jc's viz mount /embed in slug mode (T-7464), each page naming its own framers.
 FRAMED_BY_UPSTREAM = {
     "assistant/assistant-widget", "portal/portal-public-form", "ckan/ckan-map", "viz/viz", "ai/ai", "jc/jc-apps",
+    "jc/jc-embed",
 }
 
 
