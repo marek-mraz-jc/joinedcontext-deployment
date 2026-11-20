@@ -57,8 +57,12 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-praha
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-zilina
+monitoring.coreos.com/v1/PodMonitor jc-dev/apps-db
+monitoring.coreos.com/v1/PodMonitor jc-dev/postgres-cluster
+monitoring.coreos.com/v1/ServiceMonitor jc-dev/jc
 networking.k8s.io/v1/Ingress -/apisix
 networking.k8s.io/v1/NetworkPolicy dev/dev-operator-egress-to-jc-dev
+networking.k8s.io/v1/NetworkPolicy dev/dev-prometheus-egress-to-jc-dev
 networking.k8s.io/v1/NetworkPolicy jc-dev/acme-http01-solver
 networking.k8s.io/v1/NetworkPolicy jc-dev/apisix
 networking.k8s.io/v1/NetworkPolicy jc-dev/apisix-allow-linkerd
@@ -85,6 +89,7 @@ networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-apisix
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-apps-db
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-artifact-store
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-jc
+networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-monitoring
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-networkpolicies
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-postgres
 networking.k8s.io/v1/NetworkPolicy jc-dev/default-deny-secrets

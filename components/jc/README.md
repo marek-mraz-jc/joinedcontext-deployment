@@ -22,7 +22,8 @@ One release of `charts/workload`, `jc-server`:
   `jc --config /etc/jc/jc.toml` (ConfigMap `jc`): slug mode, the Portal at `/`, kaisatsu at
   `/login` (`/id` answers 308 there, T-7006), dataroom at `/opendata`, daiya at `/dashboards`, ekiben at `/streams`, Antares at
   `/broker`, shako at `/git`. Public listener 8080, admin listener 9091 (`/metrics` behind the
-  bearer of Secret `jc-admin-token`, `/healthz` open).
+  bearer of Secret `jc-admin-token`, `/healthz` open), reachable only from the Prometheus pods of
+  `monitoring.prometheusNamespace` (meshed, it skips the inbound proxy; T-7469).
 - **Init container `seed-state`** copies Secret `jc-setup` into the state directory
   `/var/lib/jc/state` (0700, files 0600, a memory `emptyDir`). jc reads its first-start secrets
   there (monorepo `bins/jc/src/setup.rs`) and never generates them in the pod, so a restart and

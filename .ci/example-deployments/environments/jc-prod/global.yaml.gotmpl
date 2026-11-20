@@ -428,11 +428,8 @@ jc:
     # Supervisor 2026-11-10 06:5xZ from evidence/jc-memory-1g/REPORT.md (prod data): peak RSS 2.13 GiB
     # after start, 2.28 GiB under gate load, allocator-resident 2.60 GiB, idle 1.63 GiB.
     rawValues:
-      # dev's Prometheus is meshed: through jc's Linkerd inbound port (4143) it would reach every
-      # port of the pod, the public 8080 included. The admin listener skips the proxy instead, so
-      # the policy below opens 9091 alone (the token still guards /metrics).
-      podAnnotations:
-        config.linkerd.io/skip-inbound-ports: "9091"
+      # dev's Prometheus is meshed: jc's admin listener (9091) skips the inbound proxy and the jc
+      # chart's NetworkPolicy opens it to dev's Prometheus pods alone (prometheusNamespace, T-7469).
       # Guaranteed QoS so prod wins on the shared node (supervisor 2026-11-10 15:59Z): requests =
       # limits, 3.75 GiB as jc-memory-cut2 sized it. jc OOMKilled at 3 Gi three times on
       # 2026-11-10 (15:29, 15:57, 16:05Z) once the old dev namespace still held ~2 GiB; it is off.
@@ -795,25 +792,7 @@ networkpolicies:
             port: 9187
           - protocol: TCP
             port: 4143
-  # 9091 alone: it skips jc's mesh proxy (podAnnotations above), and 4143 would reach 8080 too.
-  jc-admin-from-dev-prometheus:
-    _component: jc
-    podSelector:
-      app.kubernetes.io/name: jc-server
-      app.kubernetes.io/instance: jc-server
-    policyTypes:
-      - Ingress
-    ingress:
-      - from:
-          - namespaceSelector:
-              matchLabels:
-                kubernetes.io/metadata.name: dev
-            podSelector:
-              matchLabels:
-                app.kubernetes.io/name: prometheus
-        ports:
-          - protocol: TCP
-            port: 9091
+  # jc's admin listener (9091) admits dev's Prometheus by the jc chart's own rule (prometheusNamespace).
   apisix-metrics-from-dev-prometheus:
     _component: apisix
     podSelector:

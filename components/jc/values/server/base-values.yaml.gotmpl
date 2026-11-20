@@ -147,6 +147,13 @@ metrics:
   enabled: true
   port: 9091
   name: admin
+{{- if and ($global.serviceMesh.enable | default false) (eq ($global.serviceMesh.type | default "") "linkerd") (dig "monitoring" "monitoring" "prometheusNamespace" "" .Values) }}
+# A meshed Prometheus would reach every port of the pod through jc's inbound proxy (4143), the
+# public 8080 included. The admin listener skips the proxy instead, so the NetworkPolicy opens 9091
+# alone to the Prometheus pods (T-7469); the token still guards /metrics.
+podAnnotations:
+  config.linkerd.io/skip-inbound-ports: "9091"
+{{- end }}
 
 probes:
   # The window's loopback listener answers no kubelet probe.
