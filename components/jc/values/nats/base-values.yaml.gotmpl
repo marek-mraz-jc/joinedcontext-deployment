@@ -94,7 +94,9 @@ resources:
     memory: 64Mi
   limits:
     cpu: 200m
-    memory: 256Mi
+    # 640Mi: the KV antares_subscriptions held 452k messages on 2026-11-20 and 256Mi OOM-killed it
+    # on restore (jc-dev outage 07:09-07:23Z); stopgap until the bucket is bounded.
+    memory: 640Mi
 
 podSecurityContext:
   {{ .Values.securityDefaults.podSecurityContext | toYaml | nindent 2 }}
