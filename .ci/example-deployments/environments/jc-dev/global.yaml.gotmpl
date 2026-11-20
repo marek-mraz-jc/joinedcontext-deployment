@@ -16,6 +16,9 @@ components:
   - apps-db
   - jc
   - wasm-host
+  # jc's ServiceMonitor (admin /metrics behind its token) and the Postgres PodMonitors, read by dev's
+  # Prometheus (namespace dev) as jc-prod's are (T-7469).
+  - monitoring
 
 global:
   # Its own domain under dev's wildcard A record: jc answers on jc.jcdev.dev.joinedcontext.com (slug
@@ -283,7 +286,54 @@ jc:
 componentDependencies:
   apisix: [secrets]
 
+# Metrics (T-7469): dev's Prometheus scrapes jc-dev's jc (admin 9091, behind its token) and the
+# Postgres exporters (9187). The targets admit it by prometheusNamespace (the jc, postgres and apps-db
+# charts' own rules); dev's half is dev-prometheus-egress-to-jc-dev below. jc-prod's PrometheusRule carries
+# the cluster's alerts, so jc-dev renders none.
+monitoring:
+  monitoring:
+    # On without global.metrics.enabled, which would also render the CloudNativePG chart's rules.
+    enabled: true
+    prometheusNamespace: dev
+    rawValues:
+      alertGroups: []
+
 networkpolicies:
+  # dev's Prometheus to jc-dev's scrape targets: jc's admin listener skips the mesh proxy (9091
+  # alone, 4143 would reach 8080 too), the Postgres exporters sit behind theirs (4143).
+  dev-prometheus-egress-to-jc-dev:
+    _component: jc
+    namespace: dev
+    podSelector:
+      app.kubernetes.io/name: prometheus
+    policyTypes:
+      - Egress
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-dev
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: jc-server
+                app.kubernetes.io/instance: jc-server
+        ports:
+          - protocol: TCP
+            port: 9091
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: jc-dev
+            podSelector:
+              matchExpressions:
+                - key: cnpg.io/cluster
+                  operator: In
+                  values: [postgres-cluster, apps-db]
+        ports:
+          - protocol: TCP
+            port: 9187
+          - protocol: TCP
+            port: 4143
   # The CloudNativePG operator runs in namespace dev (clusterWide): it reads each instance's status
   # on 8000 and connects on 5432. Both halves, with the Linkerd proxy port.
   apps-db-from-dev-operator:

@@ -140,7 +140,6 @@ networking.k8s.io/v1/NetworkPolicy jc-prod/embedder-server-linkerd-control-plane
 networking.k8s.io/v1/NetworkPolicy jc-prod/hsl-transport-allow-linkerd
 networking.k8s.io/v1/NetworkPolicy jc-prod/hsl-transport-linkerd-cp
 networking.k8s.io/v1/NetworkPolicy jc-prod/hsl-transport-pod
-networking.k8s.io/v1/NetworkPolicy jc-prod/jc-admin-from-dev-prometheus
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-egress-to-app-pods
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-egress-to-embedder
 networking.k8s.io/v1/NetworkPolicy jc-prod/jc-egress-to-metrics-proxy

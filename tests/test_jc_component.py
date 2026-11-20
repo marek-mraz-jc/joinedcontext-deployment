@@ -364,6 +364,86 @@ def test_jc_retain_reaches_the_meshed_postgres(rendered):
     assert any(p["port"] == 4143 for rule in egress for p in rule.get("ports", [])), egress
 
 
+JC_SERVER = {"app.kubernetes.io/name": "jc-server", "app.kubernetes.io/instance": "jc-server"}
+
+
+def selects(selector: dict, labels: dict) -> bool:
+    """A NetworkPolicy podSelector (matchLabels or the chart's flat form) selecting a pod with labels."""
+    want = selector.get("matchLabels", selector if "matchExpressions" not in selector else {})
+    return all(labels.get(k) == v for k, v in want.items()) and "matchExpressions" not in selector
+
+
+def jc_admin_ingress(docs, ns: str) -> list[tuple[str, dict]]:
+    """(policy, peer) for every ingress peer that reaches jc's admin listener (9091) or its inbound
+    proxy (4143, which reaches every port) in jc's namespace; a rule with no ports or no `from`
+    counts as reaching 9091."""
+    found = []
+    for d in docs:
+        if d.get("kind") != "NetworkPolicy" or d["metadata"].get("namespace") != ns:
+            continue
+        if not selects(d["spec"].get("podSelector") or {}, JC_SERVER):
+            continue
+        for rule in d["spec"].get("ingress") or []:
+            ports = {p.get("port") for p in rule.get("ports") or []}
+            if ports and not ports & {9091, 4143, "admin"}:
+                continue
+            for peer in rule.get("from") or [{"everything": ports}]:
+                found.append((d["metadata"]["name"], peer, sorted(map(str, ports))))
+    return found
+
+
+@requires_helmfile
+@pytest.mark.parametrize("env", ["jc-dev", "jc-prod"])
+def test_dev_prometheus_alone_reaches_jcs_admin_listener_with_the_token_from_a_secret(rendered, env):
+    """T-7469: dev's Prometheus scrapes jc's /metrics (jc_gateway_writes_refused_total, T-7467) on
+    jc-dev and jc-prod. 9091 admits the Prometheus pods of namespace dev and nothing else; the
+    listener skips jc's mesh proxy, so no Prometheus rule names 4143 (that port reaches 8080 too);
+    the scrape sends the admin token from Secret jc-admin-token, never a literal in values."""
+    docs = rendered(env)
+    prometheus = {"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "dev"}},
+                  "podSelector": {"matchLabels": {"app.kubernetes.io/name": "prometheus"}}}
+    reach = jc_admin_ingress(docs, env)
+    admin = [(name, peer) for name, peer, ports in reach if "9091" in ports]
+    assert admin and all(peer == prometheus for _, peer in admin), admin
+    assert not [r for r in reach if r[1] == prometheus and "4143" in r[2]], reach
+
+    (dep,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    notes = dep["spec"]["template"]["metadata"].get("annotations") or {}
+    assert notes.get("config.linkerd.io/skip-inbound-ports") == "9091", notes
+
+    (mon,) = [d for d in docs if d.get("kind") == "ServiceMonitor" and d["metadata"]["name"] == "jc"]
+    assert mon["metadata"]["namespace"] == env and mon["spec"]["namespaceSelector"] == {"matchNames": [env]}
+    (endpoint,) = mon["spec"]["endpoints"]
+    assert endpoint["port"] == "admin" and endpoint["path"] == "/metrics", endpoint
+    assert endpoint["authorization"] == {
+        "type": "Bearer", "credentials": {"name": "jc-admin-token", "key": "token"}}, endpoint
+    assert not {"bearerToken", "bearerTokenFile", "basicAuth"} & endpoint.keys(), endpoint
+    # The monitor's selector finds jc's Service with the named admin port (a renamed port scrapes nothing).
+    admin_ports = [p for d in docs if d.get("kind") == "Service" and d["metadata"].get("namespace") == env
+                   and selects(mon["spec"]["selector"], d["metadata"].get("labels") or {})
+                   for p in d["spec"]["ports"] if p["name"] == "admin"]
+    assert [p["port"] for p in admin_ports] == [9091], admin_ports
+
+    # dev's half: its Prometheus may leave for jc's 9091 in this namespace.
+    egress = [rule for d in docs if d.get("kind") == "NetworkPolicy" and d["metadata"].get("namespace") == "dev"
+              and selects(d["spec"]["podSelector"], {"app.kubernetes.io/name": "prometheus"})
+              for rule in d["spec"].get("egress") or []]
+    assert any(any(peer.get("namespaceSelector") == {"matchLabels": {"kubernetes.io/metadata.name": env}}
+                   and peer.get("podSelector") == {"matchLabels": JC_SERVER} for peer in rule["to"])
+               and 9091 in [p["port"] for p in rule["ports"]] for rule in egress), egress
+
+
+@requires_helmfile
+def test_without_a_prometheus_namespace_jcs_admin_listener_stays_closed(rendered):
+    """addons deploys jc without the monitoring component: no peer reaches 9091 and the listener keeps
+    its mesh proxy, never a rule that falls back to every pod."""
+    docs = rendered("addons")
+    (dep,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    ns = dep["metadata"]["namespace"]
+    assert not [r for r in jc_admin_ingress(docs, ns) if "9091" in r[2] or r[1].get("everything") is not None]
+    assert "config.linkerd.io/skip-inbound-ports" not in (dep["spec"]["template"]["metadata"].get("annotations") or {})
+
+
 @requires_helmfile
 @pytest.mark.parametrize("env", jc_environments())
 def test_jc_toml_names_its_profile(rendered, env):
