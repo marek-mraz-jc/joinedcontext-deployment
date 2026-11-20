@@ -421,6 +421,10 @@ TEMPLATE_CLASSES = {
         "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
         "why": "the plugin config of the jc-apps route that defaults/environment/apisix-routes.yaml.gotmpl adds in jc host mode: every App host {name}.apps.{domain} to jc in host mode: jc's Portal serves App {name} alone there, signs its visitor in with the App's own client and hands the App's own endpoint slugs to the gateway (bins/jc edge-session-design S4a); each App page names the Portal in its own frame-ancestors (AP-122), so the edge sets no X-Frame-Options",
     },
+    "jc-embed": {
+        "reach": UPSTREAM, "cacheable": True, "framing": FRAMED_BY_UPSTREAM,
+        "why": "the plugin config of the jc-embed route that defaults/environment/apisix-routes.yaml.gotmpl adds in jc slug mode: jc's chart renderer and explorer on jc.{domain}/embed (T-7464): static pages with no data and no token; the chart host, an opaque sandboxed origin, frames /embed/render.html, which SAMEORIGIN refuses, so each page names its framers in its own frame-ancestors (or runs in a sandbox that connects nowhere) and an answer without a policy gets frame-ancestors 'none'; jc's limit-count of 600 a minute per address bounds the anonymous reads",
+    },
 }
 
 # The workloads that answer inside the cluster only. None of them may appear as the upstream
