@@ -53,6 +53,22 @@ routes:
 {{- end }}
 {{- end }}
 {{- end }}
+{{- /* Slug mode: the viz mount /embed on jc. without X-Frame-Options (plugin config jc-embed, T-7464);
+       in host mode it has a host of its own, where the renderer names `frame-ancestors *`. */}}
+{{- if ne (dig "jc" "server" "mode" "slug" .Values) "host" }}
+  jc-embed:
+    name: jc-embed
+    description: jc's chart renderer and explorer on /embed, framed as each page's policy says
+    upstream: {{ printf "jc.%s.svc.cluster.local:8080" $ns }}
+    subDomain: jc
+    uri: /embed/*
+    priority: 5
+    pluginConfig: jc-embed
+    timeout:
+      connect: 6
+      send: 120
+      read: 120
+{{- end }}
 {{- range $org := dig "jc" "server" "organizations" list .Values }}
 {{- if and (hasKey $org "hosts") (not (hasKey $org "domain")) }}
 {{- range $role := list "portal" "opendata" "api" "mcp" "idm" }}

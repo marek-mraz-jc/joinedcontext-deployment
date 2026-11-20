@@ -310,6 +310,31 @@ def test_the_edge_sends_only_dataroom_and_daiya_paths_to_their_deployments(rende
 
 
 @requires_helmfile
+def test_only_the_viz_mount_on_jc_drops_x_frame_options_in_slug_mode(rendered):
+    """T-7464: on jc. the chart host (an opaque origin in its CSP sandbox) frames /embed/render.html,
+    which SAMEORIGIN refuses; /embed/* drops the header, each viz page names its own framers, and every
+    other path keeps SAMEORIGIN. Host mode (jc-prod) serves viz on a host of its own: no such route."""
+    def standalone(env):
+        docs = rendered(env)
+        text = next((d.get("stringData") or d.get("data") or {}).get("apisix.yaml", "") for d in docs
+                    if d.get("kind") in ("Secret", "ConfigMap") and d["metadata"]["name"].startswith("apisix-standalone"))
+        return yaml.safe_load(text)
+    dev = standalone("jc-dev")
+    routes = {r["id"]: r for r in dev["routes"]}
+    plugins = {p["id"]: p["plugins"] for p in dev["plugin_configs"]}
+    embed = routes["jc-embed"]
+    assert (embed["host"], embed["uri"]) == ("jc.jcdev.dev.joinedcontext.com", "/embed/*"), embed
+    assert embed["priority"] > routes["jc"]["priority"], (embed, routes["jc"])
+    framing = plugins[embed["plugin_config_id"]]["response-rewrite"]["headers"]["set"]
+    assert "X-Frame-Options" not in framing, framing
+    assert plugins[routes["jc"]["plugin_config_id"]]["response-rewrite"]["headers"]["set"]["X-Frame-Options"] == "SAMEORIGIN"
+    # The rest of the chain is jc's: forged-header clearing, rate limit, internal-mount refusals.
+    for name in ("serverless-pre-function", "limit-count", "uri-blocker", "proxy-rewrite"):
+        assert plugins[embed["plugin_config_id"]][name] == plugins["jc"][name], name
+    assert "jc-embed" not in {r["id"] for r in standalone("jc-prod")["routes"]}
+
+
+@requires_helmfile
 def test_jc_prod_runs_no_split(rendered):
     """T-7009 is jc-dev's alone: jc-prod keeps one process on the local bus, no role Deployment, no NATS."""
     docs = rendered("jc-prod")
