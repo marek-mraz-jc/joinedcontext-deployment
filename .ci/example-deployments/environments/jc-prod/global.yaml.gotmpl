@@ -186,7 +186,7 @@ jc:
     # bbsk. is Organization bbsk's working host since T-7010 (owner 2026-11-18 ~19:50Z), no longer
     # the BBSK demo landing (demos/bbsk-landing) behind demo-bbsk-tls.
     hosts: ["", api, assistant, data, idm, opendata, portal, status, viz]
-    # Four Organizations, each its own realm (idm.<org>.), Portal host and catalogue (T-7010, owner
+    # Four Organizations (three more below, T-7444), each its own realm (idm.<org>.), Portal host and catalogue (T-7010, owner
     # 2026-11-18 ~19:50Z). smartcity is the installation: every project of the release-56 Portal
     # database is keyed under it on the upgrading start (T-7264). Its catalogue is a new id of its own:
     # jc a185cffe refuses an Organization catalogue_id equal to [dataroom] catalogue_id (that would move
@@ -208,6 +208,31 @@ jc:
       - name: slovensko
         catalogueId: 00000000-0000-7000-8000-0000000000c3
         hosts: { portal: slovensko, idm: idm.slovensko, opendata: opendata.slovensko }
+      # barcelona, bratislava and zilina own Projects in jc-prod's forge but sat in no registry entry, so the
+      # T-7222 door import could not be recorded for them and their Pipelines' writes stayed refused (T-7444
+      # step 2b, supervisor 2026-11-20T17:35Z). The marek-mraz shape without idm: their people stay in the
+      # smartcity realm. Their datasets move from opendata.smartcity to opendata.<org> (301 of old links: T-7408).
+      - name: barcelona
+        catalogueId: 00000000-0000-7000-8000-0000000000c4
+        hosts: { portal: barcelona, opendata: opendata.barcelona }
+      - name: bratislava
+        catalogueId: 00000000-0000-7000-8000-0000000000c5
+        hosts: { portal: bratislava, opendata: opendata.bratislava }
+      - name: zilina
+        catalogueId: 00000000-0000-7000-8000-0000000000c6
+        hosts: { portal: zilina, opendata: opendata.zilina }
+    # The 10 Certificates of T-7010 and T-7408, issued (Ready since 2026-11-19): only T-7444's 6 are new.
+    issuedCertificates:
+      - jc-org-smartcity
+      - jc-org-marek-mraz
+      - jc-org-idm-marek-mraz
+      - jc-org-opendata-marek-mraz
+      - jc-org-bbsk
+      - jc-org-idm-bbsk
+      - jc-org-opendata-bbsk
+      - jc-org-slovensko
+      - jc-org-idm-slovensko
+      - jc-org-opendata-slovensko
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:
