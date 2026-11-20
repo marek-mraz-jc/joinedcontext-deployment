@@ -211,6 +211,7 @@
  "test_open_data_seed.py": 104.4,
  "test_parity.py": 0.0,
  "test_password_guessing.py": 0.2,
+ "test_pg_blockers.py": 25.4,
  "test_pin_antares.py": 0.0,
  "test_pin_tiers.py": 0.0,
  "test_pins.py": 1.2,
