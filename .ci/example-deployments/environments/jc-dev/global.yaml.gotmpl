@@ -49,17 +49,23 @@ global:
 postgres:
   operator:
     enabled: false
-  # One instance of three on a 16 GB node: jc's three stores ask for a third of dev's request and keep
-  # its 2Gi ceiling (measure with kubectl top after the import and set the request from it).
+  # T-7489: jc_antares' hot set (entities heap 4.2 GB + indexes 3.2 GB) met a 128MB cache and a 2Gi
+  # cgroup that also caps the page cache: buffer hit 68 %, deep reads waiting on IO:DataFileRead
+  # (T-7484, 2026-11-21). 512MB shared_buffers under 2.5Gi with work_mem 4MB (the 10-21 OOMs at 512MB
+  # had work_mem 16/8MB under 2Gi; tests/test_postgres_memory_budget.py sums the worst case).
   cluster:
     rawValues:
       cluster:
         resources:
           requests:
             cpu: 100m
-            memory: 640Mi
+            memory: 1Gi
           limits:
-            memory: 2Gi
+            memory: 2560Mi
+        postgresql:
+          parameters:
+            shared_buffers: "512MB"
+            effective_cache_size: "1536MB"
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB
@@ -276,9 +282,23 @@ jc:
           cpu: '2'
           memory: 3Gi
   # The split's role Deployments and NATS (values/role, values/nats).
-  shako: { enabled: true }
-  daiya: { enabled: true }
-  dataroom: { enabled: true }
+  # T-7489: requests at measured use plus headroom (7-day peak RSS / working set, 2026-11-21: shako
+  # 64/136Mi, daiya 20/82Mi, dataroom 284/291Mi); the limits stay the defaults, above every peak.
+  shako:
+    enabled: true
+    resources:
+      requests: { cpu: 20m, memory: 128Mi }
+      limits: { cpu: '1', memory: 1Gi }
+  daiya:
+    enabled: true
+    resources:
+      requests: { cpu: 20m, memory: 128Mi }
+      limits: { cpu: '1', memory: 768Mi }
+  dataroom:
+    enabled: true
+    resources:
+      requests: { cpu: 20m, memory: 128Mi }
+      limits: { cpu: '1', memory: 1Gi }
   nats: { enabled: true }
 
 # jc carries identity itself (kaisatsu): this edge proxies to jc alone and has no Keycloak to log in
