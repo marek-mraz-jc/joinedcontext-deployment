@@ -48,6 +48,52 @@ def test_every_jc_route_names_its_host(edge):
         assert inside not in hosts, inside
 
 
+WS_PATH = "^/api/endpoint/[^/]+/ws$"
+
+
+@pytest.mark.parametrize("env", ["jc-prod", "jc-dev"])
+def test_every_jc_route_carrying_an_endpoint_websocket_passes_the_upgrade(rendered, env):
+    """T-7478: no jc route set enable_websocket, so APISIX dropped Upgrade and Connection and jc
+    answered every handshake 426. Each route that sends `/api/endpoint/{slug}/ws` to jc has a
+    `-ws` twin that takes that path alone, passes the upgrade on and keeps the parent's host,
+    vars, plugin config and route plugins (auth, cors, limit-count), with 50 open sockets per
+    address on top; no other route passes an upgrade."""
+    edge = edge_file(rendered(env))
+    upstreams = {u["id"]: u for u in edge["upstreams"]}
+    routes = {r["id"]: r for r in edge["routes"]}
+    ns = env
+    jc = f"jc.{ns}.svc.cluster.local:8080"
+    carriers = [
+        r for r in routes.values()
+        if jc in upstreams[r["upstream_id"]]["nodes"] and not r["id"].endswith("-ws")
+        and r["uri"] in ("/*", "/api/endpoint/*")
+    ]
+    assert carriers, f"{env}: no jc route carries /api/endpoint"
+    for parent in carriers:
+        twin = routes.get(f"{parent['id']}-ws")
+        assert twin is not None, f"{env}: {parent['id']} sends /api/endpoint/{{slug}}/ws to jc without an upgrade"
+        assert twin.get("enable_websocket") is True, twin["id"]
+        assert twin["uri"] == parent["uri"] and twin["priority"] > parent["priority"], twin["id"]
+        assert twin.get("vars") == [*parent.get("vars", []), ["uri", "~~", WS_PATH]], twin["id"]
+        assert (twin.get("host"), twin.get("hosts")) == (parent.get("host"), parent.get("hosts")), twin["id"]
+        assert twin.get("plugin_config_id") == parent.get("plugin_config_id") in ("jc", "jc-apps"), twin["id"]
+        plugins = twin.get("plugins", {})
+        for name, conf in parent.get("plugins", {}).items():
+            assert plugins.get(name) == conf, f"{twin['id']} lost its parent's {name}"
+        assert plugins["limit-conn"]["conn"] == 50 and plugins["limit-conn"]["key"] == "$remote_addr", twin["id"]
+        assert upstreams[twin["upstream_id"]]["nodes"] == upstreams[parent["upstream_id"]]["nodes"], twin["id"]
+    # The twin of a more specific route outranks the twin of `/*` on the same host, as the parents do.
+    for a in carriers:
+        for b in carriers:
+            if a.get("host") == b.get("host") and a["priority"] < b["priority"]:
+                assert routes[f"{a['id']}-ws"]["priority"] < routes[f"{b['id']}-ws"]["priority"], (a["id"], b["id"])
+    upgraded = {r["id"] for r in routes.values() if r.get("enable_websocket")}
+    assert upgraded == {f"{r['id']}-ws" for r in carriers}, f"{env}: an upgrade on a route that is no -ws twin"
+    # jc identity's routes and any route to another upstream keep APISIX's default.
+    for rid in ("jc-identity", "jc-identity-old"):
+        assert not routes.get(rid, {}).get("enable_websocket"), rid
+
+
 # Requests that must reach no jc module: a host jc serves inside the pod only, or a blocked path
 # in any spelling on a host the edge does route.
 FORGED = [
