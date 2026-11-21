@@ -70,10 +70,12 @@ jc:
   # = serverJcDev; carries T-7470; no migration. Rollback: 616176ea sha256:e6a7a7be.
   # jc-prod 6b32f911 (2026-11-21, prod-deployer): signed by jc main's ci 44847330659 (green),
   # train smoke green, = serverJcDev; carries T-7473; no migration. Rollback: 519709a1 sha256:ab34434b.
+  # jc-prod 6a833354 (2026-11-21, prod-deployer): signed by jc main's ci 44852717752 (green),
+  # train smoke green, = serverJcDev; carries T-7462; no migration. Rollback: 6b32f911 sha256:e77be480.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '6b32f911b003ef97389c532017f670a4f1f1960f'
-    digest: 'sha256:e77be480362e90527192afbaba40263cc8428cd6aa17bdfc06f507d2904fe052'
+    tag: '6a833354159f1eda8890ef3b7eb7f9f8945499e9'
+    digest: 'sha256:46491303dab9967ec47d6f779c43c34ae74c0fc621dfc100cf64c15d9f8afeff'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
