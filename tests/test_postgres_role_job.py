@@ -73,10 +73,12 @@ def sql(name: str, query: str, db: str = "postgres") -> str:
     return done.stdout.strip()
 
 
-def run_job(name: str, role: str = "app_read", role_type: str = "readonly") -> subprocess.CompletedProcess:
+def run_job(name: str, role: str = "app_read", role_type: str = "readonly",
+            grants: str = "", member_of: str = "[]") -> subprocess.CompletedProcess:
     env = {"HOME": "/tmp", "PGHOST": "127.0.0.1", "PGPORT": "5432", "PGDATABASE": "app",
            "PGUSER": "postgres", "PGPASSWORD": "su", "ROLE_NAME": role,
-           "ROLE_PASSWORD": PASSWORD, "ROLE_TYPE": role_type, "DB_OWNER": "app"}
+           "ROLE_PASSWORD": PASSWORD, "ROLE_TYPE": role_type, "DB_OWNER": "app",
+           "ROLE_GRANTS": grants, "ROLE_MEMBER_OF": member_of}
     flags = [f for key, value in env.items() for f in ("-e", f"{key}={value}")]
     return subprocess.run(["docker", "exec", *flags, name, "/bin/sh", "-c", role_script()],
                           capture_output=True, text=True)
@@ -110,6 +112,75 @@ def test_a_login_role_keeps_the_grants_its_program_migrated(postgres):
     # Red check: the readonly type strips the same grant.
     assert run_job(postgres, "app_login", "readonly").returncode == 0
     assert sql(postgres, "SELECT has_table_privilege('app_login', 'migrated', 'INSERT')", db="app") == "f"
+
+
+def test_a_backup_role_reads_its_columns_only_and_never_passes_row_security(postgres):
+    # T-7169: the Portal's data backup reader of a module's database.
+    sql(postgres, "CREATE SCHEMA m AUTHORIZATION app; CREATE TABLE m.t (id int, org text, secret text);"
+        " CREATE TABLE m.gone (id int); ALTER TABLE m.t ENABLE ROW LEVEL SECURITY;"
+        " ALTER TABLE m.t FORCE ROW LEVEL SECURITY;"
+        " CREATE POLICY p ON m.t USING (org = current_setting('m.org', true));"
+        " INSERT INTO m.t VALUES (1, 'a', 's1'), (2, 'b', 's2')", db="app")
+    grants = ('[{"schema": "m", "table": "t", "columns": ["id", "org"]},'
+              ' {"schema": "m", "table": "later", "columns": ["id"]}]')
+    sql(postgres, "CREATE ROLE app_backup LOGIN BYPASSRLS")
+    sql(postgres, "GRANT SELECT ON m.gone TO app_backup", db="app")
+    done = run_job(postgres, "app_backup", "backup", grants)
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert sql(postgres, "SELECT rolbypassrls FROM pg_roles WHERE rolname = 'app_backup'") == "f"
+    def reads(*queries: str) -> subprocess.CompletedProcess:
+        commands = [f for q in queries for f in ("-c", q)]
+        return subprocess.run(
+            ["docker", "exec", "-e", f"PGPASSWORD={PASSWORD}", postgres, "psql", "-h", "127.0.0.1",
+             "-U", "app_backup", "-d", "app", "-qtA", *commands], capture_output=True, text=True)
+    seen = reads("SET m.org TO 'a'", "SELECT id, org FROM m.t")
+    assert seen.stdout.split() == ["1|a"], seen.stdout + seen.stderr
+    assert "permission denied" in reads("SELECT secret FROM m.t").stderr
+    assert "permission denied" in reads("SELECT id FROM m.gone").stderr
+
+
+def test_a_dml_role_writes_the_owners_tables_now_and_later_and_holds_nothing_more(postgres):
+    # T-7310: Antares' request role. Rows of the owner's tables, a table the owner creates after
+    # the job (next week's history partition) included; no function kept from PUBLIC; no group it
+    # was granted by hand; never row-level security bypassed.
+    sql(postgres, "CREATE TABLE IF NOT EXISTS before_job (id int);"
+        " CREATE OR REPLACE FUNCTION owner_only() RETURNS int LANGUAGE sql AS 'SELECT 1';"
+        " REVOKE EXECUTE ON FUNCTION owner_only() FROM PUBLIC;"
+        " ALTER TABLE before_job OWNER TO app; ALTER FUNCTION owner_only() OWNER TO app", db="app")
+    sql(postgres, "CREATE ROLE grp_escape NOLOGIN; CREATE ROLE app_req LOGIN BYPASSRLS;"
+        " GRANT grp_escape TO app_req")
+    done = run_job(postgres, "app_req", "dml")
+    assert done.returncode == 0, done.stdout + done.stderr
+    sql(postgres, "SET ROLE app; CREATE TABLE after_job (id int)", db="app")
+    for table in ("before_job", "after_job"):
+        assert sql(postgres, f"SELECT has_table_privilege('app_req', '{table}', 'INSERT')"
+                             f" AND has_table_privilege('app_req', '{table}', 'DELETE')", db="app") == "t"
+    assert sql(postgres, "SELECT has_table_privilege('app_req', 'after_job', 'TRUNCATE')", db="app") == "f"
+    assert sql(postgres, "SELECT has_function_privilege('app_req', 'owner_only()', 'EXECUTE')",
+               db="app") == "f"
+    assert sql(postgres, "SELECT rolbypassrls FROM pg_roles WHERE rolname = 'app_req'") == "f"
+    assert sql(postgres, "SELECT pg_has_role('app_req', 'grp_escape', 'MEMBER')") == "f"
+
+
+def test_a_dml_role_joins_the_groups_it_names_and_the_group_cannot_log_in(postgres):
+    done = run_job(postgres, "app_maint", "dml", member_of='["app_maintenance"]')
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert sql(postgres, "SELECT pg_has_role('app_maint', 'app_maintenance', 'MEMBER')") == "t"
+    assert sql(postgres, "SELECT rolcanlogin OR rolbypassrls FROM pg_roles"
+                         " WHERE rolname = 'app_maintenance'") == "f"
+    # A rerun without the group takes the membership away.
+    assert run_job(postgres, "app_maint", "dml").returncode == 0
+    assert sql(postgres, "SELECT pg_has_role('app_maint', 'app_maintenance', 'MEMBER')") == "f"
+
+
+def test_a_dml_role_that_owns_a_table_fails_the_job(postgres):
+    # An owner can switch its table's row-level security off: the request role owns nothing.
+    assert run_job(postgres, "app_owner", "dml").returncode == 0
+    sql(postgres, "CREATE TABLE owned_by_request (id int); ALTER TABLE owned_by_request OWNER TO app_owner",
+        db="app")
+    done = run_job(postgres, "app_owner", "dml")
+    assert done.returncode != 0
+    assert "owns a table" in done.stdout + done.stderr
 
 
 def test_a_role_made_earlier_as_superuser_loses_its_rights(postgres):

@@ -14,6 +14,8 @@ batch/v1/CronJob jc-prod/basemap-tiles
 batch/v1/CronJob jc-prod/postgres-cluster-dr-drill
 batch/v1/CronJob jc-prod/postgres-cluster-local-backup
 batch/v1/Job jc-prod/artifact-store-bucket
+batch/v1/Job jc-prod/jc-antares-db-create-role-jc-antares-app-dml
+batch/v1/Job jc-prod/jc-antares-db-create-role-jc-antares-maint-dml
 batch/v1/Job jc-prod/jc-daiya-db-create-role-daiya-app-login
 batch/v1/Job jc-prod/jc-dataroom-db-create-role-dataroom-app-login
 batch/v1/Job jc-prod/jc-ekiben-db-create-role-ekiben-app-login
@@ -245,6 +247,8 @@ v1/Secret jc-prod/apps-host-1-db
 v1/Secret jc-prod/artifact-store-root
 v1/Secret jc-prod/db-apps-admin
 v1/Secret jc-prod/db-jc-antares
+v1/Secret jc-prod/db-jc-antares-app
+v1/Secret jc-prod/db-jc-antares-maint
 v1/Secret jc-prod/db-jc-assistant
 v1/Secret jc-prod/db-jc-daiya
 v1/Secret jc-prod/db-jc-daiya-app
