@@ -10,6 +10,8 @@ apps/v1/StatefulSet jc-dev/artifact-store
 batch/v1/CronJob jc-dev/jc-retain
 batch/v1/CronJob jc-dev/postgres-cluster-dr-drill
 batch/v1/Job jc-dev/artifact-store-bucket
+batch/v1/Job jc-dev/jc-antares-db-create-role-jc-antares-app-dml
+batch/v1/Job jc-dev/jc-antares-db-create-role-jc-antares-maint-dml
 batch/v1/Job jc-dev/jc-daiya-db-create-role-daiya-app-login
 batch/v1/Job jc-dev/jc-dataroom-db-create-role-dataroom-app-login
 batch/v1/Job jc-dev/jc-ekiben-db-create-role-ekiben-app-login
@@ -173,6 +175,8 @@ v1/Secret jc-dev/apps-host-1-db
 v1/Secret jc-dev/artifact-store-root
 v1/Secret jc-dev/db-apps-admin
 v1/Secret jc-dev/db-jc-antares
+v1/Secret jc-dev/db-jc-antares-app
+v1/Secret jc-dev/db-jc-antares-maint
 v1/Secret jc-dev/db-jc-assistant
 v1/Secret jc-dev/db-jc-daiya
 v1/Secret jc-dev/db-jc-daiya-app
