@@ -86,6 +86,9 @@ routes:
     uri: '/*'
     priority: 1
     pluginConfig: jc
+    {{- if not (and $jcSplit (eq $role "opendata")) }}
+    websocketPath: '^/api/endpoint/[^/]+/ws$'
+    {{- end }}
     timeout:
       connect: 6
       send: 120
@@ -138,6 +141,10 @@ routes:
     uri: '/*'
     priority: 1
     pluginConfig: jc
+    {{- if not $upstream }}
+    # The gateway answers its root paths on every host, the Endpoint WebSocket included (T-7478).
+    websocketPath: '^/api/endpoint/[^/]+/ws$'
+    {{- end }}
     timeout:
       connect: 6
       send: 120
@@ -155,6 +162,7 @@ routes:
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/api/endpoint/*'
+    websocketPath: '^/api/endpoint/[^/]+/ws$'
     priority: 2
     pluginConfig: jc
     plugins:
@@ -187,6 +195,7 @@ routes:
     tlsSecret: {{ . }}
     {{- end }}
     uri: '/api/endpoint/*'
+    websocketPath: '^/api/endpoint/[^/]+/ws$'
     vars: [["remote_addr", "ipmatch", {{ . | toJson }}]]
     priority: 3
     pluginConfig: jc
@@ -278,6 +287,8 @@ routes:
     uri: '/*'
     priority: 2
     pluginConfig: jc-apps
+    # An App's own Endpoints answer on its host, their live changes too (T-7478).
+    websocketPath: '^/api/endpoint/[^/]+/ws$'
     timeout:
       connect: 6
       send: 120

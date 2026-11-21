@@ -13,6 +13,9 @@ jc:
   subDomain: '{{ if (eq (dig "jc" "server" "mode" "slug" .Values) "host") }}portal{{ else }}jc{{ end }}'
   uri: '/*'
   priority: 1
+  # An Endpoint's live changes (/api/endpoint/{slug}/ws): the configuration chart renders the
+  # twin `jc-ws` that passes the upgrade on (T-7478; without it every handshake was a 426).
+  websocketPath: '^/api/endpoint/[^/]+/ws$'
   # The assistant streams its answer and an import uploads a file: longer than a page read.
   timeout:
     connect: 6

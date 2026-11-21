@@ -4,6 +4,28 @@
   apisix-plugins.yaml. The `#END` marker is required by APISIX standalone mode.
 */}}
 {{- define "configuration.standalone" }}
+{{- /* T-7478: a route with `websocketPath` (a regular expression over the path) gets a twin
+       `<id>-ws` that takes those paths alone and passes the upgrade on, as the gateway's `-ws`
+       routes do (T-3905, T-4873): the same host, uri, vars, plugin config and route plugins, a
+       priority 20 above its parent so the twins keep their parents' order, and 50 open sockets
+       per client address. The parent keeps APISIX's default and drops Upgrade on every other
+       path. jc's routes carried no upgrade at all, so every handshake reached jc as a plain GET
+       and got 426. */}}
+{{- $routes := dict }}
+{{- range $id, $config := .Values.routes }}
+{{- $_ := set $routes $id (omit $config "websocketPath") }}
+{{- with $config.websocketPath }}
+{{- $twin := omit (deepCopy $config) "websocketPath" }}
+{{- $_ = set $twin "name" (printf "%s-ws" $config.name) }}
+{{- $_ = set $twin "description" (printf "%s, WebSocket upgrades on %s, 50 at once per client address" ($config.description | default $config.name) .) }}
+{{- $_ = set $twin "vars" (append (deepCopy ($config.vars | default list)) (list "uri" "~~" .)) }}
+{{- $_ = set $twin "priority" (add ($config.priority | default 0) 20) }}
+{{- $_ = set $twin "pluginConfig" ($config.pluginConfig | default $id) }}
+{{- $_ = set $twin "websocket" true }}
+{{- $_ = set $twin "plugins" (mergeOverwrite (dict "limit-conn" (dict "conn" 50 "burst" 0 "default_conn_delay" 0.1 "key_type" "var_combination" "key" "$remote_addr" "rejected_code" 429)) (deepCopy ($config.plugins | default dict))) }}
+{{- $_ = set $routes (printf "%s-ws" $id) $twin }}
+{{- end }}
+{{- end }}
     plugin_configs:
 {{- range $id, $config := .Values.plugins }}
       - id: {{ $id }}
@@ -109,7 +131,7 @@
                   end
                 end
     upstreams:
-{{- range $id, $config := .Values.routes }}
+{{- range $id, $config := $routes }}
       - id: {{ $id }}
         type: roundrobin
         {{- if hasKey $config "scheme" }}
@@ -130,7 +152,7 @@
         {{- end }}
 {{- end }}
     routes:
-{{- range $id, $config := .Values.routes }}
+{{- range $id, $config := $routes }}
       - id: {{ $id }}
         name: {{ $config.name | quote }}
         desc: {{ $config.description | default $config.name | quote }}
