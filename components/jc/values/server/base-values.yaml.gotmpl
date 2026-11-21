@@ -357,9 +357,18 @@ configMap:
       {{- end }}
 
       [assistant.database]
+      {{- if (dig "roleSplit" false $jc) }}
+      # The assistant migrates as the owner jc_assistant and serves as jc_assistant_app (T-7488).
+      url = "postgres://jc_assistant_app@{{ $pg }}:5432/jc_assistant"
+      password_file = "/run/jc/db/assistant-app/password"
+      max_connections = {{ dig "assistantPool" 3 $jc }}
+      migrate_url = "postgres://jc_assistant@{{ $pg }}:5432/jc_assistant"
+      migrate_password_file = "/run/jc/db/assistant/password"
+      {{- else }}
       url = "postgres://jc_assistant@{{ $pg }}:5432/jc_assistant"
       password_file = "/run/jc/db/assistant/password"
       max_connections = {{ dig "assistantPool" 3 $jc }}
+      {{- end }}
       {{- with (dig "realm" "" $realm) }}
 
       [identity]
@@ -462,6 +471,11 @@ envSecret:
   PORTAL_DB_PASSWORD:
     secret: db-jc-portal
     key: password
+  {{- if (dig "roleSplit" false $jc) }}
+  PORTAL_APP_DB_PASSWORD:
+    secret: db-jc-portal-app
+    key: password
+  {{- end }}
 {{- if $split }}
   NATS_PASSWORD:
     secret: jc-split
@@ -470,7 +484,7 @@ envSecret:
   BROKER_DB_PASSWORD:
     secret: db-jc-antares
     key: password
-  {{- if (dig "antaresRoleSplit" false $jc) }}
+  {{- if (dig "roleSplit" false $jc) }}
   BROKER_APP_DB_PASSWORD:
     secret: db-jc-antares-app
     key: password
@@ -573,9 +587,15 @@ env:
   ANTARES_BUS: "local"
   ANTARES_ALLOW_SHARED_LOCAL: "1"
   {{- end }}
+  {{- if (dig "roleSplit" false $jc) }}
+  # The Portal serves as jc_portal_app and migrates as the owner jc_portal (T-7179).
+  JC_PORTAL_DATABASE_URL: "postgresql://jc_portal_app:$(PORTAL_APP_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
+  JC_PORTAL_MIGRATION_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
+  {{- else }}
   JC_PORTAL_DATABASE_URL: "postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@{{ $pg }}:5432/jc_portal"
+  {{- end }}
   ANTARES_STORE: "postgres"
-  {{- if (dig "antaresRoleSplit" false $jc) }}
+  {{- if (dig "roleSplit" false $jc) }}
   # Antares migrates and builds its weekly partitions as jc_antares, the owner, serves as
   # jc_antares_app and runs the cross-Tenant work as jc_antares_maint (T-7310, databases.yaml).
   ANTARES_DATABASE_URL: "postgresql://jc_antares_app:$(BROKER_APP_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
@@ -779,6 +799,13 @@ extraVolumes:
       secretName: db-jc-assistant
       defaultMode: 0440
       items: [{ key: password, path: password }]
+  {{- if (dig "roleSplit" false $jc) }}
+  - name: db-assistant-app
+    secret:
+      secretName: db-jc-assistant-app
+      defaultMode: 0440
+      items: [{ key: password, path: password }]
+  {{- end }}
   {{- with (dig "ageKeySecret" "" $jc) }}
   - name: age-key
     secret:
@@ -853,6 +880,9 @@ extraVolumeMounts:
   {{- end }}
   - { name: db-kaisatsu-app, mountPath: /run/jc/db/kaisatsu-app, readOnly: true }
   - { name: db-assistant, mountPath: /run/jc/db/assistant, readOnly: true }
+  {{- if (dig "roleSplit" false $jc) }}
+  - { name: db-assistant-app, mountPath: /run/jc/db/assistant-app, readOnly: true }
+  {{- end }}
   {{- if (dig "ageKeySecret" "" $jc) }}
   - { name: age-key, mountPath: /run/jc/age, readOnly: true }
   {{- end }}

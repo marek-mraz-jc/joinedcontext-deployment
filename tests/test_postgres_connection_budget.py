@@ -45,7 +45,9 @@ SUPERUSER_RESERVED_DEFAULT = 3
 # joinedcontext-portal src/db.rs and joinedcontext-platform crates/assistant/src/bin/jc-assistant.rs.
 # joinedcontext-portal src/state.rs: the Portal's apps admin pool in apps-db, 4.
 # jc (monorepo crates/portal/src/db.rs): the same Portal pool inside the one binary, 5; jc renders
-# no apps-db, so the Portal opens no apps admin pool there.
+# no apps-db, so the Portal opens no apps admin pool there. With jc.server.roleSplit it serves as
+# jc_portal_app and migrates at start as jc_portal (T-7179), whose pool closes after the grant; both
+# counted at 5 (jc_portal_app only when the render sets JC_PORTAL_MIGRATION_DATABASE_URL).
 COMPILED = {"portal": ("portal", 5), "assistant": ("jc-assistant", 10), "jc_apps_admin": ("portal", 4), "jc_portal": ("jc", 5)}
 # Drivers' own defaults, used when the render sets nothing.
 ANTARES_DEFAULT = 20  # antares-broker main.rs parse_pg_pool
@@ -146,13 +148,26 @@ def jc_module(module: str):
     return count
 
 
-def jc_assistant(docs: list[dict]) -> int:
-    # The assistant in jc migrates and serves as jc_assistant: [assistant.database] max_connections.
-    found = named(docs, "jc")
-    assert found, "role jc_assistant has a database but no jc workload in the render"
-    section = tomllib.loads(jc_toml_text(docs)).get("assistant", {}).get("database", {})
-    assert "max_connections" in section, "jc.toml sets no [assistant.database] max_connections"
-    return sum(replicas(w) for w in found) * section["max_connections"]
+def jc_assistant(app: bool):
+    # The assistant in jc serves on [assistant.database] url with max_connections. With a migrate_url
+    # (jc.server.roleSplit, T-7488) it serves as jc_assistant_app and the owner jc_assistant logs in
+    # once at start; without, jc_assistant serves and jc_assistant_app never logs in.
+    def count(docs: list[dict]) -> int:
+        found = named(docs, "jc")
+        assert found, "role jc_assistant has a database but no jc workload in the render"
+        section = tomllib.loads(jc_toml_text(docs)).get("assistant", {}).get("database", {})
+        assert "max_connections" in section, "jc.toml sets no [assistant.database] max_connections"
+        split = "migrate_url" in section
+        per_pod = (section["max_connections"] if app else 1) if split else (0 if app else section["max_connections"])
+        return sum(replicas(w) for w in found) * per_pod
+
+    return count
+
+
+def jc_portal_app(docs: list[dict]) -> int:
+    # jc_portal_app serves only when the Portal migrates apart from it (T-7179, jc.server.roleSplit).
+    found = [w for w in named(docs, "jc") if "JC_PORTAL_MIGRATION_DATABASE_URL" in env_of(w)]
+    return sum(replicas(w) for w in found) * COMPILED["jc_portal"][1]
 
 
 def keycloak(docs: list[dict]) -> int:
@@ -230,12 +245,14 @@ CLIENTS = {
     "jc_apps_admin": compiled("jc_apps_admin"),
     "decidim": decidim,
     "jc_portal": compiled("jc_portal"),
+    "jc_portal_app": jc_portal_app,
     "jc_antares": lambda docs: antares(docs, jc=True, role="jc_antares"),
     "jc_antares_app": lambda docs: antares(docs, jc=True, role="jc_antares_app"),
     "jc_antares_maint": lambda docs: antares(docs, jc=True, role="jc_antares_maint"),
     "kaisatsu_migrate": jc_kaisatsu,
     **{f"{m}_migrate": jc_module(m) for m in ("shako", "daiya", "dataroom", "ekiben")},
-    "jc_assistant": jc_assistant,
+    "jc_assistant": jc_assistant(app=False),
+    "jc_assistant_app": jc_assistant(app=True),
     # The branch previews' group never logs in; each member pv_{slug} has CONNECTION LIMIT 5, the
     # preview Portal's pool, and scripts/preview.sh starts at most PREVIEW_MAX = 2 of them (T-5548).
     "pv_previews": lambda docs: 2 * COMPILED["portal"][1],

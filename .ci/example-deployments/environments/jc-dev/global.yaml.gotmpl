@@ -101,9 +101,9 @@ jc:
       pipelineIdentity: pipeline-secret
     ageKeySecret: jc-age
     retainHours: 24
-    # The broker serves as jc_antares_app and drains as jc_antares_maint, never as the owner (T-7486,
-    # T-7310); jc-dev first, jc-prod after jc-dev's judge smoke.
-    antaresRoleSplit: true
+    # Antares, the Portal and the assistant serve as logins apart from their owners (T-7486, T-7488);
+    # jc-dev first, jc-prod after jc-dev's judge smoke.
+    roleSplit: true
     # Separate services (owner 2026-11-16 16:5xZ, T-7009): shako, daiya and dataroom each in a
     # Deployment of its own, Antares' bus on NATS (components/jc default-environment `split`).
     split: true
