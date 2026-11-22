@@ -584,9 +584,9 @@ def test_jc_databases_serve_apart_from_their_owners_once_the_role_split_is_on(re
 
     def split_on(tree):
         path = tree / "components/jc/default-environment.yaml.gotmpl"
-        text = path.read_text()
-        assert "roleSplit: false" in text
-        path.write_text(text.replace("roleSplit: false", "roleSplit: true"))
+        text, n = re.subn(r"(?m)^(\s+roleSplit: ).*$", r"\1true", path.read_text())
+        assert n == 1
+        path.write_text(text)
 
     docs = rendered_variant("addons", split_on)
     on = {e["name"]: e for e in jc_container(docs)["env"]}
