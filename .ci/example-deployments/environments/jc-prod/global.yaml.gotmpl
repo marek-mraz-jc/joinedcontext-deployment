@@ -133,6 +133,9 @@ postgres:
             # 2 MiB of shared memory, inside the 38Mi left under 80 % of 2400Mi.
             pg_stat_statements.max: "1000"
             pg_stat_statements.track: "top"
+            # CNPG's ALTER ROLE carries each password's verifier: utility statements stay out of the
+            # statistics (T-7498), which T-7519 reads into the board's evidence.
+            pg_stat_statements.track_utility: "off"
   # jc-prod serves the public smartcity hosts and had no backup at all (F-1, owner 2026-11-11). Until
   # the owner gives an object store for CNPG's own backups, the nightly age-encrypted pg_dumpall onto
   # a volume of its own (not the database's PVC), every database with jc_antares (17 GB live), and
