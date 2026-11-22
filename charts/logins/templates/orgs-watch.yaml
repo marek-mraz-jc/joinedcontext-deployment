@@ -1,0 +1,98 @@
+{{- with .Values.orgsWatch }}{{ if .enabled }}
+{{- $ns := $.Release.Namespace }}
+# kubectl calls of watch.py: get pod -l (list pods), logs deploy/jc --all-pods (get deployments,
+# list pods, get pods/log), get configmap jc, exec <postgres pod> psql, and in the Prometheus
+# namespace get pod -l + exec prometheus-prometheus-0 promtool. Nothing else, no Secret.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orgs-watch
+  namespace: {{ $ns }}
+automountServiceAccountToken: false
+---
+# Its long-lived token for the kubeconfig on s1; the control plane fills it, Git never holds it.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orgs-watch-token
+  namespace: {{ $ns }}
+  annotations:
+    kubernetes.io/service-account.name: orgs-watch
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: orgs-watch
+  namespace: {{ $ns }}
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/log]
+    verbs: [get]
+  - apiGroups: [apps]
+    resources: [deployments, replicasets]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [configmaps]
+    resourceNames: [{{ .configMap | quote }}]
+    verbs: [get]
+  - apiGroups: [""]
+    resources: [services, endpoints]
+    verbs: [get, list]
+  - apiGroups: [postgresql.cnpg.io]
+    resources: [clusters]
+    verbs: [get]
+  # ponytail: exec into Postgres is the watch's existing DB path and reaches the superuser socket;
+  # the SQL sets default_transaction_read_only. Upgrade: a pg_read_all_data login and no exec.
+  - apiGroups: [""]
+    resources: [pods/exec]
+    resourceNames: {{ .postgresPods | toJson }}
+    verbs: [get, create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: orgs-watch
+  namespace: {{ $ns }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: orgs-watch
+subjects:
+  - kind: ServiceAccount
+    name: orgs-watch
+    namespace: {{ $ns }}
+{{- if .prometheusNamespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: orgs-watch-{{ $ns }}
+  namespace: {{ .prometheusNamespace }}
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/exec]
+    resourceNames: [{{ .prometheusPod | quote }}]
+    verbs: [get, create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: orgs-watch-{{ $ns }}
+  namespace: {{ .prometheusNamespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: orgs-watch-{{ $ns }}
+subjects:
+  - kind: ServiceAccount
+    name: orgs-watch
+    namespace: {{ $ns }}
+{{- end }}
+{{- end }}{{ end }}

@@ -119,3 +119,10 @@ jc:
     namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
     # http://<prometheus service>.<namespace>.svc.cluster.local:9090
     upstream: ''
+  # Scoped cluster logins for the s1 automation (T-7496, charts/logins): the orgs watch's read-only
+  # ServiceAccount, and on jc-prod the promotion's. Only jc-dev and jc-prod run the watch.
+  logins:
+    enabled: {{ has .Environment.Name (list "jc-dev" "jc-prod") }}
+    namespace: {{ include "jc.namespace" (dict "global" .Values.global "suffix" "jc") }}
+    # The namespace of the Prometheus the watch reads with promtool ('' = none).
+    prometheusNamespace: 'dev'

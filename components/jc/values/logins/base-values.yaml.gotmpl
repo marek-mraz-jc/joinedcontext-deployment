@@ -1,0 +1,9 @@
+---
+# Scoped logins for the s1 automation (T-7496): the orgs watch on jc-dev and jc-prod, whose
+# Prometheus is dev's (both watch.toml name prometheus_namespace dev), and the prod promotion
+# (T-7495) on jc-prod only, reading jc-dev's pods.
+orgsWatch:
+  prometheusNamespace: {{ .Values.jc.logins.prometheusNamespace | quote }}
+prodPromote:
+  enabled: {{ eq .Environment.Name "jc-prod" }}
+  readNamespace: 'jc-dev'
