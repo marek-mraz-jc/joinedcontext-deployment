@@ -1,0 +1,10 @@
+---
+# The orgs watch (monorepo bins/jc/smoke/orgs/watch.py, cron on s1): reads jc's pods, log and
+# ConfigMap and runs promtool inside the Prometheus pod. No exec into Postgres: the watch's SQL
+# moves to a SELECT-only database login (T-7496 step 2). The prod promotion's login comes with
+# T-7495.
+orgsWatch:
+  enabled: true
+  configMap: jc
+  prometheusNamespace: ''
+  prometheusPod: prometheus-prometheus-0

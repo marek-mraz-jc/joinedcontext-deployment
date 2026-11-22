@@ -217,10 +217,14 @@ postgresql.cnpg.io/v1/Database jc-prod/jc-ekiben
 postgresql.cnpg.io/v1/Database jc-prod/jc-kaisatsu
 postgresql.cnpg.io/v1/Database jc-prod/jc-portal
 postgresql.cnpg.io/v1/Database jc-prod/jc-shako
+rbac.authorization.k8s.io/v1/Role dev/orgs-watch-jc-prod
 rbac.authorization.k8s.io/v1/Role jc-prod-mqtt/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/Role jc-prod/orgs-watch
 rbac.authorization.k8s.io/v1/Role jc-prod/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role jc-prod/postgres-cluster-dr-drill
+rbac.authorization.k8s.io/v1/RoleBinding dev/orgs-watch-jc-prod
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod-mqtt/portal-mqtt-brokers
+rbac.authorization.k8s.io/v1/RoleBinding jc-prod/orgs-watch
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod/postgres-cluster-dr-drill
 traefik.io/v1alpha1/TLSOption jc-prod-mqtt/mqtt-bsi-tr-02102
@@ -271,6 +275,7 @@ v1/Secret jc-prod/jc-catalogue-tokens
 v1/Secret jc-prod/jc-setup
 v1/Secret jc-prod/keycloak-client-apisix-gateway
 v1/Secret jc-prod/keycloak-client-edge
+v1/Secret jc-prod/orgs-watch-token
 v1/Secret jc-prod/postgres-backup-artifact-store
 v1/Secret jc-prod/postgres-cluster-local-backup-key
 v1/Service jc-prod-mqtt/mqtt-broker-pods
@@ -295,4 +300,5 @@ v1/ServiceAccount jc-prod/jc-functions
 v1/ServiceAccount jc-prod/jc-metrics-proxy
 v1/ServiceAccount jc-prod/jc-wasm-host-0
 v1/ServiceAccount jc-prod/jc-wasm-host-1
+v1/ServiceAccount jc-prod/orgs-watch
 v1/ServiceAccount jc-prod/postgres-cluster-dr-drill

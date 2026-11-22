@@ -14,3 +14,5 @@ jc:
     chart: ../../charts/workload
   nats:
     chart: ../../charts/workload
+  logins:
+    chart: ../../charts/logins

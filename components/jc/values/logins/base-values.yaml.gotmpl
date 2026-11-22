@@ -1,0 +1,5 @@
+---
+# The orgs watch's login on jc-dev and jc-prod (T-7496), whose Prometheus is dev's (both watch.toml
+# name prometheus_namespace dev).
+orgsWatch:
+  prometheusNamespace: {{ .Values.jc.logins.prometheusNamespace | quote }}
