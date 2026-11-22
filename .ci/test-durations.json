@@ -192,6 +192,7 @@
  "test_kit_linkerd_cni.py": 0.0,
  "test_kit_prod_namespaces.py": 16.0,
  "test_lane_token.py": 0.2,
+ "test_logins_rbac.py": 0.3,
  "test_manifest_format.py": 3.7,
  "test_mcp_connectors_seed.py": 1.4,
  "test_mcp_registry.py": 0.0,
