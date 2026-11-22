@@ -346,6 +346,35 @@ def test_jc_prod_runs_no_split(rendered):
 
 
 @requires_helmfile
+def test_daiyas_organizations_keep_their_exported_numbers(rendered):
+    """T-7509: jc.server.daiyaOrganizations becomes [[daiya.organizations]] in the jc.toml of the process
+    that runs daiya: jc-daiya's with the split (jc-dev, its 2026-11-22 export), the server's without."""
+    dev = rendered("jc-dev")
+    orgs = jc_toml(dev, "jc-daiya")["daiya"]["organizations"]
+    ids = [o["id"] for o in orgs]
+    assert len(ids) == len(set(ids)) == len({o["name"] for o in orgs}) and min(ids) >= 2, orgs
+    assert {"id": 23, "name": "zilina"} in orgs and {"id": 2, "name": "banskabystrica"} in orgs
+    assert "organizations" not in jc_toml(dev).get("daiya", {})
+
+    daiya = jc_toml(rendered("jc-prod"))["daiya"]
+    assert [(o["id"], o["name"]) for o in daiya["organizations"]] == [
+        (2, "banskabystrica"),
+        (3, "barcelona"),
+        (4, "bbsk"),
+        (5, "bratislava"),
+        (6, "helsinki"),
+        (7, "helsinki-mobility"),
+        (8, "pilot"),
+        (9, "pilot-bbsk"),
+        (10, "pilot-slovensko"),
+        (11, "praha"),
+        (12, "slovensko"),
+        (13, "zilina"),
+    ], "jc-prod's export of 2026-11-22: a number here is in dashboard links, never renumber one"
+    assert daiya["prometheus_reach"], "the metricsProxy reach left the [daiya] table"
+
+
+@requires_helmfile
 def test_jc_retain_reaches_the_meshed_postgres(rendered):
     """jc-dev's hourly history cut (retainHours) connects to a Postgres whose inbound proxy takes only
     mesh-authenticated clients (T-6959: unmeshed, every run was refused at connect). The pod is meshed
