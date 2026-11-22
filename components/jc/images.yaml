@@ -96,10 +96,14 @@ jc:
   # c61599fb (signed, promote/sign green in ci 43658368346), smoke 43651239746: 10 fail, 0 rows new
   # against 799d0eab; on jc-dev since 01:15Z with second_factor required, 0 restarts. `server` above
   # stays jc-prod's.
+  # jc-dev ddfd9107 (2026-11-22, deployer, T-7486): jc main's ci 44919854363 and train smoke
+  # 44919854523 green; carries T-7487 (Antares 0045), T-7484 (0046), T-7488 (needs roleSplit, set
+  # for jc-dev in default-environment.yaml.gotmpl in this commit). Rollback: 90d5aab2 sha256:d1e78235
+  # with roleSplit false.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '90d5aab23563c5b0c3a3fd910e84b897d65a4dcf'
-    digest: 'sha256:d1e782351b256b05b487501182d015e92f0886b187d57eb0ec57f801f8989bd0'
+    tag: 'ddfd91077e088fcaab6c4645ce6896a1d4e253f3'
+    digest: 'sha256:37e9e0ab0fa092dfb09a0de182b1db39f896434757061f11d28bdb022b2bcdbc'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
