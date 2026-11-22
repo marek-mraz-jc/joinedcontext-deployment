@@ -100,10 +100,12 @@ jc:
   # 44919854523 green; carries T-7487 (Antares 0045), T-7484 (0046), T-7488 (needs roleSplit, set
   # for jc-dev in default-environment.yaml.gotmpl in this commit). Rollback: 90d5aab2 sha256:d1e78235
   # with roleSplit false.
+  # jc-dev c9bf1edc (2026-11-22, deployer): jc main's ci 45002121144 and smoke 45002121178 green;
+  # carries T-7493 (assistant schedule catch-up); no migration. Rollback: ddfd9107 sha256:37e9e0ab.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'ddfd91077e088fcaab6c4645ce6896a1d4e253f3'
-    digest: 'sha256:37e9e0ab0fa092dfb09a0de182b1db39f896434757061f11d28bdb022b2bcdbc'
+    tag: 'c9bf1edc44e2039649f52c0ad9b7bbb555e95f63'
+    digest: 'sha256:db2166869deb0c463b770193b7bb0fe3240b8653eeb5f7428c869e83a4da8c9b'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
