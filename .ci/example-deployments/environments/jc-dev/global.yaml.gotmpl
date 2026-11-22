@@ -104,6 +104,33 @@ jc:
     # Separate services (owner 2026-11-16 16:5xZ, T-7009): shako, daiya and dataroom each in a
     # Deployment of its own, Antares' bus on NATS (components/jc default-environment `split`).
     split: true
+    # daiya's Organizations as the running daiya numbered them (T-7509, export 2026-11-22T15:08Z,
+    # evidence/T-7509/jc-dev-export-20261122T1508Z.tsv; all 24 equal the stored org_id rows). A project
+    # made later takes the next free number: export again before a pin that changes daiya.
+    daiyaOrganizations:
+      - { id: 2, name: banskabystrica }
+      - { id: 3, name: banskabystrica-mcp-check }
+      - { id: 4, name: barcelona }
+      - { id: 5, name: barcelona-mcp-check }
+      - { id: 6, name: bbsk }
+      - { id: 7, name: bbsk-mcp-check }
+      - { id: 8, name: bratislava }
+      - { id: 9, name: bratislava-mcp-check }
+      - { id: 10, name: ctl-a-mcp-check }
+      - { id: 11, name: ctl-b-mcp-check }
+      - { id: 12, name: demo-mcp-air }
+      - { id: 13, name: hel-mcp-check }
+      - { id: 14, name: helsinki }
+      - { id: 15, name: praha }
+      - { id: 16, name: praha-mcp-check }
+      - { id: 17, name: sharing }
+      - { id: 18, name: sharing-other }
+      - { id: 19, name: slovensko }
+      - { id: 20, name: slovensko-mcp-check }
+      - { id: 21, name: t6025-full }
+      - { id: 22, name: t7380-walk }
+      - { id: 23, name: zilina }
+      - { id: 24, name: zilina-mcp-check }
     # TOTP for every person on jc-dev (owner 2026-11-14 "TURN ON TOTP FOR NOW"; T-6894, SHA1 enrolments).
     secondFactor: required
     # Six Organizations on hosts of their own (T-7005 phase A, owner 2026-11-15 12:1xZ; the dev layout of
@@ -147,6 +174,17 @@ jc:
       - jc-org-idm-banskabystrica
       - jc-org-idm-bratislava
       - jc-org-idm-praha
+      # T-7009 batch 1, issued 2026-11-18.
+      - jc-org-smartcity-barcelona
+      - jc-org-opendata-barcelona
+      - jc-org-api-barcelona
+      - jc-org-mcp-barcelona
+      - jc-org-idm-barcelona
+      - jc-org-smartcity-zilina
+      - jc-org-opendata-zilina
+      - jc-org-api-zilina
+      - jc-org-mcp-zilina
+      - jc-org-idm-zilina
     # The deployment host's people (their connectors, connector calls and preferences) belong to
     # marek-mraz, the owner's Organization: the Portal keys the 35 connectors, 637 calls and 8
     # preference rows of jc-dev under its reserved project before migration 0088 forces the key
@@ -176,17 +214,18 @@ jc:
       # (36 would pass certificateStage and eat the Let's Encrypt week); list a host there when it needs TLS.
       # T-7009 batch 1 (deployer 2026-11-18): barcelona and zilina get every host, 10 new Certificates (the
       # cluster issued 30 in the week to 2026-11-18T00:4xZ, so 40 of 50); the other four follow from 2026-11-22.
+      # T-7391 batch 2 (deployer 2026-11-22): ctl-a and ctl-b get every host, 10 new Certificates (32 issued
+      # in the week to 2026-11-22T12Z, so 42 of 50); demo-mcp and slovensko follow from 2026-11-25, when
+      # the 17 of 2026-11-18 leave the window.
       - name: barcelona
         catalogueId: 00000000-0000-7000-8000-0000000000b7
         hosts: { portal: smartcity.barcelona, opendata: opendata.barcelona, api: api.barcelona, mcp: mcp.barcelona, idm: idm.barcelona }
       - name: ctl-a
         catalogueId: 00000000-0000-7000-8000-0000000000b8
         hosts: { portal: smartcity.ctl-a, opendata: opendata.ctl-a, api: api.ctl-a, mcp: mcp.ctl-a, idm: idm.ctl-a }
-        resolved: []
       - name: ctl-b
         catalogueId: 00000000-0000-7000-8000-0000000000b9
         hosts: { portal: smartcity.ctl-b, opendata: opendata.ctl-b, api: api.ctl-b, mcp: mcp.ctl-b, idm: idm.ctl-b }
-        resolved: []
       - name: demo-mcp
         catalogueId: 00000000-0000-7000-8000-0000000000ba
         hosts: { portal: smartcity.demo-mcp, opendata: opendata.demo-mcp, api: api.demo-mcp, mcp: mcp.demo-mcp, idm: idm.demo-mcp }

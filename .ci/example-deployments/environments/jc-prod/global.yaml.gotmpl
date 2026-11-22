@@ -177,6 +177,22 @@ jc:
     upstream: http://prometheus-operated.dev.svc.cluster.local:9090
   server:
     mode: host
+    # daiya's Organizations as the running daiya numbered them (T-7509, export 2026-11-22T15:02Z, read
+    # again unchanged 15:16Z; evidence/T-7509/jc-prod-export-20261122T1502Z.tsv). A project made later
+    # takes the next free number: export again before an apply that restarts jc.
+    daiyaOrganizations:
+      - { id: 2, name: banskabystrica }
+      - { id: 3, name: barcelona }
+      - { id: 4, name: bbsk }
+      - { id: 5, name: bratislava }
+      - { id: 6, name: helsinki }
+      - { id: 7, name: helsinki-mobility }
+      - { id: 8, name: pilot }
+      - { id: 9, name: pilot-bbsk }
+      - { id: 10, name: pilot-slovensko }
+      - { id: 11, name: praha }
+      - { id: 12, name: slovensko }
+      - { id: 13, name: zilina }
     # Prod's edge certificate names (kubectl get ingress -n smartcity apisix, 2026-11-09): the same
     # set, so the copied certificate stays Ready. status. is no jc module (prod serves it from
     # status-page): `hostUpstreams` sends it to the one dev kept (supervisor 20:2xZ), opened to this

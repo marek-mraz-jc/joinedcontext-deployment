@@ -402,6 +402,14 @@ configMap:
       provisioning_dir = "/etc/jc-daiya"
       prometheus_reach = "{{ $proxyUrl }}"
       {{- end }}
+      {{- if not $split }}
+      {{- range (dig "daiyaOrganizations" list $jc) }}
+
+      [[daiya.organizations]]
+      id = {{ .id | int }}
+      name = {{ .name | quote }}
+      {{- end }}
+      {{- end }}
     {{- if (dig "catalogueHarvest" false $jc) }}
     # The datasets prod converted (files/od-datasets.json, the monorepo's bins/jc/docs copy).
     od-datasets.json: |

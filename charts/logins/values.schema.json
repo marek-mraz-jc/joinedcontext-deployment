@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "values of logins (T-4956: an unknown key is a typo and fails the render)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "type": "object"
+    },
+    "orgsWatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "configMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prometheusNamespace": {
+          "type": "string"
+        },
+        "prometheusPod": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

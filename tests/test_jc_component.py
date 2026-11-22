@@ -116,9 +116,10 @@ def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_var
 def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certificate(rendered):
     """T-7005 phase A: each of the six Organizations' five hosts (T-7001: its own sign-in host `idm.`)
     is in its `[[organizations]]` entry in jc.toml, an edge route to jc and one HTTP-01 Certificate
-    each (never a wildcard, never on the shared SAN list). T-7009 batch 1 adds barcelona and zilina;
-    the four still on `resolved: []` have no Certificate yet."""
-    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha", "barcelona", "zilina")
+    each (never a wildcard, never on the shared SAN list). T-7009 batch 1 adds barcelona and zilina,
+    T-7391 ctl-a and ctl-b; the two still on `resolved: []` have no Certificate yet."""
+    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha", "barcelona", "zilina",
+            "ctl-a", "ctl-b")
     labels = ("smartcity", "opendata", "api", "mcp", "idm")
     hosts = [f"{h}.{o}.jcdev.dev.joinedcontext.com" for o in orgs for h in labels]
     docs = rendered("jc-dev")
@@ -342,6 +343,35 @@ def test_jc_prod_runs_no_split(rendered):
     assert not split_objects(docs, "Deployment") and not split_objects(docs, "NetworkPolicy")
     assert {e["name"]: e.get("value") for e in jc_container(docs)["env"]}["ANTARES_BUS"] == "local"
     assert not any(d.get("kind") == "Secret" and d["metadata"]["name"] == "jc-split" for d in docs)
+
+
+@requires_helmfile
+def test_daiyas_organizations_keep_their_exported_numbers(rendered):
+    """T-7509: jc.server.daiyaOrganizations becomes [[daiya.organizations]] in the jc.toml of the process
+    that runs daiya: jc-daiya's with the split (jc-dev, its 2026-11-22 export), the server's without."""
+    dev = rendered("jc-dev")
+    orgs = jc_toml(dev, "jc-daiya")["daiya"]["organizations"]
+    ids = [o["id"] for o in orgs]
+    assert len(ids) == len(set(ids)) == len({o["name"] for o in orgs}) and min(ids) >= 2, orgs
+    assert {"id": 23, "name": "zilina"} in orgs and {"id": 2, "name": "banskabystrica"} in orgs
+    assert "organizations" not in jc_toml(dev).get("daiya", {})
+
+    daiya = jc_toml(rendered("jc-prod"))["daiya"]
+    assert [(o["id"], o["name"]) for o in daiya["organizations"]] == [
+        (2, "banskabystrica"),
+        (3, "barcelona"),
+        (4, "bbsk"),
+        (5, "bratislava"),
+        (6, "helsinki"),
+        (7, "helsinki-mobility"),
+        (8, "pilot"),
+        (9, "pilot-bbsk"),
+        (10, "pilot-slovensko"),
+        (11, "praha"),
+        (12, "slovensko"),
+        (13, "zilina"),
+    ], "jc-prod's export of 2026-11-22: a number here is in dashboard links, never renumber one"
+    assert daiya["prometheus_reach"], "the metricsProxy reach left the [daiya] table"
 
 
 @requires_helmfile

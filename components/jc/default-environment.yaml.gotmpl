@@ -84,6 +84,10 @@ jc:
     # token of realm jc-split; each answers it at its [door]. Needs realmImport (the realm's import
     # dir) and jc.shako, jc.daiya, jc.dataroom and jc.nats enabled with it.
     split: false
+    # daiya's Organizations under their Grafana numbers ([[daiya.organizations]], T-7509): the export
+    # of the running daiya (number, name; Main Org. 1 left out), so a restart or a provisioning order
+    # never renumbers one. Each item { id: <number>, name: <Organization> }.
+    daiyaOrganizations: []
   # The split's role Deployments (values/role) and NATS (values/nats): off unless jc.server.split.
   # `resources` per role: requests about 1.25x the role's share of jc's one-process RSS (T-7014).
   shako:
