@@ -111,8 +111,11 @@ global:
 postgres:
   operator:
     enabled: false
-  # One instance of three on a 16 GB node: jc's three stores ask for a third of dev's request and keep
-  # its 2Gi ceiling (measure with kubectl top after the import and set the request from it).
+  # One instance of three on a 16 GB node: jc's three stores ask for a third of dev's request.
+  # Option A of T-7498 (supervisor 2026-11-22T13:4xZ): the pools count 52 with the role Jobs' logins and
+  # the Portal's three standing sessions, x 1.2 + 3 reserved = 66 (tests/test_postgres_connection_budget.py);
+  # the worst case at 66 is 1882MiB, under 80 % of 2400Mi (tests/test_postgres_memory_budget.py). The
+  # request stays: the working set peaks at the limit with RSS about 1 GiB, the rest page cache (T-7498).
   cluster:
     rawValues:
       cluster:
@@ -121,7 +124,15 @@ postgres:
             cpu: 100m
             memory: 640Mi
           limits:
-            memory: 2Gi
+            memory: 2400Mi
+        postgresql:
+          parameters:
+            max_connections: "66"
+            # T-7519: pg_stat_statements for the statement-timeout read, in option A's restart (a
+            # pg_stat_statements.* parameter makes CNPG preload it). 1000 top-level entries hold about
+            # 2 MiB of shared memory, inside the 38Mi left under 80 % of 2400Mi.
+            pg_stat_statements.max: "1000"
+            pg_stat_statements.track: "top"
   # jc-prod serves the public smartcity hosts and had no backup at all (F-1, owner 2026-11-11). Until
   # the owner gives an object store for CNPG's own backups, the nightly age-encrypted pg_dumpall onto
   # a volume of its own (not the database's PVC), every database with jc_antares (17 GB live), and
