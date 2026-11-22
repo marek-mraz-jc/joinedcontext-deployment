@@ -12,10 +12,12 @@ batch/v1/CronJob jc-dev/postgres-cluster-dr-drill
 batch/v1/Job jc-dev/artifact-store-bucket
 batch/v1/Job jc-dev/jc-antares-db-create-role-jc-antares-app-dml
 batch/v1/Job jc-dev/jc-antares-db-create-role-jc-antares-maint-dml
+batch/v1/Job jc-dev/jc-assistant-db-create-role-jc-assistant-app-dml
 batch/v1/Job jc-dev/jc-daiya-db-create-role-daiya-app-login
 batch/v1/Job jc-dev/jc-dataroom-db-create-role-dataroom-app-login
 batch/v1/Job jc-dev/jc-ekiben-db-create-role-ekiben-app-login
 batch/v1/Job jc-dev/jc-kaisatsu-db-create-role-kaisatsu-app-readonly
+batch/v1/Job jc-dev/jc-portal-db-create-role-jc-portal-app-login
 batch/v1/Job jc-dev/jc-shako-db-create-role-shako-app-login
 batch/v1/Job jc-dev/postgres-cluster-stat-statements
 cert-manager.io/v1/Certificate jc-dev/apisix-edge
@@ -178,6 +180,7 @@ v1/Secret jc-dev/db-jc-antares
 v1/Secret jc-dev/db-jc-antares-app
 v1/Secret jc-dev/db-jc-antares-maint
 v1/Secret jc-dev/db-jc-assistant
+v1/Secret jc-dev/db-jc-assistant-app
 v1/Secret jc-dev/db-jc-daiya
 v1/Secret jc-dev/db-jc-daiya-app
 v1/Secret jc-dev/db-jc-dataroom
@@ -187,6 +190,7 @@ v1/Secret jc-dev/db-jc-ekiben-app
 v1/Secret jc-dev/db-jc-kaisatsu
 v1/Secret jc-dev/db-jc-kaisatsu-app
 v1/Secret jc-dev/db-jc-portal
+v1/Secret jc-dev/db-jc-portal-app
 v1/Secret jc-dev/db-jc-shako
 v1/Secret jc-dev/db-jc-shako-app
 v1/Secret jc-dev/etcd-apisix

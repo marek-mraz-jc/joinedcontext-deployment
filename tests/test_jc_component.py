@@ -568,19 +568,25 @@ def test_jc_streams_sign_in_as_their_pipelines_own_client(rendered, env):
 
 
 @requires_helmfile
-def test_jc_antares_serves_apart_from_its_owner_once_the_role_split_is_on(rendered, rendered_variant):
-    # T-7310: off, the broker logs in as the owner jc_antares as before (an older image knows no
-    # ANTARES_MIGRATION_DATABASE_URL); on, it migrates as jc_antares, serves as jc_antares_app and
-    # drains and reaps as jc_antares_maint, each password from its own Secret.
-    off = {e["name"]: e for e in jc_container(rendered("addons"))["env"]}
+def test_jc_databases_serve_apart_from_their_owners_once_the_role_split_is_on(rendered, rendered_variant):
+    # T-7310, T-7179, T-7488: off, Antares, the Portal and the assistant log in as their owners as
+    # before (an older image refuses the assistant's migrate_url); on, each migrates as the owner and
+    # serves as its own login: jc_antares_app (jc_antares_maint drains and reaps), jc_portal_app,
+    # jc_assistant_app, each password from its own Secret.
+    off_docs = rendered("addons")
+    off = {e["name"]: e for e in jc_container(off_docs)["env"]}
     assert off["ANTARES_DATABASE_URL"]["value"].startswith("postgresql://jc_antares:$(BROKER_DB_PASSWORD)@")
     assert "ANTARES_MIGRATION_DATABASE_URL" not in off and "ANTARES_MAINTENANCE_DATABASE_URL" not in off
+    assert off["JC_PORTAL_DATABASE_URL"]["value"].startswith("postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@")
+    assert "JC_PORTAL_MIGRATION_DATABASE_URL" not in off and "PORTAL_APP_DB_PASSWORD" not in off
+    off_assistant = jc_toml(off_docs)["assistant"]["database"]
+    assert off_assistant["url"].startswith("postgres://jc_assistant@") and "migrate_url" not in off_assistant
 
     def split_on(tree):
         path = tree / "components/jc/default-environment.yaml.gotmpl"
         text = path.read_text()
-        assert "antaresRoleSplit: false" in text
-        path.write_text(text.replace("antaresRoleSplit: false", "antaresRoleSplit: true"))
+        assert "roleSplit: false" in text
+        path.write_text(text.replace("roleSplit: false", "roleSplit: true"))
 
     docs = rendered_variant("addons", split_on)
     on = {e["name"]: e for e in jc_container(docs)["env"]}
@@ -604,6 +610,21 @@ def test_jc_antares_serves_apart_from_its_owner_once_the_role_split_is_on(render
     assert (app["ROLE_TYPE"], app["ROLE_MEMBER_OF"]) == ("dml", "[]")
     assert (maint["ROLE_TYPE"], maint["ROLE_MEMBER_OF"]) == ("dml", '["antares_maintenance"]')
     assert app["DB_OWNER"] == maint["DB_OWNER"] == "jc_antares"
+    portal = {k: on[k]["value"] for k in ("JC_PORTAL_DATABASE_URL", "JC_PORTAL_MIGRATION_DATABASE_URL")}
+    assert portal["JC_PORTAL_DATABASE_URL"].startswith("postgresql://jc_portal_app:$(PORTAL_APP_DB_PASSWORD)@")
+    assert portal["JC_PORTAL_MIGRATION_DATABASE_URL"].startswith("postgresql://jc_portal:$(PORTAL_DB_PASSWORD)@")
+    assert all(u.endswith("/jc_portal") for u in portal.values())
+    assert on["PORTAL_APP_DB_PASSWORD"]["valueFrom"]["secretKeyRef"]["name"] == "db-jc-portal-app"
+    assistant = jc_toml(docs)["assistant"]["database"]
+    assert assistant["url"] == assistant["migrate_url"].replace("jc_assistant@", "jc_assistant_app@")
+    assert assistant["migrate_url"].startswith("postgres://jc_assistant@")
+    assert (assistant["password_file"], assistant["migrate_password_file"]) == (
+        "/run/jc/db/assistant-app/password", "/run/jc/db/assistant/password")
+    mounts = {m["mountPath"]: m["name"] for m in jc_container(docs)["volumeMounts"]}
+    (jc,) = [d for d in docs if d.get("kind") == "Deployment" and d["metadata"]["name"] == "jc"]
+    vols = {v["name"]: v.get("secret", {}).get("secretName") for v in jc["spec"]["template"]["spec"]["volumes"]}
+    assert vols[mounts["/run/jc/db/assistant-app"]] == "db-jc-assistant-app"
+    assert {"jc-portal-db-create-role-jc-portal-app-login", "jc-assistant-db-create-role-jc-assistant-app-dml"} <= set(jobs)
 
 
 @requires_helmfile
