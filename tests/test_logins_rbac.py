@@ -1,5 +1,5 @@
-"""charts/logins (T-7496): the s1 automation's cluster logins grant no verb beyond their lists and
-nothing cluster-scoped."""
+"""charts/logins (T-7496): the orgs watch's login grants no verb beyond its list, nothing
+cluster-scoped, and no write or exec outside the Prometheus pod."""
 import subprocess
 from pathlib import Path
 
@@ -16,24 +16,10 @@ WATCH = {
     ("jc-prod", "", "configmaps"): ({"get"}, {"jc"}),
     ("jc-prod", "", "services"): ({"get", "list"}, None),
     ("jc-prod", "", "endpoints"): ({"get", "list"}, None),
-    ("jc-prod", "postgresql.cnpg.io", "clusters"): ({"get"}, None),
-    ("jc-prod", "", "pods/exec"): ({"get", "create"}, {"postgres-cluster-1"}),
     ("dev", "", "pods"): ({"get", "list"}, None),
     ("dev", "", "pods/exec"): ({"get", "create"}, {"prometheus-prometheus-0"}),
 }
-WRITE = {"get", "list", "watch", "create", "update", "patch", "delete"}
 READ = {"get", "list", "watch"}
-PROMOTE = {
-    **{("jc-prod", "", r): (WRITE, None) for r in ("configmaps", "secrets", "services", "serviceaccounts", "pods")},
-    ("jc-prod", "", "persistentvolumeclaims"): (WRITE - {"delete"}, None),
-    **{("jc-prod", "", r): (READ, None) for r in ("pods/log", "events", "endpoints")},
-    **{("jc-prod", "apps", r): (WRITE, None) for r in ("deployments", "replicasets")},
-    ("jc-prod", "batch", "jobs"): (WRITE, None),
-    ("jc-prod", "policy", "poddisruptionbudgets"): (WRITE, None),
-    **{("jc-prod", "policy.linkerd.io", r): (WRITE, None)
-       for r in ("servers", "authorizationpolicies", "meshtlsauthentications")},
-    ("jc-dev", "", "pods"): ({"get", "list"}, None),
-}
 
 
 def render(*sets: str) -> list[dict]:
@@ -61,23 +47,29 @@ def grants(docs: list[dict], account: str) -> dict:
     return got
 
 
-def test_logins_grant_exactly_their_lists_and_nothing_cluster_scoped():
-    docs = render("orgsWatch.prometheusNamespace=dev", "prodPromote.enabled=true", "prodPromote.readNamespace=jc-dev")
+def test_the_watch_reads_only_and_execs_only_into_prometheus():
+    docs = render("orgsWatch.prometheusNamespace=dev")
     assert not [d for d in docs if d["kind"] in ("ClusterRole", "ClusterRoleBinding")]
-    assert grants(docs, "orgs-watch") == WATCH
-    assert grants(docs, "prod-promote") == PROMOTE
+    got = grants(docs, "orgs-watch")
+    assert got == WATCH
+    # Read-only: every grant but the one Prometheus exec is read verbs, and no exec, attach,
+    # port-forward, proxy or Secret anywhere else (T-7496 review).
+    for (ns, group, resource), (verbs, names) in got.items():
+        if resource == "pods/exec":
+            assert (ns, names) == ("dev", {"prometheus-prometheus-0"})
+        else:
+            assert verbs <= READ, (ns, resource, verbs)
+            assert resource not in ("secrets", "pods/attach", "pods/portforward", "services/proxy")
     for d in docs:
         if d["kind"] == "Role":
             for rule in d["rules"]:
                 assert "*" not in rule["verbs"] + rule["resources"] + rule["apiGroups"]
-                assert "escalate" not in rule["verbs"] and "bind" not in rule["verbs"]
-    tokens = {d["metadata"]["annotations"]["kubernetes.io/service-account.name"]
-              for d in docs if d["kind"] == "Secret"}
-    assert tokens == {"orgs-watch", "prod-promote"}
-    assert all("data" not in d and "stringData" not in d for d in docs if d["kind"] == "Secret")
+    tokens = [d for d in docs if d["kind"] == "Secret"]
+    assert [t["metadata"]["annotations"]["kubernetes.io/service-account.name"] for t in tokens] == ["orgs-watch"]
+    assert all("data" not in t and "stringData" not in t for t in tokens)
 
 
-def test_the_watch_alone_by_default_and_no_prometheus_grant_without_its_namespace():
+def test_no_prometheus_grant_without_its_namespace():
     docs = render()
     assert {d["metadata"]["name"] for d in docs if d["kind"] == "ServiceAccount"} == {"orgs-watch"}
     assert {d["metadata"]["namespace"] for d in docs} == {"jc-prod"}

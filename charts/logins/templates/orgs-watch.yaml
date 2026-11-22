@@ -1,8 +1,8 @@
 {{- with .Values.orgsWatch }}{{ if .enabled }}
 {{- $ns := $.Release.Namespace }}
-# kubectl calls of watch.py: get pod -l (list pods), logs deploy/jc --all-pods (get deployments,
-# list pods, get pods/log), get configmap jc, exec <postgres pod> psql, and in the Prometheus
-# namespace get pod -l + exec prometheus-prometheus-0 promtool. Nothing else, no Secret.
+# kubectl calls of watch.py: logs deploy/jc --all-pods (get deployments, list pods, get pods/log),
+# get configmap jc, and in the Prometheus namespace get pod -l + exec prometheus-prometheus-0
+# promtool. Read verbs only in this namespace, no Secret, no exec.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -42,15 +42,6 @@ rules:
   - apiGroups: [""]
     resources: [services, endpoints]
     verbs: [get, list]
-  - apiGroups: [postgresql.cnpg.io]
-    resources: [clusters]
-    verbs: [get]
-  # ponytail: exec into Postgres is the watch's existing DB path and reaches the superuser socket;
-  # the SQL sets default_transaction_read_only. Upgrade: a pg_read_all_data login and no exec.
-  - apiGroups: [""]
-    resources: [pods/exec]
-    resourceNames: {{ .postgresPods | toJson }}
-    verbs: [get, create]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -79,6 +70,8 @@ rules:
   - apiGroups: [""]
     resources: [pods/exec]
     resourceNames: [{{ .prometheusPod | quote }}]
+    # The pod is distroless (no shell): exec runs its own binaries (promtool) under its
+    # ServiceAccount, which reads endpoints, nodes, pods, services and ingresses, no Secret.
     verbs: [get, create]
 ---
 apiVersion: rbac.authorization.k8s.io/v1

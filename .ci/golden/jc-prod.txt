@@ -218,19 +218,15 @@ postgresql.cnpg.io/v1/Database jc-prod/jc-kaisatsu
 postgresql.cnpg.io/v1/Database jc-prod/jc-portal
 postgresql.cnpg.io/v1/Database jc-prod/jc-shako
 rbac.authorization.k8s.io/v1/Role dev/orgs-watch-jc-prod
-rbac.authorization.k8s.io/v1/Role jc-dev/prod-promote-jc-prod
 rbac.authorization.k8s.io/v1/Role jc-prod-mqtt/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/Role jc-prod/orgs-watch
 rbac.authorization.k8s.io/v1/Role jc-prod/portal-wasm-shards
 rbac.authorization.k8s.io/v1/Role jc-prod/postgres-cluster-dr-drill
-rbac.authorization.k8s.io/v1/Role jc-prod/prod-promote
 rbac.authorization.k8s.io/v1/RoleBinding dev/orgs-watch-jc-prod
-rbac.authorization.k8s.io/v1/RoleBinding jc-dev/prod-promote-jc-prod
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod-mqtt/portal-mqtt-brokers
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod/orgs-watch
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod/portal-wasm-shards
 rbac.authorization.k8s.io/v1/RoleBinding jc-prod/postgres-cluster-dr-drill
-rbac.authorization.k8s.io/v1/RoleBinding jc-prod/prod-promote
 traefik.io/v1alpha1/TLSOption jc-prod-mqtt/mqtt-bsi-tr-02102
 traefik.io/v1alpha1/TLSOption jc-prod/bsi-tr-02102
 v1/ConfigMap jc-prod-mqtt/broker-template
@@ -282,7 +278,6 @@ v1/Secret jc-prod/keycloak-client-edge
 v1/Secret jc-prod/orgs-watch-token
 v1/Secret jc-prod/postgres-backup-artifact-store
 v1/Secret jc-prod/postgres-cluster-local-backup-key
-v1/Secret jc-prod/prod-promote-token
 v1/Service jc-prod-mqtt/mqtt-broker-pods
 v1/Service jc-prod/apisix-gateway
 v1/Service jc-prod/apisix-prometheus-metrics
@@ -307,4 +302,3 @@ v1/ServiceAccount jc-prod/jc-wasm-host-0
 v1/ServiceAccount jc-prod/jc-wasm-host-1
 v1/ServiceAccount jc-prod/orgs-watch
 v1/ServiceAccount jc-prod/postgres-cluster-dr-drill
-v1/ServiceAccount jc-prod/prod-promote

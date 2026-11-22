@@ -1,16 +1,10 @@
 ---
 # The orgs watch (monorepo bins/jc/smoke/orgs/watch.py, cron on s1): reads jc's pods, log and
-# ConfigMap, runs its read-only SQL through `kubectl exec` into the Postgres instances named here,
-# and promtool inside the Prometheus pod.
+# ConfigMap and runs promtool inside the Prometheus pod. No exec into Postgres: the watch's SQL
+# moves to a SELECT-only database login (T-7496 step 2). The prod promotion's login comes with
+# T-7495.
 orgsWatch:
   enabled: true
   configMap: jc
-  # The CNPG instance pods of the Postgres cluster in this namespace (exec runs psql there).
-  postgresPods: [postgres-cluster-1]
   prometheusNamespace: ''
   prometheusPod: prometheus-prometheus-0
-# The jc-dev -> jc-prod promotion from s1 (T-7495): writes the jc release's objects in this
-# namespace, reads the pods of `readNamespace` (the imageID gate).
-prodPromote:
-  enabled: false
-  readNamespace: ''

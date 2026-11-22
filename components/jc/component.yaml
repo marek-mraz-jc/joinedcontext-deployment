@@ -23,6 +23,6 @@ parts:
   - name: dataroom
     valuesFrom: role
   - name: nats
-  # Scoped cluster logins for the s1 automation (T-7496): the orgs watch, the prod promotion.
+  # Scoped cluster logins for the s1 automation (T-7496): the orgs watch.
   # On for jc-dev and jc-prod only.
   - name: logins
