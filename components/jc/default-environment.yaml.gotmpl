@@ -38,7 +38,8 @@ jc:
     # jc_assistant_app (T-7488); each owner only migrates. A jc image from 712cff15 (T-7488) on refuses
     # to start without it, and an older one refuses the assistant's migrate_url: flip it in the same
     # commit as the pin that crosses 712cff15. The switch goes once both clusters run such an image.
-    roleSplit: false
+    # On for jc-dev with its serverJcDev pin ddfd9107; jc-prod (server e942ebb8) stays off.
+    roleSplit: {{ eq .Environment.Name "jc-dev" }}
     # shako's, daiya's, dataroom's and ekiben's request roles, each (plus one migration login at start).
     modulePool: 3
     # The assistant's pool on jc_assistant (it migrates as the same role).
