@@ -66,6 +66,12 @@ postgres:
         postgresql:
           parameters:
             max_connections: "66"
+            # pg_stat_statements as on jc-prod (T-7517: the reap's DELETE read after the pin; T-7519 compares).
+            # 1000 top-level entries, about 2 MiB, inside the 38Mi left under 80 % of 2400Mi; CNPG's
+            # ALTER ROLE password statements stay out of it (track_utility off, T-7498).
+            pg_stat_statements.max: "1000"
+            pg_stat_statements.track: "top"
+            pg_stat_statements.track_utility: "off"
 
 
 # The server WASM Apps' store and database (jc-app-hosts slice 2). Prod's `apps` bucket held 18 MB

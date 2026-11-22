@@ -78,12 +78,13 @@ def test_the_job_waits_for_the_library_on_dev(rendered):
     assert container["securityContext"]["readOnlyRootFilesystem"] is True
 
 
-def test_jc_prod_keeps_password_statements_out_of_the_statistics(rendered):
+@pytest.mark.parametrize("env", ["jc-dev", "jc-prod"])
+def test_jc_keeps_password_statements_out_of_the_statistics(rendered, env):
     # CNPG sets passwords in plain ALTER ROLE statements and, unlike the role Job, leaves
-    # track_utility on: the server has to switch it off (T-7498).
-    parameters = cluster(rendered("jc-prod"))["spec"]["postgresql"]["parameters"]
+    # track_utility on: the server has to switch it off (T-7498; jc-dev too since T-7517).
+    parameters = cluster(rendered(env))["spec"]["postgresql"]["parameters"]
     assert parameters["pg_stat_statements.track_utility"] == "off"
-    assert env_of(stat_statements_job(rendered("jc-prod")))["PRELOADED"] == "true"
+    assert env_of(stat_statements_job(rendered(env)))["PRELOADED"] == "true"
 
 
 def test_the_script_survives_kubernetes_variable_expansion(rendered):
