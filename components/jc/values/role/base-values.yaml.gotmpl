@@ -108,6 +108,13 @@ configMap:
       {{- $at := printf "https://%s" $base }}
       {{- tpl (readFile "../server/dataroom.toml.gotmpl") (dict "Values" .Values "addresses" (dict "api" $at "portal" $at "viz" (printf "%s/embed" $at))) | trimSuffix "\n" }}
       {{- tpl (readFile "../server/organizations.toml.gotmpl") (dict "Values" .Values) | trimSuffix "\n" }}
+      {{- else if eq $role "daiya" }}
+      {{- range (dig "daiyaOrganizations" list $jc) }}
+
+      [[daiya.organizations]]
+      id = {{ .id | int }}
+      name = {{ .name | quote }}
+      {{- end }}
       {{- end }}
 
       [{{ $role }}.database]

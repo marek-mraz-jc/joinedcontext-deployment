@@ -104,6 +104,33 @@ jc:
     # Separate services (owner 2026-11-16 16:5xZ, T-7009): shako, daiya and dataroom each in a
     # Deployment of its own, Antares' bus on NATS (components/jc default-environment `split`).
     split: true
+    # daiya's Organizations as the running daiya numbered them (T-7509, export 2026-11-22T15:08Z,
+    # evidence/T-7509/jc-dev-export-20261122T1508Z.tsv; all 24 equal the stored org_id rows). A project
+    # made later takes the next free number: export again before a pin that changes daiya.
+    daiyaOrganizations:
+      - { id: 2, name: banskabystrica }
+      - { id: 3, name: banskabystrica-mcp-check }
+      - { id: 4, name: barcelona }
+      - { id: 5, name: barcelona-mcp-check }
+      - { id: 6, name: bbsk }
+      - { id: 7, name: bbsk-mcp-check }
+      - { id: 8, name: bratislava }
+      - { id: 9, name: bratislava-mcp-check }
+      - { id: 10, name: ctl-a-mcp-check }
+      - { id: 11, name: ctl-b-mcp-check }
+      - { id: 12, name: demo-mcp-air }
+      - { id: 13, name: hel-mcp-check }
+      - { id: 14, name: helsinki }
+      - { id: 15, name: praha }
+      - { id: 16, name: praha-mcp-check }
+      - { id: 17, name: sharing }
+      - { id: 18, name: sharing-other }
+      - { id: 19, name: slovensko }
+      - { id: 20, name: slovensko-mcp-check }
+      - { id: 21, name: t6025-full }
+      - { id: 22, name: t7380-walk }
+      - { id: 23, name: zilina }
+      - { id: 24, name: zilina-mcp-check }
     # TOTP for every person on jc-dev (owner 2026-11-14 "TURN ON TOTP FOR NOW"; T-6894, SHA1 enrolments).
     secondFactor: required
     # Six Organizations on hosts of their own (T-7005 phase A, owner 2026-11-15 12:1xZ; the dev layout of
