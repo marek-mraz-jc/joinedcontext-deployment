@@ -346,7 +346,7 @@ def test_jc_prod_runs_no_split(rendered):
 
 
 @requires_helmfile
-def test_daiyas_organizations_keep_their_exported_numbers(rendered, rendered_variant):
+def test_daiyas_organizations_keep_their_exported_numbers(rendered):
     """T-7509: jc.server.daiyaOrganizations becomes [[daiya.organizations]] in the jc.toml of the process
     that runs daiya: jc-daiya's with the split (jc-dev, its 2026-11-22 export), the server's without."""
     dev = rendered("jc-dev")
@@ -356,15 +356,21 @@ def test_daiyas_organizations_keep_their_exported_numbers(rendered, rendered_var
     assert {"id": 23, "name": "zilina"} in orgs and {"id": 2, "name": "banskabystrica"} in orgs
     assert "organizations" not in jc_toml(dev).get("daiya", {})
 
-    def declare(tree):
-        values = tree / "deployment/environments/jc-prod/global.yaml.gotmpl"
-        text = values.read_text()
-        assert "    mode: host\n" in text, "jc-prod names no host mode"
-        values.write_text(text.replace("    mode: host\n", "    mode: host\n    daiyaOrganizations:\n"
-                                       "      - { id: 3, name: barcelona }\n", 1))
-
-    daiya = jc_toml(rendered_variant("jc-prod", declare))["daiya"]
-    assert daiya["organizations"] == [{"id": 3, "name": "barcelona"}]
+    daiya = jc_toml(rendered("jc-prod"))["daiya"]
+    assert [(o["id"], o["name"]) for o in daiya["organizations"]] == [
+        (2, "banskabystrica"),
+        (3, "barcelona"),
+        (4, "bbsk"),
+        (5, "bratislava"),
+        (6, "helsinki"),
+        (7, "helsinki-mobility"),
+        (8, "pilot"),
+        (9, "pilot-bbsk"),
+        (10, "pilot-slovensko"),
+        (11, "praha"),
+        (12, "slovensko"),
+        (13, "zilina"),
+    ], "jc-prod's export of 2026-11-22: a number here is in dashboard links, never renumber one"
     assert daiya["prometheus_reach"], "the metricsProxy reach left the [daiya] table"
 
 
