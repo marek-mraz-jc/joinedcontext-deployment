@@ -248,12 +248,13 @@ def test_dev_keeps_untrusted_content_apart(rendered):
 
 def test_jc_devs_organization_routes_name_the_secrets_their_certificates_write(rendered):
     """One shape (T-7005 + T-7002): each Organization host's Ingress TLS entry names the Secret of
-    the organization-tls.yaml Certificate for that host, and no host has two Certificates: eight
-    Organizations of five hosts each (T-7001 adds `idm.`; T-7009 batch 1 adds barcelona and zilina)."""
+    the organization-tls.yaml Certificate for that host, and no host has two Certificates: ten
+    Organizations of five hosts each (T-7001 adds `idm.`; T-7009 batch 1 adds barcelona and zilina,
+    T-7391 ctl-a and ctl-b)."""
     docs = rendered("jc-dev")
     certs = {s["secretName"]: s["dnsNames"] for s in certificates(docs).values()}
     ingress = next(d for d in docs if d.get("kind") == "Ingress" and d["metadata"]["name"] == "apisix")
     org_tls = {t["secretName"]: t["hosts"] for t in ingress["spec"]["tls"] if t["secretName"].startswith("jc-org-")}
-    assert len(org_tls) == 40 and all(certs[s] == h for s, h in org_tls.items()), org_tls
+    assert len(org_tls) == 50 and all(certs[s] == h for s, h in org_tls.items()), org_tls
     names = [n for h in certs.values() for n in h]
     assert len(names) == len(set(names))

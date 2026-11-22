@@ -116,9 +116,10 @@ def test_a_jc_dev_pin_change_leaves_jc_prods_render_alone(rendered, rendered_var
 def test_jc_devs_organizations_answer_on_their_own_hosts_each_on_its_own_certificate(rendered):
     """T-7005 phase A: each of the six Organizations' five hosts (T-7001: its own sign-in host `idm.`)
     is in its `[[organizations]]` entry in jc.toml, an edge route to jc and one HTTP-01 Certificate
-    each (never a wildcard, never on the shared SAN list). T-7009 batch 1 adds barcelona and zilina;
-    the four still on `resolved: []` have no Certificate yet."""
-    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha", "barcelona", "zilina")
+    each (never a wildcard, never on the shared SAN list). T-7009 batch 1 adds barcelona and zilina,
+    T-7391 ctl-a and ctl-b; the two still on `resolved: []` have no Certificate yet."""
+    orgs = ("bbsk", "hel", "marek-mraz", "banskabystrica", "bratislava", "praha", "barcelona", "zilina",
+            "ctl-a", "ctl-b")
     labels = ("smartcity", "opendata", "api", "mcp", "idm")
     hosts = [f"{h}.{o}.jcdev.dev.joinedcontext.com" for o in orgs for h in labels]
     docs = rendered("jc-dev")
