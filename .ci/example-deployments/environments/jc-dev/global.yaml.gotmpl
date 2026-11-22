@@ -147,6 +147,17 @@ jc:
       - jc-org-idm-banskabystrica
       - jc-org-idm-bratislava
       - jc-org-idm-praha
+      # T-7009 batch 1, issued 2026-11-18.
+      - jc-org-smartcity-barcelona
+      - jc-org-opendata-barcelona
+      - jc-org-api-barcelona
+      - jc-org-mcp-barcelona
+      - jc-org-idm-barcelona
+      - jc-org-smartcity-zilina
+      - jc-org-opendata-zilina
+      - jc-org-api-zilina
+      - jc-org-mcp-zilina
+      - jc-org-idm-zilina
     # The deployment host's people (their connectors, connector calls and preferences) belong to
     # marek-mraz, the owner's Organization: the Portal keys the 35 connectors, 637 calls and 8
     # preference rows of jc-dev under its reserved project before migration 0088 forces the key
@@ -176,17 +187,18 @@ jc:
       # (36 would pass certificateStage and eat the Let's Encrypt week); list a host there when it needs TLS.
       # T-7009 batch 1 (deployer 2026-11-18): barcelona and zilina get every host, 10 new Certificates (the
       # cluster issued 30 in the week to 2026-11-18T00:4xZ, so 40 of 50); the other four follow from 2026-11-22.
+      # T-7391 batch 2 (deployer 2026-11-22): ctl-a and ctl-b get every host, 10 new Certificates (32 issued
+      # in the week to 2026-11-22T12Z, so 42 of 50); demo-mcp and slovensko follow from 2026-11-25, when
+      # the 17 of 2026-11-18 leave the window.
       - name: barcelona
         catalogueId: 00000000-0000-7000-8000-0000000000b7
         hosts: { portal: smartcity.barcelona, opendata: opendata.barcelona, api: api.barcelona, mcp: mcp.barcelona, idm: idm.barcelona }
       - name: ctl-a
         catalogueId: 00000000-0000-7000-8000-0000000000b8
         hosts: { portal: smartcity.ctl-a, opendata: opendata.ctl-a, api: api.ctl-a, mcp: mcp.ctl-a, idm: idm.ctl-a }
-        resolved: []
       - name: ctl-b
         catalogueId: 00000000-0000-7000-8000-0000000000b9
         hosts: { portal: smartcity.ctl-b, opendata: opendata.ctl-b, api: api.ctl-b, mcp: mcp.ctl-b, idm: idm.ctl-b }
-        resolved: []
       - name: demo-mcp
         catalogueId: 00000000-0000-7000-8000-0000000000ba
         hosts: { portal: smartcity.demo-mcp, opendata: opendata.demo-mcp, api: api.demo-mcp, mcp: mcp.demo-mcp, idm: idm.demo-mcp }

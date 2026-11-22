@@ -25,6 +25,8 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-api-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-barcelona
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-api-ctl-a
+cert-manager.io/v1/Certificate jc-dev/jc-org-api-ctl-b
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-api-praha
@@ -33,6 +35,8 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-idm-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-barcelona
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-ctl-a
+cert-manager.io/v1/Certificate jc-dev/jc-org-idm-ctl-b
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-idm-praha
@@ -41,6 +45,8 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-barcelona
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-ctl-a
+cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-ctl-b
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-mcp-praha
@@ -49,6 +55,8 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-barcelona
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-ctl-a
+cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-ctl-b
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-opendata-praha
@@ -57,6 +65,8 @@ cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-banskabystrica
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-barcelona
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-bbsk
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-bratislava
+cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-ctl-a
+cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-ctl-b
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-hel
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-marek-mraz
 cert-manager.io/v1/Certificate jc-dev/jc-org-smartcity-praha
