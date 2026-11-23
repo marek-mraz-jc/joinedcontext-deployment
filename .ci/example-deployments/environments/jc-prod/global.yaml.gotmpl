@@ -240,18 +240,20 @@ jc:
         hosts: { portal: slovensko, idm: idm.slovensko, opendata: opendata.slovensko }
       # barcelona, bratislava and zilina own Projects in jc-prod's forge but sat in no registry entry, so the
       # T-7222 door import could not be recorded for them and their Pipelines' writes stayed refused (T-7444
-      # step 2b, supervisor 2026-11-20T17:35Z). The marek-mraz shape without idm: their people stay in the
-      # smartcity realm. Their datasets move from opendata.smartcity to opendata.<org> (301 of old links: T-7408).
+      # step 2b, supervisor 2026-11-20T17:35Z). Their datasets move from opendata.smartcity to opendata.<org>
+      # (301 of old links: T-7408). Since T-7408 (owner 2026-11-23 17:50Z, every Organization its own login
+      # identity) each has its realm on idm.<org>. like marek-mraz; no person moved (realm smartcity held none of
+      # theirs), their Pipelines' service accounts stay in the installation realm as on jc-dev.
       - name: barcelona
         catalogueId: 00000000-0000-7000-8000-0000000000c4
-        hosts: { portal: barcelona, opendata: opendata.barcelona }
+        hosts: { portal: barcelona, idm: idm.barcelona, opendata: opendata.barcelona }
       - name: bratislava
         catalogueId: 00000000-0000-7000-8000-0000000000c5
-        hosts: { portal: bratislava, opendata: opendata.bratislava }
+        hosts: { portal: bratislava, idm: idm.bratislava, opendata: opendata.bratislava }
       - name: zilina
         catalogueId: 00000000-0000-7000-8000-0000000000c6
-        hosts: { portal: zilina, opendata: opendata.zilina }
-    # The 10 Certificates of T-7010 and T-7408, issued (Ready since 2026-11-19): only T-7444's 6 are new.
+        hosts: { portal: zilina, idm: idm.zilina, opendata: opendata.zilina }
+    # The 16 Certificates of T-7010, T-7408 and T-7444, issued (Ready since 2026-11-19/20): the 3 idm. are new.
     issuedCertificates:
       - jc-org-smartcity
       - jc-org-marek-mraz
@@ -263,6 +265,12 @@ jc:
       - jc-org-slovensko
       - jc-org-idm-slovensko
       - jc-org-opendata-slovensko
+      - jc-org-barcelona
+      - jc-org-opendata-barcelona
+      - jc-org-bratislava
+      - jc-org-opendata-bratislava
+      - jc-org-zilina
+      - jc-org-opendata-zilina
     # The dev node (Traefik's LoadBalancer address): drop it once DNS has moved.
     edgeAddress: 116.203.134.249
     trustedProxies:

@@ -171,9 +171,7 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
     assert {o["name"]: o["hosts"] for o in toml["organizations"]} == {
         "smartcity": {"portal": f"smartcity.{d}"},
         **{o: {"portal": f"{o}.{d}", "idm": f"idm.{o}.{d}", "opendata": f"opendata.{o}.{d}"}
-           for o in ("marek-mraz", "bbsk", "slovensko")},
-        # T-7444 step 2b: the forge's other Organizations, no realm of their own
-        **{o: {"portal": f"{o}.{d}", "opendata": f"opendata.{o}.{d}"} for o in ("barcelona", "bratislava", "zilina")},
+           for o in ("marek-mraz", "bbsk", "slovensko", "barcelona", "bratislava", "zilina")},
     }
     # jc refuses an Organization reusing [dataroom] catalogue_id (first start stopped on it, 94b935bc5)
     ids = [o["catalogue_id"] for o in toml["organizations"]] + [toml["dataroom"]["catalogue_id"]]
@@ -184,7 +182,7 @@ def test_jc_prods_four_organizations_each_have_a_working_host_and_smartcity_hold
     assert env["JC_PORTAL_INSTALLATION_ORGANIZATION"] == "smartcity"
     own = sorted(n for x in docs if x.get("kind") == "Certificate"
                  for n in x["spec"]["dnsNames"] if x["metadata"]["name"].startswith("jc-org-"))
-    assert len(own) == 16 and f"bbsk.{d}" in own and f"opendata.zilina.{d}" in own, own
+    assert len(own) == 19 and f"bbsk.{d}" in own and f"idm.zilina.{d}" in own, own
     routes = str([x for x in docs if x.get("kind") == "ConfigMap"])
     assert "demo-bbsk-landing" not in routes
 
