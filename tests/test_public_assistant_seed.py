@@ -191,7 +191,8 @@ def test_it_is_placed_on_the_host_the_demo_page_and_the_catalogue_with_its_own_b
     # The cost cap is the guard; the shared token cap stays above it (T-4286).
     assert budget["tokensPerDay"] <= 5_000_000
     assert budget["tokensPerConversation"] <= budget["tokensPerDay"]
-    assert spec["model"]["answer"] and spec["model"]["router"]
+    # No model of its own: the cluster value assistant.llm (JC_ASSISTANT_LLM) picks it (T-6543, owner 2026-11-23).
+    assert "model" not in spec
 
 
 def test_the_public_budgets_stay_inside_the_keys_five_dollars():
