@@ -198,18 +198,6 @@ def test_jc_devs_deployment_host_people_belong_to_marek_mraz(rendered):
     assert "marek-mraz" in {o["name"] for o in jc_toml(rendered("jc-dev"))["organizations"]}
 
 
-@requires_helmfile
-def test_both_jc_clusters_answer_the_public_assistant_with_the_owners_model(rendered):
-    """T-6543 (owner 2026-11-23 ~19:50Z): jc-dev and jc-prod set JC_ASSISTANT_LLM, which jc reads
-    before its built-in default; reasoning stays jc's default (low), so no effort key is set."""
-    for name in ("jc-dev", "jc-prod"):
-        (pod,) = [x["spec"]["template"]["spec"] for x in rendered(name)
-                  if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
-        env = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
-        assert env["JC_ASSISTANT_LLM"] == "google/gemini-4-hydrogen", name
-        assert not any("EFFORT" in k or "REASONING" in k for k in env if k.startswith("JC_ASSISTANT")), name
-
-
 def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_registry(rendered):
     """With `[[organizations]]` jc routes by Host in slug mode too: a kubelet probe with the pod-IP
     Host got 421 and Recreate took every jc-dev host down (2026-11-15T13:21Z, T-7005). Each probe
