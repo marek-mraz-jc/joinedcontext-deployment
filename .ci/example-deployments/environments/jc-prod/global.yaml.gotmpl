@@ -281,6 +281,8 @@ jc:
     # OpenRouter key's own limit (80 USD, owner) stops every call when reached.
     assistant:
       modelKeySecret: jc-model-key
+      # The public assistant's model (owner 2026-11-23 ~19:50Z, T-6543); reasoning stays jc's default, low.
+      llm: google/gemini-4-hydrogen
     # The shared embedder in this namespace (components/embedder, embedder.yaml.gotmpl).
     embedder:
       url: http://embedder.jc-prod.svc.cluster.local:8089
