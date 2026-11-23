@@ -95,10 +95,14 @@ jc:
   # jc-smoke-2026-11-23T094045Z green (181 fail, 154 known, 27 new all 503 read-budget, T-6294).
   # Migrations portal 0095-0097 (preflighted on jc-dev). Rollback: 4b8d6220 sha256:2320b60c with the
   # pre-apply backup.
+  # jc-prod c6404006 (2026-11-23, prod-deployer): = serverJcDev, jc-dev judge smoke
+  # jc-smoke-2026-11-23T163742Z green (167 fail, 0 off the known list). Migrations Antares 0049 (two small
+  # RLS tables + triggers on subscriptions/registrations/views) and shako's trim column/policy; cookie
+  # 0.18.3 (RUSTSEC-2026-0594). Rollback: 13d999e6 sha256:e058e6bf with the pre-apply backup.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '13d999e66d4e75b71c1f2303114146e5362fe4f9'
-    digest: 'sha256:e058e6bff07eaf72d6a01700d1aa435648be9bde8f2a9d652286580e12c68031'
+    tag: 'c6404006fe84fa073d5ae513b48c95630d3e78a6'
+    digest: 'sha256:d73d730d69034ebb3ccf163fed383e30ba0955b552d11833469f203bf7e1f937'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
