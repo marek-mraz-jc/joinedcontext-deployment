@@ -91,10 +91,14 @@ jc:
   # goes on for jc-prod in the same commit (default-environment.yaml.gotmpl). Migrations Antares 0045-0048,
   # daiya 0002-0004 (jc.server.daiyaOrganizations keeps jc-prod's 12 numbers), portal 0094.
   # Rollback floor: e942ebb8 sha256:4dc9745f only with the pre-apply backup and roleSplit false.
+  # jc-prod 13d999e6 (2026-11-23, prod-deployer): = serverJcDev, jc-dev judge smoke
+  # jc-smoke-2026-11-23T094045Z green (181 fail, 154 known, 27 new all 503 read-budget, T-6294).
+  # Migrations portal 0095-0097 (preflighted on jc-dev). Rollback: 4b8d6220 sha256:2320b60c with the
+  # pre-apply backup.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '4b8d6220d03cbf54c9a1a9393db065499204fa2d'
-    digest: 'sha256:2320b60c448a443940c42e726b93ad9355254c0769bdc7828ab563ff69e8b952'
+    tag: '13d999e66d4e75b71c1f2303114146e5362fe4f9'
+    digest: 'sha256:e058e6bff07eaf72d6a01700d1aa435648be9bde8f2a9d652286580e12c68031'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
