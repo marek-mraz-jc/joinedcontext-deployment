@@ -8,7 +8,9 @@ the service account (writes). A render that drifts on any of them still applies 
 
 import base64
 import json
+import re
 import shutil
+from pathlib import Path
 
 import pytest
 import yaml
@@ -117,6 +119,23 @@ def test_the_conformance_space_is_one_space_one_endpoint_and_the_policies_of_two
     assert kinds == ["ContextSpace", "DataModel", "Endpoint", "Endpoint", "Policy", "Policy"], kinds
     audiences = sorted(m["spec"]["audience"] for (kind, _), m in ovzdusie.items() if kind == "Endpoint")
     assert audiences == ["organization", "public"], audiences
+
+
+def test_no_mapping_writes_through_a_public_endpoint():
+    """A Bento mapping's own batch write names the space's write door, never its public one: the
+    gateway refuses every write on open data (EP-187), and a refused removal step failed the whole
+    run of banskabystrica/osm on jc-dev, so it wrote nothing (T-7692)."""
+    seed = Path(__file__).resolve().parent.parent / "components/context-gateway/seed"
+    audience = {}
+    for path in seed.rglob("*.yaml"):
+        if "kind: Endpoint" in path.read_text():
+            for doc in yaml.safe_load_all(path.read_text()):
+                if isinstance(doc, dict) and doc.get("kind") == "Endpoint":
+                    audience[doc["spec"].get("slug")] = doc["spec"].get("audience")
+    writes = re.compile(r"/api/endpoint/([a-z0-9]+)/ngsi-ld/v1/entityOperations/(?:create|upsert|update|merge|delete)")
+    found = [(path.name, slug) for path in seed.rglob("*-bento.yaml") for slug in writes.findall(path.read_text())]
+    assert found, "no mapping writes by itself: the scan reads the wrong files"
+    assert not [(name, slug) for name, slug in found if audience.get(slug) == "public"], found
 
 
 @requires_helmfile
