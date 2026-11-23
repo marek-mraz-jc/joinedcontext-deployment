@@ -113,10 +113,16 @@ jc:
   # T-7523, T-7516, T-7504, T-7510 (sqlx 0.9.1), T-7526, T-7553 and the night's security merges.
   # Rollback floor: c9bf1edc sha256:db216686 cannot serve the daiya organization numbers this release
   # writes; roll back only with the pre-apply backup.
+  # jc-dev 13d999e6 (2026-11-23, deployer): jc main's trunk ci 45135191635 and smoke 45135191432 green
+  # (a0d9745c7) and ci 45132857163 (13d999e66); judge smoke on 4b8d6220 green (jc-smoke-2026-11-23T055921Z).
+  # Carries portal 0095-0097 (backup lease, retired project ids, MCP audit), shako trim/jobs, T-7557
+  # (scheduled Organization backups), T-7570 (dataroom publisher token from kaisatsu), T-7541/T-7542,
+  # T-7704 (orgs watch). Preflight green on backup jcdev-20261123T0854Z. Rollback: 4b8d6220 sha256:2320b60c
+  # and that backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '4b8d6220d03cbf54c9a1a9393db065499204fa2d'
-    digest: 'sha256:2320b60c448a443940c42e726b93ad9355254c0769bdc7828ab563ff69e8b952'
+    tag: '13d999e66d4e75b71c1f2303114146e5362fe4f9'
+    digest: 'sha256:e058e6bff07eaf72d6a01700d1aa435648be9bde8f2a9d652286580e12c68031'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
