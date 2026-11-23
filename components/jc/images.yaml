@@ -123,10 +123,16 @@ jc:
   # (scheduled Organization backups), T-7570 (dataroom publisher token from kaisatsu), T-7541/T-7542,
   # T-7704 (orgs watch). Preflight green on backup jcdev-20261123T0854Z. Rollback: 4b8d6220 sha256:2320b60c
   # and that backup.
+  # jc-dev c6404006 (2026-11-23, deployer): jc main's ci 45204270617 green (supply-chain clean after the
+  # cookie 0.18.3 bump, RUSTSEC-2026-0594), image signed by image.yml on main, trunk smoke 45189786558
+  # green; train test green (trunk ci a4d49293a + c6404006f, UI vitest 169 passed). Carries T-7555,
+  # T-7539, T-7558/T-7559, T-7564 (shako trim migration), T-7562, T-7717, T-7648, T-7677, T-7679,
+  # T-7591, T-7560/T-7561/T-7688 (Antares 0049), T-7684, T-7686. Rollback: 13d999e6 sha256:e058e6bf
+  # and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '13d999e66d4e75b71c1f2303114146e5362fe4f9'
-    digest: 'sha256:e058e6bff07eaf72d6a01700d1aa435648be9bde8f2a9d652286580e12c68031'
+    tag: 'c6404006fe84fa073d5ae513b48c95630d3e78a6'
+    digest: 'sha256:d73d730d69034ebb3ccf163fed383e30ba0955b552d11833469f203bf7e1f937'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
