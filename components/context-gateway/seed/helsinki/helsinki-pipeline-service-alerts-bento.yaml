@@ -154,7 +154,7 @@ pipeline:
                   - check: this.length() > 0
                     processors:
                       - http:
-                          url: ${JC_GATEWAY_URL}/api/endpoint/si6epqkx364lprho5uaigutk274r5grb/ngsi-ld/v1/entityOperations/delete
+                          url: ${JC_GATEWAY_URL}/api/endpoint/kpozxcalvmcockfawrbca4gibvjvj4uu/ngsi-ld/v1/entityOperations/delete
                           verb: POST
                           headers: { Content-Type: application/json }
                           oauth2:

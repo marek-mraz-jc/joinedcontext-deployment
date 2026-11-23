@@ -128,7 +128,7 @@ pipeline:
           }) }
         processors:
           - http:
-              url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
+              url: ${JC_GATEWAY_URL}/api/endpoint/uneghfimtggnrpflgjsvar7cvrdsc4fw/ngsi-ld/v1/entityOperations/query?limit=1000&options=keyValues
               verb: POST
               headers: { Content-Type: application/json }
               oauth2:
@@ -149,7 +149,7 @@ pipeline:
               - check: this.length() > 0
                 processors:
                   - http:
-                      url: ${JC_GATEWAY_URL}/api/endpoint/rpfqszwlbp5bonvg7kckhdsne5qedjor/ngsi-ld/v1/entityOperations/delete
+                      url: ${JC_GATEWAY_URL}/api/endpoint/uneghfimtggnrpflgjsvar7cvrdsc4fw/ngsi-ld/v1/entityOperations/delete
                       verb: POST
                       headers: { Content-Type: application/json }
                       oauth2:
