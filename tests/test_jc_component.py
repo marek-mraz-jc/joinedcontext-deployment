@@ -346,6 +346,15 @@ def test_jc_prod_runs_no_split(rendered):
 
 
 @requires_helmfile
+@pytest.mark.parametrize("env, host", [("jc-dev", "jc.jcdev.dev.joinedcontext.com"), ("jc-prod", "portal.smartcity.joinedcontext.com")])
+def test_an_mcp_write_asks_on_the_portals_own_page(rendered, env, host):
+    """T-7507: with ANTARES_MCP_CONFIRM_URL unset the AI client's own form answer confirms a write;
+    the page is the Portal UI's host (slug mode on jc-dev, host mode on jc-prod)."""
+    page = {e["name"]: e.get("value") for e in jc_container(rendered(env))["env"]}["ANTARES_MCP_CONFIRM_URL"]
+    assert page == f"https://{host}/mcp-confirmations/{{id}}", page
+
+
+@requires_helmfile
 def test_daiyas_organizations_keep_their_exported_numbers(rendered):
     """T-7509: jc.server.daiyaOrganizations becomes [[daiya.organizations]] in the jc.toml of the process
     that runs daiya: jc-daiya's with the split (jc-dev, its 2026-11-22 export), the server's without."""

@@ -613,6 +613,9 @@ env:
   ANTARES_DATABASE_URL: "postgresql://jc_antares:$(BROKER_DB_PASSWORD)@{{ $pg }}:5432/jc_antares"
   {{- end }}
   ANTARES_PG_POOL: {{ $jc.antaresPool | quote }}
+  # An MCP write asks the person on the Portal's decision page, never by the AI client's own form
+  # answer (T-7507); the page is the Portal UI, on the host the readiness probe names.
+  ANTARES_MCP_CONFIRM_URL: "https://{{ ternary (printf "portal.%s" $global.domain) (printf "%s.%s" $jc.subDomain $global.domain) (eq $mode "host") }}/mcp-confirmations/{id}"
   {{- if dig "jc" "functions" "enabled" false .Values }}
   # The App functions runtime beside jc (values/functions); the Portal calls it with its token.
   JC_FUNCTIONS_URL: "http://jc-functions.{{ .Values.jc.functions.namespace }}.svc.cluster.local:8080"

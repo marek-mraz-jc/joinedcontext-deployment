@@ -102,10 +102,16 @@ jc:
   # with roleSplit false.
   # jc-dev c9bf1edc (2026-11-22, deployer): jc main's ci 45002121144 and smoke 45002121178 green;
   # carries T-7493 (assistant schedule catch-up); no migration. Rollback: ddfd9107 sha256:37e9e0ab.
+  # jc-dev 4b8d6220 (2026-11-23, deployer): jc main's ci 45095619815 and smoke green, the first green
+  # head after T-7511's url fix; carries T-7509 (daiya organizations, daiya 0002-0004, T-7524, T-7571),
+  # T-7507 (MCP confirmations, Antares 0047), T-7517 (history expiry, 0048), T-7494 (portal 0094),
+  # T-7523, T-7516, T-7504, T-7510 (sqlx 0.9.1), T-7526, T-7553 and the night's security merges.
+  # Rollback floor: c9bf1edc sha256:db216686 cannot serve the daiya organization numbers this release
+  # writes; roll back only with the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'c9bf1edc44e2039649f52c0ad9b7bbb555e95f63'
-    digest: 'sha256:db2166869deb0c463b770193b7bb0fe3240b8653eeb5f7428c869e83a4da8c9b'
+    tag: '4b8d6220d03cbf54c9a1a9393db065499204fa2d'
+    digest: 'sha256:2320b60c448a443940c42e726b93ad9355254c0769bdc7828ab563ff69e8b952'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
