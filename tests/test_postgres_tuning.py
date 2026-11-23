@@ -104,18 +104,23 @@ PATH=$(ls -d /usr/lib/postgresql/*/bin):$PATH
 initdb -U postgres --auth=trust >/dev/null
 pg_ctl -w -o "-k /tmp -c listen_addresses= -c shared_preload_libraries=pg_stat_statements" start >/dev/null
 psql -qc "CREATE ROLE app LOGIN" -c "CREATE ROLE mon LOGIN IN ROLE pg_read_all_stats" -c "CREATE DATABASE antares OWNER app"
+# jc-dev before the move: the extension in public, and a role Job's grant on it to an app login
+psql -d antares -qc "CREATE EXTENSION pg_stat_statements" -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO app"
 cat >/tmp/job.sh
 PRELOADED=true sh /tmp/job.sh >/dev/null
 PRELOADED=true sh /tmp/job.sh >/dev/null 2>&1
 psql -qc "CREATE DATABASE later"
 for db in antares later postgres; do
   for user in app mon; do
-    if psql -U "$user" -d "$db" -Atc "SELECT 1 FROM pg_stat_statements LIMIT 1" >/dev/null 2>&1; then r=read; else r=denied; fi
-    if psql -U "$user" -d "$db" -Atc "SELECT 1 FROM pg_stat_statements(true) LIMIT 1" >/dev/null 2>&1; then f=read; else f=denied; fi
-    if psql -U "$user" -d "$db" -Atc "SELECT pg_stat_statements_reset()" >/dev/null 2>&1; then x=reset; else x=denied; fi
+    if psql -U "$user" -d "$db" -Atc "SELECT 1 FROM pgss.pg_stat_statements LIMIT 1" >/dev/null 2>&1; then r=read; else r=denied; fi
+    if psql -U "$user" -d "$db" -Atc "SELECT 1 FROM pgss.pg_stat_statements(true) LIMIT 1" >/dev/null 2>&1; then f=read; else f=denied; fi
+    if psql -U "$user" -d "$db" -Atc "SELECT pgss.pg_stat_statements_reset()" >/dev/null 2>&1; then x=reset; else x=denied; fi
     echo "$db $user $r $f $x"
   done
 done
+# the database owner's serving grant over public, as the Portal runs it at every start
+if psql -U app -d antares -qc "GRANT SELECT ON ALL TABLES IN SCHEMA public TO mon" >/dev/null 2>&1; then g=granted; else g=refused; fi
+echo "owner-grant $g -"
 """
     result = subprocess.run(
         ["docker", "run", "--rm", "-i", "--network", "none", "--entrypoint", "sh", ROLE_JOB_IMAGE, "-c",
@@ -124,6 +129,8 @@ done
     )
     assert result.returncode == 0, result.stderr
     lines = result.stdout.split()
+    assert lines[-3:] == ["owner-grant", "granted", "-"], result.stdout
+    lines = lines[:-3]
     rows = [tuple(lines[i:i + 5]) for i in range(0, len(lines), 5)]
     # template1 carries the closed extension, so a database created after the Job is closed too.
     assert rows == [
