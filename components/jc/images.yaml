@@ -133,10 +133,14 @@ jc:
   # T-7539, T-7558/T-7559, T-7564 (shako trim migration), T-7562, T-7717, T-7648, T-7677, T-7679,
   # T-7591, T-7560/T-7561/T-7688 (Antares 0049), T-7684, T-7686. Rollback: 13d999e6 sha256:e058e6bf
   # and the pre-apply backup.
+  # jc-dev c126f1ed (2026-11-24, deployer): jc main's ci 45278055110 green, image signed by image.yml
+  # on main (cosign githubWorkflowSha c126f1ed), trunk smoke 45260434975 green; train tests green.
+  # Carries parquet 60.2.0 (RUSTSEC-2026-0595), the week-flake test fix and the coverage merges
+  # T-7597..T-7748 (tests, coverage floors). Rollback: c6404006 sha256:d73d730d and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'c6404006fe84fa073d5ae513b48c95630d3e78a6'
-    digest: 'sha256:d73d730d69034ebb3ccf163fed383e30ba0955b552d11833469f203bf7e1f937'
+    tag: 'c126f1ed09c076ecca25a54442abb2f6336df5bd'
+    digest: 'sha256:55214cc60daf45ce0f33976d69a4f4659f2c8d8b604d4cd8b697b98c3bb83b61'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
