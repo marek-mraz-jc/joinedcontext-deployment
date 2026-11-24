@@ -111,10 +111,14 @@ jc:
   # jc-smoke-2026-11-24T064305Z green (185 judged fails, 0 off the known list). T-7745 (portal
   # stylesheet, portal-editor role), T-7764 (ci tooling); no SQL migration.
   # Rollback: 6c261102 sha256:767b3bec with the pre-apply backup.
+  # jc-prod cca5f1da (2026-11-24, prod-deployer): = serverJcDev, jc-dev judge smoke
+  # jc-smoke-2026-11-24T092605Z green (170 judged fails, 0 off the known list). T-7765 (assistant
+  # connectors step no longer waits for languages()); migration 0026_chunk_url, a plain CREATE INDEX
+  # on chunks (0.17 s on 110k rows). Rollback: 5071573f sha256:331e87cb with the pre-apply backup.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '5071573f2fce89b2c33af2d7d9cd8215862babfa'
-    digest: 'sha256:331e87cba3f333fe9607c62a83bb2b1e7492acf2085d281de0a7efc0a903dace'
+    tag: 'cca5f1dabf82cc35cbebc2245b4d6d455876828d'
+    digest: 'sha256:d91f5658c95880832815ffdcd025a4cfa03526b80320db688263362ae99bbb15'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
