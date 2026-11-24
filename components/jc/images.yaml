@@ -158,10 +158,14 @@ jc:
   # (cosign githubWorkflowSha 5071573f), trunk smoke green; train tests green. = 6c261102 + T-7745 (Portal
   # stylesheet editor role, cssparser 0.37 sanitizer) + T-7764 (workflows). No migrations.
   # Rollback: 6c261102 sha256:767b3bec and the pre-apply backup.
+  # jc-dev cca5f1da (2026-11-24, deployer): jc main's ci green, image signed by image.yml on main
+  # (cosign githubWorkflowSha cca5f1da), trunk smoke green; train test green. = 5071573f + T-7765
+  # (assistant speed; assistant migration 0026 CREATE INDEX chunks (project, url): 0.17 s on a restore of
+  # jc-dev's 110k chunks). Rollback: 5071573f sha256:331e87cb and the pre-apply backup (jc_assistant too).
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '5071573f2fce89b2c33af2d7d9cd8215862babfa'
-    digest: 'sha256:331e87cba3f333fe9607c62a83bb2b1e7492acf2085d281de0a7efc0a903dace'
+    tag: 'cca5f1dabf82cc35cbebc2245b4d6d455876828d'
+    digest: 'sha256:d91f5658c95880832815ffdcd025a4cfa03526b80320db688263362ae99bbb15'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
