@@ -107,10 +107,14 @@ jc:
   # jc-smoke-2026-11-24T041844Z green (164 judged fails, 0 off the known list). Schema: dataroom
   # 0001_init swaps cat_dataset's search columns for search_v/search_* + GIN index (T-7689, idempotent,
   # replayed each boot). Rollback: c126f1ed sha256:55214cc6 with the pre-apply backup.
+  # jc-prod 5071573f (2026-11-24, prod-deployer): = serverJcDev, jc-dev judge smoke
+  # jc-smoke-2026-11-24T064305Z green (185 judged fails, 0 off the known list). T-7745 (portal
+  # stylesheet, portal-editor role), T-7764 (ci tooling); no SQL migration.
+  # Rollback: 6c261102 sha256:767b3bec with the pre-apply backup.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '6c26110204a36fba49659c5b935feb4457ecffb7'
-    digest: 'sha256:767b3bec67218f334fed97eb5cc421b483d0bd10a7380cadb5c1c9079c712f42'
+    tag: '5071573f2fce89b2c33af2d7d9cd8215862babfa'
+    digest: 'sha256:331e87cba3f333fe9607c62a83bb2b1e7492acf2085d281de0a7efc0a903dace'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
