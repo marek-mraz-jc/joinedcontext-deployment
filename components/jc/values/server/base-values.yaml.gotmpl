@@ -556,6 +556,12 @@ env:
   JC_GATEWAY_ORG_DOMAIN: {{ . | quote }}
   JC_ASSISTANT_ORG_DOMAIN: {{ . | quote }}
   {{- end }}
+  {{- with (dig "assistant" "llm" "" $jc) }}
+  # The public assistant's model (owner 2026-11-23, T-6543): jc reads JC_ASSISTANT_LLM before its
+  # built-in default (bins/jc/src/modules/assistant.rs); reasoning stays at jc's default (low).
+  # An Assistant whose spec.model names a model still wins. Unset: jc's default.
+  JC_ASSISTANT_LLM: {{ . | quote }}
+  {{- end }}
   {{- with (dig "installationOrganization" "" $jc) }}
   # The [[organizations]] entry every project of a Portal database from before the project
   # registry belongs to (T-7264): read only on the start that upgrades such a database, which
