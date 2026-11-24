@@ -171,10 +171,16 @@ jc:
   # + T-6651, T-7540, T-7576..T-7593, T-7608, T-7636, T-7656, T-7661, T-7724, T-7727, T-7729, T-7769,
   # T-7773 (tests, fuzz, coverage, ekiben io, cron overflow fix); no migrations. Supersedes the
   # unmerged 5973b8cc pin. Rollback: cca5f1da sha256:d91f5658 and the pre-apply backup.
+  # jc-dev 32f225aa (2026-11-24, deployer): jc main's ci 45482653483 (deploy-tests 1/6 red on a
+  # dl.gitea.com chart index 500, rerun), image built, scanned and signed (cosign githubWorkflowSha
+  # 32f225aa, refs/heads/main); train tests green. = a19ec021 + T-7529, T-7589, T-7591, T-7594, T-7595,
+  # T-7605, T-7613, T-7616, T-7624, T-7637, T-7641, T-7654, T-7658, T-7698, T-7699, T-7766..T-7768,
+  # T-7772, T-7786..T-7790, T-7793, T-7794. Assistant migration 0027 (chunk_endpoints table, backfilled
+  # from chunks): preflight on the pre-apply backup. Rollback: a19ec021 sha256:af6ef9e5 and the backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'a19ec021f9e5da176d29c52b2e8330fd5b3283eb'
-    digest: 'sha256:af6ef9e5b53905a0986c9e0a5715322069868fdaecb53ccedc0055c72ae455d2'
+    tag: '32f225aad3426f4b1667798192aa125e696ce454'
+    digest: 'sha256:667cef1195db3f7f66e45f38a36120b468b94d8c3c8ddcc11a0f0acdf5ca54b0'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
