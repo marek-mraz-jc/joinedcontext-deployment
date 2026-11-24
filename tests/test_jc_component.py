@@ -201,16 +201,16 @@ def test_jc_devs_deployment_host_people_belong_to_marek_mraz(rendered):
 @requires_helmfile
 def test_jc_dev_answers_the_public_assistant_with_the_owners_model(rendered):
     """T-6543 (owner 2026-11-23 ~19:50Z): jc-dev sets JC_ASSISTANT_LLM, which jc reads before its
-    built-in default; reasoning stays jc's default (low), so no effort key is set. jc-prod keeps
-    jc's default until the jc-dev proof on an image with T-7758's reasoning allowance."""
+    built-in default; reasoning stays jc's default (low), so no effort key is set. jc-prod follows
+    since the jc-dev proof on jc 6c261102 (T-7758's reasoning allowance), 2026-11-24."""
     env = {}
     for name in ("jc-dev", "jc-prod"):
         (pod,) = [x["spec"]["template"]["spec"] for x in rendered(name)
                   if x.get("kind") == "Deployment" and x["metadata"]["name"] == "jc"]
         env[name] = {e["name"]: e.get("value") for c in pod["containers"] for e in c.get("env", [])}
-    assert env["jc-dev"]["JC_ASSISTANT_LLM"] == "google/gemini-4-hydrogen"
-    assert not any("EFFORT" in k or "REASONING" in k for k in env["jc-dev"] if k.startswith("JC_ASSISTANT"))
-    assert "JC_ASSISTANT_LLM" not in env["jc-prod"]
+    for name in ("jc-dev", "jc-prod"):
+        assert env[name]["JC_ASSISTANT_LLM"] == "google/gemini-4-hydrogen"
+        assert not any("EFFORT" in k or "REASONING" in k for k in env[name] if k.startswith("JC_ASSISTANT"))
 
 
 def test_jc_devs_probes_name_a_bound_host_once_organizations_turn_on_the_host_registry(rendered):
