@@ -150,10 +150,14 @@ jc:
   # 6c261102), trunk smoke green; train tests green. Carries T-7758 (assistant reasoning token allowance),
   # T-7753, T-7755, T-7683 + its publisher-guard fix, T-7689 (dataroom search in SQL), T-7743/T-7744,
   # T-7746, T-7651/T-7672. Rollback: c126f1ed sha256:55214cc6 and the pre-apply backup.
+  # jc-dev 5071573f (2026-11-24, deployer): jc main's ci green, image signed by image.yml on main
+  # (cosign githubWorkflowSha 5071573f), trunk smoke green; train tests green. = 6c261102 + T-7745 (Portal
+  # stylesheet editor role, cssparser 0.37 sanitizer) + T-7764 (workflows). No migrations.
+  # Rollback: 6c261102 sha256:767b3bec and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '6c26110204a36fba49659c5b935feb4457ecffb7'
-    digest: 'sha256:767b3bec67218f334fed97eb5cc421b483d0bd10a7380cadb5c1c9079c712f42'
+    tag: '5071573f2fce89b2c33af2d7d9cd8215862babfa'
+    digest: 'sha256:331e87cba3f333fe9607c62a83bb2b1e7492acf2085d281de0a7efc0a903dace'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
