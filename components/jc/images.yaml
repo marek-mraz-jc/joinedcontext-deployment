@@ -103,10 +103,14 @@ jc:
   # jc-smoke-2026-11-24T005647Z green (156 judged fails, 0 off the known list). parquet 60.2.0
   # (RUSTSEC-2026-0595), tests and coverage only otherwise; no migration past c6404006's.
   # Rollback: c6404006 sha256:d73d730d with the pre-apply backup.
+  # jc-prod 6c261102 (2026-11-24, prod-deployer): = serverJcDev, jc-dev judge smoke
+  # jc-smoke-2026-11-24T041844Z green (164 judged fails, 0 off the known list). Schema: dataroom
+  # 0001_init swaps cat_dataset's search columns for search_v/search_* + GIN index (T-7689, idempotent,
+  # replayed each boot). Rollback: c126f1ed sha256:55214cc6 with the pre-apply backup.
   server:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: 'c126f1ed09c076ecca25a54442abb2f6336df5bd'
-    digest: 'sha256:55214cc60daf45ce0f33976d69a4f4659f2c8d8b604d4cd8b697b98c3bb83b61'
+    tag: '6c26110204a36fba49659c5b935feb4457ecffb7'
+    digest: 'sha256:767b3bec67218f334fed97eb5cc421b483d0bd10a7380cadb5c1c9079c712f42'
   # jc-functions: the platform image's runtime, the digest jc-migrate's rehearsals ran
   # (deploy/rehearsal/apps.sh) and dev's components/functions runs.
   # jc-dev's own pin (T-6723, Decided by the supervisor 2026-11-15 03:35Z, owner may override): main
