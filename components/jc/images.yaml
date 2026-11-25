@@ -177,10 +177,16 @@ jc:
   # T-7605, T-7613, T-7616, T-7624, T-7637, T-7641, T-7654, T-7658, T-7698, T-7699, T-7766..T-7768,
   # T-7772, T-7786..T-7790, T-7793, T-7794. Assistant migration 0027 (chunk_endpoints table, backfilled
   # from chunks): preflight on the pre-apply backup. Rollback: a19ec021 sha256:af6ef9e5 and the backup.
+  # jc-dev 45794af0 (2026-11-25, deployer): jc main's ci 45506556200 green (ui-test-1 first red on a
+  # midnight-crossing T-7790 test, fix agent/deployer/t7790-midnight, rerun green), image built, scanned
+  # and signed (cosign githubWorkflowSha 45794af0, refs/heads/main). = 32f225aa + T-7594, T-7595,
+  # T-7605, T-7608, T-7634, T-7643, T-7652, T-7661, T-7662, T-7686, T-7766, T-7774, T-7795, T-7797,
+  # T-7799, T-7800, T-7801, T-7802, T-7803, T-7804, T-7805. No migrations. Rollback: 32f225aa
+  # sha256:667cef11 and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '32f225aad3426f4b1667798192aa125e696ce454'
-    digest: 'sha256:667cef1195db3f7f66e45f38a36120b468b94d8c3c8ddcc11a0f0acdf5ca54b0'
+    tag: '45794af00ee596cbfa00eee4aa39cc8aae6409cf'
+    digest: 'sha256:85889894a16a9bf4f8a73dcc9636fb84b7d9647221fe1b7a4332d49537b1d066'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
