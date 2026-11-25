@@ -95,6 +95,10 @@ artifact-store:
           memory: 512Mi
 
 jc:
+  # The script sandbox beside jc (T-7774): the assistant's run_script and the Apps' server
+  # functions, from jc-dev's own jc image (components/jc values/functions).
+  functions:
+    enabled: true
   server:
     trustedProxies:
       - "10.42.0.0/16"

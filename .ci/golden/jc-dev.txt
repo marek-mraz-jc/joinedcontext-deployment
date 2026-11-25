@@ -2,6 +2,7 @@ apps/v1/Deployment jc-dev/apisix
 apps/v1/Deployment jc-dev/jc
 apps/v1/Deployment jc-dev/jc-daiya
 apps/v1/Deployment jc-dev/jc-dataroom
+apps/v1/Deployment jc-dev/jc-functions
 apps/v1/Deployment jc-dev/jc-nats
 apps/v1/Deployment jc-dev/jc-shako
 apps/v1/Deployment jc-dev/jc-wasm-host-0
@@ -222,6 +223,7 @@ v1/Service jc-dev/artifact-store
 v1/Service jc-dev/jc
 v1/Service jc-dev/jc-daiya
 v1/Service jc-dev/jc-dataroom
+v1/Service jc-dev/jc-functions
 v1/Service jc-dev/jc-nats
 v1/Service jc-dev/jc-pods
 v1/Service jc-dev/jc-shako
@@ -232,6 +234,7 @@ v1/ServiceAccount jc-dev/artifact-store
 v1/ServiceAccount jc-dev/jc
 v1/ServiceAccount jc-dev/jc-daiya
 v1/ServiceAccount jc-dev/jc-dataroom
+v1/ServiceAccount jc-dev/jc-functions
 v1/ServiceAccount jc-dev/jc-nats
 v1/ServiceAccount jc-dev/jc-shako
 v1/ServiceAccount jc-dev/jc-wasm-host-0
