@@ -188,10 +188,15 @@ jc:
   # scanned and signed (cosign githubWorkflowSha 72f7eb33, refs/heads/main). = 45794af0 + T-7594,
   # T-7595, T-7613, T-7658, T-7666, T-7685, T-7706, T-7711, T-7780, T-7782. No migrations. Rollback:
   # 45794af0 sha256:85889894 and the pre-apply backup.
+  # jc-dev 8bfc29bb (2026-11-25, deployer): jc main's ci 45561558519 green in every test job, image
+  # built, scanned and signed (promote/sign, cosign githubWorkflowSha 8bfc29bb, refs/heads/main). =
+  # 72f7eb33 + T-7593, T-7606, T-7643, T-7654, T-7659, T-7661, T-7706, T-7711, T-7724, T-7729,
+  # T-7783..T-7785, T-7788 (gate runner), T-7802, T-7806..T-7808, T-7811, T-7812. No migrations.
+  # Rollback: 72f7eb33 sha256:5ef24212 and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '72f7eb335ecfcae55910acddc06868bb8a0641cf'
-    digest: 'sha256:5ef24212fd10fc8f131c13099e2ead36f458c290dd177dcbc002a25abc06566d'
+    tag: '8bfc29bb3b6f78a2c66af067850399f85ca0a810'
+    digest: 'sha256:ee986b652c9226f6a949b6c7c038e6b40f42f8bf1e57557e0acbdcb8f49dc6c5'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
