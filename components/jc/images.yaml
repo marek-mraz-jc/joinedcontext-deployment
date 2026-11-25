@@ -183,10 +183,15 @@ jc:
   # T-7605, T-7608, T-7634, T-7643, T-7652, T-7661, T-7662, T-7686, T-7766, T-7774, T-7795, T-7797,
   # T-7799, T-7800, T-7801, T-7802, T-7803, T-7804, T-7805. No migrations. Rollback: 32f225aa
   # sha256:667cef11 and the pre-apply backup.
+  # jc-dev 72f7eb33 (2026-11-25, deployer): jc main's ci 45524191097 green (antares-test-2 first red on
+  # the odata-table CREATE SCHEMA race, fix agent/deployer/odata-schema-race, rerun green), image built,
+  # scanned and signed (cosign githubWorkflowSha 72f7eb33, refs/heads/main). = 45794af0 + T-7594,
+  # T-7595, T-7613, T-7658, T-7666, T-7685, T-7706, T-7711, T-7780, T-7782. No migrations. Rollback:
+  # 45794af0 sha256:85889894 and the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '45794af00ee596cbfa00eee4aa39cc8aae6409cf'
-    digest: 'sha256:85889894a16a9bf4f8a73dcc9636fb84b7d9647221fe1b7a4332d49537b1d066'
+    tag: '72f7eb335ecfcae55910acddc06868bb8a0641cf'
+    digest: 'sha256:5ef24212fd10fc8f131c13099e2ead36f458c290dd177dcbc002a25abc06566d'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
