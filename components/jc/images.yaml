@@ -209,10 +209,15 @@ jc:
   # T-7865, T-7866, T-7894..T-7975 (coverage tests and audit fixes T-7972..T-7974, T-7970 smoke shard,
   # T-7971 coverage floors, T-7975 views cfg). No migrations. Rollback: 7dc56200 sha256:25700dfd and
   # the pre-apply backup.
+  # jc-dev 6bea2d14 (2026-11-28, deployer, owner order ~17:55Z "up-to-date dev and prod with the latest
+  # changes"): jc main's ci 46178382698 green, image signed (cosign githubWorkflowSha 6bea2d14,
+  # refs/heads/main); deploy-pin 46178384587 failed again. = 92f1fd31 + T-7977, T-7788 (search cut),
+  # T-7978 (semantic arm deadline). No migrations. Rollback: 92f1fd31 sha256:b4a80776 and the
+  # pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '92f1fd31755dc55d520cd8b2df5ccc02164e0244'
-    digest: 'sha256:b4a807764611bd5d77fb270130cebd4e096fda6a9c91c5ca6d62bd671b8f0a83'
+    tag: '6bea2d140667a4cadaa77114def501fe5cf6ea24'
+    digest: 'sha256:136dcaac0fed14d18e6f2ccc8ce26a0cde8fb9d7c8b9038ae74cd2463fd60d2c'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
