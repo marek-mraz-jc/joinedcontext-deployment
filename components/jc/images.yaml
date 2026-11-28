@@ -203,10 +203,16 @@ jc:
   # set". = 84d71f6f + T-7840..T-7842, T-7852, T-7858..T-7860, T-7862..T-7864, T-7867..T-7873 (coverage
   # tests; T-7871/T-7872 carry a daiya render default-range fix). No migrations. Rollback: 84d71f6f
   # sha256:06270b5b and the pre-apply backup.
+  # jc-dev 92f1fd31 (2026-11-28, deployer, owner order ~13:50Z "deploy these to dev and prod with all
+  # these fixes"): jc main's ci 46155792535 green, image signed (cosign githubWorkflowSha 92f1fd31,
+  # refs/heads/main); deploy-pin 46155794499 again "DEPLOY_PIN_TOKEN is not set". = 7dc56200 + T-7788,
+  # T-7865, T-7866, T-7894..T-7975 (coverage tests and audit fixes T-7972..T-7974, T-7970 smoke shard,
+  # T-7971 coverage floors, T-7975 views cfg). No migrations. Rollback: 7dc56200 sha256:25700dfd and
+  # the pre-apply backup.
   serverJcDev:
     repository: 'ghcr.io/marek-mraz-jc/jc'
-    tag: '7dc562002d4a854b55e7f2996a5bb0780b6c7c08'
-    digest: 'sha256:25700dfd21907454a82a2c3f9588e0833a1ed0d959fbcd7ff125f04e54745f2d'
+    tag: '92f1fd31755dc55d520cd8b2df5ccc02164e0244'
+    digest: 'sha256:b4a807764611bd5d77fb270130cebd4e096fda6a9c91c5ca6d62bd671b8f0a83'
   functions:
     repository: 'ghcr.io/marek-mraz-jc/joinedcontext-platform'
     tag: 'main'
